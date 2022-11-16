@@ -8,32 +8,17 @@ components:
     ### - RICHIESTA
     ##################
 
-    PaperEngageRequest:
+    PaperPrepareRequest:
       required:
         - requestId
-        - requestSenderId
-        - requestPAId
+        - requestPaId
         - clientRequestTimeStamp
-        - eventType
         - productType
         - attachmentUrl
         - printType
-        - receiverName
-        - receiverAddress
-        - receiverCity
-        - senderName
         - senderAddress
-        - senderCity
-        - senderPr        
       type: object
       properties:
-        iun: 
-          type: string
-          example: 'ABCD-HILM-YKWX-202202-1'
-          description: >-
-            Identificativo Unico della Notifica. Può essere usato per migliorare il servizio 
-            di archiviazione degli originali cartacei. Permettendo alle 
-            Pubbliche Amministrazioni di ricercare anche per Identificativo Univoco Notifica.
         requestId:
           type: string
           example: 'ABCD-HILM-YKWX-202202-1_rec0_try1'
@@ -60,10 +45,15 @@ components:
             - ... ulteriori prodotti 
           type: string
           example: 'AR'
-        attachmentUri:  // TODO modificare in lista
-          type: string
-          description: >-
-            Coordinate per l'accesso al documento PDF da inviare. <br/>
+        attachmentUrls:
+          type: array
+          items:
+            type: string
+            description: >-
+              Path in cui si trova il documento da allegare alla comunicazione digitale
+              (i.e. url del file dentro Safe Storage che si occuperà di crypt/decrypt dei documenti).
+              Il Safe Storge si occuperà di calcolare la presigned url per il recupero dell'allegato che sarà decifrato.
+              documentUrl può rispondere (alla GET) con un 403 per redirect vs servizio (i.e. lambda, safe storage, presigned url vs bucket s3 non cifrato).
         printType:
           type: string
           description: >-
@@ -72,92 +62,33 @@ components:
             - __BN_FRONTE_RETRO__: bianco e nero fronte e retro <br/>
             - ... ulteriori modalità previste dal contratto
           example: 'BN_FRONTE_RETRO'
-        receiverName:
-          type: string
-          description: >-
-            Cognome e nome o ragione sociale del destinatario
-          example: 'Mario Rossi'
-        receiverNameRow2:
-          type: string
-          description: >-
-            Seconda riga sulla busta.
-          example: 'c/o famiglia Bianchi'
         receiverAddress:
-          type: string
+          type: object
+          schema:
+            $ref: '#/components/schemas/AnalogAddress'
           description: >-
-            Indirizzo del destinatario.
-          example: 'via senza nome 610106'
-        receiverAddressRow2:
-          type: string
-          description: >-
-            Specifica dell’indirizzo di residenza del destinatario (seconda riga indirizzo sulla busta).
-          example: 'scala Z interno 400'
-        receiverCap:
-          type: string
-          description: >-
-            Cap del destinatario; in caso di invio estero diventa facoltativo.
-          example: '40050'
-        receiverCity:
-          type: string
-          description: >-
-            Comune del destinatario.
-          example: Argelato
-        receiverCity2:
-          type: string
-          description: >-
-            Frazione del destinatario. Potrebbe essere utile se il chiamante non fornisce il cap.
-          example: 'fraz. malacappa'
-        receiverPr:
-          type: string
-          description: >-
-            Provincia del destinatario; in caso di invio estero diventa facoltativo.
-          example: 'BO'
-        receiverCountry:
-          type: string
-          description: >-
-            In caso di destinatario estero, diventa obbligatoria l’indicazione della nazione di destinazione, 
-            in standard UPU o altro standard condiviso.
+            Estremi del destinatario
         receiverFiscalCode:
           type: string
           description: >-
             Serve per poter recuperare da ANPR l'eventuale indirizzo fornito dall'utente alla banca dati nazionale.
             Potrebbe inoltre servire ai recapitisti in caso di offerte migliorative per i destinatari (servizi a valore aggiunto basati su cf).
-        senderName:
-          type: string
-          description: >-
-            Ragione sociale del mittente (PagoPA).
         senderAddress:
-          type: string
+          type: object
+          schema:
+            $ref: '#/components/schemas/AnalogAddress'
           description: >-
-            Indirizzo del mittente.
-        senderCity:
-          type: string
-          description: >-
-            Città del mittente
-        senderPr:
-          type: string
-          description: >-
-            Provincia del mittente.
+            Estremi della PA mittente
         senderDigitalAddress:  // TODO SE non serve togliere
           type: string
           description: >-
             Indirizzo PEC del mittente.
-        arName:
-          type: string
-          description: >-
-            Nominativo di riferimento per l’Avviso di Ritorno.
         arAddress:
-          type: string
+          type: object
+          schema:
+            $ref: '#/components/schemas/AnalogAddress'
           description: >-
-            Indirizzo per AR.
-        arCap:
-          type: string
-          description: >-
-            CAP AR.
-        arCity:
-          type: string
-          description: >-
-            Città per AR.
+            Estremi della PA mittente per l'avviso di ritorno
 
     ##########################################################################
     ###      NOTIFICHE DI AVANZAMENTO DEL PROCESSO DI POSTALIZZAZIONE      ###
@@ -287,9 +218,9 @@ components:
           description: >-
             Data di produzione del documento.
 
-    DiscoveredAddress:
+    AnalogAddress:
       description: >-
-        Indirizzo del destinatario desunto dalle indagini del personale postale.
+        Indirizzo analogico
       required:
         - name
         - address

@@ -37,12 +37,14 @@ paths:
       description: >-
         Questa operazione sottomette ad paper-channel una richiesta di invio di corrispondenza
         cartacea precedentemente calcolata. <br/>
-        Paper channel deve validare la richiesta in base all'engageId passato e, se tale validazione ha
-        successo, registrare la richiesta in maniera sincrona. Se vengono inviate molteplici
-        richieste con lo stesso requestId e lo stesso engageId solo una deve avere successo (status code HTTP 204, le
-        altre devono ricevere lo status code 409).
+        Paper channel deve validare la richiesta in base alla coppia requestIdx - engageId passati e,
+        se tale validazione ha successo, registrare la richiesta in maniera sincrona invocando external-channel.
+        Se l'invocazione a external-channel ha successo, a questo punto può tornare nella response il costo in eurocent
+        e l'indirizzo effettivo a cui verrà inviata la comunicazione cartacea.
+        Se vengono inviate molteplici richieste con lo stesso requestId e lo stesso engageId solo una deve avere successo
+        (status code HTTP 200, le altre devono ricevere lo status code 409).
     responses:
-      '204':
+      '200':
         $ref: '#/components/responses/EngageSendResponse'
       '400':
         $ref: '#/components/responses/EngageSendResponseBad'
@@ -63,7 +65,7 @@ paths:
                     minItems: 1
                     maxItems: 1000
                     items:
-                      $ref: '#/components/schemas/SingleStatusUpdate'
+                      $ref: '#/components/schemas/PaperChannelUpdate'
               required: true
             responses:
               default:
@@ -77,30 +79,32 @@ paths:
     parameters:
       - $ref: '#/components/parameters/requestIdx'
     post:
-      operationId: sendPaperEngageRequest
+      operationId: sendPaperEngagePrepareRequest
       tags:
         - PaperMessages
-      summary: Invio di corrispondenza cartacea
+      summary: Invio di corrispondenza cartacea - richiesta di validazione e praparazione all'invio
       description: >- 
-        Questa operazione sottomette ad paper-channel una richiesta di invio di corrispondenza
+        Questa operazione sottomette ad paper-channel una richiesta preparazione di invio di corrispondenza
         cartacea. <br/>
-        Paper channel deve validare la sintatticamente la richiesta e, se tale validazione ha
-        successo, registrare la richiesta in maniera sincrona. Se vengono inviate molteplici 
-        richieste con lo stesso requestId solo una deve avere successo (status code HTTP 204, le 
+        Paper channel deve validare la sintatticamente la richiesta e se tale validazione ha successo, ritornare
+        l'OK di presa in carico.
+        In asincrono poi, dovrà eventualmente recuperare le informazioni da pn-national-registries, calcolare le pagine
+        da inviare, e se l'utente ha un indirizzo valido predisporre un engageId da ritornare tramite eventi a coda SQS
+        e/o tramite richiesta di lettura.
+        Se vengono inviate molteplici richieste con lo stesso requestId solo una deve avere successo (status code HTTP 204, le
         altre devono ricevere lo status code 409).
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PaperEngageRequest'
+              $ref: '#/components/schemas/PaperPrepareRequest'
         required: true
       responses:
         '204':
-          $ref: '#/components/responses/putDeliveryOk'
         '400':
-          $ref: '#/components/responses/putDeliveryBad'
+          $ref: '#/components/responses/EngagePrepareResponseBad'
         '409':
-            $ref: '#/components/responses/putDeliveryDuplicated'
+          $ref: '#/components/responses/EngagePrepareResponseDuplicated'
       callbacks:
         deliveryStatusPushUpdates:
           'indirizzo_webhook_oppure_coda_sqs_legato_al_valore_header_xPagopaExtchCxId':
@@ -166,14 +170,6 @@ components:
   
   responses:
     
-    EngagePrepareResponse:
-      description: OK/KO
-      result:
-        description: // TODO avvisa solo del presa in carico
-        enum:
-          - OK
-          - KO
-
     EngageSendResponse:
       cost:
         description: ammontare in eurocent del costo per l'invio della notifica in forma cartacea
@@ -182,7 +178,7 @@ components:
         description: indirizzo al quale verrà spedita la notifica
         type: object
         schema:
-          $ref: '#/components/schemas/Address'
+          $ref: '#/components/schemas/AnalogAddress'
 
     
     EngageSendResponseBad:
@@ -200,6 +196,7 @@ components:
           schema:
             $ref: 'remote-refs.yaml#/components/schemas/Problem'
 
+
     EngageSendResponseNotFound:
       description: >-
         Indica che la richiesta con la coppia requestIdx-engageId non è stata trovata
@@ -207,43 +204,49 @@ components:
         application/json:
           schema:
             $ref: 'remote-refs.yaml#/components/schemas/Problem'
-    
-    putDeliveryDuplicated:
+
+    EngagePrepareResponseBad:
+      description: Errore di validazione sintattica della richiesta
+      content:
+        application/json:
+          schema:
+            $ref: 'remote-refs.yaml#/components/schemas/Problem'
+
+    EngagePrepareResponseDuplicated:
       description: >-
         Indica che la richiesta è già stata effettuata e non può essere sovrascritta.
       content:
         application/json:
           schema:
-            $ref: 'schemas-pn-errors-v1.yaml#/components/schemas/Problem'
-    
-    getDeliveryStatusHistoryNotFound:
-      description: requestIdNotFound
-      content:
-        application/json:
-          schema:
-            $ref: 'schemas-pn-errors-v1.yaml#/components/schemas/Problem'
+            $ref: 'remote-refs.yaml#/components/schemas/Problem'
   
   schemas:
-    
-    ### - DTO PER RICEZIONE ASINCRONA AVANZAMENTI MESSAGGI
+
+    ######################################################
+    ### - DTO PER RICEZIONE ASINCRONA AVANZAMENTI RICHIESTE
     ######################################################
 
     PaperChannelUpdate:
+      description: oggetto usato per ricevere un evento nella coda. >-
+          Prevede di valorizzare solo uno dei tipi di eventi possibili
       type: object
       properties:
-        preEngageEvent:
-          $ref: '#/components/schemas/PaperProgressStatusEvent'
-        analogEvent:
-          $ref: '#/components/schemas/PaperProgressStatusEvent'
+        EngagePrepareEvent:
+          $ref: '#/components/schemas/PrepareEvent'
+        EngageSendEvent:
+          $ref: '#/components/schemas/SendEvent'
     
 
     ### - RIFERIMENTI AD ALTRI FILE
     ######################################################
-    PaperEngageRequest:
-      $ref: 'schemas-paper-v1.yaml#/components/schemas/PaperEngageRequest'
-    PaperProgressStatusEvent:
-      $ref: 'schemas-paper-v1.yaml#/components/schemas/PaperProgressStatusEvent'
-      
+    PrepareEvent:
+      $ref: 'schemas-paper-v1.yaml#/components/schemas/PrepareEvent'
+    SendEvent:
+      $ref: 'schemas-paper-v1.yaml#/components/schemas/SendEvent'
+    PaperPrepareRequest:
+      $ref: 'schemas-paper-v1.yaml#/components/schemas/PaperPrepareRequest'
+    AnalogAddress:
+      $ref: 'schemas-paper-v1.yaml#/components/schemas/AnalogAddress'
     
 
 #  securitySchemes:        # ONLY EXTERNAL
