@@ -25,7 +25,7 @@ paths:
     #############################################################################################
     ###                                  PAPER MAIL MESSAGES                                  ###
     #############################################################################################
-  /paper-channel/v1/paper-deliveries-send/{pathRequestId}/engageid/{pathRequestId}:
+  /paper-channel/v1/paper-deliveries-send/{requestId}/engageid/{engageId}:
     parameters:
       - $ref: '#/components/parameters/pathRequestId'
       - $ref: '#/components/parameters/pathEngageId'
@@ -43,39 +43,39 @@ paths:
         e l'indirizzo effettivo a cui verrà inviata la comunicazione cartacea.
         Se vengono inviate molteplici richieste con lo stesso requestId e lo stesso engageId solo una deve avere successo
         (status code HTTP 200, le altre devono ricevere lo status code 409).
-    responses:
-      '200':
-        $ref: '#/components/responses/EngageSendResponse'
-      '400':
-        $ref: '#/components/responses/EngageSendResponseBad'
-      '404':
-        $ref: '#/components/responses/EngageSendResponseNotFound'
-      '409':
-        $ref: '#/components/responses/EngageSendResponseDuplicated'
-    callbacks:
-      deliveryStatusPushUpdates:
-        'indirizzo_webhook_oppure_coda_sqs_legato_al_valore_header_xPagopaExtchCxId':
-          post:
-            summary: Eventi avanzamento spediti ad SQS
-            requestBody:
-              content:
-                application/json:
-                  schema:
-                    type: array
-                    minItems: 1
-                    maxItems: 1000
-                    items:
-                      $ref: '#/components/schemas/PaperChannelUpdate'
-              required: true
-            responses:
-              default:
-                description: Error processing the update, the update must be re-sended
-              '200':
-                description: Update correctly received
-              '400':
-                description: Malformed update status
+      responses:
+        '200':
+          $ref: '#/components/responses/EngageSendResponse'
+        '400':
+          $ref: '#/components/responses/EngageSendResponseBad'
+        '404':
+          $ref: '#/components/responses/EngageSendResponseNotFound'
+        '409':
+          $ref: '#/components/responses/EngageSendResponseDuplicated'
+      callbacks:
+        deliveryStatusPushUpdates:
+          'indirizzo_webhook_oppure_coda_sqs_legato_al_valore_header_xPagopaExtchCxId':
+            post:
+              summary: Eventi avanzamento spediti ad SQS
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      type: array
+                      minItems: 1
+                      maxItems: 1000
+                      items:
+                        $ref: '#/components/schemas/PaperChannelUpdate'
+                required: true
+              responses:
+                default:
+                  description: Error processing the update, the update must be re-sended
+                '200':
+                  description: Update correctly received
+                '400':
+                  description: Malformed update status
 
-  /paper-channel/v1/paper-deliveries-prepare/{pathRequestId}:
+  /paper-channel/v1/paper-deliveries-prepare/{requestId}:
     parameters:
       - $ref: '#/components/parameters/pathRequestId'
     post:
@@ -93,6 +93,8 @@ paths:
         e/o tramite richiesta di lettura.
         Se vengono inviate molteplici richieste con lo stesso requestId solo una deve avere successo (status code HTTP 204, le
         altre devono ricevere lo status code 409).
+        // FIXME ragionare se va bene il 409: delivery push, nel caso si sia "perso" la risposta causa errore, dovrà chiedere
+        // tramite GET lo stato corrente e se tale stato è finale, procedere fin da subito all'invio
       requestBody:
         content:
           application/json:
@@ -101,6 +103,7 @@ paths:
         required: true
       responses:
         '204':
+          description: No Content
         '400':
           $ref: '#/components/responses/EngagePrepareResponseBad'
         '409':
@@ -118,7 +121,7 @@ paths:
                       minItems: 1
                       maxItems: 1000
                       items:
-                        $ref: '#/components/schemas/SingleStatusUpdate'
+                        $ref: '#/components/schemas/PaperChannelUpdate'
                 required: true
               responses:
                 default:
@@ -129,27 +132,22 @@ paths:
                   description: Malformed update status
     
     get:
-      operationId: getPaperEngageProgresses
+      operationId: getPaperEngagePrepareRequest
       tags:
         - PaperMessages
-      summary: Pull avanzamenti messaggi cartacei
+      summary: Pull esito ed eventuale engageId per richieste già inviate
       description: >- 
-        Questa richiesta permette di ottenere l'elenco degli eventi salienti 
-        riguardanti un processo di postalizzazione. <br/>
-        Oltre all'elenco degli eventi si ottengono informazioni sulle cause di tali eventi 
-        e URL per effettuare il download delle scansioni digitali dei documenti prodotti 
-        durante il processo di postalizzazione. <br>
+        Questa richiesta permette di ottenere l'esito per la richiesta di prepare precedentemente inviata. <br/>
+        Se presente, torna l'evento relativo allo stato corrente di prepare con eventuale engageId se correttamente generato.
       responses:
         '200':
           description: OK
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/PaperProgressStatusEvent'
+                $ref: '#/components/schemas/PaperEvent'
         '404':
-          $ref: '#/components/responses/getDeliveryStatusHistoryNotFound'
+          $ref: '#/components/responses/EngagePrepareResponseNotFound'
 
 components:
   
@@ -187,7 +185,6 @@ components:
         schema:
           $ref: '#/components/schemas/AnalogAddress'
 
-    
     EngageSendResponseBad:
       description: Errore di validazione sintattica della richiesta
       content:
@@ -214,6 +211,13 @@ components:
 
     EngagePrepareResponseBad:
       description: Errore di validazione sintattica della richiesta
+      content:
+        application/json:
+          schema:
+            $ref: 'remote-refs.yaml#/components/schemas/Problem'
+
+    EngagePrepareResponseNotFound:
+      description: Errore di lettura richiesta non trovata
       content:
         application/json:
           schema:

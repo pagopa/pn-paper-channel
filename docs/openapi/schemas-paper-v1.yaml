@@ -79,7 +79,7 @@ components:
             $ref: '#/components/schemas/AnalogAddress'
           description: >-
             Estremi della PA mittente
-        senderDigitalAddress:  // TODO SE non serve togliere
+        senderDigitalAddress:  // FIXME SE non serve togliere
           type: string
           description: >-
             Indirizzo PEC del mittente.
@@ -97,11 +97,11 @@ components:
     ### - EVENTO SINGOLO
     #####################
 
-    PreEngagePaperEvent:
+    PaperEvent:
       required:
         - requestId
         - statusCode
-        - statusDescription
+        - statusDetail
         - statusDateTime
       type: object
       properties:
@@ -110,24 +110,42 @@ components:
           description: >-
             Identificativo della richiesta.
           example: 'ABCD-HILM-YKWX-202202-1_rec0_try1'
+        statusCode:
+          type: string
+          description: codice dell'evento.
+        statusDetail:
+          type: string
+          description: dettaglio associato all'evento.
+        statusDateTime:
+          type: string
+            format: date-time
+            description: >-
+              Data stato con timezone
         engageId:
           type: string
           description: eventuale nuovo engageId da usare in risposta
 
-    PaperProgressStatusEvent:
-      required:
-        - requestId
-        - statusCode  // TODO è un remap dei valori di ext-channel, con aggiunte all'occorrenza
-        - statusDescription
-        - statusDateTime
-        - clientRequestTimeStamp
+    PrepareEvent:
+      allOf:
+        - $ref: '#/components/schemas/PaperEvent'
       type: object
       properties:
-        requestId:
+        statusCode:
           type: string
           description: >-
-            Identificativo della richiesta.
-          example: 'ABCD-HILM-YKWX-202202-1_rec0_try1'  
+            Codici ritornati:
+            - PROGRESS :  stato iniziale che indica che la richiesta è in fase di elaborazione
+            - OK : nel caso di indirizzo valido e allegati recuperati correttamente. Prevede la presenza dell'engageId
+            - KO_UNREACHABLE : nel caso in cui non sia disponibile un indirizzo per l'utente
+        engageId:
+          type: string
+          description: l'engageId da usare per richiedere l'invio di questa richiesta
+
+    SendEvent:
+      allOf:
+        - $ref: '#/components/schemas/PaperEvent'
+      type: object
+      properties:
         registeredLetterCode:
           type: string
           description: >-
@@ -135,10 +153,15 @@ components:
           example: '123456789abc'
         engageId:
           type: string
-          description: eventuale nuovo engageId da usare in risposta
+          description: eventuale nuovo engageId da usare per richiedere l'invio del secondo tentativo. >-
+              paper-channel dovrà memorizzarsi l'indirizzo risolto a valle del KO di invio del primo tentativo.
+              Delivery-push a questo punto richiederà eventualmente il send per il secondo tentativo.
+              // FIXME Capire se va bene che paper-channel debba tenere in memoria queste informazioni (sensibili) e se si per quanto
+              // valutare eventualmente dialogo con data-vault
         statusCode:
           type: string
           description: >-
+            Vengono ribattuti gli esiti di ext-channel, più eventuali eventi interni a paper-channel (codici PCXXX)
             _Codifica sintetica dello stato dell'esito._  <br/>
             - __001__ Stampato  <br/>
             - __002__ Disponibile al recapitista  <br/>
@@ -150,7 +173,7 @@ components:
             - __008__ Mancata consegna Ufficio Postale  <br/>
             - __009__ Compiuta giacenza  <br/>
 
-            - __PC001__ Paper channel nuova richiesta invio cartaceo
+            - __PC001__ Paper channel nuova richiesta invio cartaceo, a valle di un fallimento "temporaneo"  <br/>
 
         statusDescription: 
           type: string
@@ -183,7 +206,7 @@ components:
           items:
             $ref: '#/components/schemas/AttachmentDetails'
         discoveredAddress:
-            $ref: '#/components/schemas/DiscoveredAddress'
+            $ref: '#/components/schemas/AnalogAddress'
         clientRequestTimeStamp:
           type: string
           format: date-time
