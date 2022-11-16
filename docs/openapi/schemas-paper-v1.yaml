@@ -8,7 +8,22 @@ components:
     ### - RICHIESTA
     ##################
 
-    PaperPrepareRequest:
+    SendResponse:
+      type: object
+      required:
+        - cost
+        - receiverAddress
+      properties:
+        cost:
+          description: ammontare in eurocent del costo per l'invio della notifica in forma cartacea
+          type: number
+        receiverAddress:
+          description: indirizzo al quale verrà spedita la notifica
+          type: object
+          schema:
+            $ref: '#/components/schemas/AnalogAddress'
+
+    PrepareRequest:
       required:
         - requestId
         - requestPaId

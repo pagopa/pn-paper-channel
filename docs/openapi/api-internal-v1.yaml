@@ -45,13 +45,13 @@ paths:
         (status code HTTP 200, le altre devono ricevere lo status code 409).
       responses:
         '200':
-          $ref: '#/components/responses/EngageSendResponse'
+          $ref: '#/components/responses/SendResponse'
         '400':
-          $ref: '#/components/responses/EngageSendResponseBad'
+          $ref: '#/components/responses/SendResponseBad'
         '404':
-          $ref: '#/components/responses/EngageSendResponseNotFound'
+          $ref: '#/components/responses/SendResponseNotFound'
         '409':
-          $ref: '#/components/responses/EngageSendResponseDuplicated'
+          $ref: '#/components/responses/SendResponseDuplicated'
       callbacks:
         deliveryStatusPushUpdates:
           'indirizzo_webhook_oppure_coda_sqs_legato_al_valore_header_xPagopaExtchCxId':
@@ -90,7 +90,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/SendEvent'
         '404':
-          $ref: '#/components/responses/EngageSendResponseNotFound'
+          $ref: '#/components/responses/SendResponseNotFound'
 
   /paper-channel/v1/paper-deliveries-prepare/{requestId}:
     parameters:
@@ -116,15 +116,15 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PaperPrepareRequest'
+              $ref: '#/components/schemas/PrepareRequest'
         required: true
       responses:
         '204':
           description: No Content
         '400':
-          $ref: '#/components/responses/EngagePrepareResponseBad'
+          $ref: '#/components/responses/PrepareResponseBad'
         '409':
-          $ref: '#/components/responses/EngagePrepareResponseDuplicated'
+          $ref: '#/components/responses/PrepareResponseDuplicated'
       callbacks:
         deliveryStatusPushUpdates:
           'indirizzo_webhook_oppure_coda_sqs_legato_al_valore_header_xPagopaExtchCxId':
@@ -164,7 +164,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/PrepareEvent'
         '404':
-          $ref: '#/components/responses/EngagePrepareResponseNotFound'
+          $ref: '#/components/responses/PrepareResponseNotFound'
 
 components:
   
@@ -192,29 +192,21 @@ components:
   
   responses:
     
-    EngageSendResponse:
-      type: object
-      required:
-        - cost
-        - receiverAddress
-      properties:
-        cost:
-          description: ammontare in eurocent del costo per l'invio della notifica in forma cartacea
-          type: number
-        receiverAddress:
-          description: indirizzo al quale verrà spedita la notifica
-          type: object
+    SendResponse:
+      description: Risposta positiva di invio cartaceo
+      content:
+        application/json:
           schema:
-            $ref: '#/components/schemas/AnalogAddress'
+            $ref: '#/components/schemas/SendResponse'
 
-    EngageSendResponseBad:
+    SendResponseBad:
       description: Errore di validazione sintattica della richiesta
       content:
         application/json:
           schema:
             $ref: 'remote-refs.yaml#/components/schemas/Problem'
 
-    EngageSendResponseDuplicated:
+    SendResponseDuplicated:
       description: >-
         Indica che la richiesta è già stata effettuata e non può essere sovrascritta.
       content:
@@ -223,7 +215,7 @@ components:
             $ref: 'remote-refs.yaml#/components/schemas/Problem'
 
 
-    EngageSendResponseNotFound:
+    SendResponseNotFound:
       description: >-
         Indica che la richiesta con la coppia requestIdx-engageId non è stata trovata
       content:
@@ -231,21 +223,21 @@ components:
           schema:
             $ref: 'remote-refs.yaml#/components/schemas/Problem'
 
-    EngagePrepareResponseBad:
+    PrepareResponseBad:
       description: Errore di validazione sintattica della richiesta
       content:
         application/json:
           schema:
             $ref: 'remote-refs.yaml#/components/schemas/Problem'
 
-    EngagePrepareResponseNotFound:
+    PrepareResponseNotFound:
       description: Errore di lettura richiesta non trovata
       content:
         application/json:
           schema:
             $ref: 'remote-refs.yaml#/components/schemas/Problem'
 
-    EngagePrepareResponseDuplicated:
+    PrepareResponseDuplicated:
       description: >-
         Indica che la richiesta è già stata effettuata e non può essere sovrascritta.
       content:
@@ -264,20 +256,22 @@ components:
           Prevede di valorizzare solo uno dei tipi di eventi possibili
       type: object
       properties:
-        EngagePrepareEvent:
+        prepareEvent:
           $ref: '#/components/schemas/PrepareEvent'
-        EngageSendEvent:
+        sendEvent:
           $ref: '#/components/schemas/SendEvent'
     
 
     ### - RIFERIMENTI AD ALTRI FILE
     ######################################################
+    SendResponse:
+      $ref: 'schemas-paper-v1.yaml#/components/schemas/SendResponse'
     PrepareEvent:
       $ref: 'schemas-paper-v1.yaml#/components/schemas/PrepareEvent'
     SendEvent:
       $ref: 'schemas-paper-v1.yaml#/components/schemas/SendEvent'
-    PaperPrepareRequest:
-      $ref: 'schemas-paper-v1.yaml#/components/schemas/PaperPrepareRequest'
+    PrepareRequest:
+      $ref: 'schemas-paper-v1.yaml#/components/schemas/PrepareRequest'
     AnalogAddress:
       $ref: 'schemas-paper-v1.yaml#/components/schemas/AnalogAddress'
     
