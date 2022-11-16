@@ -25,10 +25,10 @@ paths:
     #############################################################################################
     ###                                  PAPER MAIL MESSAGES                                  ###
     #############################################################################################
-  /paper-channel/v1/paper-deliveries-send/{requestIdx}/engageid/{engageId}:
+  /paper-channel/v1/paper-deliveries-send/{pathRequestId}/engageid/{pathRequestId}:
     parameters:
-      - $ref: '#/components/parameters/requestIdx'
-      - $ref: '#/components/parameters/engageId'
+      - $ref: '#/components/parameters/pathRequestId'
+      - $ref: '#/components/parameters/pathEngageId'
     post:
       operationId: sendPaperEngageSendRequest
       tags:
@@ -75,9 +75,9 @@ paths:
               '400':
                 description: Malformed update status
 
-  /paper-channel/v1/paper-deliveries-prepare/{requestIdx}:
+  /paper-channel/v1/paper-deliveries-prepare/{pathRequestId}:
     parameters:
-      - $ref: '#/components/parameters/requestIdx'
+      - $ref: '#/components/parameters/pathRequestId'
     post:
       operationId: sendPaperEngagePrepareRequest
       tags:
@@ -158,13 +158,20 @@ components:
     #############################################################################################
   parameters:
 
-    requestIdx:
-      name: requestIdx
+    pathRequestId:
+      name: requestId
       in: path
       required: true
       schema:
         type: string
-#        pattern: '[0-9A-Za-z_-]'
+        minLength: 5
+        maxLength: 100
+    pathEngageId:
+      name: engageId
+      in: path
+      required: true
+      schema:
+        type: string
         minLength: 5
         maxLength: 100
   
