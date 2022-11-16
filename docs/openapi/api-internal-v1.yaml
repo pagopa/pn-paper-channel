@@ -74,6 +74,23 @@ paths:
                   description: Update correctly received
                 '400':
                   description: Malformed update status
+    get:
+      operationId: getPaperEngageSendRequest
+      tags:
+        - PaperMessages
+      summary: Pull stato per richieste già inviate
+      description: >-
+        Questa richiesta permette di ottenere l'esito per la richiesta di send precedentemente inviata. <br/>
+        Se presente, torna l'evento relativo allo stato corrente di send.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SendEvent'
+        '404':
+          $ref: '#/components/responses/EngageSendResponseNotFound'
 
   /paper-channel/v1/paper-deliveries-prepare/{requestId}:
     parameters:
@@ -137,7 +154,7 @@ paths:
         - PaperMessages
       summary: Pull esito ed eventuale engageId per richieste già inviate
       description: >- 
-        Questa richiesta permette di ottenere l'esito per la richiesta di prepare precedentemente inviata. <br/>
+        Questa richiesta permette di ottenere l'esito corrente per la richiesta di prepare precedentemente inviata. <br/>
         Se presente, torna l'evento relativo allo stato corrente di prepare con eventuale engageId se correttamente generato.
       responses:
         '200':
@@ -145,7 +162,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaperEvent'
+                $ref: '#/components/schemas/PrepareEvent'
         '404':
           $ref: '#/components/responses/EngagePrepareResponseNotFound'
 
@@ -176,14 +193,19 @@ components:
   responses:
     
     EngageSendResponse:
-      cost:
-        description: ammontare in eurocent del costo per l'invio della notifica in forma cartacea
-        type: number
-      receiverAddress:
-        description: indirizzo al quale verrà spedita la notifica
-        type: object
-        schema:
-          $ref: '#/components/schemas/AnalogAddress'
+      type: object
+      required:
+        - cost
+        - receiverAddress
+      properties:
+        cost:
+          description: ammontare in eurocent del costo per l'invio della notifica in forma cartacea
+          type: number
+        receiverAddress:
+          description: indirizzo al quale verrà spedita la notifica
+          type: object
+          schema:
+            $ref: '#/components/schemas/AnalogAddress'
 
     EngageSendResponseBad:
       description: Errore di validazione sintattica della richiesta
