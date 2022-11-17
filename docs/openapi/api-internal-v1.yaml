@@ -269,6 +269,8 @@ components:
 
     ### - RIFERIMENTI AD ALTRI FILE
     ######################################################
+    SendRequest:
+      $ref: 'schemas-paper-v1.yaml#/components/schemas/SendRequest'
     SendResponse:
       $ref: 'schemas-paper-v1.yaml#/components/schemas/SendResponse'
     PrepareEvent:
