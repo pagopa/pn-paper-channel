@@ -11,34 +11,101 @@ components:
     SendResponse:
       type: object
       required:
-        - cost
-        - receiverAddress
+        - amount
       properties:
-        cost:
+        amount:
           description: ammontare in eurocent del costo per l'invio della notifica in forma cartacea
           type: number
-        receiverAddress:
-          description: indirizzo al quale verrà spedita la notifica
-          type: object
-          schema:
-            $ref: '#/components/schemas/AnalogAddress'
 
-    PrepareRequest:
-      required:
-        - requestId
-        - requestPaId
-        - clientRequestTimeStamp
-        - productType
-        - attachmentUrl
-        - printType
-        - senderAddress
+    PaperRequest
       type: object
       properties:
         requestId:
           type: string
           example: 'ABCD-HILM-YKWX-202202-1_rec0_try1'
           description: >-
-            Identificativo della richiesta.
+            Identificativo della richiesta. E' lo stesso usato nel path del metodo
+        receiverFiscalCode:
+          type: string
+          description: >-
+            Serve per poter recuperare da ANPR l'eventuale indirizzo fornito dall'utente alla banca dati nazionale.
+            Potrebbe inoltre servire ai recapitisti in caso di offerte migliorative per i destinatari (servizi a valore aggiunto basati su cf).
+        receiverType:
+          type: string
+          description: >-
+            PF o PG in base al tipo di destinatario
+        receiverAddress:
+          type: object
+            schema:
+              $ref: '#/components/schemas/AnalogAddress'
+          description: >-
+            Estremi del destinatario. Se presente, va usato.
+        productType:
+          description: >-
+            Tipo prodotto di cui viene chiesto il recapito: <br/>
+            - __AR__: Raccomandata Andata e Ritorno, <br/>
+            - __890__: Recapito a norma della legge 890/1982, <br/>
+            - __RI__: Raccomandata Internazionale, <br/>
+            - __RS__: Raccomandata Semplice (per Avviso di mancato Recapito). <br/>
+            - ... ulteriori prodotti
+          type: string
+          example: 'AR'
+        printType:
+          type: string
+          description: >-
+            Indica il tipo di stampa richiesto al Consolidatore <br />
+            - __BN_FRONTE__: bianco e nero solo fronte <br/>
+            - __BN_FRONTE_RETRO__: bianco e nero fronte e retro <br/>
+            - ... ulteriori modalità previste dal contratto
+          example: 'BN_FRONTE_RETRO'
+        attachmentUrls:
+          type: array
+          items:
+            type: string
+            description: >-
+              Path in cui si trova il documento da allegare alla comunicazione digitale
+              (i.e. url del file dentro Safe Storage che si occuperà di crypt/decrypt dei documenti).
+              Il Safe Storge si occuperà di calcolare la presigned url per il recupero dell'allegato che sarà decifrato.
+              documentUrl può rispondere (alla GET) con un 403 per redirect vs servizio (i.e. lambda, safe storage, presigned url vs bucket s3 non cifrato).
+              Utilizzato per recuperare il conteggio delle pagine da stampare
+
+    PrepareRequest
+      allOf:
+        - $ref: '#/components/schemas/PaperRequest'
+      type: object
+      properties:
+        alreadyUsedReceiverAddress:
+          type: object
+            schema:
+              $ref: '#/components/schemas/AnalogAddress'
+          description: >-
+            Indirizzo già usato in precedenza per l'utente.
+            Se valorizzato indica che è una richiesta che fa seguito ad un tentativo precedente di invio non andato a buon fine.
+            Va pertanto richiesto a pn-national-registry l'eventuale indirizzo presente nei registri pubblici, e se diverso da quello
+            usato nel precedente tentativo, ha precedenza sull'eventuale discoveredAddress.
+        discoveredAddress:
+          type: object
+            schema:
+              $ref: '#/components/schemas/AnalogAddress'
+          description: >-
+            Estremi del destinatario recuperati a valle dell'indagine del postino a fronte di un tentativo precedente non andato a buon fine.
+            Se presente, va usato come indirizzo nel caso in cui la richiesta a pn-national-registry non fornisca un indirizzo valido, o se tale
+            indirizzo è lo stesso usato in precedenza.
+
+    SendRequest:
+      allOf:
+          - $ref: '#/components/schemas/PaperRequest'
+      required:
+        - requestId
+        - requestPaId
+        - clientRequestTimeStamp
+        - productType
+        - attachmentUrls
+        - printType
+        - senderAddress
+        - receiverAddress
+      type: object
+      properties:
         requestPaId:
           type: string
           example: '00414580183'
@@ -50,61 +117,18 @@ components:
           format: date-time
           description: >-
             Timestamp della richiesta in UTC
-        productType:
-          description: >-
-            Tipo prodotto di cui viene chiesto il recapito: <br/>
-            - __AR__: Raccomandata Andata e Ritorno, <br/>
-            - __890__: Recapito a norma della legge 890/1982, <br/>
-            - __RI__: Raccomandata Internazionale, <br/>
-            - __RS__: Raccomandata Semplice (per Avviso di mancato Recapito). <br/>
-            - ... ulteriori prodotti 
-          type: string
-          example: 'AR'
-        attachmentUrls:
-          type: array
-          items:
-            type: string
-            description: >-
-              Path in cui si trova il documento da allegare alla comunicazione digitale
-              (i.e. url del file dentro Safe Storage che si occuperà di crypt/decrypt dei documenti).
-              Il Safe Storge si occuperà di calcolare la presigned url per il recupero dell'allegato che sarà decifrato.
-              documentUrl può rispondere (alla GET) con un 403 per redirect vs servizio (i.e. lambda, safe storage, presigned url vs bucket s3 non cifrato).
-        printType:
-          type: string
-          description: >-
-            Indica il tipo di stampa richiesto al Consolidatore <br />
-            - __BN_FRONTE__: bianco e nero solo fronte <br/>
-            - __BN_FRONTE_RETRO__: bianco e nero fronte e retro <br/>
-            - ... ulteriori modalità previste dal contratto
-          example: 'BN_FRONTE_RETRO'
-        receiverAddress:
-          type: object
-          schema:
-            $ref: '#/components/schemas/AnalogAddress'
-          description: >-
-            Estremi del destinatario
-        receiverFiscalCode:
-          type: string
-          description: >-
-            Serve per poter recuperare da ANPR l'eventuale indirizzo fornito dall'utente alla banca dati nazionale.
-            Potrebbe inoltre servire ai recapitisti in caso di offerte migliorative per i destinatari (servizi a valore aggiunto basati su cf).
         senderAddress:
           type: object
           schema:
             $ref: '#/components/schemas/AnalogAddress'
           description: >-
             Estremi della PA mittente
-        senderDigitalAddress:  #// FIXME SE non serve togliere
-          type: string
-          description: >-
-            Indirizzo PEC del mittente.
         arAddress:
           type: object
           schema:
             $ref: '#/components/schemas/AnalogAddress'
           description: >-
             Estremi della PA mittente per l'avviso di ritorno
-
     ##########################################################################
     ###      NOTIFICHE DI AVANZAMENTO DEL PROCESSO DI POSTALIZZAZIONE      ###
     ##########################################################################
@@ -136,9 +160,6 @@ components:
           format: date-time
           description: >-
               Data stato con timezone
-        engageId:
-          type: string
-          description: eventuale nuovo engageId da usare in risposta
 
     PrepareEvent:
       allOf:
@@ -148,13 +169,16 @@ components:
         statusCode:
           type: string
           description: >-
-            Codici ritornati:
+            Codici di stato:
             - PROGRESS :  stato iniziale che indica che la richiesta è in fase di elaborazione
             - OK : nel caso di indirizzo valido e allegati recuperati correttamente. Prevede la presenza dell'engageId
-            - KO_UNREACHABLE : nel caso in cui non sia disponibile un indirizzo per l'utente
-        engageId:
-          type: string
-          description: l'engageId da usare per richiedere l'invio di questa richiesta
+            - KO_UNREACHABLE : nel caso in cui non sia disponibile un indirizzo per l'utente in base alle informazioni passate.
+        receiverAddress:
+          type: object
+            schema:
+              $ref: '#/components/schemas/AnalogAddress'
+          description: >-
+            Indirizzo da usare per l'invio nell'operazione di send.
 
     SendEvent:
       allOf:
@@ -227,7 +251,9 @@ components:
           format: date-time
           description: >-
             Timestamp della richiesta in UTC
-
+        amount:
+          description: ammontare in eurocent del costo per l'invio della notifica in forma cartacea
+          type: number
     
     AttachmentDetails:
       title: dettagli allegato a un evento del processo postale

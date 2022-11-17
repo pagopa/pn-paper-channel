@@ -25,10 +25,9 @@ paths:
     #############################################################################################
     ###                                  PAPER MAIL MESSAGES                                  ###
     #############################################################################################
-  /paper-channel/v1/paper-deliveries-send/{requestId}/engageid/{engageId}:
+  /paper-channel/v1/paper-deliveries-send/{requestId}:
     parameters:
       - $ref: '#/components/parameters/pathRequestId'
-      - $ref: '#/components/parameters/pathEngageId'
     post:
       operationId: sendPaperEngageSendRequest
       tags:
@@ -36,13 +35,19 @@ paths:
       summary: Invio di corrispondenza cartacea
       description: >-
         Questa operazione sottomette ad paper-channel una richiesta di invio di corrispondenza
-        cartacea precedentemente calcolata. <br/>
-        Paper channel deve validare la richiesta in base alla coppia requestIdx - engageId passati e,
+        cartacea precedentemente preparata. <br/>
+        Paper channel deve validare la richiesta in base al requestId passato e,
         se tale validazione ha successo, registrare la richiesta in maniera sincrona invocando external-channel.
-        Se l'invocazione a external-channel ha successo, a questo punto può tornare nella response il costo in eurocent
+        Se l'invocazione a external-channel ha successo, a questo punto può tornare nella response il costo stimato in eurocent
         e l'indirizzo effettivo a cui verrà inviata la comunicazione cartacea.
-        Se vengono inviate molteplici richieste con lo stesso requestId e lo stesso engageId solo una deve avere successo
-        (status code HTTP 200, le altre devono ricevere lo status code 409).
+        Se vengono inviate molteplici richieste con lo stesso requestId il servizio deve ritornare lo stesso risultato
+        precedentemente calcolato.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendRequest'
+        required: true
       responses:
         '200':
           $ref: '#/components/responses/SendResponse'
@@ -103,15 +108,13 @@ paths:
       description: >- 
         Questa operazione sottomette ad paper-channel una richiesta preparazione di invio di corrispondenza
         cartacea. <br/>
-        Paper channel deve validare la sintatticamente la richiesta e se tale validazione ha successo, ritornare
-        l'OK di presa in carico.
-        In asincrono poi, dovrà eventualmente recuperare le informazioni da pn-national-registries, calcolare le pagine
-        da inviare, e se l'utente ha un indirizzo valido predisporre un engageId da ritornare tramite eventi a coda SQS
-        e/o tramite richiesta di lettura.
-        Se vengono inviate molteplici richieste con lo stesso requestId solo una deve avere successo (status code HTTP 204, le
-        altre devono ricevere lo status code 409).
-        // FIXME ragionare se va bene il 409: delivery push, nel caso si sia "perso" la risposta causa errore, dovrà chiedere
-        // tramite GET lo stato corrente e se tale stato è finale, procedere fin da subito all'invio
+        Paper channel deve validare la sintatticamente la richiesta e in base ai parametri passati, ritornare
+        l'OK di presa in carico (204) o anche la conferma dell'indirizzo da usare (200).
+        Nel caso di presa in carico (204), in asincrono poi dovrà eventualmente recuperare le informazioni da pn-national-registries
+        e ritornare l'indirizzo corretto da usare.
+        Se vengono inviate molteplici richieste con lo stesso requestId ma informazioni funzionalmente differenti (es indirizzo diverso)
+        va previsto il codice 409. Se con lo stesso requestId ma stessi parametri passati, si può tornare il codice 200
+        se la richiesta è già stata elaborata (o si conosce già l'esito), o il 204 se è ancora in fase di elaborazione.
       requestBody:
         content:
           application/json:
@@ -119,6 +122,8 @@ paths:
               $ref: '#/components/schemas/PrepareRequest'
         required: true
       responses:
+        '200':
+          $ref: '#/components/schemas/PrepareResponse'
         '204':
           description: No Content
         '400':
@@ -181,14 +186,6 @@ components:
         type: string
         minLength: 5
         maxLength: 100
-    pathEngageId:
-      name: engageId
-      in: path
-      required: true
-      schema:
-        type: string
-        minLength: 5
-        maxLength: 100
   
   responses:
     
@@ -222,6 +219,14 @@ components:
         application/json:
           schema:
             $ref: 'remote-refs.yaml#/components/schemas/Problem'
+
+
+    PrepareResponse:
+      description: Risposta positiva di invio cartaceo
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SendEvent'
 
     PrepareResponseBad:
       description: Errore di validazione sintattica della richiesta
