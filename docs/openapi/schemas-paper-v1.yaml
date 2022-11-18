@@ -60,11 +60,11 @@ components:
       properties:
         statusCode:
           type: string
-          description: "Codici di stato: - PROGRESS :  stato iniziale che indica che\
-            \ la richiesta è in fase di elaborazione - OK : nel caso di indirizzo\
-            \ valido e allegati recuperati correttamente. Prevede la presenza del\
-            \ receiverAddress - KOUNREACHABLE : nel caso in cui non sia disponibile\
-            \ un indirizzo per l'utente in base alle informazioni passate."
+          description: "Codici di stato:
+            \ - PROGRESS :  stato iniziale che indica che\
+            \ la richiesta è in fase di elaborazione
+            \ - OK : nel caso di indirizzo valido e allegati recuperati correttamente. Prevede la presenza del receiverAddress \
+            \ - KOUNREACHABLE : nel caso in cui non sia disponibile un indirizzo per l'utente in base alle informazioni passate."
         receiverAddress:
           $ref: '#/components/schemas/AnalogAddress'
       allOf:
@@ -125,8 +125,6 @@ components:
     PrepareRequest:
       type: object
       properties:
-        alreadyUsedReceiverAddress:
-          $ref: '#/components/schemas/AnalogAddress'
         discoveredAddress:
           $ref: '#/components/schemas/AnalogAddress'
       allOf:
