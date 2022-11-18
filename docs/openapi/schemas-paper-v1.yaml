@@ -17,7 +17,7 @@ components:
           description: ammontare in eurocent del costo per l'invio della notifica in forma cartacea
           type: number
 
-    PaperRequest
+    PaperRequest:
       type: object
       properties:
         requestId:
@@ -35,9 +35,7 @@ components:
           description: >-
             PF o PG in base al tipo di destinatario
         receiverAddress:
-          type: object
-            schema:
-              $ref: '#/components/schemas/AnalogAddress'
+          $ref: '#/components/schemas/AnalogAddress'
           description: >-
             Estremi del destinatario. Se presente, va usato.
         productType:
@@ -57,6 +55,7 @@ components:
             - __BN_FRONTE__: bianco e nero solo fronte <br/>
             - __BN_FRONTE_RETRO__: bianco e nero fronte e retro <br/>
             - ... ulteriori modalità previste dal contratto
+            Se non presente prevedere il default
           example: 'BN_FRONTE_RETRO'
         attachmentUrls:
           type: array
@@ -69,26 +68,22 @@ components:
               documentUrl può rispondere (alla GET) con un 403 per redirect vs servizio (i.e. lambda, safe storage, presigned url vs bucket s3 non cifrato).
               Utilizzato per recuperare il conteggio delle pagine da stampare
 
-    PrepareRequest
+    PrepareRequest:
       allOf:
         - $ref: '#/components/schemas/PaperRequest'
       type: object
       properties:
         alreadyUsedReceiverAddress:
-          type: object
-            schema:
-              $ref: '#/components/schemas/AnalogAddress'
+          $ref: '#/components/schemas/AnalogAddress'
           description: >-
             Indirizzo già usato in precedenza per l'utente.
             Se valorizzato indica che è una richiesta che fa seguito ad un tentativo precedente di invio non andato a buon fine.
             Va pertanto richiesto a pn-national-registry l'eventuale indirizzo presente nei registri pubblici, e se diverso da quello
             usato nel precedente tentativo, ha precedenza sull'eventuale discoveredAddress.
         discoveredAddress:
-          type: object
-            schema:
-              $ref: '#/components/schemas/AnalogAddress'
+          $ref: '#/components/schemas/AnalogAddress'
           description: >-
-            Estremi del destinatario recuperati a valle dell'indagine del postino a fronte di un tentativo precedente non andato a buon fine.
+            Eventuali estremi del destinatario recuperati a valle dell'indagine del postino a fronte di un tentativo precedente non andato a buon fine.
             Se presente, va usato come indirizzo nel caso in cui la richiesta a pn-national-registry non fornisca un indirizzo valido, o se tale
             indirizzo è lo stesso usato in precedenza.
 
@@ -118,15 +113,11 @@ components:
           description: >-
             Timestamp della richiesta in UTC
         senderAddress:
-          type: object
-          schema:
-            $ref: '#/components/schemas/AnalogAddress'
+          $ref: '#/components/schemas/AnalogAddress'
           description: >-
             Estremi della PA mittente
         arAddress:
-          type: object
-          schema:
-            $ref: '#/components/schemas/AnalogAddress'
+          $ref: '#/components/schemas/AnalogAddress'
           description: >-
             Estremi della PA mittente per l'avviso di ritorno
     ##########################################################################
@@ -172,13 +163,11 @@ components:
             Codici di stato:
             - PROGRESS :  stato iniziale che indica che la richiesta è in fase di elaborazione
             - OK : nel caso di indirizzo valido e allegati recuperati correttamente. Prevede la presenza dell'engageId
-            - KO_UNREACHABLE : nel caso in cui non sia disponibile un indirizzo per l'utente in base alle informazioni passate.
+            - KOUNREACHABLE : nel caso in cui non sia disponibile un indirizzo per l'utente in base alle informazioni passate.
         receiverAddress:
-          type: object
-            schema:
-              $ref: '#/components/schemas/AnalogAddress'
+          $ref: '#/components/schemas/AnalogAddress'
           description: >-
-            Indirizzo da usare per l'invio nell'operazione di send.
+            Indirizzo da usare per l'invio nell'operazione di send, obbligatorio nel caso di statusCode OK.
 
     SendEvent:
       allOf:
