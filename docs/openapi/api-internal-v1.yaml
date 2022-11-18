@@ -38,7 +38,7 @@ paths:
         cartacea precedentemente preparata. <br/>
         Paper channel deve validare la richiesta in base al requestId passato e,
         se tale validazione ha successo, registrare la richiesta in maniera sincrona invocando external-channel.
-        Se l'invocazione a external-channel ha successo, a questo punto può tornare nella response il costo stimato in eurocent
+        Se l'invocazione a external-channel ha successo, a questo punto può tornare nella response il costo in eurocent
         e l'indirizzo effettivo a cui verrà inviata la comunicazione cartacea.
         Se vengono inviate molteplici richieste con lo stesso requestId il servizio deve ritornare lo stesso risultato
         precedentemente calcolato.

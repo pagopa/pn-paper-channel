@@ -233,9 +233,6 @@ components:
           format: date-time
           description: >-
             Timestamp della richiesta in UTC
-        amount:
-          description: ammontare in eurocent del costo per l'invio della notifica in forma cartacea
-          type: number
     
     AttachmentDetails:
       title: dettagli allegato a un evento del processo postale
