@@ -17,7 +17,7 @@ components:
           description: ammontare in eurocent del costo per l'invio della notifica in forma cartacea
           type: number
 
-    PaperRequest
+    PaperRequest:
       type: object
       properties:
         requestId:
@@ -36,8 +36,8 @@ components:
             PF o PG in base al tipo di destinatario
         receiverAddress:
           type: object
-            schema:
-              $ref: '#/components/schemas/AnalogAddress'
+          schema:
+            $ref: '#/components/schemas/AnalogAddress'
           description: >-
             Estremi del destinatario. Se presente, va usato.
         productType:
@@ -69,15 +69,15 @@ components:
               documentUrl può rispondere (alla GET) con un 403 per redirect vs servizio (i.e. lambda, safe storage, presigned url vs bucket s3 non cifrato).
               Utilizzato per recuperare il conteggio delle pagine da stampare
 
-    PrepareRequest
+    PrepareRequest:
       allOf:
         - $ref: '#/components/schemas/PaperRequest'
       type: object
       properties:
         alreadyUsedReceiverAddress:
           type: object
-            schema:
-              $ref: '#/components/schemas/AnalogAddress'
+          schema:
+            $ref: '#/components/schemas/AnalogAddress'
           description: >-
             Indirizzo già usato in precedenza per l'utente.
             Se valorizzato indica che è una richiesta che fa seguito ad un tentativo precedente di invio non andato a buon fine.
@@ -85,8 +85,8 @@ components:
             usato nel precedente tentativo, ha precedenza sull'eventuale discoveredAddress.
         discoveredAddress:
           type: object
-            schema:
-              $ref: '#/components/schemas/AnalogAddress'
+          schema:
+            $ref: '#/components/schemas/AnalogAddress'
           description: >-
             Estremi del destinatario recuperati a valle dell'indagine del postino a fronte di un tentativo precedente non andato a buon fine.
             Se presente, va usato come indirizzo nel caso in cui la richiesta a pn-national-registry non fornisca un indirizzo valido, o se tale
@@ -175,8 +175,8 @@ components:
             - KO_UNREACHABLE : nel caso in cui non sia disponibile un indirizzo per l'utente in base alle informazioni passate.
         receiverAddress:
           type: object
-            schema:
-              $ref: '#/components/schemas/AnalogAddress'
+          schema:
+            $ref: '#/components/schemas/AnalogAddress'
           description: >-
             Indirizzo da usare per l'invio nell'operazione di send.
 

@@ -123,7 +123,7 @@ paths:
         required: true
       responses:
         '200':
-          $ref: '#/components/schemas/PrepareResponse'
+          $ref: '#/components/schemas/PrepareResponse' #FIXME: dovrebbe essere un PrepareEvent? O creiamo una struttura dedicata con lo stesso contenuto?
         '204':
           description: No Content
         '400':
