@@ -70,7 +70,7 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Problem'
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
     post:
       tags:
       - PaperMessages
@@ -113,20 +113,20 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Problem'
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
         "404":
           description: Indica che la richiesta con requestId non è stata trovata
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Problem'
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
         "409":
           description: Indica che la richiesta è già stata effettuata e non può essere
             sovrascritta.
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Problem'
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
       callbacks:
         deliveryStatusPushUpdates:
           indirizzo_webhook_oppure_coda_sqs_legato_al_valore_header_xPagopaExtchCxId:
@@ -180,7 +180,7 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Problem'
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
     post:
       tags:
       - PaperMessages
@@ -230,14 +230,14 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Problem'
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
         "409":
           description: Indica che la richiesta è già stata effettuata e non può essere
             sovrascritta.
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Problem'
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
       callbacks:
         deliveryStatusPushUpdates:
           indirizzo_webhook_oppure_coda_sqs_legato_al_valore_header_xPagopaExtchCxId:
