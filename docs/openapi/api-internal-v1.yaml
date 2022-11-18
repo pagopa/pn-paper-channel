@@ -29,7 +29,7 @@ paths:
     parameters:
       - $ref: '#/components/parameters/pathRequestId'
     post:
-      operationId: sendPaperEngageSendRequest
+      operationId: sendPaperSendRequest
       tags:
         - PaperMessages
       summary: Invio di corrispondenza cartacea
@@ -80,7 +80,7 @@ paths:
                 '400':
                   description: Malformed update status
     get:
-      operationId: getPaperEngageSendRequest
+      operationId: getPaperSendRequest
       tags:
         - PaperMessages
       summary: Pull stato per richieste già inviate
@@ -101,20 +101,21 @@ paths:
     parameters:
       - $ref: '#/components/parameters/pathRequestId'
     post:
-      operationId: sendPaperEngagePrepareRequest
+      operationId: sendPaperPrepareRequest
       tags:
         - PaperMessages
       summary: Invio di corrispondenza cartacea - richiesta di validazione e praparazione all'invio
       description: >- 
         Questa operazione sottomette ad paper-channel una richiesta preparazione di invio di corrispondenza
         cartacea. <br/>
-        Paper channel deve validare la sintatticamente la richiesta e in base ai parametri passati, ritornare
-        l'OK di presa in carico (204) o anche la conferma dell'indirizzo da usare (200).
+        Paper channel deve validare sintatticamente la richiesta in maniera sincrona in base ai parametri passati, ritornare
+        l'OK di presa in carico (204) o la conferma dell'indirizzo da usare (200) se già elaborata in precedenza.
         Nel caso di presa in carico (204), in asincrono poi dovrà eventualmente recuperare le informazioni da pn-national-registries
         e ritornare l'indirizzo corretto da usare.
         Se vengono inviate molteplici richieste con lo stesso requestId ma informazioni funzionalmente differenti (es indirizzo diverso)
         va previsto il codice 409. Se con lo stesso requestId ma stessi parametri passati, si può tornare il codice 200
         se la richiesta è già stata elaborata (o si conosce già l'esito), o il 204 se è ancora in fase di elaborazione.
+        I dati relativi alla richiesta vanno mantenuti in forma anonima tramite opportuno hash.
       requestBody:
         content:
           application/json:
@@ -154,7 +155,7 @@ paths:
                   description: Malformed update status
     
     get:
-      operationId: getPaperEngagePrepareRequest
+      operationId: getPaperPrepareRequest
       tags:
         - PaperMessages
       summary: Pull esito ed eventuale indirizzo da usare per richieste già inviate
