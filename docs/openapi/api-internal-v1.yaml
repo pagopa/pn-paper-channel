@@ -1,0 +1,378 @@
+openapi: 3.0.3
+info:
+  termsOfService: https://termofservice.it
+  x-api-id: api-paper-channel-private
+  x-summary: OpenAPI servizio PaperChannel ad uso solo interno
+  title: PaperChannel
+  description: |-
+    ## Abstract
+      Questo servizio permette di inviare richieste di invio cartaceo in modo asyncrono e ricevere aggiornamenti
+      sul loro stato di avanzamento. Nello specifico: <br/>
+          - Raccomandata Internazionale, <br/>
+          - Raccomandata Semplice, <br/>
+          - Raccomandata con ricevuta di ritorno, <br/>
+          - Raccomandata a norma di legge 890/1982. <br/>
+  contact:
+    email: pn@pagopa.it
+  license:
+    name: PN software license
+    url: https://www.pn.pagopa.it/LICENSE
+  version: '1.0.0'
+servers:
+- url: https://api.paperchannel.pagopa.local
+  description: Server url
+tags:
+- name: PaperMessages
+  description: Operazioni per inviare e monitorare messaggi di corrispondenza cartacea
+- name: HealthCheck
+  description: Metodo heartbeat
+paths:
+  '/status':
+    get:
+      summary: healthCheck path
+      description: healtCheck path per verificare lo stato del microservizio
+      tags:
+        - HealthCheck
+      operationId: status
+      responses:
+        '200':
+          description: Ok
+        '500':
+          description: Internal Server Error
+  /paper-channel/v1/paper-deliveries-send/{requestId}:
+    get:
+      tags:
+      - PaperMessages
+      summary: Pull stato per richieste già inviate
+      description: "Questa richiesta permette di ottenere l'esito per la richiesta\
+        \ di send precedentemente inviata. <br/> Se presente, torna l'evento relativo\
+        \ allo stato corrente di send."
+      operationId: retrievePaperSendRequest
+      parameters:
+      - name: requestId
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          maxLength: 100
+          minLength: 5
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SendEvent'
+        "404":
+          description: Indica che la richiesta con requestId non è stata trovata
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+    post:
+      tags:
+      - PaperMessages
+      summary: Invio di corrispondenza cartacea
+      description: "Questa operazione sottomette ad paper-channel una richiesta di\
+        \ invio di corrispondenza cartacea precedentemente preparata. <br/> Paper\
+        \ channel deve validare la richiesta in base al requestId passato e, se tale\
+        \ validazione ha successo, registrare la richiesta in maniera sincrona invocando\
+        \ external-channel. Se l'invocazione a external-channel ha successo, a questo\
+        \ punto può tornare nella response il costo in eurocent e l'indirizzo effettivo\
+        \ a cui verrà inviata la comunicazione cartacea. Se vengono inviate molteplici\
+        \ richieste con lo stesso requestId il servizio deve ritornare lo stesso risultato\
+        \ precedentemente calcolato."
+      operationId: sendPaperSendRequest
+      parameters:
+      - name: requestId
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          maxLength: 100
+          minLength: 5
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendRequest'
+        required: true
+      responses:
+        "200":
+          description: Risposta positiva di invio cartaceo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SendResponse'
+        "400":
+          description: Errore di validazione sintattica della richiesta
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+        "404":
+          description: Indica che la richiesta con requestId non è stata trovata
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+        "409":
+          description: Indica che la richiesta è già stata effettuata e non può essere
+            sovrascritta.
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+      callbacks:
+        deliveryStatusPushUpdates:
+          indirizzo_webhook_oppure_coda_sqs_legato_al_valore_header_xPagopaExtchCxId:
+            post:
+              summary: Eventi avanzamento spediti ad SQS
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      maxItems: 1000
+                      minItems: 1
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/PaperChannelUpdate'
+                required: true
+              responses:
+                default:
+                  description: "Error processing the update, the update must be re-sended"
+                "200":
+                  description: Update correctly received
+                "400":
+                  description: Malformed update status
+  /paper-channel/v1/paper-deliveries-prepare/{requestId}:
+    get:
+      tags:
+      - PaperMessages
+      summary: Pull esito ed eventuale indirizzo da usare per richieste già inviate
+      description: "Questa richiesta permette di ottenere l'esito corrente per la\
+        \ richiesta di prepare precedentemente inviata. <br/> Se presente, torna l'evento\
+        \ relativo allo stato corrente di prepare con eventuale indirizzo da usare."
+      operationId: retrievePaperPrepareRequest
+      parameters:
+      - name: requestId
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          maxLength: 100
+          minLength: 5
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrepareEvent'
+        "404":
+          description: Errore di lettura richiesta non trovata
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+    post:
+      tags:
+      - PaperMessages
+      summary: Invio di corrispondenza cartacea - richiesta di validazione e praparazione
+        all'invio
+      description: "Questa operazione sottomette ad paper-channel una richiesta preparazione\
+        \ di invio di corrispondenza cartacea. <br/> Paper channel deve validare sintatticamente\
+        \ la richiesta in maniera sincrona in base ai parametri passati, ritornare\
+        \ l'OK di presa in carico (204) o la conferma dell'indirizzo da usare (200)\
+        \ se già elaborata in precedenza. Nel caso di presa in carico (204), in asincrono\
+        \ poi dovrà eventualmente recuperare le informazioni da pn-national-registries\
+        \ e ritornare l'indirizzo corretto da usare. Se vengono inviate molteplici\
+        \ richieste con lo stesso requestId ma informazioni funzionalmente differenti\
+        \ (es indirizzo diverso) va previsto il codice 409. Se con lo stesso requestId\
+        \ ma stessi parametri passati, si può tornare il codice 200 se la richiesta\
+        \ è già stata elaborata (o si conosce già l'esito), o il 204 se è ancora in\
+        \ fase di elaborazione. I dati relativi alla richiesta vanno mantenuti in\
+        \ forma anonima tramite opportuno hash."
+      operationId: sendPaperPrepareRequest
+      parameters:
+      - name: requestId
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          maxLength: 100
+          minLength: 5
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PrepareRequest'
+        required: true
+      responses:
+        "200":
+          description: Risposta positiva di invio cartaceo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SendEvent'
+        "204":
+          description: No Content
+        "400":
+          description: Errore di validazione sintattica della richiesta
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+        "409":
+          description: Indica che la richiesta è già stata effettuata e non può essere
+            sovrascritta.
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+      callbacks:
+        deliveryStatusPushUpdates:
+          indirizzo_webhook_oppure_coda_sqs_legato_al_valore_header_xPagopaExtchCxId:
+            post:
+              summary: Eventi avanzamento spediti ad SQS
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      maxItems: 1000
+                      minItems: 1
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/PaperChannelUpdate'
+                required: true
+              responses:
+                default:
+                  description: "Error processing the update, the update must be re-sended"
+                "200":
+                  description: Update correctly received
+                "400":
+                  description: Malformed update status
+
+components:
+  
+    #############################################################################################
+    ###             PARAMETRI E RISPOSTE IN COMUNE PER TUTTI I TIPI DI MESSAGGIO              ###
+    #############################################################################################
+  parameters:
+
+    pathRequestId:
+      name: requestId
+      in: path
+      required: true
+      schema:
+        type: string
+        minLength: 5
+        maxLength: 100
+  
+  responses:
+    
+    SendResponse:
+      description: Risposta positiva di invio cartaceo
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SendResponse'
+
+    SendResponseBad:
+      description: Errore di validazione sintattica della richiesta
+      content:
+        application/json:
+          schema:
+            $ref: 'remote-refs.yaml#/components/schemas/Problem'
+
+    SendResponseDuplicated:
+      description: "Indica che la richiesta è già stata effettuata e non può essere sovrascritta."
+      content:
+        application/json:
+          schema:
+            $ref: 'remote-refs.yaml#/components/schemas/Problem'
+
+
+    SendResponseNotFound:
+      description: "Indica che la richiesta con requestId non è stata trovata"
+      content:
+        application/json:
+          schema:
+            $ref: 'remote-refs.yaml#/components/schemas/Problem'
+
+
+    PrepareResponse:
+      description: Risposta positiva di invio cartaceo
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SendEvent'
+
+    PrepareResponseBad:
+      description: Errore di validazione sintattica della richiesta
+      content:
+        application/json:
+          schema:
+            $ref: 'remote-refs.yaml#/components/schemas/Problem'
+
+    PrepareResponseNotFound:
+      description: Errore di lettura richiesta non trovata
+      content:
+        application/json:
+          schema:
+            $ref: 'remote-refs.yaml#/components/schemas/Problem'
+
+    PrepareResponseDuplicated:
+      description: "Indica che la richiesta è già stata effettuata e non può essere sovrascritta."
+      content:
+        application/json:
+          schema:
+            $ref: 'remote-refs.yaml#/components/schemas/Problem'
+  
+  schemas:
+
+    ######################################################
+    ### - DTO PER RICEZIONE ASINCRONA AVANZAMENTI RICHIESTE
+    ######################################################
+
+    PaperChannelUpdate:
+      description: oggetto usato per ricevere un evento nella coda. >-
+          Prevede di valorizzare solo uno dei tipi di eventi possibili
+      type: object
+      properties:
+        prepareEvent:
+          $ref: '#/components/schemas/PrepareEvent'
+        sendEvent:
+          $ref: '#/components/schemas/SendEvent'
+    
+
+    ### - RIFERIMENTI AD ALTRI FILE
+    ######################################################
+    SendRequest:
+      $ref: 'schemas-paper-v1.yaml#/components/schemas/SendRequest'
+    SendResponse:
+      $ref: 'schemas-paper-v1.yaml#/components/schemas/SendResponse'
+    PrepareEvent:
+      $ref: 'schemas-paper-v1.yaml#/components/schemas/PrepareEvent'
+    SendEvent:
+      $ref: 'schemas-paper-v1.yaml#/components/schemas/SendEvent'
+    PrepareRequest:
+      $ref: 'schemas-paper-v1.yaml#/components/schemas/PrepareRequest'
+
+#  securitySchemes:        # ONLY EXTERNAL
+#    ApiKeyAuth:           # ONLY EXTERNAL
+#      type: apiKey        # ONLY EXTERNAL
+#      in: header          # ONLY EXTERNAL
+#      name: x-api-key     # ONLY EXTERNAL
+
+#security:                 # ONLY EXTERNAL
+#  - ApiKeyAuth: [] # use the same name as under securitySchemes    # ONLY EXTERNAL
+              

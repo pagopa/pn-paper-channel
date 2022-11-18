@@ -1,0 +1,305 @@
+components:
+  schemas:
+
+    ##########################################################################
+    ###                    RICHIESTA DI POSTALIZZAZIONE                    ###
+    ##########################################################################
+
+    ### - RICHIESTA
+    ##################
+
+    PaperChannelUpdate:
+      type: object
+      properties:
+        prepareEvent:
+          $ref: '#/components/schemas/PrepareEvent'
+        sendEvent:
+          $ref: '#/components/schemas/SendEvent'
+      description: oggetto usato per ricevere un evento nella coda. >- Prevede di
+        valorizzare solo uno dei tipi di eventi possibili
+    SendRequest:
+      required:
+      - attachmentUrls
+      - clientRequestTimeStamp
+      - printType
+      - productType
+      - receiverAddress
+      - requestId
+      - requestPaId
+      - senderAddress
+      type: object
+      properties:
+        requestPaId:
+          type: string
+          description: "Identificativo della PA che ha richiesto il recapito. Utile\
+            \ per autorizzare il recupero, da parte delle pubbliche amministrazioni,\
+            \ degli originali cartacei"
+          example: "00414580183"
+        clientRequestTimeStamp:
+          type: string
+          description: Timestamp della richiesta in UTC
+          format: date-time
+        senderAddress:
+          $ref: '#/components/schemas/AnalogAddress'
+        arAddress:
+          $ref: '#/components/schemas/AnalogAddress'
+      allOf:
+      - $ref: '#/components/schemas/PaperRequest'
+    SendResponse:
+      required:
+      - amount
+      type: object
+      properties:
+        amount:
+          type: integer
+          format: int32
+          description: ammontare in eurocent del costo per l'invio della notifica
+            in forma cartacea
+    PrepareEvent:
+      type: object
+      properties:
+        statusCode:
+          type: string
+          description: "Codici di stato:
+            \ - PROGRESS :  stato iniziale che indica che\
+            \ la richiesta è in fase di elaborazione
+            \ - OK : nel caso di indirizzo valido e allegati recuperati correttamente. Prevede la presenza del receiverAddress \
+            \ - KOUNREACHABLE : nel caso in cui non sia disponibile un indirizzo per l'utente in base alle informazioni passate."
+        receiverAddress:
+          $ref: '#/components/schemas/AnalogAddress'
+      allOf:
+      - $ref: '#/components/schemas/PaperEvent'
+    SendEvent:
+      type: object
+      properties:
+        registeredLetterCode:
+          type: string
+          description: Il codice di tracciatura obbligatorio per i prodotti di corrispondenza
+            tracciata.
+          example: 123456789abc
+        statusCode:
+          type: string
+          description: "Vengono ribattuti gli esiti di ext-channel, più eventuali eventi interni a paper-channel \
+            \ (codici PCXXX) _Codifica sintetica dello stato dell'esito._  <br/> \
+            \ - __001__ Stampato  <br/> \
+            \ - __002__ Disponibile al recapitista  <br/> \
+            \ - __003__ Preso in carico dal recapitista  <br/> \
+            \ - __004__ Consegnata  <br/> \
+            \ - __005__ Mancata consegna  <br/> \
+            \ - __006__ Furto/Smarrimanto/deterioramento  <br/> \
+            \ - __007__ Consegnato Ufficio Postale  <br/> \
+            \ - __008__ Mancata consegna Ufficio Postale  <br/> \
+            \ - __009__ Compiuta giacenza  <br/> \
+            \ - __PC001__ Paper channel nuova richiesta invio cartaceo, a valle di un fallimento temporaneo  <br/>"
+        statusDescription:
+          type: string
+          description: Descrizione dello stato del delivery cartaceo che viene notificato.
+          example: Stampato
+        statusDateTime:
+          type: string
+          description: Data stato con timezone
+          format: date-time
+        deliveryFailureCause:
+          type: string
+          description: _Motivazione di mancata consegna_ obbligtorie negli stati di
+            mancata consegna  <br/> - __01__ destinatario irreperibile <br/> - __02__
+            destinatario deceduto <br/> - __03__ destinatario sconosciuto <br/> -
+            __04__ destinatario trasferito <br/> - __05__ invio rifiutato <br/> -
+            __06__ indirizzo inesatto <br/> - __07__ indirizzo inesistente <br/> -
+            __08__ indirizzo insufficiente <br/> - ... Motivazioni aggiuntive concordate
+            con il consolidatore
+        attachments:
+          type: array
+          description: elenco dei documenti prodotti che attestano quanto accaduto
+            durante il processo  di postalizzazione
+          items:
+            $ref: '#/components/schemas/AttachmentDetails'
+        discoveredAddress:
+          $ref: '#/components/schemas/AnalogAddress'
+        clientRequestTimeStamp:
+          type: string
+          description: Timestamp della richiesta in UTC
+          format: date-time
+      allOf:
+      - $ref: '#/components/schemas/PaperEvent'
+    PrepareRequest:
+      type: object
+      properties:
+        relatedRequestId:
+          type: string
+          description: "Se presente, indica che questa seconda richiesta è successiva a quella passata nel relatedRequestId"
+        discoveredAddress:
+          $ref: '#/components/schemas/AnalogAddress'
+      allOf:
+      - $ref: '#/components/schemas/PaperRequest'
+    Problem:
+      required:
+      - errors
+      - status
+      properties:
+        type:
+          type: string
+          description: URI reference of type definition
+        status:
+          maximum: 600
+          exclusiveMaximum: true
+          minimum: 100
+          type: integer
+          description: The HTTP status code generated by the origin server for this
+            occurrence of the problem.
+          format: int32
+          example: 503
+        title:
+          maxLength: 64
+          pattern: "^[ -~]{0,64}$"
+          type: string
+          description: "A short, summary of the problem type. Written in english and\
+            \ readable"
+          example: Service Unavailable
+        detail:
+          maxLength: 4096
+          pattern: "^.{0,4096}$"
+          type: string
+          description: A human readable explanation of the problem.
+          example: Request took too long to complete.
+        traceId:
+          type: string
+          description: Internal support identifier associated to error
+          example: 123e4567-e89b-12d3-a456-426614174000
+        timestamp:
+          type: string
+          description: date and time referred to UTC
+          format: date-time
+          example: 2022-07-27T12:22:33.444Z
+        errors:
+          minItems: 1
+          type: array
+          items:
+            $ref: '#/components/schemas/ProblemError'
+    PaperRequest:
+      type: object
+      properties:
+        requestId:
+          type: string
+          description: Identificativo della richiesta. E' lo stesso usato nel path
+            del metodo
+          example: ABCD-HILM-YKWX-202202-1_rec0_try1
+        receiverFiscalCode:
+          type: string
+          description: Serve per poter recuperare da ANPR l'eventuale indirizzo fornito
+            dall'utente alla banca dati nazionale. Potrebbe inoltre servire ai recapitisti
+            in caso di offerte migliorative per i destinatari (servizi a valore aggiunto
+            basati su cf).
+        receiverType:
+          type: string
+          description: PF o PG in base al tipo di destinatario
+        receiverAddress:
+          $ref: '#/components/schemas/AnalogAddress'
+        productType:
+          type: string
+          description: "Tipo prodotto di cui viene chiesto il recapito: <br/> - __AR__:\
+            \ Raccomandata Andata e Ritorno, <br/> - __890__: Recapito a norma della\
+            \ legge 890/1982, <br/> - __RI__: Raccomandata Internazionale, <br/> -\
+            \ __RS__: Raccomandata Semplice (per Avviso di mancato Recapito). <br/>\
+            \ - ... ulteriori prodotti"
+          example: AR
+        printType:
+          type: string
+          description: "Indica il tipo di stampa richiesto al Consolidatore <br />\
+            \ - __BN_FRONTE__: bianco e nero solo fronte <br/> - __BN_FRONTE_RETRO__:\
+            \ bianco e nero fronte e retro <br/> - ... ulteriori modalità previste\
+            \ dal contratto Se non presente prevedere il default"
+          example: BN_FRONTE_RETRO
+        attachmentUrls:
+          type: array
+          items:
+            type: string
+            description: "Path in cui si trova il documento da allegare alla comunicazione\
+              \ digitale (i.e. url del file dentro Safe Storage che si occuperà di\
+              \ crypt/decrypt dei documenti). Il Safe Storge si occuperà di calcolare\
+              \ la presigned url per il recupero dell'allegato che sarà decifrato.\
+              \ documentUrl può rispondere (alla GET) con un 403 per redirect vs servizio\
+              \ (i.e. lambda, safe storage, presigned url vs bucket s3 non cifrato).\
+              \ Utilizzato per recuperare il conteggio delle pagine da stampare"
+    AnalogAddress:
+      required:
+      - address
+      - city
+      - fullname
+      properties:
+        fullname:
+          type: string
+          description: Cognome e nome o ragione sociale del destinatario
+        nameRow2:
+          type: string
+          description: Seconda riga sulla busta.
+        address:
+          type: string
+          description: Indirizzo del destinatario.
+        addressRow2:
+          type: string
+          description: Specifica dell’indirizzo di residenza del destinatario (seconda
+            riga indirizzo sulla busta).
+        cap:
+          type: string
+          description: Cap del destinatario; in caso di invio estero diventa facoltativo.
+        city:
+          type: string
+          description: Comune del destinatario.
+        city2:
+          type: string
+          description: Frazione del destinatario. Potrebbe essere utile se il chiamante
+            non fornisce il cap.
+        pr:
+          type: string
+          description: Provincia del destinatario; in caso di invio estero diventa
+            facoltativo.
+        country:
+          type: string
+          description: "In caso di destinatario estero, diventa obbligatoria l’indicazione\
+            \ della nazione di destinazione,  in standard UPU o altro standard condiviso."
+      description: Indirizzo analogico
+    PaperEvent:
+      required:
+      - requestId
+      - statusCode
+      - statusDateTime
+      - statusDetail
+      type: object
+      properties:
+        requestId:
+          type: string
+          description: Identificativo della richiesta.
+          example: ABCD-HILM-YKWX-202202-1_rec0_try1
+        statusCode:
+          type: string
+          description: codice dell'evento.
+        statusDetail:
+          type: string
+          description: dettaglio associato all'evento.
+        statusDateTime:
+          type: string
+          description: Data stato con timezone
+          format: date-time
+    AttachmentDetails:
+      title: dettagli allegato a un evento del processo postale
+      required:
+      - date
+      - documentType
+      - id
+      - url
+      type: object
+      properties:
+        id:
+          type: string
+          description: Identificativo di riga.
+        documentType:
+          type: string
+          description: La descrizione della tipologia di oggetto.
+        url:
+          type: string
+          description: 'Le coordinate del documento correlato allo stato. '
+        date:
+          type: string
+          description: Data di produzione del documento.
+          format: date-time
