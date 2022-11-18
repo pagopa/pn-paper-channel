@@ -225,9 +225,9 @@ components:
       required:
       - address
       - city
-      - receiverName
+      - fullname
       properties:
-        receiverName:
+        fullname:
           type: string
           description: Cognome e nome o ragione sociale del destinatario
         nameRow2:
