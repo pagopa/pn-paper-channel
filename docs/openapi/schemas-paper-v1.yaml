@@ -125,6 +125,9 @@ components:
     PrepareRequest:
       type: object
       properties:
+        relatedRequestId:
+          type: string
+          description: "Se presente, indica che questa seconda richiesta è successiva a quella passata nel relatedRequestId"
         discoveredAddress:
           $ref: '#/components/schemas/AnalogAddress'
       allOf:
