@@ -162,7 +162,7 @@ components:
           description: >-
             Codici di stato:
             - PROGRESS :  stato iniziale che indica che la richiesta è in fase di elaborazione
-            - OK : nel caso di indirizzo valido e allegati recuperati correttamente. Prevede la presenza dell'engageId
+            - OK : nel caso di indirizzo valido e allegati recuperati correttamente. Prevede la presenza del receiverAddress
             - KOUNREACHABLE : nel caso in cui non sia disponibile un indirizzo per l'utente in base alle informazioni passate.
         receiverAddress:
           $ref: '#/components/schemas/AnalogAddress'
@@ -179,13 +179,6 @@ components:
           description: >-
             Il codice di tracciatura obbligatorio per i prodotti di corrispondenza tracciata.
           example: '123456789abc'
-        engageId:
-          type: string
-          description: eventuale nuovo engageId da usare per richiedere l'invio del secondo tentativo. >-
-              paper-channel dovrà memorizzarsi l'indirizzo risolto a valle del KO di invio del primo tentativo.
-              Delivery-push a questo punto richiederà eventualmente il send per il secondo tentativo.
-              // FIXME Capire se va bene che paper-channel debba tenere in memoria queste informazioni (sensibili) e se si per quanto
-              // valutare eventualmente dialogo con data-vault
         statusCode:
           type: string
           description: >-

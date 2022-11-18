@@ -157,10 +157,10 @@ paths:
       operationId: getPaperEngagePrepareRequest
       tags:
         - PaperMessages
-      summary: Pull esito ed eventuale engageId per richieste già inviate
+      summary: Pull esito ed eventuale indirizzo da usare per richieste già inviate
       description: >- 
         Questa richiesta permette di ottenere l'esito corrente per la richiesta di prepare precedentemente inviata. <br/>
-        Se presente, torna l'evento relativo allo stato corrente di prepare con eventuale engageId se correttamente generato.
+        Se presente, torna l'evento relativo allo stato corrente di prepare con eventuale indirizzo da usare.
       responses:
         '200':
           description: OK
@@ -214,7 +214,7 @@ components:
 
     SendResponseNotFound:
       description: >-
-        Indica che la richiesta con la coppia requestIdx-engageId non è stata trovata
+        Indica che la richiesta con requestId non è stata trovata
       content:
         application/json:
           schema:
