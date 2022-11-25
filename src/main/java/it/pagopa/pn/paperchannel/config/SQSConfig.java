@@ -10,7 +10,6 @@ import it.pagopa.pn.paperchannel.queue.model.DeliveryEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.util.StringUtils;
 import software.amazon.awssdk.services.sqs.SqsClient;
 
@@ -51,5 +50,4 @@ public class SQSConfig {
                     .build();
         }
     }
-
 }

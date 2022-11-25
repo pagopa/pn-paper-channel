@@ -3,7 +3,6 @@ package it.pagopa.pn.paperchannel.service;
 import it.pagopa.pn.api.dto.events.StandardEventHeader;
 import it.pagopa.pn.paperchannel.queue.action.DeliveryMomProducer;
 import it.pagopa.pn.paperchannel.queue.model.DeliveryEvent;
-import it.pagopa.pn.paperchannel.queue.model.DeliveryHeader;
 import it.pagopa.pn.paperchannel.queue.model.DeliveryPayload;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
