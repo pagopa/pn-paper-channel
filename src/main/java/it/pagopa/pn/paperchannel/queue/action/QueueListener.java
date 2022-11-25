@@ -1,8 +1,8 @@
 package it.pagopa.pn.paperchannel.queue.action;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.awspring.cloud.messaging.listener.SqsMessageDeletionPolicy;
 import io.awspring.cloud.messaging.listener.annotation.SqsListener;
 import it.pagopa.pn.paperchannel.queue.model.DeliveryPayload;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +20,7 @@ public class QueueListener {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @SqsListener("${aws.ready-delivery-queue}")
+    @SqsListener(value = "${aws.ready-delivery-queue}",deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)
     public void pull(@Payload String node, @Headers Map<String,Object> headers){
 
         convertPayload(node);
