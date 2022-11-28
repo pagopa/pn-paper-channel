@@ -11,5 +11,5 @@ import lombok.Setter;
 @NoArgsConstructor
 public class DeliveryPayload {
 
-    private String body;
+    private String prepareEvent;
 }

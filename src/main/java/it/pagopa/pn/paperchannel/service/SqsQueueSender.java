@@ -1,9 +1,10 @@
 package it.pagopa.pn.paperchannel.service;
 
-import it.pagopa.pn.api.dto.events.StandardEventHeader;
+import it.pagopa.pn.api.dto.events.GenericEventHeader;
 import it.pagopa.pn.paperchannel.queue.action.DeliveryMomProducer;
 import it.pagopa.pn.paperchannel.queue.model.DeliveryEvent;
 import it.pagopa.pn.paperchannel.queue.model.DeliveryPayload;
+import it.pagopa.pn.paperchannel.queue.model.EventTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,13 +19,12 @@ public class SqsQueueSender {
     @Autowired
     private DeliveryMomProducer deliveryMomProducer;
 
-    public void pushEvent(){
-        StandardEventHeader deliveryHeader= StandardEventHeader.builder()
-                .publisher("paperChannel")
-                .iun("abcd")
+    public void pushEvent(EventTypeEnum eventType){
+        GenericEventHeader deliveryHeader= GenericEventHeader.builder()
+                .publisher("paper-channel-update")
                 .eventId(UUID.randomUUID().toString())
                 .createdAt(Instant.now())
-                .eventType( "readyDelivery")
+                .eventType(eventType.name())
                 .build();
 
         DeliveryPayload deliveryPayload= new DeliveryPayload("delivery Event body");
