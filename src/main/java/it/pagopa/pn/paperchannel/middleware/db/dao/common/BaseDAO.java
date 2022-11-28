@@ -1,6 +1,8 @@
 package it.pagopa.pn.paperchannel.middleware.db.dao.common;
 
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
+import it.pagopa.pn.paperchannel.middleware.db.entities.RequestDeliveryEntity;
+import org.apache.commons.lang3.StringUtils;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
@@ -43,16 +45,18 @@ public abstract class BaseDAO<T> {
     }
 
     protected CompletableFuture<Integer> getCounterQuery(Map<String, AttributeValue> values, String filterExpression, String keyConditionExpression){
-        QueryRequest qeRequest = QueryRequest
+        QueryRequest.Builder qeRequest = QueryRequest
                 .builder()
                 .select(Select.COUNT)
                 .tableName(table)
                 .keyConditionExpression(keyConditionExpression)
-                .filterExpression(filterExpression)
-                .expressionAttributeValues(values)
-                .build();
+                .expressionAttributeValues(values);
 
-        return dynamoDbAsyncClient.query(qeRequest).thenApply(QueryResponse::count);
+        if (!StringUtils.isBlank(filterExpression)){
+            qeRequest.filterExpression(filterExpression);
+        }
+
+        return dynamoDbAsyncClient.query(qeRequest.build()).thenApply(QueryResponse::count);
     }
 
 }

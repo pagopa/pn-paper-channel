@@ -26,6 +26,7 @@ public class PnMicroservicesConfig {
     @ToString
     public static class Urls{
         private String safeStorage;
+        private String externalChannel;
     }
 
     @Getter

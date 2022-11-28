@@ -26,8 +26,6 @@ public class SafeStorageClientImpl extends BaseClient implements SafeStorageClie
 
     public SafeStorageClientImpl(PnMicroservicesConfig pnMicroservicesConfig) {
         this.pnMicroservicesConfig = pnMicroservicesConfig;
-        log.info("Pn Client config");
-        log.info(pnMicroservicesConfig.toString());
     }
 
     @PostConstruct
