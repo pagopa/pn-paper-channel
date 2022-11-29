@@ -1,18 +1,17 @@
 package it.pagopa.pn.paperchannel.queue.model;
 
 import it.pagopa.pn.api.dto.events.GenericEvent;
-import it.pagopa.pn.api.dto.events.StandardEventHeader;
+import it.pagopa.pn.api.dto.events.GenericEventHeader;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
-public class DeliveryEvent implements GenericEvent<StandardEventHeader, DeliveryPayload> {
+public class DeliveryEvent implements GenericEvent<GenericEventHeader, DeliveryPayload> {
 
-    private StandardEventHeader header;
-
+    private GenericEventHeader header;
     private DeliveryPayload payload;
 
     @Override
-    public StandardEventHeader getHeader() {
+    public GenericEventHeader getHeader() {
         return header;
     }
 

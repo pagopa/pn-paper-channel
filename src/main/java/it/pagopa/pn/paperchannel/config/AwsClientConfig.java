@@ -12,5 +12,4 @@ public class AwsClientConfig extends AwsServicesClientsConfig {
         super(props, RuntimeMode.DEVELOPMENT);
     }
 
-
 }
