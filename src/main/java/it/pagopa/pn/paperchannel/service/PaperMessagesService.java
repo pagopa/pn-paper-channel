@@ -6,6 +6,6 @@ import reactor.core.publisher.Mono;
 
 public interface PaperMessagesService {
 
-    Mono<SendEvent> preparePaperSync(String requestId, Mono<PrepareRequest> prepareRequest);
+    Mono<SendEvent> preparePaperSync(String requestId, PrepareRequest prepareRequest);
 
 }

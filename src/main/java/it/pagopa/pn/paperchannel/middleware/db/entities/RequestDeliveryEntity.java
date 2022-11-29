@@ -21,6 +21,7 @@ public class RequestDeliveryEntity {
     public static final String COL_FISCAL_CODE = "fiscalCode";
 
     public static final String COL_ADDRESS_HASH = "addressHash";
+    public static final String COL_ADDRESS = "address";
 
     public static final String FISCAL_CODE_INDEX = "fiscal-code-index";
 
@@ -32,5 +33,8 @@ public class RequestDeliveryEntity {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_ADDRESS_HASH)}))
     private String addressHash;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_ADDRESS)}))
+    private Address address;
 
 }
