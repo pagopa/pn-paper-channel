@@ -10,7 +10,7 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 @Getter
 @Setter
 @ToString
-public class Address {
+public class AddressEntity {
 
     private static final String COL_FULL_NAME = "fullName";
 

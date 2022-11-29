@@ -24,7 +24,7 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
     @Override
     public Mono<SendEvent> preparePaperSync(String requestId, PrepareRequest prepareRequest){
         return requestDeliveryDAO.getByRequestId(requestId)
-                .map(item -> PreparePaperResponseMapper.fromResult(item))
+                .map(PreparePaperResponseMapper::fromResult)
                 .onErrorResume(PnGenericException.class, ex -> {
                     if (ex.getExceptionType() == DELIVERY_REQUEST_NOT_EXIST){
                         log.info("Delivery request");

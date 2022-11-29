@@ -2,7 +2,7 @@ package it.pagopa.pn.paperchannel.mapper;
 
 import it.pagopa.pn.paperchannel.mapper.common.BaseMapper;
 import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
-import it.pagopa.pn.paperchannel.middleware.db.entities.Address;
+import it.pagopa.pn.paperchannel.middleware.db.entities.AddressEntity;
 import it.pagopa.pn.paperchannel.middleware.db.entities.AttachmentInfoEntity;
 import it.pagopa.pn.paperchannel.middleware.db.entities.RequestDeliveryEntity;
 import it.pagopa.pn.paperchannel.rest.v1.dto.AnalogAddress;
@@ -11,13 +11,12 @@ import it.pagopa.pn.paperchannel.rest.v1.dto.PaperEvent;
 import it.pagopa.pn.paperchannel.rest.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.stream.Collectors;
 
 public class PreparePaperResponseMapper {
 
-    private static final BaseMapper <Address,AnalogAddress> baseMapperAddress = new BaseMapperImpl(Address.class, AnalogAddress.class);
+    private static final BaseMapper <AddressEntity,AnalogAddress> baseMapperAddress = new BaseMapperImpl(AddressEntity.class, AnalogAddress.class);
 
     private static final BaseMapper <AttachmentInfoEntity, AttachmentDetails> baseMapperAttachment = new BaseMapperImpl(AttachmentInfoEntity.class, AttachmentDetails.class);
 

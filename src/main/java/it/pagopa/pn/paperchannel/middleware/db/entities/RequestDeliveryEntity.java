@@ -50,7 +50,7 @@ public class RequestDeliveryEntity {
     private String addressHash;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_ADDRESS)}))
-    private Address address;
+    private AddressEntity address;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_STATUS_CODE)}))
     private String statusCode;
