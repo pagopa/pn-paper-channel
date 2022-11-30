@@ -27,9 +27,8 @@ public class NationalRegistryClientImpl extends BaseClient implements NationalRe
 
     private AddressAnprApi addressAnprApi;
 
-    public NationalRegistryClientImpl(PnMicroservicesConfig pnMicroservicesConfig, AddressAnprApi addressAnprApi) {
+    public NationalRegistryClientImpl(PnMicroservicesConfig pnMicroservicesConfig) {
         this.pnMicroservicesConfig = pnMicroservicesConfig;
-        this.addressAnprApi = addressAnprApi;
     }
 
     @PostConstruct
