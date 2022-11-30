@@ -76,8 +76,7 @@ Parameters:
     Description: 'keep track of used projects commitIds'
 
 Resources:
-
-  # PN-Radd-Fsu microservice
+  # PN-Paper-Channel microservice
   PaperChannelMicroservice:
     Type: AWS::CloudFormation::Stack
     Properties:
