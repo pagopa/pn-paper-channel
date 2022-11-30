@@ -1,7 +1,6 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.api.dto.events.GenericEventHeader;
-import it.pagopa.pn.api.dto.events.MomProducer;
 import it.pagopa.pn.paperchannel.queue.action.DeliveryMomProducer;
 import it.pagopa.pn.paperchannel.queue.model.DeliveryEvent;
 import it.pagopa.pn.paperchannel.queue.model.DeliveryPayload;

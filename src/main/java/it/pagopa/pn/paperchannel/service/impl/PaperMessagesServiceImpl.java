@@ -24,7 +24,7 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
     @Override
     public Mono<SendEvent> preparePaperSync(String requestId, PrepareRequest prepareRequest){
         return requestDeliveryDAO.getByRequestId(requestId)
-                .map(item -> PreparePaperResponseMapper.fromResult())
+                .map(PreparePaperResponseMapper::fromResult)
                 .onErrorResume(PnGenericException.class, ex -> {
                     if (ex.getExceptionType() == DELIVERY_REQUEST_NOT_EXIST){
                         log.info("Delivery request");
@@ -39,6 +39,25 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
     }
 
 
+
+
+    private Mono<String> getAddress(PrepareRequest prepareRequest){
+        if (prepareRequest.getReceiverAddress() != null){
+            return Mono.just(""); //prepareRequest.getReceiverAddress()
+        }
+        if (prepareRequest.getDiscoveredAddress() != null){
+            return Mono.just(""); //prepareRequest.getDiscoveredAddress()
+        }
+
+        return Mono.just("");
+        // return nationalRegistries.findAddress(prepareRequest.getReceiverFiscalCode())
+        //      .map(item -> {
+        //          return addressFind
+        //      })
+        //      .onErrorResume(PnGenericException.class, ex ->
+        //          settare lo status dell'entità su dynamo con IRREPERIBILE TOTALE fine....
+        //      )
+    }
 
 
 

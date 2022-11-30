@@ -27,6 +27,7 @@ public class PnMicroservicesConfig {
     public static class Urls{
         private String safeStorage;
         private String externalChannel;
+        private String nationalRegistries;
     }
 
     @Getter
