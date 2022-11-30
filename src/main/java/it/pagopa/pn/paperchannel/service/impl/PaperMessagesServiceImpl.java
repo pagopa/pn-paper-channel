@@ -41,5 +41,24 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
 
 
 
+    private Mono<String> getAddress(PrepareRequest prepareRequest){
+        if (prepareRequest.getReceiverAddress() != null){
+            return Mono.just(""); //prepareRequest.getReceiverAddress()
+        }
+        if (prepareRequest.getDiscoveredAddress() != null){
+            return Mono.just(""); //prepareRequest.getDiscoveredAddress()
+        }
+
+        return Mono.just("");
+        // return nationalRegistries.findAddress(prepareRequest.getReceiverFiscalCode())
+        //      .map(item -> {
+        //          return addressFind
+        //      })
+        //      .onErrorResume(PnGenericException.class, ex ->
+        //          settare lo status dell'entità su dynamo con IRREPERIBILE TOTALE fine....
+        //      )
+    }
+
+
 
 }
