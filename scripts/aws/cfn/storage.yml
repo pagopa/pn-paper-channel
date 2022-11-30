@@ -50,71 +50,75 @@ Resources:
     NullResource:
         Type: AWS::CloudFormation::WaitConditionHandle
 
-    AuroraMasterSecret:
-      Type: AWS::SecretsManager::Secret
-      Properties:
-        Name: !Join [ '/', [ 'pn-paper-channel-secret-db', !Ref 'AWS::StackName' ] ]
-        Description: !Join [ '', [ 'Aurora PostgreSQL Master User Secret ', 'for CloudFormation Stack ', !Ref 'AWS::StackName' ] ]
-        GenerateSecretString:
-          SecretStringTemplate: !Join [ '', [ '{"username": "', !Ref DBUsername, '"}' ] ]
-          GenerateStringKey: "password"
-          ExcludeCharacters: '"@/\'
-          PasswordLength: 16
-
-    RDSDBClusterParameterGroup:
-      Type: AWS::RDS::DBClusterParameterGroup
-      Properties:
-        Description: !Join [ "- ", [ "Aurora PG Cluster Parameter Group for  Pn-Paper-Channel ", !Ref DBName ] ]
-        Family: 'aurora-postgresql14'
-        Parameters:
-          rds.force_ssl: 1
-
-    RDSDBParameterGroup:
-      Type: AWS::RDS::DBParameterGroup
-      Properties:
-        Description: 'CloudFormation PG Parameter Group'
-          Family: 'aurora-postgresql14'
-
-    AuroraDBCluster:
-      Type: AWS::RDS::DBCluster
-        DeletionPolicy: Snapshot
-        UpdateReplacePolicy: Snapshot
-        Properties:
-          Engine: aurora-postgresql
-          EngineVersion: '14.5'
-          DatabaseName: !Ref DBName
-          Port: !Ref DBPort
-          MasterUsername: !Join [ '', [ '{{resolve:secretsmanager:', !Ref AuroraMasterSecret, ':SecretString:username}}' ] ]
-          MasterUserPassword: !Join [ '', [ '{{resolve:secretsmanager:', !Ref AuroraMasterSecret, ':SecretString:password}}' ] ]
-          DBClusterParameterGroupName: !Ref RDSDBClusterParameterGroup
-        AuroraDBFirstInstance:
-          Type: AWS::RDS::DBInstance
-          Properties:
-            CopyTagsToSnapshot: true
-            DBInstanceClass:
-              Ref: DBInstanceClass
-            DBClusterIdentifier: !Ref AuroraDBCluster
-            Engine: aurora-postgresql
-            EngineVersion: '14.5'
-            DBParameterGroupName:
-              Ref: RDSDBParameterGroup
-            PubliclyAccessible: false
-        AuroraDBSecondInstance:
-          Type: AWS::RDS::DBInstance
-          DependsOn:
-            - AuroraDBFirstInstance
-          Properties:
-            CopyTagsToSnapshot: true
-            DBInstanceClass:
-              Ref: DBInstanceClass
-            DBClusterIdentifier: !Ref AuroraDBCluster
-            Engine: aurora-postgresql
-            EngineVersion: '14.5'
-            DBParameterGroupName:
-              Ref: RDSDBParameterGroup
-            PubliclyAccessible: false
+#    AuroraMasterSecret:
+#      Type: AWS::SecretsManager::Secret
+#      Properties:
+#        Name: !Join [ '/', [ 'pn-paper-channel-secret-db', !Ref 'AWS::StackName' ] ]
+#        Description: !Join [ '', [ 'Aurora PostgreSQL Master User Secret ', 'for CloudFormation Stack ', !Ref 'AWS::StackName' ] ]
+#        GenerateSecretString:
+#          SecretStringTemplate: !Join [ '', [ '{"username": "', !Ref DBUsername, '"}' ] ]
+#          GenerateStringKey: "password"
+#          ExcludeCharacters: '"@/\'
+#          PasswordLength: 16
+#
+#    RDSDBClusterParameterGroup:
+#      Type: AWS::RDS::DBClusterParameterGroup
+#      Properties:
+#        Description: !Join [ "- ", [ "Aurora PG Cluster Parameter Group for  Pn-Paper-Channel ", !Ref DBName ] ]
+#        Family: 'aurora-postgresql14'
+#        Parameters:
+#          rds.force_ssl: 1
+#
+#    RDSDBParameterGroup:
+#      Type: AWS::RDS::DBParameterGroup
+#      Properties:
+#        Description: 'CloudFormation PG Parameter Group'
+#          Family: 'aurora-postgresql14'
+#
+#    AuroraDBCluster:
+#      Type: AWS::RDS::DBCluster
+#        DeletionPolicy: Snapshot
+#        UpdateReplacePolicy: Snapshot
+#        Properties:
+#          Engine: aurora-postgresql
+#          EngineVersion: '14.5'
+#          DatabaseName: !Ref DBName
+#          Port: !Ref DBPort
+#          MasterUsername: !Join [ '', [ '{{resolve:secretsmanager:', !Ref AuroraMasterSecret, ':SecretString:username}}' ] ]
+#          MasterUserPassword: !Join [ '', [ '{{resolve:secretsmanager:', !Ref AuroraMasterSecret, ':SecretString:password}}' ] ]
+#          DBClusterParameterGroupName: !Ref RDSDBClusterParameterGroup
+#        AuroraDBFirstInstance:
+#          Type: AWS::RDS::DBInstance
+#          Properties:
+#            CopyTagsToSnapshot: true
+#            DBInstanceClass:
+#              Ref: DBInstanceClass
+#            DBClusterIdentifier: !Ref AuroraDBCluster
+#            Engine: aurora-postgresql
+#            EngineVersion: '14.5'
+#            DBParameterGroupName:
+#              Ref: RDSDBParameterGroup
+#            PubliclyAccessible: false
+#        AuroraDBSecondInstance:
+#          Type: AWS::RDS::DBInstance
+#          DependsOn:
+#            - AuroraDBFirstInstance
+#          Properties:
+#            CopyTagsToSnapshot: true
+#            DBInstanceClass:
+#              Ref: DBInstanceClass
+#            DBClusterIdentifier: !Ref AuroraDBCluster
+#            Engine: aurora-postgresql
+#            EngineVersion: '14.5'
+#            DBParameterGroupName:
+#              Ref: RDSDBParameterGroup
+#            PubliclyAccessible: false
 
 Outputs:
-  AuroraMasterSecretName:
-    Description: Aurora Master Secret Name
-    Value: !Ref AuroraMasterSecret
+  SampleOutput:
+    Description: A Sample Output
+    Value: 'na'
+#Outputs:
+#  AuroraMasterSecretName:
+#    Description: Aurora Master Secret Name
+#    Value: !Ref AuroraMasterSecret
