@@ -98,16 +98,6 @@ Resources:
         LoadBalancerListenerArn: !Ref ApplicationLoadBalancerListenerArn
         LoadbalancerRulePriority: !Ref MicroserviceNumber
         CloudwatchLogKinesisStreamArn: !Ref LogsKinesisSourceStreamArn
-
-
-  # Grant operational rights to Pn-PaperChannel microservice
-  PaperChannelMicroserviceTaskPolicy:
-    Type: AWS::IAM::Policy
-    Properties:
-      PolicyName: !Sub '${ProjectName}-paper-channel-CustomTaskPolicy'
-      Roles:
-        - !GetAtt PaperChannelMicroservice.Outputs.TaskRoleName
-
             
   # Dashboard
   PaperChannelMicroserviceCloudWatchDashboard:
