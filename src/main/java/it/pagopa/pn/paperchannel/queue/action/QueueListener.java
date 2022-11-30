@@ -20,7 +20,7 @@ public class QueueListener {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @SqsListener(value = "${aws.ready-delivery-queue}",deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)
+    //@SqsListener(value = "${aws.ready-delivery-queue}",deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)
     public void pull(@Payload String node, @Headers Map<String,Object> headers){
 
         convertPayload(node);
