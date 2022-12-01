@@ -92,7 +92,7 @@ Resources:
         ContainerEnvEntry3: !Sub 'MICROSERVICE_URLS_SAFESTORAGE=http://${ApplicationLoadBalancerDomain}:8080'
         ContainerEnvEntry4: !Sub 'MICROSERVICE_URLS_NATIONALREGISTRIES=http://${ApplicationLoadBalancerDomain}:8080'
         ContainerEnvEntry5: !Sub 'MICROSERVICE_EXTRAS_SAFESTORAGECXID=pn-radd'
-        MappedPaths: '/paper-channel/*'
+        MappedPaths: '/paper-channel/*,/paper-channel-private/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds
         VpcId: !Ref VpcId
