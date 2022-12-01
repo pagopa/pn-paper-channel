@@ -83,8 +83,6 @@ Resources:
       Type: AWS::RDS::DBInstance
       Properties:
         CopyTagsToSnapshot: true
-        DBInstanceClass:
-          Ref: DBInstanceClass
         DBClusterIdentifier: !Ref AuroraDBCluster
         Engine: aurora-postgresql
         EngineVersion: '14.5'
@@ -98,8 +96,6 @@ Resources:
         - AuroraDBFirstInstance
       Properties:
         CopyTagsToSnapshot: true
-        DBInstanceClass:
-          Ref: DBInstanceClass
         DBClusterIdentifier: !Ref AuroraDBCluster
         Engine: aurora-postgresql
         EngineVersion: '14.5'
