@@ -78,6 +78,7 @@ Resources:
         MasterUsername: !Join [ '', [ '{{resolve:secretsmanager:', !Ref AuroraMasterSecret, ':SecretString:username}}' ] ]
         MasterUserPassword: !Join [ '', [ '{{resolve:secretsmanager:', !Ref AuroraMasterSecret, ':SecretString:password}}' ] ]
         DBClusterParameterGroupName: !Ref RDSDBClusterParameterGroup
+
       AuroraDBFirstInstance:
         Type: AWS::RDS::DBInstance
         Properties:
@@ -90,6 +91,7 @@ Resources:
           DBParameterGroupName:
             Ref: RDSDBParameterGroup
           PubliclyAccessible: false
+          
       AuroraDBSecondInstance:
         Type: AWS::RDS::DBInstance
         DependsOn:
