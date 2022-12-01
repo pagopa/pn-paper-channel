@@ -28,10 +28,6 @@ Parameters:
     Description: 'Database Name'
     Default: 'pn-paper-channel-db'
     Type: String
-    MinLength: '1'
-    MaxLength: '64'
-    AllowedPattern: "^[a-zA-Z]+[0-9a-zA-Z_]*$"
-    ConstraintDescription: 'Must start with a letter. Only numbers, letters, and _ accepted. max length 64 characters'
 
   DBPort:
     Description: 'TCP/IP Port for the Database Instance'
