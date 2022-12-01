@@ -52,7 +52,7 @@ Resources:
     Type: AWS::SecretsManager::Secret
     Properties:
       Name: !Join [ '/', [ 'pn-paper-channel-secret-db', !Ref 'AWS::StackName' ] ]
-      Description: !Join [ '', [ 'Aurora PostgreSQL Master User Secret ', 'for CloudFormation Stack ', !Ref 'AWS::StackName' ] ]
+      Description: !Join [ '', [ 'Aurora PostgreSQL Master User Secret ', !Ref 'AWS::StackName' ] ]
       GenerateSecretString:
         SecretStringTemplate: !Join [ '', [ '{"username": "', !Ref DBUsername, '"}' ] ]
         GenerateStringKey: "password"
@@ -109,6 +109,22 @@ Resources:
       DBInstanceClass: !Ref DBInstanceClass
 
 Outputs:
-  AuroraMasterSecretName:
-    Description: Aurora Master Secret Name
-    Value: !Ref AuroraMasterSecret
+  DBPasswordSecretName:
+    Description: 'Aurora db password'
+    Value: !GetAtt 'AuroraMasterSecret.Properties.Name'
+
+  ClusterEndpoint:
+    Description: 'Aurora Cluster/Writer Endpoint'
+    Value: !GetAtt 'AuroraDBCluster.Endpoint.Address'
+
+  ReaderEndpoint:
+    Description: 'Aurora Reader Endpoint'
+    Value: !GetAtt 'AuroraDBCluster.ReadEndpoint.Address'
+
+  DBPort:
+    Description: 'Aurora Endpoint Port'
+    Value: !GetAtt 'AuroraDBCluster.Endpoint.Port'
+
+  DBName:
+    Description: 'Database Name'
+    Value: !Ref DBName
