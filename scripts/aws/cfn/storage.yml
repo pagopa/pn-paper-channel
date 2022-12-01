@@ -111,7 +111,7 @@ Resources:
 Outputs:
   DBPasswordSecretName:
     Description: 'Aurora db password'
-    Value: !GetAtt 'AuroraMasterSecret.Properties.Name'
+    Value: !GetAtt 'AuroraMasterSecret.Name'
 
   ClusterEndpoint:
     Description: 'Aurora Cluster/Writer Endpoint'
