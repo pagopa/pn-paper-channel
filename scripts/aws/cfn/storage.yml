@@ -74,42 +74,40 @@ Resources:
 
     AuroraDBCluster:
       Type: AWS::RDS::DBCluster
-        DeletionPolicy: Snapshot
-        UpdateReplacePolicy: Snapshot
+      Properties:
+        Engine: aurora-postgresql
+        EngineVersion: '14.5'
+        DatabaseName: !Ref DBName
+        Port: !Ref DBPort
+        MasterUsername: !Join [ '', [ '{{resolve:secretsmanager:', !Ref AuroraMasterSecret, ':SecretString:username}}' ] ]
+        MasterUserPassword: !Join [ '', [ '{{resolve:secretsmanager:', !Ref AuroraMasterSecret, ':SecretString:password}}' ] ]
+        DBClusterParameterGroupName: !Ref RDSDBClusterParameterGroup
+      AuroraDBFirstInstance:
+        Type: AWS::RDS::DBInstance
         Properties:
+          CopyTagsToSnapshot: true
+          DBInstanceClass:
+            Ref: DBInstanceClass
+          DBClusterIdentifier: !Ref AuroraDBCluster
           Engine: aurora-postgresql
           EngineVersion: '14.5'
-          DatabaseName: !Ref DBName
-          Port: !Ref DBPort
-          MasterUsername: !Join [ '', [ '{{resolve:secretsmanager:', !Ref AuroraMasterSecret, ':SecretString:username}}' ] ]
-          MasterUserPassword: !Join [ '', [ '{{resolve:secretsmanager:', !Ref AuroraMasterSecret, ':SecretString:password}}' ] ]
-          DBClusterParameterGroupName: !Ref RDSDBClusterParameterGroup
-        AuroraDBFirstInstance:
-          Type: AWS::RDS::DBInstance
-          Properties:
-            CopyTagsToSnapshot: true
-            DBInstanceClass:
-              Ref: DBInstanceClass
-            DBClusterIdentifier: !Ref AuroraDBCluster
-            Engine: aurora-postgresql
-            EngineVersion: '14.5'
-            DBParameterGroupName:
-              Ref: RDSDBParameterGroup
-            PubliclyAccessible: false
-        AuroraDBSecondInstance:
-          Type: AWS::RDS::DBInstance
-          DependsOn:
-            - AuroraDBFirstInstance
-          Properties:
-            CopyTagsToSnapshot: true
-            DBInstanceClass:
-              Ref: DBInstanceClass
-            DBClusterIdentifier: !Ref AuroraDBCluster
-            Engine: aurora-postgresql
-            EngineVersion: '14.5'
-            DBParameterGroupName:
-              Ref: RDSDBParameterGroup
-            PubliclyAccessible: false
+          DBParameterGroupName:
+            Ref: RDSDBParameterGroup
+          PubliclyAccessible: false
+      AuroraDBSecondInstance:
+        Type: AWS::RDS::DBInstance
+        DependsOn:
+          - AuroraDBFirstInstance
+        Properties:
+          CopyTagsToSnapshot: true
+          DBInstanceClass:
+            Ref: DBInstanceClass
+          DBClusterIdentifier: !Ref AuroraDBCluster
+          Engine: aurora-postgresql
+          EngineVersion: '14.5'
+          DBParameterGroupName:
+            Ref: RDSDBParameterGroup
+          PubliclyAccessible: false
 
 Outputs:
   AuroraMasterSecretName:
