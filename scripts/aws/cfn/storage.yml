@@ -43,15 +43,20 @@ Parameters:
     Type: String
 
   DBInstanceClass:
-    Default: db.t4g.micro
+    Default: db.r6g.large
     Description: Database Instance Class
+    Type: String
+
+  DBSecretName:
+    Description: 'Secret Name for database'
+    Default: 'pn-paper-channel-secret-db'
     Type: String
 
 Resources:
   AuroraMasterSecret:
     Type: AWS::SecretsManager::Secret
     Properties:
-      Name: !Join [ '/', [ 'pn-paper-channel-secret-db', !Ref 'AWS::StackName' ] ]
+      Name: !Ref DBSecretName
       Description: !Join [ '', [ 'Aurora PostgreSQL Master User Secret ', !Ref 'AWS::StackName' ] ]
       GenerateSecretString:
         SecretStringTemplate: !Join [ '', [ '{"username": "', !Ref DBUsername, '"}' ] ]
@@ -70,7 +75,7 @@ Resources:
   RDSDBParameterGroup:
     Type: AWS::RDS::DBParameterGroup
     Properties:
-      Description: 'CloudFormation PG Parameter Group'
+      Description: 'DB PG Parameter Group'
       Family: 'aurora-postgresql14'
 
   AuroraDBCluster:
@@ -109,9 +114,10 @@ Resources:
       DBInstanceClass: !Ref DBInstanceClass
 
 Outputs:
-  DBPasswordSecretName:
-    Description: 'Aurora db password'
-    Value: !GetAtt 'AuroraMasterSecret.Name'
+
+  DBName:
+    Description: 'Database Name'
+    Value: !Ref DBName
 
   ClusterEndpoint:
     Description: 'Aurora Cluster/Writer Endpoint'
@@ -125,6 +131,6 @@ Outputs:
     Description: 'Aurora Endpoint Port'
     Value: !GetAtt 'AuroraDBCluster.Endpoint.Port'
 
-  DBName:
-    Description: 'Database Name'
-    Value: !Ref DBName
+  DBSecretName:
+    Description: 'Database Secret Name'
+    Value: !Ref DBSecretName
