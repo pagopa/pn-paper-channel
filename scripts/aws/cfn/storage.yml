@@ -49,7 +49,7 @@ Parameters:
 
   DBSecretName:
     Description: 'Secret Name for database'
-    Default: 'pn-paper-channel-secret-db'
+    Default: 'pn-paper-channel-db-secret'
     Type: String
 
 Resources:
