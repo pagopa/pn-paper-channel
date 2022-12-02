@@ -75,15 +75,11 @@ Parameters:
     Type: String
     Description: 'keep track of used projects commitIds'
 
-  DBPasswordSecretArn:
-    Type: String
-    Description: 'AWS Secret arn'
-
-  ClusterEndpoint:
+  DBClusterEndpoint:
     Type: String
     Description: 'AWS Cluster Endpoint'
 
-  ReaderEndpoint:
+  DBReaderEndpoint:
     Type: String
     Description: 'AWS Reader Endpoint'
 
@@ -94,6 +90,10 @@ Parameters:
   DBName:
     Type: String
     Description: 'AWS DB Name'
+
+  DBSecretName:
+    Type: String
+    Description: 'AWS Secret Name'
 
 Resources:
   # PN-Paper-Channel microservice
@@ -112,8 +112,8 @@ Resources:
         ContainerEnvEntry3: !Sub 'MICROSERVICE_URLS_SAFESTORAGE=http://${ApplicationLoadBalancerDomain}:8080'
         ContainerEnvEntry4: !Sub 'MICROSERVICE_URLS_NATIONALREGISTRIES=http://${ApplicationLoadBalancerDomain}:8080'
         ContainerEnvEntry5: !Sub 'MICROSERVICE_EXTRAS_SAFESTORAGECXID=pn-radd'
-        ContainerEnvEntry6: !Sub 'PN_PAPER_CHANNEL_CLUSTER_ENDPOINT=${ClusterEndpoint}'
-        ContainerEnvEntry7: !Sub 'SPRING_DATASOURCE_USERNAME=${DBPasswordSecretName}'
+        ContainerEnvEntry6: !Sub 'PN_PAPER_CHANNEL_CLUSTER_ENDPOINT=${DBClusterEndpoint}'
+        ContainerEnvEntry7: !Sub 'SPRING_DATASOURCE_USERNAME=${DBSecretName}'
         ContainerEnvEntry8: !Sub 'PN_PAPER_CHANNEL_CLUSTER_PORT=${DBPort}'
         ContainerEnvEntry9: !Sub 'PN_PAPER_CHANNEL_CLUSTER_NAME=${DBName}'
         MappedPaths: '/paper-channel/*,/paper-channel-private/*'

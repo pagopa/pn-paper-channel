@@ -119,11 +119,11 @@ Outputs:
     Description: 'Database Name'
     Value: !Ref DBName
 
-  ClusterEndpoint:
+  DBClusterEndpoint:
     Description: 'Aurora Cluster/Writer Endpoint'
     Value: !GetAtt 'AuroraDBCluster.Endpoint.Address'
 
-  ReaderEndpoint:
+  DBReaderEndpoint:
     Description: 'Aurora Reader Endpoint'
     Value: !GetAtt 'AuroraDBCluster.ReadEndpoint.Address'
 
