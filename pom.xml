@@ -141,7 +141,6 @@
             <artifactId>spring-cloud-stream-binder-sqs</artifactId>
             <version>1.9.0</version>
         </dependency>
-
 <!--        <dependency>-->
 <!--            <groupId>it.pagopa.pn</groupId>-->
 <!--            <artifactId>pn-model</artifactId>-->
