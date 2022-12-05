@@ -6,19 +6,22 @@ import it.pagopa.pn.paperchannel.msclient.generated.pnnationalregistries.v1.dto.
 import it.pagopa.pn.paperchannel.pojo.Address;
 import it.pagopa.pn.paperchannel.rest.v1.dto.AnalogAddress;
 
-class AddressMapper {
+public class AddressMapper {
 
     private static final BaseMapper<Address, AnalogAddress> mapper = new BaseMapperImpl(Address.class, AnalogAddress.class);
 
+    private AddressMapper(){
+        throw new IllegalCallerException("the constructor must not called");
+    }
 
-    private static Address fromAnalogToAddress(AnalogAddress analogAddress){
+    public static Address fromAnalogToAddress(AnalogAddress analogAddress){
         return mapper.toEntity(analogAddress);
     }
 
 
     public static Address fromNationalRegistry(GetAddressANPROKDto data){
         Address address = new Address();
-        if(!data.getResidentialAddresses().isEmpty() && data.getResidentialAddresses()!=null){
+        if(data.getResidentialAddresses() != null && !data.getResidentialAddresses().isEmpty()){
             address.setAddress(data.getResidentialAddresses().get(0).getAddress());
         }
         return address;

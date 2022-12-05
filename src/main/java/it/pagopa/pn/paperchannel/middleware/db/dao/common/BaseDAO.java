@@ -9,6 +9,7 @@ import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.GetItemEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.PutItemEnhancedRequest;
+import software.amazon.awssdk.enhanced.dynamodb.model.UpdateItemEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.QueryRequest;
@@ -44,6 +45,12 @@ public abstract class BaseDAO<T> {
                 .item(entity)
                 .build();
         return dynamoTable.putItem(putRequest).thenApply(x -> entity);
+    }
+
+    protected CompletableFuture<T> update(T entity){
+        UpdateItemEnhancedRequest<T> updateRequest = UpdateItemEnhancedRequest
+                .builder(tClass).item(entity).build();
+        return dynamoTable.updateItem(updateRequest);
     }
 
     protected CompletableFuture<T> get(String partitionKey, String sortKey){

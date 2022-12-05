@@ -1,8 +1,8 @@
 package it.pagopa.pn.paperchannel.middleware.msclient.impl;
 
+import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.common.BaseClient;
-import it.pagopa.pn.paperchannel.middleware.msclient.common.PnMicroservicesConfig;
 import it.pagopa.pn.paperchannel.msclient.generated.pnnationalregistries.v1.ApiClient;
 import it.pagopa.pn.paperchannel.msclient.generated.pnnationalregistries.v1.api.AddressAnprApi;
 import it.pagopa.pn.paperchannel.msclient.generated.pnnationalregistries.v1.dto.GetAddressANPROKDto;
@@ -23,18 +23,18 @@ import java.util.concurrent.TimeoutException;
 @Component
 public class NationalRegistryClientImpl extends BaseClient implements NationalRegistryClient {
 
-    private final PnMicroservicesConfig pnMicroservicesConfig;
+    private final PnPaperChannelConfig pnPaperChannelConfig;
 
     private AddressAnprApi addressAnprApi;
 
-    public NationalRegistryClientImpl(PnMicroservicesConfig pnMicroservicesConfig) {
-        this.pnMicroservicesConfig = pnMicroservicesConfig;
+    public NationalRegistryClientImpl(PnPaperChannelConfig pnPaperChannelConfig) {
+        this.pnPaperChannelConfig = pnPaperChannelConfig;
     }
 
     @PostConstruct
     public void init(){
         ApiClient newApiClient = new ApiClient(super.initWebClient(ApiClient.buildWebClientBuilder()));
-        newApiClient.setBasePath(this.pnMicroservicesConfig.getUrls().getSafeStorage());
+        newApiClient.setBasePath(this.pnPaperChannelConfig.getClientNationalRegistriesBasepath());
         this.addressAnprApi = new AddressAnprApi(newApiClient);
     }
 

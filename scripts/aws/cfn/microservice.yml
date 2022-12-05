@@ -89,9 +89,9 @@ Resources:
         ContainerImageURI: !Sub '${ContainerImageUri}'
         ContainerEnvEntry1: !Sub 'AWS_REGIONCODE=${AWS::Region}'
         ContainerEnvEntry2: !Sub 'CORS_ALLOWED_DOMAINS=${CorsAllowedDomains}'
-        ContainerEnvEntry3: !Sub 'MICROSERVICE_URLS_SAFESTORAGE=http://${ApplicationLoadBalancerDomain}:8080'
-        ContainerEnvEntry4: !Sub 'MICROSERVICE_URLS_NATIONALREGISTRIES=http://${ApplicationLoadBalancerDomain}:8080'
-        ContainerEnvEntry5: !Sub 'MICROSERVICE_EXTRAS_SAFESTORAGECXID=pn-radd'
+        ContainerEnvEntry3: !Sub 'PN_PAPERCHANNEL_CLIENTSAFESTORAGEBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
+        ContainerEnvEntry4: !Sub 'PN_PAPERCHANNEL_CLIENTNATIONALREGISTRIESBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
+        ContainerEnvEntry5: !Sub 'PN_PAPERCHANNEL_SAFESTORAGECXID=pn-radd'
         MappedPaths: '/paper-channel/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds

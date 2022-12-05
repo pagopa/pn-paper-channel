@@ -45,6 +45,7 @@ public class RequestDeliveryDAOImpl extends BaseDAO<RequestDeliveryEntity> imple
                 .before(PnAuditLogEventType.AUD_DL_CREATE, logMessage)
                 .build();
         logEvent.log();
+
         return Mono.fromFuture(
                 countOccurrencesEntity(requestDeliveryEntity.getRequestId())
                         .thenCompose( total -> {
@@ -64,6 +65,11 @@ public class RequestDeliveryDAOImpl extends BaseDAO<RequestDeliveryEntity> imple
                     logEvent.generateSuccess(String.format("created request delivery = %s", entityCreated)).log();
                     return entityCreated;
                 });
+    }
+
+    @Override
+    public Mono<RequestDeliveryEntity> updateData(RequestDeliveryEntity requestDeliveryEntity) {
+        return Mono.fromFuture(this.update(requestDeliveryEntity).thenApply(item -> item));
     }
 
     @Override

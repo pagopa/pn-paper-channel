@@ -1,8 +1,9 @@
 package it.pagopa.pn.paperchannel.middleware.msclient.impl;
 
+import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
+import it.pagopa.pn.paperchannel.exception.PnRetryStorageException;
 import it.pagopa.pn.paperchannel.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.common.BaseClient;
-import it.pagopa.pn.paperchannel.middleware.msclient.common.PnMicroservicesConfig;
 import it.pagopa.pn.paperchannel.msclient.generated.pnsafestorage.v1.ApiClient;
 import it.pagopa.pn.paperchannel.msclient.generated.pnsafestorage.v1.api.FileDownloadApi;
 import it.pagopa.pn.paperchannel.msclient.generated.pnsafestorage.v1.dto.FileDownloadResponseDto;
@@ -21,17 +22,17 @@ import java.util.concurrent.TimeoutException;
 @Slf4j
 @Component
 public class SafeStorageClientImpl extends BaseClient implements SafeStorageClient {
-    private final PnMicroservicesConfig pnMicroservicesConfig;
+    private final PnPaperChannelConfig pnPaperChannelConfig;
     private FileDownloadApi fileDownloadApi;
 
-    public SafeStorageClientImpl(PnMicroservicesConfig pnMicroservicesConfig) {
-        this.pnMicroservicesConfig = pnMicroservicesConfig;
+    public SafeStorageClientImpl(PnPaperChannelConfig pnPaperChannelConfig) {
+        this.pnPaperChannelConfig = pnPaperChannelConfig;
     }
 
     @PostConstruct
     public void init(){
         ApiClient newApiClient = new ApiClient(super.initWebClient(ApiClient.buildWebClientBuilder()));
-        newApiClient.setBasePath(this.pnMicroservicesConfig.getUrls().getSafeStorage());
+        newApiClient.setBasePath(this.pnPaperChannelConfig.getClientSafeStorageBasepath());
         this.fileDownloadApi = new FileDownloadApi(newApiClient);
     }
 
@@ -39,20 +40,26 @@ public class SafeStorageClientImpl extends BaseClient implements SafeStorageClie
     @Override
     public Mono<FileDownloadResponseDto> getFile(String fileKey) {
         log.debug("Getting file with {} key", fileKey);
-        return fileDownloadApi.getFile(fileKey, this.pnMicroservicesConfig.getExtras().getSafeStorageCxId(), true)
+        return fileDownloadApi.getFile(fileKey, this.pnPaperChannelConfig.getSafeStorageCxId(), true)
                 .retryWhen(
                         Retry.backoff(2, Duration.ofMillis(500))
                                 .filter(throwable -> throwable instanceof TimeoutException || throwable instanceof ConnectException)
                 )
+                .map(response -> {
+                    if(response.getDownload() != null && response.getDownload().getRetryAfter() != null) {
+                        throw new PnRetryStorageException(response.getDownload().getRetryAfter());
+                    }
+                    return response;
+                })
                 .onErrorResume(WebClientResponseException.class, ex -> {
                     log.error(ex.getResponseBodyAsString());
                     return Mono.error(ex);
-                    /*
-                    if (ex.getStatusCode() == HttpStatus.NOT_FOUND){
-                        return Mono.error(new RaddGenericException(RETRY_AFTER, new BigDecimal(670)));
-                    }
-                    return Mono.error(new PnSafeStorageException(ex));
-                    */
+                /*
+                if (ex.getStatusCode() == HttpStatus.NOT_FOUND){
+                    return Mono.error(new RaddGenericException(RETRY_AFTER, new BigDecimal(670)));
+                }
+                return Mono.error(new PnSafeStorageException(ex));
+                */
                 });
     }
 }
