@@ -95,6 +95,18 @@ Parameters:
     Type: String
     Description: 'AWS Secret Name'
 
+  RequestDeliveryDynamoTableName:
+    Type: String
+    Description: 'Name of dynamodb table containing request'
+
+  RequestDeliveryDynamoTableArn:
+    Type: String
+    Description: 'ARN of dynamodb table containing request'
+
+  AuroraMasterSecretArn:
+    Type: String
+    Description: 'ARN of aurora secret'
+
 Resources:
   # PN-Paper-Channel microservice
   PaperChannelMicroservice:
@@ -116,6 +128,7 @@ Resources:
         ContainerEnvEntry7: !Sub 'SPRING_DATASOURCE_USERNAME=${DBSecretName}'
         ContainerEnvEntry8: !Sub 'PN_PAPER_CHANNEL_CLUSTER_PORT=${DBPort}'
         ContainerEnvEntry9: !Sub 'PN_PAPER_CHANNEL_CLUSTER_NAME=${DBName}'
+        ContainerEnvEntry10: !Sub 'AWS_DYNAMODBREQUESTDELIVERYTABLE=${RequestDeliveryDynamoTableName}'
         MappedPaths: '/paper-channel/*,/paper-channel-private/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds
@@ -124,6 +137,35 @@ Resources:
         LoadBalancerListenerArn: !Ref ApplicationLoadBalancerListenerArn
         LoadbalancerRulePriority: !Ref MicroserviceNumber
         CloudwatchLogKinesisStreamArn: !Ref LogsKinesisSourceStreamArn
+
+  PaperChannelMicroserviceTaskPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Sub '${ProjectName}-paper-channel-CustomTaskPolicy'
+      Roles:
+        - !GetAtt PaperChannelMicroservice.Outputs.TaskRoleName
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - dynamodb:BatchGetItem
+              - dynamodb:BatchWriteItem
+              - dynamodb:ExecuteTransaction
+              - dynamodb:GetItem
+              - dynamodb:PutItem
+              - dynamodb:DeleteItem
+              - dynamodb:Query
+              - dynamodb:TransactGetItems
+              - dynamodb:TransactWriteItems
+              - dynamodb:UpdateItem
+              - secretsmanager:GetResourcePolicy
+              - secretsmanager:GetSecretValue
+              - secretsmanager:DescribeSecret
+              - secretsmanager:ListSecretVersionIds
+            Resource:
+              - !Sub "${RequestDeliveryDynamoTableArn}"
+              - !Sub "${AuroraMasterSecretArn}"
             
   # Dashboard
   PaperChannelMicroserviceCloudWatchDashboard:

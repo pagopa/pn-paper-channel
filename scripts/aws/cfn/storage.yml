@@ -113,6 +113,36 @@ Resources:
       PubliclyAccessible: false
       DBInstanceClass: !Ref DBInstanceClass
 
+  RequestDeliveryDynamoTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${ProjectName}-request-delivery'
+      AttributeDefinitions:
+        - AttributeName: "requestId"
+          AttributeType: "S"
+        - AttributeName: "fiscalCode"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "requestId"
+          KeyType: "HASH"
+      ProvisionedThroughput:
+        ReadCapacityUnits: "5"
+        WriteCapacityUnits: "5"
+      GlobalSecondaryIndexes:
+        - IndexName: "fiscal-code-index"
+          KeySchema:
+            - AttributeName: "fiscalCode"
+              KeyType: "HASH"
+          Projection:
+            ProjectionType: "ALL"
+          ProvisionedThroughput:
+            ReadCapacityUnits: "5"
+            WriteCapacityUnits: "5"
+      KinesisStreamSpecification:
+        StreamArn: !Ref CdcKinesisSourceStreamArn
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+
 Outputs:
 
   DBName:
@@ -134,3 +164,15 @@ Outputs:
   DBSecretName:
     Description: 'Database Secret Name'
     Value: !Ref DBSecretName
+
+  RequestDeliveryDynamoTableName:
+    Description: Name of dynamodb table containing request
+    Value: !Ref RequestDeliveryDynamoTable
+
+  RequestDeliveryDynamoTableArn:
+    Description: ARN of dynamodb table containing request
+    Value: !Sub '${RequestDeliveryDynamoTable.Arn}'
+
+  AuroraMasterSecretArn:
+    Description: ARN of secret
+    Value: !Sub '${AuroraMasterSecret.Arn}'
