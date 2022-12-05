@@ -58,9 +58,9 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
                         return requestDeliveryDAO.create(RequestDeliveryMapper.toEntity(prepareRequest))
                                 .map(entity -> {
                                     // Case of 204
-                                    prepareAsync(prepareRequest).publishOn(Schedulers.newParallel("prepare-async"))
+                                    //prepareAsync(prepareRequest).publishOn(Schedulers.newParallel("prepare-async"))
 
-                                            .subscribe(new SubscriberCustom(null));
+                                            //.subscribe(new SubscriberCustom(null));
                                     log.info("Entity creata");
                                     throw new PnPaperEventException(PreparePaperResponseMapper.fromEvent(requestId));
                                 });
