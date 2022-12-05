@@ -107,7 +107,7 @@ paths:
           $ref: '#/components/responses/InternalError'
 
 
-  /paper-channel/delivery-driver/{idDeliveryDriver}/prices:
+  /paper-channel/delivery-driver/{deliveryDriverId}/prices:
     get:
       tags:
         - DeliveryDriver
@@ -115,7 +115,7 @@ paths:
       summary: Listino prezzi.
       description: API che consente il recupero dei prezzi di un vincitore
       parameters:
-        - $ref: '#/components/parameters/pathIdDeliveryDriver'
+        - $ref: '#/components/parameters/pathDeliveryDriverId'
         - $ref: '#/components/parameters/queryType'
       responses:
         '200':
@@ -171,7 +171,7 @@ paths:
           $ref: '#/components/responses/InternalError'
 
 
-  /paper-channel/contract/{idDeliveryDriver}/update/{idContract}:
+  /paper-channel/contract/{deliveryDriverId}/update/{contractId}:
     post:
       tags:
         - DeliveryDriver
@@ -179,8 +179,8 @@ paths:
       summary: Aggiorna recapitista.
       description: API che consente di aggiornare un nuovo contratto
       parameters:
-        - $ref: '#/components/parameters/pathIdDeliveryDriver'
-        - $ref: '#/components/parameters/pathIdContract'
+        - $ref: '#/components/parameters/pathDeliveryDriverId'
+        - $ref: '#/components/parameters/pathContractId'
       requestBody:
         content:
           application/json:
@@ -553,8 +553,8 @@ components:
       description: Unauthorized
 
   parameters:
-    pathIdDeliveryDriver:
-      name: idDeliveryDriver
+    pathDeliveryDriverId:
+      name: deliveryDriverId
       in: path
       required: true
       schema:
@@ -562,8 +562,8 @@ components:
         format: int64
         maximum: 1
         minimum: 1
-    pathIdContract:
-      name: idContract
+    pathContractId:
+      name: contractId
       in: path
       required: true
       schema:
