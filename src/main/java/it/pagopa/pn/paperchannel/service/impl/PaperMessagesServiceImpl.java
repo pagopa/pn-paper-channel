@@ -17,7 +17,6 @@ import it.pagopa.pn.paperchannel.pojo.AttachmentInfo;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareRequest;
 import it.pagopa.pn.paperchannel.rest.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.service.PaperMessagesService;
-import it.pagopa.pn.paperchannel.service.SubscriberCustom;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -26,7 +25,6 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.ParallelFlux;
-import reactor.core.scheduler.Schedulers;
 import reactor.util.retry.Retry;
 
 import java.io.IOException;
@@ -58,9 +56,6 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
                         return requestDeliveryDAO.create(RequestDeliveryMapper.toEntity(prepareRequest))
                                 .map(entity -> {
                                     // Case of 204
-                                    //prepareAsync(prepareRequest).publishOn(Schedulers.newParallel("prepare-async"))
-
-                                            //.subscribe(new SubscriberCustom(null));
                                     log.info("Entity creata");
                                     throw new PnPaperEventException(PreparePaperResponseMapper.fromEvent(requestId));
                                 });
