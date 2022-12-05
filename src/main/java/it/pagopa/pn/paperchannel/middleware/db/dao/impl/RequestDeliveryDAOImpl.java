@@ -75,7 +75,7 @@ public class RequestDeliveryDAOImpl extends BaseDAO<RequestDeliveryEntity> imple
         logEvent.log();
         return Mono.fromFuture(this.get(requestId, null).thenApply(item -> {
                     logEvent.generateSuccess(String.format("request delivery = %s", item)).log();
-                    if (item == null) throw new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage());
+                    if (item == null) throw new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(),HttpStatus.NOT_FOUND);
                     return item;
                 }));
     }

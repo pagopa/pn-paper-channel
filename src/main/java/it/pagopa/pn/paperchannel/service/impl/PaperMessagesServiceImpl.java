@@ -4,7 +4,9 @@ import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.exception.PnPaperEventException;
 import it.pagopa.pn.paperchannel.mapper.PreparePaperResponseMapper;
 import it.pagopa.pn.paperchannel.mapper.RequestDeliveryMapper;
+import it.pagopa.pn.paperchannel.mapper.RetrivePrepareResponseMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
+import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareEvent;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareRequest;
 import it.pagopa.pn.paperchannel.rest.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.service.PaperMessagesService;
@@ -18,6 +20,7 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQ
 @Slf4j
 @Service
 public class PaperMessagesServiceImpl implements PaperMessagesService {
+
     @Autowired
     private RequestDeliveryDAO requestDeliveryDAO;
 
@@ -38,7 +41,11 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
 
     }
 
-
+    @Override
+    public Mono<PrepareEvent> retrivePaperPrepareRequest(String requestId) {
+        return requestDeliveryDAO.getByRequestId(requestId)
+                .map(RetrivePrepareResponseMapper::fromResult);
+    }
 
 
     private Mono<String> getAddress(PrepareRequest prepareRequest){
@@ -58,7 +65,4 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
         //          settare lo status dell'entità su dynamo con IRREPERIBILE TOTALE fine....
         //      )
     }
-
-
-
 }

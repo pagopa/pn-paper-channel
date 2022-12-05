@@ -18,4 +18,11 @@ public class PnGenericException extends RuntimeException{
         this.message = message;
         this.httpStatus = HttpStatus.BAD_REQUEST;
     }
+
+    public PnGenericException(ExceptionTypeEnum exceptionType, String message,HttpStatus status){
+        super(message);
+        this.exceptionType = exceptionType;
+        this.message = message;
+        this.httpStatus = status;
+    }
 }
