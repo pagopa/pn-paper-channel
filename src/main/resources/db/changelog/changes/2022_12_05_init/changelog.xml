@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.8.xsd">
+    <changeSet author="ARIANNA" id="2022_12_05_create_table">
+        <sqlFile path="2022_12_05_init/create_table.sql" endDelimiter=";" relativeToChangelogFile="true" stripComments="false"
+                 splitStatements="true"/>
+<!--        <rollback>-->
+<!--            <sqlFile path="init-rollback.sql" endDelimiter=";" relativeToChangelogFile="true" stripComments="false"-->
+<!--                     splitStatements="true"/>-->
+<!--        </rollback>-->
+    </changeSet>
+</databaseChangeLog>
