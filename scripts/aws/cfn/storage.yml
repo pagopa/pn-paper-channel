@@ -175,4 +175,4 @@ Outputs:
 
   AuroraMasterSecretArn:
     Description: ARN of secret
-    Value: !Ref '${AuroraMasterSecret}'
+    Value: !Ref AuroraMasterSecret
