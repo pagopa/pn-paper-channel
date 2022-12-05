@@ -22,16 +22,16 @@ public class SqsQueueSender implements SqsSender {
 
     @Override
     public void pushEvent(EventTypeEnum eventType){
-        GenericEventHeader deliveryHeader= GenericEventHeader.builder()
-                .publisher("paper-channel-update")
-                .eventId(UUID.randomUUID().toString())
-                .createdAt(Instant.now())
-                .eventType(eventType.name())
-                .build();
-
-        DeliveryPayload deliveryPayload= new DeliveryPayload("delivery Event body");
-
-        DeliveryEvent deliveryEvent=new DeliveryEvent(deliveryHeader,deliveryPayload);
+//        GenericEventHeader deliveryHeader= GenericEventHeader.builder()
+//                .publisher("paper-channel-update")
+//                .eventId(UUID.randomUUID().toString())
+//                .createdAt(Instant.now())
+//                .eventType(eventType.name())
+//                .build();
+//
+//        DeliveryPayload deliveryPayload= new DeliveryPayload("delivery Event body");
+//
+//        DeliveryEvent deliveryEvent=new DeliveryEvent(deliveryHeader,deliveryPayload);
 
        // this.deliveryMomProducer.push(deliveryEvent);
     }
