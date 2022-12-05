@@ -17,8 +17,8 @@ import java.util.UUID;
 @Slf4j
 public class SqsQueueSender implements SqsSender {
 
-    @Autowired
-    private DeliveryMomProducer deliveryMomProducer;
+//    @Autowired
+//    private DeliveryMomProducer deliveryMomProducer;
 
     @Override
     public void pushEvent(EventTypeEnum eventType){
@@ -33,6 +33,6 @@ public class SqsQueueSender implements SqsSender {
 
         DeliveryEvent deliveryEvent=new DeliveryEvent(deliveryHeader,deliveryPayload);
 
-        this.deliveryMomProducer.push(deliveryEvent);
+       // this.deliveryMomProducer.push(deliveryEvent);
     }
 }
