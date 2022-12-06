@@ -23,7 +23,6 @@ public class PaperMessagesRestV1Controller implements PaperMessagesApi {
                 .map(ResponseEntity::ok);
     }
 
-
     @Override
     public Mono<ResponseEntity<PrepareEvent>> retrievePaperPrepareRequest(String requestId, ServerWebExchange exchange) {
         return paperMessagesService.retrivePaperPrepareRequest(requestId).map(ResponseEntity::ok);

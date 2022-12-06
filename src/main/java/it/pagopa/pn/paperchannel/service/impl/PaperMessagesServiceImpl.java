@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
+import it.pagopa.pn.paperchannel.config.HttpConnector;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.exception.PnPaperEventException;
 import it.pagopa.pn.paperchannel.exception.PnRetryStorageException;
@@ -77,6 +78,8 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
         return requestDeliveryDAO.getByRequestId(requestId)
                 .map(RetrivePrepareResponseMapper::fromResult);
     }
+
+
     //TODO aggiungere metodo per confrontare PrepareRequest con RequestDeliveryEntity, In caso,
     // requestId uguali ma dati, come inidirizzo, differenti allora 409
 
