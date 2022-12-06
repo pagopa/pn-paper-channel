@@ -39,7 +39,7 @@ paths:
           description: Ok
         '500':
           description: Internal Server Error
-  /paper-channel/v1/paper-deliveries-send/{requestId}:
+  /paper-channel-private/v1/b2b/paper-deliveries-send/{requestId}:
     get:
       tags:
       - PaperMessages
@@ -149,7 +149,7 @@ paths:
                   description: Update correctly received
                 "400":
                   description: Malformed update status
-  /paper-channel/v1/paper-deliveries-prepare/{requestId}:
+  /paper-channel-private/v1/b2b/paper-deliveries-prepare/{requestId}:
     get:
       tags:
       - PaperMessages
@@ -262,7 +262,7 @@ paths:
                   description: Malformed update status
 
 components:
-  
+
     #############################################################################################
     ###             PARAMETRI E RISPOSTE IN COMUNE PER TUTTI I TIPI DI MESSAGGIO              ###
     #############################################################################################
@@ -276,9 +276,9 @@ components:
         type: string
         minLength: 5
         maxLength: 100
-  
+
   responses:
-    
+
     SendResponse:
       description: Risposta positiva di invio cartaceo
       content:
@@ -336,7 +336,7 @@ components:
         application/json:
           schema:
             $ref: 'remote-refs.yaml#/components/schemas/Problem'
-  
+
   schemas:
 
     ######################################################
@@ -352,7 +352,7 @@ components:
           $ref: '#/components/schemas/PrepareEvent'
         sendEvent:
           $ref: '#/components/schemas/SendEvent'
-    
+
 
     ### - RIFERIMENTI AD ALTRI FILE
     ######################################################
@@ -375,4 +375,4 @@ components:
 
 #security:                 # ONLY EXTERNAL
 #  - ApiKeyAuth: [] # use the same name as under securitySchemes    # ONLY EXTERNAL
-              
+
