@@ -5,7 +5,7 @@
     <parent>
         <groupId>it.pagopa.pn</groupId>
         <artifactId>pn-parent</artifactId>
-        <version>1.0.0</version>
+        <version>1.0.1-SNAPSHOT</version>
         <relativePath />
     </parent>
     <artifactId>pn-paper-channel</artifactId>
@@ -61,10 +61,10 @@
             <groupId>net.logstash.logback</groupId>
             <artifactId>logstash-logback-encoder</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-messaging</artifactId>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.springframework</groupId>-->
+<!--            <artifactId>spring-messaging</artifactId>-->
+<!--        </dependency>-->
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -127,18 +127,18 @@
             <version>6.0.20.Final</version>
         </dependency>
 
-        <dependency>
-            <groupId>io.awspring.cloud</groupId>
-            <artifactId>spring-cloud-aws-messaging</artifactId>
-            <version>2.4.2</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>io.awspring.cloud</groupId>-->
+<!--            <artifactId>spring-cloud-aws-messaging</artifactId>-->
+<!--            <version>2.4.2</version>-->
+<!--        </dependency>-->
 
 
-        <dependency>
-            <groupId>io.awspring.cloud</groupId>
-            <artifactId>spring-cloud-aws-context</artifactId>
-            <version>2.4.2</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>io.awspring.cloud</groupId>-->
+<!--            <artifactId>spring-cloud-aws-context</artifactId>-->
+<!--            <version>2.4.2</version>-->
+<!--        </dependency>-->
 
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
@@ -155,11 +155,11 @@
             <artifactId>postgresql</artifactId>
             <version>42.5.0</version>
         </dependency>
-        <dependency>
-            <groupId>de.idealo.spring</groupId>
-            <artifactId>spring-cloud-stream-binder-sqs</artifactId>
-            <version>1.9.0</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>de.idealo.spring</groupId>-->
+<!--            <artifactId>spring-cloud-stream-binder-sqs</artifactId>-->
+<!--            <version>1.9.0</version>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>it.pagopa.pn</groupId>
             <artifactId>pn-model</artifactId>
