@@ -1,6 +1,5 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
-import it.pagopa.pn.paperchannel.config.HttpConnector;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.exception.PnPaperEventException;
 import it.pagopa.pn.paperchannel.exception.PnRetryStorageException;
@@ -9,7 +8,9 @@ import it.pagopa.pn.paperchannel.mapper.AttachmentMapper;
 
 import it.pagopa.pn.paperchannel.mapper.PreparePaperResponseMapper;
 import it.pagopa.pn.paperchannel.mapper.RequestDeliveryMapper;
+import it.pagopa.pn.paperchannel.mapper.RetrivePrepareResponseMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
+import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareEvent;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.paperchannel.pojo.Address;
@@ -38,8 +39,7 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 @Slf4j
 @Service
 public class PaperMessagesServiceImpl implements PaperMessagesService {
-    //@Value("${}")
-    //private String attemps;
+
     @Autowired
     private RequestDeliveryDAO requestDeliveryDAO;
     @Autowired
@@ -72,6 +72,11 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
 
     }
 
+    @Override
+    public Mono<PrepareEvent> retrivePaperPrepareRequest(String requestId) {
+        return requestDeliveryDAO.getByRequestId(requestId)
+                .map(RetrivePrepareResponseMapper::fromResult);
+    }
     //TODO aggiungere metodo per confrontare PrepareRequest con RequestDeliveryEntity, In caso,
     // requestId uguali ma dati, come inidirizzo, differenti allora 409
 
@@ -138,7 +143,4 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
                     }
                 });
     }
-
-
-
 }
