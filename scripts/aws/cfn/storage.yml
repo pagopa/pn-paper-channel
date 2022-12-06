@@ -24,94 +24,43 @@ Parameters:
     Type: String
     Description: 'Where to send CDC'
 
-  DBName:
-    Description: 'Database Name'
-    Default: 'pn-paper-channel-db'
-    Type: String
-    MinLength: '1'
-    MaxLength: '64'
-    AllowedPattern: "^[a-zA-Z]+[0-9a-zA-Z_]*$"
-    ConstraintDescription: 'Must start with a letter. Only numbers, letters, and _ accepted. max length 64 characters'
-
-  DBPort:
-    Description: 'TCP/IP Port for the Database Instance'
-    Type: Number
-    Default: 5432
-    ConstraintDescription: 'Must be in the range [1150-65535]'
-    MinValue: 1150
-    MaxValue: 65535
-
-  DBUsername:
-    Description: 'Database master username'
-    Default: 'pn-paper-channel-user'
-    Type: String
-
 Resources:
-    AuroraMasterSecret:
-      Type: AWS::SecretsManager::Secret
-      Properties:
-        Name: !Join [ '/', [ 'pn-paper-channel-secret-db', !Ref 'AWS::StackName' ] ]
-        Description: !Join [ '', [ 'Aurora PostgreSQL Master User Secret ', 'for CloudFormation Stack ', !Ref 'AWS::StackName' ] ]
-        GenerateSecretString:
-          SecretStringTemplate: !Join [ '', [ '{"username": "', !Ref DBUsername, '"}' ] ]
-          GenerateStringKey: "password"
-          ExcludeCharacters: '"@/\'
-          PasswordLength: 16
-
-    RDSDBClusterParameterGroup:
-      Type: AWS::RDS::DBClusterParameterGroup
-      Properties:
-        Description: !Join [ "- ", [ "Aurora PG Cluster Parameter Group for  Pn-Paper-Channel ", !Ref DBName ] ]
-        Family: 'aurora-postgresql14'
-        Parameters:
-          rds.force_ssl: 1
-
-    RDSDBParameterGroup:
-      Type: AWS::RDS::DBParameterGroup
-      Properties:
-        Description: 'CloudFormation PG Parameter Group'
-          Family: 'aurora-postgresql14'
-
-    AuroraDBCluster:
-      Type: AWS::RDS::DBCluster
-        DeletionPolicy: Snapshot
-        UpdateReplacePolicy: Snapshot
-        Properties:
-          Engine: aurora-postgresql
-          EngineVersion: '14.5'
-          DatabaseName: !Ref DBName
-          Port: !Ref DBPort
-          MasterUsername: !Join [ '', [ '{{resolve:secretsmanager:', !Ref AuroraMasterSecret, ':SecretString:username}}' ] ]
-          MasterUserPassword: !Join [ '', [ '{{resolve:secretsmanager:', !Ref AuroraMasterSecret, ':SecretString:password}}' ] ]
-          DBClusterParameterGroupName: !Ref RDSDBClusterParameterGroup
-        AuroraDBFirstInstance:
-          Type: AWS::RDS::DBInstance
-          Properties:
-            CopyTagsToSnapshot: true
-            DBInstanceClass:
-              Ref: DBInstanceClass
-            DBClusterIdentifier: !Ref AuroraDBCluster
-            Engine: aurora-postgresql
-            EngineVersion: '14.5'
-            DBParameterGroupName:
-              Ref: RDSDBParameterGroup
-            PubliclyAccessible: false
-        AuroraDBSecondInstance:
-          Type: AWS::RDS::DBInstance
-          DependsOn:
-            - AuroraDBFirstInstance
-          Properties:
-            CopyTagsToSnapshot: true
-            DBInstanceClass:
-              Ref: DBInstanceClass
-            DBClusterIdentifier: !Ref AuroraDBCluster
-            Engine: aurora-postgresql
-            EngineVersion: '14.5'
-            DBParameterGroupName:
-              Ref: RDSDBParameterGroup
-            PubliclyAccessible: false
+  RequestDeliveryDynamoTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${ProjectName}-request-delivery'
+      AttributeDefinitions:
+        - AttributeName: "requestId"
+          AttributeType: "S"
+        - AttributeName: "fiscalCode"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "requestId"
+          KeyType: "HASH"
+      ProvisionedThroughput:
+        ReadCapacityUnits: "5"
+        WriteCapacityUnits: "5"
+      GlobalSecondaryIndexes:
+        - IndexName: "fiscal-code-index"
+          KeySchema:
+            - AttributeName: "fiscalCode"
+              KeyType: "HASH"
+          Projection:
+            ProjectionType: "ALL"
+          ProvisionedThroughput:
+            ReadCapacityUnits: "5"
+            WriteCapacityUnits: "5"
+      KinesisStreamSpecification:
+        StreamArn: !Ref CdcKinesisSourceStreamArn
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
 
 Outputs:
-  AuroraMasterSecretName:
-    Description: Aurora Master Secret Name
-    Value: !Ref AuroraMasterSecret
+
+  RequestDeliveryDynamoTableName:
+    Description: Name of dynamodb table containing request
+    Value: !Ref RequestDeliveryDynamoTable
+
+  RequestDeliveryDynamoTableArn:
+    Description: ARN of dynamodb table containing request
+    Value: !Sub '${RequestDeliveryDynamoTable.Arn}'

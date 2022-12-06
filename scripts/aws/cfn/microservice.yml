@@ -75,6 +75,14 @@ Parameters:
     Type: String
     Description: 'keep track of used projects commitIds'
 
+  RequestDeliveryDynamoTableName:
+    Type: String
+    Description: 'Name of dynamodb table containing request'
+
+  RequestDeliveryDynamoTableArn:
+    Type: String
+    Description: 'ARN of dynamodb table containing request'
+
 Resources:
   # PN-Paper-Channel microservice
   PaperChannelMicroservice:
@@ -92,7 +100,8 @@ Resources:
         ContainerEnvEntry3: !Sub 'PN_PAPERCHANNEL_CLIENTSAFESTORAGEBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
         ContainerEnvEntry4: !Sub 'PN_PAPERCHANNEL_CLIENTNATIONALREGISTRIESBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
         ContainerEnvEntry5: !Sub 'PN_PAPERCHANNEL_SAFESTORAGECXID=pn-radd'
-        MappedPaths: '/paper-channel/*'
+        ContainerEnvEntry6: !Sub 'AWS_DYNAMODBREQUESTDELIVERYTABLE=${RequestDeliveryDynamoTableName}'
+        MappedPaths: '/paper-channel/*,/paper-channel-private/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds
         VpcId: !Ref VpcId
@@ -101,6 +110,30 @@ Resources:
         LoadbalancerRulePriority: !Ref MicroserviceNumber
         CloudwatchLogKinesisStreamArn: !Ref LogsKinesisSourceStreamArn
             
+  PaperChannelMicroserviceTaskPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Sub '${ProjectName}-paper-channel-CustomTaskPolicy'
+      Roles:
+        - !GetAtt PaperChannelMicroservice.Outputs.TaskRoleName
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - dynamodb:BatchGetItem
+              - dynamodb:BatchWriteItem
+              - dynamodb:ExecuteTransaction
+              - dynamodb:GetItem
+              - dynamodb:PutItem
+              - dynamodb:DeleteItem
+              - dynamodb:Query
+              - dynamodb:TransactGetItems
+              - dynamodb:TransactWriteItems
+              - dynamodb:UpdateItem
+            Resource:
+              - !Sub "${RequestDeliveryDynamoTableArn}"
+
   # Dashboard
   PaperChannelMicroserviceCloudWatchDashboard:
     Type: AWS::CloudFormation::Stack
