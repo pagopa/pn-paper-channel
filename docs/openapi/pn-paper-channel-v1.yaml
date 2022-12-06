@@ -286,13 +286,11 @@ components:
         price:
           type: number
           format: int64
-          example: 10
           maximum: 1
           minimum: 1
         priceAdditional:
           type: number
           format: int64
-          example: 10
           maximum: 1
           minimum: 1
       additionalProperties: false
@@ -307,13 +305,11 @@ components:
         price:
           type: number
           format: int64
-          example: 10
           maximum: 1
           minimum: 1
         priceAdditional:
           type: number
           format: int64
-          example: 10
           maximum: 1
           minimum: 1
       additionalProperties: false
