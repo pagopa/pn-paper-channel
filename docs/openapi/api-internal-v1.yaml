@@ -39,7 +39,7 @@ paths:
           description: Ok
         '500':
           description: Internal Server Error
-  /paper-channel/v1/paper-deliveries-send/{requestId}:
+  /paper-channel-private/v1/b2b/paper-deliveries-send/{requestId}:
     get:
       tags:
       - PaperMessages
@@ -149,7 +149,7 @@ paths:
                   description: Update correctly received
                 "400":
                   description: Malformed update status
-  /paper-channel/v1/paper-deliveries-prepare/{requestId}:
+  /paper-channel-private/v1/b2b/paper-deliveries-prepare/{requestId}:
     get:
       tags:
       - PaperMessages
