@@ -1,6 +1,7 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.api.dto.events.GenericEventHeader;
+import it.pagopa.pn.paperchannel.pojo.Address;
 import it.pagopa.pn.paperchannel.queue.action.DeliveryMomProducer;
 import it.pagopa.pn.paperchannel.queue.model.DeliveryEvent;
 import it.pagopa.pn.paperchannel.queue.model.DeliveryPayload;
@@ -29,7 +30,7 @@ public class SqsQueueSender implements SqsSender {
                 .eventType(eventType.name())
                 .build();
 
-        DeliveryPayload deliveryPayload= new DeliveryPayload("delivery Event body");
+        DeliveryPayload deliveryPayload= new DeliveryPayload(new Address(), 0.0);
 
         DeliveryEvent deliveryEvent=new DeliveryEvent(deliveryHeader,deliveryPayload);
 
