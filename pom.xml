@@ -130,11 +130,14 @@
         <dependency>
             <groupId>io.awspring.cloud</groupId>
             <artifactId>spring-cloud-aws-messaging</artifactId>
+            <version>2.4.2</version>
         </dependency>
+
 
         <dependency>
             <groupId>io.awspring.cloud</groupId>
             <artifactId>spring-cloud-aws-context</artifactId>
+            <version>2.4.2</version>
         </dependency>
 
         <dependency>
