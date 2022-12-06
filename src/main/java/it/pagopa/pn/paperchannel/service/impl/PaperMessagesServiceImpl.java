@@ -85,7 +85,7 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
 
 
     private Mono<DeliveryPayload> prepareAsync(PrepareRequest request){
-
+        log.info("Start Prepare Async");
         return getAddress(request)
             .zipWhen(address -> {
                 return getContract()

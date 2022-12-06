@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
 import software.amazon.awssdk.services.sqs.SqsClient;
 
-@Configuration
+//@Configuration
 @Slf4j
 public class SQSConfig {
 
@@ -30,13 +30,15 @@ public class SQSConfig {
      * https://docs.awspring.io/spring-cloud-aws/docs/2.4.2/reference/html/index.html#fifo-queue-support
      * @return bean per le code
      */
-    @Bean
+    //@Bean
     public DeliveryMomProducer deliveryMomProducer(SqsClient sqsClient, ObjectMapper objectMapper){
-        return new DeliveryMomProducer(sqsClient,this.awsConfigs.getReadyDeliveryQueue(),objectMapper, DeliveryEvent.class);
+        //return new DeliveryMomProducer(sqsClient,this.awsConfigs.getReadyDeliveryQueue(),objectMapper, DeliveryEvent.class);
+        return null;
     }
 
-    @Bean
+    //@Bean
     public AmazonSQSAsync amazonSQS() {
+        /*
         log.info(awsConfigs.getRegionCode());
         if (StringUtils.hasText(awsConfigs.getEndpointUrl())){
 
@@ -49,5 +51,8 @@ public class SQSConfig {
                     .withRegion(awsConfigs.getRegionCode())
                     .build();
         }
+
+        */
+        return null;
     }
 }
