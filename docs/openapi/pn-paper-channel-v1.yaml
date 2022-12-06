@@ -37,7 +37,7 @@ paths:
         '200':
           description: JSON contenente lo stato.
 
-  /paper-channel/v1/deliveries-drivers:
+  /paper-channel/backoffice/v1/deliveries-drivers:
     get:
       tags:
         - DeliveryDriver
@@ -107,7 +107,7 @@ paths:
           $ref: '#/components/responses/InternalError'
 
 
-  /paper-channel/delivery-driver/{deliveryDriverId}/prices:
+  /paper-channel/backoffice/v1/delivery-driver/{deliveryDriverId}/prices:
     get:
       tags:
         - DeliveryDriver
@@ -137,12 +137,12 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /paper-channel/delivery-tender/contract:
+  /paper-channel/backoffice/v1/delivery-tender/contract:
     post:
       tags:
         - DeliveryDriver
       operationId: addContract
-      summary: Nuovo recapitista.
+      summary: Inserimento contratto.
       description: API che consente di aggiungere un nuovo contratto
       requestBody:
         content:
@@ -171,12 +171,12 @@ paths:
           $ref: '#/components/responses/InternalError'
 
 
-  /paper-channel/contract/{deliveryDriverId}/update/{contractId}:
-    post:
+  /paper-channel/backoffice/v1/contract/{deliveryDriverId}/{contractId}:
+    put:
       tags:
         - DeliveryDriver
       operationId: updateContract
-      summary: Aggiorna recapitista.
+      summary: Aggiornamento contratto.
       description: API che consente di aggiornare un nuovo contratto
       parameters:
         - $ref: '#/components/parameters/pathDeliveryDriverId'
@@ -185,7 +185,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ContractDto'
+              $ref: '#/components/schemas/ContractInsertRequestDto'
 
       responses:
         '200':
@@ -206,63 +206,6 @@ paths:
           $ref: '#/components/responses/NotAllowed'
         '500':
           $ref: '#/components/responses/InternalError'
-
-  #Da aggiungere in delivery push
-  /paper-channel/discovered-address/{recipientId}:
-    post:
-      tags:
-        - DeliveryDriver
-      operationId: setDiscoveredAddress
-      summary: Aggiorna indirizzo.
-      description: API che consente di inserire un nuovo indirizzo per la consegna della notifica
-      parameters:
-        - name: recipientId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: '/^([a-zA-Z ]*)$/'
-            maxLength: 1024
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                country:
-                  type: string
-                  example: 'Italia'
-                  format: '/^([a-zA-Z ]*)$/'
-                  maxLength: 1024
-                province:
-                  type: string
-                  example: 'Roma'
-                  format: '/^([a-zA-Z ]*)$/'
-                  maxLength: 1024
-                address:
-                  type: string
-                  example: 'Via del colosseo'
-                  format: '/^([a-zA-Z ]*)$/'
-                  maxLength: 1024
-                cap:
-                  type: string
-                  example: '00100'
-                  format: '/^([0-9]){3,5}$/'
-                  maxLength: 16
-                city:
-                  type: string
-                  example: 'Roma'
-                  format: '/^([a-zA-Z ]*)$/'
-                  maxLength: 1024
-                discoveredName:
-                  type: string
-                  example: 'Andrea Verdi'
-                  format: '/^([a-zA-Z ]*)$/'
-                  maxLength: 128
-              additionalProperties: false
-      responses:
-        '200':
-          description: OK
 
 components:
   schemas:
@@ -323,17 +266,11 @@ components:
           format: float
           maximum: 999999
           minimum: 1
-        pricePageAAR:
+        priceAdditional:
           type: number
           format: float
           maximum: 999999
           minimum: 1
-        startingDate:
-          type: string
-          format: date-time
-        endingDate:
-          type: string
-          format: date-time
       additionalProperties: false
 
     NationalContractDto:
@@ -346,6 +283,18 @@ components:
           pattern: '^[0-9]{5}$'
           maxLength: 5
           minLength: 5
+        price:
+          type: number
+          format: int64
+          example: 10
+          maximum: 1
+          minimum: 1
+        priceAdditional:
+          type: number
+          format: int64
+          example: 10
+          maximum: 1
+          minimum: 1
       additionalProperties: false
 
     InternationalContractDto:
@@ -355,6 +304,18 @@ components:
           $ref: '#/components/schemas/TypeRegisteredLetterInterEnum'
         zone:
           $ref: '#/components/schemas/InternationalZoneEnum'
+        price:
+          type: number
+          format: int64
+          example: 10
+          maximum: 1
+          minimum: 1
+        priceAdditional:
+          type: number
+          format: int64
+          example: 10
+          maximum: 1
+          minimum: 1
       additionalProperties: false
 
     TypeRegisteredLetterEnum:
@@ -438,6 +399,12 @@ components:
           example: 'A12C34D56789E0'
           format: '/[^A-Za-z0-9]+/'
           maxLength: 32
+        startingDate:
+          type: string
+          format: date-time
+        endingDate:
+          type: string
+          format: date-time
         fsu:
           type: boolean
       additionalProperties: false
