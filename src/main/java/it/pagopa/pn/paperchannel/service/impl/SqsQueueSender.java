@@ -1,17 +1,9 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
-import it.pagopa.pn.api.dto.events.GenericEventHeader;
-import it.pagopa.pn.paperchannel.queue.action.DeliveryMomProducer;
-import it.pagopa.pn.paperchannel.queue.model.DeliveryEvent;
-import it.pagopa.pn.paperchannel.queue.model.DeliveryPayload;
 import it.pagopa.pn.paperchannel.queue.model.EventTypeEnum;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.time.Instant;
-import java.util.UUID;
 
 @Service
 @Slf4j
@@ -33,6 +25,6 @@ public class SqsQueueSender implements SqsSender {
 //
 //        DeliveryEvent deliveryEvent=new DeliveryEvent(deliveryHeader,deliveryPayload);
 
-       // this.deliveryMomProducer.push(deliveryEvent);
+        // this.deliveryMomProducer.push(deliveryEvent);
     }
 }

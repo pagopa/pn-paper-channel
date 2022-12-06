@@ -75,26 +75,6 @@ Parameters:
     Type: String
     Description: 'keep track of used projects commitIds'
 
-  DBClusterEndpoint:
-    Type: String
-    Description: 'AWS Cluster Endpoint'
-
-  DBReaderEndpoint:
-    Type: String
-    Description: 'AWS Reader Endpoint'
-
-  DBPort:
-    Type: String
-    Description: 'AWS DB Port'
-
-  DBName:
-    Type: String
-    Description: 'AWS DB Name'
-
-  DBSecretName:
-    Type: String
-    Description: 'AWS Secret Name'
-
   RequestDeliveryDynamoTableName:
     Type: String
     Description: 'Name of dynamodb table containing request'
@@ -102,10 +82,6 @@ Parameters:
   RequestDeliveryDynamoTableArn:
     Type: String
     Description: 'ARN of dynamodb table containing request'
-
-  AuroraMasterSecretArn:
-    Type: String
-    Description: 'ARN of aurora secret'
 
 Resources:
   # PN-Paper-Channel microservice
@@ -121,14 +97,10 @@ Resources:
         ContainerImageURI: !Sub '${ContainerImageUri}'
         ContainerEnvEntry1: !Sub 'AWS_REGIONCODE=${AWS::Region}'
         ContainerEnvEntry2: !Sub 'CORS_ALLOWED_DOMAINS=${CorsAllowedDomains}'
-        ContainerEnvEntry3: !Sub 'MICROSERVICE_URLS_SAFESTORAGE=http://${ApplicationLoadBalancerDomain}:8080'
-        ContainerEnvEntry4: !Sub 'MICROSERVICE_URLS_NATIONALREGISTRIES=http://${ApplicationLoadBalancerDomain}:8080'
-        ContainerEnvEntry5: !Sub 'MICROSERVICE_EXTRAS_SAFESTORAGECXID=pn-radd'
-        ContainerEnvEntry6: !Sub 'PN_PAPER_CHANNEL_CLUSTER_ENDPOINT=${DBClusterEndpoint}'
-        ContainerEnvEntry7: !Sub 'SPRING_DATASOURCE_USERNAME=${DBSecretName}'
-        ContainerEnvEntry8: !Sub 'PN_PAPER_CHANNEL_CLUSTER_PORT=${DBPort}'
-        ContainerEnvEntry9: !Sub 'PN_PAPER_CHANNEL_CLUSTER_NAME=${DBName}'
-        ContainerEnvEntry10: !Sub 'AWS_DYNAMODBREQUESTDELIVERYTABLE=${RequestDeliveryDynamoTableName}'
+        ContainerEnvEntry3: !Sub 'PN_PAPERCHANNEL_CLIENTSAFESTORAGEBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
+        ContainerEnvEntry4: !Sub 'PN_PAPERCHANNEL_CLIENTNATIONALREGISTRIESBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
+        ContainerEnvEntry5: !Sub 'PN_PAPERCHANNEL_SAFESTORAGECXID=pn-radd'
+        ContainerEnvEntry6: !Sub 'AWS_DYNAMODBREQUESTDELIVERYTABLE=${RequestDeliveryDynamoTableName}'
         MappedPaths: '/paper-channel/*,/paper-channel-private/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds
@@ -167,6 +139,30 @@ Resources:
               - !Sub "${RequestDeliveryDynamoTableArn}"
               - !Sub "${AuroraMasterSecretArn}"
             
+  PaperChannelMicroserviceTaskPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Sub '${ProjectName}-paper-channel-CustomTaskPolicy'
+      Roles:
+        - !GetAtt PaperChannelMicroservice.Outputs.TaskRoleName
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - dynamodb:BatchGetItem
+              - dynamodb:BatchWriteItem
+              - dynamodb:ExecuteTransaction
+              - dynamodb:GetItem
+              - dynamodb:PutItem
+              - dynamodb:DeleteItem
+              - dynamodb:Query
+              - dynamodb:TransactGetItems
+              - dynamodb:TransactWriteItems
+              - dynamodb:UpdateItem
+            Resource:
+              - !Sub "${RequestDeliveryDynamoTableArn}"
+
   # Dashboard
   PaperChannelMicroserviceCloudWatchDashboard:
     Type: AWS::CloudFormation::Stack

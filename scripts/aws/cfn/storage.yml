@@ -24,95 +24,7 @@ Parameters:
     Type: String
     Description: 'Where to send CDC'
 
-  DBName:
-    Description: 'Database Name'
-    Default: 'pnpaperchanneldb'
-    Type: String
-
-  DBPort:
-    Description: 'TCP/IP Port for the Database Instance'
-    Type: Number
-    Default: 5432
-    ConstraintDescription: 'Must be in the range [1150-65535]'
-    MinValue: 1150
-    MaxValue: 65535
-
-  DBUsername:
-    Description: 'Database master username'
-    Default: 'pnpaperchanneluser'
-    Type: String
-
-  DBInstanceClass:
-    Default: db.r6g.large
-    Description: Database Instance Class
-    Type: String
-
-  DBSecretName:
-    Description: 'Secret Name for database'
-    Default: 'pn-paper-channel-db-secret'
-    Type: String
-
 Resources:
-  AuroraMasterSecret:
-    Type: AWS::SecretsManager::Secret
-    Properties:
-      Name: !Ref DBSecretName
-      Description: !Join [ '', [ 'Aurora PostgreSQL Master User Secret ', !Ref 'AWS::StackName' ] ]
-      GenerateSecretString:
-        SecretStringTemplate: !Join [ '', [ '{"username": "', !Ref DBUsername, '"}' ] ]
-        GenerateStringKey: "password"
-        ExcludeCharacters: '"@/\'
-        PasswordLength: 16
-
-  RDSDBClusterParameterGroup:
-    Type: AWS::RDS::DBClusterParameterGroup
-    Properties:
-      Description: !Join [ "- ", [ "Aurora PG Cluster Parameter Group for  Pn-Paper-Channel ", !Ref DBName ] ]
-      Family: 'aurora-postgresql14'
-      Parameters:
-        rds.force_ssl: 1
-
-  RDSDBParameterGroup:
-    Type: AWS::RDS::DBParameterGroup
-    Properties:
-      Description: 'DB PG Parameter Group'
-      Family: 'aurora-postgresql14'
-
-  AuroraDBCluster:
-    Type: AWS::RDS::DBCluster
-    Properties:
-      Engine: aurora-postgresql
-      EngineVersion: '14.5'
-      DatabaseName: !Ref DBName
-      Port: !Ref DBPort
-      MasterUsername: !Join [ '', [ '{{resolve:secretsmanager:', !Ref AuroraMasterSecret, ':SecretString:username}}' ] ]
-      MasterUserPassword: !Join [ '', [ '{{resolve:secretsmanager:', !Ref AuroraMasterSecret, ':SecretString:password}}' ] ]
-      DBClusterParameterGroupName: !Ref RDSDBClusterParameterGroup
-
-  AuroraDBFirstInstance:
-    Type: AWS::RDS::DBInstance
-    Properties:
-      CopyTagsToSnapshot: true
-      DBClusterIdentifier: !Ref AuroraDBCluster
-      Engine: aurora-postgresql
-      EngineVersion: '14.5'
-      DBParameterGroupName: !Ref RDSDBParameterGroup
-      PubliclyAccessible: false
-      DBInstanceClass: !Ref DBInstanceClass
-
-  AuroraDBSecondInstance:
-    Type: AWS::RDS::DBInstance
-    DependsOn:
-      - AuroraDBFirstInstance
-    Properties:
-      CopyTagsToSnapshot: true
-      DBClusterIdentifier: !Ref AuroraDBCluster
-      Engine: aurora-postgresql
-      EngineVersion: '14.5'
-      DBParameterGroupName: !Ref RDSDBParameterGroup
-      PubliclyAccessible: false
-      DBInstanceClass: !Ref DBInstanceClass
-
   RequestDeliveryDynamoTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -145,26 +57,6 @@ Resources:
 
 Outputs:
 
-  DBName:
-    Description: 'Database Name'
-    Value: !Ref DBName
-
-  DBClusterEndpoint:
-    Description: 'Aurora Cluster/Writer Endpoint'
-    Value: !GetAtt 'AuroraDBCluster.Endpoint.Address'
-
-  DBReaderEndpoint:
-    Description: 'Aurora Reader Endpoint'
-    Value: !GetAtt 'AuroraDBCluster.ReadEndpoint.Address'
-
-  DBPort:
-    Description: 'Aurora Endpoint Port'
-    Value: !GetAtt 'AuroraDBCluster.Endpoint.Port'
-
-  DBSecretName:
-    Description: 'Database Secret Name'
-    Value: !Ref DBSecretName
-
   RequestDeliveryDynamoTableName:
     Description: Name of dynamodb table containing request
     Value: !Ref RequestDeliveryDynamoTable
@@ -172,7 +64,3 @@ Outputs:
   RequestDeliveryDynamoTableArn:
     Description: ARN of dynamodb table containing request
     Value: !Sub '${RequestDeliveryDynamoTable.Arn}'
-
-  AuroraMasterSecretArn:
-    Description: ARN of secret
-    Value: !Ref AuroraMasterSecret

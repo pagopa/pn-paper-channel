@@ -8,6 +8,8 @@ public interface RequestDeliveryDAO {
 
     Mono<RequestDeliveryEntity> create(RequestDeliveryEntity requestDeliveryEntity);
 
+    Mono<RequestDeliveryEntity> updateData(RequestDeliveryEntity requestDeliveryEntity);
+
     Mono<RequestDeliveryEntity> getByRequestId(String requestId);
 
     Flux<RequestDeliveryEntity> getByFiscalCode(String fiscalCode);
