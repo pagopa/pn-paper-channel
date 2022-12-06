@@ -14,15 +14,16 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.util.UUID;
 
-@Service
+//@Service
 @Slf4j
 public class SqsQueueSender implements SqsSender {
 
-    @Autowired
-    private DeliveryMomProducer deliveryMomProducer;
+    //@Autowired
+    //private DeliveryMomProducer deliveryMomProducer;
 
     @Override
     public void pushEvent(EventTypeEnum eventType){
+        /*
         GenericEventHeader deliveryHeader= GenericEventHeader.builder()
                 .publisher("paper-channel-update")
                 .eventId(UUID.randomUUID().toString())
@@ -35,5 +36,6 @@ public class SqsQueueSender implements SqsSender {
         DeliveryEvent deliveryEvent=new DeliveryEvent(deliveryHeader,deliveryPayload);
 
         this.deliveryMomProducer.push(deliveryEvent);
+        */
     }
 }
