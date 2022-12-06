@@ -38,18 +38,21 @@ public class SQSConfig {
 
     //@Bean
     public AmazonSQSAsync amazonSQS() {
+        /*
         log.info(awsConfigs.getRegionCode());
-//        if (StringUtils.hasText(awsConfigs.getEndpointUrl())){
-//
-//            log.info("with endpoint");
-//            return AmazonSQSAsyncClientBuilder.standard()
-//                    .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(awsConfigs.getEndpointUrl(), awsConfigs.getRegionCode()))
-//                    .build();}
-//        else {
-//            return AmazonSQSAsyncClientBuilder.standard()
-//                    .withRegion(awsConfigs.getRegionCode())
-//                    .build();
-//        }
+        if (StringUtils.hasText(awsConfigs.getEndpointUrl())){
+
+            log.info("with endpoint");
+            return AmazonSQSAsyncClientBuilder.standard()
+                    .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(awsConfigs.getEndpointUrl(), awsConfigs.getRegionCode()))
+                    .build();}
+        else {
+            return AmazonSQSAsyncClientBuilder.standard()
+                    .withRegion(awsConfigs.getRegionCode())
+                    .build();
+        }
+
+        */
         return null;
     }
 }
