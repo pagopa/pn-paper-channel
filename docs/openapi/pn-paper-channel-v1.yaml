@@ -285,12 +285,12 @@ components:
           minLength: 5
         price:
           type: number
-          format: int64
+          format: decimal64
           maximum: 1
           minimum: 1
         priceAdditional:
           type: number
-          format: int64
+          format: decimal64
           maximum: 1
           minimum: 1
       additionalProperties: false
@@ -304,12 +304,12 @@ components:
           $ref: '#/components/schemas/InternationalZoneEnum'
         price:
           type: number
-          format: int64
+          format: decimal64
           maximum: 1
           minimum: 1
         priceAdditional:
           type: number
-          format: int64
+          format: decimal64
           maximum: 1
           minimum: 1
       additionalProperties: false
