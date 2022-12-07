@@ -58,7 +58,8 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
     public Mono<SendEvent> preparePaperSync(String requestId, PrepareRequest prepareRequest){
 
         return requestDeliveryDAO.getByRequestId(requestId)
-                .flatMap(entity -> compareRequestEntity(requestId,prepareRequest ,requestDeliveryDAO))
+                // Case of 409
+                .map(entity -> compareRequestEntity(prepareRequest, entity))
                 // Case of 200,
                 .map(PreparePaperResponseMapper::fromResult)
                 .onErrorResume(PnGenericException.class, ex -> {
@@ -169,31 +170,24 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
     }
 
 
-    private Mono<RequestDeliveryEntity> compareRequestEntity(String requestId, PrepareRequest prepareRequest, RequestDeliveryDAO requestDeliveryDAO) {
+    private RequestDeliveryEntity compareRequestEntity(PrepareRequest prepareRequest, RequestDeliveryEntity requestDeliveryEntity) {
+        if((prepareRequest.getRequestId().equals(requestDeliveryEntity.getRequestId()) &&
+                (!(prepareRequest.getReceiverFiscalCode().equals(requestDeliveryEntity.getFiscalCode()))) ||
+                (!(prepareRequest.getProductType().equals(requestDeliveryEntity.getRegisteredLetterCode()))))){
 
-        RequestDeliveryEntity requestDeliveryEntity= requestDeliveryDAO.getByRequestId(requestId).block();
-
-        if(requestDeliveryEntity.getRequestId()==null){
-            return null;
-        }else{
-            if((prepareRequest.getRequestId().equals(requestDeliveryEntity.getRequestId()) &&
-                    (!(prepareRequest.getReceiverFiscalCode().equals(requestDeliveryEntity.getFiscalCode()))) ||
-                    (!(prepareRequest.getProductType().equals(requestDeliveryEntity.getRegisteredLetterCode()))))){
-
-                //caso in cui recivered address è popolato mentre discovered address no
-                if(((prepareRequest.getReceiverAddress()!=null && prepareRequest.getDiscoveredAddress()==null) ||
-                        (prepareRequest.getReceiverAddress()==null && prepareRequest.getDiscoveredAddress()!=null)) &&
-                        checkAddressInfo(prepareRequest,requestDeliveryEntity)){
-                    //recivered address diverso da quello precedentemente ricevuto
-                    throw new PnGenericException(DIFFERENT_DATA_REQUEST, DIFFERENT_DATA_REQUEST.getMessage(), HttpStatus.CONFLICT);
-                }
-                //caso in cui sono entrambi null l'indirizzo viene recuperato dal national registry
-                if(prepareRequest.getReceiverAddress()==null && prepareRequest.getDiscoveredAddress()==null){
-                    throw new PnGenericException(DIFFERENT_DATA_REQUEST, DIFFERENT_DATA_REQUEST.getMessage(), HttpStatus.CONFLICT);
-                }
+            //caso in cui recivered address è popolato mentre discovered address no
+            if(((prepareRequest.getReceiverAddress()!=null && prepareRequest.getDiscoveredAddress()==null) ||
+                    (prepareRequest.getReceiverAddress()==null && prepareRequest.getDiscoveredAddress()!=null)) &&
+                    checkAddressInfo(prepareRequest,requestDeliveryEntity)){
+                //recivered address diverso da quello precedentemente ricevuto
+                throw new PnGenericException(DIFFERENT_DATA_REQUEST, DIFFERENT_DATA_REQUEST.getMessage(), HttpStatus.CONFLICT);
+            }
+            //caso in cui sono entrambi null l'indirizzo viene recuperato dal national registry
+            if(prepareRequest.getReceiverAddress()==null && prepareRequest.getDiscoveredAddress()==null){
+                throw new PnGenericException(DIFFERENT_DATA_REQUEST, DIFFERENT_DATA_REQUEST.getMessage(), HttpStatus.CONFLICT);
             }
         }
-        return requestDeliveryDAO.getByRequestId(requestId);
+        return requestDeliveryEntity;
     }
 
     public boolean checkAddressInfo(PrepareRequest prepareRequest, RequestDeliveryEntity requestDeliveryEntity){
