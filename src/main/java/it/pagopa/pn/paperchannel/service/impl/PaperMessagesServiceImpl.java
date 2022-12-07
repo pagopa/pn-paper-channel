@@ -36,10 +36,7 @@ import reactor.util.retry.Retry;
 import java.io.IOException;
 import java.time.Duration;
 
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_NOT_EXIST;
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DIFFERENT_DATA_REQUEST;
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DOCUMENT_NOT_DOWNLOADED;
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DOCUMENT_URL_NOT_FOUND;
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 
 @Slf4j
 @Service
@@ -69,7 +66,7 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
                                     Mono.just("")
                                             .publishOn(Schedulers.parallel())
                                             .flatMap(item -> prepareAsync(prepareRequest))
-                                            .subscribe(new SubscriberPrepare(null,requestDeliveryDAO));
+                                            .subscribe(new SubscriberPrepare(null, requestId, requestDeliveryDAO));
                                     throw new PnPaperEventException(PreparePaperResponseMapper.fromEvent(requestId));
                                 });
                     }
@@ -115,7 +112,13 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
         return getAttachmentsInfo(prepareRequest)
                 .map(attachmentInfo -> attachmentInfo.getNumberOfPage() * priceForAAr)
                 .sequential()
-                .reduce(0.0, Double::sum);
+                .reduce(0.0, Double::sum)
+                .onErrorResume(exception -> {
+                        if(exception instanceof PnGenericException) {
+                            return Mono.error(exception);
+                        }
+                    return Mono.error(new PnGenericException(UNTRACEABLE_ADDRESS, UNTRACEABLE_ADDRESS.getMessage()));
+                });
     }
 
     private Mono<Address> getAddress(PrepareRequest prepareRequest){
@@ -129,7 +132,8 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
         return nationalRegistryClient.finderAddress(prepareRequest.getReceiverFiscalCode())
                 .map(AddressMapper::fromNationalRegistry)
                 //TODO Gestire caso di irreperibile totale.
-                .onErrorResume(PnGenericException.class, Mono::error);
+                .onErrorResume(PnGenericException.class, exception ->
+                        Mono.error(new PnGenericException(UNTRACEABLE_ADDRESS, UNTRACEABLE_ADDRESS.getMessage())));
     }
 
     private ParallelFlux<AttachmentInfo> getAttachmentsInfo(PrepareRequest prepareRequest){
