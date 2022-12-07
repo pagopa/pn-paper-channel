@@ -15,7 +15,8 @@ public class RestExceptionHandler {
     @ExceptionHandler(PnGenericException.class)
     public Mono<ResponseEntity<Problem>> handleResponseEntityException(final PnGenericException pnGenericException){
         final Problem problem = new Problem();
-        return Mono.just(ResponseEntity.ok(problem));
+        return Mono.just(ResponseEntity.status(pnGenericException.getHttpStatus()).body(problem));
+//        return Mono.just(ResponseEntity.ok(problem));
     }
 
 

@@ -50,6 +50,7 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
 
     @Override
     public Mono<SendEvent> preparePaperSync(String requestId, PrepareRequest prepareRequest){
+
         return requestDeliveryDAO.getByRequestId(requestId)
 
                 // Case of 200
@@ -67,6 +68,9 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
                                             .subscribe(new SubscriberPrepare(null));
                                     throw new PnPaperEventException(PreparePaperResponseMapper.fromEvent(requestId));
                                 });
+                    }
+                    if (ex.getExceptionType() == DIFFERENT_DATA_REQUEST) {
+
                     }
                     return Mono.error(ex);
                 });
@@ -145,5 +149,9 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
                         throw new PnGenericException(DOCUMENT_NOT_DOWNLOADED, DOCUMENT_NOT_DOWNLOADED.getMessage());
                     }
                 });
+    }
+
+    private void compareRequestEntity() {
+        
     }
 }
