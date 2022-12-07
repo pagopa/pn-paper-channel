@@ -43,7 +43,19 @@ public class SubscriberPrepare implements Subscriber<DeliveryPayload> {
             PnGenericException exception = (PnGenericException) throwable;
             if(exception.getExceptionType().equals(ExceptionTypeEnum.UNTRACEABLE_ADDRESS)){
                 Mono<RequestDeliveryEntity> requestDeliveryEntityMono = requestDeliveryDAO.getByRequestId(requestId);
-
+                //Aggiornare o inserire entity per etichettare codice fiscale come irreperibile totale
+            }
+            if(exception.getExceptionType().equals(ExceptionTypeEnum.DOCUMENT_URL_NOT_FOUND)){
+                Mono<RequestDeliveryEntity> requestDeliveryEntityMono = requestDeliveryDAO.getByRequestId(requestId);
+                //Aggiornare o inserire entity per etichettare codice fiscale come irreperibile totale
+            }
+            if(exception.getExceptionType().equals(ExceptionTypeEnum.DOCUMENT_NOT_DOWNLOADED)){
+                Mono<RequestDeliveryEntity> requestDeliveryEntityMono = requestDeliveryDAO.getByRequestId(requestId);
+                //Aggiornare o inserire entity per etichettare codice fiscale come irreperibile totale
+            }
+            if(exception.getExceptionType().equals(ExceptionTypeEnum.RETRY_AFTER_DOCUMENT)){
+                Mono<RequestDeliveryEntity> requestDeliveryEntityMono = requestDeliveryDAO.getByRequestId(requestId);
+                //Aggiornare o inserire entity per etichettare codice fiscale come irreperibile totale
             }
         }
     }
