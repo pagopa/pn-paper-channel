@@ -1,5 +1,4 @@
 package it.pagopa.pn.paperchannel.middleware.db.entities;
-
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -32,6 +31,7 @@ public class AddressEntity {
     private static final String COL_PR = "pr";
 
     private static final String COL_COUNTRY = "country";
+    public static final String COL_TTL = "ttl";
 
     @Getter(onMethod = @__({@DynamoDbPartitionKey,@DynamoDbAttribute(COL_REQUEST_ID)}))
     private String requestId;
@@ -62,5 +62,9 @@ public class AddressEntity {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_COUNTRY)}))
     private String country;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_TTL)}))
+    private Integer ttl;
+
 
 }
