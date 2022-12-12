@@ -81,10 +81,10 @@ Resources:
       ProvisionedThroughput:
         ReadCapacityUnits: "5"
         WriteCapacityUnits: "5"
-    KinesisStreamSpecification:
-      StreamArn: !Ref CdcKinesisSourceStreamArn
-    StreamSpecification:
-      StreamViewType: NEW_IMAGE
+      KinesisStreamSpecification:
+        StreamArn: !Ref CdcKinesisSourceStreamArn
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
 
 Outputs:
 
