@@ -41,7 +41,6 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DIFFERENT_DA
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DOCUMENT_NOT_DOWNLOADED;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DOCUMENT_URL_NOT_FOUND;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.RETRY_AFTER_DOCUMENT;
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.UNTRACEABLE_ADDRESS;
 
 @Slf4j
 @Service
@@ -65,16 +64,20 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
                 .onErrorResume(PnGenericException.class, ex -> {
                     if (ex.getExceptionType() == DELIVERY_REQUEST_NOT_EXIST){
                         log.info("Delivery request");
-                        return requestDeliveryDAO.create(RequestDeliveryMapper.toEntity(prepareRequest))
-                                .map(entity -> {
-                                    // Case of 204
-                                    log.info("Entity creata");
-                                    Mono.just("")
-                                            .publishOn(Schedulers.parallel())
-                                            .flatMap(item -> prepareAsync(prepareRequest))
-                                            .subscribe(new SubscriberPrepare(null, requestId, requestDeliveryDAO));
-                                    throw new PnPaperEventException(PreparePaperResponseMapper.fromEvent(requestId));
-                                });
+
+                        return getAddress(prepareRequest)
+                                .flatMap(address -> {
+                            if(address==null){
+
+                                return nationalRegistryClient.finderAddress(prepareRequest.getReceiverFiscalCode(),prepareRequest.getReceiverType())
+                                        .flatMap(addressOKDto -> saveRequestDeliveryEntity(prepareRequest,null,addressOKDto.getCorrelationId())
+                                                .flatMap(entity -> Mono.empty()));
+                            }
+                            return saveRequestDeliveryEntity(prepareRequest,address,null)
+                                    .flatMap(entity -> Mono.empty());
+                        });
+
+
                     }
                     if (ex.getExceptionType() == DIFFERENT_DATA_REQUEST) {
 
@@ -92,9 +95,21 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
     }
 
 
-    //TODO aggiungere metodo per confrontare PrepareRequest con RequestDeliveryEntity, In caso,
-    // requestId uguali ma dati, come inidirizzo, differenti allora 409
+    private Mono<RequestDeliveryEntity> saveRequestDeliveryEntity(PrepareRequest prepareRequest,Address address,String correlationId){
 
+        return requestDeliveryDAO.create(RequestDeliveryMapper.toEntity(prepareRequest,address,correlationId))
+                .map(entity -> {
+                    // Case of 204
+                    log.info("Entity creata");
+                    if(entity.getAddress()!=null){
+                        Mono.just("")
+                                .publishOn(Schedulers.parallel())
+                                .flatMap(item -> prepareAsync(prepareRequest))
+                                .subscribe(new SubscriberPrepare(null, prepareRequest.getRequestId(), requestDeliveryDAO));
+                    }
+                    throw new PnPaperEventException(PreparePaperResponseMapper.fromEvent(prepareRequest.getRequestId()));
+                });
+    }
 
     private Mono<DeliveryPayload> prepareAsync(PrepareRequest request){
         log.info("Start Prepare Async");
@@ -105,7 +120,7 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
                                     getPriceAttachments(request, contract.getPricePerPage())
                                             .map(price -> Double.sum(contract.getPrice(), price)) );
                 })
-                .map((tupla) -> {
+                .map(tupla -> {
                     return new DeliveryPayload(tupla.getT1(), tupla.getT2());
                 });
     }
@@ -137,12 +152,7 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
         if (prepareRequest.getDiscoveredAddress() != null){
             return Mono.just(AddressMapper.fromAnalogToAddress(prepareRequest.getDiscoveredAddress()));
         }
-
-        return nationalRegistryClient.finderAddress(prepareRequest.getReceiverFiscalCode())
-                .map(AddressMapper::fromNationalRegistry)
-                //TODO Gestire caso di irreperibile totale.
-                .onErrorResume(PnGenericException.class, exception ->
-                        Mono.error(new PnGenericException(UNTRACEABLE_ADDRESS, UNTRACEABLE_ADDRESS.getMessage())));
+        return  Mono.just(null);
     }
 
     private ParallelFlux<AttachmentInfo> getAttachmentsInfo(PrepareRequest prepareRequest){
