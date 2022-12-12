@@ -12,5 +12,7 @@ public interface RequestDeliveryDAO {
 
     Mono<RequestDeliveryEntity> getByRequestId(String requestId);
 
+    Mono<RequestDeliveryEntity> getByCorrelationId(String correlationId);
+
     Flux<RequestDeliveryEntity> getByFiscalCode(String fiscalCode);
 }

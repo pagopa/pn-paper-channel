@@ -21,6 +21,8 @@ public class AttachmentInfoEntity {
 
     private static final String COL_DATE = "date";
 
+    private static final String COL_FILE_KEY = "fileKey";
+
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_ID)}))
     private String id;
 
@@ -32,4 +34,7 @@ public class AttachmentInfoEntity {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_DATE)}))
     private String date;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_FILE_KEY)}))
+    private String fileKey;
 }

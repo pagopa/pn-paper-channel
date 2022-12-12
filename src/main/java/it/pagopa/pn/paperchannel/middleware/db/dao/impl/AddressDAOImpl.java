@@ -30,4 +30,9 @@ public class AddressDAOImpl extends BaseDAO <AddressEntity> implements AddressDA
     public Mono<AddressEntity> create(AddressEntity addressEntity) {
         return null;
     }
+
+    @Override
+    public Mono<AddressEntity> findByRequestId(String requestId) {
+        return null;
+    }
 }

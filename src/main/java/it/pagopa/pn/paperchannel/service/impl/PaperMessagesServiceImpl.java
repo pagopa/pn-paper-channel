@@ -53,6 +53,8 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
     private SafeStorageClient safeStorageClient;
     @Autowired
     private NationalRegistryClient nationalRegistryClient;
+    @Autowired
+    private PrepareAsyncServiceImpl prepareAsyncService;
 
     @Override
     public Mono<SendEvent> preparePaperSync(String requestId, PrepareRequest prepareRequest){
@@ -68,15 +70,15 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
 
                         return getAddress(prepareRequest)
                                 .flatMap(address -> {
-                            if(address==null){
+                                    if(address==null){
 
-                                return nationalRegistryClient.finderAddress(prepareRequest.getReceiverFiscalCode(),prepareRequest.getReceiverType())
-                                        .flatMap(addressOKDto -> saveRequestDeliveryEntity(prepareRequest,null,addressOKDto.getCorrelationId())
-                                                .flatMap(entity -> Mono.empty()));
-                            }
-                            return saveRequestDeliveryEntity(prepareRequest,address,null)
-                                    .flatMap(entity -> Mono.empty());
-                        });
+                                        return nationalRegistryClient.finderAddress(prepareRequest.getReceiverFiscalCode(),prepareRequest.getReceiverType())
+                                                .flatMap(addressOKDto -> saveRequestDeliveryEntity(prepareRequest,null,addressOKDto.getCorrelationId())
+                                                        .flatMap(entity -> Mono.empty()));
+                                    }
+                                    return saveRequestDeliveryEntity(prepareRequest,address,null)
+                                            .flatMap(entity -> Mono.empty());
+                                });
 
 
                     }
@@ -104,42 +106,13 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
                     if( address != null){
                         Mono.just("")
                                 .publishOn(Schedulers.parallel())
-                                .flatMap(item -> prepareAsync(prepareRequest))
+                                .flatMap(item -> prepareAsyncService.prepareAsync(prepareRequest.getRequestId(),correlationId,address))
                                 .subscribe(new SubscriberPrepare(null, prepareRequest.getRequestId(), requestDeliveryDAO));
                     }
                     throw new PnPaperEventException(PreparePaperResponseMapper.fromEvent(prepareRequest.getRequestId()));
                 });
     }
 
-    private Mono<DeliveryPayload> prepareAsync(PrepareRequest request){
-        log.info("Start Prepare Async");
-        return getAddress(request)
-                .zipWhen(address -> getContract().flatMap(contract ->
-                                            getPriceAttachments(request, contract.getPricePerPage())
-                                                .map(price -> Double.sum(contract.getPrice(), price)) )
-                )
-                .map(tupla -> new DeliveryPayload(tupla.getT1(), tupla.getT2()));
-    }
-
-    private Mono<Contract> getContract() {
-        return Mono.just(new Contract(5.0, 10.0));
-    }
-
-    private Mono<Double> getPriceAttachments(PrepareRequest prepareRequest, Double priceForAAr){
-        return getAttachmentsInfo(prepareRequest)
-                .map(attachmentInfo -> attachmentInfo.getNumberOfPage() * priceForAAr)
-                .sequential()
-                .reduce(0.0, Double::sum)
-                .onErrorResume(exception -> {
-                    if(exception instanceof PnGenericException) {
-                        return Mono.error(exception);
-                    }
-                    if(exception instanceof PnRetryStorageException) {
-                        return Mono.error(new PnGenericException(RETRY_AFTER_DOCUMENT, RETRY_AFTER_DOCUMENT.getMessage()));
-                    }
-                    return Mono.error(exception);
-                });
-    }
 
     private Mono<Address> getAddress(PrepareRequest prepareRequest){
         if (prepareRequest.getReceiverAddress() != null){
@@ -151,33 +124,9 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
         return  Mono.justOrEmpty(java.util.Optional.<Address>empty());
     }
 
-    private ParallelFlux<AttachmentInfo> getAttachmentsInfo(PrepareRequest prepareRequest){
-        return Flux.fromStream(prepareRequest.getAttachmentUrls().stream())
-                .parallel()
-                .flatMap(fileKey -> safeStorageClient.getFile(fileKey)
-                        .retryWhen(
-                                Retry.backoff(3, Duration.ofMillis(500))
-                                        .filter(PnRetryStorageException.class::isInstance)
-                        )
-                )
-                .map(fileResponse -> {
-                    try {
-                        AttachmentInfo info = AttachmentMapper.fromSafeStorage(fileResponse);
-                        if (info.getUrl() == null)
-                            throw new PnGenericException(DOCUMENT_URL_NOT_FOUND, DOCUMENT_URL_NOT_FOUND.getMessage());
-                        PDDocument pdDocument = HttpConnector.downloadFile(info.getUrl());
-                        info.setDate(DateUtils.formatDate(pdDocument.getDocumentInformation().getCreationDate().getTime()));
-                        info.setNumberOfPage(pdDocument.getNumberOfPages());
-                        return info;
-                    } catch (IOException e) {
-                        throw new PnGenericException(DOCUMENT_NOT_DOWNLOADED, DOCUMENT_NOT_DOWNLOADED.getMessage());
-                    }
-                });
-    }
-
 
     private RequestDeliveryEntity compareRequestEntity(PrepareRequest prepareRequest, RequestDeliveryEntity requestDeliveryEntity) {
-         // se request id uguali e lo status dell'entity è NATIONAL_REGISTRY_WAITING vuol dire che abbiamo già elaborato la richiesta
+        // se request id uguali e lo status dell'entity è NATIONAL_REGISTRY_WAITING vuol dire che abbiamo già elaborato la richiesta
 
         if((prepareRequest.getRequestId().equals(requestDeliveryEntity.getRequestId()) &&
                 (!(prepareRequest.getReceiverFiscalCode().equals(requestDeliveryEntity.getFiscalCode()))) ||
@@ -186,9 +135,9 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
             //caso in cui recivered address è popolato mentre discovered address no
             if(((prepareRequest.getReceiverAddress()!=null && prepareRequest.getDiscoveredAddress()==null) ||
                     (prepareRequest.getReceiverAddress()==null && prepareRequest.getDiscoveredAddress()!=null))
-                    //&&
-                    //TODO riattivare quando presente address checkAddressInfo(prepareRequest,requestDeliveryEntity
-                    ){
+                //&&
+                //TODO riattivare quando presente address checkAddressInfo(prepareRequest,requestDeliveryEntity
+            ){
                 //recivered address diverso da quello precedentemente ricevuto
                 throw new PnGenericException(DIFFERENT_DATA_REQUEST, DIFFERENT_DATA_REQUEST.getMessage(), HttpStatus.CONFLICT);
             }

@@ -87,6 +87,11 @@ public class RequestDeliveryDAOImpl extends BaseDAO<RequestDeliveryEntity> imple
     }
 
     @Override
+    public Mono<RequestDeliveryEntity> getByCorrelationId(String correlationId) {
+        return null;
+    }
+
+    @Override
     public Flux<RequestDeliveryEntity> getByFiscalCode(String fiscalCode) {
         return null;
     }
