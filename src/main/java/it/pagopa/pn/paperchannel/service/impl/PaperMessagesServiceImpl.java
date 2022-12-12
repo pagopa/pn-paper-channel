@@ -10,6 +10,7 @@ import it.pagopa.pn.paperchannel.mapper.PreparePaperResponseMapper;
 import it.pagopa.pn.paperchannel.mapper.RequestDeliveryMapper;
 import it.pagopa.pn.paperchannel.mapper.RetrivePrepareResponseMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
+import it.pagopa.pn.paperchannel.middleware.db.entities.AddressEntity;
 import it.pagopa.pn.paperchannel.middleware.db.entities.RequestDeliveryEntity;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.SafeStorageClient;
@@ -95,13 +96,12 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
     }
 
 
-    private Mono<RequestDeliveryEntity> saveRequestDeliveryEntity(PrepareRequest prepareRequest,Address address,String correlationId){
-
-        return requestDeliveryDAO.create(RequestDeliveryMapper.toEntity(prepareRequest,address,correlationId))
+    private Mono<RequestDeliveryEntity> saveRequestDeliveryEntity(PrepareRequest prepareRequest, Address address, String correlationId){
+        return requestDeliveryDAO.create(RequestDeliveryMapper.toEntity(prepareRequest, correlationId))
                 .map(entity -> {
                     // Case of 204
                     log.info("Entity creata");
-                    if(entity.getAddress()!=null){
+                    if( address != null){
                         Mono.just("")
                                 .publishOn(Schedulers.parallel())
                                 .flatMap(item -> prepareAsync(prepareRequest))
@@ -114,15 +114,11 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
     private Mono<DeliveryPayload> prepareAsync(PrepareRequest request){
         log.info("Start Prepare Async");
         return getAddress(request)
-                .zipWhen(address -> {
-                    return getContract()
-                            .flatMap(contract ->
-                                    getPriceAttachments(request, contract.getPricePerPage())
-                                            .map(price -> Double.sum(contract.getPrice(), price)) );
-                })
-                .map(tupla -> {
-                    return new DeliveryPayload(tupla.getT1(), tupla.getT2());
-                });
+                .zipWhen(address -> getContract().flatMap(contract ->
+                                            getPriceAttachments(request, contract.getPricePerPage())
+                                                .map(price -> Double.sum(contract.getPrice(), price)) )
+                )
+                .map(tupla -> new DeliveryPayload(tupla.getT1(), tupla.getT2()));
     }
 
     private Mono<Contract> getContract() {
@@ -152,7 +148,7 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
         if (prepareRequest.getDiscoveredAddress() != null){
             return Mono.just(AddressMapper.fromAnalogToAddress(prepareRequest.getDiscoveredAddress()));
         }
-        return  Mono.just(null);
+        return  Mono.justOrEmpty(java.util.Optional.<Address>empty());
     }
 
     private ParallelFlux<AttachmentInfo> getAttachmentsInfo(PrepareRequest prepareRequest){
@@ -181,14 +177,18 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
 
 
     private RequestDeliveryEntity compareRequestEntity(PrepareRequest prepareRequest, RequestDeliveryEntity requestDeliveryEntity) {
+         // se request id uguali e lo status dell'entity è NATIONAL_REGISTRY_WAITING vuol dire che abbiamo già elaborato la richiesta
+
         if((prepareRequest.getRequestId().equals(requestDeliveryEntity.getRequestId()) &&
                 (!(prepareRequest.getReceiverFiscalCode().equals(requestDeliveryEntity.getFiscalCode()))) ||
                 (!(prepareRequest.getProductType().equals(requestDeliveryEntity.getRegisteredLetterCode()))))){
 
             //caso in cui recivered address è popolato mentre discovered address no
             if(((prepareRequest.getReceiverAddress()!=null && prepareRequest.getDiscoveredAddress()==null) ||
-                    (prepareRequest.getReceiverAddress()==null && prepareRequest.getDiscoveredAddress()!=null)) &&
-                    checkAddressInfo(prepareRequest,requestDeliveryEntity)){
+                    (prepareRequest.getReceiverAddress()==null && prepareRequest.getDiscoveredAddress()!=null))
+                    //&&
+                    //TODO riattivare quando presente address checkAddressInfo(prepareRequest,requestDeliveryEntity
+                    ){
                 //recivered address diverso da quello precedentemente ricevuto
                 throw new PnGenericException(DIFFERENT_DATA_REQUEST, DIFFERENT_DATA_REQUEST.getMessage(), HttpStatus.CONFLICT);
             }
@@ -200,21 +200,17 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
         return requestDeliveryEntity;
     }
 
-    public boolean checkAddressInfo(PrepareRequest prepareRequest, RequestDeliveryEntity requestDeliveryEntity){
+    private boolean checkAddressInfo(PrepareRequest prepareRequest, AddressEntity addressEntity){
 
-        if(!prepareRequest.getReceiverAddress().getAddress().equals(requestDeliveryEntity.getAddress().getAddress()) ||
-                !prepareRequest.getReceiverAddress().getFullname().equals(requestDeliveryEntity.getAddress().getFullName()) ||
-                !prepareRequest.getReceiverAddress().getNameRow2().equals(requestDeliveryEntity.getAddress().getNameRow2()) ||
-                !prepareRequest.getReceiverAddress().getAddressRow2().equals(requestDeliveryEntity.getAddress().getAddressRow2()) ||
-                !prepareRequest.getReceiverAddress().getCap().equals(requestDeliveryEntity.getAddress().getCap()) ||
-                !prepareRequest.getReceiverAddress().getCity().equals(requestDeliveryEntity.getAddress().getCity()) ||
-                !prepareRequest.getReceiverAddress().getCity2().equals(requestDeliveryEntity.getAddress().getCity2()) ||
-                !prepareRequest.getReceiverAddress().getPr().equals(requestDeliveryEntity.getAddress().getPr()) ||
-                !prepareRequest.getReceiverAddress().getCountry().equals(requestDeliveryEntity.getAddress().getCountry())){
-            return true;
-        }
-        else{
-            return false;
-        }
+        return (!prepareRequest.getReceiverAddress().getAddress().equals(addressEntity.getAddress()) ||
+                !prepareRequest.getReceiverAddress().getFullname().equals(addressEntity.getFullName()) ||
+                !prepareRequest.getReceiverAddress().getNameRow2().equals(addressEntity.getNameRow2()) ||
+                !prepareRequest.getReceiverAddress().getAddressRow2().equals(addressEntity.getAddressRow2()) ||
+                !prepareRequest.getReceiverAddress().getCap().equals(addressEntity.getCap()) ||
+                !prepareRequest.getReceiverAddress().getCity().equals(addressEntity.getCity()) ||
+                !prepareRequest.getReceiverAddress().getCity2().equals(addressEntity.getCity2()) ||
+                !prepareRequest.getReceiverAddress().getPr().equals(addressEntity.getPr()) ||
+                !prepareRequest.getReceiverAddress().getCountry().equals(addressEntity.getCountry()));
+
     }
 }
