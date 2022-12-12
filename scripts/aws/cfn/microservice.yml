@@ -83,6 +83,14 @@ Parameters:
     Type: String
     Description: 'ARN of dynamodb table containing request'
 
+  AddressDynamoTableName:
+    Type: String
+    Description: 'Name of dynamodb table containing address of request delivery'
+
+  AddressDynamoTableArn:
+    Type: String
+    Description: 'ARN of dynamodb table containing address of request delivery'
+
 Resources:
   # PN-Paper-Channel microservice
   PaperChannelMicroservice:
@@ -101,6 +109,7 @@ Resources:
         ContainerEnvEntry4: !Sub 'PN_PAPERCHANNEL_CLIENTNATIONALREGISTRIESBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
         ContainerEnvEntry5: !Sub 'PN_PAPERCHANNEL_SAFESTORAGECXID=pn-radd'
         ContainerEnvEntry6: !Sub 'AWS_DYNAMODBREQUESTDELIVERYTABLE=${RequestDeliveryDynamoTableName}'
+        ContainerEnvEntry7: !Sub 'AWS_DYNAMODBADDRESSTABLE=${AddressDynamoTableName}'
         MappedPaths: '/paper-channel/*,/paper-channel-private/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds
@@ -131,37 +140,11 @@ Resources:
               - dynamodb:TransactGetItems
               - dynamodb:TransactWriteItems
               - dynamodb:UpdateItem
-              - secretsmanager:GetResourcePolicy
-              - secretsmanager:GetSecretValue
-              - secretsmanager:DescribeSecret
-              - secretsmanager:ListSecretVersionIds
             Resource:
               - !Sub "${RequestDeliveryDynamoTableArn}"
-              - !Sub "${AuroraMasterSecretArn}"
-            
-  PaperChannelMicroserviceTaskPolicy:
-    Type: AWS::IAM::Policy
-    Properties:
-      PolicyName: !Sub '${ProjectName}-paper-channel-CustomTaskPolicy'
-      Roles:
-        - !GetAtt PaperChannelMicroservice.Outputs.TaskRoleName
-      PolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Action:
-              - dynamodb:BatchGetItem
-              - dynamodb:BatchWriteItem
-              - dynamodb:ExecuteTransaction
-              - dynamodb:GetItem
-              - dynamodb:PutItem
-              - dynamodb:DeleteItem
-              - dynamodb:Query
-              - dynamodb:TransactGetItems
-              - dynamodb:TransactWriteItems
-              - dynamodb:UpdateItem
-            Resource:
-              - !Sub "${RequestDeliveryDynamoTableArn}"
+              - !Sub "${RequestDeliveryDynamoTableArn}/*"
+              - !Sub "${AddressDynamoTableArn}"
+              - !Sub "${AddressDynamoTableArn}/*"
 
   # Dashboard
   PaperChannelMicroserviceCloudWatchDashboard:

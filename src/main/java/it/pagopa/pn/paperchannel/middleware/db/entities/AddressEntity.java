@@ -5,12 +5,15 @@ import lombok.Setter;
 import lombok.ToString;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 
 @DynamoDbBean
 @Getter
 @Setter
 @ToString
 public class AddressEntity {
+
+    private static final String COL_REQUEST_ID = "requestId";
 
     private static final String COL_FULL_NAME = "fullName";
 
@@ -30,6 +33,8 @@ public class AddressEntity {
 
     private static final String COL_COUNTRY = "country";
 
+    @Getter(onMethod = @__({@DynamoDbPartitionKey,@DynamoDbAttribute(COL_REQUEST_ID)}))
+    private String requestId;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_FULL_NAME)}))
     private String fullName;
