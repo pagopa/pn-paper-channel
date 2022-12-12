@@ -72,6 +72,9 @@ Resources:
       AttributeDefinitions:
         - AttributeName: "requestId"
           AttributeType: "S"
+      TimeToLiveSpecification:
+        - AttributeName: "ttl"
+          Enabled: true
       KeySchema:
         - AttributeName: "requestId"
           KeyType: "HASH"

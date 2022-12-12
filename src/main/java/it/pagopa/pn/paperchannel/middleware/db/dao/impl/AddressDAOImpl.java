@@ -5,7 +5,6 @@ import it.pagopa.pn.paperchannel.config.AwsPropertiesConfig;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.BaseDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.AddressEntity;
-import it.pagopa.pn.paperchannel.middleware.db.entities.RequestDeliveryEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Import;
 import org.springframework.stereotype.Repository;
@@ -24,7 +23,7 @@ public class AddressDAOImpl extends BaseDAO <AddressEntity> implements AddressDA
                                   DynamoDbAsyncClient dynamoDbAsyncClient,
                                   AwsPropertiesConfig awsPropertiesConfig) {
         super(auditLogBuilder, dynamoDbEnhancedAsyncClient, dynamoDbAsyncClient,
-                awsPropertiesConfig.getDynamodbRequestDeliveryTable(), AddressEntity.class);
+                awsPropertiesConfig.getDynamodbAddressTable(), AddressEntity.class);
     }
 
     @Override
