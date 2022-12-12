@@ -34,6 +34,8 @@ Resources:
           AttributeType: "S"
         - AttributeName: "fiscalCode"
           AttributeType: "S"
+        - AttributeName: "correlationId"
+          AttributeType: "S"
       KeySchema:
         - AttributeName: "requestId"
           KeyType: "HASH"
@@ -50,10 +52,39 @@ Resources:
           ProvisionedThroughput:
             ReadCapacityUnits: "5"
             WriteCapacityUnits: "5"
+        - IndexName: "correlation-index"
+          KeySchema:
+            - AttributeName: "correlationId"
+              KeyType: "HASH"
+          Projection:
+            ProjectionType: "ALL"
+          ProvisionedThroughput:
+            ReadCapacityUnits: "5"
+            WriteCapacityUnits: "5"
       KinesisStreamSpecification:
         StreamArn: !Ref CdcKinesisSourceStreamArn
       StreamSpecification:
         StreamViewType: NEW_IMAGE
+  AddressDynamoTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${ProjectName}-address'
+      AttributeDefinitions:
+        - AttributeName: "requestId"
+          AttributeType: "S"
+      TimeToLiveSpecification:
+        - AttributeName: "ttl"
+          Enabled: true
+      KeySchema:
+        - AttributeName: "requestId"
+          KeyType: "HASH"
+      ProvisionedThroughput:
+        ReadCapacityUnits: "5"
+        WriteCapacityUnits: "5"
+    KinesisStreamSpecification:
+      StreamArn: !Ref CdcKinesisSourceStreamArn
+    StreamSpecification:
+      StreamViewType: NEW_IMAGE
 
 Outputs:
 
@@ -64,3 +95,11 @@ Outputs:
   RequestDeliveryDynamoTableArn:
     Description: ARN of dynamodb table containing request
     Value: !Sub '${RequestDeliveryDynamoTable.Arn}'
+
+  AddressDynamoTableName:
+    Description: Name of dynamodb table containing address of request delivery
+    Value: !Ref AddressDynamoTable
+
+  AddressDynamoTableArn:
+    Description: ARN of dynamodb table containing address of request delivery
+    Value: !Sub '${AddressDynamoTable.Arn}'

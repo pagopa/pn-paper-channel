@@ -15,4 +15,5 @@ public class AwsPropertiesConfig extends AwsConfigs {
     private String readyDeliveryQueue;
 
     private String dynamodbRequestDeliveryTable;
+    private String dynamodbAddressTable;
 }

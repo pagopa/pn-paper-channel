@@ -256,11 +256,6 @@ components:
       discriminator:
         propertyName: registeredLetter
       properties:
-        id:
-          type: integer
-          format: int64
-          maximum: 128
-          minimum: 1
         price:
           type: number
           format: float
@@ -395,12 +390,6 @@ components:
           example: 'A12C34D56789E0'
           format: '/[^A-Za-z0-9]+/'
           maxLength: 32
-        startingDate:
-          type: string
-          format: date-time
-        endingDate:
-          type: string
-          format: date-time
         fsu:
           type: boolean
       additionalProperties: false

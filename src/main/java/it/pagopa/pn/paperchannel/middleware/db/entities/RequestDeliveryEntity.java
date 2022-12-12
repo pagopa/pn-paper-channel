@@ -26,6 +26,10 @@ public class RequestDeliveryEntity {
 
     public static final String COL_ADDRESS = "address";
 
+    public static final String COL_CORRELATION_ID = "correlationId";
+
+    public static final String CORRELATION_INDEX = "correlation-index";
+
     public static final String FISCAL_CODE_INDEX = "fiscal-code-index";
 
     private static final String COL_STATUS_CODE = "statusCode";
@@ -45,6 +49,9 @@ public class RequestDeliveryEntity {
 
     @Getter(onMethod = @__({@DynamoDbSecondaryPartitionKey(indexNames = FISCAL_CODE_INDEX),@DynamoDbAttribute(COL_FISCAL_CODE)}))
     private String fiscalCode;
+
+    @Getter(onMethod = @__({@DynamoDbSecondaryPartitionKey(indexNames = CORRELATION_INDEX),@DynamoDbAttribute(COL_CORRELATION_ID)}))
+    private String correlationId;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_ADDRESS_HASH)}))
     private String addressHash;

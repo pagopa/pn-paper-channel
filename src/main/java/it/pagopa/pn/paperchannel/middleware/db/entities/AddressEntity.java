@@ -1,16 +1,18 @@
 package it.pagopa.pn.paperchannel.middleware.db.entities;
-
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 
 @DynamoDbBean
 @Getter
 @Setter
 @ToString
 public class AddressEntity {
+
+    private static final String COL_REQUEST_ID = "requestId";
 
     private static final String COL_FULL_NAME = "fullName";
 
@@ -29,7 +31,10 @@ public class AddressEntity {
     private static final String COL_PR = "pr";
 
     private static final String COL_COUNTRY = "country";
+    public static final String COL_TTL = "ttl";
 
+    @Getter(onMethod = @__({@DynamoDbPartitionKey,@DynamoDbAttribute(COL_REQUEST_ID)}))
+    private String requestId;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_FULL_NAME)}))
     private String fullName;
@@ -57,5 +62,9 @@ public class AddressEntity {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_COUNTRY)}))
     private String country;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_TTL)}))
+    private Integer ttl;
+
 
 }

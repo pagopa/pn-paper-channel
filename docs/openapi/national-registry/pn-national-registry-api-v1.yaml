@@ -1,0 +1,654 @@
+openapi: 3.0.0
+info:
+  title: PN-NationalRegistries REST APIs
+  description: |-
+    Nell’ambito del progetto Piattaforme Notifiche, il componente PN-NationalRegistries si occuperà di recuperare i dati dalle banche dati esterne previste. Tali banche dati esporranno delle interfacce web verso il componente PN-NationalRegistries, accessibili tramite piattaforma di interoperabilità.
+  version: 1.0.0
+servers:
+  - url: http://127.0.0.1
+tags:
+  - name: checkTaxId
+    description: Questo servizio ritorna la validità e l’esistenza di un dato codice fiscale descritta da un campo di ritorno booleano nell’oggetto json di response.
+  - name: addressANPR
+    description: Il servizio viene invocato per ottenere la residenza presente in ANPR per un cittadino, alla data di riferimento della richiesta.
+  - name: digitalAddressINAD
+    description: Consente di ottenere il domicilio digitale corrispondente al codice fiscale al momento della consultazione e, in caso di domicilio digitale eletto in qualità di Professionista, anche l'attività professionale esercitata.
+  - name: digitalAddressIniPEC
+    description: Consente di ottenere la PEC dell’impresa oppure del professionista corrispondente al codice fiscale al momento della consultazione. In caso di impresa si restituisce anche l’indirizzo della sede legale.
+  - name: addressRegistroImprese
+    description: Consente di ottenere l’indirizzo della sede legale a cui corrisponde il codice fiscale al momento della consultazione.
+paths:
+  /national-registries-private/{recipient-type}/addresses:
+    post:
+      tags:
+        - address
+      summary: 'Questo servizio si occupa di smistare le richieste in ingresso al fine di fornire uno o più indirizzi fisici o digitali per la PF o la PG indicata'
+      description: 'Questo servizio si occupa di smistare le richieste in ingresso al fine di fornire uno o più indirizzi fisici o digitali per la PF o la PG indicata'
+      operationId: getAddresses
+      parameters:
+        - $ref: '#/components/parameters/pathRecipientType'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddressRequestBody'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddressOK'
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddressError'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddressError'
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddressError'
+  /national-registries-private/agenzia-entrate/tax-id:
+    post:
+      tags:
+        - checkTaxId
+      summary: 'Questo servizio ritorna la validità e l’esistenza di un dato codice fiscale descritta da un campo di ritorno booleano nell’oggetto json di response'
+      description: 'Questo servizio ritorna la validità e l’esistenza di un dato codice fiscale descritta da un campo di ritorno booleano nell’oggetto json di response'
+      operationId: checkTaxId
+      requestBody:
+        description: Effettua la ricerca di un codice fiscale
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckTaxIdRequestBody'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckTaxIdOK'
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckTaxIdError'
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckTaxIdError'
+  /national-registries-private/anpr/address:
+    post:
+      tags:
+        - addressANPR
+      summary: 'Il servizio viene invocato per ottenere la residenza presente in ANPR per un cittadino, alla data di riferimento della richiesta'
+      description: 'Il servizio viene invocato per ottenere la residenza presente in ANPR per un cittadino, alla data di riferimento della richiesta'
+      operationId: addressANPR
+      requestBody:
+        description: Il servizio viene invocato per ottenere la residenza presente in ANPR per un cittadino, alla data di riferimento della richiesta
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetAddressANPRRequestBody'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetAddressANPROK'
+        "400":
+          description: Caso d'uso invalido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetAddressANPRError'
+        "404":
+          description: Caso d'uso non trovato
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetAddressANPRError'
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetAddressANPRError'
+  /national-registries-private/inad/digital-address:
+    post:
+      tags:
+        - digitalAddressINAD
+      summary: 'Consente di ottenere il domicilio digitale corrispondente al codice fiscale al momento della consultazione e, in caso di domicilio digitale eletto in qualità di Professionista, anche l''attività professionale esercitata.'
+      description: 'Consente di ottenere il domicilio digitale corrispondente al codice fiscale al momento della consultazione e, in caso di domicilio digitale eletto in qualità di Professionista, anche l''attività professionale esercitata.'
+      operationId: digitalAddressINAD
+      requestBody:
+        description: Consente di ottenere il domicilio digitale corrispondente al codice fiscale al momento della consultazione e, in caso di domicilio digitale eletto in qualità di Professionista, anche l'attività professionale esercitata.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetDigitalAddressINADRequestBody'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetDigitalAddressINADOK'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetDigitalAddressINADError'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetDigitalAddressINADError'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetDigitalAddressINADError'
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetDigitalAddressINADError'
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetDigitalAddressINADError'
+        "503":
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetDigitalAddressINADError'
+  /national-registries-private/inipec/digital-address:
+    post:
+      tags:
+        - digitalAddressIniPEC
+      summary: 'Consente di ottenere la PEC dell’impresa oppure del professionista corrispondente al codice fiscale al momento della consultazione. In caso di impresa si restituisce anche l’indirizzo della sede legale.'
+      description: 'Consente di ottenere la PEC dell’impresa oppure del professionista corrispondente al codice fiscale al momento della consultazione. In caso di impresa si restituisce anche l’indirizzo della sede legale.'
+      operationId: digitalAddressIniPEC
+      requestBody:
+        description: Consente di ottenere la PEC dell’impresa oppure del professionista corrispondente al codice fiscale al momento della consultazione. In caso di impresa si restituisce anche l’indirizzo della sede legale.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetDigitalAddressIniPECRequestBody'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetDigitalAddressIniPECOK'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetDigitalAddressIniPECError'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetDigitalAddressIniPECError'
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetDigitalAddressIniPECError'
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetDigitalAddressIniPECError'
+        "503":
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetDigitalAddressIniPECError'
+  /national-registries-private/registro-imprese/address:
+    post:
+      tags:
+        - addressRegistroImprese
+      summary: 'Consente di ottenere l’indirizzo della sede legale a cui corrisponde il codice fiscale al momento della consultazione'
+      description: 'Consente di ottenere l’indirizzo della sede legale a cui corrisponde il codice fiscale al momento della consultazione'
+      operationId: addressRegistroImprese
+      requestBody:
+        description: Consente di ottenere l’indirizzo della sede legale a cui corrisponde il codice fiscale al momento della consultazione
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetAddressRegistroImpreseRequestBody'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetAddressRegistroImpreseOK'
+        "400":
+          description: Caso d'uso invalido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetAddressRegistroImpreseError'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetAddressRegistroImpreseError'
+        "404":
+          description: Caso d'uso non trovato
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetAddressRegistroImpreseError'
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetAddressRegistroImpreseError'
+        "503":
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetAddressRegistroImpreseError'
+components:
+  parameters:
+    pathRecipientType:
+      description: >-
+        Enum per indicare se la ricerca è effettuata per una PF o per una PG
+      name: recipient-type
+      in: path
+      required: true
+      schema:
+        type: string
+        enum: [ PG , PF ]
+  schemas:
+    AddressRequestBody:
+      type: object
+      properties:
+        filter:
+          type: object
+          required:
+            - taxId
+            - referenceRequestDate
+            - correlationId
+            - domicileType
+          properties:
+            taxId:
+              type: string
+              example: AAAZZZ00H00T000Z
+            referenceRequestDate:
+              type: string
+            correlationId:
+              type: string
+            domicileType:
+              type: string
+              enum: [ PHYSICAL , DIGITAL ]
+    AddressOK:
+      type: object
+      properties:
+        correlationId:
+          type: string
+    CheckTaxIdRequestBody:
+      type: object
+      properties:
+        filter:
+          type: object
+          properties:
+            taxId:
+              type: string
+              example: AAAZZZ00H00T000Z
+    CheckTaxIdOK:
+      type: object
+      properties:
+        taxId:
+          type: string
+          example: AAAZZZ00H00T000Z
+        isValid:
+          type: boolean
+        errorCode:
+          type: string
+          enum: [B001_CHECK_TAX_ID_ERR01, B001_CHECK_TAX_ID_ERR02, B001_CHECK_TAX_ID_ERR03]
+          description: >
+            Error codes:
+            
+            
+            _'B001_CHECK_TAX_ID_ERR01'_: CODICE FISCALE VALIDO NON UTILIZZABILE
+            
+            
+            _'B001_CHECK_TAX_ID_ERR02'_: CODICE FISCALE NON VALIDO AGGIORNATO IN ALTRO
+            
+            
+            _'B001_CHECK_TAX_ID_ERR03'_: CODICE FISCALE NON VALIDO
+    CheckTaxIdError:
+      type: object
+      properties:
+        status:
+          type: integer
+          description: Contiene il codice HTTP dell'errore
+        title:
+          type: string
+        detail:
+          type: string
+        traceId:
+          type: string
+        timestamp:
+          type: integer
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              code:
+                type: string
+              element:
+                type: string
+              detail:
+                type: string
+    GetAddressANPRRequestBody:
+      type: object
+      properties:
+        filter:
+          type: object
+          required:
+            - taxId
+            - referenceRequestDate
+            - requestReason
+          properties:
+            taxId:
+              type: string
+              example: AAAZZZ00H00T000Z
+            referenceRequestDate:
+              type: string
+            requestReason:
+              type: string
+    GetAddressANPROK:
+      type: object
+      properties:
+        clientOperationId:
+          type: string
+        residentialAddresses:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResidentialAddress'
+    ResidentialAddress:
+      type: object
+      properties:
+        description:
+          type: string
+        at:
+          type: string
+        address:
+          type: string
+        addressDetail:
+          type: string
+        zip:
+          type: string
+        municipality:
+          type: string
+        municipalityDetails:
+          type: string
+        province:
+          type: string
+        foreignState:
+          type: string
+    GetAddressANPRError:
+      type: object
+      properties:
+        status:
+          type: integer
+          description: Contiene il codice HTTP dell'errore
+        title:
+          type: string
+        detail:
+          type: string
+        traceId:
+          type: string
+        timestamp:
+          type: integer
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              code:
+                type: string
+              element:
+                type: string
+              detail:
+                type: string
+              clientOperationId:
+                type: string
+    GetDigitalAddressINADRequestBody:
+      type: object
+      properties:
+        filter:
+          type: object
+          required:
+            - taxId
+            - practicalReference
+          properties:
+            taxId:
+              type: string
+              example: AAAZZZ00H00T000Z
+            practicalReference:
+              type: string
+              description: 'Riferimento del procedimento amministrativo per il quale si richiede l''estrazione'
+    GetDigitalAddressINADOK:
+      type: object
+      properties:
+        taxId:
+          type: string
+          example: AAAZZZ00H00T000Z
+        since:
+          type: string
+          format: date-time
+        digitalAddress:
+          type: array
+          items:
+            $ref: '#/components/schemas/DigitalAddress'
+    DigitalAddress:
+      type: object
+      properties:
+        digitalAddress:
+          type: string
+        practicedProfession:
+          type: string
+        usageInfo:
+          $ref: '#/components/schemas/UsageInfo'
+    UsageInfo:
+      type: object
+      properties:
+        motivation:
+          type: string
+          enum: [CESSAZIONE_UFFICIO, CESSAZIONE_VOLONTARIA]
+        dateEndValidity:
+          type: string
+          format: date-time
+    GetDigitalAddressINADError:
+      type: object
+      properties:
+        status:
+          type: integer
+          description: Contiene il codice HTTP dell'errore
+        title:
+          type: string
+        detail:
+          type: string
+        traceId:
+          type: string
+        timestamp:
+          type: integer
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              code:
+                type: string
+              element:
+                type: string
+              detail:
+                type: string
+    GetDigitalAddressIniPECRequestBody:
+      type: object
+      properties:
+        filter:
+          type: object
+          properties:
+            taxId:
+              type: string
+              example: AAAZZZ00H00T000Z
+            correlationId:
+              type: string
+    GetDigitalAddressIniPECOK:
+      type: object
+      properties:
+        correlationId:
+          type: string
+    GetDigitalAddressIniPECError:
+      type: object
+      properties:
+        status:
+          type: integer
+          description: Contiene il codice HTTP dell'errore
+        title:
+          type: string
+        detail:
+          type: string
+        traceId:
+          type: string
+        timestamp:
+          type: integer
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              code:
+                type: string
+              element:
+                type: string
+              detail:
+                type: string
+    GetAddressRegistroImpreseRequestBody:
+      type: object
+      properties:
+        filter:
+          type: object
+          properties:
+            taxId:
+              type: string
+              example: AAAZZZ00H00T000Z
+    GetAddressRegistroImpreseOK:
+      type: object
+      properties:
+        dateTimeExtraction:
+          type: string
+          format: date-time
+        taxId:
+          type: string
+          example: AAAZZZ00H00T000Z
+        professionalAddress:
+          type: object
+          properties:
+            description:
+              type: string
+            municipality:
+              type: string
+            province:
+              type: string
+            address:
+              type: string
+            zip:
+              type: string
+    GetAddressRegistroImpreseError:
+      type: object
+      properties:
+        status:
+          type: integer
+          description: Contiene il codice HTTP dell'errore
+        title:
+          type: string
+        detail:
+          type: string
+        traceId:
+          type: string
+        timestamp:
+          type: integer
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              code:
+                type: string
+              element:
+                type: string
+              detail:
+                type: string
+              clientOperationId:
+                type: string
+    AddressError:
+      type: object
+      properties:
+        status:
+          type: integer
+          description: Contiene il codice HTTP dell'errore
+        title:
+          type: string
+        detail:
+          type: string
+        traceId:
+          type: string
+        timestamp:
+          type: integer
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              code:
+                type: string
+              element:
+                type: string
+              detail:
+                type: string
