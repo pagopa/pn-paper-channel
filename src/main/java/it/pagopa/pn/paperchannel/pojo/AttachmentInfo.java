@@ -12,5 +12,6 @@ public class AttachmentInfo {
     private String documentType;
     private String url;
     private String date;
+    private String fileKey;
     private int numberOfPage;
 }

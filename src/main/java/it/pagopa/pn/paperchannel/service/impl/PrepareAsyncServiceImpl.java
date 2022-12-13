@@ -14,6 +14,7 @@ import it.pagopa.pn.paperchannel.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.paperchannel.pojo.Address;
 import it.pagopa.pn.paperchannel.pojo.AttachmentInfo;
 import it.pagopa.pn.paperchannel.pojo.Contract;
+import it.pagopa.pn.paperchannel.pojo.DeliveryAsyncModel;
 import it.pagopa.pn.paperchannel.queue.model.DeliveryPayload;
 import it.pagopa.pn.paperchannel.service.PaperAsyncService;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
@@ -29,6 +30,7 @@ import reactor.util.retry.Retry;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DOCUMENT_NOT_DOWNLOADED;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DOCUMENT_URL_NOT_FOUND;
@@ -54,28 +56,44 @@ public class PrepareAsyncServiceImpl implements PaperAsyncService {
             requestDeliveryEntityMono = requestDeliveryDAO.getByCorrelationId(correlationId);
         }
         return requestDeliveryEntityMono
-                .zipWhen(requestDeliveryEntity -> addressDAO.create(AddressMapper.toEntity( address,requestDeliveryEntity.getRequestId()))
-                        .map(item -> item)
+                .map(requestDeliveryEntity -> {
+                    DeliveryAsyncModel deliveryAsyncModel = new DeliveryAsyncModel();
+                    deliveryAsyncModel.setRequestId(requestDeliveryEntity.getRequestId());
+
+                    if(requestDeliveryEntity.getAttachments()!=null){
+                        deliveryAsyncModel.setAttachments(requestDeliveryEntity.getAttachments().stream()
+                                .map(AttachmentMapper::fromEntity).collect(Collectors.toList()));
+                    }
+                    return deliveryAsyncModel;
+                })
+                .flatMap(deliveryAsyncModel -> {
+                     addressDAO.create(AddressMapper.toEntity( address,deliveryAsyncModel.getRequestId()))
+                                    .map(item -> {
+                                        deliveryAsyncModel.setAddress(AddressMapper.toDTO(item));
+                                        return deliveryAsyncModel;
+                                    });
+                        }
                 )
-                .flatMap(requestAndAddress -> getDeliveryPayload(requestAndAddress.getT1(),requestAndAddress.getT2())
-                        .map(deliveryPayload -> deliveryPayload)
-                );
+                .map(deliveryAsyncModel -> deliveryAsyncModel getDeliveryPayload(deliveryAsyncModel).map(item -> item));
     }
 
-    private Mono<DeliveryPayload> getDeliveryPayload(RequestDeliveryEntity request, AddressEntity address){
+    private Mono<DeliveryAsyncModel> getDeliveryPayload(DeliveryAsyncModel deliveryAsyncModel){
         log.info("Start Prepare Async");
         return getContract()
-                .flatMap(contract -> getPriceAttachments(request.getAttachments(), contract.getPricePerPage())
+                .flatMap(contract -> getPriceAttachments(deliveryAsyncModel.getAttachments(), contract.getPricePerPage())
                         .map(price -> Double.sum(contract.getPrice(), price))
                 )
-                .map(price -> new DeliveryPayload(AddressMapper.toDTO(address), price));
+                .map(amount ->{
+                    deliveryAsyncModel.setAmount(amount);
+                    return deliveryAsyncModel;
+                });
     }
 
     private Mono<Contract> getContract() {
         return Mono.just(new Contract(5.0, 10.0));
     }
 
-    private ParallelFlux<AttachmentInfo> getAttachmentsInfo(List<AttachmentInfoEntity> attachmentsFileKey){
+    private ParallelFlux<AttachmentInfo> getAttachmentsInfo(List<AttachmentInfo> attachmentsFileKey){
         return Flux.fromStream(attachmentsFileKey.stream())
                 .parallel()
                 .flatMap(attachment -> safeStorageClient.getFile(attachment.getFileKey())
@@ -99,7 +117,7 @@ public class PrepareAsyncServiceImpl implements PaperAsyncService {
                 });
     }
 
-    private Mono<Double> getPriceAttachments(List<AttachmentInfoEntity> attachmentsFileKey, Double priceForAAr){
+    private Mono<Double> getPriceAttachments(List<AttachmentInfo> attachmentsFileKey, Double priceForAAr){
         return getAttachmentsInfo(attachmentsFileKey)
                 .map(attachmentInfo -> attachmentInfo.getNumberOfPage() * priceForAAr)
                 .sequential()
