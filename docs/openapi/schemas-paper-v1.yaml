@@ -45,6 +45,12 @@ components:
           $ref: '#/components/schemas/AnalogAddress'
         productType:
           type: string
+          enum:
+            - RN_AR
+            - RN_890
+            - RN_RS
+            - RI_AR
+            - RI_RS
           description: "Tipo prodotto di cui viene chiesto il recapito: <br/> \
             \  - __RN_AR__: Raccomandata Andata e Ritorno, <br/> \
             \  - __RN_890__: Recapito a norma della legge 890/1982, <br/> \
