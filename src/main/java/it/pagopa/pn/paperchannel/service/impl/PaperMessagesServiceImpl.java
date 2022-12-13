@@ -44,7 +44,7 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
 
         return requestDeliveryDAO.getByRequestId(requestId)
                 // Case of 409
-                .map(entity -> compareRequestEntity(prepareRequest, entity))
+                //.map(entity -> compareRequestEntity(prepareRequest, entity))
                 // Case of 200,
                 .map(PreparePaperResponseMapper::fromResult)
                 .onErrorResume(PnGenericException.class, ex -> {
@@ -90,7 +90,7 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
                         Mono.just("")
                                 .publishOn(Schedulers.parallel())
                                 .flatMap(item -> prepareAsyncService.prepareAsync(prepareRequest.getRequestId(),correlationId,address))
-                                .subscribe(new SubscriberPrepare(null, prepareRequest.getRequestId(), requestDeliveryDAO));
+                                .subscribe(new SubscriberPrepare(null, requestDeliveryDAO, prepareRequest.getRequestId(), correlationId));
                     }
                     throw new PnPaperEventException(PreparePaperResponseMapper.fromEvent(prepareRequest.getRequestId()));
                 });

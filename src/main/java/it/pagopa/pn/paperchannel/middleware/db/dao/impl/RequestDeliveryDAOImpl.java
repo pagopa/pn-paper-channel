@@ -86,12 +86,11 @@ public class RequestDeliveryDAOImpl extends BaseDAO<RequestDeliveryEntity> imple
                 }));
     }
 
-    public Flux<RequestDeliveryEntity> getByCorrelationId(String correlationId) {
-        return this.getBySecondaryIndex(RequestDeliveryEntity.CORRELATION_INDEX, correlationId, null);
-    }
     @Override
     public Mono<RequestDeliveryEntity> getByCorrelationId(String correlationId) {
-        return null;
+        return this.getBySecondaryIndex(RequestDeliveryEntity.CORRELATION_INDEX, correlationId, null)
+                .collectList()
+                .map(item -> item.get(0));
     }
 
     @Override

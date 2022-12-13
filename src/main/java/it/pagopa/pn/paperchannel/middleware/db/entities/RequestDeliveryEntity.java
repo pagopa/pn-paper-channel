@@ -56,9 +56,6 @@ public class RequestDeliveryEntity {
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_ADDRESS_HASH)}))
     private String addressHash;
 
-    @Getter(onMethod = @__({@DynamoDbAttribute(COL_ADDRESS)}))
-    private AddressEntity address;
-
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_STATUS_CODE)}))
     private String statusCode;
 

@@ -7,15 +7,12 @@ import it.pagopa.pn.paperchannel.mapper.AddressMapper;
 import it.pagopa.pn.paperchannel.mapper.AttachmentMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
-import it.pagopa.pn.paperchannel.middleware.db.entities.AddressEntity;
-import it.pagopa.pn.paperchannel.middleware.db.entities.AttachmentInfoEntity;
 import it.pagopa.pn.paperchannel.middleware.db.entities.RequestDeliveryEntity;
 import it.pagopa.pn.paperchannel.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.paperchannel.pojo.Address;
 import it.pagopa.pn.paperchannel.pojo.AttachmentInfo;
 import it.pagopa.pn.paperchannel.pojo.Contract;
 import it.pagopa.pn.paperchannel.pojo.DeliveryAsyncModel;
-import it.pagopa.pn.paperchannel.queue.model.DeliveryPayload;
 import it.pagopa.pn.paperchannel.service.PaperAsyncService;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -49,14 +46,15 @@ public class PrepareAsyncServiceImpl implements PaperAsyncService {
 
 
     @Override
-    public Mono<DeliveryPayload> prepareAsync(String requestId, String correlationId, Address address){
+    public Mono<DeliveryAsyncModel> prepareAsync(String requestId, String correlationId, Address address){
 
         Mono<RequestDeliveryEntity> requestDeliveryEntityMono = requestDeliveryDAO.getByRequestId(requestId);
         if(correlationId!= null){
             requestDeliveryEntityMono = requestDeliveryDAO.getByCorrelationId(correlationId);
         }
+
         return requestDeliveryEntityMono
-                .map(requestDeliveryEntity -> {
+                .flatMap(requestDeliveryEntity -> {
                     DeliveryAsyncModel deliveryAsyncModel = new DeliveryAsyncModel();
                     deliveryAsyncModel.setRequestId(requestDeliveryEntity.getRequestId());
 
@@ -64,21 +62,17 @@ public class PrepareAsyncServiceImpl implements PaperAsyncService {
                         deliveryAsyncModel.setAttachments(requestDeliveryEntity.getAttachments().stream()
                                 .map(AttachmentMapper::fromEntity).collect(Collectors.toList()));
                     }
-                    return deliveryAsyncModel;
+                    return Mono.just(deliveryAsyncModel);
                 })
-                .flatMap(deliveryAsyncModel -> {
-                     addressDAO.create(AddressMapper.toEntity( address,deliveryAsyncModel.getRequestId()))
+                .flatMap(deliveryAsyncModel -> addressDAO.create(AddressMapper.toEntity( address, deliveryAsyncModel.getRequestId()))
                                     .map(item -> {
                                         deliveryAsyncModel.setAddress(AddressMapper.toDTO(item));
                                         return deliveryAsyncModel;
-                                    });
-                        }
-                )
-                .map(deliveryAsyncModel -> deliveryAsyncModel getDeliveryPayload(deliveryAsyncModel).map(item -> item));
+                                    })
+                ).flatMap(deliveryAsyncModel -> getAmount(deliveryAsyncModel).map(item -> item));
     }
 
-    private Mono<DeliveryAsyncModel> getDeliveryPayload(DeliveryAsyncModel deliveryAsyncModel){
-        log.info("Start Prepare Async");
+    private Mono<DeliveryAsyncModel> getAmount(DeliveryAsyncModel deliveryAsyncModel){
         return getContract()
                 .flatMap(contract -> getPriceAttachments(deliveryAsyncModel.getAttachments(), contract.getPricePerPage())
                         .map(price -> Double.sum(contract.getPrice(), price))

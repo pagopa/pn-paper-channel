@@ -3,25 +3,25 @@ package it.pagopa.pn.paperchannel.service.impl;
 import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
-import it.pagopa.pn.paperchannel.middleware.db.entities.RequestDeliveryEntity;
-import it.pagopa.pn.paperchannel.queue.model.DeliveryPayload;
+import it.pagopa.pn.paperchannel.pojo.DeliveryAsyncModel;
 import lombok.extern.slf4j.Slf4j;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
-import reactor.core.publisher.Mono;
 
 @Slf4j
-public class SubscriberPrepare implements Subscriber<DeliveryPayload> {
+public class SubscriberPrepare implements Subscriber<DeliveryAsyncModel> {
 
-    private DeliveryPayload deliveryPayload;
-    private SqsQueueSender sqsQueueSender;
-    private RequestDeliveryDAO requestDeliveryDAO;
-    private String requestId;
+    private DeliveryAsyncModel deliveryAsyncModel;
+    private final SqsQueueSender sqsQueueSender;
+    private final RequestDeliveryDAO requestDeliveryDAO;
+    private final String requestId;
+    private final String corralationId;
 
-    public SubscriberPrepare(SqsQueueSender sqsQueueSender, String requestId, RequestDeliveryDAO requestDeliveryDAO) {
+    public SubscriberPrepare(SqsQueueSender sqsQueueSender, RequestDeliveryDAO requestDeliveryDAO, String requestId, String corralationId) {
         this.sqsQueueSender = sqsQueueSender;
-        this.requestId = requestId;
         this.requestDeliveryDAO = requestDeliveryDAO;
+        this.requestId = requestId;
+        this.corralationId = corralationId;
     }
 
     @Override
@@ -30,10 +30,9 @@ public class SubscriberPrepare implements Subscriber<DeliveryPayload> {
     }
 
     @Override
-    public void onNext(DeliveryPayload deliveryPayload) {
-        this.deliveryPayload = deliveryPayload;
+    public void onNext(DeliveryAsyncModel deliveryAsyncModel) {
+        this.deliveryAsyncModel = deliveryAsyncModel;
         log.info("Custom subscriber on next");
-        log.info(deliveryPayload.toString());
     }
 
     @Override
@@ -41,22 +40,24 @@ public class SubscriberPrepare implements Subscriber<DeliveryPayload> {
         log.error("on Error : {}", throwable.getMessage());
         if(throwable instanceof PnGenericException){
             PnGenericException exception = (PnGenericException) throwable;
+            /*
             if(exception.getExceptionType().equals(ExceptionTypeEnum.UNTRACEABLE_ADDRESS)){
-                Mono<RequestDeliveryEntity> requestDeliveryEntityMono = requestDeliveryDAO.getByRequestId(requestId);
+                //Mono<RequestDeliveryEntity> requestDeliveryEntityMono = requestDeliveryDAO.getByRequestId(requestId);
                 //Aggiornare o inserire entity per etichettare codice fiscale come irreperibile totale
             }
             if(exception.getExceptionType().equals(ExceptionTypeEnum.DOCUMENT_URL_NOT_FOUND)){
-                Mono<RequestDeliveryEntity> requestDeliveryEntityMono = requestDeliveryDAO.getByRequestId(requestId);
+                //Mono<RequestDeliveryEntity> requestDeliveryEntityMono = requestDeliveryDAO.getByRequestId(requestId);
                 //Aggiornare o inserire entity per etichettare codice fiscale come irreperibile totale
             }
             if(exception.getExceptionType().equals(ExceptionTypeEnum.DOCUMENT_NOT_DOWNLOADED)){
-                Mono<RequestDeliveryEntity> requestDeliveryEntityMono = requestDeliveryDAO.getByRequestId(requestId);
+                //Mono<RequestDeliveryEntity> requestDeliveryEntityMono = requestDeliveryDAO.getByRequestId(requestId);
                 //Aggiornare o inserire entity per etichettare codice fiscale come irreperibile totale
             }
             if(exception.getExceptionType().equals(ExceptionTypeEnum.RETRY_AFTER_DOCUMENT)){
-                Mono<RequestDeliveryEntity> requestDeliveryEntityMono = requestDeliveryDAO.getByRequestId(requestId);
+                //Mono<RequestDeliveryEntity> requestDeliveryEntityMono = requestDeliveryDAO.getByRequestId(requestId);
                 //Aggiornare o inserire entity per etichettare codice fiscale come irreperibile totale
             }
+            */
         }
     }
 
