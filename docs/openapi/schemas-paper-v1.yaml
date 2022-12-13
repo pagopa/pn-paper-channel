@@ -69,7 +69,8 @@ components:
       type: object
       properties:
         statusCode:
-          type: enum
+          type: string
+          enum:
             - OK
             - PROGRESS
             - KOUNREACHABLE
