@@ -5,6 +5,10 @@ import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
 import it.pagopa.pn.paperchannel.middleware.db.entities.AddressEntity;
 import it.pagopa.pn.paperchannel.pojo.Address;
 import it.pagopa.pn.paperchannel.rest.v1.dto.AnalogAddress;
+import it.pagopa.pn.paperchannel.utils.DateUtils;
+
+import java.time.LocalDateTime;
+import java.util.Date;
 
 public class AddressMapper {
 
@@ -23,6 +27,7 @@ public class AddressMapper {
     public static AddressEntity toEntity(Address address, String requestId){
         AddressEntity addressEntity = mapperToAddressEntity.toEntity(address);
         addressEntity.setRequestId(requestId);
+        addressEntity.setTtl(DateUtils.getTimeStampOfMills(LocalDateTime.now().plusMinutes(30L)));
         return addressEntity;
     }
 

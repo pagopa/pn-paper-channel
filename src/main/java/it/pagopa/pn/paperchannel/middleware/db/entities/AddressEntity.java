@@ -64,7 +64,7 @@ public class AddressEntity {
     private String country;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_TTL)}))
-    private Integer ttl;
+    private Long ttl;
 
 
 }

@@ -1,11 +1,13 @@
 package it.pagopa.pn.paperchannel.mapper;
 
+import it.pagopa.pn.paperchannel.middleware.db.entities.AttachmentInfoEntity;
 import it.pagopa.pn.paperchannel.middleware.db.entities.RequestDeliveryEntity;
 import it.pagopa.pn.paperchannel.pojo.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareRequest;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 
 import java.util.Date;
+import java.util.stream.Collectors;
 
 public class RequestDeliveryMapper {
     private RequestDeliveryMapper() {
@@ -23,16 +25,21 @@ public class RequestDeliveryMapper {
         if (correlationId != null){
             entity.setStatusCode(StatusDeliveryEnum.NATIONAL_REGISTRY_WAITING.getCode());
             entity.setStatusDetail(StatusDeliveryEnum.NATIONAL_REGISTRY_WAITING.getDescription());
-         }
+        }
 
         entity.setStatusDate(DateUtils.formatDate(new Date()));
         entity.setFiscalCode(request.getReceiverFiscalCode());
         entity.setAddressHash("Hash code");
+        entity.setCorrelationId(correlationId);
 
+        if(request.getAttachmentUrls()!= null){
+            entity.setAttachments(request.getAttachmentUrls().stream().map(key -> {
+                AttachmentInfoEntity attachmentInfoEntity = new AttachmentInfoEntity();
+                attachmentInfoEntity.setFileKey(key);
+                return attachmentInfoEntity;
+            }).collect(Collectors.toList()));
+        }
 
-
-
-       // TODO abilitare quando il campo correlationID è presente : entity.setCorrelationId(correlationId);
         return entity;
     }
 

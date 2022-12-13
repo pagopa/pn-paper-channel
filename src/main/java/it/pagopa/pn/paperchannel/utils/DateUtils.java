@@ -30,6 +30,9 @@ public class DateUtils {
 
     }
 
+    public static Long getTimeStampOfMills(LocalDateTime time){
+        return time.toInstant(ZoneOffset.UTC).getEpochSecond();
+    }
 
 
     public static OffsetDateTime getOffsetDateTime(String date){
