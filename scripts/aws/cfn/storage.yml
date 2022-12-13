@@ -73,18 +73,18 @@ Resources:
         - AttributeName: "requestId"
           AttributeType: "S"
       TimeToLiveSpecification:
-        - AttributeName: "ttl"
-          Enabled: true
+        AttributeName: "ttl"
+        Enabled: true
       KeySchema:
         - AttributeName: "requestId"
           KeyType: "HASH"
       ProvisionedThroughput:
         ReadCapacityUnits: "5"
         WriteCapacityUnits: "5"
-    KinesisStreamSpecification:
-      StreamArn: !Ref CdcKinesisSourceStreamArn
-    StreamSpecification:
-      StreamViewType: NEW_IMAGE
+      KinesisStreamSpecification:
+        StreamArn: !Ref CdcKinesisSourceStreamArn
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
 
 Outputs:
 
