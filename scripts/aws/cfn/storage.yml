@@ -25,6 +25,31 @@ Parameters:
     Description: 'Where to send CDC'
 
 Resources:
+  PCDynamoSigningKey:
+    Type: 'AWS::KMS::Key'
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      Description: RSA-2048 key to generate session token
+      KeySpec: RSA_2048
+      KeyUsage: SIGN_VERIFY
+      KeyPolicy:
+        Version: 2012-10-17
+        Statement:
+          - Sid: Enable IAM User Permissions
+            Effect: Allow
+            Principal:
+              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
+            Action: 'kms:*'
+            Resource: '*'
+
+  # Application use this alias to access the public/private key pair
+  PCDynamoSigningKeyAlias:
+    Type: 'AWS::KMS::Alias'
+    Properties:
+      AliasName: !Sub 'alias/${ProjectName}-paper-channel-dynamo'
+      TargetKeyId: !Ref PCDynamoSigningKey
+
   RequestDeliveryDynamoTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -87,6 +112,10 @@ Resources:
         StreamViewType: NEW_IMAGE
 
 Outputs:
+
+  PCDynamoSigningKeyARN:
+    Description: PCDynamoSigningKeyARN
+    Value: !Sub '${PCDynamoSigningKey.Arn}'
 
   RequestDeliveryDynamoTableName:
     Description: Name of dynamodb table containing request

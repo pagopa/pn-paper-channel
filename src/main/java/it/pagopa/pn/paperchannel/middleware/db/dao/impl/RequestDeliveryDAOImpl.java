@@ -86,6 +86,9 @@ public class RequestDeliveryDAOImpl extends BaseDAO<RequestDeliveryEntity> imple
                 }));
     }
 
+    public Flux<RequestDeliveryEntity> getByCorrelationId(String correlationId) {
+        return this.getBySecondaryIndex(RequestDeliveryEntity.CORRELATION_INDEX, correlationId, null);
+    }
     @Override
     public Mono<RequestDeliveryEntity> getByCorrelationId(String correlationId) {
         return null;
@@ -93,7 +96,7 @@ public class RequestDeliveryDAOImpl extends BaseDAO<RequestDeliveryEntity> imple
 
     @Override
     public Flux<RequestDeliveryEntity> getByFiscalCode(String fiscalCode) {
-        return null;
+        return this.getBySecondaryIndex(RequestDeliveryEntity.FISCAL_CODE_INDEX, fiscalCode, null);
     }
 
     private CompletableFuture<Integer> countOccurrencesEntity(String requestId){
