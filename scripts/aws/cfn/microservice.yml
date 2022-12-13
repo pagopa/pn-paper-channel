@@ -114,7 +114,7 @@ Resources:
         ContainerEnvEntry5: !Sub 'PN_PAPERCHANNEL_SAFESTORAGECXID=pn-radd'
         ContainerEnvEntry6: !Sub 'AWS_DYNAMODBREQUESTDELIVERYTABLE=${RequestDeliveryDynamoTableName}'
         ContainerEnvEntry7: !Sub 'AWS_DYNAMODBADDRESSTABLE=${AddressDynamoTableName}'
-        ContainerEnvEntry8: !Ref 'PN_PAPERCHANNEL_KMS_KEY=${PCDynamoSigningKeyARN}'
+        ContainerEnvEntry8: !Sub 'PN_PAPERCHANNEL_KMS_KEY=${PCDynamoSigningKeyARN}'
         MappedPaths: '/paper-channel/*,/paper-channel-private/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds
