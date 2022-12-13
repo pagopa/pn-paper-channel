@@ -43,6 +43,16 @@ components:
           $ref: '#/components/schemas/AnalogAddress'
         arAddress:
           $ref: '#/components/schemas/AnalogAddress'
+        productType:
+          type: string
+          description: "Tipo prodotto di cui viene chiesto il recapito: <br/> \
+            \  - __RN_AR__: Raccomandata Andata e Ritorno, <br/> \
+            \  - __RN_890__: Recapito a norma della legge 890/1982, <br/> \
+            \  - __RN_RS__: Raccomandata Semplice (per Avviso di mancato Recapito). <br/> \
+            \  - __RI_AR__: Recapito a norma della legge 890/1982, <br/> \
+            \  - __RI_RS__: Recapito a norma della legge 890/1982, <br/> \
+            \  - ... ulteriori prodotti"
+          example: RN_AR
       allOf:
       - $ref: '#/components/schemas/PaperRequest'
     SendResponse:
@@ -59,7 +69,10 @@ components:
       type: object
       properties:
         statusCode:
-          type: string
+          type: enum
+            - OK
+            - PROGRESS
+            - KOUNREACHABLE
           description: "Codici di stato:
             \ - PROGRESS :  stato iniziale che indica che\
             \ la richiesta è in fase di elaborazione
@@ -67,6 +80,9 @@ components:
             \ - KOUNREACHABLE : nel caso in cui non sia disponibile un indirizzo per l'utente in base alle informazioni passate."
         receiverAddress:
           $ref: '#/components/schemas/AnalogAddress'
+        productType:
+          type: string
+          description: Il productType effettivo che da usare per l'invio
       allOf:
       - $ref: '#/components/schemas/PaperEvent'
     SendEvent:
@@ -123,6 +139,14 @@ components:
       allOf:
       - $ref: '#/components/schemas/PaperEvent'
     PrepareRequest:
+      required:
+          - attachmentUrls
+          - clientRequestTimeStamp
+          - printType
+          - proposalProductType
+          - requestId
+          - receiverFiscalCode
+          - receiverType
       type: object
       properties:
         relatedRequestId:
@@ -130,6 +154,17 @@ components:
           description: "Se presente, indica che questa seconda richiesta è successiva a quella passata nel relatedRequestId"
         discoveredAddress:
           $ref: '#/components/schemas/AnalogAddress'
+        proposalProductType:
+          type: string
+          enum:
+            - AR
+            - 890
+            - RS
+          description: "Tipo prodotto proposta di cui viene chiesto il recapito: <br/> \
+            \  - __AR__: Raccomandata Andata e Ritorno, <br/> \
+            \  - __890__: Recapito a norma della legge 890/1982, <br/> \
+            \  - __RS__: Raccomandata Semplice (per Avviso di mancato Recapito)."
+          example: AR
       allOf:
       - $ref: '#/components/schemas/PaperRequest'
     Problem:
@@ -195,14 +230,6 @@ components:
           description: PF o PG in base al tipo di destinatario
         receiverAddress:
           $ref: '#/components/schemas/AnalogAddress'
-        productType:
-          type: string
-          description: "Tipo prodotto di cui viene chiesto il recapito: <br/> - __AR__:\
-            \ Raccomandata Andata e Ritorno, <br/> - __890__: Recapito a norma della\
-            \ legge 890/1982, <br/> - __RI__: Raccomandata Internazionale, <br/> -\
-            \ __RS__: Raccomandata Semplice (per Avviso di mancato Recapito). <br/>\
-            \ - ... ulteriori prodotti"
-          example: AR
         printType:
           type: string
           description: "Indica il tipo di stampa richiesto al Consolidatore <br />\
