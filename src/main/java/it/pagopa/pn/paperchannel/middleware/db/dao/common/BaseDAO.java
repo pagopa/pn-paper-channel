@@ -3,13 +3,12 @@ package it.pagopa.pn.paperchannel.middleware.db.dao.common;
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.paperchannel.middleware.db.entities.RequestDeliveryEntity;
 import org.apache.commons.lang3.StringUtils;
+import reactor.core.publisher.Flux;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
-import software.amazon.awssdk.enhanced.dynamodb.model.GetItemEnhancedRequest;
-import software.amazon.awssdk.enhanced.dynamodb.model.PutItemEnhancedRequest;
-import software.amazon.awssdk.enhanced.dynamodb.model.UpdateItemEnhancedRequest;
+import software.amazon.awssdk.enhanced.dynamodb.model.*;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.QueryRequest;
@@ -61,6 +60,17 @@ public abstract class BaseDAO<T> {
 
         return dynamoTable.getItem(keyBuilder.build());
     }
+
+    protected Flux<T> getBySecondaryIndex(String index, String partitionKey, String sortKey){
+
+        Key.Builder keyBuilder = Key.builder().partitionValue(partitionKey);
+        if (!StringUtils.isBlank(sortKey)){
+            keyBuilder.sortValue(sortKey);
+        }
+
+        return Flux.from(dynamoTable.index(index).query(QueryConditional.keyEqualTo(keyBuilder.build())).flatMapIterable(Page::items));
+    }
+
 
     protected CompletableFuture<Integer> getCounterQuery(Map<String, AttributeValue> values, String filterExpression, String keyConditionExpression){
         QueryRequest.Builder qeRequest = QueryRequest
