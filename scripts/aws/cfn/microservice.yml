@@ -75,6 +75,10 @@ Parameters:
     Type: String
     Description: 'keep track of used projects commitIds'
 
+  PCDynamoSigningKeyARN:
+    Type: String
+    Description: 'KMS Key for Dynamo encryption/decryption data'
+
   RequestDeliveryDynamoTableName:
     Type: String
     Description: 'Name of dynamodb table containing request'
@@ -130,6 +134,9 @@ Resources:
         Statement:
           - Effect: Allow
             Action:
+              - kms:Encrypt
+              - kms:Decrypt
+              - kms:ReEncrypt*
               - dynamodb:BatchGetItem
               - dynamodb:BatchWriteItem
               - dynamodb:ExecuteTransaction
@@ -141,6 +148,7 @@ Resources:
               - dynamodb:TransactWriteItems
               - dynamodb:UpdateItem
             Resource:
+              - !Ref PCDynamoSigningKeyARN
               - !Sub "${RequestDeliveryDynamoTableArn}"
               - !Sub "${RequestDeliveryDynamoTableArn}/*"
               - !Sub "${AddressDynamoTableArn}"
