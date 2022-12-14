@@ -95,6 +95,14 @@ Parameters:
     Type: String
     Description: 'ARN of dynamodb table containing address of request delivery'
 
+  ExternalChannelsOutputsQueueName:
+    Type: String
+    Description: 'Pull external-channel messages from this Queue'
+
+  ExternalChannelsOutputsQueueARN:
+    Type: String
+    Description: 'Pull external-channel messages from this Queue'
+
 Resources:
   # PN-Paper-Channel microservice
   PaperChannelMicroservice:
@@ -115,6 +123,7 @@ Resources:
         ContainerEnvEntry6: !Sub 'AWS_DYNAMODBREQUESTDELIVERYTABLE=${RequestDeliveryDynamoTableName}'
         ContainerEnvEntry7: !Sub 'AWS_DYNAMODBADDRESSTABLE=${AddressDynamoTableName}'
         ContainerEnvEntry8: !Sub 'PN_PAPERCHANNEL_KMS_KEY=${PCDynamoSigningKeyARN}'
+        ContainerEnvEntry9: !Sub 'PN_PAPERCHANNEL_QUEUE_DELIVERYPUSH=${ExternalChannelsOutputsQueueName}'
         MappedPaths: '/paper-channel/*,/paper-channel-private/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds
@@ -148,8 +157,18 @@ Resources:
               - dynamodb:TransactGetItems
               - dynamodb:TransactWriteItems
               - dynamodb:UpdateItem
+              - sqs:ChangeMessageVisibility
+              - sqs:ChangeMessageVisibilityBatch
+              - sqs:DeleteMessage
+              - sqs:DeleteMessageBatch
+              - sqs:GetQueueAttributes
+              - sqs:GetQueueUrl
+              - sqs:ReceiveMessage
+              - sqs:SendMessage
+              - sqs:SendMessageBatch
             Resource:
               - !Ref PCDynamoSigningKeyARN
+              - !Ref ExternalChannelsOutputsQueueARN
               - !Sub "${RequestDeliveryDynamoTableArn}"
               - !Sub "${RequestDeliveryDynamoTableArn}/*"
               - !Sub "${AddressDynamoTableArn}"
