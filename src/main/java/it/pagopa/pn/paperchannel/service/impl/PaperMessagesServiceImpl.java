@@ -22,6 +22,7 @@ import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareRequest;
 import it.pagopa.pn.paperchannel.rest.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.service.PaperMessagesService;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
+import it.pagopa.pn.paperchannel.validator.PrepareRequestValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,13 +54,17 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
     private SafeStorageClient safeStorageClient;
     @Autowired
     private NationalRegistryClient nationalRegistryClient;
+    private PrepareRequestValidator prepareRequestValidator;
+    public PaperMessagesServiceImpl() {
+        prepareRequestValidator = new PrepareRequestValidator();
+    }
 
     @Override
     public Mono<SendEvent> preparePaperSync(String requestId, PrepareRequest prepareRequest){
 
         return requestDeliveryDAO.getByRequestId(requestId)
                 // Case of 409
-                .map(entity -> compareRequestEntity(prepareRequest, entity))
+                .map(entity -> prepareRequestValidator.compareRequestEntity(prepareRequest, entity))
                 // Case of 200,
                 .map(PreparePaperResponseMapper::fromResult)
                 .onErrorResume(PnGenericException.class, ex -> {
@@ -169,42 +174,4 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
                 });
     }
 
-
-    private RequestDeliveryEntity compareRequestEntity(PrepareRequest prepareRequest, RequestDeliveryEntity requestDeliveryEntity) {
-        if((prepareRequest.getRequestId().equals(requestDeliveryEntity.getRequestId()) &&
-                (!(prepareRequest.getReceiverFiscalCode().equals(requestDeliveryEntity.getFiscalCode()))) ||
-                (!(prepareRequest.getProductType().equals(requestDeliveryEntity.getRegisteredLetterCode()))))){
-
-            //caso in cui recivered address è popolato mentre discovered address no
-            if(((prepareRequest.getReceiverAddress()!=null && prepareRequest.getDiscoveredAddress()==null) ||
-                    (prepareRequest.getReceiverAddress()==null && prepareRequest.getDiscoveredAddress()!=null)) &&
-                    checkAddressInfo(prepareRequest,requestDeliveryEntity)){
-                //recivered address diverso da quello precedentemente ricevuto
-                throw new PnGenericException(DIFFERENT_DATA_REQUEST, DIFFERENT_DATA_REQUEST.getMessage(), HttpStatus.CONFLICT);
-            }
-            //caso in cui sono entrambi null l'indirizzo viene recuperato dal national registry
-            if(prepareRequest.getReceiverAddress()==null && prepareRequest.getDiscoveredAddress()==null){
-                throw new PnGenericException(DIFFERENT_DATA_REQUEST, DIFFERENT_DATA_REQUEST.getMessage(), HttpStatus.CONFLICT);
-            }
-        }
-        return requestDeliveryEntity;
-    }
-
-    public boolean checkAddressInfo(PrepareRequest prepareRequest, RequestDeliveryEntity requestDeliveryEntity){
-
-        if(!prepareRequest.getReceiverAddress().getAddress().equals(requestDeliveryEntity.getAddress().getAddress()) ||
-                !prepareRequest.getReceiverAddress().getFullname().equals(requestDeliveryEntity.getAddress().getFullName()) ||
-                !prepareRequest.getReceiverAddress().getNameRow2().equals(requestDeliveryEntity.getAddress().getNameRow2()) ||
-                !prepareRequest.getReceiverAddress().getAddressRow2().equals(requestDeliveryEntity.getAddress().getAddressRow2()) ||
-                !prepareRequest.getReceiverAddress().getCap().equals(requestDeliveryEntity.getAddress().getCap()) ||
-                !prepareRequest.getReceiverAddress().getCity().equals(requestDeliveryEntity.getAddress().getCity()) ||
-                !prepareRequest.getReceiverAddress().getCity2().equals(requestDeliveryEntity.getAddress().getCity2()) ||
-                !prepareRequest.getReceiverAddress().getPr().equals(requestDeliveryEntity.getAddress().getPr()) ||
-                !prepareRequest.getReceiverAddress().getCountry().equals(requestDeliveryEntity.getAddress().getCountry())){
-            return true;
-        }
-        else{
-            return false;
-        }
-    }
 }
