@@ -31,13 +31,13 @@ public class SQSConfig {
      * https://docs.awspring.io/spring-cloud-aws/docs/2.4.2/reference/html/index.html#fifo-queue-support
      * @return bean per le code
      */
-    @Bean
+    //@Bean
     public DeliveryMomProducer deliveryMomProducer(SqsClient sqsClient, ObjectMapper objectMapper){
        // return new DeliveryMomProducer(sqsClient,this.pnPaperChannelConfig.getQueueDeliveryPush(),objectMapper, DeliveryEvent.class);
         return null;
     }
 
-    @Bean
+    //@Bean
     public AmazonSQSAsync amazonSQS() {
 //        if (StringUtils.hasText(awsConfigs.getEndpointUrl())) {
 //            log.info("with endpoint");
