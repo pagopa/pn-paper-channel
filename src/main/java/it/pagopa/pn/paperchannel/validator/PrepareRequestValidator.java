@@ -14,7 +14,7 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DIFFERENT_DA
 
 public class PrepareRequestValidator {
 
-    private RequestDeliveryEntity compareRequestEntity(PrepareRequest prepareRequest, RequestDeliveryEntity requestDeliveryEntity) {
+    public RequestDeliveryEntity compareRequestEntity(PrepareRequest prepareRequest, RequestDeliveryEntity requestDeliveryEntity) {
         List<String> errors = new ArrayList<>();
         if (!StringUtils.equals(prepareRequest.getRequestId(), requestDeliveryEntity.getRequestId())){
             errors.add("RequestId");
