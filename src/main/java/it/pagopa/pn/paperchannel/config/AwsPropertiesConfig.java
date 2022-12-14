@@ -12,8 +12,6 @@ import org.springframework.context.annotation.Configuration;
 @Setter
 public class AwsPropertiesConfig extends AwsConfigs {
 
-    private String readyDeliveryQueue;
-
     private String dynamodbRequestDeliveryTable;
     private String dynamodbAddressTable;
 }
