@@ -1,6 +1,6 @@
 package it.pagopa.pn.paperchannel.queue.model;
 
-import it.pagopa.pn.paperchannel.pojo.Address;
+import it.pagopa.pn.paperchannel.model.Address;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

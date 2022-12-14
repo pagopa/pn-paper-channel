@@ -1,4 +1,4 @@
-package it.pagopa.pn.paperchannel.pojo;
+package it.pagopa.pn.paperchannel.model;
 
 import lombok.Getter;
 import lombok.Setter;
