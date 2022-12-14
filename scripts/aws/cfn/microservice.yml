@@ -133,6 +133,7 @@ Resources:
         ContainerEnvEntry8: !Sub 'PN_PAPERCHANNEL_KMS_KEY=${PCDynamoSigningKeyARN}'
         ContainerEnvEntry9: !Sub 'PN_PAPERCHANNEL_QUEUEDELIVERYPUSH=${ExternalChannelsOutputsQueueName}'
         ContainerEnvEntry10: !Sub 'PN_PAPERCHANNEL_QUEUEEXTERNALCHANNEL=${ExternalChannels2PaperChannelQueueName}'
+        ContainerEnvEntry11: !Sub 'SPRING_CLOUD_FUNCTIONROUTER_QUEUES_LIST=${ExternalChannelsOutputsQueueName},${ExternalChannels2PaperChannelQueueName}'
         MappedPaths: '/paper-channel/*,/paper-channel-private/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds
