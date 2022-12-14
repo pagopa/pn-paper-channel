@@ -18,7 +18,7 @@ public class QueueListener {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @SqsListener(value = "${pn.paper-channel.queue-externalchannel}",deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)
+    @SqsListener(value = "${pn.paper-channel.queue-external-channel}",deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)
     public void pull( String node, Map<String,Object> headers){
         convertPayload(node);
         log.info("BODY - {}",node);
