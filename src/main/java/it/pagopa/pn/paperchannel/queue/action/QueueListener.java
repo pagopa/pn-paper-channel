@@ -2,6 +2,8 @@ package it.pagopa.pn.paperchannel.queue.action;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.awspring.cloud.messaging.listener.SqsMessageDeletionPolicy;
+import io.awspring.cloud.messaging.listener.annotation.SqsListener;
 import it.pagopa.pn.paperchannel.queue.model.DeliveryPayload;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,23 +11,21 @@ import org.springframework.stereotype.Component;
 
 import java.util.Map;
 
-//@Component
+@Component
 @Slf4j
 public class QueueListener {
 
-    //@Autowired
-    //private ObjectMapper objectMapper;
+    @Autowired
+    private ObjectMapper objectMapper;
 
-    //@SqsListener(value = "${aws.ready-delivery-queue}",deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)
+    @SqsListener(value = "${pn.paper-channel.queue-externalchannel}",deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)
     public void pull( String node, Map<String,Object> headers){
-
-       // convertPayload(node);
+        convertPayload(node);
         log.info("BODY - {}",node);
         log.info("HEADERS - {}",headers);
     }
 
     private DeliveryPayload convertPayload(String json){
-        /*
         try {
             return objectMapper.readValue(json,DeliveryPayload.class);
 
@@ -33,7 +33,5 @@ public class QueueListener {
             e.printStackTrace();
             return null;
         }
-         */
-        return  null;
     }
 }
