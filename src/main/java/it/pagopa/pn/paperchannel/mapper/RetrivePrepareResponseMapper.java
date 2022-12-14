@@ -18,7 +18,7 @@ public class RetrivePrepareResponseMapper {
         entityEvent.setRequestId(request.getRequestId());
         entityEvent.setStatusCode(StatusDeliveryEnum.IN_PROCESSING.getCode());
         entityEvent.setStatusDetail(StatusDeliveryEnum.IN_PROCESSING.getDescription());
-        entityEvent.setReceiverAddress(baseMapperAddress.toDTO(request.getAddress()));
+      //  entityEvent.setReceiverAddress(baseMapperAddress.toDTO(request.getAddress()));
         entityEvent.setStatusDateTime((DateUtils.parseDateString(request.getStatusDate())));
         return entityEvent;
     }

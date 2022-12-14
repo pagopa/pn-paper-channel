@@ -29,9 +29,10 @@ public class PreparePaperResponseMapper {
         event.setRegisteredLetterCode(item.getRegisteredLetterCode());
         event.setClientRequestTimeStamp(DateUtils.parseDateString(item.getStartDate()));
 
-        if(item.getAddress()!= null){
-            event.setDiscoveredAddress(baseMapperAddress.toDTO(item.getAddress()));
-        }
+
+       // if(item.getAddress()!= null){
+         //   event.setDiscoveredAddress(baseMapperAddress.toDTO(item.getAddress()));
+       // }
         if(item.getAttachments()!= null){
             event.setAttachments(item.getAttachments().stream().map(baseMapperAttachment::toDTO).collect(Collectors.toList()));
         }

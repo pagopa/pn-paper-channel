@@ -63,6 +63,11 @@ public class SubscriberPrepare implements Subscriber<DeliveryAsyncModel> {
 
     @Override
     public void onComplete() {
+        //controllo se valorizzati
+
+        //fare query per recuperare i dati dalla tabella e tutti gli altri ogetti
+
+        //push
         log.info("Custom subscriber on complete");
     }
 }
