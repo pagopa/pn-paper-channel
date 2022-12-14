@@ -34,15 +34,13 @@ public class SQSConfig {
     @Bean
     public DeliveryMomProducer deliveryMomProducer(SqsClient sqsClient, ObjectMapper objectMapper){
         log.info("Params: "+ this.pnPaperChannelConfig.getQueueDeliveryPush());
-        log.info("Params: "+ this.pnPaperChannelConfig.getSafeStorageCxId());
-        log.info("Params: "+ this.pnPaperChannelConfig.getClientNationalRegistriesBasepath());
-
         return new DeliveryMomProducer(sqsClient,this.pnPaperChannelConfig.getQueueDeliveryPush(),objectMapper, DeliveryEvent.class);
     }
 
     @Bean
     public AmazonSQSAsync amazonSQS() {
-        log.info(awsConfigs.getRegionCode());
+        log.info("Url: "+awsConfigs.getRegionCode());
+        log.info("Url: "+awsConfigs.getEndpointUrl());
         if (StringUtils.hasText(awsConfigs.getEndpointUrl())) {
             log.info("with endpoint");
             return AmazonSQSAsyncClientBuilder.standard()
