@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
 import software.amazon.awssdk.services.sqs.SqsClient;
 
-@Configuration
+//@Configuration
 @Slf4j
 public class SQSConfig {
 
@@ -33,20 +33,22 @@ public class SQSConfig {
      */
     @Bean
     public DeliveryMomProducer deliveryMomProducer(SqsClient sqsClient, ObjectMapper objectMapper){
-        return new DeliveryMomProducer(sqsClient,this.pnPaperChannelConfig.getQueueDeliveryPush(),objectMapper, DeliveryEvent.class);
+       // return new DeliveryMomProducer(sqsClient,this.pnPaperChannelConfig.getQueueDeliveryPush(),objectMapper, DeliveryEvent.class);
+        return null;
     }
 
     @Bean
     public AmazonSQSAsync amazonSQS() {
-        if (StringUtils.hasText(awsConfigs.getEndpointUrl())) {
-            log.info("with endpoint");
-            return AmazonSQSAsyncClientBuilder.standard()
-                    .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(awsConfigs.getEndpointUrl(), awsConfigs.getRegionCode()))
-                    .build();
-        } else {
-            return AmazonSQSAsyncClientBuilder.standard()
-                    .withRegion(awsConfigs.getRegionCode())
-                    .build();
-        }
+//        if (StringUtils.hasText(awsConfigs.getEndpointUrl())) {
+//            log.info("with endpoint");
+//            return AmazonSQSAsyncClientBuilder.standard()
+//                    .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(awsConfigs.getEndpointUrl(), awsConfigs.getRegionCode()))
+//                    .build();
+//        } else {
+//            return AmazonSQSAsyncClientBuilder.standard()
+//                    .withRegion(awsConfigs.getRegionCode())
+//                    .build();
+//        }
+        return null;
     }
 }
