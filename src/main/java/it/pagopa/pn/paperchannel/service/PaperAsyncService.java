@@ -1,7 +1,7 @@
 package it.pagopa.pn.paperchannel.service;
 
-import it.pagopa.pn.paperchannel.pojo.Address;
-import it.pagopa.pn.paperchannel.pojo.DeliveryAsyncModel;
+import it.pagopa.pn.paperchannel.model.Address;
+import it.pagopa.pn.paperchannel.model.DeliveryAsyncModel;
 import reactor.core.publisher.Mono;
 
 public interface PaperAsyncService {

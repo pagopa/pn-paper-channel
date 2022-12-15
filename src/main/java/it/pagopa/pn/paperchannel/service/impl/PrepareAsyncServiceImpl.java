@@ -9,10 +9,10 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.RequestDeliveryEntity;
 import it.pagopa.pn.paperchannel.middleware.msclient.SafeStorageClient;
-import it.pagopa.pn.paperchannel.pojo.Address;
-import it.pagopa.pn.paperchannel.pojo.AttachmentInfo;
-import it.pagopa.pn.paperchannel.pojo.Contract;
-import it.pagopa.pn.paperchannel.pojo.DeliveryAsyncModel;
+import it.pagopa.pn.paperchannel.model.Address;
+import it.pagopa.pn.paperchannel.model.AttachmentInfo;
+import it.pagopa.pn.paperchannel.model.Contract;
+import it.pagopa.pn.paperchannel.model.DeliveryAsyncModel;
 import it.pagopa.pn.paperchannel.service.PaperAsyncService;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -97,17 +97,17 @@ public class PrepareAsyncServiceImpl implements PaperAsyncService {
                         )
                 )
                 .map(fileResponse -> {
-                    try {
+                  //  try {
                         AttachmentInfo info = AttachmentMapper.fromSafeStorage(fileResponse);
                         if (info.getUrl() == null)
                             throw new PnGenericException(DOCUMENT_URL_NOT_FOUND, DOCUMENT_URL_NOT_FOUND.getMessage());
-                        PDDocument pdDocument = HttpConnector.downloadFile(info.getUrl());
-                        info.setDate(DateUtils.formatDate(pdDocument.getDocumentInformation().getCreationDate().getTime()));
-                        info.setNumberOfPage(pdDocument.getNumberOfPages());
+                      //  PDDocument pdDocument = HttpConnector.downloadFile(info.getUrl());
+                      //  info.setDate(DateUtils.formatDate(pdDocument.getDocumentInformation().getCreationDate().getTime()));
+                       // info.setNumberOfPage(pdDocument.getNumberOfPages());
                         return info;
-                    } catch (IOException e) {
-                        throw new PnGenericException(DOCUMENT_NOT_DOWNLOADED, DOCUMENT_NOT_DOWNLOADED.getMessage());
-                    }
+                 //   } catch (IOException e) {
+                   //     throw new PnGenericException(DOCUMENT_NOT_DOWNLOADED, DOCUMENT_NOT_DOWNLOADED.getMessage());
+                    //}
                 });
     }
 

@@ -2,11 +2,17 @@ package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
+import it.pagopa.pn.paperchannel.mapper.RetrivePrepareResponseMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
-import it.pagopa.pn.paperchannel.pojo.DeliveryAsyncModel;
+import it.pagopa.pn.paperchannel.middleware.db.entities.RequestDeliveryEntity;
+import it.pagopa.pn.paperchannel.model.DeliveryAsyncModel;
+import it.pagopa.pn.paperchannel.queue.model.EventTypeEnum;
+import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareEvent;
+import it.pagopa.pn.paperchannel.service.SqsSender;
 import lombok.extern.slf4j.Slf4j;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
+import reactor.core.publisher.Mono;
 
 @Slf4j
 public class SubscriberPrepare implements Subscriber<DeliveryAsyncModel> {
@@ -64,7 +70,20 @@ public class SubscriberPrepare implements Subscriber<DeliveryAsyncModel> {
     @Override
     public void onComplete() {
         //controllo se valorizzati
+        log.info("entro nell' on complete");
 
+        if(requestId!=null){
+
+            sqsQueueSender.pushEvent(EventTypeEnum.PREPARE_PAPER_RESPONSE,deliveryAsyncModel);
+
+        }else{
+
+            sqsQueueSender.pushEvent(EventTypeEnum.PREPARE_PAPER_RESPONSE,deliveryAsyncModel);
+          //  requestDeliveryDAO.getByCorrelationId(corralationId)
+            //        .map(RetrivePrepareResponseMapper::fromResult);
+
+            //sqsQueueSender.pushEvent(1,);
+        }
         //fare query per recuperare i dati dalla tabella e tutti gli altri ogetti
 
         //push
