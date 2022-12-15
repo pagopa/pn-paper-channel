@@ -1,6 +1,7 @@
 package it.pagopa.pn.paperchannel.validator;
 
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
+import it.pagopa.pn.paperchannel.exception.PnInputValidatorException;
 import it.pagopa.pn.paperchannel.middleware.db.entities.AddressEntity;
 import it.pagopa.pn.paperchannel.middleware.db.entities.RequestDeliveryEntity;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareRequest;
@@ -31,7 +32,7 @@ public class PrepareRequestValidator {
         //attachments
 
         if (!errors.isEmpty()){
-            throw new PnGenericException(DIFFERENT_DATA_REQUEST, DIFFERENT_DATA_REQUEST.getMessage(), HttpStatus.CONFLICT, errors);
+            throw new PnInputValidatorException(DIFFERENT_DATA_REQUEST, DIFFERENT_DATA_REQUEST.getMessage(), HttpStatus.CONFLICT, errors);
         }
         else {
             return requestDeliveryEntity;

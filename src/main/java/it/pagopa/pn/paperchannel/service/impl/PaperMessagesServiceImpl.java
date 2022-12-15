@@ -58,6 +58,7 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
 
     @Override
     public Mono<SendEvent> preparePaperSync(String requestId, PrepareRequest prepareRequest){
+        prepareRequest.setRequestId(requestId);
         return requestDeliveryDAO.getByRequestId(requestId)
                 // Case of 409
                 .map(entity -> prepareRequestValidator.compareRequestEntity(prepareRequest, entity))
@@ -66,7 +67,6 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
                 .onErrorResume(PnGenericException.class, ex -> {
                     if (ex.getExceptionType() == DELIVERY_REQUEST_NOT_EXIST){
                         log.info("Delivery request");
-                        prepareRequest.setRequestId(requestId);
                         return requestDeliveryDAO.create(RequestDeliveryMapper.toEntity(prepareRequest))
                                 .map(entity -> {
                                     // Case of 204
