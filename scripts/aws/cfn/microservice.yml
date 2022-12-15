@@ -97,9 +97,17 @@ Parameters:
 
   ExternalChannelsOutputsQueueName:
     Type: String
-    Description: 'Pull external-channel messages from this Queue'
+    Description: 'Push delivery-push essages to this Queue'
 
   ExternalChannelsOutputsQueueARN:
+    Type: String
+    Description: 'Push delivery-push essages to this Queue'
+
+  ExternalChannels2PaperChannelQueueName:
+    Type: String
+    Description: 'Pull external-channel messages from this Queue'
+
+  ExternalChannels2PaperChannelQueueARN:
     Type: String
     Description: 'Pull external-channel messages from this Queue'
 
@@ -123,7 +131,9 @@ Resources:
         ContainerEnvEntry6: !Sub 'AWS_DYNAMODBREQUESTDELIVERYTABLE=${RequestDeliveryDynamoTableName}'
         ContainerEnvEntry7: !Sub 'AWS_DYNAMODBADDRESSTABLE=${AddressDynamoTableName}'
         ContainerEnvEntry8: !Sub 'PN_PAPERCHANNEL_KMS_KEY=${PCDynamoSigningKeyARN}'
-        ContainerEnvEntry9: !Sub 'PN_PAPERCHANNEL_QUEUE_DELIVERYPUSH=${ExternalChannelsOutputsQueueName}'
+        ContainerEnvEntry9: !Sub 'PN_PAPERCHANNEL_QUEUEDELIVERYPUSH=${ExternalChannelsOutputsQueueName}'
+        ContainerEnvEntry10: !Sub 'PN_PAPERCHANNEL_QUEUEEXTERNALCHANNEL=${ExternalChannels2PaperChannelQueueName}'
+        ContainerEnvEntry11: !Sub 'SPRING_CLOUD_FUNCTIONROUTER_QUEUES_LIST=${ExternalChannelsOutputsQueueName},${ExternalChannels2PaperChannelQueueName}'
         MappedPaths: '/paper-channel/*,/paper-channel-private/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds
@@ -169,6 +179,7 @@ Resources:
             Resource:
               - !Ref PCDynamoSigningKeyARN
               - !Ref ExternalChannelsOutputsQueueARN
+              - !Ref ExternalChannels2PaperChannelQueueARN
               - !Sub "${RequestDeliveryDynamoTableArn}"
               - !Sub "${RequestDeliveryDynamoTableArn}/*"
               - !Sub "${AddressDynamoTableArn}"

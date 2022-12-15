@@ -10,7 +10,6 @@ cloud.aws.sqs.endpoint.uri= http://localhost:4566
 aws.profile-name=${PN_AWS_PROFILE_NAME:default}
 aws.region-code=us-east-1
 aws.endpoint-url=http://localhost:4566
-aws.ready-delivery-queue=local-delivery-push-safestorage-inputs
 aws.dynamodb-request-delivery-table=RequestDeliveryDynamoTable
 
 pn.paper-channel.client-safe-storage-basepath = "http://localhost:4566"
