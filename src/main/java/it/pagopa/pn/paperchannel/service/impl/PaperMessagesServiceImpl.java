@@ -65,6 +65,7 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
                 .onErrorResume(PnGenericException.class, ex -> {
                     if (ex.getExceptionType() == DELIVERY_REQUEST_NOT_EXIST){
                         log.info("Delivery request");
+                        prepareRequest.setRequestId(requestId);
                         return requestDeliveryDAO.create(RequestDeliveryMapper.toEntity(prepareRequest))
                                 .map(entity -> {
                                     // Case of 204
