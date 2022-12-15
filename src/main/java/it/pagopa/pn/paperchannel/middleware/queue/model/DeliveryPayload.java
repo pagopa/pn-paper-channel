@@ -1,4 +1,4 @@
-package it.pagopa.pn.paperchannel.queue.model;
+package it.pagopa.pn.paperchannel.middleware.queue.model;
 
 import it.pagopa.pn.paperchannel.model.Address;
 import lombok.AllArgsConstructor;

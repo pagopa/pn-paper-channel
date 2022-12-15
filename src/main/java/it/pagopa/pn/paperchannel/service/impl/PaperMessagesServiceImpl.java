@@ -136,15 +136,14 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
 
     private boolean checkAddressInfo(PrepareRequest prepareRequest, AddressEntity addressEntity){
 
-        return (!prepareRequest.getReceiverAddress().getAddress().equals(addressEntity.getAddress()) ||
-                !prepareRequest.getReceiverAddress().getFullname().equals(addressEntity.getFullName()) ||
-                !prepareRequest.getReceiverAddress().getNameRow2().equals(addressEntity.getNameRow2()) ||
-                !prepareRequest.getReceiverAddress().getAddressRow2().equals(addressEntity.getAddressRow2()) ||
-                !prepareRequest.getReceiverAddress().getCap().equals(addressEntity.getCap()) ||
-                !prepareRequest.getReceiverAddress().getCity().equals(addressEntity.getCity()) ||
-                !prepareRequest.getReceiverAddress().getCity2().equals(addressEntity.getCity2()) ||
-                !prepareRequest.getReceiverAddress().getPr().equals(addressEntity.getPr()) ||
-                !prepareRequest.getReceiverAddress().getCountry().equals(addressEntity.getCountry()));
-
+        return (!prepareRequest.getReceiverAddress().getAddress().equals(requestDeliveryEntity.getAddress().getAddress()) ||
+                !prepareRequest.getReceiverAddress().getFullname().equals(requestDeliveryEntity.getAddress().getFullName()) ||
+                !prepareRequest.getReceiverAddress().getNameRow2().equals(requestDeliveryEntity.getAddress().getNameRow2()) ||
+                !prepareRequest.getReceiverAddress().getAddressRow2().equals(requestDeliveryEntity.getAddress().getAddressRow2()) ||
+                !prepareRequest.getReceiverAddress().getCap().equals(requestDeliveryEntity.getAddress().getCap()) ||
+                !prepareRequest.getReceiverAddress().getCity().equals(requestDeliveryEntity.getAddress().getCity()) ||
+                !prepareRequest.getReceiverAddress().getCity2().equals(requestDeliveryEntity.getAddress().getCity2()) ||
+                !prepareRequest.getReceiverAddress().getPr().equals(requestDeliveryEntity.getAddress().getPr()) ||
+                !prepareRequest.getReceiverAddress().getCountry().equals(requestDeliveryEntity.getAddress().getCountry()));
     }
 }

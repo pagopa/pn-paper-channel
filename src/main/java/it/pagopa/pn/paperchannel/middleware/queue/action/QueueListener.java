@@ -1,10 +1,10 @@
-package it.pagopa.pn.paperchannel.queue.action;
+package it.pagopa.pn.paperchannel.middleware.queue.action;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.awspring.cloud.messaging.listener.SqsMessageDeletionPolicy;
 import io.awspring.cloud.messaging.listener.annotation.SqsListener;
-import it.pagopa.pn.paperchannel.queue.model.DeliveryPayload;
+import it.pagopa.pn.paperchannel.middleware.queue.model.DeliveryPayload;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
