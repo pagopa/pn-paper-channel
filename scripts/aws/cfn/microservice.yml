@@ -154,19 +154,6 @@ Resources:
         Statement:
           - Effect: Allow
             Action:
-              - kms:Encrypt
-              - kms:Decrypt
-              - kms:ReEncrypt*
-              - dynamodb:BatchGetItem
-              - dynamodb:BatchWriteItem
-              - dynamodb:ExecuteTransaction
-              - dynamodb:GetItem
-              - dynamodb:PutItem
-              - dynamodb:DeleteItem
-              - dynamodb:Query
-              - dynamodb:TransactGetItems
-              - dynamodb:TransactWriteItems
-              - dynamodb:UpdateItem
               - sqs:ChangeMessageVisibility
               - sqs:ChangeMessageVisibilityBatch
               - sqs:DeleteMessage
@@ -177,13 +164,32 @@ Resources:
               - sqs:SendMessage
               - sqs:SendMessageBatch
             Resource:
-              - !Ref PCDynamoSigningKeyARN
               - !Ref ExternalChannelsOutputsQueueARN
               - !Ref ExternalChannels2PaperChannelQueueARN
-              - !Sub "${RequestDeliveryDynamoTableArn}"
-              - !Sub "${RequestDeliveryDynamoTableArn}/*"
-              - !Sub "${AddressDynamoTableArn}"
-              - !Sub "${AddressDynamoTableArn}/*"
+          - Effect: Allow
+            Action:
+              - kms:Encrypt
+              - kms:Decrypt
+              - kms:ReEncrypt*
+            Resource:
+              - !Ref PCDynamoSigningKeyARN
+          - Effect: Allow
+              Action:
+                - dynamodb:BatchGetItem
+                - dynamodb:BatchWriteItem
+                - dynamodb:ExecuteTransaction
+                - dynamodb:GetItem
+                - dynamodb:PutItem
+                - dynamodb:DeleteItem
+                - dynamodb:Query
+                - dynamodb:TransactGetItems
+                - dynamodb:TransactWriteItems
+                - dynamodb:UpdateItem
+              Resource:
+                - !Sub "${RequestDeliveryDynamoTableArn}"
+                - !Sub "${RequestDeliveryDynamoTableArn}/*"
+                - !Sub "${AddressDynamoTableArn}"
+                - !Sub "${AddressDynamoTableArn}/*"
 
   # Dashboard
   PaperChannelMicroserviceCloudWatchDashboard:

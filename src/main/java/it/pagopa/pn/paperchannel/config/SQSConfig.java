@@ -51,17 +51,22 @@ public class SQSConfig {
 
     @Bean
     public AmazonSQSAsync amazonSQS() {
-        log.info("init amazonSQS");
-        if (StringUtils.hasText(awsConfigs.getEndpointUrl())) {
-            log.info("with endpoint");
-            return AmazonSQSAsyncClientBuilder.standard()
-                    .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(awsConfigs.getEndpointUrl(), awsConfigs.getRegionCode()))
-                    .build();
-        } else {
-            log.info("with no endpoint");
-            return AmazonSQSAsyncClientBuilder.standard()
-                    .withRegion(awsConfigs.getRegionCode())
-                    .build();
-        }
+        log.info("init amazonSQS region" + awsConfigs.getRegionCode());
+
+        return AmazonSQSAsyncClientBuilder.standard()
+                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration("https://sqs.eu-south-1.amazonaws.com", awsConfigs.getRegionCode()))
+                .build();
+
+//        if (StringUtils.hasText(awsConfigs.getEndpointUrl())) {
+//            log.info("with endpoint");
+//            return AmazonSQSAsyncClientBuilder.standard()
+//                    .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(awsConfigs.getEndpointUrl(), awsConfigs.getRegionCode()))
+//                    .build();
+//        } else {
+//            log.info("with no endpoint");
+//            return AmazonSQSAsyncClientBuilder.standard()
+//                    .withRegion(awsConfigs.getRegionCode())
+//                    .build();
+//        }
     }
 }

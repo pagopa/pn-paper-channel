@@ -34,7 +34,7 @@ public class PnPaperChannelMiddlewareConfigs {
                 log.info("url : "+s);
             });
         }
-        return new DeliveryMomProducer(sqsClient, this.pnPaperChannelConfig.getQueueDeliveryPush(),objMapper, DeliveryEvent.class);
+        return new DeliveryMomProducer(sqsClient, this.pnPaperChannelConfig.getQueueDeliveryPush(), objMapper, DeliveryEvent.class);
     }
 }
 
