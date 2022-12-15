@@ -25,6 +25,7 @@ import it.pagopa.pn.paperchannel.validator.PrepareRequestValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -58,14 +59,12 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
         prepareRequestValidator = new PrepareRequestValidator();
     }
 
-
     @Override
     public Mono<SendEvent> preparePaperSync(String requestId, PrepareRequest prepareRequest){
-
         return requestDeliveryDAO.getByRequestId(requestId)
                 // Case of 409
                 .map(entity -> prepareRequestValidator.compareRequestEntity(prepareRequest, entity))
-                // Case of 200,
+                // Case of 200
                 .map(PreparePaperResponseMapper::fromResult)
                 .onErrorResume(PnGenericException.class, ex -> {
                     if (ex.getExceptionType() == DELIVERY_REQUEST_NOT_EXIST){
