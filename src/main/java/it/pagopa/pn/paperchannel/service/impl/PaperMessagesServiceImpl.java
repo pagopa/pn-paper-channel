@@ -53,11 +53,8 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
     private SafeStorageClient safeStorageClient;
     @Autowired
     private NationalRegistryClient nationalRegistryClient;
+    @Autowired
     private PrepareRequestValidator prepareRequestValidator;
-
-    public PaperMessagesServiceImpl() {
-        prepareRequestValidator = new PrepareRequestValidator();
-    }
 
     @Override
     public Mono<SendEvent> preparePaperSync(String requestId, PrepareRequest prepareRequest){

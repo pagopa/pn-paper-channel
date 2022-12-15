@@ -6,12 +6,13 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.RequestDeliveryEntity;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DIFFERENT_DATA_REQUEST;
-
+@Component
 public class PrepareRequestValidator {
 
     public RequestDeliveryEntity compareRequestEntity(PrepareRequest prepareRequest, RequestDeliveryEntity requestDeliveryEntity) {
