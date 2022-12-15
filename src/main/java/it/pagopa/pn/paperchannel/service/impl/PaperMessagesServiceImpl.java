@@ -55,17 +55,17 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
     @Autowired
     private NationalRegistryClient nationalRegistryClient;
     private PrepareRequestValidator prepareRequestValidator;
-    public PaperMessagesServiceImpl() {
+
+    private PaperMessagesServiceImpl() {
         prepareRequestValidator = new PrepareRequestValidator();
     }
 
     @Override
     public Mono<SendEvent> preparePaperSync(String requestId, PrepareRequest prepareRequest){
-
         return requestDeliveryDAO.getByRequestId(requestId)
                 // Case of 409
                 .map(entity -> prepareRequestValidator.compareRequestEntity(prepareRequest, entity))
-                // Case of 200,
+                // Case of 200
                 .map(PreparePaperResponseMapper::fromResult)
                 .onErrorResume(PnGenericException.class, ex -> {
                     if (ex.getExceptionType() == DELIVERY_REQUEST_NOT_EXIST){
