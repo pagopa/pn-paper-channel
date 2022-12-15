@@ -29,12 +29,13 @@ public class PnPaperChannelMiddlewareConfigs {
         } else {
             log.info("sqsClient is not null");
         }
+
         if (sqsClient.listQueues() != null) {
             sqsClient.listQueues().queueUrls().stream().forEach(s -> {
                 log.info("url : "+s);
             });
         }
-        return new DeliveryMomProducer(sqsClient, this.pnPaperChannelConfig.getQueueDeliveryPush(),objMapper, DeliveryEvent.class);
+        return new DeliveryMomProducer(sqsClient, this.pnPaperChannelConfig.getQueueDeliveryPush(), objMapper, DeliveryEvent.class);
     }
 }
 
