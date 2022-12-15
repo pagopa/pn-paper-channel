@@ -16,7 +16,7 @@ import it.pagopa.pn.paperchannel.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.AttachmentInfo;
 import it.pagopa.pn.paperchannel.model.Contract;
-import it.pagopa.pn.paperchannel.queue.model.DeliveryPayload;
+import it.pagopa.pn.paperchannel.middleware.queue.model.DeliveryPayload;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareEvent;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareRequest;
 import it.pagopa.pn.paperchannel.rest.v1.dto.SendEvent;
@@ -65,6 +65,7 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
                 .onErrorResume(PnGenericException.class, ex -> {
                     if (ex.getExceptionType() == DELIVERY_REQUEST_NOT_EXIST){
                         log.info("Delivery request");
+                        prepareRequest.setRequestId(requestId);
                         return requestDeliveryDAO.create(RequestDeliveryMapper.toEntity(prepareRequest))
                                 .map(entity -> {
                                     // Case of 204
