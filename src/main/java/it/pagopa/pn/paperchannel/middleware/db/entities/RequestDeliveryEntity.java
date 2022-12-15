@@ -32,17 +32,17 @@ public class RequestDeliveryEntity {
 
     public static final String FISCAL_CODE_INDEX = "fiscal-code-index";
 
-    private static final String COL_STATUS_CODE = "statusCode";
+    private static final String COL_STATUS_CODE = "statusCode";  //settare
 
-    private static final String COL_STATUS_DETAIL = "statusDetail";
+    private static final String COL_STATUS_DETAIL = "statusDetail"; //settare
 
-    private static final String COL_STATUS_DATE = "statusDate";
+    private static final String COL_STATUS_DATE = "statusDate"; //settare data attuale
 
     private static final String COL_REGISTERED_LETTER_CODE = "registeredLetterCode";
 
     private static final String COL_START_DATE = "startDate";
 
-    private static final String COL_ATTACHMENTS = "attachments";
+    private static final String COL_ATTACHMENTS = "attachments"; //settare
 
     @Getter(onMethod = @__({@DynamoDbPartitionKey,@DynamoDbAttribute(COL_REQUEST_ID)}))
     private String requestId;
@@ -55,9 +55,6 @@ public class RequestDeliveryEntity {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_ADDRESS_HASH)}))
     private String addressHash;
-
-    @Getter(onMethod = @__({@DynamoDbAttribute(COL_ADDRESS)}))
-    private AddressEntity address;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_STATUS_CODE)}))
     private String statusCode;

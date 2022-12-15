@@ -5,4 +5,6 @@ import reactor.core.publisher.Mono;
 
 public interface AddressDAO {
     Mono<AddressEntity> create (AddressEntity addressEntity);
+
+    Mono<AddressEntity> findByRequestId (String requestId);
 }

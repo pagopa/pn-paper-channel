@@ -133,7 +133,6 @@
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>dynamodb-enhanced</artifactId>
-            <version>2.18.6</version>
         </dependency>
 
         <dependency>
@@ -241,7 +240,7 @@
                         </goals>
                         <phase>process-resources</phase>
                         <configuration>
-                            <inputSpec>https://raw.githubusercontent.com/pagopa/pn-national-registries/develop/docs/openapi/PNT2IA-Interface_agreement_pagoPA_PN-NationalRegistries_v4.0.yaml#/</inputSpec>
+                            <inputSpec>${project.basedir}/docs/openapi/national-registry/pn-national-registry-api-v1.yaml</inputSpec>
                             <generatorName>java</generatorName>
                             <library>webclient</library>
                             <generateApiDocumentation>false</generateApiDocumentation>

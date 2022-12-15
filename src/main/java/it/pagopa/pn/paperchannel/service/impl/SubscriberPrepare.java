@@ -2,26 +2,41 @@ package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
+import it.pagopa.pn.paperchannel.mapper.AttachmentMapper;
+import it.pagopa.pn.paperchannel.mapper.RetrivePrepareResponseMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
+import it.pagopa.pn.paperchannel.middleware.db.entities.AttachmentInfoEntity;
 import it.pagopa.pn.paperchannel.middleware.db.entities.RequestDeliveryEntity;
 import it.pagopa.pn.paperchannel.middleware.queue.model.DeliveryPayload;
+import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
+import it.pagopa.pn.paperchannel.model.DeliveryAsyncModel;
+import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
+import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareEvent;
+import it.pagopa.pn.paperchannel.service.SqsSender;
+import it.pagopa.pn.paperchannel.utils.DateUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.stream.Collectors;
+
 @Slf4j
-public class SubscriberPrepare implements Subscriber<DeliveryPayload> {
+public class SubscriberPrepare implements Subscriber<DeliveryAsyncModel> {
 
-    private DeliveryPayload deliveryPayload;
-    private SqsQueueSender sqsQueueSender;
-    private RequestDeliveryDAO requestDeliveryDAO;
-    private String requestId;
+    private DeliveryAsyncModel deliveryAsyncModel;
+    private final SqsSender sqsQueueSender;
+    private final RequestDeliveryDAO requestDeliveryDAO;
+    private final String requestId;
+    private final String corralationId;
 
-    public SubscriberPrepare(SqsQueueSender sqsQueueSender, String requestId, RequestDeliveryDAO requestDeliveryDAO) {
+    public SubscriberPrepare(SqsSender sqsQueueSender, RequestDeliveryDAO requestDeliveryDAO, String requestId, String corralationId) {
         this.sqsQueueSender = sqsQueueSender;
-        this.requestId = requestId;
         this.requestDeliveryDAO = requestDeliveryDAO;
+        this.requestId = requestId;
+        this.corralationId = corralationId;
     }
 
     @Override
@@ -30,10 +45,9 @@ public class SubscriberPrepare implements Subscriber<DeliveryPayload> {
     }
 
     @Override
-    public void onNext(DeliveryPayload deliveryPayload) {
-        this.deliveryPayload = deliveryPayload;
+    public void onNext(DeliveryAsyncModel deliveryAsyncModel) {
+        this.deliveryAsyncModel = deliveryAsyncModel;
         log.info("Custom subscriber on next");
-        log.info(deliveryPayload.toString());
     }
 
     @Override
@@ -41,27 +55,54 @@ public class SubscriberPrepare implements Subscriber<DeliveryPayload> {
         log.error("on Error : {}", throwable.getMessage());
         if(throwable instanceof PnGenericException){
             PnGenericException exception = (PnGenericException) throwable;
+            /*
             if(exception.getExceptionType().equals(ExceptionTypeEnum.UNTRACEABLE_ADDRESS)){
-                Mono<RequestDeliveryEntity> requestDeliveryEntityMono = requestDeliveryDAO.getByRequestId(requestId);
+                //Mono<RequestDeliveryEntity> requestDeliveryEntityMono = requestDeliveryDAO.getByRequestId(requestId);
                 //Aggiornare o inserire entity per etichettare codice fiscale come irreperibile totale
             }
             if(exception.getExceptionType().equals(ExceptionTypeEnum.DOCUMENT_URL_NOT_FOUND)){
-                Mono<RequestDeliveryEntity> requestDeliveryEntityMono = requestDeliveryDAO.getByRequestId(requestId);
+                //Mono<RequestDeliveryEntity> requestDeliveryEntityMono = requestDeliveryDAO.getByRequestId(requestId);
                 //Aggiornare o inserire entity per etichettare codice fiscale come irreperibile totale
             }
             if(exception.getExceptionType().equals(ExceptionTypeEnum.DOCUMENT_NOT_DOWNLOADED)){
-                Mono<RequestDeliveryEntity> requestDeliveryEntityMono = requestDeliveryDAO.getByRequestId(requestId);
+                //Mono<RequestDeliveryEntity> requestDeliveryEntityMono = requestDeliveryDAO.getByRequestId(requestId);
                 //Aggiornare o inserire entity per etichettare codice fiscale come irreperibile totale
             }
             if(exception.getExceptionType().equals(ExceptionTypeEnum.RETRY_AFTER_DOCUMENT)){
-                Mono<RequestDeliveryEntity> requestDeliveryEntityMono = requestDeliveryDAO.getByRequestId(requestId);
+                //Mono<RequestDeliveryEntity> requestDeliveryEntityMono = requestDeliveryDAO.getByRequestId(requestId);
                 //Aggiornare o inserire entity per etichettare codice fiscale come irreperibile totale
             }
+            */
         }
     }
 
     @Override
     public void onComplete() {
+        log.info("entro nell' on complete");
+        DeliveryPayload payload = new DeliveryPayload();
+
+        payload.setDeliveryAddress(deliveryAsyncModel.getAddress());
+        payload.setTotalPrice(deliveryAsyncModel.getAmount());
+        sqsQueueSender.pushEvent(EventTypeEnum.PREPARE_PAPER_RESPONSE,payload);
+
+        requestDeliveryDAO.getByRequestId(deliveryAsyncModel.getRequestId())
+                .mapNotNull(requestDeliveryEntity -> {
+
+                    requestDeliveryEntity.setStatusCode(StatusDeliveryEnum.TAKING_CHARGE.getCode());
+                    requestDeliveryEntity.setStatusDetail(StatusDeliveryEnum.TAKING_CHARGE.getDescription());
+                    requestDeliveryEntity.setStatusDate(DateUtils.formatDate(new Date()));
+                    requestDeliveryEntity.setAttachments(deliveryAsyncModel.getAttachments().stream()
+                            .map(AttachmentMapper::toEntity).collect(Collectors.toList()));
+
+                    return requestDeliveryDAO.updateData(requestDeliveryEntity).map(item->item);
+                }).subscribe();
+
+
+        //fare chiamata update
+        //fare chiamata addressDao.create
+        //se il correlationid è diverso da null vuol dire che l'indirizzo mai settato
+        // e fare create dell'indirizzo dentro deliveryasincModel
+
         log.info("Custom subscriber on complete");
     }
 }

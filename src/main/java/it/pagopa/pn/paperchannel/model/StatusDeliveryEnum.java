@@ -5,6 +5,8 @@ import lombok.Getter;
 @Getter
 public enum StatusDeliveryEnum {
     IN_PROCESSING("PC000", "In elaborazione"),
+    TAKING_CHARGE("PC001","Presa in carico"),
+    NATIONAL_REGISTRY_WAITING("PC002", "In attesa di indirizzo da National Registry"),
     UNTRACEABLE("PC010", "Irreperibile totale"),
     PRINTED("001", "Stampato"),
     DELIVERY_DRIVER_AVAILABLE("002", "Disponibile al recapitista"),
