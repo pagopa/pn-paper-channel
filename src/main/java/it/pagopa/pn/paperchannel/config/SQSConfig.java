@@ -54,7 +54,7 @@ public class SQSConfig {
         log.info("init amazonSQS region" + awsConfigs.getRegionCode());
 
         return AmazonSQSAsyncClientBuilder.standard()
-                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration("https://sqs.eu-south-1.amazonaws.com", awsConfigs.getRegionCode()))
+                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(awsConfigs.getEndpointUrl(), awsConfigs.getRegionCode()))
                 .build();
 
 //        if (StringUtils.hasText(awsConfigs.getEndpointUrl())) {

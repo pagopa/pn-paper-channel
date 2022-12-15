@@ -21,17 +21,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.ParallelFlux;
 import reactor.util.retry.Retry;
 
 import java.io.IOException;
 import java.time.Duration;
-import java.util.List;
 import java.util.stream.Collectors;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DOCUMENT_NOT_DOWNLOADED;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DOCUMENT_URL_NOT_FOUND;
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.RETRY_AFTER_DOCUMENT;
 
 @Slf4j
 @Service
@@ -64,18 +61,19 @@ public class PrepareAsyncServiceImpl implements PaperAsyncService {
                     }
                     return Mono.just(deliveryAsyncModel);
                 })
-                .flatMap(deliveryAsyncModel -> addressDAO.create(AddressMapper.toEntity( address, deliveryAsyncModel.getRequestId()))
+                .flatMap(deliveryAsyncModel -> getAttachmentsInfo(deliveryAsyncModel).map(newModel -> newModel))
+                .flatMap(deliveryAsyncModel -> getAmount(deliveryAsyncModel).map(newModel -> newModel))
+                .flatMap(deliveryAsyncModel -> addressDAO.create(AddressMapper.toEntity(address, deliveryAsyncModel.getRequestId()))
                         .map(item -> {
                             deliveryAsyncModel.setAddress(AddressMapper.toDTO(item));
                             return deliveryAsyncModel;
-                        })
-                ).flatMap(deliveryAsyncModel -> getAmount(deliveryAsyncModel).map(item -> item));
+                        }));
     }
 
     private Mono<DeliveryAsyncModel> getAmount(DeliveryAsyncModel deliveryAsyncModel){
         return getContract()
-                .flatMap(contract -> getPriceAttachments(deliveryAsyncModel.getAttachments(), contract.getPricePerPage())
-                        .map(price -> Double.sum(contract.getPrice(), price))
+                .flatMap(contract -> getPriceAttachments(deliveryAsyncModel, contract.getPricePerPage())
+                        .map(priceForPages -> Double.sum(contract.getPrice(), priceForPages))
                 )
                 .map(amount ->{
                     deliveryAsyncModel.setAmount(amount);
@@ -87,8 +85,8 @@ public class PrepareAsyncServiceImpl implements PaperAsyncService {
         return Mono.just(new Contract(5.0, 10.0));
     }
 
-    private ParallelFlux<AttachmentInfo> getAttachmentsInfo(List<AttachmentInfo> attachmentsFileKey){
-        return Flux.fromStream(attachmentsFileKey.stream())
+    private Mono<DeliveryAsyncModel> getAttachmentsInfo(DeliveryAsyncModel deliveryAsyncModel){
+        return Flux.fromStream(deliveryAsyncModel.getAttachments().stream())
                 .parallel()
                 .flatMap(attachment -> safeStorageClient.getFile(attachment.getFileKey())
                         .retryWhen(
@@ -104,27 +102,24 @@ public class PrepareAsyncServiceImpl implements PaperAsyncService {
                         PDDocument pdDocument = HttpConnector.downloadFile(info.getUrl());
                         info.setDate(DateUtils.formatDate(pdDocument.getDocumentInformation().getCreationDate().getTime()));
                         info.setNumberOfPage(pdDocument.getNumberOfPages());
+                        pdDocument.close();
                         return info;
                     } catch (IOException e) {
                         throw new PnGenericException(DOCUMENT_NOT_DOWNLOADED, DOCUMENT_NOT_DOWNLOADED.getMessage());
                     }
+                })
+                .sequential()
+                .collectList()
+                .map(listAttachment -> {
+                    deliveryAsyncModel.setAttachments(listAttachment);
+                    return deliveryAsyncModel;
                 });
     }
 
-    private Mono<Double> getPriceAttachments(List<AttachmentInfo> attachmentsFileKey, Double priceForAAr){
-        return getAttachmentsInfo(attachmentsFileKey)
+    private Mono<Double> getPriceAttachments(DeliveryAsyncModel deliveryAsyncModel, Double priceForAAr){
+        return Flux.fromStream(deliveryAsyncModel.getAttachments().stream())
                 .map(attachmentInfo -> attachmentInfo.getNumberOfPage() * priceForAAr)
-                .sequential()
-                .reduce(0.0, Double::sum)
-                .onErrorResume(exception -> {
-                    if(exception instanceof PnGenericException) {
-                        return Mono.error(exception);
-                    }
-                    if(exception instanceof PnRetryStorageException) {
-                        return Mono.error(new PnGenericException(RETRY_AFTER_DOCUMENT, RETRY_AFTER_DOCUMENT.getMessage()));
-                    }
-                    return Mono.error(exception);
-                });
+                .reduce(0.0, Double::sum);
     }
 
 }

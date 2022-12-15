@@ -7,10 +7,10 @@ import it.pagopa.pn.paperchannel.mapper.RetrivePrepareResponseMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.AttachmentInfoEntity;
 import it.pagopa.pn.paperchannel.middleware.db.entities.RequestDeliveryEntity;
+import it.pagopa.pn.paperchannel.middleware.queue.model.DeliveryPayload;
+import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
 import it.pagopa.pn.paperchannel.model.DeliveryAsyncModel;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
-import it.pagopa.pn.paperchannel.queue.model.DeliveryPayload;
-import it.pagopa.pn.paperchannel.queue.model.EventTypeEnum;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareEvent;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
@@ -27,12 +27,12 @@ import java.util.stream.Collectors;
 public class SubscriberPrepare implements Subscriber<DeliveryAsyncModel> {
 
     private DeliveryAsyncModel deliveryAsyncModel;
-    private final SqsQueueSender sqsQueueSender;
+    private final SqsSender sqsQueueSender;
     private final RequestDeliveryDAO requestDeliveryDAO;
     private final String requestId;
     private final String corralationId;
 
-    public SubscriberPrepare(SqsQueueSender sqsQueueSender, RequestDeliveryDAO requestDeliveryDAO, String requestId, String corralationId) {
+    public SubscriberPrepare(SqsSender sqsQueueSender, RequestDeliveryDAO requestDeliveryDAO, String requestId, String corralationId) {
         this.sqsQueueSender = sqsQueueSender;
         this.requestDeliveryDAO = requestDeliveryDAO;
         this.requestId = requestId;
@@ -83,10 +83,10 @@ public class SubscriberPrepare implements Subscriber<DeliveryAsyncModel> {
 
         payload.setDeliveryAddress(deliveryAsyncModel.getAddress());
         payload.setTotalPrice(deliveryAsyncModel.getAmount());
-        //     sqsQueueSender.pushEvent(EventTypeEnum.PREPARE_PAPER_RESPONSE,payload);
+        sqsQueueSender.pushEvent(EventTypeEnum.PREPARE_PAPER_RESPONSE,payload);
 
         requestDeliveryDAO.getByRequestId(deliveryAsyncModel.getRequestId())
-                .map(requestDeliveryEntity -> {
+                .mapNotNull(requestDeliveryEntity -> {
 
                     requestDeliveryEntity.setStatusCode(StatusDeliveryEnum.TAKING_CHARGE.getCode());
                     requestDeliveryEntity.setStatusDetail(StatusDeliveryEnum.TAKING_CHARGE.getDescription());
@@ -94,8 +94,8 @@ public class SubscriberPrepare implements Subscriber<DeliveryAsyncModel> {
                     requestDeliveryEntity.setAttachments(deliveryAsyncModel.getAttachments().stream()
                             .map(AttachmentMapper::toEntity).collect(Collectors.toList()));
 
-                    return requestDeliveryDAO.updateData(requestDeliveryEntity).block();
-                });
+                    return requestDeliveryDAO.updateData(requestDeliveryEntity).map(item->item);
+                }).subscribe();
 
 
         //fare chiamata update

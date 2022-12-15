@@ -5,7 +5,9 @@ import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
 import it.pagopa.pn.paperchannel.middleware.db.entities.AttachmentInfoEntity;
 import it.pagopa.pn.paperchannel.msclient.generated.pnsafestorage.v1.dto.FileDownloadResponseDto;
 import it.pagopa.pn.paperchannel.model.AttachmentInfo;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class AttachmentMapper {
 
     private AttachmentMapper(){
@@ -29,8 +31,9 @@ public class AttachmentMapper {
         return mapper.toDTO(entity);
     }
 
-    public static AttachmentInfoEntity toEntity(AttachmentInfo entity){
-
-        return mapper.toEntity(entity);
+    public static AttachmentInfoEntity toEntity(AttachmentInfo dto){
+        AttachmentInfoEntity entity =  mapper.toEntity(dto);
+        log.info("Mapper Entity : {}", entity.getUrl());
+        return entity;
     }
 }

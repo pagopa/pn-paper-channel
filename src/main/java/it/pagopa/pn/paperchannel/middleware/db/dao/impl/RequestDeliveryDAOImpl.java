@@ -49,7 +49,7 @@ public class RequestDeliveryDAOImpl extends BaseDAO<RequestDeliveryEntity> imple
         return Mono.fromFuture(
                 countOccurrencesEntity(requestDeliveryEntity.getRequestId())
                         .thenCompose( total -> {
-                                log.debug("Total elements : {}", total);
+                                log.info("Total elements : {}", total);
                                 if (total == 0){
                                     return put(requestDeliveryEntity);
                                 } else {
@@ -69,7 +69,15 @@ public class RequestDeliveryDAOImpl extends BaseDAO<RequestDeliveryEntity> imple
 
     @Override
     public Mono<RequestDeliveryEntity> updateData(RequestDeliveryEntity requestDeliveryEntity) {
-        return Mono.fromFuture(this.update(requestDeliveryEntity).thenApply(item -> item));
+        String logMessage = String.format("Update request delivery = %s", requestDeliveryEntity);
+        PnAuditLogEvent logEvent = auditLogBuilder
+                .before(PnAuditLogEventType.AUD_DL_CREATE, logMessage)
+                .build();
+        logEvent.log();
+        return Mono.fromFuture(this.update(requestDeliveryEntity).thenApply(item -> {
+            logEvent.generateSuccess("Update successfully").log();
+            return item;
+        }));
     }
 
     @Override
