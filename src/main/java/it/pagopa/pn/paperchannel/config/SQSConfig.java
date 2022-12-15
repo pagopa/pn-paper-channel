@@ -35,6 +35,11 @@ public class SQSConfig {
     public DeliveryMomProducer deliveryMomProducer(SqsClient sqsClient, ObjectMapper objectMapper){
         log.info("try to start queue ...");
         log.info("queue name url "+pnPaperChannelConfig.getQueueDeliveryPush());
+        if (sqsClient == null ) {
+            log.info(" sqsClient is null");
+        } else {
+            log.info("sqsClient is not null");
+        }
         if (sqsClient.listQueues() != null) {
             sqsClient.listQueues().queueUrls().stream().forEach(s -> {
                 log.info("url : "+s);
