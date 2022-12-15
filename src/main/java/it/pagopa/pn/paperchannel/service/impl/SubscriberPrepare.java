@@ -4,7 +4,7 @@ import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.RequestDeliveryEntity;
-import it.pagopa.pn.paperchannel.queue.model.DeliveryPayload;
+import it.pagopa.pn.paperchannel.middleware.queue.model.DeliveryPayload;
 import lombok.extern.slf4j.Slf4j;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;

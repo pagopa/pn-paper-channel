@@ -1,4 +1,4 @@
-package it.pagopa.pn.paperchannel.queue.model;
+package it.pagopa.pn.paperchannel.middleware.queue.model;
 
 public enum EventTypeEnum {
 
