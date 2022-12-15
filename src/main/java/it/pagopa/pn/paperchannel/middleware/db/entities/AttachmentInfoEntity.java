@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.db.entities;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;

@@ -65,10 +65,10 @@ public class PrepareAsyncServiceImpl implements PaperAsyncService {
                     return Mono.just(deliveryAsyncModel);
                 })
                 .flatMap(deliveryAsyncModel -> addressDAO.create(AddressMapper.toEntity( address, deliveryAsyncModel.getRequestId()))
-                                    .map(item -> {
-                                        deliveryAsyncModel.setAddress(AddressMapper.toDTO(item));
-                                        return deliveryAsyncModel;
-                                    })
+                        .map(item -> {
+                            deliveryAsyncModel.setAddress(AddressMapper.toDTO(item));
+                            return deliveryAsyncModel;
+                        })
                 ).flatMap(deliveryAsyncModel -> getAmount(deliveryAsyncModel).map(item -> item));
     }
 
@@ -97,17 +97,17 @@ public class PrepareAsyncServiceImpl implements PaperAsyncService {
                         )
                 )
                 .map(fileResponse -> {
-                  //  try {
+                    try {
                         AttachmentInfo info = AttachmentMapper.fromSafeStorage(fileResponse);
                         if (info.getUrl() == null)
                             throw new PnGenericException(DOCUMENT_URL_NOT_FOUND, DOCUMENT_URL_NOT_FOUND.getMessage());
-                      //  PDDocument pdDocument = HttpConnector.downloadFile(info.getUrl());
-                      //  info.setDate(DateUtils.formatDate(pdDocument.getDocumentInformation().getCreationDate().getTime()));
-                       // info.setNumberOfPage(pdDocument.getNumberOfPages());
+                        PDDocument pdDocument = HttpConnector.downloadFile(info.getUrl());
+                        info.setDate(DateUtils.formatDate(pdDocument.getDocumentInformation().getCreationDate().getTime()));
+                        info.setNumberOfPage(pdDocument.getNumberOfPages());
                         return info;
-                 //   } catch (IOException e) {
-                   //     throw new PnGenericException(DOCUMENT_NOT_DOWNLOADED, DOCUMENT_NOT_DOWNLOADED.getMessage());
-                    //}
+                    } catch (IOException e) {
+                        throw new PnGenericException(DOCUMENT_NOT_DOWNLOADED, DOCUMENT_NOT_DOWNLOADED.getMessage());
+                    }
                 });
     }
 

@@ -13,6 +13,7 @@ public class AttachmentMapper {
     }
 
     private static final BaseMapper<AttachmentInfoEntity,AttachmentInfo> mapper = new BaseMapperImpl<>(AttachmentInfoEntity.class,AttachmentInfo.class);
+
     public static AttachmentInfo fromSafeStorage(FileDownloadResponseDto response){
         AttachmentInfo info = new AttachmentInfo();
         info.setFileKey(response.getKey());
@@ -24,6 +25,12 @@ public class AttachmentMapper {
     }
 
     public static AttachmentInfo fromEntity(AttachmentInfoEntity entity){
+
         return mapper.toDTO(entity);
+    }
+
+    public static AttachmentInfoEntity toEntity(AttachmentInfo entity){
+
+        return mapper.toEntity(entity);
     }
 }
