@@ -1,7 +1,7 @@
 package it.pagopa.pn.paperchannel.mapper;
 
 import it.pagopa.pn.paperchannel.msclient.generated.pnsafestorage.v1.dto.FileDownloadResponseDto;
-import it.pagopa.pn.paperchannel.pojo.AttachmentInfo;
+import it.pagopa.pn.paperchannel.model.AttachmentInfo;
 
 public class AttachmentMapper {
 
