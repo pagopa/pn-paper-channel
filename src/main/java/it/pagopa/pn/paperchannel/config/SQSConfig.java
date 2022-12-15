@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
 import software.amazon.awssdk.services.sqs.SqsClient;
 
-//@Configuration
+@Configuration
 @Slf4j
 public class SQSConfig {
 
@@ -31,24 +31,22 @@ public class SQSConfig {
      * https://docs.awspring.io/spring-cloud-aws/docs/2.4.2/reference/html/index.html#fifo-queue-support
      * @return bean per le code
      */
-    //@Bean
+    @Bean
     public DeliveryMomProducer deliveryMomProducer(SqsClient sqsClient, ObjectMapper objectMapper){
-       // return new DeliveryMomProducer(sqsClient,this.pnPaperChannelConfig.getQueueDeliveryPush(),objectMapper, DeliveryEvent.class);
-        return null;
+        return new DeliveryMomProducer(sqsClient,this.pnPaperChannelConfig.getQueueDeliveryPush(),objectMapper, DeliveryEvent.class);
     }
 
-    //@Bean
+    @Bean
     public AmazonSQSAsync amazonSQS() {
-//        if (StringUtils.hasText(awsConfigs.getEndpointUrl())) {
-//            log.info("with endpoint");
-//            return AmazonSQSAsyncClientBuilder.standard()
-//                    .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(awsConfigs.getEndpointUrl(), awsConfigs.getRegionCode()))
-//                    .build();
-//        } else {
-//            return AmazonSQSAsyncClientBuilder.standard()
-//                    .withRegion(awsConfigs.getRegionCode())
-//                    .build();
-//        }
-        return null;
+        if (StringUtils.hasText(awsConfigs.getEndpointUrl())) {
+            log.info("with endpoint");
+            return AmazonSQSAsyncClientBuilder.standard()
+                    .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(awsConfigs.getEndpointUrl(), awsConfigs.getRegionCode()))
+                    .build();
+        } else {
+            return AmazonSQSAsyncClientBuilder.standard()
+                    .withRegion(awsConfigs.getRegionCode())
+                    .build();
+        }
     }
 }
