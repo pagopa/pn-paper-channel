@@ -29,7 +29,6 @@ public class PnPaperChannelMiddlewareConfigs {
         } else {
             log.info("sqsClient is not null");
         }
-
         if (sqsClient.listQueues() != null) {
             sqsClient.listQueues().queueUrls().stream().forEach(s -> {
                 log.info("url : "+s);

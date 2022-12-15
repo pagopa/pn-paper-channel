@@ -171,22 +171,25 @@ Resources:
               - kms:Encrypt
               - kms:Decrypt
               - kms:ReEncrypt*
-              - dynamodb:BatchGetItem
-              - dynamodb:BatchWriteItem
-              - dynamodb:ExecuteTransaction
-              - dynamodb:GetItem
-              - dynamodb:PutItem
-              - dynamodb:DeleteItem
-              - dynamodb:Query
-              - dynamodb:TransactGetItems
-              - dynamodb:TransactWriteItems
-              - dynamodb:UpdateItem
             Resource:
               - !Ref PCDynamoSigningKeyARN
-              - !Sub "${RequestDeliveryDynamoTableArn}"
-              - !Sub "${RequestDeliveryDynamoTableArn}/*"
-              - !Sub "${AddressDynamoTableArn}"
-              - !Sub "${AddressDynamoTableArn}/*"
+          - Effect: Allow
+              Action:
+                - dynamodb:BatchGetItem
+                - dynamodb:BatchWriteItem
+                - dynamodb:ExecuteTransaction
+                - dynamodb:GetItem
+                - dynamodb:PutItem
+                - dynamodb:DeleteItem
+                - dynamodb:Query
+                - dynamodb:TransactGetItems
+                - dynamodb:TransactWriteItems
+                - dynamodb:UpdateItem
+              Resource:
+                - !Sub "${RequestDeliveryDynamoTableArn}"
+                - !Sub "${RequestDeliveryDynamoTableArn}/*"
+                - !Sub "${AddressDynamoTableArn}"
+                - !Sub "${AddressDynamoTableArn}/*"
 
   # Dashboard
   PaperChannelMicroserviceCloudWatchDashboard:
