@@ -174,22 +174,22 @@ Resources:
             Resource:
               - !Ref PCDynamoSigningKeyARN
           - Effect: Allow
-              Action:
-                - dynamodb:BatchGetItem
-                - dynamodb:BatchWriteItem
-                - dynamodb:ExecuteTransaction
-                - dynamodb:GetItem
-                - dynamodb:PutItem
-                - dynamodb:DeleteItem
-                - dynamodb:Query
-                - dynamodb:TransactGetItems
-                - dynamodb:TransactWriteItems
-                - dynamodb:UpdateItem
-              Resource:
-                - !Sub "${RequestDeliveryDynamoTableArn}"
-                - !Sub "${RequestDeliveryDynamoTableArn}/*"
-                - !Sub "${AddressDynamoTableArn}"
-                - !Sub "${AddressDynamoTableArn}/*"
+            Action:
+              - dynamodb:BatchGetItem
+              - dynamodb:BatchWriteItem
+              - dynamodb:ExecuteTransaction
+              - dynamodb:GetItem
+              - dynamodb:PutItem
+              - dynamodb:DeleteItem
+              - dynamodb:Query
+              - dynamodb:TransactGetItems
+              - dynamodb:TransactWriteItems
+              - dynamodb:UpdateItem
+            Resource:
+              - !Sub "${RequestDeliveryDynamoTableArn}"
+              - !Sub "${RequestDeliveryDynamoTableArn}/*"
+              - !Sub "${AddressDynamoTableArn}"
+              - !Sub "${AddressDynamoTableArn}/*"
 
   # Dashboard
   PaperChannelMicroserviceCloudWatchDashboard:
