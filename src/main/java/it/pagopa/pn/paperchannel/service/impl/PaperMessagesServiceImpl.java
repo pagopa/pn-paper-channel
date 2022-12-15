@@ -192,7 +192,7 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
 
     public boolean checkAddressInfo(PrepareRequest prepareRequest, RequestDeliveryEntity requestDeliveryEntity){
 
-        if(!prepareRequest.getReceiverAddress().getAddress().equals(requestDeliveryEntity.getAddress().getAddress()) ||
+        return (!prepareRequest.getReceiverAddress().getAddress().equals(requestDeliveryEntity.getAddress().getAddress()) ||
                 !prepareRequest.getReceiverAddress().getFullname().equals(requestDeliveryEntity.getAddress().getFullName()) ||
                 !prepareRequest.getReceiverAddress().getNameRow2().equals(requestDeliveryEntity.getAddress().getNameRow2()) ||
                 !prepareRequest.getReceiverAddress().getAddressRow2().equals(requestDeliveryEntity.getAddress().getAddressRow2()) ||
@@ -200,11 +200,6 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
                 !prepareRequest.getReceiverAddress().getCity().equals(requestDeliveryEntity.getAddress().getCity()) ||
                 !prepareRequest.getReceiverAddress().getCity2().equals(requestDeliveryEntity.getAddress().getCity2()) ||
                 !prepareRequest.getReceiverAddress().getPr().equals(requestDeliveryEntity.getAddress().getPr()) ||
-                !prepareRequest.getReceiverAddress().getCountry().equals(requestDeliveryEntity.getAddress().getCountry())){
-            return true;
-        }
-        else{
-            return false;
-        }
+                !prepareRequest.getReceiverAddress().getCountry().equals(requestDeliveryEntity.getAddress().getCountry()));
     }
 }
