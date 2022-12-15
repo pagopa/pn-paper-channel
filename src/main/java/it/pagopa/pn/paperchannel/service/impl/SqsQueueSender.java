@@ -28,15 +28,13 @@ public class SqsQueueSender implements SqsSender {
     SubscriberPrepare subscriberPrepare;
 
     @Override
-    public void pushEvent(EventTypeEnum eventType, DeliveryAsyncModel entity){
+    public void pushEvent(EventTypeEnum eventType, DeliveryPayload deliveryPayload){
         GenericEventHeader deliveryHeader= GenericEventHeader.builder()
                 .publisher("paper-channel-update")
                 .eventId(UUID.randomUUID().toString())
                 .createdAt(Instant.now())
                 .eventType(eventType.name())
                 .build();
-//entity.getPayload().getDeliveryAddress()
-        DeliveryPayload deliveryPayload= new DeliveryPayload(entity.getAddress(),entity.getAmount());
 
         DeliveryEvent deliveryEvent=new DeliveryEvent(deliveryHeader,deliveryPayload);
 

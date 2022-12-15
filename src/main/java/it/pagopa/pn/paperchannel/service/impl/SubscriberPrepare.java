@@ -4,15 +4,21 @@ import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.mapper.RetrivePrepareResponseMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
+import it.pagopa.pn.paperchannel.middleware.db.entities.AttachmentInfoEntity;
 import it.pagopa.pn.paperchannel.middleware.db.entities.RequestDeliveryEntity;
 import it.pagopa.pn.paperchannel.model.DeliveryAsyncModel;
+import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
+import it.pagopa.pn.paperchannel.queue.model.DeliveryPayload;
 import it.pagopa.pn.paperchannel.queue.model.EventTypeEnum;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareEvent;
 import it.pagopa.pn.paperchannel.service.SqsSender;
+import it.pagopa.pn.paperchannel.utils.DateUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 import reactor.core.publisher.Mono;
+
+import java.util.Date;
 
 @Slf4j
 public class SubscriberPrepare implements Subscriber<DeliveryAsyncModel> {
@@ -69,24 +75,33 @@ public class SubscriberPrepare implements Subscriber<DeliveryAsyncModel> {
 
     @Override
     public void onComplete() {
-        //controllo se valorizzati
         log.info("entro nell' on complete");
+        DeliveryPayload payload = new DeliveryPayload();
 
-        if(requestId!=null){
+            payload.setDeliveryAddress(deliveryAsyncModel.getAddress());
+            payload.setTotalPrice(deliveryAsyncModel.getAmount());
+            sqsQueueSender.pushEvent(EventTypeEnum.PREPARE_PAPER_RESPONSE,payload);
 
-            sqsQueueSender.pushEvent(EventTypeEnum.PREPARE_PAPER_RESPONSE,deliveryAsyncModel);
+            requestDeliveryDAO.getByRequestId(deliveryAsyncModel.getRequestId())
+                    .map(requestDeliveryEntity -> {
+                        requestDeliveryEntity.setStatusCode(StatusDeliveryEnum.TAKING_CHARGE.getCode()),
+                                requestDeliveryEntity.setStatusDetail(StatusDeliveryEnum.TAKING_CHARGE.getDescription()),
+                        requestDeliveryEntity.setStartDate(DateUtils.formatDate(new Date())),
+                        requestDeliveryEntity.setAttachments(deliveryAsyncModel.getAttachments().stream()
+                                .map(attachmentInfo -> new AttachmentInfoEntity()
+                                        .setFileKey(attachmentInfo.getFileKey())
+                                        .map()
+                                }
 
-        }else{
 
-            sqsQueueSender.pushEvent(EventTypeEnum.PREPARE_PAPER_RESPONSE,deliveryAsyncModel);
-          //  requestDeliveryDAO.getByCorrelationId(corralationId)
-            //        .map(RetrivePrepareResponseMapper::fromResult);
+                                ));
+                     );
 
-            //sqsQueueSender.pushEvent(1,);
-        }
-        //fare query per recuperare i dati dalla tabella e tutti gli altri ogetti
+            //fare chiamata update
+            //fare chiamata addressDao.create
+            //se il correlationid è diverso da null vuol dire che l'indirizzo mai settato
+           // e fare create dell'indirizzo dentro deliveryasincModel
 
-        //push
         log.info("Custom subscriber on complete");
     }
 }
