@@ -142,13 +142,14 @@ Resources:
         LoadBalancerListenerArn: !Ref ApplicationLoadBalancerListenerArn
         LoadbalancerRulePriority: !Ref MicroserviceNumber
         CloudwatchLogKinesisStreamArn: !Ref LogsKinesisSourceStreamArn
+        TaskRoleManagedPolicyArn: !Ref PaperChannelMicroserviceTaskPolicy
 
   PaperChannelMicroserviceTaskPolicy:
-    Type: AWS::IAM::Policy
+    Type: AWS::IAM::ManagedPolicy
     Properties:
-      PolicyName: !Sub '${ProjectName}-paper-channel-CustomTaskPolicy'
-      Roles:
-        - !GetAtt PaperChannelMicroservice.Outputs.TaskRoleName
+      #PolicyName: !Sub '${ProjectName}-paper-channel-CustomTaskPolicy'
+      #Roles:
+      #  - !GetAtt PaperChannelMicroservice.Outputs.TaskRoleName
       PolicyDocument:
         Version: 2012-10-17
         Statement:
