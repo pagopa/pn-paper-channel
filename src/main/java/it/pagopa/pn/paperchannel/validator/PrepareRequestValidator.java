@@ -1,6 +1,5 @@
 package it.pagopa.pn.paperchannel.validator;
 
-import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.exception.PnInputValidatorException;
 import it.pagopa.pn.paperchannel.middleware.db.entities.AddressEntity;
 import it.pagopa.pn.paperchannel.middleware.db.entities.RequestDeliveryEntity;
