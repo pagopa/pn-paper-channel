@@ -19,13 +19,13 @@ info:
     url: https://www.pn.pagopa.it/LICENSE
   version: '1.0.0'
 servers:
-- url: https://api.paperchannel.pagopa.local
-  description: Server url
+  - url: https://api.paperchannel.pagopa.local
+    description: Server url
 tags:
-- name: PaperMessages
-  description: Operazioni per inviare e monitorare messaggi di corrispondenza cartacea
-- name: HealthCheck
-  description: Metodo heartbeat
+  - name: PaperMessages
+    description: Operazioni per inviare e monitorare messaggi di corrispondenza cartacea
+  - name: HealthCheck
+    description: Metodo heartbeat
 paths:
   '/status':
     get:
@@ -42,22 +42,22 @@ paths:
   /paper-channel-private/v1/b2b/paper-deliveries-send/{requestId}:
     get:
       tags:
-      - PaperMessages
+        - PaperMessages
       summary: Pull stato per richieste già inviate
       description: "Questa richiesta permette di ottenere l'esito per la richiesta\
         \ di send precedentemente inviata. <br/> Se presente, torna l'evento relativo\
         \ allo stato corrente di send."
       operationId: retrievePaperSendRequest
       parameters:
-      - name: requestId
-        in: path
-        required: true
-        style: simple
-        explode: false
-        schema:
-          maxLength: 100
-          minLength: 5
-          type: string
+        - name: requestId
+          in: path
+          required: true
+          style: simple
+          explode: false
+          schema:
+            maxLength: 100
+            minLength: 5
+            type: string
       responses:
         "200":
           description: OK
@@ -73,7 +73,7 @@ paths:
                 $ref: 'remote-refs.yaml#/components/schemas/Problem'
     post:
       tags:
-      - PaperMessages
+        - PaperMessages
       summary: Invio di corrispondenza cartacea
       description: "Questa operazione sottomette ad paper-channel una richiesta di\
         \ invio di corrispondenza cartacea precedentemente preparata. <br/> Paper\
@@ -86,15 +86,15 @@ paths:
         \ precedentemente calcolato."
       operationId: sendPaperSendRequest
       parameters:
-      - name: requestId
-        in: path
-        required: true
-        style: simple
-        explode: false
-        schema:
-          maxLength: 100
-          minLength: 5
-          type: string
+        - name: requestId
+          in: path
+          required: true
+          style: simple
+          explode: false
+          schema:
+            maxLength: 100
+            minLength: 5
+            type: string
       requestBody:
         content:
           application/json:
@@ -152,22 +152,22 @@ paths:
   /paper-channel-private/v1/b2b/paper-deliveries-prepare/{requestId}:
     get:
       tags:
-      - PaperMessages
+        - PaperMessages
       summary: Pull esito ed eventuale indirizzo da usare per richieste già inviate
       description: "Questa richiesta permette di ottenere l'esito corrente per la\
         \ richiesta di prepare precedentemente inviata. <br/> Se presente, torna l'evento\
         \ relativo allo stato corrente di prepare con eventuale indirizzo da usare."
       operationId: retrievePaperPrepareRequest
       parameters:
-      - name: requestId
-        in: path
-        required: true
-        style: simple
-        explode: false
-        schema:
-          maxLength: 100
-          minLength: 5
-          type: string
+        - name: requestId
+          in: path
+          required: true
+          style: simple
+          explode: false
+          schema:
+            maxLength: 100
+            minLength: 5
+            type: string
       responses:
         "200":
           description: OK
@@ -183,7 +183,7 @@ paths:
                 $ref: 'remote-refs.yaml#/components/schemas/Problem'
     post:
       tags:
-      - PaperMessages
+        - PaperMessages
       summary: Invio di corrispondenza cartacea - richiesta di validazione e praparazione
         all'invio
       description: "Questa operazione sottomette ad paper-channel una richiesta preparazione\
@@ -201,15 +201,15 @@ paths:
         \ forma anonima tramite opportuno hash."
       operationId: sendPaperPrepareRequest
       parameters:
-      - name: requestId
-        in: path
-        required: true
-        style: simple
-        explode: false
-        schema:
-          maxLength: 100
-          minLength: 5
-          type: string
+        - name: requestId
+          in: path
+          required: true
+          style: simple
+          explode: false
+          schema:
+            maxLength: 100
+            minLength: 5
+            type: string
       requestBody:
         content:
           application/json:
@@ -263,9 +263,9 @@ paths:
 
 components:
 
-    #############################################################################################
-    ###             PARAMETRI E RISPOSTE IN COMUNE PER TUTTI I TIPI DI MESSAGGIO              ###
-    #############################################################################################
+  #############################################################################################
+  ###             PARAMETRI E RISPOSTE IN COMUNE PER TUTTI I TIPI DI MESSAGGIO              ###
+  #############################################################################################
   parameters:
 
     pathRequestId:
@@ -345,7 +345,7 @@ components:
 
     PaperChannelUpdate:
       description: oggetto usato per ricevere un evento nella coda. >-
-          Prevede di valorizzare solo uno dei tipi di eventi possibili
+        Prevede di valorizzare solo uno dei tipi di eventi possibili
       type: object
       properties:
         prepareEvent:
@@ -375,4 +375,3 @@ components:
 
 #security:                 # ONLY EXTERNAL
 #  - ApiKeyAuth: [] # use the same name as under securitySchemes    # ONLY EXTERNAL
-

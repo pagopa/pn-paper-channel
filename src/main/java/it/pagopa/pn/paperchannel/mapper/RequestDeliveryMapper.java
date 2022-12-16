@@ -17,7 +17,7 @@ public class RequestDeliveryMapper {
     public static RequestDeliveryEntity toEntity(PrepareRequest request, String correlationId){
         RequestDeliveryEntity entity = new RequestDeliveryEntity();
         entity.setRequestId(request.getRequestId());
-        entity.setRegisteredLetterCode(request.getProductType());
+        entity.setRegisteredLetterCode(request.getProposalProductType().getValue());
         entity.setStartDate(DateUtils.formatDate(new Date()));
         entity.setStatusCode(StatusDeliveryEnum.IN_PROCESSING.getCode());
         entity.setStatusDetail(StatusDeliveryEnum.IN_PROCESSING.getDescription());
