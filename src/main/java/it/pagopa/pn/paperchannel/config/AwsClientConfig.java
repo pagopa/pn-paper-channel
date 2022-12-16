@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
 public class AwsClientConfig extends AwsServicesClientsConfig {
 
     public AwsClientConfig(AwsConfigs props) {
-        super(props, RuntimeMode.DEVELOPMENT);
+        super(props, RuntimeMode.PROD);
     }
 
 }
