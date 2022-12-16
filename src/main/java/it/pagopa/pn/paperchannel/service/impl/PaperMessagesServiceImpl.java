@@ -7,6 +7,7 @@ import it.pagopa.pn.paperchannel.mapper.PreparePaperResponseMapper;
 import it.pagopa.pn.paperchannel.mapper.RequestDeliveryMapper;
 import it.pagopa.pn.paperchannel.mapper.RetrivePrepareResponseMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
+import it.pagopa.pn.paperchannel.middleware.db.entities.RequestDeliveryEntity;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareEvent;
@@ -80,7 +81,6 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
         return requestDeliveryDAO.getByRequestId(requestId)
                 .map(RetrivePrepareResponseMapper::fromResult);
     }
-
 
     private Mono<RequestDeliveryEntity> saveRequestDeliveryEntity(PrepareRequest prepareRequest, Address address, String correlationId){
         return requestDeliveryDAO.create(RequestDeliveryMapper.toEntity(prepareRequest, correlationId))

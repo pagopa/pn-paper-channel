@@ -17,6 +17,17 @@ components:
           $ref: '#/components/schemas/SendEvent'
       description: oggetto usato per ricevere un evento nella coda. >- Prevede di
         valorizzare solo uno dei tipi di eventi possibili
+    ProductTypeEnum:
+      type: string
+      enum: [ RN_AR, RN_890, RN_RS, RI_AR, RI_RS ]
+      description: "Tipo prodotto di cui viene chiesto il recapito: <br/> \
+                \  - __RN_AR__: Raccomandata Andata e Ritorno, <br/> \
+                \  - __RN_890__: Recapito a norma della legge 890/1982, <br/> \
+                \  - __RN_RS__: Raccomandata Semplice (per Avviso di mancato Recapito). <br/> \
+                \  - __RI_AR__: Recapito a norma della legge 890/1982, <br/> \
+                \  - __RI_RS__: Recapito a norma della legge 890/1982, <br/> \
+                \  - ... ulteriori prodotti"
+      example: RN_AR
     SendRequest:
       required:
       - attachmentUrls
@@ -44,21 +55,7 @@ components:
         arAddress:
           $ref: '#/components/schemas/AnalogAddress'
         productType:
-          type: string
-          enum:
-            - RN_AR
-            - RN_890
-            - RN_RS
-            - RI_AR
-            - RI_RS
-          description: "Tipo prodotto di cui viene chiesto il recapito: <br/> \
-            \  - __RN_AR__: Raccomandata Andata e Ritorno, <br/> \
-            \  - __RN_890__: Recapito a norma della legge 890/1982, <br/> \
-            \  - __RN_RS__: Raccomandata Semplice (per Avviso di mancato Recapito). <br/> \
-            \  - __RI_AR__: Recapito a norma della legge 890/1982, <br/> \
-            \  - __RI_RS__: Recapito a norma della legge 890/1982, <br/> \
-            \  - ... ulteriori prodotti"
-          example: RN_AR
+          $ref: '#/components/schemas/ProductTypeEnum'
       allOf:
       - $ref: '#/components/schemas/PaperRequest'
     SendResponse:
@@ -71,20 +68,20 @@ components:
           format: int32
           description: ammontare in eurocent del costo per l'invio della notifica
             in forma cartacea
+
+    StatusCodeEnum:
+      type: string
+      enum: [ PROGRESS, OK, KOUNREACHABLE ]
+      description: "Codici di stato:
+                                \ - PROGRESS :  stato iniziale che indica che\
+                                \ la richiesta è in fase di elaborazione
+                                \ - OK : nel caso di indirizzo valido e allegati recuperati correttamente. Prevede la presenza del receiverAddress \
+                                \ - KOUNREACHABLE : nel caso in cui non sia disponibile un indirizzo per l'utente in base alle informazioni passate."
     PrepareEvent:
       type: object
       properties:
         statusCode:
-          type: string
-          enum:
-            - OK
-            - PROGRESS
-            - KOUNREACHABLE
-          description: "Codici di stato:
-            \ - PROGRESS :  stato iniziale che indica che\
-            \ la richiesta è in fase di elaborazione
-            \ - OK : nel caso di indirizzo valido e allegati recuperati correttamente. Prevede la presenza del receiverAddress \
-            \ - KOUNREACHABLE : nel caso in cui non sia disponibile un indirizzo per l'utente in base alle informazioni passate."
+          $ref: '#/components/schemas/StatusCodeEnum'
         receiverAddress:
           $ref: '#/components/schemas/AnalogAddress'
         productType:
@@ -145,15 +142,23 @@ components:
           format: date-time
       allOf:
       - $ref: '#/components/schemas/PaperEvent'
+    ProposalTypeEnum:
+      type: string
+      enum: [ AR, 890, RS ]
+      description: "Tipo prodotto proposta di cui viene chiesto il recapito: <br/> \
+                \  - __AR__: Raccomandata Andata e Ritorno, <br/> \
+                \  - __890__: Recapito a norma della legge 890/1982, <br/> \
+                \  - __RS__: Raccomandata Semplice (per Avviso di mancato Recapito)."
+      example: AR
     PrepareRequest:
       required:
-          - attachmentUrls
-          - clientRequestTimeStamp
-          - printType
-          - proposalProductType
-          - requestId
-          - receiverFiscalCode
-          - receiverType
+      - attachmentUrls
+      - clientRequestTimeStamp
+      - printType
+      - proposalProductType
+      - requestId
+      - receiverFiscalCode
+      - receiverType
       type: object
       properties:
         relatedRequestId:
@@ -162,16 +167,7 @@ components:
         discoveredAddress:
           $ref: '#/components/schemas/AnalogAddress'
         proposalProductType:
-          type: string
-          enum:
-            - AR
-            - 890
-            - RS
-          description: "Tipo prodotto proposta di cui viene chiesto il recapito: <br/> \
-            \  - __AR__: Raccomandata Andata e Ritorno, <br/> \
-            \  - __890__: Recapito a norma della legge 890/1982, <br/> \
-            \  - __RS__: Raccomandata Semplice (per Avviso di mancato Recapito)."
-          example: AR
+          $ref: '#/components/schemas/ProposalTypeEnum'
       allOf:
       - $ref: '#/components/schemas/PaperRequest'
     Problem:

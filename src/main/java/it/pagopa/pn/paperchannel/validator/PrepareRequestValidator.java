@@ -24,7 +24,7 @@ public class PrepareRequestValidator {
         if (!StringUtils.equals(prepareRequest.getReceiverFiscalCode(), requestDeliveryEntity.getFiscalCode())){
             errors.add("FiscalCode");
         }
-        if (!StringUtils.equals(prepareRequest.getProductType(), requestDeliveryEntity.getRegisteredLetterCode())){
+        if (!StringUtils.equals(prepareRequest.getProposalProductType().getValue(), requestDeliveryEntity.getRegisteredLetterCode())){
             errors.add("ProductType");
         }
 

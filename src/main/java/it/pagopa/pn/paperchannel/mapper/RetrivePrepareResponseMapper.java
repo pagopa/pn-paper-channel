@@ -7,6 +7,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.RequestDeliveryEntity;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.rest.v1.dto.AnalogAddress;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareEvent;
+import it.pagopa.pn.paperchannel.rest.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 
 public class RetrivePrepareResponseMapper {
@@ -16,7 +17,7 @@ public class RetrivePrepareResponseMapper {
     public static PrepareEvent fromResult(RequestDeliveryEntity request){
         PrepareEvent entityEvent = new PrepareEvent();
         entityEvent.setRequestId(request.getRequestId());
-        entityEvent.setStatusCode(StatusDeliveryEnum.IN_PROCESSING.getCode());
+        entityEvent.setStatusCode(StatusCodeEnum.PROGRESS);
         entityEvent.setStatusDetail(StatusDeliveryEnum.IN_PROCESSING.getDescription());
       //  entityEvent.setReceiverAddress(baseMapperAddress.toDTO(request.getAddress()));
         entityEvent.setStatusDateTime((DateUtils.parseDateString(request.getStatusDate())));
