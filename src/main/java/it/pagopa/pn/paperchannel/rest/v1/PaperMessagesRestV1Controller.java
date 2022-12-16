@@ -1,6 +1,5 @@
 package it.pagopa.pn.paperchannel.rest.v1;
 
-
 import it.pagopa.pn.paperchannel.rest.v1.api.PaperMessagesApi;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareEvent;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareRequest;
@@ -14,6 +13,7 @@ import reactor.core.publisher.Mono;
 
 @RestController
 public class PaperMessagesRestV1Controller implements PaperMessagesApi {
+
     @Autowired
     private PaperMessagesService paperMessagesService;
 
