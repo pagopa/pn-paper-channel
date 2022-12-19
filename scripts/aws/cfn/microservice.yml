@@ -63,6 +63,10 @@ Parameters:
     Type: String
     Description: 'Url to the SafeStorage microservice'
 
+  SafeStorageCxId:
+    Type: String
+    Description: 'SafeStorage cx-id'
+
   NetworkLoadBalancerLink:
     Type: String
     Description: 'network load balancer link for API-GW'
