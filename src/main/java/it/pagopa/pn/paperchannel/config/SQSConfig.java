@@ -22,14 +22,11 @@ public class SQSConfig {
 
     @Bean
     public AmazonSQSAsync amazonSQS() {
-        log.info("init amazonSQS region" + awsConfigs.getRegionCode());
         if (StringUtils.hasText(awsConfigs.getEndpointUrl())) {
-            log.info("with endpoint");
             return AmazonSQSAsyncClientBuilder.standard()
                     .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(awsConfigs.getEndpointUrl(), awsConfigs.getRegionCode()))
                     .build();
         } else {
-            log.info("with no endpoint");
             return AmazonSQSAsyncClientBuilder.standard()
                     .withRegion(awsConfigs.getRegionCode())
                     .build();

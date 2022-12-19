@@ -1,6 +1,5 @@
 package it.pagopa.pn.paperchannel.middleware;
 
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.middleware.queue.action.DeliveryMomProducer;
@@ -22,18 +21,6 @@ public class PnPaperChannelMiddlewareConfigs {
 
     @Bean
     public DeliveryMomProducer deliveryMomProducer(SqsClient sqsClient, ObjectMapper objMapper) {
-        log.info("try to start queue ...");
-        log.info("queue name url "+pnPaperChannelConfig.getQueueDeliveryPush());
-        if (sqsClient == null ) {
-            log.info(" sqsClient is null");
-        } else {
-            log.info("sqsClient is not null");
-        }
-        if (sqsClient.listQueues() != null) {
-            sqsClient.listQueues().queueUrls().stream().forEach(s -> {
-                log.info("url : "+s);
-            });
-        }
         return new DeliveryMomProducer(sqsClient, this.pnPaperChannelConfig.getQueueDeliveryPush(), objMapper, DeliveryEvent.class);
     }
 }
