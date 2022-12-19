@@ -1,10 +1,10 @@
 package it.pagopa.pn.paperchannel.middleware.db.dao;
 
-import it.pagopa.pn.paperchannel.middleware.db.entities.AddressEntity;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import reactor.core.publisher.Mono;
 
 public interface AddressDAO {
-    Mono<AddressEntity> create (AddressEntity addressEntity);
+    Mono<PnAddress> create (PnAddress pnAddress);
 
-    Mono<AddressEntity> findByRequestId (String requestId);
+    Mono<PnAddress> findByRequestId (String requestId);
 }

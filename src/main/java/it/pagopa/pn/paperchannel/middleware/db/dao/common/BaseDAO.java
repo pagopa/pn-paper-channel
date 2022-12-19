@@ -1,7 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.db.dao.common;
 
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
-import it.pagopa.pn.paperchannel.middleware.db.entities.RequestDeliveryEntity;
 import org.apache.commons.lang3.StringUtils;
 import reactor.core.publisher.Flux;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;

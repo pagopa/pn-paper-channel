@@ -7,14 +7,13 @@ import it.pagopa.pn.paperchannel.mapper.PreparePaperResponseMapper;
 import it.pagopa.pn.paperchannel.mapper.RequestDeliveryMapper;
 import it.pagopa.pn.paperchannel.mapper.RetrivePrepareResponseMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
-import it.pagopa.pn.paperchannel.middleware.db.entities.RequestDeliveryEntity;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareEvent;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareRequest;
 import it.pagopa.pn.paperchannel.rest.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.service.PaperMessagesService;
-import it.pagopa.pn.paperchannel.utils.DateUtils;
 import it.pagopa.pn.paperchannel.validator.PrepareRequestValidator;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import lombok.extern.slf4j.Slf4j;
@@ -80,7 +79,7 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
                 .map(RetrivePrepareResponseMapper::fromResult);
     }
 
-    private Mono<RequestDeliveryEntity> saveRequestDeliveryEntity(PrepareRequest prepareRequest, Address address, String correlationId){
+    private Mono<PnDeliveryRequest> saveRequestDeliveryEntity(PrepareRequest prepareRequest, Address address, String correlationId){
         return requestDeliveryDAO.create(RequestDeliveryMapper.toEntity(prepareRequest, correlationId))
                 .map(entity -> {
                     // Case of 204

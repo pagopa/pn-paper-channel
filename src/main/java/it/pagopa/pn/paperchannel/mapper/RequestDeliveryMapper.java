@@ -1,7 +1,7 @@
 package it.pagopa.pn.paperchannel.mapper;
 
-import it.pagopa.pn.paperchannel.middleware.db.entities.AttachmentInfoEntity;
-import it.pagopa.pn.paperchannel.middleware.db.entities.RequestDeliveryEntity;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareRequest;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
@@ -14,8 +14,8 @@ public class RequestDeliveryMapper {
         throw new IllegalStateException("Utility class");
     }
 
-    public static RequestDeliveryEntity toEntity(PrepareRequest request, String correlationId){
-        RequestDeliveryEntity entity = new RequestDeliveryEntity();
+    public static PnDeliveryRequest toEntity(PrepareRequest request, String correlationId){
+        PnDeliveryRequest entity = new PnDeliveryRequest();
         entity.setRequestId(request.getRequestId());
         entity.setRegisteredLetterCode(request.getProposalProductType().getValue());
         entity.setStartDate(DateUtils.formatDate(new Date()));
@@ -34,9 +34,9 @@ public class RequestDeliveryMapper {
 
         if(request.getAttachmentUrls()!= null){
             entity.setAttachments(request.getAttachmentUrls().stream().map(key -> {
-                AttachmentInfoEntity attachmentInfoEntity = new AttachmentInfoEntity();
-                attachmentInfoEntity.setFileKey(key);
-                return attachmentInfoEntity;
+                PnAttachmentInfo pnAttachmentInfo = new PnAttachmentInfo();
+                pnAttachmentInfo.setFileKey(key);
+                return pnAttachmentInfo;
             }).collect(Collectors.toList()));
         }
 
