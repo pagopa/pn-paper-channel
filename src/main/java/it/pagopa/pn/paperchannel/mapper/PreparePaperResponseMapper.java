@@ -5,10 +5,7 @@ import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
-import it.pagopa.pn.paperchannel.rest.v1.dto.AnalogAddress;
-import it.pagopa.pn.paperchannel.rest.v1.dto.AttachmentDetails;
-import it.pagopa.pn.paperchannel.rest.v1.dto.PaperEvent;
-import it.pagopa.pn.paperchannel.rest.v1.dto.SendEvent;
+import it.pagopa.pn.paperchannel.rest.v1.dto.*;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 
 import java.util.Date;
@@ -20,7 +17,9 @@ public class PreparePaperResponseMapper {
 
     private static final BaseMapper <PnAttachmentInfo, AttachmentDetails> baseMapperAttachment = new BaseMapperImpl(PnAttachmentInfo.class, AttachmentDetails.class);
 
-    public static SendEvent fromResult(PnDeliveryRequest item){
+    public static PaperChannelUpdate fromResult(PnDeliveryRequest item){
+        PaperChannelUpdate paperChannelUpdate = new PaperChannelUpdate();
+
         SendEvent event = new SendEvent();
         event.setRequestId(item.getRequestId());
         event.setStatusCode(item.getStatusCode());
@@ -30,13 +29,15 @@ public class PreparePaperResponseMapper {
         event.setClientRequestTimeStamp(DateUtils.parseDateString(item.getStartDate()));
 
 
-       // if(item.getAddress()!= null){
-         //   event.setDiscoveredAddress(baseMapperAddress.toDTO(item.getAddress()));
-       // }
+        // if(item.getAddress()!= null){
+        //   event.setDiscoveredAddress(baseMapperAddress.toDTO(item.getAddress()));
+        // }
         if(item.getAttachments()!= null){
             event.setAttachments(item.getAttachments().stream().map(baseMapperAttachment::toDTO).collect(Collectors.toList()));
         }
-        return event;
+        paperChannelUpdate.setSendEvent(event);
+
+        return paperChannelUpdate;
     }
 
     public static PaperEvent fromEvent(String requestId){

@@ -1,6 +1,7 @@
 package it.pagopa.pn.paperchannel.rest.v1;
 
 import it.pagopa.pn.paperchannel.rest.v1.api.PaperMessagesApi;
+import it.pagopa.pn.paperchannel.rest.v1.dto.PaperChannelUpdate;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareEvent;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareRequest;
 import it.pagopa.pn.paperchannel.rest.v1.dto.SendEvent;
@@ -18,7 +19,7 @@ public class PaperMessagesRestV1Controller implements PaperMessagesApi {
     private PaperMessagesService paperMessagesService;
 
     @Override
-    public Mono<ResponseEntity<SendEvent>> sendPaperPrepareRequest(String requestId, Mono<PrepareRequest> prepareRequest, ServerWebExchange exchange) {
+    public Mono<ResponseEntity<PaperChannelUpdate>> sendPaperPrepareRequest(String requestId, Mono<PrepareRequest> prepareRequest, ServerWebExchange exchange) {
        return prepareRequest.flatMap(request -> paperMessagesService.preparePaperSync(requestId, request))
                 .map(ResponseEntity::ok);
     }
