@@ -1,9 +1,12 @@
 package it.pagopa.pn.paperchannel.model;
 
+import it.pagopa.pn.paperchannel.utils.Utility;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.security.NoSuchAlgorithmException;
 
 @Getter
 @Setter
@@ -28,4 +31,18 @@ public class Address {
     private String pr;
 
     private String country;
+
+    public String convertToHash() {
+        StringBuilder builder = new StringBuilder();
+        builder.append(Utility.convertToHash(this.address));
+        builder.append(Utility.convertToHash(this.fullName));
+        builder.append(Utility.convertToHash(this.nameRow2));
+        builder.append(Utility.convertToHash(this.addressRow2));
+        builder.append(Utility.convertToHash(this.cap));
+        builder.append(Utility.convertToHash(this.city));
+        builder.append(Utility.convertToHash(this.city2));
+        builder.append(Utility.convertToHash(this.pr));
+        builder.append(Utility.convertToHash(this.country));
+        return builder.toString();
+    }
 }
