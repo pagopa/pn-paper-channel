@@ -127,7 +127,7 @@ Resources:
         ContainerEnvEntry2: !Sub 'CORS_ALLOWED_DOMAINS=${CorsAllowedDomains}'
         ContainerEnvEntry3: !Sub 'PN_PAPERCHANNEL_CLIENTSAFESTORAGEBASEPATH=${SandboxSafeStorageBaseUrl}'
         ContainerEnvEntry4: !Sub 'PN_PAPERCHANNEL_CLIENTNATIONALREGISTRIESBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
-        ContainerEnvEntry5: !Sub 'PN_PAPERCHANNEL_SAFESTORAGECXID=pn-radd'
+        ContainerEnvEntry5: !Sub 'PN_PAPERCHANNEL_SAFESTORAGECXID=${SafeStorageCxId}'
         ContainerEnvEntry6: !Sub 'AWS_DYNAMODBREQUESTDELIVERYTABLE=${RequestDeliveryDynamoTableName}'
         ContainerEnvEntry7: !Sub 'AWS_DYNAMODBADDRESSTABLE=${AddressDynamoTableName}'
         ContainerEnvEntry8: !Sub 'PN_PAPERCHANNEL_KMS_KEY=${PCDynamoSigningKeyARN}'

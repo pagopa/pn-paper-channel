@@ -40,7 +40,7 @@ public class SafeStorageClientImpl extends BaseClient implements SafeStorageClie
     @Override
     public Mono<FileDownloadResponseDto> getFile(String fileKey) {
         log.debug("Getting file with {} key", fileKey);
-        return fileDownloadApi.getFile(fileKey, this.pnPaperChannelConfig.getSafeStorageCxId(), true)
+        return fileDownloadApi.getFile(fileKey, this.pnPaperChannelConfig.getSafeStorageCxId(), false)
                 .retryWhen(
                         Retry.backoff(2, Duration.ofMillis(500))
                                 .filter(throwable -> throwable instanceof TimeoutException || throwable instanceof ConnectException)
