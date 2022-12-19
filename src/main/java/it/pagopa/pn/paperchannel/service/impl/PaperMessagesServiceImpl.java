@@ -10,6 +10,7 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.model.Address;
+import it.pagopa.pn.paperchannel.rest.v1.dto.PaperChannelUpdate;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareEvent;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareRequest;
 import it.pagopa.pn.paperchannel.rest.v1.dto.SendEvent;
@@ -41,7 +42,7 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
     private PrepareRequestValidator prepareRequestValidator;
 
     @Override
-    public Mono<SendEvent> preparePaperSync(String requestId, PrepareRequest prepareRequest){
+    public Mono<PaperChannelUpdate> preparePaperSync(String requestId, PrepareRequest prepareRequest){
         log.info("Start preparePaperSync with requestId {}", requestId);
         prepareRequest.setRequestId(requestId);
         return requestDeliveryDAO.getByRequestId(requestId)
