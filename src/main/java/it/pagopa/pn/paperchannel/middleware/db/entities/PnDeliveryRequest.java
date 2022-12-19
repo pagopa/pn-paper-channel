@@ -73,7 +73,7 @@ public class PnDeliveryRequest {
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_REGISTERED_LETTER_CODE)}))
     private String registeredLetterCode;
 
-    @Getter(onMethod = @__({@DynamoDbAttribute(COL_REGISTERED_LETTER_CODE)}))
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_PRINT_TYPE)}))
     private String printType;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_START_DATE)}))
