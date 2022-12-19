@@ -1,18 +1,18 @@
 package it.pagopa.pn.paperchannel.middleware.db.dao;
 
-import it.pagopa.pn.paperchannel.middleware.db.entities.RequestDeliveryEntity;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public interface RequestDeliveryDAO {
 
-    Mono<RequestDeliveryEntity> create(RequestDeliveryEntity requestDeliveryEntity);
+    Mono<PnDeliveryRequest> create(PnDeliveryRequest pnDeliveryRequest);
 
-    Mono<RequestDeliveryEntity> updateData(RequestDeliveryEntity requestDeliveryEntity);
+    Mono<PnDeliveryRequest> updateData(PnDeliveryRequest pnDeliveryRequest);
 
-    Mono<RequestDeliveryEntity> getByRequestId(String requestId);
+    Mono<PnDeliveryRequest> getByRequestId(String requestId);
 
-    Mono<RequestDeliveryEntity> getByCorrelationId(String correlationId);
+    Mono<PnDeliveryRequest> getByCorrelationId(String correlationId);
 
-    Flux<RequestDeliveryEntity> getByFiscalCode(String fiscalCode);
+    Flux<PnDeliveryRequest> getByFiscalCode(String fiscalCode);
 }

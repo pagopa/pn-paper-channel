@@ -8,7 +8,7 @@ import it.pagopa.pn.paperchannel.config.AwsPropertiesConfig;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.BaseDAO;
-import it.pagopa.pn.paperchannel.middleware.db.entities.RequestDeliveryEntity;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
@@ -28,30 +28,30 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQ
 @Repository
 @Slf4j
 @Import(PnAuditLogBuilder.class)
-public class RequestDeliveryDAOImpl extends BaseDAO<RequestDeliveryEntity> implements RequestDeliveryDAO {
+public class RequestDeliveryDAOImpl extends BaseDAO<PnDeliveryRequest> implements RequestDeliveryDAO {
 
     public RequestDeliveryDAOImpl(PnAuditLogBuilder auditLogBuilder,
                                   DynamoDbEnhancedAsyncClient dynamoDbEnhancedAsyncClient,
                                   DynamoDbAsyncClient dynamoDbAsyncClient,
                                   AwsPropertiesConfig awsPropertiesConfig) {
         super(auditLogBuilder, dynamoDbEnhancedAsyncClient, dynamoDbAsyncClient,
-                awsPropertiesConfig.getDynamodbRequestDeliveryTable(), RequestDeliveryEntity.class);
+                awsPropertiesConfig.getDynamodbRequestDeliveryTable(), PnDeliveryRequest.class);
     }
 
     @Override
-    public Mono<RequestDeliveryEntity> create(RequestDeliveryEntity requestDeliveryEntity) {
-        String logMessage = String.format("create request delivery = %s", requestDeliveryEntity);
+    public Mono<PnDeliveryRequest> create(PnDeliveryRequest pnDeliveryRequest) {
+        String logMessage = String.format("create request delivery = %s", pnDeliveryRequest);
         PnAuditLogEvent logEvent = auditLogBuilder
                 .before(PnAuditLogEventType.AUD_DL_CREATE, logMessage)
                 .build();
         logEvent.log();
 
         return Mono.fromFuture(
-                countOccurrencesEntity(requestDeliveryEntity.getRequestId())
+                countOccurrencesEntity(pnDeliveryRequest.getRequestId())
                         .thenCompose( total -> {
                                 log.info("Total elements : {}", total);
                                 if (total == 0){
-                                    return put(requestDeliveryEntity);
+                                    return put(pnDeliveryRequest);
                                 } else {
                                     throw new PnHttpResponseException("Data already existed", HttpStatus.BAD_REQUEST.value());
                                 }
@@ -68,20 +68,20 @@ public class RequestDeliveryDAOImpl extends BaseDAO<RequestDeliveryEntity> imple
     }
 
     @Override
-    public Mono<RequestDeliveryEntity> updateData(RequestDeliveryEntity requestDeliveryEntity) {
-        String logMessage = String.format("Update request delivery = %s", requestDeliveryEntity);
+    public Mono<PnDeliveryRequest> updateData(PnDeliveryRequest pnDeliveryRequest) {
+        String logMessage = String.format("Update request delivery = %s", pnDeliveryRequest);
         PnAuditLogEvent logEvent = auditLogBuilder
                 .before(PnAuditLogEventType.AUD_DL_CREATE, logMessage)
                 .build();
         logEvent.log();
-        return Mono.fromFuture(this.update(requestDeliveryEntity).thenApply(item -> {
+        return Mono.fromFuture(this.update(pnDeliveryRequest).thenApply(item -> {
             logEvent.generateSuccess("Update successfully").log();
             return item;
         }));
     }
 
     @Override
-    public Mono<RequestDeliveryEntity> getByRequestId(String requestId) {
+    public Mono<PnDeliveryRequest> getByRequestId(String requestId) {
         String logMessage = String.format("Find request delivery with %s", requestId);
         PnAuditLogEvent logEvent = auditLogBuilder
                 .before(PnAuditLogEventType.AUD_DL_CREATE, logMessage)
@@ -95,19 +95,19 @@ public class RequestDeliveryDAOImpl extends BaseDAO<RequestDeliveryEntity> imple
     }
 
     @Override
-    public Mono<RequestDeliveryEntity> getByCorrelationId(String correlationId) {
-        return this.getBySecondaryIndex(RequestDeliveryEntity.CORRELATION_INDEX, correlationId, null)
+    public Mono<PnDeliveryRequest> getByCorrelationId(String correlationId) {
+        return this.getBySecondaryIndex(PnDeliveryRequest.CORRELATION_INDEX, correlationId, null)
                 .collectList()
                 .map(item -> item.get(0));
     }
 
     @Override
-    public Flux<RequestDeliveryEntity> getByFiscalCode(String fiscalCode) {
-        return this.getBySecondaryIndex(RequestDeliveryEntity.FISCAL_CODE_INDEX, fiscalCode, null);
+    public Flux<PnDeliveryRequest> getByFiscalCode(String fiscalCode) {
+        return this.getBySecondaryIndex(PnDeliveryRequest.FISCAL_CODE_INDEX, fiscalCode, null);
     }
 
     private CompletableFuture<Integer> countOccurrencesEntity(String requestId){
-        String keyConditionExpression = RequestDeliveryEntity.COL_REQUEST_ID + " = :requestId";
+        String keyConditionExpression = PnDeliveryRequest.COL_REQUEST_ID + " = :requestId";
         Map<String, AttributeValue> expressionValues = new HashMap<>();
         expressionValues.put(":requestId",  AttributeValue.builder().s(requestId).build());
         return this.getCounterQuery(expressionValues, "", keyConditionExpression);

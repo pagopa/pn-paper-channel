@@ -10,7 +10,7 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbParti
 @Getter
 @Setter
 @ToString
-public class AddressEntity {
+public class PnAddress {
 
     private static final String COL_REQUEST_ID = "requestId";
 
