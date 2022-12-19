@@ -43,6 +43,7 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
 
     @Override
     public Mono<SendEvent> preparePaperSync(String requestId, PrepareRequest prepareRequest){
+        log.info("Start preparePaperSync with requestId {}", requestId);
         prepareRequest.setRequestId(requestId);
         return requestDeliveryDAO.getByRequestId(requestId)
                 // Case of 409
@@ -56,7 +57,6 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
                         return getAddress(prepareRequest)
                                 .flatMap(address -> {
                                     if(address==null){
-
                                         return nationalRegistryClient.finderAddress(prepareRequest.getReceiverFiscalCode(),prepareRequest.getReceiverType())
                                                 .flatMap(addressOKDto -> saveRequestDeliveryEntity(prepareRequest,null,addressOKDto.getCorrelationId())
                                                         .flatMap(entity -> Mono.empty()));
@@ -64,8 +64,6 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
                                     return saveRequestDeliveryEntity(prepareRequest,address,null)
                                             .flatMap(entity -> Mono.empty());
                                 });
-
-
                     }
                     if (ex.getExceptionType() == DIFFERENT_DATA_REQUEST) {
 

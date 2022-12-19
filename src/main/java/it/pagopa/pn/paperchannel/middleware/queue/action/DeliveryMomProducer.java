@@ -11,6 +11,5 @@ public class DeliveryMomProducer extends AbstractSqsMomProducer<DeliveryEvent> {
 
     public DeliveryMomProducer(SqsClient sqsClient, String topic, ObjectMapper objectMapper, Class<DeliveryEvent> msgClass) {
         super(sqsClient, topic, objectMapper, msgClass);
-        log.info("DeliveryMomProducer");
     }
 }
