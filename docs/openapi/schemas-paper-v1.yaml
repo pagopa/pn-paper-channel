@@ -365,7 +365,6 @@ components:
           oneOf: 
             - $ref: '#/components/schemas/DecisionWorkflowStepLogic'
             - $ref: '#/components/schemas/DecisionWorkflowStepService'
-            - $ref: '#/components/schemas/DecisionWorkflowStepEnding'
     DecisionWorkflowStepLogic:
       description: Step del Workflow di valutazione di una condizione logica 
       type: object
@@ -406,22 +405,6 @@ components:
             $ref: '#/components/schemas/AnalogAddress'
         allOf:
           - $ref: '#/components/schemas/GenericWorkflowStep'
-    DecisionWorkflowStepEnding:
-      description: Step finale del Workflow
-      type: object
-      required: 
-        - stepType
-        - addressFound
-      properties:
-        stepType:
-          type: string
-          enum: [ENDING]
-          description: Tipo di Step
-        addressFound:
-          type: boolean
-          description: Esito del workflow di ricerca dell'indirizzo, l'eventuale indirizzo finale non è riportato in quanto già esplicitato nella risposta
-      allOf:
-        - $ref: '#/components/schemas/GenericWorkflowStep'
     GenericWorkflowStep:
       type: object
       required: 
