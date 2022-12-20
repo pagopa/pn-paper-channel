@@ -14,12 +14,24 @@ public class RetrivePrepareResponseMapper {
 
     private static final BaseMapper <PnAddress, AnalogAddress> baseMapperAddress = new BaseMapperImpl(PnAddress.class, AnalogAddress.class);
 
-    public static PrepareEvent fromResult(PnDeliveryRequest request){
+    public static PrepareEvent fromResult(PnDeliveryRequest request, PnAddress address){
         PrepareEvent entityEvent = new PrepareEvent();
         entityEvent.setRequestId(request.getRequestId());
-        entityEvent.setStatusCode(StatusCodeEnum.PROGRESS);
-        entityEvent.setStatusDetail(StatusDeliveryEnum.IN_PROCESSING.getDescription());
-      //  entityEvent.setReceiverAddress(baseMapperAddress.toDTO(request.getAddress()));
+        entityEvent.setStatusCode(StatusCodeEnum.OK);
+        if (request.getStatusCode().equals(StatusDeliveryEnum.IN_PROCESSING.getCode()) || request.getStatusCode().equals(StatusDeliveryEnum.NATIONAL_REGISTRY_WAITING.getCode())){
+            entityEvent.setStatusCode(StatusCodeEnum.PROGRESS);
+        }
+
+        else if (request.getStatusCode().equals(StatusDeliveryEnum.UNTRACEABLE.getCode())){
+            entityEvent.setStatusCode(StatusCodeEnum.KOUNREACHABLE);
+        }
+
+        if (address != null){
+           entityEvent.setReceiverAddress(baseMapperAddress.toDTO(address));
+        }
+
+        entityEvent.setStatusDetail(request.getStatusDetail());
+        entityEvent.setProductType(request.getRegisteredLetterCode());
         entityEvent.setStatusDateTime((DateUtils.parseDateString(request.getStatusDate())));
         return entityEvent;
     }
