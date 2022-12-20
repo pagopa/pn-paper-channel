@@ -16,6 +16,7 @@ import it.pagopa.pn.paperchannel.model.AttachmentInfo;
 import it.pagopa.pn.paperchannel.model.Contract;
 import it.pagopa.pn.paperchannel.model.DeliveryAsyncModel;
 import it.pagopa.pn.paperchannel.msclient.generated.pnsafestorage.v1.dto.FileDownloadResponseDto;
+import it.pagopa.pn.paperchannel.rest.v1.dto.ProductTypeEnum;
 import it.pagopa.pn.paperchannel.service.PaperAsyncService;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -33,10 +34,15 @@ import java.util.stream.Collectors;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DOCUMENT_NOT_DOWNLOADED;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DOCUMENT_URL_NOT_FOUND;
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.UNTRACEABLE_ADDRESS;
 
 @Slf4j
 @Service
 public class PrepareAsyncServiceImpl implements PaperAsyncService {
+
+    public static final String RACCOMANDATA_SEMPLICE = "Raccomandata semplice";
+    public static final String RACCOMANDATA_890 = "Raccomandata 890";
+    public static final String RACCOMANDATA_AR = "Raccomandata AR";
 
     @Autowired
     private RequestDeliveryDAO requestDeliveryDAO;
@@ -63,6 +69,8 @@ public class PrepareAsyncServiceImpl implements PaperAsyncService {
                         deliveryAsyncModel.setAttachments(requestDeliveryEntity.getAttachments().stream()
                                 .map(AttachmentMapper::fromEntity).collect(Collectors.toList()));
                     }
+                    //settare address se not null
+                    setLetterCode(deliveryAsyncModel,requestDeliveryEntity.getRegisteredLetterCode());
                     return Mono.just(deliveryAsyncModel);
                 })
                 .flatMap(deliveryAsyncModel -> getAttachmentsInfo(deliveryAsyncModel).map(newModel -> newModel))
@@ -74,8 +82,33 @@ public class PrepareAsyncServiceImpl implements PaperAsyncService {
                         }));
     }
 
+    private Mono<DeliveryAsyncModel> setLetterCode(DeliveryAsyncModel deliveryAsyncModel, String registerLetterCode){
+        //nazionale
+        if(deliveryAsyncModel.getAddress().getCap()!=null){
+            if(registerLetterCode.equals(RACCOMANDATA_SEMPLICE)){
+                deliveryAsyncModel.setProductType(ProductTypeEnum.RN_RS);
+            }
+            if(registerLetterCode.equals(RACCOMANDATA_890)){
+                deliveryAsyncModel.setProductType(ProductTypeEnum.RN_890);
+            }
+            if(registerLetterCode.equals(RACCOMANDATA_AR)){
+                deliveryAsyncModel.setProductType(ProductTypeEnum.RN_AR);
+            }
+        }
+        //internazionale
+        else{
+            if(registerLetterCode.equals(RACCOMANDATA_SEMPLICE)){
+                deliveryAsyncModel.setProductType(ProductTypeEnum.RI_RS);
+            }
+            if(registerLetterCode.equals(RACCOMANDATA_AR)){
+                deliveryAsyncModel.setProductType(ProductTypeEnum.RI_AR);
+            }
+        }
+        return Mono.just(deliveryAsyncModel);
+    }
+
     private Mono<DeliveryAsyncModel> getAmount(DeliveryAsyncModel deliveryAsyncModel){
-        return getContract()
+        return getContract("","")
                 .flatMap(contract -> getPriceAttachments(deliveryAsyncModel, contract.getPricePerPage())
                         .map(priceForPages -> Double.sum(contract.getPrice(), priceForPages))
                 )
@@ -85,7 +118,36 @@ public class PrepareAsyncServiceImpl implements PaperAsyncService {
                 });
     }
 
-    private Mono<Contract> getContract() {
+    private Mono<DeliveryAsyncModel> getContractAddress(DeliveryAsyncModel model, Address fromNationalRegistry, Address address) {
+
+        //se nationalRegistry è diverso da null
+        if(fromNationalRegistry!=null){
+
+            //indirizzo diverso da quello del primo invio?
+            if(!fromNationalRegistry.convertToHash().equals(model.getHashOldAddress())){
+                model.setAddress(fromNationalRegistry);
+            }
+            //indirizzo ricevuto in input
+            else if(address!=null){
+                model.setAddress(address);
+            }
+            //indirizzo non trovato
+            else{
+                throw new PnGenericException(UNTRACEABLE_ADDRESS, UNTRACEABLE_ADDRESS.getMessage());
+            }
+        }
+        //indirizzo ricevuto in input
+        else if(address!=null){
+            model.setAddress(address);
+        }
+        //indirizzo non trovato
+        else{
+            throw new PnGenericException(UNTRACEABLE_ADDRESS, UNTRACEABLE_ADDRESS.getMessage());
+        }
+        return Mono.just(model);
+    }
+
+    private Mono<Contract> getContract(String capOrZone, String registerLetter) {
         return Mono.just(new Contract(5.0, 10.0));
     }
 
@@ -109,10 +171,17 @@ public class PrepareAsyncServiceImpl implements PaperAsyncService {
     }
 
     private Mono<DeliveryAsyncModel> getAttachmentsInfo(DeliveryAsyncModel deliveryAsyncModel){
+
+        if(deliveryAsyncModel.getAttachments().isEmpty() ||
+                !deliveryAsyncModel.getAttachments().stream().filter(a -> a.getNumberOfPage()>0).collect(Collectors.toList()).isEmpty()){
+            return Mono.just(deliveryAsyncModel);
+        }
+
         return Flux.fromStream(deliveryAsyncModel.getAttachments().stream())
                 .parallel()
                 .flatMap( attachment -> getFileRecursive(3, attachment.getFileKey(), new BigDecimal(0)))
                 .flatMap(fileResponse -> {
+
                     AttachmentInfo info = AttachmentMapper.fromSafeStorage(fileResponse);
                     if (info.getUrl() == null)
                         throw new PnGenericException(DOCUMENT_URL_NOT_FOUND, DOCUMENT_URL_NOT_FOUND.getMessage());
