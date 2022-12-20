@@ -5,7 +5,7 @@ import it.pagopa.pn.paperchannel.exception.PnPaperEventException;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
 import it.pagopa.pn.paperchannel.mapper.PreparePaperResponseMapper;
 import it.pagopa.pn.paperchannel.mapper.RequestDeliveryMapper;
-import it.pagopa.pn.paperchannel.mapper.RetrivePrepareResponseMapper;
+import it.pagopa.pn.paperchannel.mapper.PrepareEventMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
@@ -45,7 +45,7 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
     public Mono<PrepareEvent> retrievePaperPrepareRequest(String requestId) {
         return requestDeliveryDAO.getByRequestId(requestId)
                 .zipWhen(entity -> addressDAO.findByRequestId(requestId).map(address -> address))
-                .map(entityAndAddress -> RetrivePrepareResponseMapper.fromResult(entityAndAddress.getT1(),entityAndAddress.getT2()))
+                .map(entityAndAddress -> PrepareEventMapper.fromResult(entityAndAddress.getT1(),entityAndAddress.getT2()))
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage())));
     }
 
@@ -61,7 +61,9 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
             return this.requestDeliveryDAO.getByRequestId(prepareRequest.getRequestId())
                     .flatMap(entity -> {
                         PrepareRequestValidator.compareRequestEntity(prepareRequest, entity);
-                        return Mono.just(PreparePaperResponseMapper.fromResult(entity));
+                        return addressDAO.findByRequestId(requestId)
+                                .map(address-> PreparePaperResponseMapper.fromResult(entity,address))
+                                .switchIfEmpty(Mono.just(PreparePaperResponseMapper.fromResult(entity,null)));
                     })
                     .switchIfEmpty(Mono.defer(() -> saveRequestAndAddress(prepareRequest, null)
                             .flatMap(response -> Mono.empty()))
@@ -83,7 +85,9 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
                                 }
                                 log.debug("Attempt already exist");
                                 PrepareRequestValidator.compareRequestEntity(prepareRequest, newEntity);
-                                return Mono.just(PreparePaperResponseMapper.fromResult(newEntity));
+                                return addressDAO.findByRequestId(requestId)
+                                        .map(address-> PreparePaperResponseMapper.fromResult(newEntity,address))
+                                        .switchIfEmpty(Mono.just(PreparePaperResponseMapper.fromResult(newEntity,null)));
                             })
                             .switchIfEmpty(Mono.defer(()-> finderAddressAndSave(prepareRequest).flatMap(response -> Mono.empty())));
                 })

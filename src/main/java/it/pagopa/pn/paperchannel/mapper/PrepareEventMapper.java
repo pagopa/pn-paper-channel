@@ -10,7 +10,7 @@ import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareEvent;
 import it.pagopa.pn.paperchannel.rest.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 
-public class RetrivePrepareResponseMapper {
+public class PrepareEventMapper {
 
     private static final BaseMapper <PnAddress, AnalogAddress> baseMapperAddress = new BaseMapperImpl(PnAddress.class, AnalogAddress.class);
 

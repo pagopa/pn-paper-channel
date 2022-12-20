@@ -77,7 +77,6 @@ public class AddressDAOImpl extends BaseDAO <PnAddress> implements AddressDAO {
         logEvent.log();
         return Mono.fromFuture(this.get(requestId, null).thenApply(item -> {
             logEvent.generateSuccess(String.format("address = %s", item)).log();
-            if (item == null) throw new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(),HttpStatus.NOT_FOUND);
             return item;
         }));
     }
