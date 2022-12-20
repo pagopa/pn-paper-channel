@@ -3,8 +3,6 @@ package it.pagopa.pn.paperchannel.exception;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
-import java.util.ArrayList;
-import java.util.List;
 
 
 @Getter

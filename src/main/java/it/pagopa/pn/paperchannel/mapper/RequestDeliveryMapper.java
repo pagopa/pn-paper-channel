@@ -29,16 +29,15 @@ public class RequestDeliveryMapper {
 
         entity.setStatusDate(DateUtils.formatDate(new Date()));
         entity.setFiscalCode(request.getReceiverFiscalCode());
-        entity.setAddressHash("Hash code");
         entity.setCorrelationId(correlationId);
+        entity.setPrintType(request.getPrintType());
+        entity.setReceiverType(request.getReceiverType());
+        entity.setAttachments(request.getAttachmentUrls().stream().map(key -> {
+            PnAttachmentInfo pnAttachmentInfo = new PnAttachmentInfo();
+            pnAttachmentInfo.setFileKey(key);
+            return pnAttachmentInfo;
+        }).collect(Collectors.toList()));
 
-        if(request.getAttachmentUrls()!= null){
-            entity.setAttachments(request.getAttachmentUrls().stream().map(key -> {
-                PnAttachmentInfo pnAttachmentInfo = new PnAttachmentInfo();
-                pnAttachmentInfo.setFileKey(key);
-                return pnAttachmentInfo;
-            }).collect(Collectors.toList()));
-        }
 
         return entity;
     }

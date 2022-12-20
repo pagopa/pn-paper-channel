@@ -13,7 +13,7 @@ public class HttpConnector {
         throw new IllegalCallerException("the constructor must not called");
     }
 
-    private static Mono<PDDocument> downloadFile(String url) {
+    public static Mono<PDDocument> downloadFile(String url) {
         return WebClient.create(url)
                 .get()
                 .accept(MediaType.APPLICATION_PDF)

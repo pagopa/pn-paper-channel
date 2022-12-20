@@ -10,8 +10,7 @@ import it.pagopa.pn.paperchannel.utils.DateUtils;
 import java.time.LocalDateTime;
 
 public class AddressMapper {
-
-    private static final BaseMapper<Address, AnalogAddress> mapper = new BaseMapperImpl(Address.class, AnalogAddress.class);
+    private static final BaseMapper<Address, AnalogAddress> mapperAnalog = new BaseMapperImpl(Address.class, AnalogAddress.class);
 
     private static final BaseMapper<PnAddress, Address> mapperToAddressEntity = new BaseMapperImpl(PnAddress.class, Address.class);
 
@@ -20,7 +19,8 @@ public class AddressMapper {
     }
 
     public static Address fromAnalogToAddress(AnalogAddress analogAddress){
-        return mapper.toEntity(analogAddress);
+        if (analogAddress == null) return null;
+        return mapperAnalog.toEntity(analogAddress);
     }
 
     public static PnAddress toEntity(Address address, String requestId){

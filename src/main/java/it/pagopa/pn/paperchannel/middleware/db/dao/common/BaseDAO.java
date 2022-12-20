@@ -3,10 +3,7 @@ package it.pagopa.pn.paperchannel.middleware.db.dao.common;
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import org.apache.commons.lang3.StringUtils;
 import reactor.core.publisher.Flux;
-import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
-import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
-import software.amazon.awssdk.enhanced.dynamodb.Key;
-import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
+import software.amazon.awssdk.enhanced.dynamodb.*;
 import software.amazon.awssdk.enhanced.dynamodb.model.*;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
@@ -43,6 +40,10 @@ public abstract class BaseDAO<T> {
                 .item(entity)
                 .build();
         return dynamoTable.putItem(putRequest).thenApply(x -> entity);
+    }
+
+    protected CompletableFuture<Void> putWithTransact(TransactWriteItemsEnhancedRequest transactRequest){
+        return dynamoDbEnhancedAsyncClient.transactWriteItems(transactRequest).thenApply(item -> null);
     }
 
     protected CompletableFuture<T> update(T entity){

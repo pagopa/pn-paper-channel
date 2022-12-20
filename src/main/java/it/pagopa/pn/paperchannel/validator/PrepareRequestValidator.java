@@ -5,17 +5,19 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareRequest;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DIFFERENT_DATA_REQUEST;
 import static it.pagopa.pn.paperchannel.mapper.AddressMapper.fromAnalogToAddress;
 
-@Component
 public class PrepareRequestValidator {
 
-    public PnDeliveryRequest compareRequestEntity(PrepareRequest prepareRequest, PnDeliveryRequest pnDeliveryEntity){
+    private PrepareRequestValidator(){
+        throw new IllegalCallerException("the constructor must not called");
+    }
+
+    public static void compareRequestEntity(PrepareRequest prepareRequest, PnDeliveryRequest pnDeliveryEntity){
         List<String> errors = new ArrayList<>();
 
         if (!prepareRequest.getRequestId().equals(pnDeliveryEntity.getRequestId())) {
@@ -26,7 +28,7 @@ public class PrepareRequestValidator {
             errors.add("FiscalCode");
         }
 
-        if (!prepareRequest.getProposalProductType().equals(pnDeliveryEntity.getRegisteredLetterCode())) {
+        if (!prepareRequest.getProposalProductType().getValue().equals(pnDeliveryEntity.getRegisteredLetterCode())) {
             errors.add("ProductType");
         }
 
@@ -54,14 +56,9 @@ public class PrepareRequestValidator {
         if (!errors.isEmpty()){
             throw new PnInputValidatorException(DIFFERENT_DATA_REQUEST, DIFFERENT_DATA_REQUEST.getMessage(), HttpStatus.CONFLICT, errors);
         }
-
-        //caso in cui tutti i campi sono uguali tra loro -> 200 ok
-        else {
-            return pnDeliveryEntity;
-        }
     }
 
-    public boolean checkBetweenLists(PrepareRequest prepareRequest, PnDeliveryRequest pnDeliveryRequest){
+    private static boolean checkBetweenLists(PrepareRequest prepareRequest, PnDeliveryRequest pnDeliveryRequest){
         List<String> attachmentPrepare = prepareRequest.getAttachmentUrls();
         List<PnAttachmentInfo> attachmentDeliveryRequest = pnDeliveryRequest.getAttachments();
         attachmentPrepare.sort(Comparator.naturalOrder());
