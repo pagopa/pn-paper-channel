@@ -13,6 +13,7 @@ import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.AttachmentInfo;
 import it.pagopa.pn.paperchannel.model.Contract;
 import it.pagopa.pn.paperchannel.model.DeliveryAsyncModel;
+import it.pagopa.pn.paperchannel.rest.v1.dto.ProductTypeEnum;
 import it.pagopa.pn.paperchannel.service.PaperAsyncService;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +34,10 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.UNTRACEABLE_
 @Slf4j
 @Service
 public class PrepareAsyncServiceImpl implements PaperAsyncService {
+
+    public static final String RACCOMANDATA_SEMPLICE = "Raccomandata semplice";
+    public static final String RACCOMANDATA_890 = "Raccomandata 890";
+    public static final String RACCOMANDATA_AR = "Raccomandata AR";
 
     @Autowired
     private RequestDeliveryDAO requestDeliveryDAO;
@@ -59,6 +64,8 @@ public class PrepareAsyncServiceImpl implements PaperAsyncService {
                         deliveryAsyncModel.setAttachments(requestDeliveryEntity.getAttachments().stream()
                                 .map(AttachmentMapper::fromEntity).collect(Collectors.toList()));
                     }
+                    //settare address se not null
+                    setLetterCode(deliveryAsyncModel,requestDeliveryEntity.getRegisteredLetterCode());
                     return Mono.just(deliveryAsyncModel);
                 })
                 .flatMap(deliveryAsyncModel -> getAttachmentsInfo(deliveryAsyncModel).map(newModel -> newModel))
@@ -68,6 +75,31 @@ public class PrepareAsyncServiceImpl implements PaperAsyncService {
                             deliveryAsyncModel.setAddress(AddressMapper.toDTO(item));
                             return deliveryAsyncModel;
                         }));
+    }
+
+    private Mono<DeliveryAsyncModel> setLetterCode(DeliveryAsyncModel deliveryAsyncModel, String registerLetterCode){
+        //nazionale
+        if(deliveryAsyncModel.getAddress().getCap()!=null){
+            if(registerLetterCode.equals(RACCOMANDATA_SEMPLICE)){
+                deliveryAsyncModel.setProductType(ProductTypeEnum.RN_RS);
+            }
+            if(registerLetterCode.equals(RACCOMANDATA_890)){
+                deliveryAsyncModel.setProductType(ProductTypeEnum.RN_890);
+            }
+            if(registerLetterCode.equals(RACCOMANDATA_AR)){
+                deliveryAsyncModel.setProductType(ProductTypeEnum.RN_AR);
+            }
+        }
+        //internazionale
+        else{
+            if(registerLetterCode.equals(RACCOMANDATA_SEMPLICE)){
+                deliveryAsyncModel.setProductType(ProductTypeEnum.RI_RS);
+            }
+            if(registerLetterCode.equals(RACCOMANDATA_AR)){
+                deliveryAsyncModel.setProductType(ProductTypeEnum.RI_AR);
+            }
+        }
+        return Mono.just(deliveryAsyncModel);
     }
 
     private Mono<DeliveryAsyncModel> getAmount(DeliveryAsyncModel deliveryAsyncModel){
