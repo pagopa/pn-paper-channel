@@ -87,6 +87,11 @@ components:
         productType:
           type: string
           description: Il productType effettivo che da usare per l'invio
+        decisionWorkflow:
+          type: array
+          description: elenco degli step che hanno composto il processo decisionale
+          items:
+            $ref: '#/components/schemas/DecisionWorkflowStep'
       allOf:
       - $ref: '#/components/schemas/PaperEvent'
     SendEvent:
@@ -333,3 +338,95 @@ components:
           type: string
           description: Data di produzione del documento.
           format: date-time
+    DecisionWorkflowStep:
+      required:
+        - id
+        - label
+        - datetime
+        - details
+      type: object
+      properties:
+        id:
+          type: string
+          description: Numero ordinale dello step
+        label:
+          type: string
+          description: "Descrizione dello step: <br/> \
+              \  - Calling National Registry: step di invocazione di NationalRegistry, <br/> \
+              \  - NationalRegistry address found: step di verifica dell'indirizzo di NationalRegistry, <br/> \
+              \  - Discovered address differs from the first tentative: step di confronto dell'indirizzo con il primo tentativo, <br/> \
+              \  - Mailman verification available: step di recupero dell'indirizzo esito delle verifiche del postino, <br/> \
+              \  - ... ulteriori futuri step del flusso"
+        datetime:
+          type: string
+          description: Data di produzione del documento.
+          format: date-time
+        details:
+          oneOf: 
+            - $ref: '#/components/schemas/DecisionWorkflowStepLogic'
+            - $ref: '#/components/schemas/DecisionWorkflowStepService'
+            - $ref: '#/components/schemas/DecisionWorkflowStepEnding'
+    DecisionWorkflowStepLogic:
+      description: Step del Workflow di valutazione di una condizione logica 
+      type: object
+      required: 
+        - stepType
+        - logicResult
+      properties:
+        stepType:
+          type: string
+          enum: [LOGIC]
+          description: Tipo di Step
+        logicResult:
+          type: boolean
+          description: Esito dello step logico
+      allOf:
+        - $ref: '#/components/schemas/GenericWorkflowStep'
+    DecisionWorkflowStepService:
+        description: Step del Workflow di invocazione di un servizio
+        type: object
+        required: 
+          - stepType
+          - trackId
+          - service
+          - addressResult
+        properties:
+          stepType:
+            type: string
+            enum: [SERVICE]
+            description: Tipo di Step
+          trackId:
+            type: string
+            description: TrackId della richiesta
+          service:
+            type: string
+            enum: [NATIONAL_REGISTRY]
+            description: Il servizio richiamato
+          addressResult:
+            $ref: '#/components/schemas/AnalogAddress'
+        allOf:
+          - $ref: '#/components/schemas/GenericWorkflowStep'
+    DecisionWorkflowStepEnding:
+      description: Step finale del Workflow
+      type: object
+      required: 
+        - stepType
+        - addressFound
+      properties:
+        stepType:
+          type: string
+          enum: [ENDING]
+          description: Tipo di Step
+        addressFound:
+          type: boolean
+          description: Esito del workflow di ricerca dell'indirizzo, l'eventuale indirizzo finale non è riportato in quanto già esplicitato nella risposta
+      allOf:
+        - $ref: '#/components/schemas/GenericWorkflowStep'
+    GenericWorkflowStep:
+      type: object
+      required: 
+        - stepType
+      properties:
+        stepType:
+          type: string
+          description: Tipologia dello Step
