@@ -4,7 +4,6 @@ import it.pagopa.pn.paperchannel.rest.v1.api.PaperMessagesApi;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PaperChannelUpdate;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareEvent;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareRequest;
-import it.pagopa.pn.paperchannel.rest.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.service.PaperMessagesService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +25,6 @@ public class PaperMessagesRestV1Controller implements PaperMessagesApi {
 
     @Override
     public Mono<ResponseEntity<PrepareEvent>> retrievePaperPrepareRequest(String requestId, ServerWebExchange exchange) {
-        return paperMessagesService.retrivePaperPrepareRequest(requestId).map(ResponseEntity::ok);
+        return paperMessagesService.retrievePaperPrepareRequest(requestId).map(ResponseEntity::ok);
     }
 }

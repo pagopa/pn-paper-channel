@@ -16,7 +16,6 @@ import it.pagopa.pn.paperchannel.model.DeliveryAsyncModel;
 import it.pagopa.pn.paperchannel.service.PaperAsyncService;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -94,19 +93,23 @@ public class PrepareAsyncServiceImpl implements PaperAsyncService {
                                         .filter(PnRetryStorageException.class::isInstance)
                         )
                 )
-                .map(fileResponse -> {
-                    try {
-                        AttachmentInfo info = AttachmentMapper.fromSafeStorage(fileResponse);
-                        if (info.getUrl() == null)
-                            throw new PnGenericException(DOCUMENT_URL_NOT_FOUND, DOCUMENT_URL_NOT_FOUND.getMessage());
-                        PDDocument pdDocument = HttpConnector.downloadFile(info.getUrl());
-                        info.setDate(DateUtils.formatDate(pdDocument.getDocumentInformation().getCreationDate().getTime()));
-                        info.setNumberOfPage(pdDocument.getNumberOfPages());
-                        pdDocument.close();
-                        return info;
-                    } catch (IOException e) {
-                        throw new PnGenericException(DOCUMENT_NOT_DOWNLOADED, DOCUMENT_NOT_DOWNLOADED.getMessage());
-                    }
+                .flatMap(fileResponse -> {
+
+                    AttachmentInfo info = AttachmentMapper.fromSafeStorage(fileResponse);
+                    if (info.getUrl() == null)
+                        throw new PnGenericException(DOCUMENT_URL_NOT_FOUND, DOCUMENT_URL_NOT_FOUND.getMessage());
+                    return HttpConnector.downloadFile(info.getUrl())
+                            .map(pdDocument -> {
+                                try {
+                                info.setDate(DateUtils.formatDate(pdDocument.getDocumentInformation().getCreationDate().getTime()));
+                                info.setNumberOfPage(pdDocument.getNumberOfPages());
+                                    pdDocument.close();
+                                } catch (IOException e) {
+                                    throw new PnGenericException(DOCUMENT_NOT_DOWNLOADED, DOCUMENT_NOT_DOWNLOADED.getMessage());
+                                }
+                                return info;
+                            });
+
                 })
                 .sequential()
                 .collectList()

@@ -10,6 +10,6 @@ public interface PaperMessagesService {
 
     Mono<PaperChannelUpdate> preparePaperSync(String requestId, PrepareRequest prepareRequest);
 
-    Mono<PrepareEvent> retrivePaperPrepareRequest(String requestId);
+    Mono<PrepareEvent> retrievePaperPrepareRequest(String requestId);
 
 }
