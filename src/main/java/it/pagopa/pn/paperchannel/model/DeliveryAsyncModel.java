@@ -19,5 +19,7 @@ public class DeliveryAsyncModel {
 
     private String requestId;
 
+    private String hashOldAddress;
+
 
 }

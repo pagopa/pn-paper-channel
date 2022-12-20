@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DOCUMENT_NOT_DOWNLOADED;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DOCUMENT_URL_NOT_FOUND;
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.UNTRACEABLE_ADDRESS;
 
 @Slf4j
 @Service
@@ -70,7 +71,7 @@ public class PrepareAsyncServiceImpl implements PaperAsyncService {
     }
 
     private Mono<DeliveryAsyncModel> getAmount(DeliveryAsyncModel deliveryAsyncModel){
-        return getContract()
+        return getContract("","")
                 .flatMap(contract -> getPriceAttachments(deliveryAsyncModel, contract.getPricePerPage())
                         .map(priceForPages -> Double.sum(contract.getPrice(), priceForPages))
                 )
@@ -80,11 +81,46 @@ public class PrepareAsyncServiceImpl implements PaperAsyncService {
                 });
     }
 
-    private Mono<Contract> getContract() {
+    private Mono<DeliveryAsyncModel> getContractAddress(DeliveryAsyncModel model, Address fromNationalRegistry, Address address) {
+
+        //se nationalRegistry è diverso da null
+        if(fromNationalRegistry!=null){
+
+            //indirizzo diverso da quello del primo invio?
+            if(!fromNationalRegistry.convertToHash().equals(model.getHashOldAddress())){
+                model.setAddress(fromNationalRegistry);
+            }
+            //indirizzo ricevuto in input
+            else if(address!=null){
+                model.setAddress(address);
+            }
+            //indirizzo non trovato
+            else{
+                throw new PnGenericException(UNTRACEABLE_ADDRESS, UNTRACEABLE_ADDRESS.getMessage());
+            }
+        }
+        //indirizzo ricevuto in input
+        else if(address!=null){
+            model.setAddress(address);
+        }
+        //indirizzo non trovato
+        else{
+            throw new PnGenericException(UNTRACEABLE_ADDRESS, UNTRACEABLE_ADDRESS.getMessage());
+        }
+        return Mono.just(model);
+    }
+
+    private Mono<Contract> getContract(String capOrZone, String registerLetter) {
         return Mono.just(new Contract(5.0, 10.0));
     }
 
     private Mono<DeliveryAsyncModel> getAttachmentsInfo(DeliveryAsyncModel deliveryAsyncModel){
+
+        if(deliveryAsyncModel.getAttachments().isEmpty() ||
+                !deliveryAsyncModel.getAttachments().stream().filter(a -> a.getNumberOfPage()>0).collect(Collectors.toList()).isEmpty()){
+            return Mono.just(deliveryAsyncModel);
+        }
+
         return Flux.fromStream(deliveryAsyncModel.getAttachments().stream())
                 .parallel()
                 .flatMap(attachment -> safeStorageClient.getFile(attachment.getFileKey())
