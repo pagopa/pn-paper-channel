@@ -34,7 +34,6 @@ public class RestExceptionHandler {
 
     @ExceptionHandler(PnPaperEventException.class)
     public Mono<ResponseEntity<PaperEvent>> handlePnPaperEventException(final PnPaperEventException paperEventException){
-        log.error(paperEventException.toString());
         return Mono.just(ResponseEntity.noContent().build());
     }
 
