@@ -53,34 +53,46 @@ public class PrepareAsyncServiceImpl implements PaperAsyncService {
 
 
     @Override
-    public Mono<DeliveryAsyncModel> prepareAsync(String requestId, String correlationId, Address address){
+    public Mono<DeliveryAsyncModel> prepareAsync(String requestId, String correlationId, Address addressFromNationalRegistry){
 
-        Mono<PnDeliveryRequest> requestDeliveryEntityMono = requestDeliveryDAO.getByRequestId(requestId);
-        if(correlationId!= null){
+        Mono<PnDeliveryRequest> requestDeliveryEntityMono =null;
+        if(correlationId!= null)
             requestDeliveryEntityMono = requestDeliveryDAO.getByCorrelationId(correlationId);
-        }
+        else
+            requestDeliveryEntityMono = requestDeliveryDAO.getByRequestId(requestId);
 
         return requestDeliveryEntityMono
                 .flatMap(requestDeliveryEntity -> {
+                    //creo deliverymodel
                     DeliveryAsyncModel deliveryAsyncModel = new DeliveryAsyncModel();
                     deliveryAsyncModel.setRequestId(requestDeliveryEntity.getRequestId());
 
                     if(requestDeliveryEntity.getAttachments()!=null){
+                        //set attachment se !=null
                         deliveryAsyncModel.setAttachments(requestDeliveryEntity.getAttachments().stream()
                                 .map(AttachmentMapper::fromEntity).collect(Collectors.toList()));
                     }
+                    //todo
+                   //recuperare l'address da db addressdao.get-reqestbyid
+
                     //settare address se not null
-                    setCorrectAddress(deliveryAsyncModel, address, null);
-                    setLetterCode(deliveryAsyncModel,requestDeliveryEntity.getRegisteredLetterCode());
+                    setCorrectAddress(deliveryAsyncModel, addressFromNationalRegistry, null);
+                    /* if (requestDeliveryEntity.getfinalLetterCode()==null ) {
+                        setLetterCode(deliveryAsyncModel,requestDeliveryEntity.getRegisteredLetterCode());
+                    }else {
+                        deliveryAsyncModel.setProductType(requestDeliveryEntity.getFinalLetterCode());
+                    }*/
+                    //setLetterCode(deliveryAsyncModel,requestDeliveryEntity.getRegisteredLetterCode());
                     return Mono.just(deliveryAsyncModel);
                 })
                 .flatMap(deliveryAsyncModel -> getAttachmentsInfo(deliveryAsyncModel).map(newModel -> newModel))
                 .flatMap(deliveryAsyncModel -> getAmount(deliveryAsyncModel).map(newModel -> newModel))
-                .flatMap(deliveryAsyncModel -> addressDAO.create(AddressMapper.toEntity(address, deliveryAsyncModel.getRequestId()))
+                .flatMap(deliveryAsyncModel -> addressDAO.create(AddressMapper.toEntity(addressFromNationalRegistry, deliveryAsyncModel.getRequestId()))
                         .map(item -> {
                             deliveryAsyncModel.setAddress(AddressMapper.toDTO(item));
                             return deliveryAsyncModel;
                         }));
+        //todo: on error resume
     }
 
     private void setLetterCode(DeliveryAsyncModel deliveryAsyncModel, String registerLetterCode){
