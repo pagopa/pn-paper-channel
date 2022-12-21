@@ -70,6 +70,7 @@ public class PrepareAsyncServiceImpl implements PaperAsyncService {
                                 .map(AttachmentMapper::fromEntity).collect(Collectors.toList()));
                     }
                     //settare address se not null
+                    setCorrectAddress(deliveryAsyncModel, address, null);
                     setLetterCode(deliveryAsyncModel,requestDeliveryEntity.getRegisteredLetterCode());
                     return Mono.just(deliveryAsyncModel);
                 })
@@ -82,7 +83,7 @@ public class PrepareAsyncServiceImpl implements PaperAsyncService {
                         }));
     }
 
-    private Mono<DeliveryAsyncModel> setLetterCode(DeliveryAsyncModel deliveryAsyncModel, String registerLetterCode){
+    private void setLetterCode(DeliveryAsyncModel deliveryAsyncModel, String registerLetterCode){
         //nazionale
         if(deliveryAsyncModel.getAddress().getCap()!=null){
             if(registerLetterCode.equals(RACCOMANDATA_SEMPLICE)){
@@ -104,7 +105,6 @@ public class PrepareAsyncServiceImpl implements PaperAsyncService {
                 deliveryAsyncModel.setProductType(ProductTypeEnum.RI_AR);
             }
         }
-        return Mono.just(deliveryAsyncModel);
     }
 
     private Mono<DeliveryAsyncModel> getAmount(DeliveryAsyncModel deliveryAsyncModel){
@@ -118,7 +118,7 @@ public class PrepareAsyncServiceImpl implements PaperAsyncService {
                 });
     }
 
-    private Mono<DeliveryAsyncModel> getContractAddress(DeliveryAsyncModel model, Address fromNationalRegistry, Address address) {
+    private void setCorrectAddress(DeliveryAsyncModel model, Address fromNationalRegistry, Address discoveredAddress) {
 
         //se nationalRegistry è diverso da null
         if(fromNationalRegistry!=null){
@@ -128,8 +128,8 @@ public class PrepareAsyncServiceImpl implements PaperAsyncService {
                 model.setAddress(fromNationalRegistry);
             }
             //indirizzo ricevuto in input
-            else if(address!=null){
-                model.setAddress(address);
+            else if(discoveredAddress!=null){
+                model.setAddress(discoveredAddress);
             }
             //indirizzo non trovato
             else{
@@ -137,14 +137,13 @@ public class PrepareAsyncServiceImpl implements PaperAsyncService {
             }
         }
         //indirizzo ricevuto in input
-        else if(address!=null){
-            model.setAddress(address);
+        else if(discoveredAddress!=null){
+            model.setAddress(discoveredAddress);
         }
         //indirizzo non trovato
         else{
             throw new PnGenericException(UNTRACEABLE_ADDRESS, UNTRACEABLE_ADDRESS.getMessage());
         }
-        return Mono.just(model);
     }
 
     private Mono<Contract> getContract(String capOrZone, String registerLetter) {
