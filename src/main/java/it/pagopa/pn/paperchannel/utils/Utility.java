@@ -9,6 +9,10 @@ public class Utility {
     }
 
     public static String convertToHash(String string) {
+
+        if(string==null){
+            return null;
+        }
         MessageDigest messageDigest = null;
         try {
             messageDigest = MessageDigest.getInstance("SHA-256");
