@@ -7,6 +7,7 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
+import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.AttachmentInfo;
@@ -20,6 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -36,6 +38,8 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
     private AddressDAO addressDAO;
     @Autowired
     private NationalRegistryClient nationalRegistryClient;
+    @Autowired
+    private ExternalChannelClient externalChannelClient;
     @Autowired
     private PrepareAsyncServiceImpl prepareAsyncService;
     @Autowired
@@ -62,8 +66,9 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
 
                     return super.calculator(attachments, address, sendRequest.getProductType());
 
-                }).map(amount -> {
-                    //TODO Aggiungere push su coda di external channel
+                })
+                .zipWith(this.externalChannelClient.sendEngageRequest(sendRequest), (amount, none) -> amount)
+                .map(amount -> {
                     SendResponse sendResponse = new SendResponse();
                     sendResponse.setAmount(amount.intValue());
                     return sendResponse;
@@ -87,7 +92,13 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                                 .switchIfEmpty(Mono.just(PreparePaperResponseMapper.fromResult(entity,null)));
                     })
                     .switchIfEmpty(Mono.defer(() -> saveRequestAndAddress(prepareRequest, null)
-                            .flatMap(response -> Mono.empty()))
+                            .flatMap(response -> {
+                                Mono.just("").publishOn(Schedulers.parallel())
+                                        .flatMap(text -> this.prepareAsyncService.prepareAsync(requestId, null, null))
+                                        .subscribe(new SubscriberPrepare(sqsSender, requestDeliveryDAO, requestId, null));
+                                log.info("throw exception");
+                                throw new PnPaperEventException(PreparePaperResponseMapper.fromEvent(prepareRequest.getRequestId()));
+                            }))
                     );
 
         }
@@ -110,7 +121,12 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                                         .map(address-> PreparePaperResponseMapper.fromResult(newEntity,address))
                                         .switchIfEmpty(Mono.just(PreparePaperResponseMapper.fromResult(newEntity,null)));
                             })
-                            .switchIfEmpty(Mono.defer(()-> finderAddressAndSave(prepareRequest).flatMap(response -> Mono.empty())));
+                            .switchIfEmpty(Mono.defer(()-> finderAddressAndSave(prepareRequest)
+                                    .flatMap(response -> {
+                                        throw new PnPaperEventException(PreparePaperResponseMapper.fromEvent(prepareRequest.getRequestId()));
+                                    }))
+                            );
+
                 })
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage())));
 
@@ -137,10 +153,6 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
             addressEntity = AddressMapper.toEntity(address, prepareRequest.getRequestId());
         }
 
-        return requestDeliveryDAO.createWithAddress(pnDeliveryRequest, addressEntity)
-                .map(entity -> {
-                    // Case of 204
-                    throw new PnPaperEventException(PreparePaperResponseMapper.fromEvent(prepareRequest.getRequestId()));
-                });
+        return requestDeliveryDAO.createWithAddress(pnDeliveryRequest, addressEntity);
     }
 }
