@@ -7,17 +7,103 @@ info:
 servers:
   - url: http://127.0.0.1
 tags:
-  - name: checkTaxId
-    description: Questo servizio ritorna la validità e l’esistenza di un dato codice fiscale descritta da un campo di ritorno booleano nell’oggetto json di response.
+  - name: agenziaEntrate
+    description: Servizi esposti dall'agenzia delle entrate per la verifica del codice fiscale e la verifica del legale rappresentante (corrispondenza fra il codice fiscale del rappresentante legale di un soggetto giuridico e il soggetto giuridico stesso).
   - name: addressANPR
     description: Il servizio viene invocato per ottenere la residenza presente in ANPR per un cittadino, alla data di riferimento della richiesta.
   - name: digitalAddressINAD
     description: Consente di ottenere il domicilio digitale corrispondente al codice fiscale al momento della consultazione e, in caso di domicilio digitale eletto in qualità di Professionista, anche l'attività professionale esercitata.
-  - name: digitalAddressIniPEC
-    description: Consente di ottenere la PEC dell’impresa oppure del professionista corrispondente al codice fiscale al momento della consultazione. In caso di impresa si restituisce anche l’indirizzo della sede legale.
-  - name: addressRegistroImprese
-    description: Consente di ottenere l’indirizzo della sede legale a cui corrisponde il codice fiscale al momento della consultazione.
+  - name: infoCamere
+    description: Servizi esposti dalla banca dati esterna InfoCamere per il recupero della PEC, dell'indirizzo della Sede Legale e per la verifica del Legale Rappresentante.
 paths:
+  /national-registries-private/agenzia-entrate/legal:
+    post:
+      tags:
+        - agenziaEntrate
+      summary: 'Il servizio consente la verifica di corrispondenza fra il codice fiscale del rappresentante legale di un soggetto giuridico e il soggetto giuridico stesso.'
+      description: 'Il servizio consente la verifica di corrispondenza fra il codice fiscale del rappresentante legale di un soggetto giuridico e il soggetto giuridico stesso.'
+      operationId: adeLegal
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ADELegalRequestBody'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ADELegalOK'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ADELegalError'
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ADELegalError'
+        "503":
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ADELegalError'
+  /national-registries-private/infocamere/legal:
+    post:
+      tags:
+        - infoCamere
+      summary: 'Questo servizio Il servizio consente di verificare se il codice fiscale della persona risulta legale rappresentante dell’impresa passata come parametro.'
+      description: 'Questo servizio Il servizio consente di verificare se il codice fiscale della persona risulta legale rappresentante dell’impresa passata come parametro.'
+      operationId: infoCamereLegal
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InfoCamereLegalRequestBody'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InfoCamereLegalOK'
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InfoCamereLegalError'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InfoCamereLegalError'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InfoCamereLegalError'
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InfoCamereLegalError'
+        "503":
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InfoCamereLegalError'
   /national-registries-private/{recipient-type}/addresses:
     post:
       tags:
@@ -61,7 +147,7 @@ paths:
   /national-registries-private/agenzia-entrate/tax-id:
     post:
       tags:
-        - checkTaxId
+        - agenziaEntrate
       summary: 'Questo servizio ritorna la validità e l’esistenza di un dato codice fiscale descritta da un campo di ritorno booleano nell’oggetto json di response'
       description: 'Questo servizio ritorna la validità e l’esistenza di un dato codice fiscale descritta da un campo di ritorno booleano nell’oggetto json di response'
       operationId: checkTaxId
@@ -190,7 +276,7 @@ paths:
   /national-registries-private/inipec/digital-address:
     post:
       tags:
-        - digitalAddressIniPEC
+        - infoCamere
       summary: 'Consente di ottenere la PEC dell’impresa oppure del professionista corrispondente al codice fiscale al momento della consultazione. In caso di impresa si restituisce anche l’indirizzo della sede legale.'
       description: 'Consente di ottenere la PEC dell’impresa oppure del professionista corrispondente al codice fiscale al momento della consultazione. In caso di impresa si restituisce anche l’indirizzo della sede legale.'
       operationId: digitalAddressIniPEC
@@ -241,7 +327,7 @@ paths:
   /national-registries-private/registro-imprese/address:
     post:
       tags:
-        - addressRegistroImprese
+        - infoCamere
       summary: 'Consente di ottenere l’indirizzo della sede legale a cui corrisponde il codice fiscale al momento della consultazione'
       description: 'Consente di ottenere l’indirizzo della sede legale a cui corrisponde il codice fiscale al momento della consultazione'
       operationId: addressRegistroImprese
@@ -332,6 +418,8 @@ components:
       properties:
         filter:
           type: object
+          required:
+            - taxId
           properties:
             taxId:
               type: string
@@ -349,14 +437,14 @@ components:
           enum: [B001_CHECK_TAX_ID_ERR01, B001_CHECK_TAX_ID_ERR02, B001_CHECK_TAX_ID_ERR03]
           description: >
             Error codes:
-            
-            
+
+
             _'B001_CHECK_TAX_ID_ERR01'_: CODICE FISCALE VALIDO NON UTILIZZABILE
-            
-            
+
+
             _'B001_CHECK_TAX_ID_ERR02'_: CODICE FISCALE NON VALIDO AGGIORNATO IN ALTRO
-            
-            
+
+
             _'B001_CHECK_TAX_ID_ERR03'_: CODICE FISCALE NON VALIDO
     CheckTaxIdError:
       type: object
@@ -533,6 +621,9 @@ components:
       properties:
         filter:
           type: object
+          required:
+            - taxId
+            - correlationId
           properties:
             taxId:
               type: string
@@ -574,10 +665,12 @@ components:
       properties:
         filter:
           type: object
+          required:
+            - taxId
           properties:
             taxId:
               type: string
-              example: AAAZZZ00H00T000Z
+              example: AAAZZZ00H00T0
     GetAddressRegistroImpreseOK:
       type: object
       properties:
@@ -652,3 +745,225 @@ components:
                 type: string
               detail:
                 type: string
+    InfoCamereLegalRequestBody:
+      type: object
+      properties:
+        filter:
+          type: object
+          required:
+            - taxId
+            - vatNumber
+          properties:
+            taxId:
+              type: string
+              example: AAAZZZ00H00T000Z
+            vatNumber:
+              type: string
+              example: 12345678901
+    InfoCamereLegalOK:
+      type: object
+      properties:
+        dateTimeExtraction:
+          type: string
+          format: date-time
+        taxId:
+          type: string
+          example: AAAZZZ00H00T000Z
+        vatNumber:
+          type: string
+          example: BBBCCC00H00T000Z
+        verificationResult:
+          type: boolean
+    InfoCamereLegalError:
+      type: object
+      properties:
+        status:
+          type: integer
+          description: Contiene il codice HTTP dell'errore
+        title:
+          type: string
+        detail:
+          type: string
+        traceId:
+          type: string
+        timestamp:
+          type: integer
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              code:
+                type: string
+              element:
+                type: string
+              detail:
+                type: string
+    ADELegalRequestBody:
+      type: object
+      properties:
+        filter:
+          type: object
+          required:
+            - taxId
+            - vatNumber
+          properties:
+            taxId:
+              type: string
+              example: AAAZZZ00H00T000Z
+            vatNumber:
+              type: string
+              example: BBBCCC00H00T000Z
+    ADELegalOK:
+      type: object
+      properties:
+        verificationResult:
+          type: boolean
+        resultDetail:
+          type: string
+          enum: [XX00, XX01, XX02, XX0A, XX03, XX04, XXXX]
+          description: >
+            Values:
+
+
+            _'XX00'_: richiesta corretta
+
+
+            _'XX01'_: codice fiscale Ente e/o Rappresentante errato
+
+
+            _'XX02'_: codice fiscale Ente non di soggetto diverso da persona fisica
+
+
+            _'XX0A'_: errore nell’elaborazione
+
+
+            _'XX03'_: timeout interno all'elaborazione
+
+
+            _'XX04'_: errore di autenticazione
+
+
+            _'XXXX'_: errore non codificato
+        resultCode:
+          type: string
+          example: '00'
+          enum: ['00', '01', '02']
+          description: >
+            Values:
+
+
+            _'00'_: Richiesta correttamente eseguita
+
+
+            _'01'_: Richiesta andata in errore
+
+
+            _'02'_: Formato dati in input non corretto
+    ADELegalError:
+      type: object
+      properties:
+        status:
+          type: integer
+          description: Contiene il codice HTTP dell'errore
+        title:
+          type: string
+        detail:
+          type: string
+        traceId:
+          type: string
+        timestamp:
+          type: integer
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              code:
+                type: string
+              element:
+                type: string
+              detail:
+                type: string
+    AddressSQSMessage:
+      type: object
+      properties:
+        correlationId:
+          type: string
+        taxId:
+          type: string
+        digitalAddress:
+          type: array
+          description: >
+            Rappresenta la lista dei domicili digitali
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+              address:
+                type: string
+              recipient:
+                type: string
+                enum: [IMPRESA, PROFESSIONISTA, PERSONA_FISICA]
+                description: >
+                  Values:
+
+
+                  _'IMPRESA'_: Indica che l'indirizzo digitale corrente è riferito ad un'impresa
+
+
+                  _'PROFESSIONISTA'_: Indica che l'indirizzo digitale corrente è riferito ad un professionista
+
+
+                  _'PERSONA FISICA'_: Indica che l'indirizzo digitale corrente è riferito ad una Persona Fisica
+        physicalAddress:
+          description: >
+            Rappresenta il domicilio fisico
+          type: object
+          properties:
+            at:
+              type: string
+            address:
+              type: string
+            addressDetails:
+              type: string
+            zip:
+              type: string
+            municipality:
+              type: string
+            municipalityDetails:
+              type: string
+            province:
+              type: string
+            foreignState:
+              type: string
+    GetDigitalAddressIniPECSQSMessage:
+      type: object
+      properties:
+        correlationId:
+          type: string
+        taxId:
+          type: string
+        digitalAddress:
+          type: array
+          description: >
+            Rappresenta la lista dei domicili digitali
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+              address:
+                type: string
+              recipient:
+                type: string
+                enum: [IMPRESA, PROFESSIONISTA]
+                description: >
+                  Values:
+
+
+                  _'IMPRESA'_: Indica che l'indirizzo digitale corrente è riferito ad un'impresa
+
+
+                  _'PROFESSIONISTA'_: Indica che l'indirizzo digitale corrente è riferito ad un professionista
