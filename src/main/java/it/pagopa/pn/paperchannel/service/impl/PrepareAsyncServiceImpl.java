@@ -36,9 +36,9 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.UNTRACEABLE_
 @Service
 public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncService {
 
-    public static final String RACCOMANDATA_SEMPLICE = "Raccomandata semplice";
-    public static final String RACCOMANDATA_890 = "Raccomandata 890";
-    public static final String RACCOMANDATA_AR = "Raccomandata AR";
+    public static final String RACCOMANDATA_SEMPLICE = "RS";
+    public static final String RACCOMANDATA_890 = "890";
+    public static final String RACCOMANDATA_AR = "AR";
 
     @Autowired
     private RequestDeliveryDAO requestDeliveryDAO;
@@ -50,7 +50,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
 
     @Override
     public Mono<DeliveryAsyncModel> prepareAsync(String requestId, String correlationId, Address addressFromNationalRegistry){
-
+        log.info("Start async");
         Mono<PnDeliveryRequest> requestDeliveryEntityMono =null;
         if(correlationId!= null)
             requestDeliveryEntityMono = requestDeliveryDAO.getByCorrelationId(correlationId);
@@ -94,7 +94,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                     } else {
                         deliveryAsyncModel.setProductType(ProductTypeEnum.fromValue(pnDeliveryRequest.getProductType()));
                     }
-                    return Mono.just(deliveryAsyncModel);
+                    return Mono.just(deliveryAsyncModel).delayElement(Duration.ofMillis(2000));
                 })
                 .flatMap(deliveryAsyncModel -> getAttachmentsInfo(deliveryAsyncModel).map(newModel -> newModel))
                 .flatMap(deliveryAsyncModel -> super.calculator(deliveryAsyncModel.getAttachments(), deliveryAsyncModel.getAddress(), deliveryAsyncModel.getProductType())
@@ -114,7 +114,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
 
     private void setLetterCode(DeliveryAsyncModel deliveryAsyncModel, String registerLetterCode){
         //nazionale
-        if(deliveryAsyncModel.getAddress().getCap()!=null){
+        if(StringUtils.isNotBlank(deliveryAsyncModel.getAddress().getCap())){
             if(registerLetterCode.equals(RACCOMANDATA_SEMPLICE)){
                 deliveryAsyncModel.setProductType(ProductTypeEnum.RN_RS);
             }

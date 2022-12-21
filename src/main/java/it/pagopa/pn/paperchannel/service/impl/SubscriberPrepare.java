@@ -86,7 +86,7 @@ public class SubscriberPrepare implements Subscriber<DeliveryAsyncModel> {
                     requestDeliveryEntity.setStatusDate(DateUtils.formatDate(new Date()));
                     requestDeliveryEntity.setAttachments(deliveryAsyncModel.getAttachments().stream()
                             .map(AttachmentMapper::toEntity).collect(Collectors.toList()));
-
+                    requestDeliveryEntity.setProductType(deliveryAsyncModel.getProductType().getValue());
                     return requestDeliveryDAO.updateData(requestDeliveryEntity).map(item->item);
                 }).subscribe();
 
