@@ -2,24 +2,30 @@ package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.exception.PnPaperEventException;
-import it.pagopa.pn.paperchannel.mapper.AddressMapper;
-import it.pagopa.pn.paperchannel.mapper.PreparePaperResponseMapper;
-import it.pagopa.pn.paperchannel.mapper.RequestDeliveryMapper;
-import it.pagopa.pn.paperchannel.mapper.PrepareEventMapper;
+import it.pagopa.pn.paperchannel.mapper.*;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.model.Address;
+import it.pagopa.pn.paperchannel.model.Contract;
+import it.pagopa.pn.paperchannel.model.DeliveryAsyncModel;
 import it.pagopa.pn.paperchannel.rest.v1.dto.*;
 import it.pagopa.pn.paperchannel.service.PaperMessagesService;
 import it.pagopa.pn.paperchannel.validator.PrepareRequestValidator;
 import it.pagopa.pn.paperchannel.service.SqsSender;
+import it.pagopa.pn.paperchannel.validator.SendRequestValidator;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_NOT_EXIST;
 
@@ -49,7 +55,42 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
 
     @Override
     public Mono<SendResponse> executionPaper(String requestId, SendRequest sendRequest) {
-        return null;
+        return this.requestDeliveryDAO.getByRequestId(sendRequest.getRequestId())
+                .flatMap(entity -> {
+                    SendRequestValidator.compareRequestEntity(sendRequest,entity);
+                    if (StringUtils.isNotBlank(sendRequest.getReceiverAddress().getCap())) {
+                        return getAmount(entity.getAttachments(),sendRequest.getReceiverAddress().getCap(), sendRequest.getProductType())
+                                .map(item -> item);
+                    }
+                    return getZone(sendRequest.getReceiverAddress().getCountry())
+                            .flatMap(zone -> getAmount(entity.getAttachments(), zone, sendRequest.getProductType()).map(item -> item));
+
+                }).map(amount -> {
+                    //TODO Aggiungere push su coda di external channel
+                    SendResponse sendResponse = new SendResponse();
+                    sendResponse.setAmount(amount.intValue());
+                    return sendResponse;
+                });
+
+    }
+
+    private Mono<String> getZone(String country) {
+        return Mono.just("ZONA_1");
+    }
+    private Mono<Double> getPriceAttachments(List<PnAttachmentInfo> pnAttachmentInfos, Double priceForAAr){
+        return Flux.fromStream(pnAttachmentInfos.stream())
+                .map(attachmentInfo -> attachmentInfo.getNumberOfPage() * priceForAAr)
+                .reduce(0.0, Double::sum);
+    }
+    private Mono<Contract> getContract(String capOrZone, String registerLetter) {
+        return Mono.just(new Contract(5.0, 10.0));
+    }
+    private Mono<Double> getAmount(List<PnAttachmentInfo> attachments, String capOrZone, ProductTypeEnum registerLetter ){
+        return getContract(capOrZone,registerLetter.getValue())
+                .flatMap(contract -> getPriceAttachments(attachments, contract.getPricePerPage())
+                        .map(priceForPages -> Double.sum(contract.getPrice(), priceForPages))
+                );
+
     }
 
     @Override
