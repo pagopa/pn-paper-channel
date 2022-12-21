@@ -12,6 +12,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.model.Address;
+import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.StringUtil;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PaperChannelUpdate;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareEvent;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareRequest;
@@ -19,6 +20,7 @@ import it.pagopa.pn.paperchannel.service.PaperMessagesService;
 import it.pagopa.pn.paperchannel.validator.PrepareRequestValidator;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -54,8 +56,7 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
         log.debug("Start preparePaperSync with requestId {}", requestId);
         prepareRequest.setRequestId(requestId);
 
-
-        if (prepareRequest.getRelatedRequestId() == null){
+        if (StringUtils.isEmpty(prepareRequest.getRelatedRequestId())){
             log.debug("First attempt");
             //case of 204
             return this.requestDeliveryDAO.getByRequestId(prepareRequest.getRequestId())
