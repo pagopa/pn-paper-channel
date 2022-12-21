@@ -7,6 +7,7 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
+import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.AttachmentInfo;
@@ -38,6 +39,8 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
     @Autowired
     private NationalRegistryClient nationalRegistryClient;
     @Autowired
+    private ExternalChannelClient externalChannelClient;
+    @Autowired
     private PrepareAsyncServiceImpl prepareAsyncService;
     @Autowired
     private SqsSender sqsSender;
@@ -63,8 +66,9 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
 
                     return super.calculator(attachments, address, sendRequest.getProductType());
 
-                }).map(amount -> {
-                    //TODO Aggiungere push su coda di external channel
+                })
+                .zipWith(this.externalChannelClient.sendEngageRequest(sendRequest), (amount, none) -> amount)
+                .map(amount -> {
                     SendResponse sendResponse = new SendResponse();
                     sendResponse.setAmount(amount.intValue());
                     return sendResponse;

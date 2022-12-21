@@ -71,7 +71,7 @@ public class SubscriberPrepare implements Subscriber<DeliveryAsyncModel> {
 
     @Override
     public void onComplete() {
-        log.info("entro nell' on complete");
+        log.info("Custom subscriber on complete");
         DeliveryPayload payload = new DeliveryPayload();
 
         payload.setDeliveryAddress(deliveryAsyncModel.getAddress());
@@ -89,13 +89,5 @@ public class SubscriberPrepare implements Subscriber<DeliveryAsyncModel> {
                     requestDeliveryEntity.setProductType(deliveryAsyncModel.getProductType().getValue());
                     return requestDeliveryDAO.updateData(requestDeliveryEntity).map(item->item);
                 }).subscribe();
-
-
-        //fare chiamata update
-        //fare chiamata addressDao.create
-        //se il correlationid è diverso da null vuol dire che l'indirizzo mai settato
-        // e fare create dell'indirizzo dentro deliveryasincModel
-
-        log.info("Custom subscriber on complete");
     }
 }
