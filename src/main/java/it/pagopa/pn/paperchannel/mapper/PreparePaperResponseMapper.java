@@ -6,10 +6,8 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.rest.v1.dto.*;
-import it.pagopa.pn.paperchannel.utils.DateUtils;
 
 import java.util.Date;
-import java.util.stream.Collectors;
 
 public class PreparePaperResponseMapper {
 
@@ -17,25 +15,9 @@ public class PreparePaperResponseMapper {
 
     private static final BaseMapper <PnAttachmentInfo, AttachmentDetails> baseMapperAttachment = new BaseMapperImpl(PnAttachmentInfo.class, AttachmentDetails.class);
 
-    public static PaperChannelUpdate fromResult(PnDeliveryRequest item){
+    public static PaperChannelUpdate fromResult(PnDeliveryRequest item, PnAddress pnAddress){
         PaperChannelUpdate paperChannelUpdate = new PaperChannelUpdate();
-
-        SendEvent event = new SendEvent();
-        event.setRequestId(item.getRequestId());
-        event.setStatusCode(item.getStatusCode());
-        event.setStatusDetail(item.getStatusDetail());
-        event.setStatusDateTime(DateUtils.parseDateString(item.getStatusDate()));
-        event.setRegisteredLetterCode(item.getRegisteredLetterCode());
-        event.setClientRequestTimeStamp(DateUtils.parseDateString(item.getStartDate()));
-
-
-        // if(item.getAddress()!= null){
-        //   event.setDiscoveredAddress(baseMapperAddress.toDTO(item.getAddress()));
-        // }
-        if(item.getAttachments()!= null){
-            event.setAttachments(item.getAttachments().stream().map(baseMapperAttachment::toDTO).collect(Collectors.toList()));
-        }
-        paperChannelUpdate.setSendEvent(event);
+        paperChannelUpdate.setPrepareEvent(PrepareEventMapper.fromResult(item,pnAddress));
 
         return paperChannelUpdate;
     }
