@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import reactor.core.publisher.Mono;
 
+import java.util.Date;
 import java.util.stream.Collectors;
 
 import static it.pagopa.pn.commons.log.MDCWebFilter.MDC_TRACE_ID_KEY;
@@ -19,11 +20,15 @@ import static it.pagopa.pn.commons.log.MDCWebFilter.MDC_TRACE_ID_KEY;
 public class RestExceptionHandler {
 
     @ExceptionHandler(PnGenericException.class)
-    public Mono<ResponseEntity<Problem>> handleResponseEntityException(final PnGenericException pnGenericException){
+    public Mono<ResponseEntity<Problem>> handleResponseEntityException(final PnGenericException exception){
+        log.error(exception.toString());
         final Problem problem = new Problem();
         settingTraceId(problem);
-        return Mono.just(ResponseEntity.status(pnGenericException.getHttpStatus()).body(problem));
-//        return Mono.just(ResponseEntity.ok(problem));
+        problem.setTitle(exception.getExceptionType().getTitle());
+        problem.setDetail(exception.getExceptionType().getMessage());
+        problem.setStatus(exception.getHttpStatus().value());
+        problem.setTimestamp(new Date());
+        return Mono.just(ResponseEntity.status(exception.getHttpStatus()).body(problem));
     }
 
 
@@ -35,6 +40,7 @@ public class RestExceptionHandler {
 
      @ExceptionHandler(PnInputValidatorException.class)
      public Mono<ResponseEntity<Problem>> handlePnInputValidatorException(final PnInputValidatorException exception){
+        log.error(exception.toString());
         final Problem problem = new Problem();
         problem.setTitle(exception.getExceptionType().getTitle());
         problem.setDetail(exception.getExceptionType().getMessage());
@@ -47,7 +53,7 @@ public class RestExceptionHandler {
             return item;
         }).collect(Collectors.toList()));
         settingTraceId(problem);
-
+        problem.setTimestamp(new Date());
 
         return Mono.just(ResponseEntity.status(exception.getHttpStatus()).body(problem));
      }

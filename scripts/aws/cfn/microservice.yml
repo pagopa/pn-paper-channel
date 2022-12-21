@@ -79,9 +79,9 @@ Parameters:
     Type: String
     Description: 'keep track of used projects commitIds'
 
-  PCDynamoSigningKeyARN:
+  PCKmsEncDecDynamoDataKeyARN:
     Type: String
-    Description: 'KMS Key for Dynamo encryption/decryption data'
+    Description: 'Name of KMS Key for Dynamo encode/decode data'
 
   RequestDeliveryDynamoTableName:
     Type: String
@@ -134,10 +134,11 @@ Resources:
         ContainerEnvEntry5: !Sub 'PN_PAPERCHANNEL_SAFESTORAGECXID=${SafeStorageCxId}'
         ContainerEnvEntry6: !Sub 'AWS_DYNAMODBREQUESTDELIVERYTABLE=${RequestDeliveryDynamoTableName}'
         ContainerEnvEntry7: !Sub 'AWS_DYNAMODBADDRESSTABLE=${AddressDynamoTableName}'
-        ContainerEnvEntry8: !Sub 'PN_PAPERCHANNEL_KMS_KEY=${PCDynamoSigningKeyARN}'
-        ContainerEnvEntry9: !Sub 'PN_PAPERCHANNEL_QUEUEDELIVERYPUSH=${ExternalChannelsOutputsQueueName}'
-        ContainerEnvEntry10: !Sub 'PN_PAPERCHANNEL_QUEUEEXTERNALCHANNEL=${ExternalChannels2PaperChannelQueueName}'
-        ContainerEnvEntry11: !Sub 'SPRING_CLOUD_FUNCTIONROUTER_QUEUES_LIST=${ExternalChannelsOutputsQueueName},${ExternalChannels2PaperChannelQueueName}'
+        ContainerEnvEntry8: !Sub 'PN_PAPERCHANNEL_KMS_KEY=${PCKmsEncDecDynamoDataKeyARN}'
+        ContainerEnvEntry9: !Sub 'AWS_KMS_REGION=${AWS::Region}'
+        ContainerEnvEntry10: !Sub 'PN_PAPERCHANNEL_QUEUEDELIVERYPUSH=${ExternalChannelsOutputsQueueName}'
+        ContainerEnvEntry11: !Sub 'PN_PAPERCHANNEL_QUEUEEXTERNALCHANNEL=${ExternalChannels2PaperChannelQueueName}'
+        ContainerEnvEntry12: !Sub 'SPRING_CLOUD_FUNCTIONROUTER_QUEUES_LIST=${ExternalChannelsOutputsQueueName},${ExternalChannels2PaperChannelQueueName}'
         MappedPaths: '/paper-channel/*,/paper-channel-private/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds
@@ -177,7 +178,7 @@ Resources:
               - kms:Decrypt
               - kms:ReEncrypt*
             Resource:
-              - !Ref PCDynamoSigningKeyARN
+              - !Ref PCKmsEncDecDynamoDataKeyARN
           - Effect: Allow
             Action:
               - dynamodb:BatchGetItem

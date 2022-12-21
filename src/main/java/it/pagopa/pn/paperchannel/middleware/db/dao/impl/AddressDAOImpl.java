@@ -5,6 +5,7 @@ import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.commons.log.PnAuditLogEvent;
 import it.pagopa.pn.commons.log.PnAuditLogEventType;
 import it.pagopa.pn.paperchannel.config.AwsPropertiesConfig;
+import it.pagopa.pn.paperchannel.encryption.KmsEncryption;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.BaseDAO;
@@ -32,10 +33,11 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQ
 public class AddressDAOImpl extends BaseDAO <PnAddress> implements AddressDAO {
 
     public AddressDAOImpl(PnAuditLogBuilder auditLogBuilder,
+                                  KmsEncryption kmsEncryption,
                                   DynamoDbEnhancedAsyncClient dynamoDbEnhancedAsyncClient,
                                   DynamoDbAsyncClient dynamoDbAsyncClient,
                                   AwsPropertiesConfig awsPropertiesConfig) {
-        super(auditLogBuilder, dynamoDbEnhancedAsyncClient, dynamoDbAsyncClient,
+        super(auditLogBuilder, kmsEncryption, dynamoDbEnhancedAsyncClient, dynamoDbAsyncClient,
                 awsPropertiesConfig.getDynamodbAddressTable(), PnAddress.class);
     }
 
@@ -77,7 +79,6 @@ public class AddressDAOImpl extends BaseDAO <PnAddress> implements AddressDAO {
         logEvent.log();
         return Mono.fromFuture(this.get(requestId, null).thenApply(item -> {
             logEvent.generateSuccess(String.format("address = %s", item)).log();
-            if (item == null) throw new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(),HttpStatus.NOT_FOUND);
             return item;
         }));
     }

@@ -25,14 +25,14 @@ Parameters:
     Description: 'Where to send CDC'
 
 Resources:
-  PCDynamoSigningKey:
+  PCKmsEncDecDynamoDataKey:
     Type: 'AWS::KMS::Key'
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
     Properties:
-      Description: RSA-2048 key to generate session token
-      KeySpec: RSA_2048
-      KeyUsage: SIGN_VERIFY
+      Description: A symmetric encryption KMS key AES-256-GCM
+      KeySpec: SYMMETRIC_DEFAULT
+      KeyUsage: ENCRYPT_DECRYPT
       KeyPolicy:
         Version: 2012-10-17
         Statement:
@@ -43,12 +43,12 @@ Resources:
             Action: 'kms:*'
             Resource: '*'
 
-  # Application use this alias to access the public/private key pair
-  PCDynamoSigningKeyAlias:
+  # Application use this alias to access the public key
+  PCKmsEncDecDynamoDataKeyAlias:
     Type: 'AWS::KMS::Alias'
     Properties:
       AliasName: !Sub 'alias/${ProjectName}-paper-channel-dynamo'
-      TargetKeyId: !Ref PCDynamoSigningKey
+      TargetKeyId: !Ref PCKmsEncDecDynamoDataKey
 
   RequestDeliveryDynamoTable:
     Type: AWS::DynamoDB::Table
@@ -113,9 +113,9 @@ Resources:
 
 Outputs:
 
-  PCDynamoSigningKeyARN:
-    Description: PCDynamoSigningKeyARN
-    Value: !Sub '${PCDynamoSigningKey.Arn}'
+  PCKmsEncDecDynamoDataKeyARN:
+    Description: Name of KMS Key for Dynamo encode/decode data
+    Value: !Sub '${PCKmsEncDecDynamoDataKey.Arn}'
 
   RequestDeliveryDynamoTableName:
     Description: Name of dynamodb table containing request
