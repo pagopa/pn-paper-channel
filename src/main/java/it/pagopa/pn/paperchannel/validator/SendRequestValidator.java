@@ -2,7 +2,6 @@ package it.pagopa.pn.paperchannel.validator;
 
 import it.pagopa.pn.paperchannel.exception.PnInputValidatorException;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
-import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareRequest;
 import it.pagopa.pn.paperchannel.rest.v1.dto.SendRequest;
 import org.springframework.http.HttpStatus;
 
@@ -28,7 +27,7 @@ public class SendRequestValidator {
             errors.add("FiscalCode");
         }
 
-        if (!sendRequest.getProductType().getValue().equals(pnDeliveryEntity.getFinalLetterCode())) {
+        if (!sendRequest.getProductType().getValue().equals(pnDeliveryEntity.getProductType())) {
             errors.add("ProductType");
         }
 

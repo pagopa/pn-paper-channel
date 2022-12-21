@@ -39,14 +39,14 @@ public class PnDeliveryRequest {
 
     private static final String COL_STATUS_DATE = "statusDate";
 
-    private static final String COL_REGISTERED_LETTER_CODE = "registeredLetterCode";
+    private static final String COL_PROPOSAL_PRODUCT_TYPE = "proposalProductType";
     private static final String COL_PRINT_TYPE = "printType";
 
     private static final String COL_START_DATE = "startDate";
 
     private static final String COL_ATTACHMENTS = "attachments";
 
-    private static final String COL_FINAL_LETTER_CODE = "finalLetterCode";
+    private static final String COL_PRODUCT_TYPE = "productType";
 
     @Getter(onMethod = @__({@DynamoDbPartitionKey,@DynamoDbAttribute(COL_REQUEST_ID)}))
     private String requestId;
@@ -72,8 +72,8 @@ public class PnDeliveryRequest {
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_STATUS_DATE)}))
     private String statusDate;
 
-    @Getter(onMethod = @__({@DynamoDbAttribute(COL_REGISTERED_LETTER_CODE)}))
-    private String registeredLetterCode;
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_PROPOSAL_PRODUCT_TYPE)}))
+    private String proposalProductType;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_PRINT_TYPE)}))
     private String printType;
@@ -81,8 +81,8 @@ public class PnDeliveryRequest {
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_START_DATE)}))
     private String startDate;
 
-    @Getter(onMethod = @__({@DynamoDbAttribute(COL_FINAL_LETTER_CODE)}))
-    private String finalLetterCode;
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_PRODUCT_TYPE)}))
+    private String productType;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_ATTACHMENTS)}))
     private List<PnAttachmentInfo> attachments;
