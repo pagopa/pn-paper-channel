@@ -8,6 +8,7 @@ import it.pagopa.pn.paperchannel.encryption.EncryptedUtils;
 import it.pagopa.pn.paperchannel.encryption.KmsEncryption;
 import it.pagopa.pn.paperchannel.encryption.model.EncryptionModel;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
 
 import java.nio.ByteBuffer;
@@ -29,7 +30,7 @@ public class KmsEncryptionImpl implements KmsEncryption {
     @Override
     public String encode(String data) {
         log.info("Encode :  {}", data);
-        if(data != null) {
+        if(StringUtils.isNotEmpty(data)) {
             final EncryptRequest encryptRequest = new EncryptRequest()
                     .withKeyId(this.awsKmsProperties.getKeyId())
                     .withPlaintext(ByteBuffer.wrap(data.getBytes()));
@@ -45,7 +46,7 @@ public class KmsEncryptionImpl implements KmsEncryption {
     @Override
     public String decode(String data) {
         log.info("Decode :  {}", data);
-        if(data != null) {
+        if(StringUtils.isNotEmpty(data)) {
             final EncryptedUtils token = EncryptedUtils.parse(data);
 
             final DecryptRequest decryptRequest = new DecryptRequest()

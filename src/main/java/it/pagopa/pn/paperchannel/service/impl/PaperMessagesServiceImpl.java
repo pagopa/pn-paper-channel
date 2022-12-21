@@ -109,7 +109,7 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
 
     private Mono<PnDeliveryRequest> saveRequestAndAddress(PrepareRequest prepareRequest, String correlationId){
         PnDeliveryRequest pnDeliveryRequest = RequestDeliveryMapper.toEntity(prepareRequest, correlationId);
-        Address address = AddressMapper.fromAnalogToAddress(prepareRequest.getDiscoveredAddress());
+        Address address = AddressMapper.fromAnalogToAddress(prepareRequest.getReceiverAddress());
         pnDeliveryRequest.setAddressHash(address.convertToHash());
 
         PnAddress addressEntity = null;

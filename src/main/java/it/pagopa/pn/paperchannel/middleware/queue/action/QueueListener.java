@@ -32,7 +32,7 @@ public class QueueListener {
             return objectMapper.readValue(json,DeliveryPayload.class);
 
         } catch (JsonProcessingException e) {
-            e.printStackTrace();
+            log.error("Error in convertPayload ", e.getMessage());
             return null;
         }
     }

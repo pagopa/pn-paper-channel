@@ -134,7 +134,7 @@ Resources:
         ContainerEnvEntry5: !Sub 'PN_PAPERCHANNEL_SAFESTORAGECXID=${SafeStorageCxId}'
         ContainerEnvEntry6: !Sub 'AWS_DYNAMODBREQUESTDELIVERYTABLE=${RequestDeliveryDynamoTableName}'
         ContainerEnvEntry7: !Sub 'AWS_DYNAMODBADDRESSTABLE=${AddressDynamoTableName}'
-        ContainerEnvEntry8: !Sub 'PN_PAPERCHANNEL_KMS_KEY=${PCKmsEncDecDynamoDataKeyARN}'
+        ContainerEnvEntry8: !Sub 'AWS_KMS_KEYID=${PCKmsEncDecDynamoDataKeyARN}'
         ContainerEnvEntry9: !Sub 'AWS_KMS_REGION=${AWS::Region}'
         ContainerEnvEntry10: !Sub 'PN_PAPERCHANNEL_QUEUEDELIVERYPUSH=${ExternalChannelsOutputsQueueName}'
         ContainerEnvEntry11: !Sub 'PN_PAPERCHANNEL_QUEUEEXTERNALCHANNEL=${ExternalChannels2PaperChannelQueueName}'
