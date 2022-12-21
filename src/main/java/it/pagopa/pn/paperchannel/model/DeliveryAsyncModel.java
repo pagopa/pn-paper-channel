@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.model;
 
+import it.pagopa.pn.paperchannel.rest.v1.dto.ProductTypeEnum;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -20,6 +21,8 @@ public class DeliveryAsyncModel {
     private String requestId;
 
     private String hashOldAddress;
+
+    private ProductTypeEnum productType;
 
 
 }
