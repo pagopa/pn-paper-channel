@@ -12,9 +12,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.model.Address;
-import it.pagopa.pn.paperchannel.rest.v1.dto.PaperChannelUpdate;
-import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareEvent;
-import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareRequest;
+import it.pagopa.pn.paperchannel.rest.v1.dto.*;
 import it.pagopa.pn.paperchannel.service.PaperMessagesService;
 import it.pagopa.pn.paperchannel.validator.PrepareRequestValidator;
 import it.pagopa.pn.paperchannel.service.SqsSender;
@@ -47,6 +45,11 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
                 .zipWhen(entity -> addressDAO.findByRequestId(requestId).map(address -> address))
                 .map(entityAndAddress -> PrepareEventMapper.fromResult(entityAndAddress.getT1(),entityAndAddress.getT2()))
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage())));
+    }
+
+    @Override
+    public Mono<SendResponse> executionPaper(String requestId, SendRequest sendRequest) {
+        return null;
     }
 
     @Override
