@@ -46,6 +46,8 @@ public class PnDeliveryRequest {
 
     private static final String COL_ATTACHMENTS = "attachments";
 
+    private static final String COL_FINAL_LETTER_CODE = "finalLetterCode";
+
     @Getter(onMethod = @__({@DynamoDbPartitionKey,@DynamoDbAttribute(COL_REQUEST_ID)}))
     private String requestId;
 
@@ -78,6 +80,9 @@ public class PnDeliveryRequest {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_START_DATE)}))
     private String startDate;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_FINAL_LETTER_CODE)}))
+    private String finalLetterCode;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_ATTACHMENTS)}))
     private List<PnAttachmentInfo> attachments;
