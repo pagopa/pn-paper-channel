@@ -5,6 +5,7 @@ import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.commons.log.PnAuditLogEvent;
 import it.pagopa.pn.commons.log.PnAuditLogEventType;
 import it.pagopa.pn.paperchannel.config.AwsPropertiesConfig;
+import it.pagopa.pn.paperchannel.encryption.KmsEncryption;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.BaseDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.TransactWriterInitializer;
@@ -36,15 +37,16 @@ public class RequestDeliveryDAOImpl extends BaseDAO<PnDeliveryRequest> implement
 
     private final DynamoDbAsyncTable<PnAddress> addressTable;
     private final TransactWriterInitializer transactWriterInitializer;
+
     public RequestDeliveryDAOImpl(PnAuditLogBuilder auditLogBuilder,
+                                  KmsEncryption kmsEncryption,
                                   DynamoDbEnhancedAsyncClient dynamoDbEnhancedAsyncClient,
                                   DynamoDbAsyncClient dynamoDbAsyncClient,
                                   AwsPropertiesConfig awsPropertiesConfig, TransactWriterInitializer transactWriterInitializer) {
-        super(auditLogBuilder, dynamoDbEnhancedAsyncClient, dynamoDbAsyncClient,
+        super(auditLogBuilder, kmsEncryption, dynamoDbEnhancedAsyncClient, dynamoDbAsyncClient,
                 awsPropertiesConfig.getDynamodbRequestDeliveryTable(), PnDeliveryRequest.class);
         this.transactWriterInitializer = transactWriterInitializer;
         this.addressTable = dynamoDbEnhancedAsyncClient.table(awsPropertiesConfig.getDynamodbAddressTable(), TableSchema.fromBean(PnAddress.class));
-
     }
 
     @Override
@@ -64,7 +66,8 @@ public class RequestDeliveryDAOImpl extends BaseDAO<PnDeliveryRequest> implement
                                         try {
                                             this.transactWriterInitializer.init();
                                             if(pnAddress != null) {
-                                                transactWriterInitializer.addRequestTransaction(addressTable, pnAddress, PnAddress.class);
+
+                                                transactWriterInitializer.addRequestTransaction(addressTable, encode(pnAddress, PnAddress.class), PnAddress.class);
                                             }
 
                                             transactWriterInitializer.addRequestTransaction(this.dynamoTable, request, PnDeliveryRequest.class);

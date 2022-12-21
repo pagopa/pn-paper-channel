@@ -28,30 +28,39 @@ public class KmsEncryptionImpl implements KmsEncryption {
 
     @Override
     public String encode(String data) {
-        final EncryptRequest encryptRequest = new EncryptRequest()
-                .withKeyId(this.awsKmsProperties.getKeyId())
-                .withPlaintext(ByteBuffer.wrap(data.getBytes()));
+        log.info("Encode :  {}", data);
+        if(data != null) {
+            final EncryptRequest encryptRequest = new EncryptRequest()
+                    .withKeyId(this.awsKmsProperties.getKeyId())
+                    .withPlaintext(ByteBuffer.wrap(data.getBytes()));
 
-        final ByteBuffer encryptedBytes = kms.encrypt(encryptRequest).getCiphertextBlob();
+            final ByteBuffer encryptedBytes = kms.encrypt(encryptRequest).getCiphertextBlob();
 
-        return extractString(encryptedBytes, false);
+            return extractString(encryptedBytes, false);
+        } else {
+            return data;
+        }
     }
 
     @Override
     public String decode(String data) {
         log.info("Decode :  {}", data);
-        final EncryptedUtils token = EncryptedUtils.parse(data);
+        if(data != null) {
+            final EncryptedUtils token = EncryptedUtils.parse(data);
 
-        final DecryptRequest decryptRequest = new DecryptRequest()
-                .withCiphertextBlob(token.getCipherBytes())
-                .withEncryptionContext(token.getEncryptionContext());
-        final EncryptionModel options = token.getModel();
-        final String keyId = Optional.ofNullable(options.getKeyId()).orElse(awsKmsProperties.getKeyId());
-        final String algorithm = Optional.ofNullable(options.getAlgorithm()).orElse("SYMMETRIC_DEFAULT");
-        decryptRequest.setEncryptionAlgorithm(algorithm);
-        decryptRequest.setKeyId(keyId);
+            final DecryptRequest decryptRequest = new DecryptRequest()
+                    .withCiphertextBlob(token.getCipherBytes())
+                    .withEncryptionContext(token.getEncryptionContext());
+            final EncryptionModel options = token.getModel();
+            final String keyId = Optional.ofNullable(options.getKeyId()).orElse(awsKmsProperties.getKeyId());
+            final String algorithm = Optional.ofNullable(options.getAlgorithm()).orElse("SYMMETRIC_DEFAULT");
+            decryptRequest.setEncryptionAlgorithm(algorithm);
+            decryptRequest.setKeyId(keyId);
 
-        return extractString(kms.decrypt(decryptRequest).getPlaintext(), true);
+            return extractString(kms.decrypt(decryptRequest).getPlaintext(), true);
+        } else {
+            return data;
+        }
     }
 
 
