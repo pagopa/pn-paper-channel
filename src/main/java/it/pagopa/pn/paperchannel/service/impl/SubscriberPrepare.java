@@ -69,7 +69,16 @@ public class SubscriberPrepare implements Subscriber<DeliveryAsyncModel> {
         Mono<PnDeliveryRequest> requestDeliveryEntityMono = requestDeliveryDAO.getByRequestId(requestId);
         //todo inserire codice fiscale come irreperibile
         //Aggiornare o inserire entity per etichettare codice fiscale come irreperibile totale
-        requestDeliveryDAO.updateData( Mono.just(requestDeliveryEntityMono)  );
+        requestDeliveryEntityMono.map(
+                result -> {
+
+                        return requestDeliveryDAO.updateData(result).map(
+                                item -> {
+                                    return item;
+                                }
+                        );
+                }) ;
+
     }
 
     @Override
