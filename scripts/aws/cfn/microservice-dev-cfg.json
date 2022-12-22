@@ -2,6 +2,7 @@
   "Parameters" : {
     "NotificationCheckAddress": "true",
     "SafeStorageCxId": "pn-radd-fsu",
+    "XPagopaExtchCxId": "pn-delivery-002",
     "SandboxSafeStorageBaseUrl": "https://14ej9p2krd.execute-api.eu-south-1.amazonaws.com/dev"
   }
 }

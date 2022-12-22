@@ -1,8 +1,6 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
-import com.sun.jdi.LongValue;
 import it.pagopa.pn.paperchannel.config.HttpConnector;
-import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.exception.PnRetryStorageException;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
@@ -13,19 +11,17 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.AttachmentInfo;
-import it.pagopa.pn.paperchannel.model.Contract;
 import it.pagopa.pn.paperchannel.model.DeliveryAsyncModel;
 import it.pagopa.pn.paperchannel.msclient.generated.pnsafestorage.v1.dto.FileDownloadResponseDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.ProductTypeEnum;
 import it.pagopa.pn.paperchannel.service.PaperAsyncService;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.ParallelFlux;
-import reactor.util.retry.Retry;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -38,11 +34,11 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.UNTRACEABLE_
 
 @Slf4j
 @Service
-public class PrepareAsyncServiceImpl implements PaperAsyncService {
+public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncService {
 
-    public static final String RACCOMANDATA_SEMPLICE = "Raccomandata semplice";
-    public static final String RACCOMANDATA_890 = "Raccomandata 890";
-    public static final String RACCOMANDATA_AR = "Raccomandata AR";
+    public static final String RACCOMANDATA_SEMPLICE = "RS";
+    public static final String RACCOMANDATA_890 = "890";
+    public static final String RACCOMANDATA_AR = "AR";
 
     @Autowired
     private RequestDeliveryDAO requestDeliveryDAO;
@@ -54,7 +50,7 @@ public class PrepareAsyncServiceImpl implements PaperAsyncService {
 
     @Override
     public Mono<DeliveryAsyncModel> prepareAsync(String requestId, String correlationId, Address addressFromNationalRegistry){
-
+        log.info("Start async");
         Mono<PnDeliveryRequest> requestDeliveryEntityMono =null;
         if(correlationId!= null)
             requestDeliveryEntityMono = requestDeliveryDAO.getByCorrelationId(correlationId);
@@ -62,42 +58,63 @@ public class PrepareAsyncServiceImpl implements PaperAsyncService {
             requestDeliveryEntityMono = requestDeliveryDAO.getByRequestId(requestId);
 
         return requestDeliveryEntityMono
-                .flatMap(requestDeliveryEntity -> {
-                    //creo deliverymodel
-                    DeliveryAsyncModel deliveryAsyncModel = new DeliveryAsyncModel();
-                    deliveryAsyncModel.setRequestId(requestDeliveryEntity.getRequestId());
+                .zipWhen(entity -> addressDAO.findByRequestId(entity.getRequestId()).map(item->item))
+                .flatMap(entityAndAddress -> {
+                    PnDeliveryRequest pnDeliveryRequest = entityAndAddress.getT1();
+                    // Sarà diverso da null solo nel secondo tentativo
+                    Address fromDB = AddressMapper.toDTO(entityAndAddress.getT2());
 
-                    if(requestDeliveryEntity.getAttachments()!=null){
-                        //set attachment se !=null
-                        deliveryAsyncModel.setAttachments(requestDeliveryEntity.getAttachments().stream()
+                    //Creo model
+                    DeliveryAsyncModel deliveryAsyncModel = new DeliveryAsyncModel();
+                    deliveryAsyncModel.setRequestId(pnDeliveryRequest.getRequestId());
+
+                    //setto gli allegati se ci sono
+                    if(pnDeliveryRequest.getAttachments() != null){
+                        deliveryAsyncModel.setAttachments(pnDeliveryRequest.getAttachments().stream()
                                 .map(AttachmentMapper::fromEntity).collect(Collectors.toList()));
                     }
-                    //todo
-                   //recuperare l'address da db addressdao.get-reqestbyid
 
-                    //settare address se not null
-                    setCorrectAddress(deliveryAsyncModel, addressFromNationalRegistry, null);
-                    /* if (requestDeliveryEntity.getfinalLetterCode()==null ) {
-                        setLetterCode(deliveryAsyncModel,requestDeliveryEntity.getRegisteredLetterCode());
-                    }else {
-                        deliveryAsyncModel.setProductType(requestDeliveryEntity.getFinalLetterCode());
-                    }*/
-                    //setLetterCode(deliveryAsyncModel,requestDeliveryEntity.getRegisteredLetterCode());
-                    return Mono.just(deliveryAsyncModel);
+                    deliveryAsyncModel.setHashOldAddress(pnDeliveryRequest.getAddressHash());
+
+                    if (StringUtils.isNotBlank(correlationId)){
+                        /*
+                        se siamo nel secondo tentativo dobbiamo fare i controlli su:
+                            - indirizzo recuperato da National Registry
+                            - hash indirizzo primo tentativo
+                            - indirizzo scoperto dal postino se != null
+                        */
+                        setCorrectAddress(deliveryAsyncModel, addressFromNationalRegistry, fromDB);
+                    } else {
+                        // altrimenti ci troviamo nel primo tentativo dove fromDB sempre != null
+                        deliveryAsyncModel.setAddress(fromDB);
+                    }
+
+                    if (pnDeliveryRequest.getProductType() == null ) {
+                        setLetterCode(deliveryAsyncModel, pnDeliveryRequest.getProposalProductType());
+                    } else {
+                        deliveryAsyncModel.setProductType(ProductTypeEnum.fromValue(pnDeliveryRequest.getProductType()));
+                    }
+                    return Mono.just(deliveryAsyncModel).delayElement(Duration.ofMillis(2000));
                 })
                 .flatMap(deliveryAsyncModel -> getAttachmentsInfo(deliveryAsyncModel).map(newModel -> newModel))
-                .flatMap(deliveryAsyncModel -> getAmount(deliveryAsyncModel).map(newModel -> newModel))
-                .flatMap(deliveryAsyncModel -> addressDAO.create(AddressMapper.toEntity(addressFromNationalRegistry, deliveryAsyncModel.getRequestId()))
-                        .map(item -> {
-                            deliveryAsyncModel.setAddress(AddressMapper.toDTO(item));
-                            return deliveryAsyncModel;
-                        }));
-        //todo: on error resume
+                .flatMap(deliveryAsyncModel -> super.calculator(deliveryAsyncModel.getAttachments(), deliveryAsyncModel.getAddress(), deliveryAsyncModel.getProductType())
+                                                        .map(amount -> {
+                                                            deliveryAsyncModel.setAmount(amount);
+                                                            return deliveryAsyncModel;
+                                                        })
+                )
+                .flatMap(deliveryAsyncModel -> {
+                    if (deliveryAsyncModel.isFromNationalRegistry()){
+                        return addressDAO.create(AddressMapper.toEntity(addressFromNationalRegistry, deliveryAsyncModel.getRequestId()))
+                                .map(item -> deliveryAsyncModel);
+                    }
+                    return Mono.just(deliveryAsyncModel);
+                });
     }
 
     private void setLetterCode(DeliveryAsyncModel deliveryAsyncModel, String registerLetterCode){
         //nazionale
-        if(deliveryAsyncModel.getAddress().getCap()!=null){
+        if(StringUtils.isNotBlank(deliveryAsyncModel.getAddress().getCap())){
             if(registerLetterCode.equals(RACCOMANDATA_SEMPLICE)){
                 deliveryAsyncModel.setProductType(ProductTypeEnum.RN_RS);
             }
@@ -113,30 +130,23 @@ public class PrepareAsyncServiceImpl implements PaperAsyncService {
             if(registerLetterCode.equals(RACCOMANDATA_SEMPLICE)){
                 deliveryAsyncModel.setProductType(ProductTypeEnum.RI_RS);
             }
+            if(registerLetterCode.equals(RACCOMANDATA_890)){
+                deliveryAsyncModel.setProductType(ProductTypeEnum.RI_AR);
+            }
             if(registerLetterCode.equals(RACCOMANDATA_AR)){
                 deliveryAsyncModel.setProductType(ProductTypeEnum.RI_AR);
             }
         }
     }
 
-    private Mono<DeliveryAsyncModel> getAmount(DeliveryAsyncModel deliveryAsyncModel){
-        return getContract("","")
-                .flatMap(contract -> getPriceAttachments(deliveryAsyncModel, contract.getPricePerPage())
-                        .map(priceForPages -> Double.sum(contract.getPrice(), priceForPages))
-                )
-                .map(amount ->{
-                    deliveryAsyncModel.setAmount(amount);
-                    return deliveryAsyncModel;
-                });
-    }
-
     private void setCorrectAddress(DeliveryAsyncModel model, Address fromNationalRegistry, Address discoveredAddress) {
 
         //se nationalRegistry è diverso da null
-        if(fromNationalRegistry!=null){
+        if(fromNationalRegistry != null){
 
             //indirizzo diverso da quello del primo invio?
             if(!fromNationalRegistry.convertToHash().equals(model.getHashOldAddress())){
+                model.setFromNationalRegistry(true);
                 model.setAddress(fromNationalRegistry);
             }
             //indirizzo ricevuto in input
@@ -157,12 +167,6 @@ public class PrepareAsyncServiceImpl implements PaperAsyncService {
             throw new PnGenericException(UNTRACEABLE_ADDRESS, UNTRACEABLE_ADDRESS.getMessage());
         }
     }
-
-    private Mono<Contract> getContract(String capOrZone, String registerLetter) {
-        return Mono.just(new Contract(5.0, 10.0));
-    }
-
-
 
     public Mono<FileDownloadResponseDto> getFileRecursive(Integer n, String fileKey, BigDecimal millis){
         if (n<0)
@@ -215,12 +219,6 @@ public class PrepareAsyncServiceImpl implements PaperAsyncService {
                     deliveryAsyncModel.setAttachments(listAttachment);
                     return deliveryAsyncModel;
                 });
-    }
-
-    private Mono<Double> getPriceAttachments(DeliveryAsyncModel deliveryAsyncModel, Double priceForAAr){
-        return Flux.fromStream(deliveryAsyncModel.getAttachments().stream())
-                .map(attachmentInfo -> attachmentInfo.getNumberOfPage() * priceForAAr)
-                .reduce(0.0, Double::sum);
     }
 
 }
