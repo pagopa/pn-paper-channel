@@ -63,13 +63,12 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                     List<AttachmentInfo> attachments = entity.getAttachments().stream().map(AttachmentMapper::fromEntity).collect(Collectors.toList());
 
                     Address address = AddressMapper.fromAnalogToAddress(sendRequest.getReceiverAddress());
-                    log.info("Flat Map");
                     return super.calculator(attachments, address, sendRequest.getProductType()).map(value -> value);
 
                 })
                 .zipWith(this.externalChannelClient.sendEngageRequest(sendRequest).map(item -> Mono.just("")), (amount, none) -> amount)
                 .map(amount -> {
-                    log.info("Setttt");
+                    log.info("Amount for response : {}", amount);
                     SendResponse sendResponse = new SendResponse();
                     sendResponse.setAmount(amount.intValue());
                     return sendResponse;
