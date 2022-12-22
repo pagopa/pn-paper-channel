@@ -96,6 +96,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                     }
                     return Mono.just(deliveryAsyncModel).delayElement(Duration.ofMillis(2000));
                 })
+
                 .flatMap(deliveryAsyncModel -> getAttachmentsInfo(deliveryAsyncModel).map(newModel -> newModel))
                 .flatMap(deliveryAsyncModel -> super.calculator(deliveryAsyncModel.getAttachments(), deliveryAsyncModel.getAddress(), deliveryAsyncModel.getProductType())
                                                         .map(amount -> {
