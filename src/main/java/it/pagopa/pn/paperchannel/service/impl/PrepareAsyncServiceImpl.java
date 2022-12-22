@@ -85,6 +85,7 @@ public class PrepareAsyncServiceImpl implements PaperAsyncService {
                     //setLetterCode(deliveryAsyncModel,requestDeliveryEntity.getRegisteredLetterCode());
                     return Mono.just(deliveryAsyncModel);
                 })
+
                 .flatMap(deliveryAsyncModel -> getAttachmentsInfo(deliveryAsyncModel).map(newModel -> newModel))
                 .flatMap(deliveryAsyncModel -> getAmount(deliveryAsyncModel).map(newModel -> newModel))
                 .flatMap(deliveryAsyncModel -> addressDAO.create(AddressMapper.toEntity(addressFromNationalRegistry, deliveryAsyncModel.getRequestId()))
