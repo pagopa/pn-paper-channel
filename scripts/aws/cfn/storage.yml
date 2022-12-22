@@ -53,7 +53,7 @@ Resources:
   RequestDeliveryDynamoTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub '${ProjectName}-request-delivery'
+      TableName: !Sub '${ProjectName}PaperRequestDelivery'
       AttributeDefinitions:
         - AttributeName: "requestId"
           AttributeType: "S"
@@ -93,7 +93,7 @@ Resources:
   AddressDynamoTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub '${ProjectName}-address'
+      TableName: !Sub '${ProjectName}PaperAddress'
       AttributeDefinitions:
         - AttributeName: "requestId"
           AttributeType: "S"
