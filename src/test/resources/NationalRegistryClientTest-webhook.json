@@ -1,0 +1,130 @@
+[
+  {
+    "httpRequest": {
+      "path": "/national-registries-private/PF/addresses",
+      "method": "POST",
+      "body":
+      {
+        "filter": {
+          "taxId": "AAAZZZ00H00T000Z",
+          "referenceRequestDate": "string",
+          "correlationId": "string",
+          "domicileType": "PHYSICAL"
+        }
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "content-type": [
+          "application/json"
+        ]
+      },
+      "body": {
+        "correlationId": "string"
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "path": "/national-registries-private/PG/addresses",
+      "method": "POST",
+      "body":
+      {
+        "filter": {
+          "taxId": "AAAZZZ00H00T000Z"
+        }
+      }
+    },
+    "httpResponse": {
+      "statusCode": 400,
+      "headers": {
+        "content-type": [
+          "application/json"
+        ]
+      },
+      "body": {
+        "status": 0,
+        "title": "string",
+        "detail": "string",
+        "traceId": "string",
+        "timestamp": 0,
+        "errors": [
+          {
+            "code": "string",
+            "element": "string",
+            "detail": "string"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "path": "/national-registries-private/PF/addresses",
+      "method": "POST",
+      "body":
+      {
+        "filter": {
+          "taxId": "AAAZZZ00H00T000Z"
+        }
+      }
+    },
+    "httpResponse": {
+      "statusCode": 404,
+      "headers": {
+        "content-type": [
+          "application/json"
+        ]
+      },
+      "body":{
+        "status": 0,
+        "title": "string",
+        "detail": "string",
+        "traceId": "string",
+        "timestamp": 0,
+        "errors": [
+          {
+            "code": "string",
+            "element": "string",
+            "detail": "string"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "path": "/national-registries-private/PF/addresses",
+      "method": "POST",
+      "body":
+      {
+        "filter": {
+          "taxId": "AAAZZZ00H00T000Z"
+        }
+      }
+    },
+    "httpResponse": {
+      "statusCode": 500,
+      "headers": {
+        "content-type": [
+          "application/json"
+        ]
+      },
+      "body":{
+        "status": 0,
+        "title": "string",
+        "detail": "string",
+        "traceId": "string",
+        "timestamp": 0,
+        "errors": [
+          {
+            "code": "string",
+            "element": "string",
+            "detail": "string"
+          }
+        ]
+      }
+    }
+  }
+]
