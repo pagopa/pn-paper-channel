@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class SafeStorageClientTest extends BaseTest.WithMockServer {
+public class SafeStorageClientTest { //extends BaseTest.WithMockServer {
 
 
     @Autowired

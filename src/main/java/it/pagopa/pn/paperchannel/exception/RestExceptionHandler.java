@@ -6,6 +6,7 @@ import it.pagopa.pn.paperchannel.rest.v1.dto.ProblemError;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import reactor.core.publisher.Mono;
@@ -19,6 +20,11 @@ import static it.pagopa.pn.commons.log.MDCWebFilter.MDC_TRACE_ID_KEY;
 @ControllerAdvice
 public class RestExceptionHandler {
 
+    @ExceptionHandler
+    public void handle(HttpMessageNotReadableException e) {
+        log.error("Returning HTTP 400 Bad Request", e);
+    }
+
     @ExceptionHandler(PnGenericException.class)
     public Mono<ResponseEntity<Problem>> handleResponseEntityException(final PnGenericException exception){
         log.error(exception.toString());
@@ -31,12 +37,10 @@ public class RestExceptionHandler {
         return Mono.just(ResponseEntity.status(exception.getHttpStatus()).body(problem));
     }
 
-
     @ExceptionHandler(PnPaperEventException.class)
     public Mono<ResponseEntity<PaperEvent>> handlePnPaperEventException(final PnPaperEventException paperEventException){
         return Mono.just(ResponseEntity.noContent().build());
     }
-
 
      @ExceptionHandler(PnInputValidatorException.class)
      public Mono<ResponseEntity<Problem>> handlePnInputValidatorException(final PnInputValidatorException exception){
