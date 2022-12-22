@@ -7,6 +7,7 @@ import io.awspring.cloud.messaging.listener.annotation.SqsListener;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.queue.model.DeliveryPayload;
+import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.msclient.generated.pnnationalregistries.v1.dto.AddressSQSMessageDto;
 import it.pagopa.pn.paperchannel.service.PaperAsyncService;
@@ -46,12 +47,12 @@ public class QueueListener {
         log.info("HEADERS - {}",headers);
     }
 
-    private DeliveryPayload convertPayload(String json){
+    private SingleStatusUpdateDto convertSingleStatusUpdateDto(String json){
         try {
-            return objectMapper.readValue(json,DeliveryPayload.class);
+            return objectMapper.readValue(json,SingleStatusUpdateDto.class);
 
         } catch (JsonProcessingException e) {
-            log.error("Error in convertPayload ", e.getMessage());
+            log.error("Error in convertSingleStatusUpdateDto ", e.getMessage());
             return null;
         }
     }

@@ -1,14 +1,18 @@
 package it.pagopa.pn.paperchannel.validator;
 
 import it.pagopa.pn.paperchannel.exception.PnInputValidatorException;
+import it.pagopa.pn.paperchannel.mapper.AttachmentMapper;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
+import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.SendRequest;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DIFFERENT_DATA_REQUEST;
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DIFFERENT_DATA_RESULT;
 import static it.pagopa.pn.paperchannel.mapper.AddressMapper.fromAnalogToAddress;
 
 public class SendRequestValidator {
@@ -54,6 +58,30 @@ public class SendRequestValidator {
 
         if (!errors.isEmpty()){
             throw new PnInputValidatorException(DIFFERENT_DATA_REQUEST, DIFFERENT_DATA_REQUEST.getMessage(), HttpStatus.CONFLICT, errors);
+        }
+    }
+
+    public static void compareProgressStatusRequestEntity(PaperProgressStatusEventDto paperProgressStatusEventDto, PnDeliveryRequest pnDeliveryEntity) {
+        List<String> errors = new ArrayList<>();
+
+//        if (!StringUtils.equalsIgnoreCase(paperProgressStatusEventDto.getIun(), pnDeliveryEntity.getIun())) {
+//            errors.add("Iun");
+//        }
+
+        if (!StringUtils.equalsIgnoreCase(paperProgressStatusEventDto.getProductType(), pnDeliveryEntity.getProductType())) {
+            errors.add("ProductType");
+        }
+
+        if (!StringUtils.equalsIgnoreCase(paperProgressStatusEventDto.getRegisteredLetterCode(), pnDeliveryEntity.getProposalProductType())) {
+            errors.add("ProposalProductType");
+        }
+
+        if (paperProgressStatusEventDto.getAttachments() != null && !AttachmentMapper.toPojo(paperProgressStatusEventDto.getAttachments()).equals(pnDeliveryEntity.getAttachments())) {
+            errors.add("Attachments");
+        }
+
+        if (!errors.isEmpty()){
+            throw new PnInputValidatorException(DIFFERENT_DATA_RESULT, DIFFERENT_DATA_RESULT.getMessage(), HttpStatus.CONFLICT, errors);
         }
     }
 }
