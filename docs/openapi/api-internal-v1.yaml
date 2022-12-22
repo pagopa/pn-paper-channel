@@ -218,13 +218,18 @@ paths:
         required: true
       responses:
         "200":
-          description: Risposta positiva di invio cartaceo
+          description: Risposta positiva ad una ulteriore chiamata di invio cartaceo 
+            con stesso requestId e body della prima. Questo è il caso in cui il client effettua
+            una nuova richiesta del tutto identica alla prima. 
+            In questo scenario il componente risponderà con l'ultimo evento di aggiornamento 
+            sullo stato di lavaorazione della richiesta.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/PaperChannelUpdate'
         "204":
-          description: No Content
+          description: Risposta positiva di un invio cartaceo con un nuovo requestID, 
+            lo status code indica che servizio ha preso in carico la richiesta
         "400":
           description: Errore di validazione sintattica della richiesta
           content:
