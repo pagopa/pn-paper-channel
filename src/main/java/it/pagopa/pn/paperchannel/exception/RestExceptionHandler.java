@@ -1,16 +1,15 @@
 package it.pagopa.pn.paperchannel.exception;
 
+import com.fasterxml.jackson.databind.JsonMappingException;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PaperEvent;
 import it.pagopa.pn.paperchannel.rest.v1.dto.Problem;
 import it.pagopa.pn.paperchannel.rest.v1.dto.ProblemError;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import reactor.core.publisher.Mono;
-
 import java.util.Date;
 import java.util.stream.Collectors;
 
@@ -20,9 +19,9 @@ import static it.pagopa.pn.commons.log.MDCWebFilter.MDC_TRACE_ID_KEY;
 @ControllerAdvice
 public class RestExceptionHandler {
 
-    @ExceptionHandler
-    public void handle(HttpMessageNotReadableException e) {
-        log.error("Returning HTTP 400 Bad Request", e);
+    @ExceptionHandler(JsonMappingException.class)
+    public void handle(JsonMappingException e) {
+        log.error("Returning HTTP 400 Bad Request {}", e.getMessage());
     }
 
     @ExceptionHandler(PnGenericException.class)
