@@ -3,10 +3,9 @@ package it.pagopa.pn.paperchannel.service.impl;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.mapper.AttachmentMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
-import it.pagopa.pn.paperchannel.middleware.queue.model.DeliveryPayload;
-import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
 import it.pagopa.pn.paperchannel.model.DeliveryAsyncModel;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
+import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareEvent;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -71,12 +70,10 @@ public class SubscriberPrepare implements Subscriber<DeliveryAsyncModel> {
 
     @Override
     public void onComplete() {
-        log.info("entro nell' on complete");
-        DeliveryPayload payload = new DeliveryPayload();
+        log.info("Custom subscriber on complete");
 
-        payload.setDeliveryAddress(deliveryAsyncModel.getAddress());
-        payload.setTotalPrice(deliveryAsyncModel.getAmount());
-        sqsQueueSender.pushEvent(EventTypeEnum.PREPARE_PAPER_RESPONSE,payload);
+        PrepareEvent prepareEvent = new PrepareEvent();
+        sqsQueueSender.pushPrepareEvent(prepareEvent);
 
         requestDeliveryDAO.getByRequestId(deliveryAsyncModel.getRequestId())
                 .mapNotNull(requestDeliveryEntity -> {
@@ -86,16 +83,8 @@ public class SubscriberPrepare implements Subscriber<DeliveryAsyncModel> {
                     requestDeliveryEntity.setStatusDate(DateUtils.formatDate(new Date()));
                     requestDeliveryEntity.setAttachments(deliveryAsyncModel.getAttachments().stream()
                             .map(AttachmentMapper::toEntity).collect(Collectors.toList()));
-
+                    requestDeliveryEntity.setProductType(deliveryAsyncModel.getProductType().getValue());
                     return requestDeliveryDAO.updateData(requestDeliveryEntity).map(item->item);
                 }).subscribe();
-
-
-        //fare chiamata update
-        //fare chiamata addressDao.create
-        //se il correlationid è diverso da null vuol dire che l'indirizzo mai settato
-        // e fare create dell'indirizzo dentro deliveryasincModel
-
-        log.info("Custom subscriber on complete");
     }
 }

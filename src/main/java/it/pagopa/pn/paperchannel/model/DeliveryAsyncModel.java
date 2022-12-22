@@ -12,6 +12,7 @@ import java.util.List;
 @ToString
 public class DeliveryAsyncModel {
 
+    private boolean fromNationalRegistry = false;
     private Address address;
 
     private List<AttachmentInfo> attachments;

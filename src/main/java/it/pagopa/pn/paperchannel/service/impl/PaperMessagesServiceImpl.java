@@ -2,34 +2,35 @@ package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.exception.PnPaperEventException;
-import it.pagopa.pn.paperchannel.mapper.AddressMapper;
-import it.pagopa.pn.paperchannel.mapper.PreparePaperResponseMapper;
-import it.pagopa.pn.paperchannel.mapper.RequestDeliveryMapper;
-import it.pagopa.pn.paperchannel.mapper.PrepareEventMapper;
+import it.pagopa.pn.paperchannel.mapper.*;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
+import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.model.Address;
-import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.StringUtil;
-import it.pagopa.pn.paperchannel.rest.v1.dto.PaperChannelUpdate;
-import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareEvent;
-import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareRequest;
+import it.pagopa.pn.paperchannel.model.AttachmentInfo;
+import it.pagopa.pn.paperchannel.rest.v1.dto.*;
 import it.pagopa.pn.paperchannel.service.PaperMessagesService;
 import it.pagopa.pn.paperchannel.validator.PrepareRequestValidator;
 import it.pagopa.pn.paperchannel.service.SqsSender;
+import it.pagopa.pn.paperchannel.validator.SendRequestValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_NOT_EXIST;
 
 @Slf4j
 @Service
-public class PaperMessagesServiceImpl implements PaperMessagesService {
+public class PaperMessagesServiceImpl extends BaseService implements PaperMessagesService {
 
     @Autowired
     private RequestDeliveryDAO requestDeliveryDAO;
@@ -37,6 +38,8 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
     private AddressDAO addressDAO;
     @Autowired
     private NationalRegistryClient nationalRegistryClient;
+    @Autowired
+    private ExternalChannelClient externalChannelClient;
     @Autowired
     private PrepareAsyncServiceImpl prepareAsyncService;
     @Autowired
@@ -49,6 +52,28 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
                 .zipWhen(entity -> addressDAO.findByRequestId(requestId).map(address -> address))
                 .map(entityAndAddress -> PrepareEventMapper.fromResult(entityAndAddress.getT1(),entityAndAddress.getT2()))
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage())));
+    }
+
+    @Override
+    public Mono<SendResponse> executionPaper(String requestId, SendRequest sendRequest) {
+        return this.requestDeliveryDAO.getByRequestId(sendRequest.getRequestId())
+                .flatMap(entity -> {
+                    SendRequestValidator.compareRequestEntity(sendRequest,entity);
+
+                    List<AttachmentInfo> attachments = entity.getAttachments().stream().map(AttachmentMapper::fromEntity).collect(Collectors.toList());
+
+                    Address address = AddressMapper.fromAnalogToAddress(sendRequest.getReceiverAddress());
+                    return super.calculator(attachments, address, sendRequest.getProductType()).map(value -> value);
+
+                })
+                .zipWith(this.externalChannelClient.sendEngageRequest(sendRequest).map(item -> Mono.just("")), (amount, none) -> amount)
+                .map(amount -> {
+                    log.info("Amount for response : {}", amount);
+                    SendResponse sendResponse = new SendResponse();
+                    sendResponse.setAmount(amount.intValue());
+                    return sendResponse;
+                });
+
     }
 
     @Override
@@ -67,7 +92,13 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
                                 .switchIfEmpty(Mono.just(PreparePaperResponseMapper.fromResult(entity,null)));
                     })
                     .switchIfEmpty(Mono.defer(() -> saveRequestAndAddress(prepareRequest, null)
-                            .flatMap(response -> Mono.empty()))
+                            .flatMap(response -> {
+                                Mono.just("").publishOn(Schedulers.parallel())
+                                        .flatMap(text -> this.prepareAsyncService.prepareAsync(requestId, null, null))
+                                        .subscribe(new SubscriberPrepare(sqsSender, requestDeliveryDAO, requestId, null));
+                                log.info("throw exception");
+                                throw new PnPaperEventException(PreparePaperResponseMapper.fromEvent(prepareRequest.getRequestId()));
+                            }))
                     );
 
         }
@@ -90,7 +121,12 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
                                         .map(address-> PreparePaperResponseMapper.fromResult(newEntity,address))
                                         .switchIfEmpty(Mono.just(PreparePaperResponseMapper.fromResult(newEntity,null)));
                             })
-                            .switchIfEmpty(Mono.defer(()-> finderAddressAndSave(prepareRequest).flatMap(response -> Mono.empty())));
+                            .switchIfEmpty(Mono.defer(()-> finderAddressAndSave(prepareRequest)
+                                    .flatMap(response -> {
+                                        throw new PnPaperEventException(PreparePaperResponseMapper.fromEvent(prepareRequest.getRequestId()));
+                                    }))
+                            );
+
                 })
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage())));
 
@@ -117,10 +153,6 @@ public class PaperMessagesServiceImpl implements PaperMessagesService {
             addressEntity = AddressMapper.toEntity(address, prepareRequest.getRequestId());
         }
 
-        return requestDeliveryDAO.createWithAddress(pnDeliveryRequest, addressEntity)
-                .map(entity -> {
-                    // Case of 204
-                    throw new PnPaperEventException(PreparePaperResponseMapper.fromEvent(prepareRequest.getRequestId()));
-                });
+        return requestDeliveryDAO.createWithAddress(pnDeliveryRequest, addressEntity);
     }
 }

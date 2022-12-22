@@ -4,6 +4,7 @@ import it.pagopa.pn.paperchannel.mapper.common.BaseMapper;
 import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.model.Address;
+import it.pagopa.pn.paperchannel.msclient.generated.pnnationalregistries.v1.dto.AddressSQSMessagePhysicalAddressDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.AnalogAddress;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 
@@ -21,6 +22,19 @@ public class AddressMapper {
     public static Address fromAnalogToAddress(AnalogAddress analogAddress){
         if (analogAddress == null) return null;
         return mapperAnalog.toEntity(analogAddress);
+    }
+
+    public static Address fromNationalRegistry(AddressSQSMessagePhysicalAddressDto pysicalAddress){
+        Address address = new Address();
+        address.setFullName(pysicalAddress.getAt());
+        address.setAddress(pysicalAddress.getAddress());
+        address.setAddressRow2(pysicalAddress.getAddressDetails());
+        address.setCap(pysicalAddress.getZip());
+        address.setCity(pysicalAddress.getMunicipality());
+        address.setCity2(pysicalAddress.getMunicipalityDetails());
+        address.setPr(pysicalAddress.getProvince());
+        address.setCountry(pysicalAddress.getForeignState());
+        return address;
     }
 
     public static PnAddress toEntity(Address address, String requestId){

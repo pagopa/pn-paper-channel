@@ -2,14 +2,14 @@ package it.pagopa.pn.paperchannel.middleware.queue.action;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.pagopa.pn.api.dto.events.AbstractSqsMomProducer;
-import it.pagopa.pn.paperchannel.middleware.queue.model.DeliveryEvent;
+import it.pagopa.pn.paperchannel.middleware.queue.model.PrepareDeliveryEvent;
 import lombok.extern.slf4j.Slf4j;
 import software.amazon.awssdk.services.sqs.SqsClient;
 
 @Slf4j
-public class DeliveryMomProducer extends AbstractSqsMomProducer<DeliveryEvent> {
+public class PrepareDeliveryMomProducer extends AbstractSqsMomProducer<PrepareDeliveryEvent> {
 
-    public DeliveryMomProducer(SqsClient sqsClient, String topic, ObjectMapper objectMapper, Class<DeliveryEvent> msgClass) {
+    public PrepareDeliveryMomProducer(SqsClient sqsClient, String topic, ObjectMapper objectMapper, Class<PrepareDeliveryEvent> msgClass) {
         super(sqsClient, topic, objectMapper, msgClass);
     }
 }

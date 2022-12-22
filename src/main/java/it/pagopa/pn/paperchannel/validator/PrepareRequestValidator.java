@@ -1,13 +1,13 @@
 package it.pagopa.pn.paperchannel.validator;
 
 import it.pagopa.pn.paperchannel.exception.PnInputValidatorException;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareRequest;
 import org.springframework.http.HttpStatus;
+
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
+
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DIFFERENT_DATA_REQUEST;
 import static it.pagopa.pn.paperchannel.mapper.AddressMapper.fromAnalogToAddress;
 
@@ -24,11 +24,15 @@ public class PrepareRequestValidator {
             errors.add("RequestId");
         }
 
+        if (!prepareRequest.getIun().equals(pnDeliveryEntity.getIun())) {
+            errors.add("Iun");
+        }
+
         if (!prepareRequest.getReceiverFiscalCode().equals(pnDeliveryEntity.getFiscalCode())) {
             errors.add("FiscalCode");
         }
 
-        if (!prepareRequest.getProposalProductType().getValue().equals(pnDeliveryEntity.getRegisteredLetterCode())) {
+        if (!prepareRequest.getProposalProductType().getValue().equals(pnDeliveryEntity.getProposalProductType())) {
             errors.add("ProductType");
         }
 
@@ -40,7 +44,7 @@ public class PrepareRequestValidator {
             errors.add("printType");
         }
 
-        if (!checkBetweenLists(prepareRequest, pnDeliveryEntity)){
+        if (!AttachmentValidator.checkBetweenLists(prepareRequest.getAttachmentUrls(), pnDeliveryEntity.getAttachments())){
             errors.add("Attachments");
         }
 
@@ -48,8 +52,7 @@ public class PrepareRequestValidator {
             if (!fromAnalogToAddress(prepareRequest.getReceiverAddress()).convertToHash().equals(pnDeliveryEntity.getAddressHash())) {
                 errors.add("Address");
             }
-        }
-        else{
+        } else{
             errors.add("Address");
         }
 
@@ -58,21 +61,4 @@ public class PrepareRequestValidator {
         }
     }
 
-    private static boolean checkBetweenLists(PrepareRequest prepareRequest, PnDeliveryRequest pnDeliveryRequest){
-        List<String> attachmentPrepare = prepareRequest.getAttachmentUrls();
-        List<PnAttachmentInfo> attachmentDeliveryRequest = pnDeliveryRequest.getAttachments();
-        attachmentPrepare.sort(Comparator.naturalOrder());
-        attachmentDeliveryRequest.sort(Comparator.comparing(PnAttachmentInfo::getFileKey));
-        if (attachmentPrepare.size() != attachmentDeliveryRequest.size()) {
-            return false;
-        }
-        else {
-            for (int i = 0; i < attachmentPrepare.size() ; i++){
-                if (!attachmentPrepare.get(i).equals(attachmentDeliveryRequest.get(i).getFileKey())){
-                    return false;
-                }
-            }
-            return true;
-        }
-    }
 }

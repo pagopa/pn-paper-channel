@@ -1,7 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.msclient.impl;
 
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
-import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.common.BaseClient;
 import it.pagopa.pn.paperchannel.msclient.generated.pnnationalregistries.v1.ApiClient;
@@ -11,7 +10,6 @@ import it.pagopa.pn.paperchannel.msclient.generated.pnnationalregistries.v1.dto.
 import it.pagopa.pn.paperchannel.msclient.generated.pnnationalregistries.v1.dto.AddressRequestBodyFilterDto;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
@@ -23,8 +21,6 @@ import java.time.Duration;
 import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
-
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.UNTRACEABLE_ADDRESS;
 
 @Slf4j
 @Component
