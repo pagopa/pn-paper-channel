@@ -3,10 +3,9 @@ package it.pagopa.pn.paperchannel.service.impl;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.mapper.AttachmentMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
-import it.pagopa.pn.paperchannel.middleware.queue.model.DeliveryPayload;
-import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
 import it.pagopa.pn.paperchannel.model.DeliveryAsyncModel;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
+import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareEvent;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -72,11 +71,9 @@ public class SubscriberPrepare implements Subscriber<DeliveryAsyncModel> {
     @Override
     public void onComplete() {
         log.info("Custom subscriber on complete");
-        DeliveryPayload payload = new DeliveryPayload();
 
-        payload.setDeliveryAddress(deliveryAsyncModel.getAddress());
-        payload.setTotalPrice(deliveryAsyncModel.getAmount());
-        sqsQueueSender.pushEvent(EventTypeEnum.PREPARE_PAPER_RESPONSE,payload);
+        PrepareEvent prepareEvent = new PrepareEvent();
+        sqsQueueSender.pushPrepareEvent(prepareEvent);
 
         requestDeliveryDAO.getByRequestId(deliveryAsyncModel.getRequestId())
                 .mapNotNull(requestDeliveryEntity -> {
