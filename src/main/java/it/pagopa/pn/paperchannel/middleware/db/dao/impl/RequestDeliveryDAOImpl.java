@@ -5,9 +5,11 @@ import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.commons.log.PnAuditLogEvent;
 import it.pagopa.pn.commons.log.PnAuditLogEventType;
 import it.pagopa.pn.paperchannel.config.AwsPropertiesConfig;
-import it.pagopa.pn.paperchannel.exception.PnGenericException;
+import it.pagopa.pn.paperchannel.encryption.KmsEncryption;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.BaseDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.common.TransactWriterInitializer;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Import;
@@ -15,54 +17,78 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.TransactionCanceledException;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_NOT_EXIST;
 
 @Repository
 @Slf4j
 @Import(PnAuditLogBuilder.class)
 public class RequestDeliveryDAOImpl extends BaseDAO<PnDeliveryRequest> implements RequestDeliveryDAO {
 
+
+    private final DynamoDbAsyncTable<PnAddress> addressTable;
+    private final TransactWriterInitializer transactWriterInitializer;
+
     public RequestDeliveryDAOImpl(PnAuditLogBuilder auditLogBuilder,
+                                  KmsEncryption kmsEncryption,
                                   DynamoDbEnhancedAsyncClient dynamoDbEnhancedAsyncClient,
                                   DynamoDbAsyncClient dynamoDbAsyncClient,
-                                  AwsPropertiesConfig awsPropertiesConfig) {
-        super(auditLogBuilder, dynamoDbEnhancedAsyncClient, dynamoDbAsyncClient,
+                                  AwsPropertiesConfig awsPropertiesConfig, TransactWriterInitializer transactWriterInitializer) {
+        super(auditLogBuilder, kmsEncryption, dynamoDbEnhancedAsyncClient, dynamoDbAsyncClient,
                 awsPropertiesConfig.getDynamodbRequestDeliveryTable(), PnDeliveryRequest.class);
+        this.transactWriterInitializer = transactWriterInitializer;
+        this.addressTable = dynamoDbEnhancedAsyncClient.table(awsPropertiesConfig.getDynamodbAddressTable(), TableSchema.fromBean(PnAddress.class));
     }
 
     @Override
-    public Mono<PnDeliveryRequest> create(PnDeliveryRequest pnDeliveryRequest) {
-        String logMessage = String.format("create request delivery = %s", pnDeliveryRequest);
+    public Mono<PnDeliveryRequest> createWithAddress(PnDeliveryRequest request, PnAddress pnAddress) {
+
+        String logMessage = String.format("create request delivery and address= %s", request);
         PnAuditLogEvent logEvent = auditLogBuilder
                 .before(PnAuditLogEventType.AUD_DL_CREATE, logMessage)
                 .build();
         logEvent.log();
 
         return Mono.fromFuture(
-                countOccurrencesEntity(pnDeliveryRequest.getRequestId())
-                        .thenCompose( total -> {
-                                log.info("Total elements : {}", total);
-                                if (total == 0){
-                                    return put(pnDeliveryRequest);
-                                } else {
-                                    throw new PnHttpResponseException("Data already existed", HttpStatus.BAD_REQUEST.value());
-                                }
-                            })
+                        countOccurrencesEntity(request.getRequestId())
+                                .thenCompose( total -> {
+                                    log.debug("Total elements : {}", total);
+                                    if (total == 0){
+                                        try {
+                                            this.transactWriterInitializer.init();
+                                            if(pnAddress != null) {
+
+                                                transactWriterInitializer.addRequestTransaction(addressTable, encode(pnAddress, PnAddress.class), PnAddress.class);
+                                            }
+
+                                            transactWriterInitializer.addRequestTransaction(this.dynamoTable, request, PnDeliveryRequest.class);
+                                            return putWithTransact(transactWriterInitializer.build()).thenApply(item-> request);
+                                        } catch (TransactionCanceledException tce) {
+                                            log.error("Transaction Canceled" + tce.getMessage());
+                                        }
+                                        return null;
+
+                                    } else {
+                                        throw new PnHttpResponseException("Data already existed", HttpStatus.BAD_REQUEST.value());
+                                    }
+                                })
                 )
                 .onErrorResume(throwable -> {
+                    throwable.printStackTrace();
                     logEvent.generateFailure(throwable.getMessage()).log();
                     return Mono.error(throwable);
                 })
                 .map(entityCreated -> {
-                    logEvent.generateSuccess(String.format("created request delivery = %s", entityCreated)).log();
+                    logEvent.generateSuccess(String.format("created request delivery and address = %s", entityCreated)).log();
                     return entityCreated;
                 });
     }
@@ -89,7 +115,6 @@ public class RequestDeliveryDAOImpl extends BaseDAO<PnDeliveryRequest> implement
         logEvent.log();
         return Mono.fromFuture(this.get(requestId, null).thenApply(item -> {
                     logEvent.generateSuccess(String.format("request delivery = %s", item)).log();
-                    if (item == null) throw new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(),HttpStatus.NOT_FOUND);
                     return item;
                 }));
     }

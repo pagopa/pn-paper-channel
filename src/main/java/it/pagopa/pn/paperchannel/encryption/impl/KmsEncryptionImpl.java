@@ -8,6 +8,7 @@ import it.pagopa.pn.paperchannel.encryption.EncryptedUtils;
 import it.pagopa.pn.paperchannel.encryption.KmsEncryption;
 import it.pagopa.pn.paperchannel.encryption.model.EncryptionModel;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
 
 import java.nio.ByteBuffer;
@@ -28,30 +29,39 @@ public class KmsEncryptionImpl implements KmsEncryption {
 
     @Override
     public String encode(String data) {
-        final EncryptRequest encryptRequest = new EncryptRequest()
-                .withKeyId(this.awsKmsProperties.getKeyId())
-                .withPlaintext(ByteBuffer.wrap(data.getBytes()));
+        log.info("Encode :  {}", data);
+        if(StringUtils.isNotEmpty(data)) {
+            final EncryptRequest encryptRequest = new EncryptRequest()
+                    .withKeyId(this.awsKmsProperties.getKeyId())
+                    .withPlaintext(ByteBuffer.wrap(data.getBytes()));
 
-        final ByteBuffer encryptedBytes = kms.encrypt(encryptRequest).getCiphertextBlob();
+            final ByteBuffer encryptedBytes = kms.encrypt(encryptRequest).getCiphertextBlob();
 
-        return extractString(encryptedBytes, false);
+            return extractString(encryptedBytes, false);
+        } else {
+            return data;
+        }
     }
 
     @Override
     public String decode(String data) {
         log.info("Decode :  {}", data);
-        final EncryptedUtils token = EncryptedUtils.parse(data);
+        if(StringUtils.isNotEmpty(data)) {
+            final EncryptedUtils token = EncryptedUtils.parse(data);
 
-        final DecryptRequest decryptRequest = new DecryptRequest()
-                .withCiphertextBlob(token.getCipherBytes())
-                .withEncryptionContext(token.getEncryptionContext());
-        final EncryptionModel options = token.getModel();
-        final String keyId = Optional.ofNullable(options.getKeyId()).orElse(awsKmsProperties.getKeyId());
-        final String algorithm = Optional.ofNullable(options.getAlgorithm()).orElse("SYMMETRIC_DEFAULT");
-        decryptRequest.setEncryptionAlgorithm(algorithm);
-        decryptRequest.setKeyId(keyId);
+            final DecryptRequest decryptRequest = new DecryptRequest()
+                    .withCiphertextBlob(token.getCipherBytes())
+                    .withEncryptionContext(token.getEncryptionContext());
+            final EncryptionModel options = token.getModel();
+            final String keyId = Optional.ofNullable(options.getKeyId()).orElse(awsKmsProperties.getKeyId());
+            final String algorithm = Optional.ofNullable(options.getAlgorithm()).orElse("SYMMETRIC_DEFAULT");
+            decryptRequest.setEncryptionAlgorithm(algorithm);
+            decryptRequest.setKeyId(keyId);
 
-        return extractString(kms.decrypt(decryptRequest).getPlaintext(), true);
+            return extractString(kms.decrypt(decryptRequest).getPlaintext(), true);
+        } else {
+            return data;
+        }
     }
 
 

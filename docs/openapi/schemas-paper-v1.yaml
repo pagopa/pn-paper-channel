@@ -38,6 +38,7 @@ components:
       - requestId
       - requestPaId
       - senderAddress
+      - iun
       type: object
       properties:
         requestPaId:
@@ -159,6 +160,7 @@ components:
       - requestId
       - receiverFiscalCode
       - receiverType
+      - iun
       type: object
       properties:
         relatedRequestId:
@@ -217,6 +219,10 @@ components:
     PaperRequest:
       type: object
       properties:
+        iun: 
+          type: string
+          description: IUN della richiesta, necessario a fini di audit
+          example: 'ABCD-HILM-YKWX-202202-1'
         requestId:
           type: string
           description: Identificativo della richiesta. E' lo stesso usato nel path
