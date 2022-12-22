@@ -18,7 +18,6 @@ public class PreparePaperResponseMapper {
     public static PaperChannelUpdate fromResult(PnDeliveryRequest item, PnAddress pnAddress){
         PaperChannelUpdate paperChannelUpdate = new PaperChannelUpdate();
         paperChannelUpdate.setPrepareEvent(PrepareEventMapper.fromResult(item,pnAddress));
-
         return paperChannelUpdate;
     }
 
