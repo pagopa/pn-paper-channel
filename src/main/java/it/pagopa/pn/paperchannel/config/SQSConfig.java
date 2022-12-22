@@ -13,11 +13,9 @@ import org.springframework.util.StringUtils;
 public class SQSConfig {
 
     private final AwsPropertiesConfig awsConfigs;
-    private final PnPaperChannelConfig pnPaperChannelConfig;
 
-    public SQSConfig(AwsPropertiesConfig awsConfigs, PnPaperChannelConfig pnPaperChannelConfig) {
+    public SQSConfig(AwsPropertiesConfig awsConfigs) {
         this.awsConfigs = awsConfigs;
-        this.pnPaperChannelConfig = pnPaperChannelConfig;
     }
 
     @Bean
