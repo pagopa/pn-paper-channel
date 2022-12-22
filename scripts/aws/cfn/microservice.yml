@@ -145,7 +145,8 @@ Resources:
         ContainerEnvEntry12: !Sub 'PN_PAPERCHANNEL_QUEUEPREPAREDELIVERYPUSH=${ExternalChannelsOutputsQueueName}'
         ContainerEnvEntry13: !Sub 'PN_PAPERCHANNEL_QUEUESENDDELIVERYPUSH=${ExternalChannelsOutputsQueueName}'
         ContainerEnvEntry14: !Sub 'PN_PAPERCHANNEL_QUEUEEXTERNALCHANNEL=${ExternalChannels2PaperChannelQueueName}'
-        ContainerEnvEntry15: !Sub 'SPRING_CLOUD_FUNCTIONROUTER_QUEUES_LIST=${ExternalChannelsOutputsQueueName},${ExternalChannels2PaperChannelQueueName}'
+        ContainerEnvEntry15: !Sub 'PN_PAPERCHANNEL_QUEUENATIONALREGISTRIES=${ExternalChannels2PaperChannelQueueName}'
+        ContainerEnvEntry16: !Sub 'SPRING_CLOUD_FUNCTIONROUTER_QUEUES_LIST=${ExternalChannelsOutputsQueueName},${ExternalChannels2PaperChannelQueueName}'
         MappedPaths: '/paper-channel/*,/paper-channel-private/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds
