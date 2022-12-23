@@ -98,12 +98,6 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                 })
 
                 .flatMap(deliveryAsyncModel -> getAttachmentsInfo(deliveryAsyncModel).map(newModel -> newModel))
-                .flatMap(deliveryAsyncModel -> super.calculator(deliveryAsyncModel.getAttachments(), deliveryAsyncModel.getAddress(), deliveryAsyncModel.getProductType())
-                                                        .map(amount -> {
-                                                            deliveryAsyncModel.setAmount(amount);
-                                                            return deliveryAsyncModel;
-                                                        })
-                )
                 .flatMap(deliveryAsyncModel -> {
                     if (deliveryAsyncModel.isFromNationalRegistry()){
                         return addressDAO.create(AddressMapper.toEntity(addressFromNationalRegistry, deliveryAsyncModel.getRequestId()))
