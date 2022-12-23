@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.config;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -7,6 +8,7 @@ import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 
+@Slf4j
 public class HttpConnector {
 
     private HttpConnector(){
@@ -14,6 +16,7 @@ public class HttpConnector {
     }
 
     public static Mono<PDDocument> downloadFile(String url) {
+        log.info("Url to download: "+url);
         return WebClient.create(url)
                 .get()
                 .accept(MediaType.APPLICATION_PDF)
