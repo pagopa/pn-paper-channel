@@ -3,13 +3,9 @@
     "httpRequest": {
       "path": "/national-registries-private/PF/addresses",
       "method": "POST",
-      "body":
-      {
+      "body": {
         "filter": {
-          "taxId": "AAAZZZ00H00T000Z",
-          "referenceRequestDate": "string",
-          "correlationId": "string",
-          "domicileType": "PHYSICAL"
+          "taxId": "CODICEFISCALE200"
         }
       }
     },
@@ -27,12 +23,11 @@
   },
   {
     "httpRequest": {
-      "path": "/national-registries-private/PG/addresses",
+      "path": "/national-registries-private/PF/addresses",
       "method": "POST",
-      "body":
-      {
+      "body":{
         "filter": {
-          "taxId": "AAAZZZ00H00T000Z"
+          "taxId": "CODICEFISCALE400"
         }
       }
     },
@@ -63,10 +58,9 @@
     "httpRequest": {
       "path": "/national-registries-private/PF/addresses",
       "method": "POST",
-      "body":
-      {
+      "body":{
         "filter": {
-          "taxId": "AAAZZZ00H00T000Z"
+          "taxId": "CODICEFISCALE404"
         }
       }
     },
@@ -97,10 +91,9 @@
     "httpRequest": {
       "path": "/national-registries-private/PF/addresses",
       "method": "POST",
-      "body":
-      {
+      "body":{
         "filter": {
-          "taxId": "AAAZZZ00H00T000Z"
+          "taxId": "CODICEFISCALE500"
         }
       }
     },
