@@ -2,7 +2,9 @@ package it.pagopa.pn.paperchannel.validator;
 
 import it.pagopa.pn.paperchannel.exception.PnInputValidatorException;
 import it.pagopa.pn.paperchannel.mapper.AttachmentMapper;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
+import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.AttachmentDetailsDto;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.SendRequest;
 import org.apache.commons.lang3.StringUtils;
@@ -10,6 +12,7 @@ import org.springframework.http.HttpStatus;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DIFFERENT_DATA_REQUEST;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DIFFERENT_DATA_RESULT;
@@ -43,7 +46,9 @@ public class SendRequestValidator {
             errors.add("printType");
         }
 
-        if (!AttachmentValidator.checkBetweenLists(sendRequest.getAttachmentUrls(), pnDeliveryEntity.getAttachments())){
+        List<String> fromDb = pnDeliveryEntity.getAttachments().stream()
+                .map(PnAttachmentInfo::getFileKey).collect(Collectors.toList());
+        if (!AttachmentValidator.checkBetweenLists(sendRequest.getAttachmentUrls(), fromDb)){
             errors.add("Attachments");
         }
 
@@ -64,19 +69,24 @@ public class SendRequestValidator {
     public static void compareProgressStatusRequestEntity(PaperProgressStatusEventDto paperProgressStatusEventDto, PnDeliveryRequest pnDeliveryEntity) {
         List<String> errors = new ArrayList<>();
 
-//        if (!StringUtils.equalsIgnoreCase(paperProgressStatusEventDto.getIun(), pnDeliveryEntity.getIun())) {
-//            errors.add("Iun");
-//        }
+        if (!StringUtils.equals(paperProgressStatusEventDto.getIun(), pnDeliveryEntity.getIun())) {
+            errors.add("Iun");
+        }
 
-        if (!StringUtils.equalsIgnoreCase(paperProgressStatusEventDto.getProductType(), pnDeliveryEntity.getProductType())) {
+        if (!StringUtils.equals(paperProgressStatusEventDto.getProductType(), pnDeliveryEntity.getProductType())) {
             errors.add("ProductType");
         }
 
-        if (!StringUtils.equalsIgnoreCase(paperProgressStatusEventDto.getRegisteredLetterCode(), pnDeliveryEntity.getProposalProductType())) {
-            errors.add("ProposalProductType");
-        }
+        if (paperProgressStatusEventDto.getAttachments() != null && pnDeliveryEntity.getAttachments() != null) {
+            List<String> fromDb = pnDeliveryEntity.getAttachments().stream()
+                    .map(PnAttachmentInfo::getUrl).collect(Collectors.toList());
+            List<String> fromExternal = paperProgressStatusEventDto.getAttachments().stream()
+                    .map(AttachmentDetailsDto::getUrl).collect(Collectors.toList());
 
-        if (paperProgressStatusEventDto.getAttachments() != null && !AttachmentMapper.toPojo(paperProgressStatusEventDto.getAttachments()).equals(pnDeliveryEntity.getAttachments())) {
+            if(!AttachmentValidator.checkBetweenLists(fromDb, fromExternal)) {
+                errors.add("Attachments");
+            }
+        } else {
             errors.add("Attachments");
         }
 

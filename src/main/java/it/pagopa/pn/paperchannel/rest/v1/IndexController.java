@@ -1,11 +1,12 @@
 package it.pagopa.pn.paperchannel.rest.v1;
 
-
 import it.pagopa.pn.paperchannel.encryption.KmsEncryption;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.paperchannel.service.PaperResultAsyncService;
 import it.pagopa.pn.paperchannel.service.impl.PrepareAsyncServiceImpl;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +14,7 @@ import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 
+@Slf4j
 @RestController
 @RequestMapping(value = "/index")
 public class IndexController {
@@ -57,16 +59,16 @@ public class IndexController {
 
     @GetMapping(value = "/recursive")
     public Mono<ResponseEntity<String>> recursive(){
-
         return prepareAsyncServiceImpl.getFileRecursive(3, "RETRY", new BigDecimal(1) )
                 .map(item -> ResponseEntity.ok().body("RISPOSTA "));
-
     }
 
     @PostMapping(value = "/sendResult")
-    public ResponseEntity<String> sendResult(@RequestBody SingleStatusUpdateDto singleStatusUpdateDtoRequest){
-        return ResponseEntity.ok()
-                .body(paperResultAsyncService.resultAsyncBackground(singleStatusUpdateDtoRequest));
+    public Mono<ResponseEntity<PnDeliveryRequest>> sendResult(@RequestBody SingleStatusUpdateDto singleStatusUpdateDtoRequest){
+        return paperResultAsyncService.resultAsyncBackground(singleStatusUpdateDtoRequest)
+                .map(item -> {
+                    log.info("SEND RESULT ENTITY: {}", item);
+                    return ResponseEntity.ok().body(item);
+                });
     }
-
 }

@@ -25,30 +25,27 @@ public class PaperResultAsyncServiceImpl implements PaperResultAsyncService {
 
     @Autowired
     private RequestDeliveryDAO requestDeliveryDAO;
-
     @Autowired
     private SqsSender sqsSender;
 
     @Override
-    public String resultAsyncBackground(SingleStatusUpdateDto singleStatusUpdateDto) {
-
-        requestDeliveryDAO.getByRequestId(singleStatusUpdateDto.getAnalogMail().getRequestId())
-                .map(entity -> {
+    public Mono<PnDeliveryRequest> resultAsyncBackground(SingleStatusUpdateDto singleStatusUpdateDto) {
+        return requestDeliveryDAO.getByRequestId(singleStatusUpdateDto.getAnalogMail().getRequestId())
+                .flatMap(entity -> {
+                    log.info("GETTED ENTITY: {}", entity);
                     compareProgressStatusRequestEntity(singleStatusUpdateDto.getAnalogMail(), entity);
-                    updateEntityResult(singleStatusUpdateDto, entity)
+                    return updateEntityResult(singleStatusUpdateDto, entity)
                             .flatMap(updatedEntity -> {
-                                respondDeliveryPush(singleStatusUpdateDto, updatedEntity);
-                                return Mono.just("");
+                                log.info("UPDATED ENTITY: {}", updatedEntity);
+                                sendPaperResponse(singleStatusUpdateDto, updatedEntity);
+                                return Mono.just(updatedEntity);
                             });
-                    return Mono.just("");
                 })
                 //TODO case of retry event from external-channel queue
                 .onErrorResume(ex -> {
                     ex.printStackTrace();
                     return Mono.error(ex);
                 });
-
-        return "";
     }
 
     private Mono<PnDeliveryRequest> updateEntityResult(SingleStatusUpdateDto singleStatusUpdateDto, PnDeliveryRequest pnDeliveryRequestMono) {
@@ -58,17 +55,16 @@ public class PaperResultAsyncServiceImpl implements PaperResultAsyncService {
         return requestDeliveryDAO.updateData(pnDeliveryRequestMono);
     }
 
-    private void respondDeliveryPush(SingleStatusUpdateDto singleStatusUpdateDto, PnDeliveryRequest pnDeliveryRequestMono) {
+    private void sendPaperResponse(SingleStatusUpdateDto singleStatusUpdateDto, PnDeliveryRequest pnDeliveryRequestMono) {
         PaperChannelUpdate paperChannelUpdate = new PaperChannelUpdate();
         SendEvent sendEvent = new SendEvent();
         paperChannelUpdate.sendEvent(sendEvent);
-
         sendEvent.setDiscoveredAddress(AddressMapper.toPojo(singleStatusUpdateDto.getAnalogMail().getDiscoveredAddress()));
         sendEvent.setClientRequestTimeStamp(Date.from(singleStatusUpdateDto.getAnalogMail().getClientRequestTimeStamp().toInstant()));
         if(StringUtils.isNotEmpty(singleStatusUpdateDto.getAnalogMail().getDeliveryFailureCause())) {
             sendEvent.setDeliveryFailureCause(singleStatusUpdateDto.getAnalogMail().getDeliveryFailureCause());
         }
-//        sqsSender.pushEvent(paperChannelUpdate);
+        sqsSender.pushSendEvent(sendEvent);
     }
 
 }

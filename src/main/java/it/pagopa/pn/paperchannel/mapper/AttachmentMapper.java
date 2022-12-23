@@ -45,10 +45,4 @@ public class AttachmentMapper {
         return entity;
     }
 
-    public static List<PnAttachmentInfo> toPojo(List<AttachmentDetailsDto> listAttachmentDetailsDto) {
-        return listAttachmentDetailsDto.stream()
-                .map(mapperDetails::toEntity)
-                .collect(Collectors.toList());
-    }
-
 }

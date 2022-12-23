@@ -6,11 +6,11 @@ import io.awspring.cloud.messaging.listener.SqsMessageDeletionPolicy;
 import io.awspring.cloud.messaging.listener.annotation.SqsListener;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
-import it.pagopa.pn.paperchannel.middleware.queue.model.DeliveryPayload;
-import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.paperchannel.model.Address;
+import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.paperchannel.msclient.generated.pnnationalregistries.v1.dto.AddressSQSMessageDto;
 import it.pagopa.pn.paperchannel.service.PaperAsyncService;
+import it.pagopa.pn.paperchannel.service.PaperResultAsyncService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.service.impl.SubscriberPrepare;
 import it.pagopa.pn.paperchannel.utils.Utility;
@@ -35,27 +35,10 @@ public class QueueListener {
     private SqsSender sender;
     @Autowired
     private RequestDeliveryDAO requestDeliveryDAO;
-
-
+    @Autowired
+    private PaperResultAsyncService paperResultAsyncService;
     @Autowired
     private ObjectMapper objectMapper;
-
-    //@SqsListener(value = "${pn.paper-channel.queue-external-channel}",deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)
-    public void pull(@Payload String node, @Headers Map<String,Object> headers){
-        //convertPayload(node);
-        log.info("BODY - {}",node);
-        log.info("HEADERS - {}",headers);
-    }
-
-    private SingleStatusUpdateDto convertSingleStatusUpdateDto(String json){
-        try {
-            return objectMapper.readValue(json,SingleStatusUpdateDto.class);
-
-        } catch (JsonProcessingException e) {
-            log.error("Error in convertSingleStatusUpdateDto ", e.getMessage());
-            return null;
-        }
-    }
 
 
     //@SqsListener(value = "${pn.paper-channel.queue-national-registries}", deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)
@@ -72,7 +55,18 @@ public class QueueListener {
         } else {
             log.error("Message from NationalRegistry is null");
         }
+    }
 
+    @SqsListener(value = "${pn.paper-channel.queue-external-channel}",deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)
+    public void pullExternalChannel(@Payload String node, @Headers Map<String,Object> headers){
+        convertSingleStatusUpdateDto(node);
+        log.info("BODY - {}",node);
+        log.info("HEADERS - {}",headers);
+    }
+
+    private void convertSingleStatusUpdateDto(String json) {
+        paperResultAsyncService.resultAsyncBackground(Utility.jsonToObject(this.objectMapper, json, SingleStatusUpdateDto.class))
+                .block();
     }
 
 }
