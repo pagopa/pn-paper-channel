@@ -5,6 +5,8 @@ import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.msclient.generated.pnsafestorage.v1.dto.FileDownloadResponseDto;
 import it.pagopa.pn.paperchannel.model.AttachmentInfo;
+import it.pagopa.pn.paperchannel.rest.v1.dto.AttachmentDetails;
+import it.pagopa.pn.paperchannel.utils.DateUtils;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -35,5 +37,14 @@ public class AttachmentMapper {
         PnAttachmentInfo entity =  mapper.toEntity(dto);
         log.info("Mapper Entity : {}", entity.getUrl());
         return entity;
+    }
+
+    public static AttachmentDetails toAttachmentDetails(PnAttachmentInfo attachments){
+        AttachmentDetails attachmentDetails = new AttachmentDetails();
+        attachmentDetails.setId(attachments.getId());
+        attachmentDetails.setDocumentType(attachments.getDocumentType());
+        attachmentDetails.setUrl(attachments.getUrl());
+        attachmentDetails.setDate(DateUtils.parseDateString(attachments.getDate()));
+        return attachmentDetails;
     }
 }

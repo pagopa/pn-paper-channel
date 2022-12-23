@@ -17,8 +17,6 @@ public class DeliveryAsyncModel {
 
     private List<AttachmentInfo> attachments;
 
-    private Double amount;
-
     private String requestId;
 
     private String hashOldAddress;
