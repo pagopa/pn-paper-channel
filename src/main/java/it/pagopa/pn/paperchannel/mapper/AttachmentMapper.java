@@ -47,4 +47,13 @@ public class AttachmentMapper {
         return entity;
     }
 
+    public static AttachmentDetails toAttachmentDetails(PnAttachmentInfo attachments){
+        AttachmentDetails attachmentDetails = new AttachmentDetails();
+        attachmentDetails.setId(attachments.getId());
+        attachmentDetails.setDocumentType(attachments.getDocumentType());
+        attachmentDetails.setUrl(attachments.getUrl());
+        attachmentDetails.setDate(DateUtils.parseDateString(attachments.getDate()));
+        return attachmentDetails;
+    }
+
 }
