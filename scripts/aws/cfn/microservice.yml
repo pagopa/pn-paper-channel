@@ -119,6 +119,14 @@ Parameters:
     Type: String
     Description: 'Pull external-channel messages from this Queue'
 
+  ScheduledRequestsQueueName:
+  Type: String
+  Description: 'Send and pull requests in this queue'
+
+  ScheduledRequestsQueueARN:
+    Type: String
+    Description: 'Send and pull requests in this queue'
+
 Resources:
   # PN-Paper-Channel microservice
   PaperChannelMicroservice:
@@ -146,7 +154,8 @@ Resources:
         ContainerEnvEntry13: !Sub 'PN_PAPERCHANNEL_QUEUESENDDELIVERYPUSH=${ExternalChannelsOutputsQueueName}'
         ContainerEnvEntry14: !Sub 'PN_PAPERCHANNEL_QUEUEEXTERNALCHANNEL=${ExternalChannels2PaperChannelQueueName}'
         ContainerEnvEntry15: !Sub 'PN_PAPERCHANNEL_QUEUENATIONALREGISTRIES=${ExternalChannels2PaperChannelQueueName}'
-        ContainerEnvEntry16: !Sub 'SPRING_CLOUD_FUNCTIONROUTER_QUEUES_LIST=${ExternalChannelsOutputsQueueName},${ExternalChannels2PaperChannelQueueName}'
+        ContainerEnvEntry16: !Sub 'PN_PAPERCHANNEL_QUEUEINTERNAL=${ScheduledRequestsQueueName}'
+        ContainerEnvEntry17: !Sub 'SPRING_CLOUD_FUNCTIONROUTER_QUEUES_LIST=${ExternalChannelsOutputsQueueName},${ExternalChannels2PaperChannelQueueName},${ScheduledActionsQueueName}'
         MappedPaths: '/paper-channel/*,/paper-channel-private/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds
@@ -180,6 +189,7 @@ Resources:
             Resource:
               - !Ref ExternalChannelsOutputsQueueARN
               - !Ref ExternalChannels2PaperChannelQueueARN
+              - !Ref ScheduledRequestsQueueARN
           - Effect: Allow
             Action:
               - kms:Encrypt

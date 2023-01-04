@@ -50,6 +50,15 @@ Resources:
       AliasName: !Sub 'alias/${ProjectName}-paper-channel-dynamo'
       TargetKeyId: !Ref PCKmsEncDecDynamoDataKey
 
+  # Internal queues
+  ScheduledRequestsQueue:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/sqs-queue.yaml"
+      Parameters:
+        QueueName: !Sub '${ProjectName}-paper_channel_requests'
+        DelaySeconds: 1
+
   RequestDeliveryDynamoTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -112,6 +121,17 @@ Resources:
         StreamViewType: NEW_IMAGE
 
 Outputs:
+
+  # Scheduled Requests
+  ScheduledRequestsQueueName:
+    Value: !GetAtt ScheduledActionsQueue.Outputs.QueueName
+    Description: pn-paper-channel input queue name
+  ScheduledRequestsQueueURL:
+    Value: !GetAtt ScheduledActionsQueue.Outputs.QueueURL
+    Description: pn-paper-channel input queue URL
+  ScheduledRequestsQueueARN:
+    Value: !GetAtt ScheduledActionsQueue.Outputs.QueueARN
+    Description: pn-paper-channel input queue ARN
 
   PCKmsEncDecDynamoDataKeyARN:
     Description: Name of KMS Key for Dynamo encode/decode data
