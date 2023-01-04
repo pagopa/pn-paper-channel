@@ -120,8 +120,8 @@ Parameters:
     Description: 'Pull external-channel messages from this Queue'
 
   ScheduledRequestsQueueName:
-  Type: String
-  Description: 'Send and pull requests in this queue'
+    Type: String
+    Description: 'Send and pull requests in this queue'
 
   ScheduledRequestsQueueARN:
     Type: String
