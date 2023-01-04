@@ -12,19 +12,19 @@ public class AttachmentValidator {
         throw new IllegalCallerException();
     }
 
-    public static boolean checkBetweenLists(List<String> attachmentUrls, List<PnAttachmentInfo> attachments){
-        attachmentUrls.sort(Comparator.naturalOrder());
-        attachments.sort(Comparator.comparing(PnAttachmentInfo::getFileKey));
-        if (attachmentUrls.size() != attachments.size()) {
+    public static boolean checkBetweenLists(List<String> first, List<String> second){
+        if (first.size() != second.size()) {
             return false;
         }
-        else {
-            for (int i = 0; i < attachmentUrls.size() ; i++){
-                if (!attachmentUrls.get(i).equals(attachments.get(i).getFileKey())){
-                    return false;
-                }
+
+        first.sort(Comparator.naturalOrder());
+        second.sort(Comparator.naturalOrder());
+
+        for (int i = 0; i < first.size() ; i++){
+            if (!first.get(i).equals(second.get(i))){
+                return false;
             }
-            return true;
         }
+        return true;
     }
 }
