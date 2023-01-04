@@ -12,6 +12,10 @@ import it.pagopa.pn.paperchannel.utils.DateUtils;
 
 public class PrepareEventMapper {
 
+    private PrepareEventMapper() {
+        throw new IllegalCallerException();
+    }
+
     private static final BaseMapper <PnAddress, AnalogAddress> baseMapperAddress = new BaseMapperImpl(PnAddress.class, AnalogAddress.class);
 
     public static PrepareEvent fromResult(PnDeliveryRequest request, PnAddress address){
