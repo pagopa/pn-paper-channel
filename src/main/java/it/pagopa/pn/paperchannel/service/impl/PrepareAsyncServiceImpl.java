@@ -98,12 +98,6 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                 })
 
                 .flatMap(deliveryAsyncModel -> getAttachmentsInfo(deliveryAsyncModel).map(newModel -> newModel))
-                .flatMap(deliveryAsyncModel -> super.calculator(deliveryAsyncModel.getAttachments(), deliveryAsyncModel.getAddress(), deliveryAsyncModel.getProductType())
-                                                        .map(amount -> {
-                                                            deliveryAsyncModel.setAmount(amount);
-                                                            return deliveryAsyncModel;
-                                                        })
-                )
                 .flatMap(deliveryAsyncModel -> {
                     if (deliveryAsyncModel.isFromNationalRegistry()){
                         return addressDAO.create(AddressMapper.toEntity(addressFromNationalRegistry, deliveryAsyncModel.getRequestId()))
@@ -175,10 +169,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
         else {
              return Mono.just ("").delay(Duration.ofMillis( millis.longValue() ))
                      .flatMap(item -> safeStorageClient.getFile(fileKey)
-                     .map(fileDownloadResponseDto -> {
-                                log.debug("Url file "+fileDownloadResponseDto.getDownload().getUrl());
-                                 return fileDownloadResponseDto;
-                     })
+                     .map(fileDownloadResponseDto -> fileDownloadResponseDto)
                      .onErrorResume(ex -> {
                          log.error (ex.getMessage());
                          return Mono.error(ex);
