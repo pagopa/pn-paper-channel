@@ -57,7 +57,7 @@ public class QueueListener {
         }
     }
 
-    @SqsListener(value = "${pn.paper-channel.queue-external-channel}",deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)
+//    @SqsListener(value = "${pn.paper-channel.queue-external-channel}",deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)
     public void pullExternalChannel(@Payload String node, @Headers Map<String,Object> headers){
         convertSingleStatusUpdateDto(node);
         log.info("BODY - {}",node);
