@@ -21,6 +21,7 @@ public class RequestDeliveryMapper {
         entity.setStartDate(DateUtils.formatDate(new Date()));
         entity.setStatusCode(StatusDeliveryEnum.IN_PROCESSING.getCode());
         entity.setStatusDetail(StatusDeliveryEnum.IN_PROCESSING.getDescription());
+        entity.setIun(request.getIun());
 
         if (correlationId != null){
             entity.setStatusCode(StatusDeliveryEnum.NATIONAL_REGISTRY_WAITING.getCode());
@@ -37,7 +38,6 @@ public class RequestDeliveryMapper {
             pnAttachmentInfo.setFileKey(key);
             return pnAttachmentInfo;
         }).collect(Collectors.toList()));
-
 
         return entity;
     }

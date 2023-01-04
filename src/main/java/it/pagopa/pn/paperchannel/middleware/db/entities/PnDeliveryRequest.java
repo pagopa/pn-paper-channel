@@ -23,6 +23,8 @@ public class PnDeliveryRequest {
     public static final String COL_FISCAL_CODE = "fiscalCode";
     public static final String COL_RECEIVER_TYPE = "receiverType";
 
+    public static final String COL_IUN = "iun";
+
     public static final String COL_ADDRESS_HASH = "addressHash";
 
     public static final String COL_ADDRESS = "address";
@@ -56,6 +58,9 @@ public class PnDeliveryRequest {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_RECEIVER_TYPE)}))
     private String receiverType;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_IUN)}))
+    private String iun;
 
     @Getter(onMethod = @__({@DynamoDbSecondaryPartitionKey(indexNames = CORRELATION_INDEX),@DynamoDbAttribute(COL_CORRELATION_ID)}))
     private String correlationId;

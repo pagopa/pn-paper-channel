@@ -96,13 +96,8 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                     }
                     return Mono.just(deliveryAsyncModel).delayElement(Duration.ofMillis(2000));
                 })
+
                 .flatMap(deliveryAsyncModel -> getAttachmentsInfo(deliveryAsyncModel).map(newModel -> newModel))
-                .flatMap(deliveryAsyncModel -> super.calculator(deliveryAsyncModel.getAttachments(), deliveryAsyncModel.getAddress(), deliveryAsyncModel.getProductType())
-                                                        .map(amount -> {
-                                                            deliveryAsyncModel.setAmount(amount);
-                                                            return deliveryAsyncModel;
-                                                        })
-                )
                 .flatMap(deliveryAsyncModel -> {
                     if (deliveryAsyncModel.isFromNationalRegistry()){
                         return addressDAO.create(AddressMapper.toEntity(addressFromNationalRegistry, deliveryAsyncModel.getRequestId()))
@@ -174,11 +169,14 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
         else {
              return Mono.just ("").delay(Duration.ofMillis( millis.longValue() ))
                      .flatMap(item -> safeStorageClient.getFile(fileKey)
-                     .map(fileDownloadResponseDto -> fileDownloadResponseDto)
-                             .onErrorResume(ex -> {
-                                 log.error (ex.getMessage());
-                                 return Mono.error(ex);
-                             })
+                     .map(fileDownloadResponseDto -> {
+                                log.debug("Url file "+fileDownloadResponseDto.getDownload().getUrl());
+                                 return fileDownloadResponseDto;
+                     })
+                     .onErrorResume(ex -> {
+                         log.error (ex.getMessage());
+                         return Mono.error(ex);
+                     })
                      .onErrorResume(PnRetryStorageException.class, ex ->
                          getFileRecursive(n - 1, fileKey, ex.getRetryAfter())
                     ));
