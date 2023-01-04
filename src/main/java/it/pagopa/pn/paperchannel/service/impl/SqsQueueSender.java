@@ -2,11 +2,9 @@ package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.api.dto.events.GenericEventHeader;
 
-import it.pagopa.pn.paperchannel.middleware.queue.action.PrepareDeliveryMomProducer;
-import it.pagopa.pn.paperchannel.middleware.queue.action.SendDeliveryMomProducer;
-import it.pagopa.pn.paperchannel.middleware.queue.model.PrepareDeliveryEvent;
+import it.pagopa.pn.paperchannel.middleware.queue.producer.DeliveryPushMomProducer;
+import it.pagopa.pn.paperchannel.middleware.queue.model.DeliveryPushEvent;
 import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
-import it.pagopa.pn.paperchannel.middleware.queue.model.SendDeliveryEvent;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PaperChannelUpdate;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareEvent;
 import it.pagopa.pn.paperchannel.rest.v1.dto.SendEvent;
@@ -23,40 +21,32 @@ import java.util.UUID;
 public class SqsQueueSender implements SqsSender {
 
     @Autowired
-    private PrepareDeliveryMomProducer prepareDeliveryMomProducer;
-    @Autowired
-    private SendDeliveryMomProducer sendDeliveryMomProducer;
+    private DeliveryPushMomProducer deliveryPushMomProducer;
 
     @Override
     public void pushSendEvent(SendEvent event) {
-        GenericEventHeader deliveryHeader= GenericEventHeader.builder()
-                .publisher("paper-channel-update")
-                .eventId(UUID.randomUUID().toString())
-                .createdAt(Instant.now())
-                .eventType(EventTypeEnum.SEND_PAPER_RESPONSE.name())
-                .build();
-
-        PaperChannelUpdate paperChannelUpdate = new PaperChannelUpdate();
-        paperChannelUpdate.setSendEvent(event);
-        SendDeliveryEvent sendDeliveryEvent = new SendDeliveryEvent(deliveryHeader, paperChannelUpdate);
-
-        this.sendDeliveryMomProducer.push(sendDeliveryEvent);
+        push(event, null);
     }
 
     @Override
     public void pushPrepareEvent(PrepareEvent event) {
+        push(null, event);
+    }
+
+    private void push(SendEvent sendEvent, PrepareEvent prepareEvent){
         GenericEventHeader deliveryHeader= GenericEventHeader.builder()
                 .publisher("paper-channel-update")
                 .eventId(UUID.randomUUID().toString())
                 .createdAt(Instant.now())
-                .eventType(EventTypeEnum.PREPARE_PAPER_RESPONSE.name())
+                .eventType((sendEvent == null) ? EventTypeEnum.PREPARE_PAPER_RESPONSE.name(): EventTypeEnum.SEND_PAPER_RESPONSE.name())
                 .build();
 
         PaperChannelUpdate paperChannelUpdate = new PaperChannelUpdate();
-        paperChannelUpdate.setPrepareEvent(event);
+        paperChannelUpdate.setPrepareEvent(prepareEvent);
+        paperChannelUpdate.setSendEvent(sendEvent);
 
-        PrepareDeliveryEvent prepareDeliveryEvent = new PrepareDeliveryEvent(deliveryHeader, paperChannelUpdate);
+        DeliveryPushEvent deliveryPushEvent = new DeliveryPushEvent(deliveryHeader, paperChannelUpdate);
 
-        this.prepareDeliveryMomProducer.push(prepareDeliveryEvent);
+        this.deliveryPushMomProducer.push(deliveryPushEvent);
     }
 }
