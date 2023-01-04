@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 
 public class RequestDeliveryMapper {
     private RequestDeliveryMapper() {
-        throw new IllegalStateException("Utility class");
+        throw new IllegalStateException();
     }
 
     public static PnDeliveryRequest toEntity(PrepareRequest request, String correlationId){
