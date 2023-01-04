@@ -23,5 +23,7 @@ public class PnPaperChannelConfig {
     private String xPagopaExtchCxId;
     private String queuePrepareDeliveryPush;
     private String queueSendDeliveryPush;
+    private String queueNationalRegistries;
+    private String queueExternalChannel;
 
 }

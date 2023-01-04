@@ -2,8 +2,8 @@ package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.api.dto.events.GenericEventHeader;
 
-import it.pagopa.pn.paperchannel.middleware.queue.action.PrepareDeliveryMomProducer;
-import it.pagopa.pn.paperchannel.middleware.queue.action.SendDeliveryMomProducer;
+import it.pagopa.pn.paperchannel.middleware.queue.producer.PrepareDeliveryMomProducer;
+import it.pagopa.pn.paperchannel.middleware.queue.producer.SendDeliveryMomProducer;
 import it.pagopa.pn.paperchannel.middleware.queue.model.PrepareDeliveryEvent;
 import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
 import it.pagopa.pn.paperchannel.middleware.queue.model.SendDeliveryEvent;

@@ -1,4 +1,4 @@
-package it.pagopa.pn.paperchannel.middleware.queue.action;
+package it.pagopa.pn.paperchannel.middleware.queue.producer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.pagopa.pn.api.dto.events.AbstractSqsMomProducer;

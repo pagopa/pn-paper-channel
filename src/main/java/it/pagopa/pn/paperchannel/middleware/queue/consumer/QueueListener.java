@@ -1,4 +1,4 @@
-package it.pagopa.pn.paperchannel.middleware.queue.action;
+package it.pagopa.pn.paperchannel.middleware.queue.consumer;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
