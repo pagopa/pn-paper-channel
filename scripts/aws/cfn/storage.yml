@@ -203,6 +203,53 @@ Resources:
       StreamSpecification:
         StreamViewType: NEW_IMAGE
 
+  ZoneDynamoTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${ProjectName}PaperZone'
+      AttributeDefinitions:
+        - AttributeName: "countryIt"
+          AttributeType: "S"
+        - AttributeName: "countryEn"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "countryIt"
+          KeyType: "HASH"
+      GlobalSecondaryIndexes:
+        - IndexName: "countryEn-index"
+          KeySchema:
+            - AttributeName: "countryEn"
+              KeyType: "HASH"
+          Projection:
+            ProjectionType: "ALL"
+          ProvisionedThroughput:
+            ReadCapacityUnits: "5"
+            WriteCapacityUnits: "5"
+      ProvisionedThroughput:
+        ReadCapacityUnits: "5"
+        WriteCapacityUnits: "5"
+      KinesisStreamSpecification:
+        StreamArn: !Ref CdcKinesisSourceStreamArn
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+  CapDynamoTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${ProjectName}PaperCap'
+      AttributeDefinitions:
+        - AttributeName: "cap"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "cap"
+          KeyType: "HASH"
+      ProvisionedThroughput:
+        ReadCapacityUnits: "5"
+        WriteCapacityUnits: "5"
+      KinesisStreamSpecification:
+        StreamArn: !Ref CdcKinesisSourceStreamArn
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+
 Outputs:
 
   PCKmsEncDecDynamoDataKeyARN:
@@ -248,3 +295,19 @@ Outputs:
   CostDynamoTableArn:
     Description: ARN of dynamodb table containing cost
     Value: !Sub '${CostDynamoTable.Arn}'
+
+  ZoneDynamoTableName:
+    Description: Name of dynamodb table containing zone
+    Value: !Ref ZoneDynamoTable
+
+  ZoneDynamoTableArn:
+    Description: ARN of dynamodb table containing zone
+    Value: !Sub '${ZoneDynamoTable.Arn}'
+
+  CapDynamoTableName:
+    Description: Name of dynamodb table containing cap
+    Value: !Ref CapDynamoTable
+
+  CapDynamoTableArn:
+    Description: ARN of dynamodb table containing cap
+    Value: !Sub '${CapDynamoTable.Arn}'
