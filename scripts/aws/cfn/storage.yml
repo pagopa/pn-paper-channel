@@ -154,8 +154,8 @@ Resources:
       AttributeDefinitions:
         - AttributeName: "idDeliveryDriver"
           AttributeType: "S"
-        - AttributeName: "id"
-          AttributeType: "N"
+        - AttributeName: "uuid"
+          AttributeType: "S"
         - AttributeName: "cap"
           AttributeType: "S"
         - AttributeName: "zone"
@@ -165,7 +165,7 @@ Resources:
       KeySchema:
         - AttributeName: "idDeliveryDriver"
           KeyType: "HASH"
-        - AttributeName: "id"
+        - AttributeName: "uuid"
           KeyType: "SORT"
       GlobalSecondaryIndexes:
         - IndexName: "cap-index"
