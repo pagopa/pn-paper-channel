@@ -18,6 +18,7 @@ import org.springframework.test.context.ActiveProfiles;
 @Import(LocalStackTestConfig.class)
 public abstract class BaseTest {
 
+
     @Slf4j
     @SpringBootTest
     @ActiveProfiles("test")
