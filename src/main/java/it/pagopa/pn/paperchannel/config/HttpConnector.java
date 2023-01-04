@@ -7,6 +7,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 @Slf4j
 public class HttpConnector {
@@ -17,17 +19,23 @@ public class HttpConnector {
 
     public static Mono<PDDocument> downloadFile(String url) {
         log.info("Url to download: "+url);
-        return WebClient.create(url)
-                .get()
-                .accept(MediaType.APPLICATION_PDF)
-                .retrieve()
-                .bodyToMono(byte[].class)
-                .flatMap(bytes -> {
-                    try {
-                        return Mono.just(PDDocument.load(bytes));
-                    } catch (IOException e) {
-                        return Mono.error(e);
-                    }
-                });
+
+        try {
+            return WebClient.create()
+                    .get()
+                    .uri(new URI(url))
+                    .accept(MediaType.APPLICATION_PDF)
+                    .retrieve()
+                    .bodyToMono(byte[].class)
+                    .flatMap(bytes -> {
+                        try {
+                            return Mono.just(PDDocument.load(bytes));
+                        } catch (IOException e) {
+                            return Mono.error(e);
+                        }
+                    });
+        } catch (URISyntaxException e) {
+            return Mono.error(e);
+        }
     }
 }
