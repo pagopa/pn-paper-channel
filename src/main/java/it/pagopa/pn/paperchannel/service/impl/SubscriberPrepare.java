@@ -5,7 +5,6 @@ import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.mapper.AttachmentMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
-import it.pagopa.pn.paperchannel.middleware.queue.model.DeliveryPayload;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.DeliveryAsyncModel;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
@@ -81,8 +80,6 @@ public class SubscriberPrepare implements Subscriber<DeliveryAsyncModel> {
     @Override
     public void onComplete() {
         log.info("Custom subscriber on complete");
-        DeliveryPayload payload = new DeliveryPayload();
-
         PrepareEvent prepareEvent = new PrepareEvent();
         sqsQueueSender.pushPrepareEvent(prepareEvent);
 
