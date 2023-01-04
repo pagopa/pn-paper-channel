@@ -3,12 +3,12 @@ package it.pagopa.pn.paperchannel.service.impl;
 import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.mapper.AttachmentMapper;
+import it.pagopa.pn.paperchannel.mapper.PrepareEventMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.DeliveryAsyncModel;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
-import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareEvent;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -56,32 +56,24 @@ public class SubscriberPrepare implements Subscriber<DeliveryAsyncModel> {
             || exception.getExceptionType().equals(ExceptionTypeEnum.DOCUMENT_NOT_DOWNLOADED)
             || exception.getExceptionType().equals(ExceptionTypeEnum.RETRY_AFTER_DOCUMENT)
             )
-             updatentity();
+             updatentity().block();
         }
     }
 
-    public void updatentity(){
+    public Mono<PnDeliveryRequest> updatentity(){
         Address address = null;
         Mono<PnDeliveryRequest> requestDeliveryEntityMono = requestDeliveryDAO.getByRequestId(requestId);
         //todo inserire codice fiscale come irreperibile
         //Aggiornare o inserire entity per etichettare codice fiscale come irreperibile totale
-        requestDeliveryEntityMono.map(
-                result -> {
-
-                        return requestDeliveryDAO.updateData(result).map(
-                                item -> {
-                                    return item;
-                                }
-                        );
-                }) ;
+        return requestDeliveryEntityMono
+                .flatMap(result -> requestDeliveryDAO.updateData(result).map(item ->item));
 
     }
 
     @Override
     public void onComplete() {
         log.info("Custom subscriber on complete");
-        PrepareEvent prepareEvent = new PrepareEvent();
-        sqsQueueSender.pushPrepareEvent(prepareEvent);
+        sqsQueueSender.pushPrepareEvent(PrepareEventMapper.toPrepareEvent(deliveryAsyncModel));
 
         requestDeliveryDAO.getByRequestId(deliveryAsyncModel.getRequestId())
                 .mapNotNull(requestDeliveryEntity -> {

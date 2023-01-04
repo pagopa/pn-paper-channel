@@ -55,5 +55,10 @@ public class AddressMapper {
         return mapperToAnalog.toEntity(discoveredAddressDto);
     }
 
+    public static AnalogAddress toPojo(Address address){
+        if (address == null) return null;
+        return mapperAnalog.toDTO(address);
+    }
+
 
 }
