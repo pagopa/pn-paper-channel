@@ -124,13 +124,13 @@ Outputs:
 
   # Scheduled Requests
   ScheduledRequestsQueueName:
-    Value: !GetAtt ScheduledActionsQueue.Outputs.QueueName
+    Value: !GetAtt ScheduledRequestsQueue.Outputs.QueueName
     Description: pn-paper-channel input queue name
   ScheduledRequestsQueueURL:
-    Value: !GetAtt ScheduledActionsQueue.Outputs.QueueURL
+    Value: !GetAtt ScheduledRequestsQueue.Outputs.QueueURL
     Description: pn-paper-channel input queue URL
   ScheduledRequestsQueueARN:
-    Value: !GetAtt ScheduledActionsQueue.Outputs.QueueARN
+    Value: !GetAtt ScheduledRequestsQueue.Outputs.QueueARN
     Description: pn-paper-channel input queue ARN
 
   PCKmsEncDecDynamoDataKeyARN:
