@@ -150,12 +150,11 @@ Resources:
         ContainerEnvEntry9: !Sub 'AWS_DYNAMODBADDRESSTABLE=${AddressDynamoTableName}'
         ContainerEnvEntry10: !Sub 'AWS_KMS_KEYID=${PCKmsEncDecDynamoDataKeyARN}'
         ContainerEnvEntry11: !Sub 'AWS_KMS_REGION=${AWS::Region}'
-        ContainerEnvEntry12: !Sub 'PN_PAPERCHANNEL_QUEUEPREPAREDELIVERYPUSH=${ExternalChannelsOutputsQueueName}'
-        ContainerEnvEntry13: !Sub 'PN_PAPERCHANNEL_QUEUESENDDELIVERYPUSH=${ExternalChannelsOutputsQueueName}'
-        ContainerEnvEntry14: !Sub 'PN_PAPERCHANNEL_QUEUEEXTERNALCHANNEL=${ExternalChannels2PaperChannelQueueName}'
-        ContainerEnvEntry15: !Sub 'PN_PAPERCHANNEL_QUEUENATIONALREGISTRIES=${ExternalChannels2PaperChannelQueueName}'
-        ContainerEnvEntry16: !Sub 'PN_PAPERCHANNEL_QUEUEINTERNAL=${ScheduledRequestsQueueName}'
-        ContainerEnvEntry17: !Sub 'SPRING_CLOUD_FUNCTIONROUTER_QUEUES_LIST=${ExternalChannelsOutputsQueueName},${ExternalChannels2PaperChannelQueueName},${ScheduledRequestsQueueName}'
+        ContainerEnvEntry12: !Sub 'PN_PAPERCHANNEL_QUEUEDELIVERYPUSH=${ExternalChannelsOutputsQueueName}'
+        ContainerEnvEntry13: !Sub 'PN_PAPERCHANNEL_QUEUEEXTERNALCHANNEL=${ExternalChannels2PaperChannelQueueName}'
+        ContainerEnvEntry14: !Sub 'PN_PAPERCHANNEL_QUEUENATIONALREGISTRIES=${ExternalChannels2PaperChannelQueueName}'
+        ContainerEnvEntry15: !Sub 'PN_PAPERCHANNEL_QUEUEINTERNAL=${ScheduledRequestsQueueName}'
+        ContainerEnvEntry16: !Sub 'SPRING_CLOUD_FUNCTIONROUTER_QUEUES_LIST=${ExternalChannelsOutputsQueueName},${ExternalChannels2PaperChannelQueueName},${ScheduledRequestsQueueName}'
         MappedPaths: '/paper-channel/*,/paper-channel-private/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds
