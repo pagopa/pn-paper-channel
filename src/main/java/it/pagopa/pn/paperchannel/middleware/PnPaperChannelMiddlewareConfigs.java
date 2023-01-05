@@ -7,8 +7,10 @@ import it.pagopa.pn.paperchannel.middleware.queue.model.DeliveryPushEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.ActiveProfiles;
 import software.amazon.awssdk.services.sqs.SqsClient;
 
+@ActiveProfiles("local")
 @Configuration
 @Slf4j
 public class PnPaperChannelMiddlewareConfigs {
@@ -18,6 +20,7 @@ public class PnPaperChannelMiddlewareConfigs {
     public PnPaperChannelMiddlewareConfigs(PnPaperChannelConfig cfg) {
         this.pnPaperChannelConfig = cfg;
     }
+
 
     @Bean
     public DeliveryPushMomProducer deliveryMomProducer(SqsClient sqsClient, ObjectMapper objMapper) {

@@ -109,7 +109,7 @@
   },
   {
     "httpRequest": {
-      "path": "/safe-storage/v1/files/",
+      "path": "/safe-storage/v1/files/ERROR404",
       "method": "GET"
     },
     "httpResponse": {
