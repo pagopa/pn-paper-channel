@@ -7,7 +7,6 @@ for qn in  $( echo $queues | tr " " "\n" ) ; do
         --attributes '{"DelaySeconds":"2"}' \
         --queue-name $qn
 done
-
 echo " - Create pn-paper-channel TABLES"
 aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     dynamodb create-table \
