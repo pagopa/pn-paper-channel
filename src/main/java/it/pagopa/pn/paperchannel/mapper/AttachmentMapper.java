@@ -29,14 +29,11 @@ public class AttachmentMapper {
     }
 
     public static AttachmentInfo fromEntity(PnAttachmentInfo entity){
-
         return mapper.toDTO(entity);
     }
 
     public static PnAttachmentInfo toEntity(AttachmentInfo dto){
-        PnAttachmentInfo entity =  mapper.toEntity(dto);
-        log.info("Mapper Entity : {}", entity.getUrl());
-        return entity;
+        return mapper.toEntity(dto);
     }
 
     public static AttachmentDetails toAttachmentDetails(PnAttachmentInfo attachments){
@@ -47,4 +44,5 @@ public class AttachmentMapper {
         attachmentDetails.setDate(DateUtils.parseDateString(attachments.getDate()));
         return attachmentDetails;
     }
+
 }

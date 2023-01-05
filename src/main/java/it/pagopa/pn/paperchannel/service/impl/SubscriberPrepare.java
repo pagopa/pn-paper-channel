@@ -3,16 +3,15 @@ package it.pagopa.pn.paperchannel.service.impl;
 import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.mapper.AttachmentMapper;
+import it.pagopa.pn.paperchannel.mapper.PrepareEventMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
-import it.pagopa.pn.paperchannel.middleware.queue.model.DeliveryPayload;
-import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.DeliveryAsyncModel;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
-import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareEvent;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 import reactor.core.publisher.Mono;
@@ -27,13 +26,13 @@ public class SubscriberPrepare implements Subscriber<DeliveryAsyncModel> {
     private final SqsSender sqsQueueSender;
     private final RequestDeliveryDAO requestDeliveryDAO;
     private final String requestId;
-    private final String corralationId;
+    private final String correlationId;
 
-    public SubscriberPrepare(SqsSender sqsQueueSender, RequestDeliveryDAO requestDeliveryDAO, String requestId, String corralationId) {
+    public SubscriberPrepare(SqsSender sqsQueueSender, RequestDeliveryDAO requestDeliveryDAO, String requestId, String correlationId) {
         this.sqsQueueSender = sqsQueueSender;
         this.requestDeliveryDAO = requestDeliveryDAO;
         this.requestId = requestId;
-        this.corralationId = corralationId;
+        this.correlationId = correlationId;
     }
 
     @Override
@@ -52,43 +51,36 @@ public class SubscriberPrepare implements Subscriber<DeliveryAsyncModel> {
         log.error("on Error : {}", throwable.getMessage());
         if(throwable instanceof PnGenericException){
             PnGenericException exception = (PnGenericException) throwable;
-            if(exception.getExceptionType().equals(ExceptionTypeEnum.UNTRACEABLE_ADDRESS)
+            if (exception.getExceptionType().equals(ExceptionTypeEnum.UNTRACEABLE_ADDRESS)
             || exception.getExceptionType().equals(ExceptionTypeEnum.DOCUMENT_URL_NOT_FOUND)
             || exception.getExceptionType().equals(ExceptionTypeEnum.DOCUMENT_NOT_DOWNLOADED)
             || exception.getExceptionType().equals(ExceptionTypeEnum.RETRY_AFTER_DOCUMENT)
             )
-             updatentity();
+                updateEntity().block();
         }
     }
 
-    public void updatentity(){
-        Address address = null;
-        Mono<PnDeliveryRequest> requestDeliveryEntityMono = requestDeliveryDAO.getByRequestId(requestId);
+    public Mono<PnDeliveryRequest> updateEntity(){
+        Mono<PnDeliveryRequest> requestDeliveryEntityMono;
+        if (StringUtils.isNotBlank(correlationId)){
+            requestDeliveryEntityMono = requestDeliveryDAO.getByCorrelationId(correlationId);
+        } else {
+            requestDeliveryEntityMono = requestDeliveryDAO.getByRequestId(requestId);
+        }
         //todo inserire codice fiscale come irreperibile
         //Aggiornare o inserire entity per etichettare codice fiscale come irreperibile totale
-        requestDeliveryEntityMono.map(
-                result -> {
-
-                        return requestDeliveryDAO.updateData(result).map(
-                                item -> {
-                                    return item;
-                                }
-                        );
-                }) ;
+        return requestDeliveryEntityMono
+                .flatMap(result -> requestDeliveryDAO.updateData(result).map(item ->item));
 
     }
 
     @Override
     public void onComplete() {
         log.info("Custom subscriber on complete");
-        DeliveryPayload payload = new DeliveryPayload();
-
-        PrepareEvent prepareEvent = new PrepareEvent();
-        sqsQueueSender.pushPrepareEvent(prepareEvent);
+        sqsQueueSender.pushPrepareEvent(PrepareEventMapper.toPrepareEvent(deliveryAsyncModel));
 
         requestDeliveryDAO.getByRequestId(deliveryAsyncModel.getRequestId())
                 .mapNotNull(requestDeliveryEntity -> {
-
                     requestDeliveryEntity.setStatusCode(StatusDeliveryEnum.TAKING_CHARGE.getCode());
                     requestDeliveryEntity.setStatusDetail(StatusDeliveryEnum.TAKING_CHARGE.getDescription());
                     requestDeliveryEntity.setStatusDate(DateUtils.formatDate(new Date()));
