@@ -13,12 +13,13 @@ import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.AttachmentInfo;
 import it.pagopa.pn.paperchannel.rest.v1.dto.*;
 import it.pagopa.pn.paperchannel.service.PaperMessagesService;
-import it.pagopa.pn.paperchannel.validator.PrepareRequestValidator;
 import it.pagopa.pn.paperchannel.service.SqsSender;
+import it.pagopa.pn.paperchannel.validator.PrepareRequestValidator;
 import it.pagopa.pn.paperchannel.validator.SendRequestValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -51,22 +52,22 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
         return requestDeliveryDAO.getByRequestId(requestId)
                 .zipWhen(entity -> addressDAO.findByRequestId(requestId).map(address -> address))
                 .map(entityAndAddress -> PrepareEventMapper.fromResult(entityAndAddress.getT1(),entityAndAddress.getT2()))
-                .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage())));
+                .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)));
     }
 
     @Override
     public Mono<SendResponse> executionPaper(String requestId, SendRequest sendRequest) {
+        sendRequest.setRequestId(requestId);
         return this.requestDeliveryDAO.getByRequestId(sendRequest.getRequestId())
                 .flatMap(entity -> {
                     SendRequestValidator.compareRequestEntity(sendRequest,entity);
 
                     List<AttachmentInfo> attachments = entity.getAttachments().stream().map(AttachmentMapper::fromEntity).collect(Collectors.toList());
-
                     Address address = AddressMapper.fromAnalogToAddress(sendRequest.getReceiverAddress());
                     return super.calculator(attachments, address, sendRequest.getProductType()).map(value -> value);
-
                 })
-                .zipWith(this.externalChannelClient.sendEngageRequest(sendRequest).map(item -> Mono.just("")), (amount, none) -> amount)
+                .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)))
+                .zipWith(this.externalChannelClient.sendEngageRequest(sendRequest).then(Mono.just("")), (amount, none) -> amount)
                 .map(amount -> {
                     log.info("Amount for response : {}", amount);
                     SendResponse sendResponse = new SendResponse();
@@ -128,7 +129,7 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                             );
 
                 })
-                .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage())));
+                .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)));
 
     }
 

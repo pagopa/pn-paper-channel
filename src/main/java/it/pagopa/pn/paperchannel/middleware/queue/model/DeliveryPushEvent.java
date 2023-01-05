@@ -6,11 +6,10 @@ import it.pagopa.pn.paperchannel.rest.v1.dto.PaperChannelUpdate;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
-public class SendDeliveryEvent implements GenericEvent<GenericEventHeader, PaperChannelUpdate> {
+public class DeliveryPushEvent implements GenericEvent<GenericEventHeader, PaperChannelUpdate> {
 
     private GenericEventHeader header;
     private PaperChannelUpdate payload;
-
 
     @Override
     public GenericEventHeader getHeader() {
@@ -21,5 +20,4 @@ public class SendDeliveryEvent implements GenericEvent<GenericEventHeader, Paper
     public PaperChannelUpdate getPayload() {
         return payload;
     }
-
 }
