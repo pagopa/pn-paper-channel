@@ -1,5 +1,14 @@
 package it.pagopa.pn.paperchannel;
 
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.client.builder.AwsClientBuilder;
+import com.amazonaws.services.kms.AWSKMS;
+import com.amazonaws.services.kms.AWSKMSClientBuilder;
+import com.amazonaws.services.kms.model.CreateKeyRequest;
+import com.amazonaws.services.kms.model.CreateKeyResult;
+import com.amazonaws.services.kms.model.Tag;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.core.io.ClassPathResource;
 import org.testcontainers.containers.BindMode;
@@ -11,6 +20,7 @@ import org.testcontainers.utility.DockerImageName;
 import java.io.IOException;
 
 import static org.testcontainers.containers.localstack.LocalStackContainer.Service.DYNAMODB;
+import static org.testcontainers.containers.localstack.LocalStackContainer.Service.KMS;
 
 /**
  * Classe che permette di creare un container Docker di LocalStack.
@@ -19,6 +29,7 @@ import static org.testcontainers.containers.localstack.LocalStackContainer.Servi
  * @Import(LocalStackTestConfig.class)
  */
 @TestConfiguration
+@Slf4j
 public class LocalStackTestConfig {
     static LocalStackContainer localStack =
             new LocalStackContainer(DockerImageName.parse("localstack/localstack:1.0.4").asCompatibleSubstituteFor("localstack/localstack"))
@@ -33,7 +44,10 @@ public class LocalStackTestConfig {
 
     static {
         localStack.start();
+        System.setProperty("aws.kms.keyId", kmsKeyCreation(localStack));
+        System.setProperty("aws.kms.endpoint", localStack.getEndpointOverride(KMS).toString());
         System.setProperty("aws.endpoint-url", localStack.getEndpointOverride(DYNAMODB).toString());
+
         try {
             System.setProperty("aws.sharedCredentialsFile", new ClassPathResource("testcontainers/credentials").getFile().getAbsolutePath());
         } catch (IOException e) {
@@ -41,5 +55,29 @@ public class LocalStackTestConfig {
         }
 
     }
+    public static String kmsKeyCreation(LocalStackContainer localstack) {
+        AWSKMS awskms = AWSKMSClientBuilder
+                .standard()
+                .withEndpointConfiguration(
+                        new AwsClientBuilder.EndpointConfiguration(
+                                localstack.getEndpointOverride(LocalStackContainer.Service.KMS).toString(),
+                                localstack.getRegion()
+                        )
+                )
+                .withCredentials(
+                        new AWSStaticCredentialsProvider(
+                                new BasicAWSCredentials(localstack.getAccessKey(), localstack.getSecretKey())
+                        )
+                )
+                .build();
+
+        String desc = String.format("AWS CMK Description");
+        Tag createdByTag = new Tag().withTagKey("CreatedBy").withTagValue("StorageService");
+        CreateKeyRequest req = new CreateKeyRequest().withDescription(desc).withTags(createdByTag);
+        CreateKeyResult key = awskms.createKey(req);
+        log.info("Arn : {}", key.getKeyMetadata().getArn());
+        return key.getKeyMetadata().getArn();
+    }
+
 
 }
