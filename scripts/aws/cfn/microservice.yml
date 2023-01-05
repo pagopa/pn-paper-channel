@@ -103,6 +103,46 @@ Parameters:
     Type: String
     Description: 'ARN of dynamodb table containing address of request delivery'
 
+  TenderDynamoTableName:
+    Type: String
+    Description: 'Name of dynamodb table containing tenders'
+
+  TenderDynamoTableArn:
+    Type: String
+    Description: 'ARN of dynamodb table containing tenders'
+
+  DeliveryDriverDynamoTableName:
+    Type: String
+    Description: 'Name of dynamodb table containing delivery drivers'
+
+  DeliveryDriverDynamoTableArn:
+    Type: String
+    Description: 'ARN of dynamodb table containing delivery drivers'
+
+  CostDynamoTableName:
+    Type: String
+    Description: 'Name of dynamodb table containing cost'
+
+  CostDynamoTableArn:
+    Type: String
+    Description: 'ARN of dynamodb table containing cost'
+
+  ZoneDynamoTableName:
+    Type: String
+    Description: 'Name of dynamodb table containing zone'
+
+  ZoneDynamoTableArn:
+    Type: String
+    Description: 'ARN of dynamodb table containing zone'
+
+  CapDynamoTableName:
+    Type: String
+    Description: 'Name of dynamodb table containing cap'
+
+  CapDynamoTableArn:
+    Type: String
+    Description: 'ARN of dynamodb table containing cap'
+
   ExternalChannelsOutputsQueueName:
     Type: String
     Description: 'Push delivery-push essages to this Queue'
@@ -148,13 +188,18 @@ Resources:
         ContainerEnvEntry7: !Sub 'PN_PAPERCHANNEL_XPAGOPAEXTCHCXID=${XPagopaExtchCxId}'
         ContainerEnvEntry8: !Sub 'AWS_DYNAMODBREQUESTDELIVERYTABLE=${RequestDeliveryDynamoTableName}'
         ContainerEnvEntry9: !Sub 'AWS_DYNAMODBADDRESSTABLE=${AddressDynamoTableName}'
-        ContainerEnvEntry10: !Sub 'AWS_KMS_KEYID=${PCKmsEncDecDynamoDataKeyARN}'
-        ContainerEnvEntry11: !Sub 'AWS_KMS_REGION=${AWS::Region}'
-        ContainerEnvEntry12: !Sub 'PN_PAPERCHANNEL_QUEUEDELIVERYPUSH=${ExternalChannelsOutputsQueueName}'
-        ContainerEnvEntry13: !Sub 'PN_PAPERCHANNEL_QUEUEEXTERNALCHANNEL=${ExternalChannels2PaperChannelQueueName}'
-        ContainerEnvEntry14: !Sub 'PN_PAPERCHANNEL_QUEUENATIONALREGISTRIES=${ExternalChannels2PaperChannelQueueName}'
-        ContainerEnvEntry15: !Sub 'PN_PAPERCHANNEL_QUEUEINTERNAL=${ScheduledRequestsQueueName}'
-        ContainerEnvEntry16: !Sub 'SPRING_CLOUD_FUNCTIONROUTER_QUEUES_LIST=${ExternalChannelsOutputsQueueName},${ExternalChannels2PaperChannelQueueName},${ScheduledRequestsQueueName}'
+        ContainerEnvEntry10: !Sub 'AWS_DYNAMODBTENDERTABLE=${TenderDynamoTableName}'
+        ContainerEnvEntry11: !Sub 'AWS_DYNAMODBDELIVERYDRIVERTABLE=${DeliveryDriverDynamoTableName}'
+        ContainerEnvEntry12: !Sub 'AWS_DYNAMODBCOSTTABLE=${CostDynamoTableName}'
+        ContainerEnvEntry13: !Sub 'AWS_DYNAMODBZONETABLE=${ZoneDynamoTableName}'
+        ContainerEnvEntry14: !Sub 'AWS_DYNAMODBCAPTABLE=${CapDynamoTableName}'
+        ContainerEnvEntry15: !Sub 'AWS_KMS_KEYID=${PCKmsEncDecDynamoDataKeyARN}'
+        ContainerEnvEntry16: !Sub 'AWS_KMS_REGION=${AWS::Region}'
+        ContainerEnvEntry17: !Sub 'PN_PAPERCHANNEL_QUEUEDELIVERYPUSH=${ExternalChannelsOutputsQueueName}'
+        ContainerEnvEntry18: !Sub 'PN_PAPERCHANNEL_QUEUEEXTERNALCHANNEL=${ExternalChannels2PaperChannelQueueName}'
+        ContainerEnvEntry19: !Sub 'PN_PAPERCHANNEL_QUEUENATIONALREGISTRIES=${ExternalChannels2PaperChannelQueueName}'
+        ContainerEnvEntry20: !Sub 'PN_PAPERCHANNEL_QUEUEINTERNAL=${ScheduledRequestsQueueName}'
+        ContainerEnvEntry21: !Sub 'SPRING_CLOUD_FUNCTIONROUTER_QUEUES_LIST=${ExternalChannelsOutputsQueueName},${ExternalChannels2PaperChannelQueueName},${ScheduledRequestsQueueName}'
         MappedPaths: '/paper-channel/*,/paper-channel-private/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds
@@ -213,6 +258,17 @@ Resources:
               - !Sub "${RequestDeliveryDynamoTableArn}/*"
               - !Sub "${AddressDynamoTableArn}"
               - !Sub "${AddressDynamoTableArn}/*"
+              - !Sub "${TenderDynamoTableArn}"
+              - !Sub "${TenderDynamoTableArn}/*"
+              - !Sub "${DeliveryDriverDynamoTableArn}"
+              - !Sub "${DeliveryDriverDynamoTableArn}/*"
+              - !Sub "${CostDynamoTableArn}"
+              - !Sub "${CostDynamoTableArn}/*"
+              - !Sub "${ZoneDynamoTableArn}"
+              - !Sub "${ZoneDynamoTableArn}/*"
+              - !Sub "${CapDynamoTableArn}"
+              - !Sub "${CapDynamoTableArn}/*"
+
 
   # Dashboard
   PaperChannelMicroserviceCloudWatchDashboard:

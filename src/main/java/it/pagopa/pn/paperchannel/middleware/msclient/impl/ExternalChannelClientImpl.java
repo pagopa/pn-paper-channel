@@ -35,7 +35,6 @@ public class ExternalChannelClientImpl extends BaseClient implements ExternalCha
         this.paperMessagesApi = new PaperMessagesApi(newApiClient);
     }
 
-
     public Mono<Void> sendEngageRequest(SendRequest sendRequest){
         String requestIdx = sendRequest.getRequestId();
         PaperEngageRequestDto dto = new PaperEngageRequestDto();
@@ -78,10 +77,5 @@ public class ExternalChannelClientImpl extends BaseClient implements ExternalCha
                                 .filter(throwable -> throwable instanceof TimeoutException || throwable instanceof ConnectException)
                 );
     }
-
-
-
-
-
 
 }

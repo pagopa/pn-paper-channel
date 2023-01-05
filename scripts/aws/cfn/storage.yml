@@ -120,6 +120,145 @@ Resources:
       StreamSpecification:
         StreamViewType: NEW_IMAGE
 
+  TenderDynamoTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${ProjectName}PaperTender'
+      AttributeDefinitions:
+        - AttributeName: "idTender"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "idTender"
+          KeyType: "HASH"
+      ProvisionedThroughput:
+        ReadCapacityUnits: "5"
+        WriteCapacityUnits: "5"
+      KinesisStreamSpecification:
+        StreamArn: !Ref CdcKinesisSourceStreamArn
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+
+  DeliveryDriverDynamoTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${ProjectName}PaperDeliveryDriver'
+      AttributeDefinitions:
+        - AttributeName: "uniqueCode"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "uniqueCode"
+          KeyType: "HASH"
+      ProvisionedThroughput:
+        ReadCapacityUnits: "5"
+        WriteCapacityUnits: "5"
+      KinesisStreamSpecification:
+        StreamArn: !Ref CdcKinesisSourceStreamArn
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+
+  CostDynamoTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${ProjectName}PaperCost'
+      AttributeDefinitions:
+        - AttributeName: "idDeliveryDriver"
+          AttributeType: "S"
+        - AttributeName: "uuid"
+          AttributeType: "S"
+        - AttributeName: "cap"
+          AttributeType: "S"
+        - AttributeName: "zone"
+          AttributeType: "S"
+        - AttributeName: "idTender"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "idDeliveryDriver"
+          KeyType: "HASH"
+        - AttributeName: "uuid"
+          KeyType: "SORT"
+      GlobalSecondaryIndexes:
+        - IndexName: "cap-index"
+          KeySchema:
+            - AttributeName: "cap"
+              KeyType: "HASH"
+          Projection:
+            ProjectionType: "ALL"
+          ProvisionedThroughput:
+            ReadCapacityUnits: "5"
+            WriteCapacityUnits: "5"
+        - IndexName: "zone-index"
+          KeySchema:
+            - AttributeName: "zone"
+              KeyType: "HASH"
+          Projection:
+            ProjectionType: "ALL"
+          ProvisionedThroughput:
+            ReadCapacityUnits: "5"
+            WriteCapacityUnits: "5"
+        - IndexName: "tender-index"
+          KeySchema:
+            - AttributeName: "idTender"
+              KeyType: "HASH"
+          Projection:
+            ProjectionType: "ALL"
+          ProvisionedThroughput:
+            ReadCapacityUnits: "5"
+            WriteCapacityUnits: "5"
+      ProvisionedThroughput:
+        ReadCapacityUnits: "5"
+        WriteCapacityUnits: "5"
+      KinesisStreamSpecification:
+        StreamArn: !Ref CdcKinesisSourceStreamArn
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+
+  ZoneDynamoTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${ProjectName}PaperZone'
+      AttributeDefinitions:
+        - AttributeName: "countryIt"
+          AttributeType: "S"
+        - AttributeName: "countryEn"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "countryIt"
+          KeyType: "HASH"
+      GlobalSecondaryIndexes:
+        - IndexName: "countryEn-index"
+          KeySchema:
+            - AttributeName: "countryEn"
+              KeyType: "HASH"
+          Projection:
+            ProjectionType: "ALL"
+          ProvisionedThroughput:
+            ReadCapacityUnits: "5"
+            WriteCapacityUnits: "5"
+      ProvisionedThroughput:
+        ReadCapacityUnits: "5"
+        WriteCapacityUnits: "5"
+      KinesisStreamSpecification:
+        StreamArn: !Ref CdcKinesisSourceStreamArn
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+  CapDynamoTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${ProjectName}PaperCap'
+      AttributeDefinitions:
+        - AttributeName: "cap"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "cap"
+          KeyType: "HASH"
+      ProvisionedThroughput:
+        ReadCapacityUnits: "5"
+        WriteCapacityUnits: "5"
+      KinesisStreamSpecification:
+        StreamArn: !Ref CdcKinesisSourceStreamArn
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+
 Outputs:
 
   # Scheduled Requests
@@ -152,3 +291,43 @@ Outputs:
   AddressDynamoTableArn:
     Description: ARN of dynamodb table containing address of request delivery
     Value: !Sub '${AddressDynamoTable.Arn}'
+
+  TenderDynamoTableName:
+    Description: Name of dynamodb table containing tenders
+    Value: !Ref TenderDynamoTable
+
+  TenderDynamoTableArn:
+    Description: ARN of dynamodb table containing tenders
+    Value: !Sub '${TenderDynamoTable.Arn}'
+
+  DeliveryDriverDynamoTableName:
+    Description: Name of dynamodb table containing delivery drivers
+    Value: !Ref DeliveryDriverDynamoTable
+
+  DeliveryDriverDynamoTableArn:
+    Description: ARN of dynamodb table containing delivery drivers
+    Value: !Sub '${DeliveryDriverDynamoTable.Arn}'
+
+  CostDynamoTableName:
+    Description: Name of dynamodb table containing cost
+    Value: !Ref CostDynamoTable
+
+  CostDynamoTableArn:
+    Description: ARN of dynamodb table containing cost
+    Value: !Sub '${CostDynamoTable.Arn}'
+
+  ZoneDynamoTableName:
+    Description: Name of dynamodb table containing zone
+    Value: !Ref ZoneDynamoTable
+
+  ZoneDynamoTableArn:
+    Description: ARN of dynamodb table containing zone
+    Value: !Sub '${ZoneDynamoTable.Arn}'
+
+  CapDynamoTableName:
+    Description: Name of dynamodb table containing cap
+    Value: !Ref CapDynamoTable
+
+  CapDynamoTableArn:
+    Description: ARN of dynamodb table containing cap
+    Value: !Sub '${CapDynamoTable.Arn}'
