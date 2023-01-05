@@ -11,7 +11,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-public class SafeStorageClientTest { //extends BaseTest.WithMockServer {
+class SafeStorageClientTest extends BaseTest.WithMockServer {
 
 
     @Autowired
