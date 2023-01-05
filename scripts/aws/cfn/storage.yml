@@ -175,7 +175,7 @@ Resources:
         - AttributeName: "idDeliveryDriver"
           KeyType: "HASH"
         - AttributeName: "uuid"
-          KeyType: "SORT"
+          KeyType: "RANGE"
       GlobalSecondaryIndexes:
         - IndexName: "cap-index"
           KeySchema:
