@@ -182,7 +182,7 @@ Resources:
         ContainerEnvEntry9: !Sub 'AWS_DYNAMODBADDRESSTABLE=${AddressDynamoTableName}'
         ContainerEnvEntry10: !Sub 'AWS_DYNAMODBTENDERTABLE=${TenderDynamoTableName}'
         ContainerEnvEntry11: !Sub 'AWS_DYNAMODBDELIVERYDRIVERTABLE=${DeliveryDriverDynamoTableName}'
-        ContainerEnvEntry12.: !Sub 'AWS_DYNAMODBCOSTTABLE=${CostDynamoTableName}'
+        ContainerEnvEntry12: !Sub 'AWS_DYNAMODBCOSTTABLE=${CostDynamoTableName}'
         ContainerEnvEntry13: !Sub 'AWS_DYNAMODBZONETABLE=${ZoneDynamoTableName}'
         ContainerEnvEntry14: !Sub 'AWS_DYNAMODBCAPTABLE=${CapDynamoTableName}'
         ContainerEnvEntry15: !Sub 'AWS_KMS_KEYID=${PCKmsEncDecDynamoDataKeyARN}'
