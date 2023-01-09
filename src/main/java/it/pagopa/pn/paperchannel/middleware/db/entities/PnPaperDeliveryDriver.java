@@ -14,11 +14,11 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbParti
 @ToString
 @NoArgsConstructor
 public class PnPaperDeliveryDriver {
-    private static final String COL_UNIQUE_CODE = "uniqueCode";
-    private static final String COL_DENOMINATION = "denomination";
-    private static final String COL_TAX_ID = "taxId";
-    private static final String COL_PHONE_NUMBER = "phoneNumber";
-    private static final String COL_FSU = "fsu";
+    public static final String COL_UNIQUE_CODE = "uniqueCode";
+    public static final String COL_DENOMINATION = "denomination";
+    public static final String COL_TAX_ID = "taxId";
+    public static final String COL_PHONE_NUMBER = "phoneNumber";
+    public static final String COL_FSU = "fsu";
 
     @Getter(onMethod = @__({@DynamoDbPartitionKey,@DynamoDbAttribute(COL_UNIQUE_CODE)}))
     private String uniqueCode;
