@@ -11,4 +11,6 @@ public interface PaperMessagesService {
 
     Mono<SendResponse> executionPaper(String requestId, SendRequest sendRequest);
 
+    Mono<SendEvent> retrievePaperSendRequest(String requestId);
+
 }
