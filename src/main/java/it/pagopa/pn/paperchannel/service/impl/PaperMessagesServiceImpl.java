@@ -79,7 +79,7 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
 
     @Override
     public Mono<PaperChannelUpdate> preparePaperSync(String requestId, PrepareRequest prepareRequest){
-        log.debug("Start preparePaperSync with requestId {}", requestId);
+        log.info("Start preparePaperSync with requestId {}", requestId);
         prepareRequest.setRequestId(requestId);
 
         if (StringUtils.isEmpty(prepareRequest.getRelatedRequestId())){
@@ -97,7 +97,6 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                                 Mono.just("").publishOn(Schedulers.parallel())
                                         .flatMap(text -> this.prepareAsyncService.prepareAsync(requestId, null, null))
                                         .subscribe(new SubscriberPrepare(sqsSender, requestDeliveryDAO, requestId, null));
-                                log.info("throw exception");
                                 throw new PnPaperEventException(PreparePaperResponseMapper.fromEvent(prepareRequest.getRequestId()));
                             }))
                     );
@@ -133,6 +132,13 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
 
     }
 
+    @Override
+    public Mono<SendEvent> retrievePaperSendRequest(String requestId) {
+        return requestDeliveryDAO.getByRequestId(requestId)
+                .zipWhen(entity -> addressDAO.findByRequestId(requestId).map(address -> address))
+                .map(entityAndAddress -> SendEventMapper.fromResult(entityAndAddress.getT1(),entityAndAddress.getT2()))
+                .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)));
+    }
 
     private Mono<PnDeliveryRequest> finderAddressAndSave(PrepareRequest prepareRequest){
         return this.nationalRegistryClient.finderAddress(prepareRequest.getReceiverFiscalCode(), prepareRequest.getReceiverType())
