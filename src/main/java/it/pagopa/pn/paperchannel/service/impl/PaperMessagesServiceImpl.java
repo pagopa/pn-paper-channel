@@ -11,9 +11,11 @@ import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.AttachmentInfo;
+import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.rest.v1.dto.*;
 import it.pagopa.pn.paperchannel.service.PaperMessagesService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
+import it.pagopa.pn.paperchannel.utils.DateUtils;
 import it.pagopa.pn.paperchannel.validator.PrepareRequestValidator;
 import it.pagopa.pn.paperchannel.validator.SendRequestValidator;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +26,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -57,24 +60,29 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
 
     @Override
     public Mono<SendResponse> executionPaper(String requestId, SendRequest sendRequest) {
+        log.info("Start executionPaper with requestId {}", requestId);
         sendRequest.setRequestId(requestId);
         return this.requestDeliveryDAO.getByRequestId(sendRequest.getRequestId())
-                .flatMap(entity -> {
+                .zipWhen(entity -> {
                     SendRequestValidator.compareRequestEntity(sendRequest,entity);
+
+                    entity.setStatusCode(StatusDeliveryEnum.SEND_REQUEST_IN_PROCESSING.getCode());
+                    entity.setStatusDetail(StatusDeliveryEnum.SEND_REQUEST_IN_PROCESSING.getDescription());
+                    entity.setStatusDate(DateUtils.formatDate(new Date()));
 
                     List<AttachmentInfo> attachments = entity.getAttachments().stream().map(AttachmentMapper::fromEntity).collect(Collectors.toList());
                     Address address = AddressMapper.fromAnalogToAddress(sendRequest.getReceiverAddress());
                     return super.calculator(attachments, address, sendRequest.getProductType()).map(value -> value);
                 })
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)))
-                .zipWith(this.externalChannelClient.sendEngageRequest(sendRequest).then(Mono.just("")), (amount, none) -> amount)
+                .zipWhen(entityAndAmount -> this.externalChannelClient.sendEngageRequest(sendRequest)
+                        .then(this.requestDeliveryDAO.updateData(entityAndAmount.getT1()).map(item -> item)), (entityAndAmount, none) -> entityAndAmount.getT2())
                 .map(amount -> {
-                    log.info("Amount for response : {}", amount);
+                    log.info("Amount: {} for requestId {}", amount, requestId);
                     SendResponse sendResponse = new SendResponse();
                     sendResponse.setAmount(amount.intValue());
                     return sendResponse;
                 });
-
     }
 
     @Override
@@ -129,7 +137,6 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
 
                 })
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)));
-
     }
 
     @Override
