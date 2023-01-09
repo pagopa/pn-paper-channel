@@ -1,0 +1,74 @@
+[
+  {
+    "httpRequest": {
+      "path": "/external-channel/v1/paper-deliveries-engagements/abcd12345",
+      "method": "PUT"
+    },
+    "httpResponse": {
+      "statusCode": 204,
+      "headers": {
+        "content-type": [
+          "application/json"
+        ]
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "path": "/external-channel/v1/paper-deliveries-engagements/abcd12345",
+      "method": "PUT"
+    },
+    "httpResponse": {
+      "statusCode": 400,
+      "headers": {
+        "content-type": [
+          "application/json"
+        ]
+      },
+      "body": {
+        "status": 503,
+        "title": "Service Unavailable",
+        "detail": "Request took too long to complete.",
+        "traceId": "123e4567-e89b-12d3-a456-426614174000",
+        "errors": [
+          {
+            "code": "123-4567",
+            "element": "body.order.item[2].quantity",
+            "detail": "Parameter not valid"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "path": "/external-channel/v1/paper-deliveries-engagements/abcd12345",
+      "method": "PUT"
+    },
+    "httpResponse": {
+      "statusCode": 409,
+      "headers": {
+        "content-type": [
+          "application/json"
+        ]
+      },
+      "body": {
+        "status": 503,
+        "title": "Service Unavailable",
+        "detail": "Request took too long to complete.",
+        "traceId": "123e4567-e89b-12d3-a456-426614174000",
+        "errors": [
+          {
+            "code": "123-4567",
+            "element": "body.order.item[2].quantity",
+            "detail": "Parameter not valid"
+          }
+        ]
+      }
+    }
+  }
+]
+
+
+
+

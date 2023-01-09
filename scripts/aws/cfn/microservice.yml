@@ -279,5 +279,4 @@ Resources:
         DashboardName: !Sub "${ProjectName}-paper-channel"
         AlarmArns: !Join
           - ','
-          - - !GetAtt PaperChannelMicroservice.Outputs.AutoScalingAlarmArn
-            - !GetAtt PaperChannelMicroservice.Outputs.FatalLogsMetricAlarmArn
+          - - !GetAtt PaperChannelMicroservice.Outputs.FatalLogsMetricAlarmArn
