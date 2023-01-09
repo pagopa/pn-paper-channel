@@ -62,21 +62,27 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
     public Mono<SendResponse> executionPaper(String requestId, SendRequest sendRequest) {
         log.info("Start executionPaper with requestId {}", requestId);
         sendRequest.setRequestId(requestId);
+
+
         return this.requestDeliveryDAO.getByRequestId(sendRequest.getRequestId())
                 .zipWhen(entity -> {
                     SendRequestValidator.compareRequestEntity(sendRequest,entity);
 
-                    entity.setStatusCode(StatusDeliveryEnum.SEND_REQUEST_IN_PROCESSING.getCode());
-                    entity.setStatusDetail(StatusDeliveryEnum.SEND_REQUEST_IN_PROCESSING.getDescription());
-                    entity.setStatusDate(DateUtils.formatDate(new Date()));
+                    // verifico se è la prima volta che viene invocata
+                    if (StringUtils.equals(entity.getStatusCode(), StatusDeliveryEnum.TAKING_CHARGE.getCode())) {
+                        entity.setStatusCode(StatusDeliveryEnum.SEND_REQUEST_IN_PROCESSING.getCode());
+                        entity.setStatusDetail(StatusDeliveryEnum.SEND_REQUEST_IN_PROCESSING.getDescription());
+                        entity.setStatusDate(DateUtils.formatDate(new Date()));
+                    }
 
                     List<AttachmentInfo> attachments = entity.getAttachments().stream().map(AttachmentMapper::fromEntity).collect(Collectors.toList());
                     Address address = AddressMapper.fromAnalogToAddress(sendRequest.getReceiverAddress());
                     return super.calculator(attachments, address, sendRequest.getProductType()).map(value -> value);
                 })
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)))
-                .zipWhen(entityAndAmount -> this.externalChannelClient.sendEngageRequest(sendRequest)
-                        .then(this.requestDeliveryDAO.updateData(entityAndAmount.getT1()).map(item -> item)), (entityAndAmount, none) -> entityAndAmount.getT2())
+                .zipWhen(entityAndAmount ->
+                        this.externalChannelClient.sendEngageRequest(sendRequest).then(this.requestDeliveryDAO.updateData(entityAndAmount.getT1()).map(item -> item)), (entityAndAmount, none) -> entityAndAmount.getT2()
+                )
                 .map(amount -> {
                     log.info("Amount: {} for requestId {}", amount, requestId);
                     SendResponse sendResponse = new SendResponse();
@@ -142,7 +148,14 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
     @Override
     public Mono<SendEvent> retrievePaperSendRequest(String requestId) {
         return requestDeliveryDAO.getByRequestId(requestId)
-                .zipWhen(entity -> addressDAO.findByRequestId(requestId).map(address -> address))
+                .zipWhen(entity -> {
+                    if (entity.getStatusCode().equals(StatusDeliveryEnum.TAKING_CHARGE.getCode()) ||
+                        entity.getStatusCode().equals(StatusDeliveryEnum.IN_PROCESSING.getCode())) {
+                        return Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND));
+                    }
+
+                    return addressDAO.findByRequestId(requestId).map(address -> address);
+                })
                 .map(entityAndAddress -> SendEventMapper.fromResult(entityAndAddress.getT1(),entityAndAddress.getT2()))
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)));
     }
