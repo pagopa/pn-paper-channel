@@ -2,8 +2,10 @@ package it.pagopa.pn.paperchannel.middleware;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
+import it.pagopa.pn.paperchannel.middleware.queue.model.InternalPushEvent;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.DeliveryPushMomProducer;
 import it.pagopa.pn.paperchannel.middleware.queue.model.DeliveryPushEvent;
+import it.pagopa.pn.paperchannel.middleware.queue.producer.InternalQueueMomProducer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,6 +27,11 @@ public class PnPaperChannelMiddlewareConfigs {
     @Bean
     public DeliveryPushMomProducer deliveryMomProducer(SqsClient sqsClient, ObjectMapper objMapper) {
         return new DeliveryPushMomProducer(sqsClient, this.pnPaperChannelConfig.getQueueDeliveryPush(), objMapper, DeliveryPushEvent.class);
+    }
+
+    @Bean
+    public InternalQueueMomProducer internalQueueMomProducer(SqsClient sqsClient, ObjectMapper objMapper) {
+        return new InternalQueueMomProducer(sqsClient, this.pnPaperChannelConfig.getQueueInternal(), objMapper, InternalPushEvent.class);
     }
 }
 

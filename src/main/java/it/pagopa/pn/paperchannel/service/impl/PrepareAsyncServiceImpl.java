@@ -12,6 +12,7 @@ import it.pagopa.pn.paperchannel.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.AttachmentInfo;
 import it.pagopa.pn.paperchannel.model.DeliveryAsyncModel;
+import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
 import it.pagopa.pn.paperchannel.msclient.generated.pnsafestorage.v1.dto.FileDownloadResponseDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.ProductTypeEnum;
 import it.pagopa.pn.paperchannel.service.PaperAsyncService;
@@ -28,9 +29,7 @@ import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.stream.Collectors;
 
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DOCUMENT_NOT_DOWNLOADED;
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DOCUMENT_URL_NOT_FOUND;
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.UNTRACEABLE_ADDRESS;
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 
 @Slf4j
 @Service
@@ -47,10 +46,12 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
     @Autowired
     private AddressDAO addressDAO;
 
-
     @Override
-    public Mono<DeliveryAsyncModel> prepareAsync(String requestId, String correlationId, Address addressFromNationalRegistry){
-        log.info(String.format("Start Prepare async requestId %s", requestId));
+    public Mono<DeliveryAsyncModel> prepareAsync(PrepareAsyncRequest request){
+        log.info("Start async");
+        String correlationId = request.getCorrelationId();
+        String requestId = request.getRequestId();
+        Address addressFromNationalRegistry = request.getAddress() ;
         Mono<PnDeliveryRequest> requestDeliveryEntityMono =null;
         if(correlationId!= null)
             requestDeliveryEntityMono = requestDeliveryDAO.getByCorrelationId(correlationId);
@@ -198,10 +199,10 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                     return HttpConnector.downloadFile(info.getUrl())
                             .map(pdDocument -> {
                                 try {
-                                if (pdDocument.getDocumentInformation() != null && pdDocument.getDocumentInformation().getCreationDate() != null) {
-                                    info.setDate(DateUtils.formatDate(pdDocument.getDocumentInformation().getCreationDate().getTime()));
-                                }
-                                info.setNumberOfPage(pdDocument.getNumberOfPages());
+                                    if (pdDocument.getDocumentInformation() != null && pdDocument.getDocumentInformation().getCreationDate() != null) {
+                                        info.setDate(DateUtils.formatDate(pdDocument.getDocumentInformation().getCreationDate().getTime()));
+                                    }
+                                    info.setNumberOfPage(pdDocument.getNumberOfPages());
                                     pdDocument.close();
                                 } catch (IOException e) {
                                     throw new PnGenericException(DOCUMENT_NOT_DOWNLOADED, DOCUMENT_NOT_DOWNLOADED.getMessage());

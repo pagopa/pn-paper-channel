@@ -34,9 +34,13 @@ public class BaseService {
                 .map(attachmentInfo -> attachmentInfo.getNumberOfPage() * priceForAAr)
                 .reduce(0.0, Double::sum);
     }
+
+
     private Mono<Contract> getContract(String capOrZone, ProductTypeEnum productType) {
         return Mono.just(new Contract(5.0, 10.0));
     }
+
+
     private Mono<Double> getAmount(List<AttachmentInfo> attachments, String capOrZone, ProductTypeEnum productType ){
         return getContract(capOrZone, productType)
                 .flatMap(contract -> getPriceAttachments(attachments, contract.getPricePerPage())
