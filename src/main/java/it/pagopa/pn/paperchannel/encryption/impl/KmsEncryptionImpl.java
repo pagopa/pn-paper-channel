@@ -29,7 +29,6 @@ public class KmsEncryptionImpl implements KmsEncryption {
 
     @Override
     public String encode(String data) {
-        log.info("Encode :  {}", data);
         if(StringUtils.isNotEmpty(data)) {
             final EncryptRequest encryptRequest = new EncryptRequest()
                     .withKeyId(this.awsKmsProperties.getKeyId())
