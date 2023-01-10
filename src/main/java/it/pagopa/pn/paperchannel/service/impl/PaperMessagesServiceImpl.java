@@ -53,6 +53,7 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
 
     @Override
     public Mono<PrepareEvent> retrievePaperPrepareRequest(String requestId) {
+        log.info("Start retrieve prepare request");
         return requestDeliveryDAO.getByRequestId(requestId)
                 .zipWhen(entity -> addressDAO.findByRequestId(requestId).map(address -> address))
                 .map(entityAndAddress -> PrepareEventMapper.fromResult(entityAndAddress.getT1(),entityAndAddress.getT2()))
@@ -90,7 +91,6 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                     sendResponse.setAmount(amount.intValue());
                     return sendResponse;
                 });
-
     }
 
     @Override
@@ -110,8 +110,9 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                     })
                     .switchIfEmpty(Mono.defer(() -> saveRequestAndAddress(prepareRequest, null)
                             .flatMap(response -> {
-                                PrepareAsyncRequest prepareAsyncRequest = new PrepareAsyncRequest(requestId, null, null);
-                                sqsSender.pushToInternalQueue(prepareAsyncRequest);
+                                Mono.just("").publishOn(Schedulers.parallel())
+                                        .flatMap(text -> this.prepareAsyncService.prepareAsync(requestId, null, null))
+                                        .subscribe(new SubscriberPrepare(sqsSender, requestDeliveryDAO, requestId, null));
                                 throw new PnPaperEventException(PreparePaperResponseMapper.fromEvent(prepareRequest.getRequestId()));
                             }))
                     );
@@ -160,7 +161,6 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                 .map(entityAndAddress -> SendEventMapper.fromResult(entityAndAddress.getT1(),entityAndAddress.getT2()))
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)));
     }
-
 
     private Mono<PnDeliveryRequest> finderAddressAndSave(PrepareRequest prepareRequest){
         return this.nationalRegistryClient.finderAddress(prepareRequest.getReceiverFiscalCode(), prepareRequest.getReceiverType())
