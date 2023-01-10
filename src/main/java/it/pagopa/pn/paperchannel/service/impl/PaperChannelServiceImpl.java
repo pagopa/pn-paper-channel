@@ -1,8 +1,10 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
+import it.pagopa.pn.paperchannel.model.DeliveryDriverFilter;
 import it.pagopa.pn.paperchannel.rest.v1.dto.BaseResponse;
 import it.pagopa.pn.paperchannel.rest.v1.dto.ContractInsertRequestDto;
+import it.pagopa.pn.paperchannel.rest.v1.dto.PageableDeliveryDriverResponseDto;
 import it.pagopa.pn.paperchannel.service.PaperChannelService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,4 +26,16 @@ public class PaperChannelServiceImpl implements PaperChannelService {
         //costDAO.createNewContract()
         return null;
     }
+
+    @Override
+    public Mono<PageableDeliveryDriverResponseDto> takeDeliveryDriver(DeliveryDriverFilter filter) {
+
+        // recupero i dati
+        // Paginiamo i dati
+        // costruisco la response -> PageableDeliveryDriverResponseDto
+
+        return null;
+    }
+
+
 }
