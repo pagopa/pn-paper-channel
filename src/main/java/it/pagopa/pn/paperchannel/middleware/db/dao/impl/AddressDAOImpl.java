@@ -6,7 +6,6 @@ import it.pagopa.pn.commons.log.PnAuditLogEvent;
 import it.pagopa.pn.commons.log.PnAuditLogEventType;
 import it.pagopa.pn.paperchannel.config.AwsPropertiesConfig;
 import it.pagopa.pn.paperchannel.encryption.KmsEncryption;
-import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.BaseDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
@@ -23,8 +22,6 @@ import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_NOT_EXIST;
 
 @Repository
 @Slf4j
@@ -52,10 +49,11 @@ public class AddressDAOImpl extends BaseDAO <PnAddress> implements AddressDAO {
         return Mono.fromFuture(
                 countOccurrencesEntity(pnAddress.getRequestId())
                         .thenCompose( total -> {
-                            log.debug("Total elements : {}", total);
+                            log.debug("Address with same RequestID : {}", total);
                             if (total == 0){
                                 return put(pnAddress);
                             } else {
+                                log.debug("Address already exist");
                                 throw new PnHttpResponseException("Data already existed", HttpStatus.BAD_REQUEST.value());
                             }
                         })
@@ -78,7 +76,7 @@ public class AddressDAOImpl extends BaseDAO <PnAddress> implements AddressDAO {
                 .build();
         logEvent.log();
         return Mono.fromFuture(this.get(requestId, null).thenApply(item -> {
-            logEvent.generateSuccess(String.format("address = %s", item)).log();
+            logEvent.generateSuccess(String.format("Address find = %s", item)).log();
             return item;
         }));
     }
