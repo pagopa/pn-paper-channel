@@ -47,7 +47,7 @@ public class PrepareEventMapper {
     public static PrepareEvent toPrepareEvent(DeliveryAsyncModel model){
         PrepareEvent entityEvent = new PrepareEvent();
         entityEvent.setRequestId(model.getRequestId());
-        entityEvent.setStatusCode(StatusCodeEnum.PROGRESS);
+        entityEvent.setStatusCode(StatusCodeEnum.OK);
         if (model.getAddress() != null){
             entityEvent.setReceiverAddress(AddressMapper.toPojo(model.getAddress()));
         }
