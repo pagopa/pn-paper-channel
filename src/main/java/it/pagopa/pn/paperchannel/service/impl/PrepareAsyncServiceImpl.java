@@ -198,7 +198,9 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                     return HttpConnector.downloadFile(info.getUrl())
                             .map(pdDocument -> {
                                 try {
-                                info.setDate(DateUtils.formatDate(pdDocument.getDocumentInformation().getCreationDate().getTime()));
+                                if (pdDocument.getDocumentInformation() != null && pdDocument.getDocumentInformation().getCreationDate() != null) {
+                                    info.setDate(DateUtils.formatDate(pdDocument.getDocumentInformation().getCreationDate().getTime()));
+                                }
                                 info.setNumberOfPage(pdDocument.getNumberOfPages());
                                     pdDocument.close();
                                 } catch (IOException e) {
