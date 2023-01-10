@@ -42,8 +42,9 @@ public class QueueListener {
     private PaperResultAsyncService paperResultAsyncService;
     @Autowired
     private ObjectMapper objectMapper;
-    //@SqsListener(value = "${pn.paper-channel.queue-internal}", deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)
+    @SqsListener(value = "${pn.paper-channel.queue-internal}", deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)
     public void pullFromInternalQueue(@Payload String node, @Headers Map<String, Object> headers) {
+
         PrepareAsyncRequest prepareAsyncRequest = Utility.jsonToObject(this.objectMapper, node, PrepareAsyncRequest.class);
         this.paperAsyncService.prepareAsync(prepareAsyncRequest)
                 .subscribe(new SubscriberPrepare(sender, requestDeliveryDAO,

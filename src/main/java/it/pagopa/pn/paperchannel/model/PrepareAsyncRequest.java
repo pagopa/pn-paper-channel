@@ -11,12 +11,15 @@ import java.util.List;
 @Getter
 @Setter
 @ToString
-@AllArgsConstructor
 public class PrepareAsyncRequest {
 
     private String requestId;
     private String correlationId;
     private Address address;
 
-
+    public PrepareAsyncRequest(String requestId, String correlationId, Address address) {
+        this.requestId = requestId;
+        this.correlationId = correlationId;
+        this.address = address;
+    }
 }
