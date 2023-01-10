@@ -2,7 +2,7 @@
   "Parameters" : {
     "NotificationCheckAddress": "true",
     "SafeStorageCxId": "pn-cons-000",
-    "XPagopaExtchCxId": "pn-delivery-002",
+    "XPagopaExtchCxId": "pn-cons-000",
     "SandboxSafeStorageBaseUrl": "https://eo6pdvms24.execute-api.eu-south-1.amazonaws.com/coll"
   }
 }
