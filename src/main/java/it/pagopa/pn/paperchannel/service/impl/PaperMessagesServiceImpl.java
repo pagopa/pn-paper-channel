@@ -70,8 +70,8 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
 
                     // verifico se è la prima volta che viene invocata
                     if (StringUtils.equals(entity.getStatusCode(), StatusDeliveryEnum.TAKING_CHARGE.getCode())) {
-                        entity.setStatusCode(StatusDeliveryEnum.SEND_REQUEST_IN_PROCESSING.getCode());
-                        entity.setStatusDetail(StatusDeliveryEnum.SEND_REQUEST_IN_PROCESSING.getDescription());
+                        entity.setStatusCode(StatusDeliveryEnum.READY_TO_SEND.getCode());
+                        entity.setStatusDetail(StatusDeliveryEnum.READY_TO_SEND.getDescription());
                         entity.setStatusDate(DateUtils.formatDate(new Date()));
                     }
 
