@@ -49,7 +49,7 @@ public class CostDAOImpl extends BaseDAO<PnPaperCost> implements CostDAO {
         this.transactWriterInitializer = transactWriterInitializer;
     }
 
-    public Mono<List<PnPaperCost>> createNewContract(PnPaperDeliveryDriver pnDeliveryDriver, List<PnPaperCost> pnListCosts) {
+    public Mono<PnPaperDeliveryDriver> createNewContract(PnPaperDeliveryDriver pnDeliveryDriver, List<PnPaperCost> pnListCosts) {
         String logMessage = "create contract";
         PnAuditLogEvent logEvent = auditLogBuilder
                 .before(PnAuditLogEventType.AUD_DL_CREATE, logMessage)
@@ -61,7 +61,7 @@ public class CostDAOImpl extends BaseDAO<PnPaperCost> implements CostDAO {
             transactWriterInitializer.addRequestTransaction(deliveryDriverTable, pnDeliveryDriver, PnPaperDeliveryDriver.class);
         }
         pnListCosts.forEach(cost -> transactWriterInitializer.addRequestTransaction(this.dynamoTable, cost, PnPaperCost.class));
-        return Mono.fromFuture(putWithTransact(transactWriterInitializer.build()).thenApply(item -> pnListCosts));
+        return Mono.fromFuture(putWithTransact(transactWriterInitializer.build()).thenApply(item -> pnDeliveryDriver));
 
     }
 

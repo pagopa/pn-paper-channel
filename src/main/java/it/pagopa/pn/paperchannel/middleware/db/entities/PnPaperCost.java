@@ -45,10 +45,10 @@ public class PnPaperCost {
     private String productType;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_BASE_PRICE)}))
-    private String basePrice;
+    private Float basePrice;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_PAGE_PRICE)}))
-    private String pagePrice;
+    private Float pagePrice;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_START_DATE)}))
     private String startDate;
