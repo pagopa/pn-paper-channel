@@ -61,12 +61,11 @@ public class RequestDeliveryDAOImpl extends BaseDAO<PnDeliveryRequest> implement
         return Mono.fromFuture(
                         countOccurrencesEntity(request.getRequestId())
                                 .thenCompose( total -> {
-                                    log.debug("Total elements : {}", total);
+                                    log.debug("Delivery request with same request id : {}", total);
                                     if (total == 0){
                                         try {
                                             this.transactWriterInitializer.init();
                                             if(pnAddress != null) {
-
                                                 transactWriterInitializer.addRequestTransaction(addressTable, encode(pnAddress, PnAddress.class), PnAddress.class);
                                             }
 
@@ -74,9 +73,8 @@ public class RequestDeliveryDAOImpl extends BaseDAO<PnDeliveryRequest> implement
                                             return putWithTransact(transactWriterInitializer.build()).thenApply(item-> request);
                                         } catch (TransactionCanceledException tce) {
                                             log.error("Transaction Canceled" + tce.getMessage());
+                                            return null;
                                         }
-                                        return null;
-
                                     } else {
                                         throw new PnHttpResponseException("Data already existed", HttpStatus.BAD_REQUEST.value());
                                     }
@@ -114,7 +112,7 @@ public class RequestDeliveryDAOImpl extends BaseDAO<PnDeliveryRequest> implement
                 .build();
         logEvent.log();
         return Mono.fromFuture(this.get(requestId, null).thenApply(item -> {
-                    logEvent.generateSuccess(String.format("request delivery = %s", item)).log();
+                    logEvent.generateSuccess(String.format("request delivery find = %s", item)).log();
                     return item;
                 }));
     }
