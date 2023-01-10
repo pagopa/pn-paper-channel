@@ -191,7 +191,6 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                 .parallel()
                 .flatMap( attachment -> getFileRecursive(3, attachment.getFileKey(), new BigDecimal(0)))
                 .flatMap(fileResponse -> {
-
                     AttachmentInfo info = AttachmentMapper.fromSafeStorage(fileResponse);
                     if (info.getUrl() == null)
                         throw new PnGenericException(DOCUMENT_URL_NOT_FOUND, DOCUMENT_URL_NOT_FOUND.getMessage());

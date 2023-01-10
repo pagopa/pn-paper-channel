@@ -39,6 +39,7 @@ public class SafeStorageClientImpl extends BaseClient implements SafeStorageClie
 
     @Override
     public Mono<FileDownloadResponseDto> getFile(String fileKey) {
+        String reqFileKey = fileKey;
         log.info("Getting file with {} key", fileKey);
         String BASE_URL = "safestorage://";
         if (fileKey.contains(BASE_URL)){
@@ -55,6 +56,7 @@ public class SafeStorageClientImpl extends BaseClient implements SafeStorageClie
                     if(response.getDownload() != null && response.getDownload().getRetryAfter() != null) {
                         throw new PnRetryStorageException(response.getDownload().getRetryAfter());
                     }
+                    response.setKey(reqFileKey);
                     return response;
                 })
                 .onErrorResume(WebClientResponseException.class, ex -> {
