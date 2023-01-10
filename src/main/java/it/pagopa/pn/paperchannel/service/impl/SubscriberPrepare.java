@@ -77,9 +77,13 @@ public class SubscriberPrepare implements Subscriber<DeliveryAsyncModel> {
     @Override
     public void onComplete() {
         log.info("Custom subscriber on complete");
+        Mono<PnDeliveryRequest> requestDeliveryEntityMono = requestDeliveryDAO.getByRequestId(requestId);
+        if (StringUtils.isNotBlank(correlationId))
+            requestDeliveryEntityMono = requestDeliveryDAO.getByCorrelationId(correlationId);
+
         sqsQueueSender.pushPrepareEvent(PrepareEventMapper.toPrepareEvent(deliveryAsyncModel));
 
-        requestDeliveryDAO.getByRequestId(deliveryAsyncModel.getRequestId())
+        requestDeliveryEntityMono
                 .mapNotNull(requestDeliveryEntity -> {
                     requestDeliveryEntity.setStatusCode(StatusDeliveryEnum.TAKING_CHARGE.getCode());
                     requestDeliveryEntity.setStatusDetail(StatusDeliveryEnum.TAKING_CHARGE.getDescription());

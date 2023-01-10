@@ -12,6 +12,7 @@ import it.pagopa.pn.paperchannel.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.AttachmentInfo;
 import it.pagopa.pn.paperchannel.model.DeliveryAsyncModel;
+import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
 import it.pagopa.pn.paperchannel.msclient.generated.pnsafestorage.v1.dto.FileDownloadResponseDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.ProductTypeEnum;
 import it.pagopa.pn.paperchannel.service.PaperAsyncService;
@@ -49,8 +50,11 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
 
 
     @Override
-    public Mono<DeliveryAsyncModel> prepareAsync(String requestId, String correlationId, Address addressFromNationalRegistry){
+    public Mono<DeliveryAsyncModel> prepareAsync(PrepareAsyncRequest request){
         log.info("Start async");
+        String correlationId = request.getCorrelationId();
+        String requestId = request.getRequestId();
+        Address addressFromNationalRegistry = request.getAddress() ;
         Mono<PnDeliveryRequest> requestDeliveryEntityMono =null;
         if(correlationId!= null)
             requestDeliveryEntityMono = requestDeliveryDAO.getByCorrelationId(correlationId);

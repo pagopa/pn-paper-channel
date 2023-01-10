@@ -11,6 +11,7 @@ import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.AttachmentInfo;
+import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
 import it.pagopa.pn.paperchannel.rest.v1.dto.*;
 import it.pagopa.pn.paperchannel.service.PaperMessagesService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
@@ -94,10 +95,8 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                     })
                     .switchIfEmpty(Mono.defer(() -> saveRequestAndAddress(prepareRequest, null)
                             .flatMap(response -> {
-                                Mono.just("").publishOn(Schedulers.parallel())
-                                        .flatMap(text -> this.prepareAsyncService.prepareAsync(requestId, null, null))
-                                        .subscribe(new SubscriberPrepare(sqsSender, requestDeliveryDAO, requestId, null));
-                                log.info("throw exception");
+                                PrepareAsyncRequest prepareAsyncRequest = new PrepareAsyncRequest(requestId, null, null);
+                                sqsSender.pushToInternalQueue(prepareAsyncRequest);
                                 throw new PnPaperEventException(PreparePaperResponseMapper.fromEvent(prepareRequest.getRequestId()));
                             }))
                     );
