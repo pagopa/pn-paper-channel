@@ -45,7 +45,6 @@ public class KmsEncryptionImpl implements KmsEncryption {
 
     @Override
     public String decode(String data) {
-        log.info("Decode :  {}", data);
         if(StringUtils.isNotEmpty(data)) {
             final EncryptedUtils token = EncryptedUtils.parse(data);
 

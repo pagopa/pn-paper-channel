@@ -1,6 +1,8 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.awspring.cloud.messaging.listener.SqsMessageDeletionPolicy;
+import io.awspring.cloud.messaging.listener.annotation.SqsListener;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
@@ -63,11 +65,11 @@ public class QueueListener {
                 .block();
     }
 
-//    @SqsListener(value = "${pn.paper-channel.queue-external-channel}",deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)
+    @SqsListener(value = "${pn.paper-channel.queue-external-channel}",deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)
     public void pullExternalChannel(@Payload String node, @Headers Map<String,Object> headers){
         convertSingleStatusUpdateDto(node);
-        log.info("BODY - {}",node);
-        log.info("HEADERS - {}",headers);
+        log.info("Receive msg from external-channel with BODY - {}",node);
+        log.info("Receive msg from external-channel with HEADERS - {}",headers);
     }
 
     private void convertSingleStatusUpdateDto(String json) {
