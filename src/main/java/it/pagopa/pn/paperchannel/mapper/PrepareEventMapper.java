@@ -5,7 +5,6 @@ import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.model.Address;
-import it.pagopa.pn.paperchannel.model.DeliveryAsyncModel;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.rest.v1.dto.AnalogAddress;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareEvent;
@@ -44,15 +43,15 @@ public class PrepareEventMapper {
         return entityEvent;
     }
 
-    public static PrepareEvent toPrepareEvent(DeliveryAsyncModel model){
+    public static PrepareEvent toPrepareEvent(PnDeliveryRequest deliveryRequest, Address address){
         PrepareEvent entityEvent = new PrepareEvent();
-        entityEvent.setRequestId(model.getRequestId());
+        entityEvent.setRequestId(deliveryRequest.getRequestId());
         entityEvent.setStatusCode(StatusCodeEnum.PROGRESS);
-        if (model.getAddress() != null){
-            entityEvent.setReceiverAddress(AddressMapper.toPojo(model.getAddress()));
+        if (address != null){
+            entityEvent.setReceiverAddress(AddressMapper.toPojo(address));
         }
         entityEvent.setStatusDetail(StatusDeliveryEnum.TAKING_CHARGE.getDescription());
-        entityEvent.setProductType(model.getProductType().getValue());
+        entityEvent.setProductType(deliveryRequest.getProductType());
         entityEvent.setStatusDateTime(new Date());
         return entityEvent;
     }
