@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_NOT_EXIST;
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_IN_PROCESSING;
 
 @Slf4j
 @Service
@@ -65,10 +66,13 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
         log.info("Start executionPaper with requestId {}", requestId);
         sendRequest.setRequestId(requestId);
 
-
         return this.requestDeliveryDAO.getByRequestId(sendRequest.getRequestId())
                 .zipWhen(entity -> {
                     SendRequestValidator.compareRequestEntity(sendRequest,entity);
+                    //verifico se la fase di prepare è stata completata
+                    if (StringUtils.equals(entity.getStatusCode(), StatusDeliveryEnum.IN_PROCESSING.getCode())) {
+                        return Mono.error(new PnGenericException(DELIVERY_REQUEST_IN_PROCESSING, DELIVERY_REQUEST_IN_PROCESSING.getMessage(), HttpStatus.NOT_FOUND));
+                    }
 
                     // verifico se è la prima volta che viene invocata
                     if (StringUtils.equals(entity.getStatusCode(), StatusDeliveryEnum.TAKING_CHARGE.getCode())) {

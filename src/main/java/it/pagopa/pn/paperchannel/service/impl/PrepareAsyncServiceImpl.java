@@ -16,6 +16,7 @@ import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
 import it.pagopa.pn.paperchannel.msclient.generated.pnsafestorage.v1.dto.FileDownloadResponseDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.ProductTypeEnum;
 import it.pagopa.pn.paperchannel.service.PaperAsyncService;
+import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -34,10 +35,6 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 @Slf4j
 @Service
 public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncService {
-
-    public static final String RACCOMANDATA_SEMPLICE = "RS";
-    public static final String RACCOMANDATA_890 = "890";
-    public static final String RACCOMANDATA_AR = "AR";
 
     @Autowired
     private RequestDeliveryDAO requestDeliveryDAO;
@@ -111,25 +108,22 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
     private void setLetterCode(DeliveryAsyncModel deliveryAsyncModel, String registerLetterCode){
         //nazionale
         if(StringUtils.isNotBlank(deliveryAsyncModel.getAddress().getCap())){
-            if(registerLetterCode.equals(RACCOMANDATA_SEMPLICE)){
+            if(registerLetterCode.equals(Const.RACCOMANDATA_SEMPLICE)){
                 deliveryAsyncModel.setProductType(ProductTypeEnum.RN_RS);
             }
-            if(registerLetterCode.equals(RACCOMANDATA_890)){
+            if(registerLetterCode.equals(Const.RACCOMANDATA_890)){
                 deliveryAsyncModel.setProductType(ProductTypeEnum.RN_890);
             }
-            if(registerLetterCode.equals(RACCOMANDATA_AR)){
+            if(registerLetterCode.equals(Const.RACCOMANDATA_AR)){
                 deliveryAsyncModel.setProductType(ProductTypeEnum.RN_AR);
             }
         }
         //internazionale
         else{
-            if(registerLetterCode.equals(RACCOMANDATA_SEMPLICE)){
+            if(registerLetterCode.equals(Const.RACCOMANDATA_SEMPLICE)){
                 deliveryAsyncModel.setProductType(ProductTypeEnum.RI_RS);
             }
-            if(registerLetterCode.equals(RACCOMANDATA_890)){
-                deliveryAsyncModel.setProductType(ProductTypeEnum.RI_AR);
-            }
-            if(registerLetterCode.equals(RACCOMANDATA_AR)){
+            if(registerLetterCode.equals(Const.RACCOMANDATA_AR)){
                 deliveryAsyncModel.setProductType(ProductTypeEnum.RI_AR);
             }
         }
