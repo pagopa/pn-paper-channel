@@ -23,7 +23,7 @@ public class SendEventMapper {
         entityEvent.setRequestId(request.getRequestId());
         entityEvent.setStatusCode(request.getStatusCode());
         entityEvent.setStatusDetail(request.getStatusDetail());
-        entityEvent.setRegisteredLetterCode(request.getProposalProductType());
+        entityEvent.setRegisteredLetterCode(request.getProductType());
         entityEvent.setStatusDateTime((DateUtils.parseDateString(request.getStatusDate())));
         entityEvent.setAttachments(request.getAttachments().stream().map(AttachmentMapper::toAttachmentDetails).collect(Collectors.toList()));
         if (address != null){
