@@ -1,6 +1,5 @@
 package it.pagopa.pn.paperchannel.middleware.db.dao.impl;
 
-import it.pagopa.pn.commons.exceptions.PnHttpResponseException;
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.commons.log.PnAuditLogEvent;
 import it.pagopa.pn.commons.log.PnAuditLogEventType;
@@ -13,7 +12,6 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.common.TransactWriterInitiali
 import it.pagopa.pn.paperchannel.middleware.db.entities.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Import;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
@@ -21,12 +19,10 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.TransactionCanceledException;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.COST_NOT_FOUND;
 
@@ -68,15 +64,15 @@ public class CostDAOImpl extends BaseDAO<PnPaperCost> implements CostDAO {
     @Override
     public Mono<PnPaperCost> getByCapOrZoneAndProductType(String cap, PnZone zone, String productType) {
         String value = cap;
-        String index = PnPaperCost.COL_CAP_INDEX;
+        String index = PnPaperCost.CAP_INDEX;
         if (zone != null) {
             value = zone.getZone();
-            index = PnPaperCost.COL_ZONE_INDEX;
+            index = PnPaperCost.ZONE_INDEX;
         }
         String filterExpression = "(" + PnPaperCost.COL_PRODUCT_TYPE + " = :productType)";
         Map<String, AttributeValue> values = new HashMap<>();
         values.put(":productType", AttributeValue.builder().s(productType).build());
-        return this.getByFilter(value, null, index, values, filterExpression)
+        return this.getByFilter( CONDITION_EQUAL_TO.apply( keyBuild(value, null) ), PnPaperDeliveryDriver.CREATED_INDEX, values, filterExpression)
                 .collectList()
                 .map(items -> {
                     if (items.isEmpty()) {
@@ -85,7 +81,6 @@ public class CostDAOImpl extends BaseDAO<PnPaperCost> implements CostDAO {
                     return items.get(0);
                 });
     }
-
 
 
 }

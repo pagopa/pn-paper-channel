@@ -18,8 +18,8 @@ public class PnCap {
     public static final String COL_CITY = "city";
 
     @Getter(onMethod = @__({@DynamoDbPartitionKey,@DynamoDbAttribute(COL_CAP)}))
-    private String cap;
+    public String cap;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_CITY)}))
-    private String city;
+    public String city;
 }

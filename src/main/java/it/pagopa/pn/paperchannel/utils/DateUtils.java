@@ -1,15 +1,20 @@
 package it.pagopa.pn.paperchannel.utils;
 
+import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.cglib.core.Local;
+import org.springframework.data.util.Pair;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.BADLY_FILTER_REQUEST;
+
 @Slf4j
 public class DateUtils {
-
+    private static final Long START_TIMESTAMP = 1672527600L;
     private static final ZoneId italianZoneId =  ZoneId.of("Europe/Rome");
 
     private DateUtils(){}
@@ -42,6 +47,22 @@ public class DateUtils {
     public static OffsetDateTime getOffsetDateTimeFromDate(Date date) {
         //return OffsetDateTime.ofInstant(date.toInstant(), italianZoneId);
         return OffsetDateTime.ofInstant(date.toInstant(), ZoneOffset.UTC);
+    }
+
+    public static Pair<Long, Long> getStartAndEndTimestamp(String startDate, String endDate){
+        Long start = START_TIMESTAMP;
+        Long end = getTimeStampOfMills(LocalDateTime.now());
+        if (StringUtils.isNotBlank(startDate)){
+            start = getTimeStampOfMills(LocalDateTime.parse(startDate, DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+        }
+        if (StringUtils.isNotBlank(endDate)){
+            end = getTimeStampOfMills(LocalDateTime.parse(endDate, DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+        }
+
+        if (start < end){
+            throw new PnGenericException(BADLY_FILTER_REQUEST, BADLY_FILTER_REQUEST.getMessage());
+        }
+        return Pair.of(start, end);
     }
 
     /*

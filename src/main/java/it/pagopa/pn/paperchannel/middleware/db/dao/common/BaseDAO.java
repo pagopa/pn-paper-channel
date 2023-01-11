@@ -3,6 +3,9 @@ package it.pagopa.pn.paperchannel.middleware.db.dao.common;
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.paperchannel.encryption.KmsEncryption;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import reactor.core.publisher.Flux;
 import software.amazon.awssdk.enhanced.dynamodb.*;
@@ -15,9 +18,18 @@ import software.amazon.awssdk.services.dynamodb.model.Select;
 
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 
 
 public abstract class BaseDAO<T> {
+
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    protected static class Keys {
+        Key from;
+        Key to;
+    }
 
     protected final PnAuditLogBuilder auditLogBuilder;
     private final KmsEncryption kmsEncryption;
@@ -25,6 +37,9 @@ public abstract class BaseDAO<T> {
     protected final DynamoDbAsyncClient dynamoDbAsyncClient;
     protected final DynamoDbAsyncTable<T> dynamoTable;
     protected final String table;
+    protected static final Function<Key, QueryConditional> CONDITION_EQUAL_TO = QueryConditional::keyEqualTo;
+    protected static final Function<BaseDAO.Keys, QueryConditional> CONDITION_BETWEEN = keys -> QueryConditional.sortBetween(keys.getFrom(), keys.getTo());
+
     private final Class<T> tClass;
 
 
@@ -91,10 +106,10 @@ public abstract class BaseDAO<T> {
         return dynamoDbAsyncClient.query(qeRequest.build()).thenApply(QueryResponse::count);
     }
 
-    protected Flux<T> getByFilter(String partition, String sort, String index, Map<String, AttributeValue> values, String filterExpression){
+    protected Flux<T> getByFilter(QueryConditional conditional, String index, Map<String, AttributeValue> values, String filterExpression){
         QueryEnhancedRequest.Builder qeRequest = QueryEnhancedRequest
                 .builder()
-                .queryConditional(QueryConditional.keyEqualTo(keyBuild(partition,sort)));
+                .queryConditional(conditional);
         if (!StringUtils.isBlank(filterExpression)){
             qeRequest.filterExpression(Expression.builder().expression(filterExpression).expressionValues(values).build());
         }
@@ -136,7 +151,7 @@ public abstract class BaseDAO<T> {
         });
     }
 
-    private Key keyBuild (String partitionKey, String sortKey){
+    protected Key keyBuild (String partitionKey, String sortKey){
         Key.Builder builder = Key.builder().partitionValue(partitionKey);
         if (StringUtils.isNotBlank(sortKey)){
             builder.sortValue(sortKey);

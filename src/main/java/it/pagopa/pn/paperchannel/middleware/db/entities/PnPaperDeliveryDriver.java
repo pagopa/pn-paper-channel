@@ -18,27 +18,27 @@ public class PnPaperDeliveryDriver {
     public static final String COL_PHONE_NUMBER = "phoneNumber";
     public static final String COL_FSU = "fsu";
     public static final String COL_CREATED = "created";
-    public static final String COL_CREATED_INDEX = "created-index";
+    public static final String CREATED_INDEX = "created-index";
     public static final String COL_START_DATE = "startDate";
 
     @Getter(onMethod = @__({@DynamoDbPartitionKey,@DynamoDbAttribute(COL_UNIQUE_CODE)}))
-    private String uniqueCode;
+    public String uniqueCode;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_DENOMINATION)}))
-    private String denomination;
+    public String denomination;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_TAX_ID)}))
-    private String taxId;
+    public String taxId;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_PHONE_NUMBER)}))
-    private String phoneNumber;
+    public String phoneNumber;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_FSU)}))
-    private Boolean fsu;
+    public Boolean fsu;
 
-    @Getter(onMethod = @__({@DynamoDbSecondaryPartitionKey(indexNames = COL_CREATED_INDEX),@DynamoDbAttribute(COL_CREATED)}))
-    private String created;
+    @Getter(onMethod = @__({@DynamoDbSecondaryPartitionKey(indexNames = CREATED_INDEX),@DynamoDbAttribute(COL_CREATED)}))
+    public String created;
 
-    @Getter(onMethod = @__({@DynamoDbSecondarySortKey(indexNames = COL_CREATED_INDEX),@DynamoDbAttribute(COL_START_DATE)}))
-    private String startDate;
+    @Getter(onMethod = @__({@DynamoDbSecondarySortKey(indexNames = CREATED_INDEX),@DynamoDbAttribute(COL_START_DATE)}))
+    public String startDate;
 }
