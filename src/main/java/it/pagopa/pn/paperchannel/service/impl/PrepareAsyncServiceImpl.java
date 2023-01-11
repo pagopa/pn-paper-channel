@@ -15,6 +15,7 @@ import it.pagopa.pn.paperchannel.msclient.generated.pnsafestorage.v1.dto.FileDow
 import it.pagopa.pn.paperchannel.rest.v1.dto.ProductTypeEnum;
 import it.pagopa.pn.paperchannel.service.PaperAsyncService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
+import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -35,10 +36,6 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 @Slf4j
 @Service
 public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncService {
-
-    public static final String RACCOMANDATA_SEMPLICE = "RS";
-    public static final String RACCOMANDATA_890 = "890";
-    public static final String RACCOMANDATA_AR = "AR";
 
     @Autowired
     private RequestDeliveryDAO requestDeliveryDAO;
