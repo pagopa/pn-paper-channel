@@ -1,6 +1,7 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.paperchannel.config.HttpConnector;
+import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.exception.PnRetryStorageException;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
@@ -32,6 +33,7 @@ import java.util.Date;
 import java.util.stream.Collectors;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
+import static it.pagopa.pn.paperchannel.utils.Const.*;
 
 @Slf4j
 @Service
@@ -105,8 +107,22 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                     return this.requestDeliveryDAO.updateData(pnDeliveryRequest);
                 })
                 .onErrorResume(ex -> {
+                    log.error("on Error : {}", ex.getMessage());
+                    StatusDeliveryEnum statusDeliveryEnum = StatusDeliveryEnum.PAPER_CHANNEL_DEFAULT_ERROR;
+                    if(ex instanceof PnGenericException) {
+                        statusDeliveryEnum=mapper(((PnGenericException) ex).getExceptionType()) ;
+                    }
+                    updateStatus(requestId, correlationId, statusDeliveryEnum);
                     return Mono.error(ex);
                 });
+    }
+
+    private StatusDeliveryEnum mapper(ExceptionTypeEnum ex){
+        switch (ex){
+            case UNTRACEABLE_ADDRESS : return StatusDeliveryEnum.UNTRACEABLE;
+            default : return StatusDeliveryEnum.PAPER_CHANNEL_DEFAULT_ERROR;
+        }
+
     }
 
     private void setLetterCode(Address address, PnDeliveryRequest deliveryRequest){
@@ -134,6 +150,22 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                 deliveryRequest.setProductType(ProductTypeEnum.RI_AR.getValue());
             }
         }
+    }
+
+    public void updateStatus (String requestId, String correlationId, StatusDeliveryEnum status ){
+        Mono<PnDeliveryRequest> pnDeliveryRequest;
+        if (StringUtils.isNotEmpty(requestId) && !StringUtils.isNotEmpty(correlationId) ){
+            pnDeliveryRequest= this.requestDeliveryDAO.getByRequestId(requestId);
+        }else{
+            pnDeliveryRequest= this.requestDeliveryDAO.getByCorrelationId(correlationId);
+        }
+        pnDeliveryRequest.map(
+                entity -> {
+                    entity.setStatusCode(status.getCode());
+                    entity.setStatusDetail(status.getDescription());
+                    entity.setStatusDate(DateUtils.formatDate(new Date()));
+                    return this.requestDeliveryDAO.updateData(entity);
+                });
     }
 
     private Address setCorrectAddress(String hashOldAddress, Address fromNationalRegistry, Address discoveredAddress) {
@@ -219,5 +251,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                     return deliveryRequest;
                 });
     }
+
+
 
 }

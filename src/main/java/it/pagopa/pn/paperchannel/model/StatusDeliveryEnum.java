@@ -19,6 +19,8 @@ public enum StatusDeliveryEnum {
     DELIVERY_MISSING_POST_OFFICE("008", "Mancata consegna Ufficio Postale"),
     IN_STOCK("009", "Compiuta giacenza"),
     PAPER_CHANNEL_NEW_REQUEST("PC001", "Paper channel nuova richiesta invio cartaceo, a valle di un fallimento temporaneo"),
+    PAPER_CHANNEL_DEFAULT_ERROR("PC011", "Notifica in errore"),
+
     ;
 
     private final String code;
