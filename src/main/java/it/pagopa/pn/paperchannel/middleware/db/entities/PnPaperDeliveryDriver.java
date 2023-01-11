@@ -39,6 +39,6 @@ public class PnPaperDeliveryDriver {
     @Getter(onMethod = @__({@DynamoDbSecondaryPartitionKey(indexNames = COL_CREATED_INDEX),@DynamoDbAttribute(COL_CREATED)}))
     private String created;
 
-    @Getter(onMethod = @__({@DynamoDbSortKey,@DynamoDbAttribute(COL_START_DATE)}))
+    @Getter(onMethod = @__({@DynamoDbSecondarySortKey(indexNames = COL_CREATED_INDEX),@DynamoDbAttribute(COL_START_DATE)}))
     private String startDate;
 }
