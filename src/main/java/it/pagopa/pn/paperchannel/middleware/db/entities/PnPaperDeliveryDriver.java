@@ -4,9 +4,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
 
 @DynamoDbBean
 @Getter
@@ -19,6 +17,9 @@ public class PnPaperDeliveryDriver {
     public static final String COL_TAX_ID = "taxId";
     public static final String COL_PHONE_NUMBER = "phoneNumber";
     public static final String COL_FSU = "fsu";
+    public static final String COL_CREATED = "created";
+    public static final String COL_CREATED_INDEX = "created-index";
+    public static final String COL_START_DATE = "startDate";
 
     @Getter(onMethod = @__({@DynamoDbPartitionKey,@DynamoDbAttribute(COL_UNIQUE_CODE)}))
     private String uniqueCode;
@@ -35,4 +36,9 @@ public class PnPaperDeliveryDriver {
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_FSU)}))
     private Boolean fsu;
 
+    @Getter(onMethod = @__({@DynamoDbSecondaryPartitionKey(indexNames = COL_CREATED_INDEX),@DynamoDbAttribute(COL_CREATED)}))
+    private String created;
+
+    @Getter(onMethod = @__({@DynamoDbSortKey,@DynamoDbAttribute(COL_START_DATE)}))
+    private String startDate;
 }
