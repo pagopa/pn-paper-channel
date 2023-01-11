@@ -44,7 +44,7 @@ public class SqsQueueSender implements SqsSender {
                 .publisher("paper-channel-update")
                 .eventId(UUID.randomUUID().toString())
                 .createdAt(Instant.now())
-                .eventType((sendEvent == null) ? EventTypeEnum.PREPARE_PAPER_RESPONSE.name(): EventTypeEnum.SEND_PAPER_RESPONSE.name())
+                .eventType((sendEvent == null) ? EventTypeEnum.PREPARE_ANALOG_RESPONSE.name(): EventTypeEnum.SEND_ANALOG_RESPONSE.name())
                 .build();
 
         PaperChannelUpdate paperChannelUpdate = new PaperChannelUpdate();
