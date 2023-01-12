@@ -37,6 +37,7 @@ public class AddressMapper {
         address.setCity2(pysicalAddress.getMunicipalityDetails());
         address.setPr(pysicalAddress.getProvince());
         address.setCountry(pysicalAddress.getForeignState());
+        address.setFromNationalRegistry(true);
         return address;
     }
 
