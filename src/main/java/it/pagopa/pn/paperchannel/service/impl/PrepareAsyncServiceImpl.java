@@ -165,7 +165,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                     entity.setStatusDetail(status.getDescription());
                     entity.setStatusDate(DateUtils.formatDate(new Date()));
                     return this.requestDeliveryDAO.updateData(entity);
-                });
+                }).block();
     }
 
     private Address setCorrectAddress(String hashOldAddress, Address fromNationalRegistry, Address discoveredAddress) {

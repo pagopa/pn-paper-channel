@@ -92,6 +92,7 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                 })
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)))
                 .zipWhen(entityAndAmount ->
+                        //TODO chiamare external channel solo se status == TAKING_CHARGE
                         this.externalChannelClient.sendEngageRequest(sendRequest).then(this.requestDeliveryDAO.updateData(entityAndAmount.getT1()).map(item -> item)), (entityAndAmount, none) -> entityAndAmount.getT2()
                 )
                 .map(amount -> {
