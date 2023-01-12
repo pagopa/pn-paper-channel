@@ -47,27 +47,25 @@ public class ExternalChannelClientImpl extends BaseClient implements ExternalCha
         dto.setClientRequestTimeStamp(DateUtils.getOffsetDateTimeFromDate(sendRequest.getClientRequestTimeStamp()));
         dto.setProductType(setProductType(sendRequest.getProductType().getValue()));
         dto.setReceiverFiscalCode(sendRequest.getReceiverFiscalCode());
-        //dto.setAttachmentUri();
-        dto.setPrintType(sendRequest.getPrintType());
-        if (sendRequest.getReceiverAddress() != null) {
-            dto.setReceiverNameRow2(sendRequest.getReceiverAddress().getNameRow2());
-            dto.setReceiverName(sendRequest.getReceiverAddress().getFullname());
-            dto.setReceiverAddress(sendRequest.getReceiverAddress().getAddress());
-            dto.setReceiverAddressRow2(sendRequest.getReceiverAddress().getAddressRow2());
-            dto.setReceiverCap(sendRequest.getReceiverAddress().getCap());
-            dto.setReceiverCity(sendRequest.getReceiverAddress().getCity());
-            dto.setReceiverCity2(sendRequest.getReceiverAddress().getCity2());
-            dto.setReceiverPr(sendRequest.getReceiverAddress().getPr());
-            dto.setReceiverCountry(sendRequest.getReceiverAddress().getCountry());
-        }
-        if (sendRequest.getSenderAddress() != null){
-            dto.setSenderName(sendRequest.getSenderAddress().getFullname());
-            dto.setSenderAddress(sendRequest.getSenderAddress().getAddress());
-            dto.setSenderCity(sendRequest.getSenderAddress().getCity());
-            dto.setSenderPr(sendRequest.getSenderAddress().getPr());
+        if (!sendRequest.getAttachmentUrls().isEmpty())
+            dto.setAttachmentUri(sendRequest.getAttachmentUrls().get(0));
 
-        }
-        //dto.setSenderDigitalAddress(sendRequest.);
+        dto.setPrintType(sendRequest.getPrintType());
+        dto.setReceiverNameRow2(sendRequest.getReceiverAddress().getNameRow2());
+        dto.setReceiverName(sendRequest.getReceiverAddress().getFullname());
+        dto.setReceiverAddress(sendRequest.getReceiverAddress().getAddress());
+        dto.setReceiverAddressRow2(sendRequest.getReceiverAddress().getAddressRow2());
+        dto.setReceiverCap(sendRequest.getReceiverAddress().getCap());
+        dto.setReceiverCity(sendRequest.getReceiverAddress().getCity());
+        dto.setReceiverCity2(sendRequest.getReceiverAddress().getCity2());
+        dto.setReceiverPr(sendRequest.getReceiverAddress().getPr());
+        dto.setReceiverCountry(sendRequest.getReceiverAddress().getCountry());
+
+        dto.setSenderName(sendRequest.getSenderAddress().getFullname());
+        dto.setSenderAddress(sendRequest.getSenderAddress().getAddress());
+        dto.setSenderCity(sendRequest.getSenderAddress().getCity());
+        dto.setSenderPr(sendRequest.getSenderAddress().getPr());
+
         if (sendRequest.getArAddress() != null){
             dto.setArName(sendRequest.getArAddress().getFullname());
             dto.setArAddress(sendRequest.getArAddress().getAddress());
@@ -82,17 +80,17 @@ public class ExternalChannelClientImpl extends BaseClient implements ExternalCha
                 );
     }
 
-    private String setProductType(String prodcutType){
+    private String setProductType(String productType){
         String type = null;
-        if (StringUtils.equals(prodcutType, ProductTypeEnum.RN_AR.getValue())
-                || StringUtils.equals(prodcutType, ProductTypeEnum.RI_AR.getValue())) {
+        if (StringUtils.equals(productType, ProductTypeEnum.RN_AR.getValue())
+                || StringUtils.equals(productType, ProductTypeEnum.RI_AR.getValue())) {
             type = Const.RACCOMANDATA_AR;
 
-        } else if (StringUtils.equals(prodcutType, ProductTypeEnum.RN_RS.getValue())
-                || StringUtils.equals(prodcutType, ProductTypeEnum.RI_RS.getValue())) {
+        } else if (StringUtils.equals(productType, ProductTypeEnum.RN_RS.getValue())
+                || StringUtils.equals(productType, ProductTypeEnum.RI_RS.getValue())) {
             type = Const.RACCOMANDATA_SEMPLICE;
 
-        } else if (StringUtils.equals(prodcutType, ProductTypeEnum.RN_890.getValue())) {
+        } else if (StringUtils.equals(productType, ProductTypeEnum.RN_890.getValue())) {
             type = Const.RACCOMANDATA_890;
         }
 

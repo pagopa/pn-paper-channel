@@ -81,7 +81,7 @@ public class SubscriberPrepare implements Subscriber<DeliveryAsyncModel> {
         if (StringUtils.isNotBlank(correlationId))
             requestDeliveryEntityMono = requestDeliveryDAO.getByCorrelationId(correlationId);
 
-        sqsQueueSender.pushPrepareEvent(PrepareEventMapper.toPrepareEvent(deliveryAsyncModel));
+        //sqsQueueSender.pushPrepareEvent(PrepareEventMapper.toPrepareEvent(deliveryAsyncModel));
 
         requestDeliveryEntityMono
                 .mapNotNull(requestDeliveryEntity -> {

@@ -73,7 +73,7 @@ public class SendRequestValidator {
             errors.add("Iun");
         }
 
-        if (!StringUtils.equals(paperProgressStatusEventDto.getProductType(), pnDeliveryEntity.getProductType())) {
+        if (!StringUtils.equals(paperProgressStatusEventDto.getProductType(), pnDeliveryEntity.getProposalProductType())) {
             errors.add("ProductType");
         }
 

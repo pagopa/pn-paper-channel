@@ -13,7 +13,6 @@ import it.pagopa.pn.paperchannel.msclient.generated.pnnationalregistries.v1.dto.
 import it.pagopa.pn.paperchannel.service.PaperAsyncService;
 import it.pagopa.pn.paperchannel.service.PaperResultAsyncService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
-import it.pagopa.pn.paperchannel.service.impl.SubscriberPrepare;
 import it.pagopa.pn.paperchannel.utils.Utility;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -26,7 +25,7 @@ import reactor.util.function.Tuples;
 
 import java.util.Map;
 
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.UNTRACEABLE_ADDRESS;
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 
 @Component
 @Slf4j
@@ -44,15 +43,22 @@ public class QueueListener {
     private ObjectMapper objectMapper;
     @SqsListener(value = "${pn.paper-channel.queue-internal}", deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)
     public void pullFromInternalQueue(@Payload String node, @Headers Map<String, Object> headers) {
-
-        PrepareAsyncRequest prepareAsyncRequest = Utility.jsonToObject(this.objectMapper, node, PrepareAsyncRequest.class);
-        this.paperAsyncService.prepareAsync(prepareAsyncRequest)
-                .subscribe(new SubscriberPrepare(sender, requestDeliveryDAO,
-                        prepareAsyncRequest.getRequestId(), prepareAsyncRequest.getCorrelationId()));
-
+        Mono.just(node)
+                .doOnNext(message -> log.info("Do On Next: {}", message))
+                .mapNotNull(json -> Utility.jsonToObject(this.objectMapper, node, PrepareAsyncRequest.class))
+                .switchIfEmpty(Mono.error(new PnGenericException(MAPPER_ERROR, MAPPER_ERROR.getMessage())))
+                .flatMap(prepareRequest -> this.paperAsyncService.prepareAsync(prepareRequest))
+                .doOnSuccess(resultFromAsync -> {
+                    log.info("End of prepare async");
+                })
+                .doOnError(throwable -> {
+                    log.error(throwable.getMessage());
+                    throw new PnGenericException(PREPARE_ASYNC_LISTENER_EXCEPTION, PREPARE_ASYNC_LISTENER_EXCEPTION.getMessage());
+                })
+                .block();
     }
 
-//    @SqsListener(value = "${pn.paper-channel.queue-national-registries}", deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)
+    @SqsListener(value = "${pn.paper-channel.queue-national-registries}", deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)
     public void pullNationalRegistries(@Payload String node, @Headers Map<String, Object> headers){
         Mono.just(node)
                 .doOnNext(message -> log.info("Do On Next: {}", message))
@@ -76,7 +82,7 @@ public class QueueListener {
                 .block();
     }
 
-    @SqsListener(value = "${pn.paper-channel.queue-external-channel}",deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)
+    //@SqsListener(value = "${pn.paper-channel.queue-external-channel}",deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)
     public void pullExternalChannel(@Payload String node, @Headers Map<String,Object> headers){
         convertSingleStatusUpdateDto(node);
         log.info("Receive msg from external-channel with BODY - {}",node);
