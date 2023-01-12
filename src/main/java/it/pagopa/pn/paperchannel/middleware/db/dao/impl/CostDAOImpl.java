@@ -72,7 +72,7 @@ public class CostDAOImpl extends BaseDAO<PnPaperCost> implements CostDAO {
         String filterExpression = "(" + PnPaperCost.COL_PRODUCT_TYPE + " = :productType)";
         Map<String, AttributeValue> values = new HashMap<>();
         values.put(":productType", AttributeValue.builder().s(productType).build());
-        return this.getByFilter( CONDITION_EQUAL_TO.apply( keyBuild(value, null) ), PnPaperDeliveryDriver.CREATED_INDEX, values, filterExpression)
+        return this.getByFilter( CONDITION_EQUAL_TO.apply( keyBuild(value, "") ), PnPaperDeliveryDriver.CREATED_INDEX, values, filterExpression)
                 .collectList()
                 .map(items -> {
                     if (items.isEmpty()) {
