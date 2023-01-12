@@ -11,9 +11,12 @@ import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.AttachmentInfo;
+import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
+import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.rest.v1.dto.*;
 import it.pagopa.pn.paperchannel.service.PaperMessagesService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
+import it.pagopa.pn.paperchannel.utils.DateUtils;
 import it.pagopa.pn.paperchannel.validator.PrepareRequestValidator;
 import it.pagopa.pn.paperchannel.validator.SendRequestValidator;
 import lombok.extern.slf4j.Slf4j;
@@ -23,11 +26,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
+import reactor.util.function.Tuples;
 
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_NOT_EXIST;
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_IN_PROCESSING;
 
 @Slf4j
 @Service
@@ -49,37 +55,57 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
 
     @Override
     public Mono<PrepareEvent> retrievePaperPrepareRequest(String requestId) {
+        log.info("Start retrieve prepare request");
         return requestDeliveryDAO.getByRequestId(requestId)
-                .zipWhen(entity -> addressDAO.findByRequestId(requestId).map(address -> address))
-                .map(entityAndAddress -> PrepareEventMapper.fromResult(entityAndAddress.getT1(),entityAndAddress.getT2()))
+                .zipWhen(entity -> addressDAO.findByRequestId(requestId).map(address -> address)
+                            .switchIfEmpty(Mono.just(new PnAddress()))
+                )
+                .map(entityAndAddress -> PrepareEventMapper.fromResult(entityAndAddress.getT1(), entityAndAddress.getT2()))
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)));
     }
 
     @Override
     public Mono<SendResponse> executionPaper(String requestId, SendRequest sendRequest) {
+        log.info("Start executionPaper with requestId {}", requestId);
         sendRequest.setRequestId(requestId);
+
         return this.requestDeliveryDAO.getByRequestId(sendRequest.getRequestId())
-                .flatMap(entity -> {
+                .zipWhen(entity -> {
                     SendRequestValidator.compareRequestEntity(sendRequest,entity);
+
+                    //TODO Managed error from status code into pnDeliveryRequest
+                    //verifico se la fase di prepare è stata completata
+                    if (StringUtils.equals(entity.getStatusCode(), StatusDeliveryEnum.IN_PROCESSING.getCode())) {
+                        return Mono.error(new PnGenericException(DELIVERY_REQUEST_IN_PROCESSING, DELIVERY_REQUEST_IN_PROCESSING.getMessage(), HttpStatus.CONFLICT));
+                    }
+
+                    // verifico se è la prima volta che viene invocata
+                    if (StringUtils.equals(entity.getStatusCode(), StatusDeliveryEnum.TAKING_CHARGE.getCode())) {
+                        entity.setStatusCode(StatusDeliveryEnum.READY_TO_SEND.getCode());
+                        entity.setStatusDetail(StatusDeliveryEnum.READY_TO_SEND.getDescription());
+                        entity.setStatusDate(DateUtils.formatDate(new Date()));
+                    }
 
                     List<AttachmentInfo> attachments = entity.getAttachments().stream().map(AttachmentMapper::fromEntity).collect(Collectors.toList());
                     Address address = AddressMapper.fromAnalogToAddress(sendRequest.getReceiverAddress());
                     return super.calculator(attachments, address, sendRequest.getProductType()).map(value -> value);
                 })
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)))
-                .zipWith(this.externalChannelClient.sendEngageRequest(sendRequest).then(Mono.just("")), (amount, none) -> amount)
+                .zipWhen(entityAndAmount ->
+                        //TODO chiamare external channel solo se status == TAKING_CHARGE
+                        this.externalChannelClient.sendEngageRequest(sendRequest).then(this.requestDeliveryDAO.updateData(entityAndAmount.getT1()).map(item -> item)), (entityAndAmount, none) -> entityAndAmount.getT2()
+                )
                 .map(amount -> {
-                    log.info("Amount for response : {}", amount);
+                    log.info("Amount: {} for requestId {}", amount, requestId);
                     SendResponse sendResponse = new SendResponse();
                     sendResponse.setAmount(amount.intValue());
                     return sendResponse;
                 });
-
     }
 
     @Override
     public Mono<PaperChannelUpdate> preparePaperSync(String requestId, PrepareRequest prepareRequest){
-        log.debug("Start preparePaperSync with requestId {}", requestId);
+        log.info("Start preparePaperSync with requestId {}", requestId);
         prepareRequest.setRequestId(requestId);
 
         if (StringUtils.isEmpty(prepareRequest.getRelatedRequestId())){
@@ -94,10 +120,8 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                     })
                     .switchIfEmpty(Mono.defer(() -> saveRequestAndAddress(prepareRequest, null)
                             .flatMap(response -> {
-                                Mono.just("").publishOn(Schedulers.parallel())
-                                        .flatMap(text -> this.prepareAsyncService.prepareAsync(requestId, null, null))
-                                        .subscribe(new SubscriberPrepare(sqsSender, requestDeliveryDAO, requestId, null));
-                                log.info("throw exception");
+                                PrepareAsyncRequest request = new PrepareAsyncRequest(requestId, null, null);
+                                this.sqsSender.pushToInternalQueue(request);
                                 throw new PnPaperEventException(PreparePaperResponseMapper.fromEvent(prepareRequest.getRequestId()));
                             }))
                     );
@@ -130,9 +154,25 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
 
                 })
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)));
-
     }
 
+    @Override
+    public Mono<SendEvent> retrievePaperSendRequest(String requestId) {
+        return requestDeliveryDAO.getByRequestId(requestId)
+                .zipWhen(entity -> {
+
+                    //TODO Added other status code
+                    if (entity.getStatusCode().equals(StatusDeliveryEnum.TAKING_CHARGE.getCode()) ||
+                        entity.getStatusCode().equals(StatusDeliveryEnum.IN_PROCESSING.getCode())) {
+                        return Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND));
+                    }
+
+                    return addressDAO.findByRequestId(requestId).map(address -> address)
+                            .switchIfEmpty(Mono.just(new PnAddress()));
+                })
+                .map(entityAndAddress -> SendEventMapper.fromResult(entityAndAddress.getT1(),entityAndAddress.getT2()))
+                .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)));
+    }
 
     private Mono<PnDeliveryRequest> finderAddressAndSave(PrepareRequest prepareRequest){
         return this.nationalRegistryClient.finderAddress(prepareRequest.getReceiverFiscalCode(), prepareRequest.getReceiverType())

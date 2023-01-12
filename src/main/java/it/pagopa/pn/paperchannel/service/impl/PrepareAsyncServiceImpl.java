@@ -1,20 +1,22 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.paperchannel.config.HttpConnector;
+import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.exception.PnRetryStorageException;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
 import it.pagopa.pn.paperchannel.mapper.AttachmentMapper;
+import it.pagopa.pn.paperchannel.mapper.PrepareEventMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.SafeStorageClient;
-import it.pagopa.pn.paperchannel.model.Address;
-import it.pagopa.pn.paperchannel.model.AttachmentInfo;
-import it.pagopa.pn.paperchannel.model.DeliveryAsyncModel;
+import it.pagopa.pn.paperchannel.model.*;
 import it.pagopa.pn.paperchannel.msclient.generated.pnsafestorage.v1.dto.FileDownloadResponseDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.ProductTypeEnum;
 import it.pagopa.pn.paperchannel.service.PaperAsyncService;
+import it.pagopa.pn.paperchannel.service.SqsSender;
+import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -22,23 +24,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuples;
 
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.Duration;
+import java.util.Date;
 import java.util.stream.Collectors;
 
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DOCUMENT_NOT_DOWNLOADED;
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DOCUMENT_URL_NOT_FOUND;
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.UNTRACEABLE_ADDRESS;
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
+import static it.pagopa.pn.paperchannel.utils.Const.*;
 
 @Slf4j
 @Service
 public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncService {
-
-    public static final String RACCOMANDATA_SEMPLICE = "RS";
-    public static final String RACCOMANDATA_890 = "890";
-    public static final String RACCOMANDATA_AR = "AR";
 
     @Autowired
     private RequestDeliveryDAO requestDeliveryDAO;
@@ -46,11 +45,15 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
     private SafeStorageClient safeStorageClient;
     @Autowired
     private AddressDAO addressDAO;
-
+    @Autowired
+    private SqsSender sqsQueueSender;
 
     @Override
-    public Mono<DeliveryAsyncModel> prepareAsync(String requestId, String correlationId, Address addressFromNationalRegistry){
+    public Mono<PnDeliveryRequest> prepareAsync(PrepareAsyncRequest request){
         log.info("Start async");
+        String correlationId = request.getCorrelationId();
+        String requestId = request.getRequestId();
+        Address addressFromNationalRegistry = request.getAddress() ;
         Mono<PnDeliveryRequest> requestDeliveryEntityMono =null;
         if(correlationId!= null)
             requestDeliveryEntityMono = requestDeliveryDAO.getByCorrelationId(correlationId);
@@ -59,23 +62,10 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
 
         return requestDeliveryEntityMono
                 .zipWhen(entity -> addressDAO.findByRequestId(entity.getRequestId()).map(item->item))
-                .flatMap(entityAndAddress -> {
+                .map(entityAndAddress -> {
                     PnDeliveryRequest pnDeliveryRequest = entityAndAddress.getT1();
-                    // Sarà diverso da null solo nel secondo tentativo
-                    Address fromDB = AddressMapper.toDTO(entityAndAddress.getT2());
 
-                    //Creo model
-                    DeliveryAsyncModel deliveryAsyncModel = new DeliveryAsyncModel();
-                    deliveryAsyncModel.setRequestId(pnDeliveryRequest.getRequestId());
-
-                    //setto gli allegati se ci sono
-                    if(pnDeliveryRequest.getAttachments() != null){
-                        deliveryAsyncModel.setAttachments(pnDeliveryRequest.getAttachments().stream()
-                                .map(AttachmentMapper::fromEntity).collect(Collectors.toList()));
-                    }
-
-                    deliveryAsyncModel.setHashOldAddress(pnDeliveryRequest.getAddressHash());
-
+                    Address correctAddress = AddressMapper.toDTO(entityAndAddress.getT2());
                     if (StringUtils.isNotBlank(correlationId)){
                         /*
                         se siamo nel secondo tentativo dobbiamo fare i controlli su:
@@ -83,70 +73,113 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                             - hash indirizzo primo tentativo
                             - indirizzo scoperto dal postino se != null
                         */
-                        setCorrectAddress(deliveryAsyncModel, addressFromNationalRegistry, fromDB);
-                    } else {
-                        // altrimenti ci troviamo nel primo tentativo dove fromDB sempre != null
-                        deliveryAsyncModel.setAddress(fromDB);
+                        correctAddress = setCorrectAddress(pnDeliveryRequest.getAddressHash(), addressFromNationalRegistry, correctAddress);
                     }
 
                     if (pnDeliveryRequest.getProductType() == null ) {
-                        setLetterCode(deliveryAsyncModel, pnDeliveryRequest.getProposalProductType());
-                    } else {
-                        deliveryAsyncModel.setProductType(ProductTypeEnum.fromValue(pnDeliveryRequest.getProductType()));
+                        setLetterCode(correctAddress, pnDeliveryRequest);
                     }
-                    return Mono.just(deliveryAsyncModel).delayElement(Duration.ofMillis(2000));
+
+                    pnDeliveryRequest.setStatusCode(StatusDeliveryEnum.TAKING_CHARGE.getCode());
+                    pnDeliveryRequest.setStatusDetail(StatusDeliveryEnum.TAKING_CHARGE.getDescription());
+                    pnDeliveryRequest.setStatusDate(DateUtils.formatDate(new Date()));
+                    return Tuples.of(pnDeliveryRequest, correctAddress);
                 })
 
-                .flatMap(deliveryAsyncModel -> getAttachmentsInfo(deliveryAsyncModel).map(newModel -> newModel))
-                .flatMap(deliveryAsyncModel -> {
-                    if (deliveryAsyncModel.isFromNationalRegistry()){
-                        return addressDAO.create(AddressMapper.toEntity(addressFromNationalRegistry, deliveryAsyncModel.getRequestId()))
-                                .map(item -> deliveryAsyncModel);
+                .zipWhen(deliveryRequestAndAddress -> getAttachmentsInfo(deliveryRequestAndAddress.getT1()).map(newModel -> newModel)
+                        //Ritorno la tupla composta dall'indirizzo e il risultato ottentuto da attachment info
+                        ,(input, output) -> Tuples.of(output, input.getT2())
+                )
+                .flatMap(deliveryRequestAndAddress -> {
+                    //Controllo se l'indirizzo che ho proviene da NationalRegistry
+                    if (deliveryRequestAndAddress.getT2().isFromNationalRegistry()){
+                        log.info("Indirizzo di national registry");
+                        return addressDAO.create(AddressMapper.toEntity(addressFromNationalRegistry, deliveryRequestAndAddress.getT1().getRequestId()))
+                                .map(item -> deliveryRequestAndAddress);
                     }
-                    return Mono.just(deliveryAsyncModel);
+                    return Mono.just(deliveryRequestAndAddress);
+                })
+                .flatMap(deliveryRequestAndAddress -> {
+                    PnDeliveryRequest pnDeliveryRequest = deliveryRequestAndAddress.getT1();
+                    Address address = deliveryRequestAndAddress.getT2();
+                    this.sqsQueueSender.pushPrepareEvent(PrepareEventMapper.toPrepareEvent(pnDeliveryRequest, address));
+
+                    return this.requestDeliveryDAO.updateData(pnDeliveryRequest);
+                })
+                .onErrorResume(ex -> {
+                    log.error("on Error : {}", ex.getMessage());
+                    StatusDeliveryEnum statusDeliveryEnum = StatusDeliveryEnum.PAPER_CHANNEL_DEFAULT_ERROR;
+                    if(ex instanceof PnGenericException) {
+                        statusDeliveryEnum=mapper(((PnGenericException) ex).getExceptionType()) ;
+                    }
+                    updateStatus(requestId, correlationId, statusDeliveryEnum);
+                    return Mono.error(ex);
                 });
     }
 
-    private void setLetterCode(DeliveryAsyncModel deliveryAsyncModel, String registerLetterCode){
+    private StatusDeliveryEnum mapper(ExceptionTypeEnum ex){
+        switch (ex){
+            case UNTRACEABLE_ADDRESS : return StatusDeliveryEnum.UNTRACEABLE;
+            default : return StatusDeliveryEnum.PAPER_CHANNEL_DEFAULT_ERROR;
+        }
+
+    }
+
+    private void setLetterCode(Address address, PnDeliveryRequest deliveryRequest){
         //nazionale
-        if(StringUtils.isNotBlank(deliveryAsyncModel.getAddress().getCap())){
-            if(registerLetterCode.equals(RACCOMANDATA_SEMPLICE)){
-                deliveryAsyncModel.setProductType(ProductTypeEnum.RN_RS);
+        if(StringUtils.isNotBlank(address.getCap())){
+            if(deliveryRequest.getProposalProductType().equals(RACCOMANDATA_SEMPLICE)){
+                deliveryRequest.setProductType(ProductTypeEnum.RN_RS.getValue());
             }
-            if(registerLetterCode.equals(RACCOMANDATA_890)){
-                deliveryAsyncModel.setProductType(ProductTypeEnum.RN_890);
+            if(deliveryRequest.getProposalProductType().equals(RACCOMANDATA_890)){
+                deliveryRequest.setProductType(ProductTypeEnum.RN_890.getValue());
             }
-            if(registerLetterCode.equals(RACCOMANDATA_AR)){
-                deliveryAsyncModel.setProductType(ProductTypeEnum.RN_AR);
+            if(deliveryRequest.getProposalProductType().equals(RACCOMANDATA_AR)){
+                deliveryRequest.setProductType(ProductTypeEnum.RN_AR.getValue());
             }
         }
         //internazionale
         else{
-            if(registerLetterCode.equals(RACCOMANDATA_SEMPLICE)){
-                deliveryAsyncModel.setProductType(ProductTypeEnum.RI_RS);
+            if(deliveryRequest.getProposalProductType().equals(RACCOMANDATA_SEMPLICE)){
+                deliveryRequest.setProductType(ProductTypeEnum.RI_RS.getValue());
             }
-            if(registerLetterCode.equals(RACCOMANDATA_890)){
-                deliveryAsyncModel.setProductType(ProductTypeEnum.RI_AR);
+            if(deliveryRequest.getProposalProductType().equals(RACCOMANDATA_890)){
+                deliveryRequest.setProductType(ProductTypeEnum.RI_AR.getValue());
             }
-            if(registerLetterCode.equals(RACCOMANDATA_AR)){
-                deliveryAsyncModel.setProductType(ProductTypeEnum.RI_AR);
+            if(deliveryRequest.getProposalProductType().equals(RACCOMANDATA_AR)){
+                deliveryRequest.setProductType(ProductTypeEnum.RI_AR.getValue());
             }
         }
     }
 
-    private void setCorrectAddress(DeliveryAsyncModel model, Address fromNationalRegistry, Address discoveredAddress) {
+    public void updateStatus (String requestId, String correlationId, StatusDeliveryEnum status ){
+        Mono<PnDeliveryRequest> pnDeliveryRequest;
+        if (StringUtils.isNotEmpty(requestId) && !StringUtils.isNotEmpty(correlationId) ){
+            pnDeliveryRequest= this.requestDeliveryDAO.getByRequestId(requestId);
+        }else{
+            pnDeliveryRequest= this.requestDeliveryDAO.getByCorrelationId(correlationId);
+        }
+        pnDeliveryRequest.map(
+                entity -> {
+                    entity.setStatusCode(status.getCode());
+                    entity.setStatusDetail(status.getDescription());
+                    entity.setStatusDate(DateUtils.formatDate(new Date()));
+                    return this.requestDeliveryDAO.updateData(entity);
+                }).block();
+    }
+
+    private Address setCorrectAddress(String hashOldAddress, Address fromNationalRegistry, Address discoveredAddress) {
 
         //se nationalRegistry è diverso da null
         if(fromNationalRegistry != null){
 
             //indirizzo diverso da quello del primo invio?
-            if(!fromNationalRegistry.convertToHash().equals(model.getHashOldAddress())){
-                model.setFromNationalRegistry(true);
-                model.setAddress(fromNationalRegistry);
+            if(!fromNationalRegistry.convertToHash().equals(hashOldAddress)){
+                return fromNationalRegistry;
             }
             //indirizzo ricevuto in input
             else if(discoveredAddress!=null){
-                model.setAddress(discoveredAddress);
+                return discoveredAddress;
             }
             //indirizzo non trovato
             else{
@@ -155,7 +188,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
         }
         //indirizzo ricevuto in input
         else if(discoveredAddress!=null){
-            model.setAddress(discoveredAddress);
+            return discoveredAddress;
         }
         //indirizzo non trovato
         else{
@@ -167,7 +200,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
         if (n<0)
             return Mono.error(new PnGenericException( DOCUMENT_URL_NOT_FOUND, DOCUMENT_URL_NOT_FOUND.getMessage() ) );
         else {
-             return Mono.just ("").delay(Duration.ofMillis( millis.longValue() ))
+            return Mono.delay(Duration.ofMillis( millis.longValue() ))
                      .flatMap(item -> safeStorageClient.getFile(fileKey)
                      .map(fileDownloadResponseDto -> fileDownloadResponseDto)
                      .onErrorResume(ex -> {
@@ -180,14 +213,14 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
         }
     }
 
-    private Mono<DeliveryAsyncModel> getAttachmentsInfo(DeliveryAsyncModel deliveryAsyncModel){
+    private Mono<PnDeliveryRequest> getAttachmentsInfo(PnDeliveryRequest deliveryRequest){
 
-        if(deliveryAsyncModel.getAttachments().isEmpty() ||
-                !deliveryAsyncModel.getAttachments().stream().filter(a -> a.getNumberOfPage()>0).collect(Collectors.toList()).isEmpty()){
-            return Mono.just(deliveryAsyncModel);
+        if(deliveryRequest.getAttachments().isEmpty() ||
+                !deliveryRequest.getAttachments().stream().filter(a -> a.getNumberOfPage()>0).collect(Collectors.toList()).isEmpty()){
+            return Mono.just(deliveryRequest);
         }
 
-        return Flux.fromStream(deliveryAsyncModel.getAttachments().stream())
+        return Flux.fromStream(deliveryRequest.getAttachments().stream())
                 .parallel()
                 .flatMap( attachment -> getFileRecursive(3, attachment.getFileKey(), new BigDecimal(0)))
                 .flatMap(fileResponse -> {
@@ -198,8 +231,10 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                     return HttpConnector.downloadFile(info.getUrl())
                             .map(pdDocument -> {
                                 try {
-                                info.setDate(DateUtils.formatDate(pdDocument.getDocumentInformation().getCreationDate().getTime()));
-                                info.setNumberOfPage(pdDocument.getNumberOfPages());
+                                    if (pdDocument.getDocumentInformation() != null && pdDocument.getDocumentInformation().getCreationDate() != null) {
+                                        info.setDate(DateUtils.formatDate(pdDocument.getDocumentInformation().getCreationDate().getTime()));
+                                    }
+                                    info.setNumberOfPage(pdDocument.getNumberOfPages());
                                     pdDocument.close();
                                 } catch (IOException e) {
                                     throw new PnGenericException(DOCUMENT_NOT_DOWNLOADED, DOCUMENT_NOT_DOWNLOADED.getMessage());
@@ -208,12 +243,15 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                             });
 
                 })
+                .map(AttachmentMapper::toEntity)
                 .sequential()
                 .collectList()
                 .map(listAttachment -> {
-                    deliveryAsyncModel.setAttachments(listAttachment);
-                    return deliveryAsyncModel;
+                    deliveryRequest.setAttachments(listAttachment);
+                    return deliveryRequest;
                 });
     }
+
+
 
 }

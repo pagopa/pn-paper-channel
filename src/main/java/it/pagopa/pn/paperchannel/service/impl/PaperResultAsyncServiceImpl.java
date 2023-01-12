@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
+import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
@@ -17,6 +18,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.Date;
 
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DATA_NULL_OR_INVALID;
 import static it.pagopa.pn.paperchannel.validator.SendRequestValidator.compareProgressStatusRequestEntity;
 
 @Slf4j
@@ -30,6 +32,11 @@ public class PaperResultAsyncServiceImpl implements PaperResultAsyncService {
 
     @Override
     public Mono<PnDeliveryRequest> resultAsyncBackground(SingleStatusUpdateDto singleStatusUpdateDto) {
+        if (singleStatusUpdateDto == null || singleStatusUpdateDto.getAnalogMail() == null || StringUtils.isBlank(singleStatusUpdateDto.getAnalogMail().getRequestId())){
+            log.error("the message sended from external channel, includes errors. It cannot be processing");
+            return Mono.error(new PnGenericException(DATA_NULL_OR_INVALID, DATA_NULL_OR_INVALID.getMessage()));
+        }
+
         return requestDeliveryDAO.getByRequestId(singleStatusUpdateDto.getAnalogMail().getRequestId())
                 .flatMap(entity -> {
                     log.info("GETTED ENTITY: {}", entity);
@@ -37,7 +44,7 @@ public class PaperResultAsyncServiceImpl implements PaperResultAsyncService {
                     return updateEntityResult(singleStatusUpdateDto, entity)
                             .flatMap(updatedEntity -> {
                                 log.info("UPDATED ENTITY: {}", updatedEntity);
-                                sendPaperResponse(singleStatusUpdateDto, updatedEntity);
+                                sendPaperResponse(singleStatusUpdateDto);
                                 return Mono.just(updatedEntity);
                             });
                 })
@@ -55,11 +62,13 @@ public class PaperResultAsyncServiceImpl implements PaperResultAsyncService {
         return requestDeliveryDAO.updateData(pnDeliveryRequestMono);
     }
 
-    private void sendPaperResponse(SingleStatusUpdateDto singleStatusUpdateDto, PnDeliveryRequest pnDeliveryRequestMono) {
+    private void sendPaperResponse(SingleStatusUpdateDto singleStatusUpdateDto) {
         PaperChannelUpdate paperChannelUpdate = new PaperChannelUpdate();
         SendEvent sendEvent = new SendEvent();
         paperChannelUpdate.sendEvent(sendEvent);
-        sendEvent.setDiscoveredAddress(AddressMapper.toPojo(singleStatusUpdateDto.getAnalogMail().getDiscoveredAddress()));
+        if (singleStatusUpdateDto.getAnalogMail() != null && singleStatusUpdateDto.getAnalogMail().getDiscoveredAddress() != null){
+            sendEvent.setDiscoveredAddress(AddressMapper.toPojo(singleStatusUpdateDto.getAnalogMail().getDiscoveredAddress()));
+        }
         sendEvent.setClientRequestTimeStamp(Date.from(singleStatusUpdateDto.getAnalogMail().getClientRequestTimeStamp().toInstant()));
         if(StringUtils.isNotEmpty(singleStatusUpdateDto.getAnalogMail().getDeliveryFailureCause())) {
             sendEvent.setDeliveryFailureCause(singleStatusUpdateDto.getAnalogMail().getDeliveryFailureCause());

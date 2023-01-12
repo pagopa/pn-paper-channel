@@ -1,8 +1,8 @@
 {
   "Parameters" : {
     "NotificationCheckAddress": "true",
-    "SafeStorageCxId": "pn-radd-fsu",
-    "XPagopaExtchCxId": "pn-delivery-002",
+    "SafeStorageCxId": "pn-cons-000",
+    "XPagopaExtchCxId": "pn-cons-000",
     "SandboxSafeStorageBaseUrl": "https://ewlg4idc89.execute-api.eu-south-1.amazonaws.com/dev"
   }
 }
