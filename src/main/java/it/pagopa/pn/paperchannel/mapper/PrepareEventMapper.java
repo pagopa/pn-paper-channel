@@ -33,7 +33,7 @@ public class PrepareEventMapper {
             entityEvent.setStatusCode(StatusCodeEnum.KOUNREACHABLE);
         }
 
-        if (address != null){
+        if (address != null && address.getTtl() != null){
            entityEvent.setReceiverAddress(baseMapperAddress.toDTO(address));
         }
 

@@ -26,7 +26,7 @@ public class SendEventMapper {
         entityEvent.setRegisteredLetterCode(request.getProductType());
         entityEvent.setStatusDateTime((DateUtils.parseDateString(request.getStatusDate())));
         entityEvent.setAttachments(request.getAttachments().stream().map(AttachmentMapper::toAttachmentDetails).collect(Collectors.toList()));
-        if (address != null){
+        if (address != null && address.getTtl() != null) {
             entityEvent.setDiscoveredAddress(baseMapperAddress.toDTO(address));
         }
         return entityEvent;

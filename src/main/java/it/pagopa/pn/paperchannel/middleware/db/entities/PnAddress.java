@@ -66,5 +66,4 @@ public class PnAddress {
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_TTL)}))
     private Long ttl;
 
-
 }

@@ -26,6 +26,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
+import reactor.util.function.Tuples;
 
 import java.util.Date;
 import java.util.List;
@@ -56,8 +57,10 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
     public Mono<PrepareEvent> retrievePaperPrepareRequest(String requestId) {
         log.info("Start retrieve prepare request");
         return requestDeliveryDAO.getByRequestId(requestId)
-                .zipWhen(entity -> addressDAO.findByRequestId(requestId).map(address -> address))
-                .map(entityAndAddress -> PrepareEventMapper.fromResult(entityAndAddress.getT1(),entityAndAddress.getT2()))
+                .zipWhen(entity -> addressDAO.findByRequestId(requestId).map(address -> address)
+                            .switchIfEmpty(Mono.just(new PnAddress()))
+                )
+                .map(entityAndAddress -> PrepareEventMapper.fromResult(entityAndAddress.getT1(), entityAndAddress.getT2()))
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)));
     }
 
@@ -69,9 +72,11 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
         return this.requestDeliveryDAO.getByRequestId(sendRequest.getRequestId())
                 .zipWhen(entity -> {
                     SendRequestValidator.compareRequestEntity(sendRequest,entity);
+
+                    //TODO Managed error from status code into pnDeliveryRequest
                     //verifico se la fase di prepare è stata completata
                     if (StringUtils.equals(entity.getStatusCode(), StatusDeliveryEnum.IN_PROCESSING.getCode())) {
-                        return Mono.error(new PnGenericException(DELIVERY_REQUEST_IN_PROCESSING, DELIVERY_REQUEST_IN_PROCESSING.getMessage(), HttpStatus.NOT_FOUND));
+                        return Mono.error(new PnGenericException(DELIVERY_REQUEST_IN_PROCESSING, DELIVERY_REQUEST_IN_PROCESSING.getMessage(), HttpStatus.CONFLICT));
                     }
 
                     // verifico se è la prima volta che viene invocata
@@ -154,12 +159,15 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
     public Mono<SendEvent> retrievePaperSendRequest(String requestId) {
         return requestDeliveryDAO.getByRequestId(requestId)
                 .zipWhen(entity -> {
+
+                    //TODO Added other status code
                     if (entity.getStatusCode().equals(StatusDeliveryEnum.TAKING_CHARGE.getCode()) ||
                         entity.getStatusCode().equals(StatusDeliveryEnum.IN_PROCESSING.getCode())) {
                         return Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND));
                     }
 
-                    return addressDAO.findByRequestId(requestId).map(address -> address);
+                    return addressDAO.findByRequestId(requestId).map(address -> address)
+                            .switchIfEmpty(Mono.just(new PnAddress()));
                 })
                 .map(entityAndAddress -> SendEventMapper.fromResult(entityAndAddress.getT1(),entityAndAddress.getT2()))
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)));
