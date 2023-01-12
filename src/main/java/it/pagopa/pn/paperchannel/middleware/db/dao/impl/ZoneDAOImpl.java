@@ -31,7 +31,7 @@ public class ZoneDAOImpl extends BaseDAO<PnZone> implements ZoneDAO {
     @Override
     public Mono<PnZone> getByCountry(String country) {
         return Mono.fromFuture(this.get(country,null).thenApply(item->item))
-                .switchIfEmpty(this.getBySecondaryIndex(PnZone.COL_COUNTRY_EN_INDEX,country,null)
+                .switchIfEmpty(this.getBySecondaryIndex(PnZone.COUNTRY_EN_INDEX,country,null)
                         .collectList()
                         .map(items->{
                             if (items.isEmpty()) {
