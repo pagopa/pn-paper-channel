@@ -216,7 +216,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
     private Mono<PnDeliveryRequest> getAttachmentsInfo(PnDeliveryRequest deliveryRequest){
 
         if(deliveryRequest.getAttachments().isEmpty() ||
-                !deliveryRequest.getAttachments().stream().filter(a -> a.getNumberOfPage()>0).collect(Collectors.toList()).isEmpty()){
+                !deliveryRequest.getAttachments().stream().filter(a ->a.getNumberOfPage()!=null && a.getNumberOfPage()>0).collect(Collectors.toList()).isEmpty()){
             return Mono.just(deliveryRequest);
         }
 
