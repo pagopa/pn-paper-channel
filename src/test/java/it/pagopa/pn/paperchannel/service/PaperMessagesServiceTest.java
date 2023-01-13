@@ -2,6 +2,7 @@ package it.pagopa.pn.paperchannel.service;
 
 import it.pagopa.pn.paperchannel.config.BaseTest;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
+import it.pagopa.pn.paperchannel.exception.PnPaperEventException;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
@@ -11,10 +12,17 @@ import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
-import it.pagopa.pn.paperchannel.rest.v1.dto.*;
+import it.pagopa.pn.paperchannel.rest.v1.dto.AnalogAddress;
+import it.pagopa.pn.paperchannel.rest.v1.dto.PaperChannelUpdate;
+import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareEvent;
+import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareRequest;
+import it.pagopa.pn.paperchannel.rest.v1.dto.ProductTypeEnum;
+import it.pagopa.pn.paperchannel.rest.v1.dto.ProposalTypeEnum;
+import it.pagopa.pn.paperchannel.rest.v1.dto.SendRequest;
+import it.pagopa.pn.paperchannel.rest.v1.dto.SendResponse;
+import it.pagopa.pn.paperchannel.rest.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.service.impl.PaperMessagesServiceImpl;
 import it.pagopa.pn.paperchannel.service.impl.PrepareAsyncServiceImpl;
-import it.pagopa.pn.paperchannel.validator.PrepareRequestValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,7 +36,9 @@ import reactor.test.StepVerifier;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 @Slf4j
 class PaperMessagesServiceTest extends BaseTest {
@@ -61,7 +71,7 @@ class PaperMessagesServiceTest extends BaseTest {
     @BeforeEach
     void setUp(){
         this.deliveryRequestInProcessing = getDeliveryRequest("123-adb-567", StatusDeliveryEnum.IN_PROCESSING);
-        this.deliveryRequestTakingCharge = getDeliveryRequest("123-adb-KIJ", StatusDeliveryEnum.TAKING_CHARGE);
+        this.deliveryRequestTakingCharge = getDeliveryRequest("123-cba-572", StatusDeliveryEnum.TAKING_CHARGE);
     }
 
     @Test
@@ -74,7 +84,6 @@ class PaperMessagesServiceTest extends BaseTest {
         assertEquals(prepareEvent.getProductType(), deliveryRequestInProcessing.getProposalProductType());
         assertNull(prepareEvent.getReceiverAddress());
     }
-
 
     @Test
     void paperMessagesServiceTest() {
@@ -101,14 +110,23 @@ class PaperMessagesServiceTest extends BaseTest {
         StepVerifier.create(paperMessagesService.retrievePaperPrepareRequest("abcde12345")).expectError(PnGenericException.class).verify();
     }
 
-    //-------------TEST DA SISTEMARE----------
-   // @Test
+    @Test
     void executionPaperTest() {
-        Mockito.when(requestDeliveryDAO.getByRequestId("abcde12345")).thenReturn(Mono.just(gePnDeliveryRequest()));
-        Mockito.when(addressDAO.findByRequestId("abcde12345")).thenReturn(Mono.just(getPnAddress("abcde12345")));
-        Mockito.doNothing().when(externalChannelClient).sendEngageRequest(Mockito.any()).block();
-        paperMessagesService.executionPaper("abcde12345",getRequest()).block();
+        PnAddress address = getPnAddress(deliveryRequestTakingCharge.getRequestId());
+        Mockito.when(requestDeliveryDAO.getByRequestId(deliveryRequestTakingCharge.getRequestId())).thenReturn(Mono.just(deliveryRequestTakingCharge));
+        Mockito.when(addressDAO.findByRequestId(deliveryRequestTakingCharge.getRequestId())).thenReturn(Mono.just(address));
+        Mockito.when(externalChannelClient.sendEngageRequest(Mockito.any())).thenReturn(Mono.just("").then());
+        Mockito.when(requestDeliveryDAO.updateData(Mockito.any())).thenReturn(Mono.just(deliveryRequestTakingCharge));
+        SendResponse response = paperMessagesService.executionPaper(deliveryRequestTakingCharge.getRequestId(),getRequest(deliveryRequestTakingCharge.getRequestId())).block();
+        assertNotNull(response);
+        assertNotNull(response.getAmount());
+    }
 
+    @Test
+    void executionPaperInProcessingTest() {
+        Mockito.when(requestDeliveryDAO.getByRequestId(deliveryRequestInProcessing.getRequestId())).thenReturn(Mono.just(deliveryRequestInProcessing));
+        StepVerifier.create(paperMessagesService.executionPaper(deliveryRequestInProcessing.getRequestId(),getRequest(deliveryRequestInProcessing.getRequestId())))
+                .expectError(PnGenericException.class).verify();
     }
 
     @Test
@@ -117,10 +135,31 @@ class PaperMessagesServiceTest extends BaseTest {
         Mockito.when(requestDeliveryDAO.getByRequestId(deliveryRequestTakingCharge.getRequestId())).thenReturn(Mono.just(deliveryRequestTakingCharge));
         Mockito.when(addressDAO.findByRequestId(deliveryRequestTakingCharge.getRequestId())).thenReturn(Mono.just(address));
         PaperChannelUpdate response = paperMessagesService.preparePaperSync(deliveryRequestTakingCharge.getRequestId(), getRequestOK()).block();
-        log.info(response.toString());
+        assertNotNull(response);
     }
 
-    private SendRequest getRequest(){
+    @Test
+    void paperAsyncEntitySecondAttemptTest() {
+        PnAddress address = getPnAddress(deliveryRequestTakingCharge.getRequestId());
+        Mockito.when(requestDeliveryDAO.getByRequestId(getRelatedRequest().getRelatedRequestId())).thenReturn(Mono.just(deliveryRequestTakingCharge));
+        Mockito.when(requestDeliveryDAO.getByRequestId(deliveryRequestTakingCharge.getRequestId())).thenReturn(Mono.just(deliveryRequestTakingCharge));
+        Mockito.when(addressDAO.findByRequestId(deliveryRequestTakingCharge.getRequestId())).thenReturn(Mono.just(address));
+        PaperChannelUpdate response =paperMessagesService.preparePaperSync(deliveryRequestTakingCharge.getRequestId(), getRelatedRequest()).block();
+        assertNotNull(response);
+    }
+
+
+    @Test
+    void paperAsyncEntityAndAddressSwitchIfEmptyTest() {
+        PnAddress address = getPnAddress(deliveryRequestTakingCharge.getRequestId());
+        Mockito.when(requestDeliveryDAO.getByRequestId(deliveryRequestTakingCharge.getRequestId())).thenReturn(Mono.empty());
+        Mockito.when(addressDAO.findByRequestId(deliveryRequestTakingCharge.getRequestId())).thenReturn(Mono.just(address));
+        Mockito.when(requestDeliveryDAO.createWithAddress(Mockito.any(), Mockito.any())).thenReturn(Mono.just(deliveryRequestTakingCharge));
+        Mockito.doNothing().when(sqsSender).pushToInternalQueue(Mockito.any());
+        StepVerifier.create(paperMessagesService.preparePaperSync(deliveryRequestTakingCharge.getRequestId(), getRequestOK())).expectError(PnPaperEventException.class).verify();
+    }
+
+    private SendRequest getRequest(String reqeustId){
         SendRequest sendRequest= new SendRequest();
         List<String> attachmentUrls = new ArrayList<>();
         AnalogAddress analogAddress= new AnalogAddress();
@@ -135,11 +174,14 @@ class PaperMessagesServiceTest extends BaseTest {
         analogAddress.setCountry("italia");
         analogAddress.setPr("PR");
         analogAddress.setFullname("Ettore Fieramosca");
-        sendRequest.setRequestId("12345abcde");
+        analogAddress.setNameRow2("Ettore");
+
+        sendRequest.setRequestId(reqeustId);
         sendRequest.setReceiverFiscalCode("ABCD123AB501");
         sendRequest.setProductType(ProductTypeEnum.RN_AR);
-        sendRequest.setReceiverType("RT");
+        sendRequest.setReceiverType("PF");
         sendRequest.setPrintType("PT");
+        sendRequest.setIun("iun");
         sendRequest.setAttachmentUrls(attachmentUrls);
         sendRequest.setReceiverAddress(analogAddress);
         return sendRequest;
@@ -221,7 +263,6 @@ class PaperMessagesServiceTest extends BaseTest {
         deliveryRequest.setStartDate("");
         deliveryRequest.setProductType("RN_AR");
         deliveryRequest.setAttachments(attachmentUrls);
-        List<PnAttachmentInfo> attachments;
         return deliveryRequest;
     }
 
@@ -258,7 +299,7 @@ class PaperMessagesServiceTest extends BaseTest {
         analogAddress.setFullname("Ettore Fieramosca");
         analogAddress.setNameRow2("Ettore");
 
-        sendRequest.setRequestId("12345abcde");
+        sendRequest.setRequestId("123-cba-572");
         sendRequest.setReceiverFiscalCode("ABCD123AB501");
         sendRequest.setProposalProductType(ProposalTypeEnum.AR);
         sendRequest.setReceiverType("PF");
@@ -269,12 +310,42 @@ class PaperMessagesServiceTest extends BaseTest {
         return sendRequest;
     }
 
+    private PrepareRequest getRelatedRequest(){
+        PrepareRequest sendRequest= new PrepareRequest();
+        List<String> attachmentUrls = new ArrayList<>();
+        AnalogAddress analogAddress= new AnalogAddress();
+        String s = "http://localhost:8080";
+        attachmentUrls.add(s);
+
+        analogAddress.setAddress("via roma");
+        analogAddress.setAddressRow2("via lazio");
+        analogAddress.setCap("00061");
+        analogAddress.setCity("roma");
+        analogAddress.setCity2("viterbo");
+        analogAddress.setCountry("italia");
+        analogAddress.setPr("PR");
+        analogAddress.setFullname("Ettore Fieramosca");
+        analogAddress.setNameRow2("Ettore");
+
+        sendRequest.setRequestId("123-cba-572");
+        sendRequest.setReceiverFiscalCode("ABCD123AB501");
+        sendRequest.setProposalProductType(ProposalTypeEnum.AR);
+        sendRequest.setReceiverType("PF");
+        sendRequest.setPrintType("PT");
+        sendRequest.setIun("iun");
+        sendRequest.setAttachmentUrls(attachmentUrls);
+        sendRequest.setReceiverAddress(analogAddress);
+        sendRequest.setRelatedRequestId("123abcd1234");
+        sendRequest.setDiscoveredAddress(analogAddress);
+        return sendRequest;
+    }
+
     private PnDeliveryRequest getDeliveryRequest(String requestId, StatusDeliveryEnum status){
         PnDeliveryRequest deliveryRequest= new PnDeliveryRequest();
         List<PnAttachmentInfo> attachmentUrls = new ArrayList<>();
         PnAttachmentInfo pnAttachmentInfo = new PnAttachmentInfo();
         pnAttachmentInfo.setDate("");
-        pnAttachmentInfo.setFileKey("PDFURL");
+        pnAttachmentInfo.setFileKey("http://localhost:8080");
         pnAttachmentInfo.setId("");
         pnAttachmentInfo.setNumberOfPage(3);
         pnAttachmentInfo.setDocumentType("");
@@ -291,6 +362,7 @@ class PaperMessagesServiceTest extends BaseTest {
         address.setPr("PR");
         address.setFullName("Ettore Fieramosca");
         address.setNameRow2("Ettore");
+        address.setFromNationalRegistry(true);
 
         deliveryRequest.setAddressHash(address.convertToHash());
         deliveryRequest.setRequestId(requestId);
