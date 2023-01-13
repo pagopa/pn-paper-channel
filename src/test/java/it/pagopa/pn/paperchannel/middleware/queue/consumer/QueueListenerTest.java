@@ -8,11 +8,12 @@ import it.pagopa.pn.paperchannel.service.PaperAsyncService;
 import it.pagopa.pn.paperchannel.service.PaperResultAsyncService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.Spy;
+import org.springframework.beans.factory.annotation.Autowired;
 import reactor.core.publisher.Mono;
 
 import java.util.HashMap;
@@ -32,7 +33,8 @@ class QueueListenerTest extends BaseTest {
     private SqsSender sender;
     @Mock
     private PaperResultAsyncService paperResultAsyncService;
-    @Mock
+    @Spy
+    @Autowired
     private ObjectMapper objectMapper;
 
 
@@ -45,16 +47,16 @@ class QueueListenerTest extends BaseTest {
         } catch (PnGenericException ex){
             assertNotNull(ex);
             assertNotNull(ex.getExceptionType());
-            assertEquals(MAPPER_ERROR, ex.getExceptionType());
+            assertEquals(PREPARE_ASYNC_LISTENER_EXCEPTION, ex.getExceptionType());
         }
     }
 
 
     @Test
     void internalQueuePrepareAsyncThrowErrorTest(){
-        String json = "{'correlationId': null,'requestId':'NRTK-EWZL-KVPV-202212-Q-1124ds'}";
+        String json = "{\"correlationId\": null,\"requestId\":\"NRTK-EWZL-KVPV-202212-Q-1124ds\"}";
         try {
-            Mockito.when(paperAsyncService.prepareAsync(Mockito.any())).thenThrow(new PnGenericException(DOCUMENT_URL_NOT_FOUND, DOCUMENT_URL_NOT_FOUND.getMessage()));
+            Mockito.when(paperAsyncService.prepareAsync(Mockito.any())).thenThrow(new RuntimeException());
             queueListener.pullFromInternalQueue(json, new HashMap<>());
             fail("Error with pull. Missed an exception");
         } catch (PnGenericException ex){
@@ -66,7 +68,7 @@ class QueueListenerTest extends BaseTest {
 
     @Test
     void internalQueueOKTest(){
-        String json = "{'correlationId': null,'requestId':'NRTK-EWZL-KVPV-202212-Q-1124ds'}";
+        String json = "{\"correlationId\": null,\"requestId\":\"NRTK-EWZL-KVPV-202212-Q-1124ds\"}";
         Mockito.when(paperAsyncService.prepareAsync(Mockito.any())).thenReturn(Mono.just(new PnDeliveryRequest()));
         queueListener.pullFromInternalQueue(json, new HashMap<>());
         assertTrue(true);
