@@ -43,10 +43,10 @@ public class PrepareEventMapper {
         return entityEvent;
     }
 
-    public static PrepareEvent toPrepareEvent(PnDeliveryRequest deliveryRequest, Address address){
+    public static PrepareEvent toPrepareEvent(PnDeliveryRequest deliveryRequest, Address address, StatusCodeEnum status){
         PrepareEvent entityEvent = new PrepareEvent();
         entityEvent.setRequestId(deliveryRequest.getRequestId());
-        entityEvent.setStatusCode(StatusCodeEnum.PROGRESS);
+        entityEvent.setStatusCode(status);
         if (address != null){
             entityEvent.setReceiverAddress(AddressMapper.toPojo(address));
         }

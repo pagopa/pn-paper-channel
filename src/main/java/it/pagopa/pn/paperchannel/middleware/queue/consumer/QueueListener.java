@@ -45,11 +45,11 @@ public class QueueListener {
     public void pullFromInternalQueue(@Payload String node, @Headers Map<String, Object> headers) {
         Mono.just(node)
                 .doOnNext(message -> log.info("Do On Next: {}", message))
-                .mapNotNull(json -> Utility.jsonToObject(this.objectMapper, node, PrepareAsyncRequest.class))
+                .mapNotNull(json -> Utility.jsonToObject(this.objectMapper, json, PrepareAsyncRequest.class))
                 .switchIfEmpty(Mono.error(new PnGenericException(MAPPER_ERROR, MAPPER_ERROR.getMessage())))
                 .flatMap(prepareRequest -> this.paperAsyncService.prepareAsync(prepareRequest))
                 .doOnSuccess(resultFromAsync -> {
-                    log.info("End of prepare async");
+                    log.info("End of prepare async internal");
                 })
                 .doOnError(throwable -> {
                     log.error(throwable.getMessage());
@@ -58,7 +58,7 @@ public class QueueListener {
                 .block();
     }
 
-    @SqsListener(value = "${pn.paper-channel.queue-national-registries}", deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)
+    //@SqsListener(value = "${pn.paper-channel.queue-national-registries}", deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)
     public void pullNationalRegistries(@Payload String node, @Headers Map<String, Object> headers){
         Mono.just(node)
                 .doOnNext(message -> log.info("Do On Next: {}", message))
@@ -82,11 +82,12 @@ public class QueueListener {
                 .block();
     }
 
-    //@SqsListener(value = "${pn.paper-channel.queue-external-channel}",deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)
+    @SqsListener(value = "${pn.paper-channel.queue-external-channel}",deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)
     public void pullExternalChannel(@Payload String node, @Headers Map<String,Object> headers){
-        convertSingleStatusUpdateDto(node);
         log.info("Receive msg from external-channel with BODY - {}",node);
         log.info("Receive msg from external-channel with HEADERS - {}",headers);
+        convertSingleStatusUpdateDto(node);
+
     }
 
     private void convertSingleStatusUpdateDto(String json) {
