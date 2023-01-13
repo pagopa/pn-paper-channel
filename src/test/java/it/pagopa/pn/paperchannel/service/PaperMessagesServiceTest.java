@@ -12,17 +12,18 @@ import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
+import it.pagopa.pn.paperchannel.msclient.generated.pnnationalregistries.v1.dto.AddressOKDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.AnalogAddress;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PaperChannelUpdate;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareEvent;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareRequest;
 import it.pagopa.pn.paperchannel.rest.v1.dto.ProductTypeEnum;
 import it.pagopa.pn.paperchannel.rest.v1.dto.ProposalTypeEnum;
+import it.pagopa.pn.paperchannel.rest.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.rest.v1.dto.SendRequest;
 import it.pagopa.pn.paperchannel.rest.v1.dto.SendResponse;
 import it.pagopa.pn.paperchannel.rest.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.service.impl.PaperMessagesServiceImpl;
-import it.pagopa.pn.paperchannel.service.impl.PrepareAsyncServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -60,18 +61,17 @@ class PaperMessagesServiceTest extends BaseTest {
     private ExternalChannelClient externalChannelClient;
 
     @Mock
-    private PrepareAsyncServiceImpl prepareAsyncService;
-
-    @Mock
     private SqsSender sqsSender;
 
     private PnDeliveryRequest deliveryRequestInProcessing;
     private PnDeliveryRequest deliveryRequestTakingCharge;
+    private PnDeliveryRequest deliveryRequestRegistryWaiting;
 
     @BeforeEach
     void setUp(){
         this.deliveryRequestInProcessing = getDeliveryRequest("123-adb-567", StatusDeliveryEnum.IN_PROCESSING);
         this.deliveryRequestTakingCharge = getDeliveryRequest("123-cba-572", StatusDeliveryEnum.TAKING_CHARGE);
+        this.deliveryRequestRegistryWaiting = getDeliveryRequest("123-lsg-992", StatusDeliveryEnum.NATIONAL_REGISTRY_WAITING);
     }
 
     @Test
@@ -86,8 +86,8 @@ class PaperMessagesServiceTest extends BaseTest {
     }
 
     @Test
-    void paperMessagesServiceTest() {
-        Mockito.when(requestDeliveryDAO.getByRequestId("abcde12345")).thenReturn(Mono.just(gePnDeliveryRequest()));
+    void paperMessagesServicePROGRESSTest() {
+        Mockito.when(requestDeliveryDAO.getByRequestId("abcde12345")).thenReturn(Mono.just(getPnDeliveryRequest()));
         Mockito.when(addressDAO.findByRequestId("abcde12345")).thenReturn(Mono.just(getPnAddress("abcde12345")));
         PrepareEvent prepareEvent = paperMessagesService.retrievePaperPrepareRequest("abcde12345").block();
         assertNotNull(prepareEvent);
@@ -95,8 +95,8 @@ class PaperMessagesServiceTest extends BaseTest {
     }
 
     @Test
-    void paperMessagesServiceTest2() {
-        Mockito.when(requestDeliveryDAO.getByRequestId("abcde12345")).thenReturn(Mono.just(gePnDeliveryRequestUntraceable()));
+    void paperMessagesServiceKOUNREACHABLETest() {
+        Mockito.when(requestDeliveryDAO.getByRequestId("abcde12345")).thenReturn(Mono.just(getPnDeliveryRequestUntraceable()));
         Mockito.when(addressDAO.findByRequestId("abcde12345")).thenReturn(Mono.just(getPnAddress("abcde12345")));
         PrepareEvent prepareEvent = paperMessagesService.retrievePaperPrepareRequest("abcde12345").block();
         assertNotNull(prepareEvent);
@@ -148,6 +148,19 @@ class PaperMessagesServiceTest extends BaseTest {
         assertNotNull(response);
     }
 
+    @Test
+    void paperAsyncEntitySecondAttemptSwitchIfEmptyTest() {
+        AddressOKDto addressOKDto = new AddressOKDto();
+        PnAddress address = getPnAddress(deliveryRequestTakingCharge.getRequestId());
+        Mockito.when(requestDeliveryDAO.getByRequestId(getRelatedRequest().getRelatedRequestId())).thenReturn(Mono.just(deliveryRequestTakingCharge));
+        Mockito.when(requestDeliveryDAO.getByRequestId(deliveryRequestTakingCharge.getRequestId())).thenReturn(Mono.empty());
+        Mockito.when(nationalRegistryClient.finderAddress(getRelatedRequest().getReceiverFiscalCode(),getRelatedRequest().getReceiverType()))
+                .thenReturn(Mono.just(addressOKDto));
+        Mockito.when(addressDAO.findByRequestId(deliveryRequestTakingCharge.getRequestId())).thenReturn(Mono.just(address));
+        Mockito.when(requestDeliveryDAO.createWithAddress(Mockito.any(), Mockito.any())).thenReturn(Mono.just(deliveryRequestTakingCharge));
+        StepVerifier.create(paperMessagesService.preparePaperSync(deliveryRequestTakingCharge.getRequestId(), getRelatedRequest())).expectError(PnPaperEventException.class).verify();
+
+    }
 
     @Test
     void paperAsyncEntityAndAddressSwitchIfEmptyTest() {
@@ -157,6 +170,21 @@ class PaperMessagesServiceTest extends BaseTest {
         Mockito.when(requestDeliveryDAO.createWithAddress(Mockito.any(), Mockito.any())).thenReturn(Mono.just(deliveryRequestTakingCharge));
         Mockito.doNothing().when(sqsSender).pushToInternalQueue(Mockito.any());
         StepVerifier.create(paperMessagesService.preparePaperSync(deliveryRequestTakingCharge.getRequestId(), getRequestOK())).expectError(PnPaperEventException.class).verify();
+    }
+
+    @Test
+    void retrievePaperSendRequesTest() {
+        PnAddress address = getPnAddress(deliveryRequestTakingCharge.getRequestId());
+        Mockito.when(requestDeliveryDAO.getByRequestId(deliveryRequestRegistryWaiting.getRequestId())).thenReturn(Mono.just(deliveryRequestRegistryWaiting));
+        Mockito.when(addressDAO.findByRequestId(deliveryRequestRegistryWaiting.getRequestId())).thenReturn(Mono.just(address));
+        SendEvent response = paperMessagesService.retrievePaperSendRequest(deliveryRequestRegistryWaiting.getRequestId()).block();
+        assertNotNull(response);
+    }
+
+    @Test
+    void retrievePaperSendRequestestError() {
+        Mockito.when(requestDeliveryDAO.getByRequestId(deliveryRequestTakingCharge.getRequestId())).thenReturn(Mono.just(deliveryRequestTakingCharge));
+        StepVerifier.create(paperMessagesService.retrievePaperSendRequest(deliveryRequestTakingCharge.getRequestId())).expectError(PnGenericException.class).verify();
     }
 
     private SendRequest getRequest(String reqeustId){
@@ -186,7 +214,7 @@ class PaperMessagesServiceTest extends BaseTest {
         sendRequest.setReceiverAddress(analogAddress);
         return sendRequest;
     }
-    private PnDeliveryRequest gePnDeliveryRequest(){
+    private PnDeliveryRequest getPnDeliveryRequest(){
         PnDeliveryRequest deliveryRequest= new PnDeliveryRequest();
         List<PnAttachmentInfo> attachmentUrls = new ArrayList<>();
         PnAttachmentInfo pnAttachmentInfo = new PnAttachmentInfo();
@@ -226,7 +254,7 @@ class PaperMessagesServiceTest extends BaseTest {
         return deliveryRequest;
     }
 
-    private PnDeliveryRequest gePnDeliveryRequestUntraceable(){
+    private PnDeliveryRequest getPnDeliveryRequestUntraceable(){
         PnDeliveryRequest deliveryRequest= new PnDeliveryRequest();
         List<PnAttachmentInfo> attachmentUrls = new ArrayList<>();
         PnAttachmentInfo pnAttachmentInfo = new PnAttachmentInfo();
