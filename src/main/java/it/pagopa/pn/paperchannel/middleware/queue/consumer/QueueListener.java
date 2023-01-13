@@ -49,7 +49,7 @@ public class QueueListener {
                 .switchIfEmpty(Mono.error(new PnGenericException(MAPPER_ERROR, MAPPER_ERROR.getMessage())))
                 .flatMap(prepareRequest -> this.paperAsyncService.prepareAsync(prepareRequest))
                 .doOnSuccess(resultFromAsync -> {
-                    log.info("End of prepare async");
+                    log.info("End of prepare async internal");
                 })
                 .doOnError(throwable -> {
                     log.error(throwable.getMessage());

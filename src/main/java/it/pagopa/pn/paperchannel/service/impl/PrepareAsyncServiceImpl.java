@@ -93,7 +93,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                 .flatMap(deliveryRequestAndAddress -> {
                     //Controllo se l'indirizzo che ho proviene da NationalRegistry
                     if (deliveryRequestAndAddress.getT2().isFromNationalRegistry()){
-                        log.info("Indirizzo di national registry");
+                        log.info("National registry address");
                         return addressDAO.create(AddressMapper.toEntity(addressFromNationalRegistry, deliveryRequestAndAddress.getT1().getRequestId()))
                                 .map(item -> deliveryRequestAndAddress);
                     }
