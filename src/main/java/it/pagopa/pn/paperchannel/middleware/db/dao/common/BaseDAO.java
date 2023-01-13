@@ -151,14 +151,6 @@ public abstract class BaseDAO<T> {
         });
     }
 
-    protected Key keyBuild(String partitionKey, Long sortKey){
-        Key.Builder builder = Key.builder().partitionValue(partitionKey);
-        if (sortKey == null){
-            builder.sortValue(sortKey);
-        }
-        return builder.build();
-    }
-
     protected Key keyBuild(String partitionKey, String sortKey){
         Key.Builder builder = Key.builder().partitionValue(partitionKey);
         if (StringUtils.isNotBlank(sortKey)){

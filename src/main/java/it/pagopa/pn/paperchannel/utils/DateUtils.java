@@ -5,7 +5,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.cglib.core.Local;
 import org.springframework.data.util.Pair;
+import software.amazon.ion.Timestamp;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
@@ -14,8 +18,10 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.BADLY_FILTER
 
 @Slf4j
 public class DateUtils {
-    private static final Long START_TIMESTAMP = 1672527600L;
+//    private static final Long START_TIMESTAMP = 1672531200L;
+    private static final String START_DATE = "2023/01/01 12:00:00";
     private static final ZoneId italianZoneId =  ZoneId.of("Europe/Rome");
+
 
     private DateUtils(){}
 
@@ -39,7 +45,6 @@ public class DateUtils {
         return time.toInstant(ZoneOffset.UTC).getEpochSecond();
     }
 
-
     public static OffsetDateTime getOffsetDateTime(String date){
         return LocalDateTime.parse(date, DateTimeFormatter.ISO_LOCAL_DATE_TIME).atOffset(ZoneOffset.UTC);
     }
@@ -49,20 +54,32 @@ public class DateUtils {
         return OffsetDateTime.ofInstant(date.toInstant(), ZoneOffset.UTC);
     }
 
-    public static Pair<Long, Long> getStartAndEndTimestamp(String startDate, String endDate){
-        Long start = START_TIMESTAMP;
-        Long end = getTimeStampOfMills(LocalDateTime.now());
+    public static Pair<Instant, Instant> getStartAndEndTimestamp(String startDate, String endDate){
+        Instant start = parseDateString(START_DATE).toInstant();
+        Instant end = Instant.now();
+
         if (StringUtils.isNotBlank(startDate)){
-            start = getTimeStampOfMills(LocalDateTime.parse(startDate, DateTimeFormatter.ISO_LOCAL_DATE_TIME));
-        }
-        if (StringUtils.isNotBlank(endDate)){
-            end = getTimeStampOfMills(LocalDateTime.parse(endDate, DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+            start = parseDateString(startDate).toInstant();
         }
 
-        if (start < end){
+        if (StringUtils.isNotBlank(endDate)){
+            end = parseDateString(endDate).toInstant();
+        }
+
+        if (start.isAfter(end)){
             throw new PnGenericException(BADLY_FILTER_REQUEST, BADLY_FILTER_REQUEST.getMessage());
         }
+
         return Pair.of(start, end);
+    }
+
+    public static Long getAwsTimeStampOfMills(String date) throws ParseException {
+        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+        if(date == null) {
+            date = dateFormat.format(new Date());
+        }
+        Date inputDate = dateFormat.parse(date);
+        return Timestamp.forDateZ(inputDate).getMillis();
     }
 
     /*

@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.rest.v1;
 
+import it.pagopa.pn.paperchannel.model.DeliveryDriverFilter;
 import it.pagopa.pn.paperchannel.rest.v1.api.DeliveryDriverApi;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PageableDeliveryDriverResponseDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.BaseResponse;
@@ -28,6 +29,10 @@ public class PaperChannelRestV1Controller implements DeliveryDriverApi {
     }
     @Override
     public Mono<ResponseEntity<PageableDeliveryDriverResponseDto>> takeDeliveryDriver(Integer page, Integer size, Boolean status, Date startDate, Date endDate, ServerWebExchange exchange) {
-        return DeliveryDriverApi.super.takeDeliveryDriver(page, size, status, startDate, endDate, exchange);
+        return paperChannelService.takeDeliveryDriver(new DeliveryDriverFilter(page, size, status, startDate, endDate))
+                .map(item -> {
+                    return ResponseEntity.ok().body(item);
+                });
     }
+
 }

@@ -10,6 +10,7 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.BaseDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.TransactWriterInitializer;
 import it.pagopa.pn.paperchannel.middleware.db.entities.*;
+import it.pagopa.pn.paperchannel.utils.DateUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Import;
 import org.springframework.stereotype.Repository;
@@ -20,6 +21,9 @@ import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
+import java.text.ParseException;
+import java.time.Instant;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,6 +58,7 @@ public class CostDAOImpl extends BaseDAO<PnPaperCost> implements CostDAO {
 
         this.transactWriterInitializer.init();
         if (pnDeliveryDriver != null) {
+            pnDeliveryDriver.setStartDate(Instant.now());
             transactWriterInitializer.addRequestTransaction(deliveryDriverTable, pnDeliveryDriver, PnPaperDeliveryDriver.class);
         }
         pnListCosts.forEach(cost -> transactWriterInitializer.addRequestTransaction(this.dynamoTable, cost, PnPaperCost.class));

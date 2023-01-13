@@ -6,6 +6,8 @@ import lombok.Setter;
 import lombok.ToString;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
 
+import java.time.Instant;
+
 @DynamoDbBean
 @Getter
 @Setter
@@ -40,5 +42,5 @@ public class PnPaperDeliveryDriver {
     public String created;
 
     @Getter(onMethod = @__({@DynamoDbSecondarySortKey(indexNames = CREATED_INDEX),@DynamoDbAttribute(COL_START_DATE)}))
-    public String startDate;
+    public Instant startDate;
 }
