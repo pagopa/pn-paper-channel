@@ -8,6 +8,11 @@ import java.util.Date;
 
 
 public class CostMapper {
+
+    private CostMapper(){
+        throw new IllegalCallerException();
+    }
+
     public static PnPaperCost fromContractDTO(ContractDto contractDto){
 
         PnPaperCost costs = new PnPaperCost();

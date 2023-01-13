@@ -3,6 +3,7 @@ package it.pagopa.pn.paperchannel.mapper;
 import it.pagopa.pn.paperchannel.mapper.common.BaseMapper;
 import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnPaperDeliveryDriver;
+import it.pagopa.pn.paperchannel.model.PageModel;
 import it.pagopa.pn.paperchannel.rest.v1.dto.ContractInsertRequestDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.DeliveryDriverDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PageableDeliveryDriverResponseDto;
@@ -28,7 +29,7 @@ public class DeliveryDriverMapper {
         return contractRequest;
     }
 
-    public static PageableDeliveryDriverResponseDto deliveryDriverToPageableDeliveryDriverDto(Page<PnPaperDeliveryDriver> pagePnPaperDeliveryDriver) {
+    public static PageableDeliveryDriverResponseDto deliveryDriverToPageableDeliveryDriverDto(PageModel<PnPaperDeliveryDriver> pagePnPaperDeliveryDriver) {
         PageableDeliveryDriverResponseDto pageableDeliveryDriverResponseDto = new PageableDeliveryDriverResponseDto();
         pageableDeliveryDriverResponseDto.setPageable(pagePnPaperDeliveryDriver.getPageable());
         pageableDeliveryDriverResponseDto.setNumber(pagePnPaperDeliveryDriver.getNumber());
@@ -36,11 +37,10 @@ public class DeliveryDriverMapper {
         pageableDeliveryDriverResponseDto.setSize(pagePnPaperDeliveryDriver.getSize());
         pageableDeliveryDriverResponseDto.setTotalElements(pagePnPaperDeliveryDriver.getTotalElements());
         pageableDeliveryDriverResponseDto.setTotalPages((long) pagePnPaperDeliveryDriver.getTotalPages());
-        pageableDeliveryDriverResponseDto.setContent(pagePnPaperDeliveryDriver
-                .stream()
-                .map(DeliveryDriverMapper::deliveryDriverToDto)
-                .collect(Collectors.toList()));
-        pageableDeliveryDriverResponseDto.setEmpty(pagePnPaperDeliveryDriver.getSize() <= 0);
+        pageableDeliveryDriverResponseDto.setFirst(pagePnPaperDeliveryDriver.isFirst());
+        pageableDeliveryDriverResponseDto.setLast(pagePnPaperDeliveryDriver.isLast());
+        pageableDeliveryDriverResponseDto.setEmpty(pagePnPaperDeliveryDriver.isEmpty());
+        pageableDeliveryDriverResponseDto.setContent(pagePnPaperDeliveryDriver.mapTo(DeliveryDriverMapper::deliveryDriverToDto));
         return pageableDeliveryDriverResponseDto;
     }
 
@@ -48,11 +48,8 @@ public class DeliveryDriverMapper {
         return mapperDeliveryDriverToDto.toDTO(pnPaperDeliveryDriver);
     }
 
-    public static Page<PnPaperDeliveryDriver> paginateList(Pageable pageable, List<PnPaperDeliveryDriver> list) {
-//        int first = (int) Math.min(pageable.getOffset(), list.size());;
-//        int last = Math.min(first + pageable.getPageSize(), list.size());
-//        return new PageImpl<>(list.subList(first, last), pageable, list.size());
-        return new PageImpl<>(list, pageable, list.size());
+    public static PageModel<PnPaperDeliveryDriver> paginateList(Pageable pageable, List<PnPaperDeliveryDriver> list) {
+        return PageModel.builder(list, pageable);
     }
 
 }

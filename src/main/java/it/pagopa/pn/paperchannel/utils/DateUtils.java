@@ -3,7 +3,6 @@ package it.pagopa.pn.paperchannel.utils;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.cglib.core.Local;
 import org.springframework.data.util.Pair;
 import software.amazon.ion.Timestamp;
 
@@ -18,8 +17,7 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.BADLY_FILTER
 
 @Slf4j
 public class DateUtils {
-//    private static final Long START_TIMESTAMP = 1672531200L;
-    private static final String START_DATE = "2023/01/01 12:00:00";
+    private static final String START_DATE = "2020-01-01T10:15:30";
     private static final ZoneId italianZoneId =  ZoneId.of("Europe/Rome");
 
 

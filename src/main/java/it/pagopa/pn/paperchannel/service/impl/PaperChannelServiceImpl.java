@@ -53,9 +53,6 @@ public class PaperChannelServiceImpl implements PaperChannelService {
         return deliveryDriverDAO.getDeliveryDriver(filter)
                 .map(list -> DeliveryDriverMapper.paginateList(pageable, list))
                 .map(DeliveryDriverMapper::deliveryDriverToPageableDeliveryDriverDto);
-        // recupero i dati
-        // Paginiamo i dati
-        // costruisco la response -> PageableDeliveryDriverResponseDto
     }
 
     @Override
