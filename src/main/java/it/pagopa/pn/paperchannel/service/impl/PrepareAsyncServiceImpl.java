@@ -14,6 +14,7 @@ import it.pagopa.pn.paperchannel.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.paperchannel.model.*;
 import it.pagopa.pn.paperchannel.msclient.generated.pnsafestorage.v1.dto.FileDownloadResponseDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.ProductTypeEnum;
+import it.pagopa.pn.paperchannel.rest.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.service.PaperAsyncService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.Const;
@@ -93,7 +94,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                 .flatMap(deliveryRequestAndAddress -> {
                     //Controllo se l'indirizzo che ho proviene da NationalRegistry
                     if (deliveryRequestAndAddress.getT2().isFromNationalRegistry()){
-                        log.info("Indirizzo di national registry");
+                        log.info("National registry address");
                         return addressDAO.create(AddressMapper.toEntity(addressFromNationalRegistry, deliveryRequestAndAddress.getT1().getRequestId()))
                                 .map(item -> deliveryRequestAndAddress);
                     }
@@ -102,7 +103,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                 .flatMap(deliveryRequestAndAddress -> {
                     PnDeliveryRequest pnDeliveryRequest = deliveryRequestAndAddress.getT1();
                     Address address = deliveryRequestAndAddress.getT2();
-                    this.sqsQueueSender.pushPrepareEvent(PrepareEventMapper.toPrepareEvent(pnDeliveryRequest, address));
+                    this.sqsQueueSender.pushPrepareEvent(PrepareEventMapper.toPrepareEvent(pnDeliveryRequest, address, StatusCodeEnum.OK));
 
                     return this.requestDeliveryDAO.updateData(pnDeliveryRequest);
                 })
@@ -216,7 +217,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
     private Mono<PnDeliveryRequest> getAttachmentsInfo(PnDeliveryRequest deliveryRequest){
 
         if(deliveryRequest.getAttachments().isEmpty() ||
-                !deliveryRequest.getAttachments().stream().filter(a -> a.getNumberOfPage()>0).collect(Collectors.toList()).isEmpty()){
+                !deliveryRequest.getAttachments().stream().filter(a ->a.getNumberOfPage()!=null && a.getNumberOfPage()>0).collect(Collectors.toList()).isEmpty()){
             return Mono.just(deliveryRequest);
         }
 

@@ -40,6 +40,7 @@ public class SqsQueueSender implements SqsSender {
     }
 
     private void push(SendEvent sendEvent, PrepareEvent prepareEvent){
+        log.info("Push event to queue {}", (sendEvent != null ? sendEvent.getRequestId() : prepareEvent.getRequestId()));
         GenericEventHeader deliveryHeader= GenericEventHeader.builder()
                 .publisher("paper-channel-update")
                 .eventId(UUID.randomUUID().toString())

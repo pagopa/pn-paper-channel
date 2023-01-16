@@ -2,9 +2,11 @@ package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
+import it.pagopa.pn.paperchannel.mapper.AttachmentMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.SingleStatusUpdateDto;
+import it.pagopa.pn.paperchannel.rest.v1.dto.AttachmentDetails;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PaperChannelUpdate;
 import it.pagopa.pn.paperchannel.rest.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.service.PaperResultAsyncService;
@@ -17,6 +19,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.util.Date;
+import java.util.stream.Collectors;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DATA_NULL_OR_INVALID;
 import static it.pagopa.pn.paperchannel.validator.SendRequestValidator.compareProgressStatusRequestEntity;
@@ -33,18 +36,18 @@ public class PaperResultAsyncServiceImpl implements PaperResultAsyncService {
     @Override
     public Mono<PnDeliveryRequest> resultAsyncBackground(SingleStatusUpdateDto singleStatusUpdateDto) {
         if (singleStatusUpdateDto == null || singleStatusUpdateDto.getAnalogMail() == null || StringUtils.isBlank(singleStatusUpdateDto.getAnalogMail().getRequestId())){
-            log.error("the message sended from external channel, includes errors. It cannot be processing");
+            log.error("the message sent from external channel, includes errors. It cannot be processing");
             return Mono.error(new PnGenericException(DATA_NULL_OR_INVALID, DATA_NULL_OR_INVALID.getMessage()));
         }
 
         return requestDeliveryDAO.getByRequestId(singleStatusUpdateDto.getAnalogMail().getRequestId())
                 .flatMap(entity -> {
                     log.info("GETTED ENTITY: {}", entity);
-                    compareProgressStatusRequestEntity(singleStatusUpdateDto.getAnalogMail(), entity);
+
                     return updateEntityResult(singleStatusUpdateDto, entity)
                             .flatMap(updatedEntity -> {
                                 log.info("UPDATED ENTITY: {}", updatedEntity);
-                                sendPaperResponse(singleStatusUpdateDto);
+                                sendPaperResponse(updatedEntity, singleStatusUpdateDto);
                                 return Mono.just(updatedEntity);
                             });
                 })
@@ -62,17 +65,26 @@ public class PaperResultAsyncServiceImpl implements PaperResultAsyncService {
         return requestDeliveryDAO.updateData(pnDeliveryRequestMono);
     }
 
-    private void sendPaperResponse(SingleStatusUpdateDto singleStatusUpdateDto) {
-        PaperChannelUpdate paperChannelUpdate = new PaperChannelUpdate();
+    private void sendPaperResponse(PnDeliveryRequest entity, SingleStatusUpdateDto request) {
         SendEvent sendEvent = new SendEvent();
-        paperChannelUpdate.sendEvent(sendEvent);
-        if (singleStatusUpdateDto.getAnalogMail() != null && singleStatusUpdateDto.getAnalogMail().getDiscoveredAddress() != null){
-            sendEvent.setDiscoveredAddress(AddressMapper.toPojo(singleStatusUpdateDto.getAnalogMail().getDiscoveredAddress()));
+
+        sendEvent.setStatusCode(entity.getStatusCode());
+        sendEvent.setStatusDetail(entity.getStatusDetail());
+        sendEvent.setStatusDescription(entity.getStatusDetail());
+
+        if (request.getAnalogMail() != null) {
+            sendEvent.setRequestId(request.getAnalogMail().getRequestId());
+            sendEvent.setStatusDateTime(DateUtils.getDatefromOffsetDateTime(request.getAnalogMail().getStatusDateTime()));
+            sendEvent.setRegisteredLetterCode(request.getAnalogMail().getRegisteredLetterCode());
+            sendEvent.setClientRequestTimeStamp(Date.from(request.getAnalogMail().getClientRequestTimeStamp().toInstant()));
+            sendEvent.setDeliveryFailureCause(request.getAnalogMail().getDeliveryFailureCause());
+            sendEvent.setDiscoveredAddress(AddressMapper.toPojo(request.getAnalogMail().getDiscoveredAddress()));
+
+            if (request.getAnalogMail().getAttachments() != null && !request.getAnalogMail().getAttachments().isEmpty()) {
+                sendEvent.setAttachments(request.getAnalogMail().getAttachments().stream().map(AttachmentMapper::fromAttachmentDetailsDto).collect(Collectors.toList()));
+            }
         }
-        sendEvent.setClientRequestTimeStamp(Date.from(singleStatusUpdateDto.getAnalogMail().getClientRequestTimeStamp().toInstant()));
-        if(StringUtils.isNotEmpty(singleStatusUpdateDto.getAnalogMail().getDeliveryFailureCause())) {
-            sendEvent.setDeliveryFailureCause(singleStatusUpdateDto.getAnalogMail().getDeliveryFailureCause());
-        }
+
         sqsSender.pushSendEvent(sendEvent);
     }
 
