@@ -91,7 +91,7 @@ class PaperMessagesServiceTest extends BaseTest {
         Mockito.when(addressDAO.findByRequestId("abcde12345")).thenReturn(Mono.just(getPnAddress("abcde12345")));
         PrepareEvent prepareEvent = paperMessagesService.retrievePaperPrepareRequest("abcde12345").block();
         assertNotNull(prepareEvent);
-        Assertions.assertEquals(prepareEvent.getStatusCode(), StatusCodeEnum.PROGRESS);
+        Assertions.assertEquals(StatusCodeEnum.PROGRESS, prepareEvent.getStatusCode());
     }
 
     @Test
@@ -100,7 +100,7 @@ class PaperMessagesServiceTest extends BaseTest {
         Mockito.when(addressDAO.findByRequestId("abcde12345")).thenReturn(Mono.just(getPnAddress("abcde12345")));
         PrepareEvent prepareEvent = paperMessagesService.retrievePaperPrepareRequest("abcde12345").block();
         assertNotNull(prepareEvent);
-        Assertions.assertEquals(prepareEvent.getStatusCode(), StatusCodeEnum.KOUNREACHABLE);
+        Assertions.assertEquals(StatusCodeEnum.KOUNREACHABLE, prepareEvent.getStatusCode());
     }
 
     @Test
