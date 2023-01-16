@@ -198,14 +198,14 @@
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <configuration>
-                    <!--
+
                     <excludes>
-                        <exclude>it/pagopa/pn/radd/microservice/msclient/generated/*</exclude>
-                        <exclude>it/pagopa/pn/radd/microservice/msclient/generated/**</exclude>
-                        <exclude>it/pagopa/pn/radd/rest/radd/v1/api/*</exclude>
-                        <exclude>it/pagopa/pn/radd/rest/radd/v1/dto/*</exclude>
+                        <exclude>it/pagopa/pn/paperchannel/msclient/generated/**</exclude>
+                        <exclude>it/pagopa/pn/paperchannel/rest/v1/api/*</exclude>
+                        <exclude>it/pagopa/pn/paperchannel/rest/v1/dto/*</exclude>
+                        <exclude>it/pagopa/pn/paperchannel/rest/v1/config/*</exclude>
                     </excludes>
-                    -->
+
                 </configuration>
             </plugin>
             <plugin>
