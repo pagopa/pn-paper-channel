@@ -3,7 +3,11 @@ package it.pagopa.pn.paperchannel.rest.v1;
 import it.pagopa.pn.paperchannel.encryption.KmsEncryption;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnPaperDeliveryDriver;
+import it.pagopa.pn.paperchannel.model.DeliveryDriverFilter;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.SingleStatusUpdateDto;
+import it.pagopa.pn.paperchannel.rest.v1.dto.PageableDeliveryDriverResponseDto;
+import it.pagopa.pn.paperchannel.service.PaperChannelService;
 import it.pagopa.pn.paperchannel.service.PaperResultAsyncService;
 import it.pagopa.pn.paperchannel.service.impl.PrepareAsyncServiceImpl;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
+import java.util.Date;
 
 @Slf4j
 @RestController
@@ -30,6 +35,10 @@ public class IndexController {
 
     @Autowired
     private PaperResultAsyncService paperResultAsyncService;
+
+    @Autowired
+    private PaperChannelService paperChannelService;
+
 
     @GetMapping(value = "/crypt")
 //    public Mono<ResponseEntity<PnAddress>> encryption(){
@@ -68,6 +77,26 @@ public class IndexController {
         return paperResultAsyncService.resultAsyncBackground(singleStatusUpdateDtoRequest)
                 .map(item -> {
                     log.info("SEND RESULT ENTITY: {}", item);
+                    return ResponseEntity.ok().body(item);
+                });
+    }
+
+    @PostMapping(value = "/addDeliveryDriver")
+    public Mono<ResponseEntity<PnPaperDeliveryDriver>> addDeliveryDriver(@RequestBody PnPaperDeliveryDriver pnPaperDeliveryDriver){
+        return paperChannelService.addDeliveryDriver(pnPaperDeliveryDriver)
+                .map(item -> {
+                    log.info("DELIVERY DRIVER ADDED : {}", item);
+                    return ResponseEntity.ok().body(item);
+                });
+    }
+
+    @GetMapping(value = "/takeDeliveryDriver")
+    public Mono<ResponseEntity<PageableDeliveryDriverResponseDto>> takeDeliveryDriver(@RequestParam(name="page") String page,
+            @RequestParam(name="size") String size,
+            @RequestParam(required=false, name="startDate") Date startDate){
+        return paperChannelService.takeDeliveryDriver(new DeliveryDriverFilter(Integer.valueOf(page), Integer.valueOf(size), false, startDate, null))
+                .map(item -> {
+                    log.info("DELIVERY DRIVER PAGE : {}", item);
                     return ResponseEntity.ok().body(item);
                 });
     }

@@ -1,16 +1,25 @@
 package it.pagopa.pn.paperchannel.utils;
 
+import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.util.Pair;
+import software.amazon.ion.Timestamp;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.BADLY_FILTER_REQUEST;
+
 @Slf4j
 public class DateUtils {
-
+    private static final String START_DATE = "2020-01-01T10:15:30";
     private static final ZoneId italianZoneId =  ZoneId.of("Europe/Rome");
+
 
     private DateUtils(){}
 
@@ -34,7 +43,6 @@ public class DateUtils {
         return time.toInstant(ZoneOffset.UTC).getEpochSecond();
     }
 
-
     public static OffsetDateTime getOffsetDateTime(String date){
         return LocalDateTime.parse(date, DateTimeFormatter.ISO_LOCAL_DATE_TIME).atOffset(ZoneOffset.UTC);
     }
@@ -46,6 +54,34 @@ public class DateUtils {
 
     public static Date getDatefromOffsetDateTime(OffsetDateTime offsetDateTime) {
         return Date.from(offsetDateTime.toInstant());
+    }
+
+    public static Pair<Instant, Instant> getStartAndEndTimestamp(String startDate, String endDate){
+        Instant start = parseDateString(START_DATE).toInstant();
+        Instant end = Instant.now();
+
+        if (StringUtils.isNotBlank(startDate)){
+            start = parseDateString(startDate).toInstant();
+        }
+
+        if (StringUtils.isNotBlank(endDate)){
+            end = parseDateString(endDate).toInstant();
+        }
+
+        if (start.isAfter(end)){
+            throw new PnGenericException(BADLY_FILTER_REQUEST, BADLY_FILTER_REQUEST.getMessage());
+        }
+
+        return Pair.of(start, end);
+    }
+
+    public static Long getAwsTimeStampOfMills(String date) throws ParseException {
+        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+        if(date == null) {
+            date = dateFormat.format(new Date());
+        }
+        Date inputDate = dateFormat.parse(date);
+        return Timestamp.forDateZ(inputDate).getMillis();
     }
 
     /*

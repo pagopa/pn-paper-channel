@@ -266,6 +266,12 @@ components:
           format: float
           maximum: 999999
           minimum: 1
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
       additionalProperties: false
 
     NationalContractDto:
@@ -345,11 +351,6 @@ components:
     DeliveryDriverDto:
       type: object
       properties:
-        id:
-          type: integer
-          format: int64
-          maximum: 64
-          minimum: 1
         denomination:
           type: string
           example: 'Denominazione'
