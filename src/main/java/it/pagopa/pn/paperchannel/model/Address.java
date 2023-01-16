@@ -6,8 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.security.NoSuchAlgorithmException;
-
 @Getter
 @Setter
 @AllArgsConstructor
@@ -31,6 +29,8 @@ public class Address {
     private String pr;
 
     private String country;
+
+    private boolean fromNationalRegistry = false;
 
     public String convertToHash() {
         StringBuilder builder = new StringBuilder();

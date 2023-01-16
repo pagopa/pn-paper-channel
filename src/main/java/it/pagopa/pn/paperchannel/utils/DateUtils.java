@@ -52,6 +52,10 @@ public class DateUtils {
         return OffsetDateTime.ofInstant(date.toInstant(), ZoneOffset.UTC);
     }
 
+    public static Date getDatefromOffsetDateTime(OffsetDateTime offsetDateTime) {
+        return Date.from(offsetDateTime.toInstant());
+    }
+
     public static Pair<Instant, Instant> getStartAndEndTimestamp(String startDate, String endDate){
         Instant start = parseDateString(START_DATE).toInstant();
         Instant end = Instant.now();

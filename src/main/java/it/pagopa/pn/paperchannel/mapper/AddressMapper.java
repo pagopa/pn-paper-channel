@@ -37,6 +37,7 @@ public class AddressMapper {
         address.setCity2(pysicalAddress.getMunicipalityDetails());
         address.setPr(pysicalAddress.getProvince());
         address.setCountry(pysicalAddress.getForeignState());
+        address.setFromNationalRegistry(true);
         return address;
     }
 
@@ -52,7 +53,11 @@ public class AddressMapper {
     }
 
     public static AnalogAddress toPojo(DiscoveredAddressDto discoveredAddressDto){
-        return mapperToAnalog.toEntity(discoveredAddressDto);
+        if (discoveredAddressDto == null) return null;
+
+        AnalogAddress address = mapperToAnalog.toEntity(discoveredAddressDto);
+        address.setFullname(discoveredAddressDto.getName());
+        return address;
     }
 
     public static AnalogAddress toPojo(Address address){

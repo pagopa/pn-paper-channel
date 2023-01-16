@@ -25,10 +25,14 @@ public class PaperMessagesRestV1Controller implements PaperMessagesApi {
         return paperMessagesService.retrievePaperPrepareRequest(requestId).map(ResponseEntity::ok);
     }
 
-
     @Override
     public Mono<ResponseEntity<SendResponse>> sendPaperSendRequest(String requestId, Mono<SendRequest> sendRequest, ServerWebExchange exchange) {
         return sendRequest.flatMap(request -> paperMessagesService.executionPaper(requestId, request))
                 .map(ResponseEntity::ok);
+    }
+
+    @Override
+    public Mono<ResponseEntity<SendEvent>> retrievePaperSendRequest(String requestId, ServerWebExchange exchange) {
+        return paperMessagesService.retrievePaperSendRequest(requestId).map(ResponseEntity::ok);
     }
 }

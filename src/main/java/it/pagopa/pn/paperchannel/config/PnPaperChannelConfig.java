@@ -24,5 +24,6 @@ public class PnPaperChannelConfig {
     private String queueDeliveryPush;
     private String queueNationalRegistries;
     private String queueExternalChannel;
+    private String queueInternal;
 
 }

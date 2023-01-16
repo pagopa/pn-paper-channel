@@ -1,7 +1,6 @@
 package it.pagopa.pn.paperchannel.validator;
 
 import it.pagopa.pn.paperchannel.exception.PnInputValidatorException;
-import it.pagopa.pn.paperchannel.mapper.AttachmentMapper;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.AttachmentDetailsDto;
@@ -73,7 +72,7 @@ public class SendRequestValidator {
             errors.add("Iun");
         }
 
-        if (!StringUtils.equals(paperProgressStatusEventDto.getProductType(), pnDeliveryEntity.getProductType())) {
+        if (!StringUtils.equals(paperProgressStatusEventDto.getProductType(), pnDeliveryEntity.getProposalProductType())) {
             errors.add("ProductType");
         }
 
