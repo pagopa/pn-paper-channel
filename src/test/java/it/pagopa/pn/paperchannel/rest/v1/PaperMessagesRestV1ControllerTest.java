@@ -1,14 +1,7 @@
 package it.pagopa.pn.paperchannel.rest.v1;
 
 
-import it.pagopa.pn.paperchannel.rest.v1.dto.AnalogAddress;
-import it.pagopa.pn.paperchannel.rest.v1.dto.PaperChannelUpdate;
-import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareEvent;
-import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareRequest;
-import it.pagopa.pn.paperchannel.rest.v1.dto.ProductTypeEnum;
-import it.pagopa.pn.paperchannel.rest.v1.dto.ProposalTypeEnum;
-import it.pagopa.pn.paperchannel.rest.v1.dto.SendRequest;
-import it.pagopa.pn.paperchannel.rest.v1.dto.SendResponse;
+import it.pagopa.pn.paperchannel.rest.v1.dto.*;
 import it.pagopa.pn.paperchannel.service.PaperMessagesService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -65,6 +58,18 @@ class PaperMessagesRestV1ControllerTest {
         PrepareEvent response = new PrepareEvent();
         String path = "/paper-channel-private/v1/b2b/paper-deliveries-prepare/12345ABC";
         Mockito.when(paperMessagesService.retrievePaperPrepareRequest(Mockito.anyString()))
+                .thenReturn(Mono.just(response));
+
+        webTestClient.get()
+                .uri(uriBuilder -> uriBuilder.path(path).build())
+                .exchange()
+                .expectStatus().isOk();
+    }
+    @Test
+    void testRetrievePaperSendRequest(){
+        SendEvent response = new SendEvent();
+        String path = "/paper-channel-private/v1/b2b/paper-deliveries-send/123456AEFD";
+        Mockito.when(paperMessagesService.retrievePaperSendRequest(Mockito.anyString()))
                 .thenReturn(Mono.just(response));
 
         webTestClient.get()
