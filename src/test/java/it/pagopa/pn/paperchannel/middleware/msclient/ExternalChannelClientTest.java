@@ -1,10 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.msclient;
 
 import it.pagopa.pn.paperchannel.config.BaseTest;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
-import it.pagopa.pn.paperchannel.model.Address;
-import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.rest.v1.dto.AnalogAddress;
 import it.pagopa.pn.paperchannel.rest.v1.dto.ProductTypeEnum;
 import it.pagopa.pn.paperchannel.rest.v1.dto.SendRequest;
@@ -31,14 +27,37 @@ class ExternalChannelClientTest  extends BaseTest.WithMockServer {
     public void setUp() {
         this.sendRequest = getRequest("abcd12345");
         sendRequest.setClientRequestTimeStamp(new Date());
-        sendRequest.setProductType(ProductTypeEnum.RI_AR);
+
     }
 
     @Test
     void testOK() {
+        AnalogAddress arAddress = new AnalogAddress();
+        arAddress.setFullname("abcdefg12345");
+        arAddress.setAddress("via roma");
+        arAddress.setCap("00065");
+        arAddress.setCity("roma");
+
         this.sendRequest.getRequestId();
+        this.sendRequest.setArAddress(arAddress);
+        this.sendRequest.setProductType(ProductTypeEnum.RI_AR);
         externalChannelClient.sendEngageRequest(sendRequest).block();
     }
+
+    @Test
+    void testOKproductTypeRN_RS() {
+        this.sendRequest.getRequestId();
+        this.sendRequest.setProductType(ProductTypeEnum.RN_RS);
+        externalChannelClient.sendEngageRequest(sendRequest).block();
+    }
+
+    @Test
+    void testOKproductTypeRN_890() {
+        this.sendRequest.getRequestId();
+        this.sendRequest.setProductType(ProductTypeEnum.RN_890);
+        externalChannelClient.sendEngageRequest(sendRequest).block();
+    }
+
 
     @Test
     void testBadRequest() {
