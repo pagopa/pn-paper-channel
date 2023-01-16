@@ -44,6 +44,10 @@ public class DateUtils {
         return OffsetDateTime.ofInstant(date.toInstant(), ZoneOffset.UTC);
     }
 
+    public static Date getDatefromOffsetDateTime(OffsetDateTime offsetDateTime) {
+        return Date.from(offsetDateTime.toInstant());
+    }
+
     /*
 
     public static String formatTime(ZonedDateTime datetime) {
