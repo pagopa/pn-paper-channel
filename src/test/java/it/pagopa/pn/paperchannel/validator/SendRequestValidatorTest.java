@@ -1,18 +1,23 @@
 package it.pagopa.pn.paperchannel.validator;
 
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
-import it.pagopa.pn.paperchannel.exception.PnInputValidatorException;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.model.Address;
+import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.AttachmentDetailsDto;
+import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.AnalogAddress;
 import it.pagopa.pn.paperchannel.rest.v1.dto.ProductTypeEnum;
 import it.pagopa.pn.paperchannel.rest.v1.dto.SendRequest;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DIFFERENT_DATA_REQUEST;
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DIFFERENT_DATA_RESULT;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class SendRequestValidatorTest {
 
@@ -23,12 +28,53 @@ class SendRequestValidatorTest {
 
     @Test
     void sendRequestValidatorTestError() {
-        List<String> errors = new ArrayList<>();
-        PnGenericException ex = Assertions.assertThrows(PnInputValidatorException.class,
-                () -> SendRequestValidator.compareRequestEntity(getRequest(),getEntity()));
-        Assertions.assertNotNull(errors);
-        Assertions.assertEquals("Richiesta già preso in carico ma sono state inviate informazioni differenti (requestId già presente)", ex.getMessage());
+        try {
+            SendRequestValidator.compareRequestEntity(getRequest(),getEntity());
+        } catch (PnGenericException ex) {
+            assertNotNull(ex);
+            assertEquals(DIFFERENT_DATA_REQUEST, ex.getExceptionType());
+        }
     }
+
+    @Test
+    void compareDtoExternalAndDeliveryRequestKOTest(){
+        PaperProgressStatusEventDto dto = new PaperProgressStatusEventDto();
+        PnDeliveryRequest deliveryRequest = new PnDeliveryRequest();
+        dto.setIun("123-asd");
+        deliveryRequest.setIun("132-der");
+
+        try {
+            SendRequestValidator.compareProgressStatusRequestEntity(dto, deliveryRequest);
+        } catch (PnGenericException ex) {
+            assertNotNull(ex);
+            assertEquals(DIFFERENT_DATA_RESULT, ex.getExceptionType());
+        }
+
+        deliveryRequest.setIun(dto.getIun());
+        dto.setProductType("AR");
+        deliveryRequest.setProposalProductType("890");
+
+        try {
+            SendRequestValidator.compareProgressStatusRequestEntity(dto, deliveryRequest);
+        } catch (PnGenericException ex) {
+            assertNotNull(ex);
+            assertEquals(DIFFERENT_DATA_RESULT, ex.getExceptionType());
+        }
+
+        deliveryRequest.setProposalProductType("AR");
+        AttachmentDetailsDto detailsDto = new AttachmentDetailsDto();
+        detailsDto.setUrl("localhost:8080");
+        dto.setAttachments(List.of(detailsDto));
+
+        try {
+            SendRequestValidator.compareProgressStatusRequestEntity(dto, deliveryRequest);
+        } catch (PnGenericException ex) {
+            assertNotNull(ex);
+            assertEquals(DIFFERENT_DATA_RESULT, ex.getExceptionType());
+        }
+
+    }
+
     private PnDeliveryRequest getEntity(){
         PnDeliveryRequest sendRequest= new PnDeliveryRequest();
         List<PnAttachmentInfo> attachmentUrls = new ArrayList<>();

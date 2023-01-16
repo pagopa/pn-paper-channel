@@ -67,20 +67,22 @@ public class PaperResultAsyncServiceImpl implements PaperResultAsyncService {
 
     private void sendPaperResponse(PnDeliveryRequest entity, SingleStatusUpdateDto request) {
         SendEvent sendEvent = new SendEvent();
-        sendEvent.setRequestId(entity.getRequestId());
+
         sendEvent.setStatusCode(entity.getStatusCode());
         sendEvent.setStatusDetail(entity.getStatusDetail());
         sendEvent.setStatusDescription(entity.getStatusDetail());
-        sendEvent.setStatusDateTime(DateUtils.parseDateString(entity.getStatusDate()));
-        sendEvent.setRegisteredLetterCode(entity.getProposalProductType());
-        sendEvent.setClientRequestTimeStamp(Date.from(request.getAnalogMail().getClientRequestTimeStamp().toInstant()));
-
-        if (entity.getAttachments() != null && !entity.getAttachments().isEmpty())
-            sendEvent.setAttachments(entity.getAttachments().stream().map(AttachmentMapper::toAttachmentDetails).collect(Collectors.toList()));
 
         if (request.getAnalogMail() != null) {
+            sendEvent.setRequestId(request.getAnalogMail().getRequestId());
+            sendEvent.setStatusDateTime(DateUtils.getDatefromOffsetDateTime(request.getAnalogMail().getStatusDateTime()));
+            sendEvent.setRegisteredLetterCode(request.getAnalogMail().getRegisteredLetterCode());
+            sendEvent.setClientRequestTimeStamp(Date.from(request.getAnalogMail().getClientRequestTimeStamp().toInstant()));
             sendEvent.setDeliveryFailureCause(request.getAnalogMail().getDeliveryFailureCause());
             sendEvent.setDiscoveredAddress(AddressMapper.toPojo(request.getAnalogMail().getDiscoveredAddress()));
+
+            if (request.getAnalogMail().getAttachments() != null && !request.getAnalogMail().getAttachments().isEmpty()) {
+                sendEvent.setAttachments(request.getAnalogMail().getAttachments().stream().map(AttachmentMapper::fromAttachmentDetailsDto).collect(Collectors.toList()));
+            }
         }
 
         sqsSender.pushSendEvent(sendEvent);
