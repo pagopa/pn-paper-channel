@@ -15,6 +15,7 @@ aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     --attribute-definitions \
         AttributeName=requestId,AttributeType=S \
         AttributeName=fiscalCode,AttributeType=S \
+        AttributeName=correlationId,AttributeType=S \
     --key-schema \
         AttributeName=requestId,KeyType=HASH \
     --provisioned-throughput \
@@ -24,6 +25,17 @@ aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
         {
             \"IndexName\": \"fiscal-code-index\",
             \"KeySchema\": [{\"AttributeName\":\"fiscalCode\",\"KeyType\":\"HASH\"}],
+            \"Projection\":{
+                \"ProjectionType\":\"ALL\"
+            },
+            \"ProvisionedThroughput\": {
+                \"ReadCapacityUnits\": 10,
+                \"WriteCapacityUnits\": 5
+            }
+        },
+        {
+            \"IndexName\": \"correlation-index\",
+            \"KeySchema\": [{\"AttributeName\":\"correlationId\",\"KeyType\":\"HASH\"}],
             \"Projection\":{
                 \"ProjectionType\":\"ALL\"
             },
