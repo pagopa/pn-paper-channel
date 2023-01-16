@@ -65,21 +65,21 @@ aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     --key-schema \
         AttributeName=uniqueCode,KeyType=HASH \
     --provisioned-throughput \
-        ReadCapacityUnits=5,WriteCapacityUnits=5
-	--global-secondary-indexes \
-    "[
-        {
-            \"IndexName\": \"created-index\",
-            \"KeySchema\": [{\"AttributeName\":\"created\",\"KeyType\":\"HASH\"}, {\"AttributeName\":\"startDate\",\"KeyType\":\"RANGE\"}],
-            \"Projection\":{
-                \"ProjectionType\":\"ALL\"
-            },
-            \"ProvisionedThroughput\": {
-                \"ReadCapacityUnits\": 5,
-                \"WriteCapacityUnits\": 5
-            }
-        }
-	]"
+        ReadCapacityUnits=5,WriteCapacityUnits=5 \
+    --global-secondary-indexes \
+      "[
+          {
+              \"IndexName\": \"created-index\",
+              \"KeySchema\": [{\"AttributeName\":\"created\",\"KeyType\":\"HASH\"}, {\"AttributeName\":\"startDate\",\"KeyType\":\"RANGE\"}],
+              \"Projection\":{
+                  \"ProjectionType\":\"ALL\"
+              },
+              \"ProvisionedThroughput\": {
+                  \"ReadCapacityUnits\": 5,
+                  \"WriteCapacityUnits\": 5
+              }
+          }
+    ]"
 
 aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     dynamodb create-table \
