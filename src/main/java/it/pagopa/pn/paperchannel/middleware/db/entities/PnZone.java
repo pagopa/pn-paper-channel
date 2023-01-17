@@ -17,15 +17,15 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSecon
 public class PnZone {
     public static final String COL_ZONE = "zone";
     public static final String COL_COUNTRY_EN = "countryEn";
-    public static final String COL_COUNTRY_EN_INDEX = "countryEn-index";
+    public static final String COUNTRY_EN_INDEX = "countryEn-index";
     public static final String COL_COUNTRY_IT = "countryIt";
 
     @Getter(onMethod = @__({@DynamoDbPartitionKey,@DynamoDbAttribute(COL_COUNTRY_IT)}))
-    private String countryIt;
+    public String countryIt;
 
-    @Getter(onMethod = @__({@DynamoDbSecondaryPartitionKey(indexNames = COL_COUNTRY_EN_INDEX),@DynamoDbAttribute(COL_COUNTRY_EN)}))
-    private String countryEn;
+    @Getter(onMethod = @__({@DynamoDbSecondaryPartitionKey(indexNames = COUNTRY_EN_INDEX),@DynamoDbAttribute(COL_COUNTRY_EN)}))
+    public String countryEn;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_ZONE)}))
-    private String zone;
+    public String zone;
 }

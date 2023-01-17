@@ -145,9 +145,25 @@ Resources:
       AttributeDefinitions:
         - AttributeName: "uniqueCode"
           AttributeType: "S"
+        - AttributeName: "created"
+          AttributeType: "S"
+        - AttributeName: "startDate"
+          AttributeType: "N"
       KeySchema:
         - AttributeName: "uniqueCode"
           KeyType: "HASH"
+      GlobalSecondaryIndexes:
+        - IndexName: "created-index"
+          KeySchema:
+            - AttributeName: "created"
+              KeyType: "HASH"
+            - AttributeName: "startDate"
+              KeyType: "RANGE"
+          Projection:
+            ProjectionType: "ALL"
+          ProvisionedThroughput:
+            ReadCapacityUnits: "5"
+            WriteCapacityUnits: "5"
       ProvisionedThroughput:
         ReadCapacityUnits: "5"
         WriteCapacityUnits: "5"

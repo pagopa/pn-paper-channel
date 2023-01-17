@@ -19,11 +19,11 @@ public class PnPaperTender {
     public static final String COL_DESCRIPTION= "description";
 
     @Getter(onMethod = @__({@DynamoDbPartitionKey,@DynamoDbAttribute(COL_ID_TENDER)}))
-    private String idTender;
+    public String idTender;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_DATE)}))
-    private String date;
+    public String date;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_DESCRIPTION)}))
-    private String description;
+    public String description;
 }

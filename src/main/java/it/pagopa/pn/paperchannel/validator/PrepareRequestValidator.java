@@ -19,7 +19,7 @@ public class PrepareRequestValidator {
         throw new IllegalCallerException("the constructor must not called");
     }
 
-    public static void compareRequestEntity(PrepareRequest prepareRequest, PnDeliveryRequest pnDeliveryEntity){
+    public static void compareRequestEntity(PrepareRequest prepareRequest, PnDeliveryRequest pnDeliveryEntity, boolean firstAttempt){
         List<String> errors = new ArrayList<>();
 
         if (!prepareRequest.getRequestId().equals(pnDeliveryEntity.getRequestId())) {
@@ -46,18 +46,25 @@ public class PrepareRequestValidator {
             errors.add("printType");
         }
 
-        List<String> fromDb = pnDeliveryEntity.getAttachments().stream()
-                .map(PnAttachmentInfo::getFileKey).collect(Collectors.toList());
-        if (!AttachmentValidator.checkBetweenLists(prepareRequest.getAttachmentUrls(), fromDb)){
-            errors.add("Attachments");
+        if (pnDeliveryEntity.getAttachments() != null){
+            List<String> fromDb = pnDeliveryEntity.getAttachments().stream()
+                    .map(PnAttachmentInfo::getFileKey).collect(Collectors.toList());
+            if (!AttachmentValidator.checkBetweenLists(prepareRequest.getAttachmentUrls(), fromDb)){
+                errors.add("Attachments");
+            }
         }
 
-        if (prepareRequest.getReceiverAddress() != null) {
-            if (!fromAnalogToAddress(prepareRequest.getReceiverAddress()).convertToHash().equals(pnDeliveryEntity.getAddressHash())) {
+
+
+        if (firstAttempt) {
+            if (prepareRequest.getReceiverAddress() != null){
+                if (!fromAnalogToAddress(prepareRequest.getReceiverAddress()).convertToHash().equals(pnDeliveryEntity.getAddressHash())){
+                    errors.add("Address");
+                }
+
+            } else {
                 errors.add("Address");
             }
-        } else{
-            errors.add("Address");
         }
 
         if (!errors.isEmpty()){
