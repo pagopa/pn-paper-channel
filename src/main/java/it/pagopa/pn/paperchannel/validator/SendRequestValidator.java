@@ -51,12 +51,7 @@ public class SendRequestValidator {
             errors.add("Attachments");
         }
 
-        if (sendRequest.getReceiverAddress() != null) {
-            if (!fromAnalogToAddress(sendRequest.getReceiverAddress()).convertToHash().equals(pnDeliveryEntity.getAddressHash())) {
-                errors.add("Address");
-            }
-        }
-        else{
+        if (!fromAnalogToAddress(sendRequest.getReceiverAddress()).convertToHash().equals(pnDeliveryEntity.getAddressHash())) {
             errors.add("Address");
         }
 
