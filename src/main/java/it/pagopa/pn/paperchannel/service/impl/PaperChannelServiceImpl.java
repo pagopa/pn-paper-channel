@@ -55,9 +55,5 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                 .map(DeliveryDriverMapper::deliveryDriverToPageableDeliveryDriverDto);
     }
 
-    @Override
-    public Mono<PnPaperDeliveryDriver> addDeliveryDriver(PnPaperDeliveryDriver pnPaperDeliveryDriver) {
-        return deliveryDriverDAO.addDeliveryDriver(pnPaperDeliveryDriver);
-    }
 
 }
