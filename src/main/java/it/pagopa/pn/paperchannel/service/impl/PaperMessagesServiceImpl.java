@@ -25,8 +25,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
-import reactor.util.function.Tuples;
 
 import java.util.Date;
 import java.util.List;
@@ -47,8 +45,6 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
     private NationalRegistryClient nationalRegistryClient;
     @Autowired
     private ExternalChannelClient externalChannelClient;
-    @Autowired
-    private PrepareAsyncServiceImpl prepareAsyncService;
     @Autowired
     private SqsSender sqsSender;
 
@@ -114,7 +110,7 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
             //case of 204
             return this.requestDeliveryDAO.getByRequestId(prepareRequest.getRequestId())
                     .flatMap(entity -> {
-                        PrepareRequestValidator.compareRequestEntity(prepareRequest, entity);
+                        PrepareRequestValidator.compareRequestEntity(prepareRequest, entity, true);
                         return addressDAO.findByRequestId(requestId)
                                 .map(address-> PreparePaperResponseMapper.fromResult(entity,address))
                                 .switchIfEmpty(Mono.just(PreparePaperResponseMapper.fromResult(entity,null)));
@@ -133,7 +129,7 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
         return this.requestDeliveryDAO.getByRequestId(prepareRequest.getRelatedRequestId())
                 .flatMap(oldEntity -> {
                     prepareRequest.setRequestId(oldEntity.getRequestId());
-                    PrepareRequestValidator.compareRequestEntity(prepareRequest, oldEntity);
+                    PrepareRequestValidator.compareRequestEntity(prepareRequest, oldEntity, false);
                     prepareRequest.setRequestId(requestId);
                     return this.requestDeliveryDAO.getByRequestId(prepareRequest.getRequestId())
                             .flatMap(newEntity -> {
@@ -142,7 +138,7 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                                     return Mono.empty();
                                 }
                                 log.debug("Attempt already exist");
-                                PrepareRequestValidator.compareRequestEntity(prepareRequest, newEntity);
+                                PrepareRequestValidator.compareRequestEntity(prepareRequest, newEntity, false);
                                 return addressDAO.findByRequestId(requestId)
                                         .map(address-> PreparePaperResponseMapper.fromResult(newEntity,address))
                                         .switchIfEmpty(Mono.just(PreparePaperResponseMapper.fromResult(newEntity,null)));
