@@ -8,6 +8,5 @@ import java.util.List;
 
 public interface DeliveryDriverDAO {
 
-    Mono<PnPaperDeliveryDriver> addDeliveryDriver(PnPaperDeliveryDriver pnDeliveryDriver);
     Mono<List<PnPaperDeliveryDriver>> getDeliveryDriver(DeliveryDriverFilter filter);
 }

@@ -3,7 +3,6 @@ package it.pagopa.pn.paperchannel.middleware.msclient.impl;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.common.BaseClient;
-import it.pagopa.pn.paperchannel.model.DeliveryAsyncModel;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.ApiClient;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.api.PaperMessagesApi;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.PaperEngageRequestDto;
