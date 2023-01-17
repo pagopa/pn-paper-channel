@@ -1,9 +1,16 @@
 package it.pagopa.pn.paperchannel.rest.v1;
 
+import com.amazonaws.services.sqs.AmazonSQS;
+import com.amazonaws.services.sqs.model.DeleteMessageRequest;
+import com.amazonaws.services.sqs.model.Message;
+import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
+import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
+import it.pagopa.pn.paperchannel.config.SQSConfig;
 import it.pagopa.pn.paperchannel.encryption.KmsEncryption;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnPaperDeliveryDriver;
+import it.pagopa.pn.paperchannel.middleware.queue.consumer.QueueListener;
 import it.pagopa.pn.paperchannel.model.DeliveryDriverFilter;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PageableDeliveryDriverResponseDto;
@@ -18,6 +25,7 @@ import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -38,6 +46,40 @@ public class IndexController {
 
     @Autowired
     private PaperChannelService paperChannelService;
+
+    @Autowired
+    private SQSConfig sqsConfig;
+    @Autowired
+    private PnPaperChannelConfig paperChannelConfig;
+    @Autowired
+    private QueueListener queueListener;
+
+    @GetMapping(value = "/receiveMsg")
+    public Mono<ResponseEntity<String>> receiveMsg(){
+        AmazonSQS sqs = sqsConfig.amazonSQS();
+
+        ReceiveMessageRequest receiveMessageRequest = new ReceiveMessageRequest(paperChannelConfig.getQueueExternalChannel()).
+                withWaitTimeSeconds(1)
+                .withMaxNumberOfMessages(1);
+        List<Message> sqsMessages = sqs.receiveMessage(receiveMessageRequest)
+                .getMessages();
+
+        if (sqsMessages != null && !sqsMessages.isEmpty()) {
+            String body = sqsMessages.get(0)
+                    .getBody();
+            // elaboro il messaggio
+            queueListener.pullExternalChannel(body, null);
+
+            sqs.deleteMessage(new DeleteMessageRequest().withQueueUrl(paperChannelConfig.getQueueExternalChannel())
+                    .withReceiptHandle(sqsMessages.get(0)
+                            .getReceiptHandle()));
+            return Mono.just("")
+                    .map(item -> ResponseEntity.ok().body(body));
+        }
+
+        return Mono.just("")
+                .map(item -> ResponseEntity.ok().body("No msg from queue"));
+    }
 
 
     @GetMapping(value = "/crypt")
@@ -92,8 +134,8 @@ public class IndexController {
 
     @GetMapping(value = "/takeDeliveryDriver")
     public Mono<ResponseEntity<PageableDeliveryDriverResponseDto>> takeDeliveryDriver(@RequestParam(name="page") String page,
-            @RequestParam(name="size") String size,
-            @RequestParam(required=false, name="startDate") Date startDate){
+                                                                                      @RequestParam(name="size") String size,
+                                                                                      @RequestParam(required=false, name="startDate") Date startDate){
         return paperChannelService.takeDeliveryDriver(new DeliveryDriverFilter(Integer.valueOf(page), Integer.valueOf(size), false, startDate, null))
                 .map(item -> {
                     log.info("DELIVERY DRIVER PAGE : {}", item);
