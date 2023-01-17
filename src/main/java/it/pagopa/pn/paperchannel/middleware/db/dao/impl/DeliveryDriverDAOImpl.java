@@ -30,13 +30,6 @@ public class DeliveryDriverDAOImpl extends BaseDAO<PnPaperDeliveryDriver> implem
     }
 
     @Override
-    public Mono<PnPaperDeliveryDriver> addDeliveryDriver(PnPaperDeliveryDriver pnDeliveryDriver) {
-        pnDeliveryDriver.setCreated("PN-PAPER-CHANNEL");
-        pnDeliveryDriver.setStartDate(Instant.now());
-        return Mono.fromFuture(this.put(pnDeliveryDriver));
-    }
-
-    @Override
     public Mono<List<PnPaperDeliveryDriver>> getDeliveryDriver(DeliveryDriverFilter filter) {
         Pair<Instant, Instant> startAndEndTimestamp = DateUtils.getStartAndEndTimestamp(DateUtils.formatDate(filter.getStartDate()), DateUtils.formatDate(filter.getEndDate()));
         return this.getByFilter(CONDITION_BETWEEN.apply(new Keys(keyBuild("PN-PAPER-CHANNEL", startAndEndTimestamp.getFirst().toString()), keyBuild("PN-PAPER-CHANNEL", startAndEndTimestamp.getSecond().toString()) )),
