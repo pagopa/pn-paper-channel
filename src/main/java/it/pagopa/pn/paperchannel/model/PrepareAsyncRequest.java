@@ -21,9 +21,20 @@ public class PrepareAsyncRequest {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Address address;
 
+    @JsonProperty("isSecondAttempt")
+    private boolean isSecondAttempt;
+
+
     public PrepareAsyncRequest(String requestId, String correlationId, Address address) {
         this.requestId = requestId;
         this.correlationId = correlationId;
         this.address = address;
+    }
+
+    public PrepareAsyncRequest(String requestId, String correlationId, Address address, boolean isSecondAttempt) {
+        this.requestId = requestId;
+        this.correlationId = correlationId;
+        this.address = address;
+        this.isSecondAttempt = isSecondAttempt ;
     }
 }
