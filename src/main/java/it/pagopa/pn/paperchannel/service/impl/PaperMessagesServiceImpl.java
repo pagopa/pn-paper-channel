@@ -1,5 +1,8 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
+import it.pagopa.pn.commons.log.PnAuditLogBuilder;
+import it.pagopa.pn.commons.log.PnAuditLogEvent;
+import it.pagopa.pn.commons.log.PnAuditLogEventType;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.exception.PnPaperEventException;
 import it.pagopa.pn.paperchannel.mapper.*;
@@ -25,15 +28,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
-import reactor.util.function.Tuples;
 
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_NOT_EXIST;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_IN_PROCESSING;
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_NOT_EXIST;
 
 @Slf4j
 @Service
@@ -48,10 +49,11 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
     @Autowired
     private ExternalChannelClient externalChannelClient;
     @Autowired
-    private PrepareAsyncServiceImpl prepareAsyncService;
-    @Autowired
     private SqsSender sqsSender;
 
+    public PaperMessagesServiceImpl(PnAuditLogBuilder auditLogBuilder) {
+        super(auditLogBuilder);
+    }
 
     @Override
     public Mono<PrepareEvent> retrievePaperPrepareRequest(String requestId) {
@@ -114,26 +116,31 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
             //case of 204
             return this.requestDeliveryDAO.getByRequestId(prepareRequest.getRequestId())
                     .flatMap(entity -> {
-                        PrepareRequestValidator.compareRequestEntity(prepareRequest, entity);
+                        PrepareRequestValidator.compareRequestEntity(prepareRequest, entity, true);
                         return addressDAO.findByRequestId(requestId)
                                 .map(address-> PreparePaperResponseMapper.fromResult(entity,address))
                                 .switchIfEmpty(Mono.just(PreparePaperResponseMapper.fromResult(entity,null)));
                     })
                     .switchIfEmpty(Mono.defer(() -> saveRequestAndAddress(prepareRequest, null)
                             .flatMap(response -> {
+                                String logMessage = String.format("prepare requestId = %s iun = %s with receiverAddress", requestId, response.getIun());
+                                PnAuditLogEvent logEvent = auditLogBuilder
+                                        .before(PnAuditLogEventType.AUD_FD_RESOLVE_LOGIC, logMessage)
+                                        .build();
+                                logEvent.log();
+
                                 PrepareAsyncRequest request = new PrepareAsyncRequest(requestId, null, null);
                                 this.sqsSender.pushToInternalQueue(request);
                                 throw new PnPaperEventException(PreparePaperResponseMapper.fromEvent(prepareRequest.getRequestId()));
                             }))
                     );
-
         }
 
         log.debug("Second attemp");
         return this.requestDeliveryDAO.getByRequestId(prepareRequest.getRelatedRequestId())
                 .flatMap(oldEntity -> {
                     prepareRequest.setRequestId(oldEntity.getRequestId());
-                    PrepareRequestValidator.compareRequestEntity(prepareRequest, oldEntity);
+                    PrepareRequestValidator.compareRequestEntity(prepareRequest, oldEntity, false);
                     prepareRequest.setRequestId(requestId);
                     return this.requestDeliveryDAO.getByRequestId(prepareRequest.getRequestId())
                             .flatMap(newEntity -> {
@@ -142,7 +149,7 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                                     return Mono.empty();
                                 }
                                 log.debug("Attempt already exist");
-                                PrepareRequestValidator.compareRequestEntity(prepareRequest, newEntity);
+                                PrepareRequestValidator.compareRequestEntity(prepareRequest, newEntity, false);
                                 return addressDAO.findByRequestId(requestId)
                                         .map(address-> PreparePaperResponseMapper.fromResult(newEntity,address))
                                         .switchIfEmpty(Mono.just(PreparePaperResponseMapper.fromResult(newEntity,null)));

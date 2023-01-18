@@ -1,9 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.db.dao.impl;
 
 import it.pagopa.pn.commons.exceptions.PnHttpResponseException;
-import it.pagopa.pn.commons.log.PnAuditLogBuilder;
-import it.pagopa.pn.commons.log.PnAuditLogEvent;
-import it.pagopa.pn.commons.log.PnAuditLogEventType;
 import it.pagopa.pn.paperchannel.config.AwsPropertiesConfig;
 import it.pagopa.pn.paperchannel.encryption.KmsEncryption;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
@@ -12,7 +9,6 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.common.TransactWriterInitiali
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
@@ -31,19 +27,17 @@ import java.util.concurrent.CompletableFuture;
 
 @Repository
 @Slf4j
-@Import(PnAuditLogBuilder.class)
 public class RequestDeliveryDAOImpl extends BaseDAO<PnDeliveryRequest> implements RequestDeliveryDAO {
 
 
     private final DynamoDbAsyncTable<PnAddress> addressTable;
     private final TransactWriterInitializer transactWriterInitializer;
 
-    public RequestDeliveryDAOImpl(PnAuditLogBuilder auditLogBuilder,
-                                  KmsEncryption kmsEncryption,
+    public RequestDeliveryDAOImpl(KmsEncryption kmsEncryption,
                                   DynamoDbEnhancedAsyncClient dynamoDbEnhancedAsyncClient,
                                   DynamoDbAsyncClient dynamoDbAsyncClient,
                                   AwsPropertiesConfig awsPropertiesConfig, TransactWriterInitializer transactWriterInitializer) {
-        super(auditLogBuilder, kmsEncryption, dynamoDbEnhancedAsyncClient, dynamoDbAsyncClient,
+        super(kmsEncryption, dynamoDbEnhancedAsyncClient, dynamoDbAsyncClient,
                 awsPropertiesConfig.getDynamodbRequestDeliveryTable(), PnDeliveryRequest.class);
         this.transactWriterInitializer = transactWriterInitializer;
         this.addressTable = dynamoDbEnhancedAsyncClient.table(awsPropertiesConfig.getDynamodbAddressTable(), TableSchema.fromBean(PnAddress.class));
@@ -51,14 +45,7 @@ public class RequestDeliveryDAOImpl extends BaseDAO<PnDeliveryRequest> implement
 
     @Override
     public Mono<PnDeliveryRequest> createWithAddress(PnDeliveryRequest request, PnAddress pnAddress) {
-
-        String logMessage = String.format("create request delivery and address= %s", request);
-        PnAuditLogEvent logEvent = auditLogBuilder
-                .before(PnAuditLogEventType.AUD_DL_CREATE, logMessage)
-                .build();
-        logEvent.log();
-
-        return Mono.fromFuture(
+            return Mono.fromFuture(
                         countOccurrencesEntity(request.getRequestId())
                                 .thenCompose( total -> {
                                     log.debug("Delivery request with same request id : {}", total);
@@ -82,39 +69,19 @@ public class RequestDeliveryDAOImpl extends BaseDAO<PnDeliveryRequest> implement
                 )
                 .onErrorResume(throwable -> {
                     throwable.printStackTrace();
-                    logEvent.generateFailure(throwable.getMessage()).log();
                     return Mono.error(throwable);
                 })
-                .map(entityCreated -> {
-                    logEvent.generateSuccess(String.format("created request delivery and address = %s", entityCreated)).log();
-                    return entityCreated;
-                });
+                .map(entityCreated -> entityCreated);
     }
 
     @Override
     public Mono<PnDeliveryRequest> updateData(PnDeliveryRequest pnDeliveryRequest) {
-        String logMessage = String.format("Update request delivery = %s", pnDeliveryRequest);
-        PnAuditLogEvent logEvent = auditLogBuilder
-                .before(PnAuditLogEventType.AUD_DL_CREATE, logMessage)
-                .build();
-        logEvent.log();
-        return Mono.fromFuture(this.update(pnDeliveryRequest).thenApply(item -> {
-            logEvent.generateSuccess("Update successfully").log();
-            return item;
-        }));
+        return Mono.fromFuture(this.update(pnDeliveryRequest).thenApply(item -> item));
     }
 
     @Override
     public Mono<PnDeliveryRequest> getByRequestId(String requestId) {
-        String logMessage = String.format("Find request delivery with %s", requestId);
-        PnAuditLogEvent logEvent = auditLogBuilder
-                .before(PnAuditLogEventType.AUD_DL_CREATE, logMessage)
-                .build();
-        logEvent.log();
-        return Mono.fromFuture(this.get(requestId, null).thenApply(item -> {
-                    logEvent.generateSuccess(String.format("request delivery find = %s", item)).log();
-                    return item;
-                }));
+        return Mono.fromFuture(this.get(requestId, null).thenApply(item -> item));
     }
 
     @Override
