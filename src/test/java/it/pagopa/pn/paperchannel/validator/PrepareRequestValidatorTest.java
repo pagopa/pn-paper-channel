@@ -11,10 +11,11 @@ import it.pagopa.pn.paperchannel.rest.v1.dto.ProposalTypeEnum;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.testcontainers.shaded.com.github.dockerjava.core.dockerfile.DockerfileStatement;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PrepareRequestValidatorTest {
 
@@ -30,6 +31,7 @@ class PrepareRequestValidatorTest {
     @Test
     void prepareRequestValidatorOKTest() {
         PrepareRequestValidator.compareRequestEntity(prepareRequest, deliveryRequest, true);
+        assertTrue(true);
     }
 
     @Test

@@ -25,13 +25,13 @@ public class DeliveryDriverDAOImpl extends BaseDAO<PnPaperDeliveryDriver> implem
                                  DynamoDbEnhancedAsyncClient dynamoDbEnhancedAsyncClient,
                                  DynamoDbAsyncClient dynamoDbAsyncClient,
                                  AwsPropertiesConfig awsPropertiesConfig) {
-        super(auditLogBuilder, kmsEncryption, dynamoDbEnhancedAsyncClient, dynamoDbAsyncClient,
+        super(kmsEncryption, dynamoDbEnhancedAsyncClient, dynamoDbAsyncClient,
                 awsPropertiesConfig.getDynamodbDeliveryDriverTable(), PnPaperDeliveryDriver.class);
     }
 
     @Override
     public Mono<List<PnPaperDeliveryDriver>> getDeliveryDriver(DeliveryDriverFilter filter) {
-        Pair<Instant, Instant> startAndEndTimestamp = DateUtils.getStartAndEndTimestamp(DateUtils.formatDate(filter.getStartDate()), DateUtils.formatDate(filter.getEndDate()));
+        Pair<Instant, Instant> startAndEndTimestamp = DateUtils.getStartAndEndTimestamp(filter.getStartDate(), filter.getEndDate());
         return this.getByFilter(CONDITION_BETWEEN.apply(new Keys(keyBuild("PN-PAPER-CHANNEL", startAndEndTimestamp.getFirst().toString()), keyBuild("PN-PAPER-CHANNEL", startAndEndTimestamp.getSecond().toString()) )),
                 PnPaperDeliveryDriver.CREATED_INDEX, null, null)
                 .collectList();

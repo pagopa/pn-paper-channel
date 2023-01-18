@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
+import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.AttachmentInfo;
 import it.pagopa.pn.paperchannel.model.Contract;
@@ -12,6 +13,11 @@ import java.util.List;
 
 public class BaseService {
 
+    protected final PnAuditLogBuilder auditLogBuilder;
+
+    public BaseService(PnAuditLogBuilder auditLogBuilder) {
+        this.auditLogBuilder = auditLogBuilder;
+    }
 
     protected Mono<Double> calculator(List<AttachmentInfo> attachments, Address address, ProductTypeEnum productType){
         if (StringUtils.isNotBlank(address.getCap())) {

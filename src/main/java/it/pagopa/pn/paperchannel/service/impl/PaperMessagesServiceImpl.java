@@ -1,5 +1,8 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
+import it.pagopa.pn.commons.log.PnAuditLogBuilder;
+import it.pagopa.pn.commons.log.PnAuditLogEvent;
+import it.pagopa.pn.commons.log.PnAuditLogEventType;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.exception.PnPaperEventException;
 import it.pagopa.pn.paperchannel.mapper.*;
@@ -30,8 +33,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_NOT_EXIST;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_IN_PROCESSING;
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_NOT_EXIST;
 
 @Slf4j
 @Service
@@ -48,6 +51,9 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
     @Autowired
     private SqsSender sqsSender;
 
+    public PaperMessagesServiceImpl(PnAuditLogBuilder auditLogBuilder) {
+        super(auditLogBuilder);
+    }
 
     @Override
     public Mono<PrepareEvent> retrievePaperPrepareRequest(String requestId) {
@@ -117,12 +123,17 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                     })
                     .switchIfEmpty(Mono.defer(() -> saveRequestAndAddress(prepareRequest, null)
                             .flatMap(response -> {
+                                String logMessage = String.format("prepare requestId = %s iun = %s with receiverAddress", requestId, response.getIun());
+                                PnAuditLogEvent logEvent = auditLogBuilder
+                                        .before(PnAuditLogEventType.AUD_FD_RESOLVE_LOGIC, logMessage)
+                                        .build();
+                                logEvent.log();
+
                                 PrepareAsyncRequest request = new PrepareAsyncRequest(requestId, null, null);
                                 this.sqsSender.pushToInternalQueue(request);
                                 throw new PnPaperEventException(PreparePaperResponseMapper.fromEvent(prepareRequest.getRequestId()));
                             }))
                     );
-
         }
 
         log.debug("Second attemp");
