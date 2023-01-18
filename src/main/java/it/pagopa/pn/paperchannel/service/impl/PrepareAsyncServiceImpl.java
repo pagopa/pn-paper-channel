@@ -1,5 +1,8 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
+import it.pagopa.pn.commons.log.PnAuditLogBuilder;
+import it.pagopa.pn.commons.log.PnAuditLogEvent;
+import it.pagopa.pn.commons.log.PnAuditLogEventType;
 import it.pagopa.pn.paperchannel.config.HttpConnector;
 import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
@@ -49,6 +52,10 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
     @Autowired
     private SqsSender sqsQueueSender;
 
+    public PrepareAsyncServiceImpl(PnAuditLogBuilder auditLogBuilder) {
+        super(auditLogBuilder);
+    }
+
     @Override
     public Mono<PnDeliveryRequest> prepareAsync(PrepareAsyncRequest request){
         log.info("Start async");
@@ -74,7 +81,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                             - hash indirizzo primo tentativo
                             - indirizzo scoperto dal postino se != null
                         */
-                        correctAddress = setCorrectAddress(pnDeliveryRequest.getAddressHash(), addressFromNationalRegistry, correctAddress);
+                        correctAddress = setCorrectAddress(pnDeliveryRequest.getRequestId(), pnDeliveryRequest.getIun(), pnDeliveryRequest.getAddressHash(), addressFromNationalRegistry, correctAddress);
                     }
 
                     if (pnDeliveryRequest.getProductType() == null ) {
@@ -95,6 +102,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                     //Controllo se l'indirizzo che ho proviene da NationalRegistry
                     if (deliveryRequestAndAddress.getT2().isFromNationalRegistry()){
                         log.info("National registry address");
+
                         return addressDAO.create(AddressMapper.toEntity(addressFromNationalRegistry, deliveryRequestAndAddress.getT1().getRequestId()))
                                 .map(item -> deliveryRequestAndAddress);
                     }
@@ -169,30 +177,60 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                 }).block();
     }
 
-    private Address setCorrectAddress(String hashOldAddress, Address fromNationalRegistry, Address discoveredAddress) {
+    private Address setCorrectAddress(String requestId, String iun, String hashOldAddress, Address fromNationalRegistry, Address discoveredAddress) {
 
         //se nationalRegistry è diverso da null
         if(fromNationalRegistry != null){
 
             //indirizzo diverso da quello del primo invio?
             if(!fromNationalRegistry.convertToHash().equals(hashOldAddress)){
+                String logMessage = String.format("prepare requestId = %s iun = %s and National Registry Address", requestId, iun);
+                PnAuditLogEvent logEvent = auditLogBuilder
+                        .before(PnAuditLogEventType.AUD_FD_RESOLVE_SERVICE, logMessage)
+                        .build();
+                logEvent.log();
+
                 return fromNationalRegistry;
             }
             //indirizzo ricevuto in input
             else if(discoveredAddress!=null){
+                String logMessage = String.format("prepare requestId = %s iun = %s and Discovered Address", requestId, iun);
+                PnAuditLogEvent logEvent = auditLogBuilder
+                        .before(PnAuditLogEventType.AUD_FD_RESOLVE_LOGIC, logMessage)
+                        .build();
+                logEvent.log();
+
                 return discoveredAddress;
             }
             //indirizzo non trovato
             else{
+                String logMessage = String.format("prepare requestId = %s iun = %s Unreachable Address", requestId, iun);
+                PnAuditLogEvent logEvent = auditLogBuilder
+                        .before(PnAuditLogEventType.AUD_FD_RESOLVE_LOGIC, logMessage)
+                        .build();
+                logEvent.generateFailure(logMessage);
+
                 throw new PnGenericException(UNTRACEABLE_ADDRESS, UNTRACEABLE_ADDRESS.getMessage());
             }
         }
         //indirizzo ricevuto in input
         else if(discoveredAddress!=null){
+            String logMessage = String.format("prepare requestId = %s iun = %s and Discovered Address", requestId, iun);
+            PnAuditLogEvent logEvent = auditLogBuilder
+                    .before(PnAuditLogEventType.AUD_FD_RESOLVE_LOGIC, logMessage)
+                    .build();
+            logEvent.log();
+
             return discoveredAddress;
         }
         //indirizzo non trovato
         else{
+            String logMessage = String.format("prepare requestId = %s iun = %s Unreachable Address", requestId, iun);
+            PnAuditLogEvent logEvent = auditLogBuilder
+                    .before(PnAuditLogEventType.AUD_FD_RESOLVE_LOGIC, logMessage)
+                    .build();
+            logEvent.generateFailure(logMessage);
+
             throw new PnGenericException(UNTRACEABLE_ADDRESS, UNTRACEABLE_ADDRESS.getMessage());
         }
     }

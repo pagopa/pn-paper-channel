@@ -1,18 +1,15 @@
 package it.pagopa.pn.paperchannel.middleware.db.dao.impl;
 
-import it.pagopa.pn.commons.log.PnAuditLogBuilder;
-import it.pagopa.pn.commons.log.PnAuditLogEvent;
-import it.pagopa.pn.commons.log.PnAuditLogEventType;
 import it.pagopa.pn.paperchannel.config.AwsPropertiesConfig;
 import it.pagopa.pn.paperchannel.encryption.KmsEncryption;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.BaseDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.TransactWriterInitializer;
-import it.pagopa.pn.paperchannel.middleware.db.entities.*;
-import it.pagopa.pn.paperchannel.utils.DateUtils;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnPaperCost;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnPaperDeliveryDriver;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnZone;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Import;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
@@ -21,9 +18,7 @@ import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
-import java.text.ParseException;
 import java.time.Instant;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,30 +27,22 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.COST_NOT_FOU
 
 @Repository
 @Slf4j
-@Import(PnAuditLogBuilder.class)
 public class CostDAOImpl extends BaseDAO<PnPaperCost> implements CostDAO {
 
     private final DynamoDbAsyncTable<PnPaperDeliveryDriver> deliveryDriverTable;
     private final TransactWriterInitializer transactWriterInitializer;
 
-    public CostDAOImpl(PnAuditLogBuilder auditLogBuilder,
-                       KmsEncryption kmsEncryption,
+    public CostDAOImpl(KmsEncryption kmsEncryption,
                        DynamoDbEnhancedAsyncClient dynamoDbEnhancedAsyncClient,
                        DynamoDbAsyncClient dynamoDbAsyncClient,
                        AwsPropertiesConfig awsPropertiesConfig, TransactWriterInitializer transactWriterInitializer) {
-        super(auditLogBuilder, kmsEncryption, dynamoDbEnhancedAsyncClient, dynamoDbAsyncClient,
+        super(kmsEncryption, dynamoDbEnhancedAsyncClient, dynamoDbAsyncClient,
                 awsPropertiesConfig.getDynamodbCostTable(), PnPaperCost.class);
         this.deliveryDriverTable = dynamoDbEnhancedAsyncClient.table(awsPropertiesConfig.getDynamodbDeliveryDriverTable(), TableSchema.fromBean(PnPaperDeliveryDriver.class));
         this.transactWriterInitializer = transactWriterInitializer;
     }
 
     public Mono<PnPaperDeliveryDriver> createNewContract(PnPaperDeliveryDriver pnDeliveryDriver, List<PnPaperCost> pnListCosts) {
-        String logMessage = "create contract";
-        PnAuditLogEvent logEvent = auditLogBuilder
-                .before(PnAuditLogEventType.AUD_DL_CREATE, logMessage)
-                .build();
-        logEvent.log();
-
         this.transactWriterInitializer.init();
         if (pnDeliveryDriver != null) {
             pnDeliveryDriver.setStartDate(Instant.now());

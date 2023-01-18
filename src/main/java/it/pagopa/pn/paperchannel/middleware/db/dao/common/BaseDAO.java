@@ -1,6 +1,5 @@
 package it.pagopa.pn.paperchannel.middleware.db.dao.common;
 
-import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.paperchannel.encryption.KmsEncryption;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import lombok.AllArgsConstructor;
@@ -31,7 +30,6 @@ public abstract class BaseDAO<T> {
         Key to;
     }
 
-    protected final PnAuditLogBuilder auditLogBuilder;
     private final KmsEncryption kmsEncryption;
     protected final DynamoDbEnhancedAsyncClient dynamoDbEnhancedAsyncClient;
     protected final DynamoDbAsyncClient dynamoDbAsyncClient;
@@ -43,11 +41,10 @@ public abstract class BaseDAO<T> {
     private final Class<T> tClass;
 
 
-    protected BaseDAO(PnAuditLogBuilder auditLogBuilder, KmsEncryption kmsEncryption, DynamoDbEnhancedAsyncClient dynamoDbEnhancedAsyncClient,
+    protected BaseDAO(KmsEncryption kmsEncryption, DynamoDbEnhancedAsyncClient dynamoDbEnhancedAsyncClient,
                       DynamoDbAsyncClient dynamoDbAsyncClient, String tableName, Class<T> tClass) {
         this.dynamoTable = dynamoDbEnhancedAsyncClient.table(tableName, TableSchema.fromBean(tClass));
         this.table = tableName;
-        this.auditLogBuilder = auditLogBuilder;
         this.kmsEncryption = kmsEncryption;
         this.dynamoDbEnhancedAsyncClient = dynamoDbEnhancedAsyncClient;
         this.dynamoDbAsyncClient = dynamoDbAsyncClient;
