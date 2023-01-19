@@ -13,6 +13,7 @@ import it.pagopa.pn.paperchannel.mapper.PrepareEventMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
+import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.paperchannel.model.*;
 import it.pagopa.pn.paperchannel.msclient.generated.pnsafestorage.v1.dto.FileDownloadResponseDto;
@@ -52,6 +53,9 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
     @Autowired
     private SqsSender sqsQueueSender;
 
+    @Autowired
+    private NationalRegistryClient nationalRegistryClient;
+
     public PrepareAsyncServiceImpl(PnAuditLogBuilder auditLogBuilder) {
         super(auditLogBuilder);
     }
@@ -70,14 +74,12 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
 
         return requestDeliveryEntityMono
                 .zipWhen(entity -> addressDAO.findByRequestId(entity.getRequestId()).map(item->item))
-               //todo: pnDeliveryRequest -> PrepareAsyncRequest -> isSecondAttempt==true -> return this.nationalRegistryClient.finderAddress()
-                /* .map(request -> {
-                            if (StringUtils.isNotBlank(correlationId) && request==true) {
-                                //return this.nationalRegistryClient.finderAddress(prepareRequest.getReceiverFiscalCode(), prepareRequest.getReceiverType());
-
-                            }
+                .map(pnDeliveryRequestPnAddressTuple2 -> {
+                            if (StringUtils.isNotBlank(correlationId) && request.getIsSecondAttempt() ==true)
+                             this.nationalRegistryClient.finderAddress(pnDeliveryRequestPnAddressTuple2.getT1().getFiscalCode(), pnDeliveryRequestPnAddressTuple2.getT1().getReceiverType());
+                          return pnDeliveryRequestPnAddressTuple2;
                         }
-                )*/
+                )
                 .map(entityAndAddress -> {
 
                     PnDeliveryRequest pnDeliveryRequest = entityAndAddress.getT1();

@@ -11,6 +11,7 @@ import java.util.List;
 @Setter
 @ToString
 @NoArgsConstructor
+@AllArgsConstructor
 public class PrepareAsyncRequest {
 
     @JsonProperty("requestId")
@@ -31,10 +32,7 @@ public class PrepareAsyncRequest {
         this.address = address;
     }
 
-    public PrepareAsyncRequest(String requestId, String correlationId, Address address, boolean isSecondAttempt) {
-        this.requestId = requestId;
-        this.correlationId = correlationId;
-        this.address = address;
-        this.isSecondAttempt = isSecondAttempt ;
+    public boolean getIsSecondAttempt(){
+        return this.isSecondAttempt;
     }
 }
