@@ -37,13 +37,13 @@ paths:
         '200':
           description: JSON contenente lo stato.
 
-  /paper-channel/backoffice/v1/deliveries-drivers:
+  /paper-channel/backoffice/v1/tenders:
     get:
       tags:
         - DeliveryDriver
-      operationId: takeDeliveryDriver
-      summary: Elenco recapitisti.
-      description: API che consente il recupero di tutti i vincitori della gara
+      operationId: takeTender
+      summary: Elenco gare d'appalto.
+      description: API che consente il recupero di tutte le gare
       parameters:
         - name: page
           in: query
@@ -65,27 +65,55 @@ paths:
             format: int32
             maximum: 999999999
             minimum: 1
-        - name: status
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageableTenderResponseDto'
+        '400':
+          $ref: '#/components/responses/Invalid'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/NotAllowed'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /paper-channel/backoffice/v1/deliveries-drivers/{tenderCode}:
+    get:
+      tags:
+        - DeliveryDriver
+      operationId: takeDeliveriesDrivers
+      summary: Elenco dei recapitisti di una gara
+      description: API che consente il recupero di tutti i recapitisti di una gara
+      parameters:
+        - $ref: '#/components/parameters/pathTenderCode'
+        - name: page
           in: query
-          description: Rappresenta lo stato di attività del vincitore
+          description: Risultati di pagina che si vuole ottenere (0..N)
           required: false
           schema:
-            type: boolean
-            default: true
-        - name: startDate
+            type: integer
+            default: 0
+            format: int32
+            maximum: 999999999
+            minimum: 0
+        - name: size
           in: query
-          description: Rappresenta la data di inizio del contratto
+          description: Numero di elementi per pagina.
           required: false
           schema:
-            type: string
-            format: date-time
-        - name: endDate
-          in: query
-          description: Rappresenta la data di termine del contratto
-          required: false
-          schema:
-            type: string
-            format: date-time
+            type: integer
+            default: 5
+            format: int32
+            maximum: 999999999
+            minimum: 1
       responses:
         '200':
           description: OK
@@ -106,17 +134,16 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-
-  /paper-channel/backoffice/v1/delivery-driver/{deliveryDriverId}/prices:
+  /paper-channel/backoffice/v1/delivery-driver/{tenderCode}/prices/{deliveryDriverId}:
     get:
       tags:
         - DeliveryDriver
       operationId: takePrices
       summary: Listino prezzi.
-      description: API che consente il recupero dei prezzi di un vincitore
+      description: API che consente il recupero dei prezzi di un vincitore della gara
       parameters:
+        - $ref: '#/components/parameters/pathTenderCode'
         - $ref: '#/components/parameters/pathDeliveryDriverId'
-        - $ref: '#/components/parameters/queryType'
       responses:
         '200':
           description: OK
@@ -137,18 +164,18 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /paper-channel/backoffice/v1/delivery-tender/contract:
+  /paper-channel/backoffice/v1/delivery-tender:
     post:
       tags:
         - DeliveryDriver
-      operationId: addContract
-      summary: Inserimento contratto.
-      description: API che consente di aggiungere un nuovo contratto
+      operationId: addTender
+      summary: Inserimento Gara.
+      description: API che consente di aggiungere una nuova gara e tutti i suoi vincitori
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ContractInsertRequestDto'
+              $ref: '#/components/schemas/TenderInsertRequestDto'
 
       responses:
         '200':
@@ -170,22 +197,31 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-
-  /paper-channel/backoffice/v1/contract/{deliveryDriverId}/{contractId}:
-    put:
+  /paper-channel/backoffice/v1/delivery-tender/file-upload:
+    post:
       tags:
         - DeliveryDriver
-      operationId: updateContract
-      summary: Aggiornamento contratto.
-      description: API che consente di aggiornare un nuovo contratto
-      parameters:
-        - $ref: '#/components/parameters/pathDeliveryDriverId'
-        - $ref: '#/components/parameters/pathContractId'
+      operationId: addTenderFromFile
+      summary: Inserimento Gara.
+      description: API che consente di aggiungere una nuova gara e tutti i suoi vincitori attraverso file Excel
       requestBody:
         content:
-          application/json:
+          multipart/form-data:
             schema:
-              $ref: '#/components/schemas/ContractInsertRequestDto'
+              type: object
+              properties:
+                tender:
+                  $ref: '#/components/schemas/TenderDTO'
+                file:
+                  nullable: false
+                  type: string
+                  format: binary
+              required:
+                - tender
+                - file
+            encoding:
+              tender:
+                contentType: application/json
 
       responses:
         '200':
@@ -206,6 +242,7 @@ paths:
           $ref: '#/components/responses/NotAllowed'
         '500':
           $ref: '#/components/responses/InternalError'
+
 
 components:
   schemas:
@@ -235,17 +272,30 @@ components:
           minItems: 1
       additionalProperties: false
 
-    ContractInsertRequestDto:
+    ContractInsertDTO:
       type: object
       allOf:
         - $ref: '#/components/schemas/DeliveryDriverDto'
       properties:
-        list:
+        contracts:
           type: array
           items:
             $ref: '#/components/schemas/ContractDto'
           maxItems: 999999999
           minItems: 1
+
+    TenderInsertRequestDto:
+      type: object
+      properties:
+        tender:
+          $ref: "#/components/schemas/TenderDTO"
+        fsu:
+          $ref: '#/components/schemas/ContractInsertDTO'
+        deliveryDrivers:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContractInsertDTO'
+
       additionalProperties: false
 
     ContractDto:
@@ -266,12 +316,6 @@ components:
           format: float
           maximum: 999999
           minimum: 1
-        startDate:
-          type: string
-          format: date
-        endDate:
-          type: string
-          format: date
       additionalProperties: false
 
     NationalContractDto:
@@ -347,6 +391,41 @@ components:
           maxItems: 999999999
           minItems: 1
       additionalProperties: false
+
+    PageableTenderResponseDto:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Page'
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/TenderDTO'
+          maxItems: 999999999
+          minItems: 1
+      additionalProperties: false
+
+    TenderDTO:
+      type: object
+      properties:
+        code:
+          type: string
+          example: "AGD-2023-TE"
+          maxLength: 128
+        name:
+          type: string
+          example: "Gara 2023"
+          format: '/^([a-zA-Z ]*)$/'
+          maxLength: 128
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        status:
+          type: string
+          enum: [CREATED, IN_PROGRESS, ENDED]
 
     DeliveryDriverDto:
       type: object
@@ -506,34 +585,18 @@ components:
       description: Unauthorized
 
   parameters:
+    pathTenderCode:
+      name: tenderCode
+      in: path
+      required: true
+      schema:
+        type: string
     pathDeliveryDriverId:
       name: deliveryDriverId
       in: path
       required: true
       schema:
-        type: integer
-        format: int64
-        maximum: 1
-        minimum: 1
-    pathContractId:
-      name: contractId
-      in: path
-      required: true
-      schema:
-        type: integer
-        format: int64
-        maximum: 1
-        minimum: 1
-    queryType:
-      name: type
-      in: query
-      schema:
         type: string
-        enum:
-          - NATIONAL
-          - INTERNATIONAL
-        maximum: 1
-        minimum: 1
   
   securitySchemes:
     ApiKeyAuth:
