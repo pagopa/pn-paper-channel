@@ -168,9 +168,11 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
         return requestDeliveryDAO.getByRequestId(requestId)
                 .zipWhen(entity -> {
 
-                    //TODO Added other status code
-                    if (entity.getStatusCode().equals(StatusDeliveryEnum.TAKING_CHARGE.getCode()) ||
-                        entity.getStatusCode().equals(StatusDeliveryEnum.IN_PROCESSING.getCode())) {
+
+                    if (!(entity.getStatusCode().equals(StatusDeliveryEnum.TAKING_CHARGE.getCode())
+                            && entity.getStatusCode().equals(StatusDeliveryEnum.IN_PROCESSING.getCode())
+                            && entity.getStatusCode().equals(StatusDeliveryEnum.PAPER_CHANNEL_DEFAULT_ERROR.getCode())
+                            && entity.getStatusCode().equals(StatusDeliveryEnum.PAPER_CHANNEL_NEW_REQUEST.getCode())) ){
                         return Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND));
                     }
 
