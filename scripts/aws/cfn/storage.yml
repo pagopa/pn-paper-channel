@@ -127,9 +127,25 @@ Resources:
       AttributeDefinitions:
         - AttributeName: "idTender"
           AttributeType: "S"
+        - AttributeName: "author"
+          AttributeType: "S"
+        - AttributeName: "startDate"
+          AttributeType: "S"
       KeySchema:
         - AttributeName: "idTender"
           KeyType: "HASH"
+      GlobalSecondaryIndexes:
+        - IndexName: "author-index"
+          KeySchema:
+            - AttributeName: "author"
+              KeyType: "HASH"
+            - AttributeName: "startDate"
+              KeyType: "RANGE"
+          Projection:
+            ProjectionType: "ALL"
+          ProvisionedThroughput:
+            ReadCapacityUnits: "5"
+            WriteCapacityUnits: "5"
       ProvisionedThroughput:
         ReadCapacityUnits: "5"
         WriteCapacityUnits: "5"
@@ -145,17 +161,21 @@ Resources:
       AttributeDefinitions:
         - AttributeName: "uniqueCode"
           AttributeType: "S"
-        - AttributeName: "created"
+        - AttributeName: "tenderCode"
+          AttributeType: "S"
+        - AttributeName: "author"
           AttributeType: "S"
         - AttributeName: "startDate"
-          AttributeType: "N"
+          AttributeType: "S"
       KeySchema:
         - AttributeName: "uniqueCode"
           KeyType: "HASH"
+        - AttributeName: "tenderCode"
+          KeyType: "RANGE"
       GlobalSecondaryIndexes:
-        - IndexName: "created-index"
+        - IndexName: "author-index"
           KeySchema:
-            - AttributeName: "created"
+            - AttributeName: "author"
               KeyType: "HASH"
             - AttributeName: "startDate"
               KeyType: "RANGE"

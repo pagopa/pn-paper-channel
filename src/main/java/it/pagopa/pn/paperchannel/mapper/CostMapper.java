@@ -18,8 +18,6 @@ public class CostMapper {
         PnPaperCost costs = new PnPaperCost();
         costs.setBasePrice(contractDto.getPrice());
         costs.setPagePrice(contractDto.getPriceAdditional());
-        costs.setStartDate(DateUtils.formatDate(new Date()));
-        costs.setEndDate(DateUtils.formatDate(new Date()));
         costs.setProductType(contractDto.getRegisteredLetter().getValue());
         costs.setCap(contractDto.getCap());
         if (contractDto.getZone() != null ) {
