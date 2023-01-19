@@ -6,6 +6,10 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnPaperDeliveryDriver;
 import it.pagopa.pn.paperchannel.model.PageModel;
 import it.pagopa.pn.paperchannel.rest.v1.dto.DeliveryDriverDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PageableDeliveryDriverResponseDto;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+import java.util.List;
 
 public class DeliveryDriverMapper {
 
@@ -25,7 +29,7 @@ public class DeliveryDriverMapper {
         return contractRequest;
     }
 */
-    public static PageableDeliveryDriverResponseDto deliveryDriverToPageableDeliveryDriverDto(PageModel<PnPaperDeliveryDriver> pagePnPaperDeliveryDriver) {
+    public static PageableDeliveryDriverResponseDto toPageableResponse(PageModel<PnPaperDeliveryDriver> pagePnPaperDeliveryDriver) {
         PageableDeliveryDriverResponseDto pageableDeliveryDriverResponseDto = new PageableDeliveryDriverResponseDto();
         pageableDeliveryDriverResponseDto.setPageable(pagePnPaperDeliveryDriver.getPageable());
         pageableDeliveryDriverResponseDto.setNumber(pagePnPaperDeliveryDriver.getNumber());
@@ -42,6 +46,10 @@ public class DeliveryDriverMapper {
 
     public static DeliveryDriverDto deliveryDriverToDto(PnPaperDeliveryDriver pnPaperDeliveryDriver) {
         return mapperDeliveryDriverToDto.toDTO(pnPaperDeliveryDriver);
+    }
+
+    public static PageModel<PnPaperDeliveryDriver> toPagination(Pageable pageable, List<PnPaperDeliveryDriver> list){
+        return PageModel.builder(list, pageable);
     }
 
 }
