@@ -23,8 +23,6 @@ public class PnPaperCost {
     public static final String COL_PRODUCT_TYPE = "productType";
     public static final String COL_BASE_PRICE = "basePrice";
     public static final String COL_PAGE_PRICE = "pagePrice";
-    public static final String COL_START_DATE = "startDate";
-    public static final String COL_END_DATE = "endDate";
 
     @Getter(onMethod = @__({@DynamoDbPartitionKey,@DynamoDbAttribute(COL_ID_DELIVERY_DRIVER)}))
     public String idDeliveryDriver;
@@ -49,11 +47,5 @@ public class PnPaperCost {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_PAGE_PRICE)}))
     public Float pagePrice;
-
-    @Getter(onMethod = @__({@DynamoDbAttribute(COL_START_DATE)}))
-    public String startDate;
-
-    @Getter(onMethod = @__({@DynamoDbAttribute(COL_END_DATE)}))
-    public String endDate;
 
 }

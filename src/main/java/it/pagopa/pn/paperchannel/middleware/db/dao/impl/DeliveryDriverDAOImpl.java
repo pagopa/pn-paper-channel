@@ -47,7 +47,7 @@ public class DeliveryDriverDAOImpl extends BaseDAO<PnPaperDeliveryDriver> implem
         //Map<String, AttributeValue> values = new HashMap<>();
         //values.put(":tenderCode", AttributeValue.builder().s(tenderCode).build());
 
-        return this.getByFilter(conditional, PnPaperDeliveryDriver.CREATED_INDEX, null, null)
+        return this.getByFilter(conditional, PnPaperDeliveryDriver.AUTHOR_INDEX, null, null)
                 .collectList();
     }
 
