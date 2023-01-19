@@ -75,8 +75,6 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                 .zipWhen(entity -> {
                     SendRequestValidator.compareRequestEntity(sendRequest,entity);
 
-                    //TODO Managed error from status code into pnDeliveryRequest
-                    //verifico se la fase di prepare è stata completata
                     if (StringUtils.equals(entity.getStatusCode(), StatusDeliveryEnum.IN_PROCESSING.getCode())) {
                         return Mono.error(new PnGenericException(DELIVERY_REQUEST_IN_PROCESSING, DELIVERY_REQUEST_IN_PROCESSING.getMessage(), HttpStatus.CONFLICT));
                     }
@@ -94,11 +92,12 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                 })
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)))
                 .zipWhen(entityAndAmount ->
+                        //(StringUtils.equals(entityAndAmount.getT1().getStatusCode(),StatusDeliveryEnum.TAKING_CHARGE.getCode()))?
+                              this.externalChannelClient.sendEngageRequest(sendRequest).then(this.requestDeliveryDAO.updateData(entityAndAmount.getT1()).map(item -> item)), (entityAndAmount, none) -> entityAndAmount.getT2()
 
-                        //TODO chiamare external channel solo se status == TAKING_CHARGE
-                        this.externalChannelClient.sendEngageRequest(sendRequest).then(this.requestDeliveryDAO.updateData(entityAndAmount.getT1()).map(item -> item)), (entityAndAmount, none) -> entityAndAmount.getT2()
                 )
                 .map(amount -> {
+                    //todo
                     log.info("Amount: {} for requestId {}", amount, requestId);
                     SendResponse sendResponse = new SendResponse();
                     sendResponse.setAmount(amount.intValue());
@@ -129,14 +128,14 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                                         .build();
                                 logEvent.log();
 
-                                PrepareAsyncRequest request = new PrepareAsyncRequest(requestId, null, null);
+                                PrepareAsyncRequest request = new PrepareAsyncRequest(requestId, null, null, true);
                                 this.sqsSender.pushToInternalQueue(request);
                                 throw new PnPaperEventException(PreparePaperResponseMapper.fromEvent(prepareRequest.getRequestId()));
                             }))
                     );
         }
 
-        log.debug("Second attemp");
+        log.debug("Second attempt");
         return this.requestDeliveryDAO.getByRequestId(prepareRequest.getRelatedRequestId())
                 .flatMap(oldEntity -> {
                     prepareRequest.setRequestId(oldEntity.getRequestId());
@@ -154,11 +153,13 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                                         .map(address-> PreparePaperResponseMapper.fromResult(newEntity,address))
                                         .switchIfEmpty(Mono.just(PreparePaperResponseMapper.fromResult(newEntity,null)));
                             })
-                            .switchIfEmpty(Mono.defer(()-> finderAddressAndSave(prepareRequest)
+                            .switchIfEmpty(Mono.defer(()-> saveRequestAndAddress(prepareRequest, null)
                                     .flatMap(response -> {
+                                        PrepareAsyncRequest request = new PrepareAsyncRequest(requestId, null, null, true);
+                                        this.sqsSender.pushToInternalQueue(request);
                                         throw new PnPaperEventException(PreparePaperResponseMapper.fromEvent(prepareRequest.getRequestId()));
-                                    }))
-                            );
+                                    })
+                            ));
 
                 })
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)));
@@ -169,9 +170,11 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
         return requestDeliveryDAO.getByRequestId(requestId)
                 .zipWhen(entity -> {
 
-                    //TODO Added other status code
-                    if (entity.getStatusCode().equals(StatusDeliveryEnum.TAKING_CHARGE.getCode()) ||
-                        entity.getStatusCode().equals(StatusDeliveryEnum.IN_PROCESSING.getCode())) {
+
+                    if (entity.getStatusCode().equals(StatusDeliveryEnum.TAKING_CHARGE.getCode())
+                            || entity.getStatusCode().equals(StatusDeliveryEnum.IN_PROCESSING.getCode())
+                            || entity.getStatusCode().equals(StatusDeliveryEnum.PAPER_CHANNEL_DEFAULT_ERROR.getCode())
+                            || entity.getStatusCode().equals(StatusDeliveryEnum.PAPER_CHANNEL_NEW_REQUEST.getCode())) {
                         return Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND));
                     }
 
@@ -190,6 +193,7 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                             .map(savedEntity -> savedEntity);
                 });
     }
+
 
 
     private Mono<PnDeliveryRequest> saveRequestAndAddress(PrepareRequest prepareRequest, String correlationId){

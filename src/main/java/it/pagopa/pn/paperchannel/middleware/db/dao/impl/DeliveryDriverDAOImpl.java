@@ -12,9 +12,14 @@ import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
+import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Repository
 public class DeliveryDriverDAOImpl extends BaseDAO<PnPaperDeliveryDriver> implements DeliveryDriverDAO {
@@ -30,10 +35,19 @@ public class DeliveryDriverDAOImpl extends BaseDAO<PnPaperDeliveryDriver> implem
     }
 
     @Override
-    public Mono<List<PnPaperDeliveryDriver>> getDeliveryDriver(DeliveryDriverFilter filter) {
-        Pair<Instant, Instant> startAndEndTimestamp = DateUtils.getStartAndEndTimestamp(filter.getStartDate(), filter.getEndDate());
-        return this.getByFilter(CONDITION_BETWEEN.apply(new Keys(keyBuild("PN-PAPER-CHANNEL", startAndEndTimestamp.getFirst().toString()), keyBuild("PN-PAPER-CHANNEL", startAndEndTimestamp.getSecond().toString()) )),
-                PnPaperDeliveryDriver.CREATED_INDEX, null, null)
+    public Mono<List<PnPaperDeliveryDriver>> getDeliveryDriver(String tenderCode) {
+        Pair<Instant, Instant> startAndEndTimestamp = DateUtils.getStartAndEndTimestamp(null, null);
+
+        QueryConditional conditional = CONDITION_BETWEEN.apply(
+                new Keys(keyBuild("PN-PAPER-CHANNEL", startAndEndTimestamp.getFirst().toString()),
+                        keyBuild("PN-PAPER-CHANNEL", startAndEndTimestamp.getSecond().toString()) )
+        );
+
+        //String filter = "( " + PnPaperDeliveryDriver.COL_TENDER_CODE + " = :tenderCode )";
+        //Map<String, AttributeValue> values = new HashMap<>();
+        //values.put(":tenderCode", AttributeValue.builder().s(tenderCode).build());
+
+        return this.getByFilter(conditional, PnPaperDeliveryDriver.AUTHOR_INDEX, null, null)
                 .collectList();
     }
 
