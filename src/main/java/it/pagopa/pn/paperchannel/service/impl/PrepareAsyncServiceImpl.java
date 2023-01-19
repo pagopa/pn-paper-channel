@@ -75,7 +75,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
         return requestDeliveryEntityMono
                 .zipWhen(entity -> addressDAO.findByRequestId(entity.getRequestId()).map(item->item))
                 .map(pnDeliveryRequestPnAddressTuple2 -> {
-                            if (StringUtils.isNotBlank(correlationId) && request.getIsSecondAttempt() ==true)
+                            if (request.getIsSecondAttempt() == true)
                              this.nationalRegistryClient.finderAddress(pnDeliveryRequestPnAddressTuple2.getT1()
                                      .getFiscalCode(), pnDeliveryRequestPnAddressTuple2.getT1().getReceiverType());
                           return pnDeliveryRequestPnAddressTuple2;
