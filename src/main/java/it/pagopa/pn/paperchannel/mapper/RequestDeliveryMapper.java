@@ -7,7 +7,6 @@ import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareRequest;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 
 import java.util.Date;
-import java.util.stream.Collectors;
 
 public class RequestDeliveryMapper {
     private RequestDeliveryMapper() {
@@ -37,7 +36,7 @@ public class RequestDeliveryMapper {
             PnAttachmentInfo pnAttachmentInfo = new PnAttachmentInfo();
             pnAttachmentInfo.setFileKey(key);
             return pnAttachmentInfo;
-        }).collect(Collectors.toList()));
+        }).toList());
 
         return entity;
     }

@@ -41,18 +41,16 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQ
 public class PaperMessagesServiceImpl extends BaseService implements PaperMessagesService {
 
     @Autowired
-    private RequestDeliveryDAO requestDeliveryDAO;
-    @Autowired
     private AddressDAO addressDAO;
-    @Autowired
-    private NationalRegistryClient nationalRegistryClient;
+
     @Autowired
     private ExternalChannelClient externalChannelClient;
     @Autowired
     private SqsSender sqsSender;
 
-    public PaperMessagesServiceImpl(PnAuditLogBuilder auditLogBuilder) {
-        super(auditLogBuilder);
+    public PaperMessagesServiceImpl(PnAuditLogBuilder auditLogBuilder, NationalRegistryClient nationalRegistryClient,
+                                    RequestDeliveryDAO requestDeliveryDAO) {
+        super(auditLogBuilder, requestDeliveryDAO, nationalRegistryClient);
     }
 
     @Override
@@ -97,7 +95,6 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
 
                 )
                 .map(amount -> {
-                    //todo
                     log.info("Amount: {} for requestId {}", amount, requestId);
                     SendResponse sendResponse = new SendResponse();
                     sendResponse.setAmount(amount.intValue());
@@ -155,8 +152,7 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                             })
                             .switchIfEmpty(Mono.defer(()-> saveRequestAndAddress(prepareRequest, null)
                                     .flatMap(response -> {
-                                        PrepareAsyncRequest request = new PrepareAsyncRequest(requestId, null, null, true);
-                                        this.sqsSender.pushToInternalQueue(request);
+                                        this.finderAddressFromNationalRegistries(response.getRequestId(), response.getFiscalCode(), response.getReceiverType());
                                         throw new PnPaperEventException(PreparePaperResponseMapper.fromEvent(prepareRequest.getRequestId()));
                                     })
                             ));
@@ -183,15 +179,6 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                 })
                 .map(entityAndAddress -> SendEventMapper.fromResult(entityAndAddress.getT1(),entityAndAddress.getT2()))
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)));
-    }
-
-    private Mono<PnDeliveryRequest> finderAddressAndSave(PrepareRequest prepareRequest){
-        return this.nationalRegistryClient.finderAddress(prepareRequest.getReceiverFiscalCode(), prepareRequest.getReceiverType())
-                .flatMap(response -> {
-                    log.debug("Response from national registry {}", response.getCorrelationId());
-                    return saveRequestAndAddress(prepareRequest, response.getCorrelationId())
-                            .map(savedEntity -> savedEntity);
-                });
     }
 
     private Mono<PnDeliveryRequest> saveRequestAndAddress(PrepareRequest prepareRequest, String correlationId){
