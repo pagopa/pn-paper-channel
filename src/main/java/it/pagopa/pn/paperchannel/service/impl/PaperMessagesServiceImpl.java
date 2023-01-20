@@ -197,14 +197,14 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
     private Mono<PnDeliveryRequest> saveRequestAndAddress(PrepareRequest prepareRequest, String correlationId){
         PnDeliveryRequest pnDeliveryRequest = RequestDeliveryMapper.toEntity(prepareRequest, correlationId);
         Address address = AddressMapper.fromAnalogToAddress(prepareRequest.getReceiverAddress());
+        PnAddress addressEntity = null;
+
        if (address != null) {
            pnDeliveryRequest.setAddressHash(address.convertToHash());
+           if (correlationId == null){
+               addressEntity = AddressMapper.toEntity(address, prepareRequest.getRequestId());
+           }
        }
-
-        PnAddress addressEntity = null;
-        if (correlationId == null){
-            addressEntity = AddressMapper.toEntity(address, prepareRequest.getRequestId());
-        }
 
         return requestDeliveryDAO.createWithAddress(pnDeliveryRequest, addressEntity);
     }
