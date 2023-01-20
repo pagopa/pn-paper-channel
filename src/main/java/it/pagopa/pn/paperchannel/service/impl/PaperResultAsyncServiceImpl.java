@@ -42,11 +42,11 @@ public class PaperResultAsyncServiceImpl implements PaperResultAsyncService {
 
         return requestDeliveryDAO.getByRequestId(singleStatusUpdateDto.getAnalogMail().getRequestId())
                 .flatMap(entity -> {
-                    log.info("GETTED ENTITY: {}", entity);
+                    log.info("GETTED ENTITY: {}", entity.getRequestId());
 
                     return updateEntityResult(singleStatusUpdateDto, entity)
                             .flatMap(updatedEntity -> {
-                                log.info("UPDATED ENTITY: {}", updatedEntity);
+                                log.info("UPDATED ENTITY: {}", updatedEntity.getRequestId());
                                 sendPaperResponse(updatedEntity, singleStatusUpdateDto);
                                 return Mono.just(updatedEntity);
                             });
