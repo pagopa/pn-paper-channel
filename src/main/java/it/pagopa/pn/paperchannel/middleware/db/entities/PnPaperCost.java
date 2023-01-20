@@ -18,7 +18,7 @@ public class PnPaperCost {
     public static final String CAP_INDEX = "cap-index";
     public static final String COL_ZONE = "zone";
     public static final String ZONE_INDEX = "zone-index";
-    public static final String COL_ID_TENDER = "idTender";
+    public static final String COL_TENDER_CODE = "tenderCode";
     public static final String TENDER_INDEX = "tender-index";
     public static final String COL_PRODUCT_TYPE = "productType";
     public static final String COL_BASE_PRICE = "basePrice";
@@ -36,8 +36,8 @@ public class PnPaperCost {
     @Getter(onMethod = @__({@DynamoDbSecondaryPartitionKey(indexNames = ZONE_INDEX),@DynamoDbAttribute(COL_ZONE)}))
     public String zone;
 
-    @Getter(onMethod = @__({@DynamoDbSecondaryPartitionKey(indexNames = TENDER_INDEX),@DynamoDbAttribute(COL_ID_TENDER)}))
-    public String idTender;
+    @Getter(onMethod = @__({@DynamoDbSecondaryPartitionKey(indexNames = TENDER_INDEX),@DynamoDbAttribute(COL_TENDER_CODE)}))
+    public String tenderCode;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_PRODUCT_TYPE)}))
     public String productType;

@@ -14,7 +14,7 @@ import java.time.Instant;
 @ToString
 @NoArgsConstructor
 public class PnPaperTender {
-    public static final String COL_ID_TENDER = "idTender";
+    public static final String COL_TENDER_CODE = "tenderCode";
     public static final String COL_DATE = "date";
     public static final String COL_DESCRIPTION= "description";
     public static final String COL_STATUS = "status";
@@ -24,8 +24,8 @@ public class PnPaperTender {
     public static final String START_DATE_INDEX = "startDate-index";
     public static final String COL_END_DATE = "endDate";
 
-    @Getter(onMethod = @__({@DynamoDbPartitionKey,@DynamoDbAttribute(COL_ID_TENDER)}))
-    public String idTender;
+    @Getter(onMethod = @__({@DynamoDbPartitionKey,@DynamoDbAttribute(COL_TENDER_CODE)}))
+    public String tenderCode;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_DATE)}))
     public String date;

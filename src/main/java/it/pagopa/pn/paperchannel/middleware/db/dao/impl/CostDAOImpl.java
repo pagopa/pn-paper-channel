@@ -15,6 +15,7 @@ import reactor.core.publisher.Mono;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
+import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
@@ -51,6 +52,15 @@ public class CostDAOImpl extends BaseDAO<PnPaperCost> implements CostDAO {
         pnListCosts.forEach(cost -> transactWriterInitializer.addRequestTransaction(this.dynamoTable, cost, PnPaperCost.class));
         return Mono.fromFuture(putWithTransact(transactWriterInitializer.build()).thenApply(item -> pnDeliveryDriver));
 
+    }
+
+    @Override
+    public Mono<List<PnPaperCost>> retrievePrice(String tenderCode, String deliveryDriver) {
+        QueryConditional conditional = CONDITION_EQUAL_TO.apply(keyBuild(tenderCode, null));
+        String filter = ":deliveryDriver=" + PnPaperCost.COL_ID_DELIVERY_DRIVER;
+        Map<String,AttributeValue> values = new HashMap<>();
+        values.put(":deliveryDriver", AttributeValue.builder().s(deliveryDriver).build());
+        return this.getByFilter(conditional, PnPaperCost.TENDER_INDEX, values, filter).collectList();
     }
 
     @Override

@@ -1,8 +1,12 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
+import it.pagopa.pn.paperchannel.mapper.CostMapper;
 import it.pagopa.pn.paperchannel.mapper.DeliveryDriverMapper;
+import it.pagopa.pn.paperchannel.mapper.TenderMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.DeliveryDriverDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.TenderDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.impl.CostDAOImpl;
 import it.pagopa.pn.paperchannel.rest.v1.dto.AllPricesContractorResponseDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PageableDeliveryDriverResponseDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PageableTenderResponseDto;
@@ -23,10 +27,15 @@ public class PaperChannelServiceImpl implements PaperChannelService {
 
     @Autowired
     private DeliveryDriverDAO deliveryDriverDAO;
+    @Autowired
+    private TenderDAO tenderDAO;
 
     @Override
     public Mono<PageableTenderResponseDto> getAllTender(Integer page, Integer size) {
-        return null;
+        Pageable pageable = PageRequest.of(page-1, size);
+        return tenderDAO.getTenders()
+                .map(list -> TenderMapper.toPagination(pageable, list))
+                .map(TenderMapper::toPageableResponse);
     }
 
     @Override
@@ -39,11 +48,9 @@ public class PaperChannelServiceImpl implements PaperChannelService {
 
     @Override
     public Mono<AllPricesContractorResponseDto> getAllPricesOfDeliveryDriver(String tenderCode, String deliveryDriver) {
-        return null;
+        return costDAO.retrievePrice(tenderCode, deliveryDriver)
+                .map(CostMapper::toResponse);
     }
-
-
-
 
 
     /*

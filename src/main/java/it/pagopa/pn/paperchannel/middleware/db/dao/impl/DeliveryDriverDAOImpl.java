@@ -43,11 +43,11 @@ public class DeliveryDriverDAOImpl extends BaseDAO<PnPaperDeliveryDriver> implem
                         keyBuild("PN-PAPER-CHANNEL", startAndEndTimestamp.getSecond().toString()) )
         );
 
-        //String filter = "( " + PnPaperDeliveryDriver.COL_TENDER_CODE + " = :tenderCode )";
-        //Map<String, AttributeValue> values = new HashMap<>();
-        //values.put(":tenderCode", AttributeValue.builder().s(tenderCode).build());
+        String filter = "( " + PnPaperDeliveryDriver.COL_TENDER_CODE + " = :tenderCode )";
+        Map<String, AttributeValue> values = new HashMap<>();
+        values.put(":tenderCode", AttributeValue.builder().s(tenderCode).build());
 
-        return this.getByFilter(conditional, PnPaperDeliveryDriver.AUTHOR_INDEX, null, null)
+        return this.getByFilter(conditional, PnPaperDeliveryDriver.AUTHOR_INDEX, values, filter)
                 .collectList();
     }
 
