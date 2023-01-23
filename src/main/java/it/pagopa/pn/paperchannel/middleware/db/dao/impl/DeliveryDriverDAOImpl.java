@@ -6,7 +6,6 @@ import it.pagopa.pn.paperchannel.encryption.KmsEncryption;
 import it.pagopa.pn.paperchannel.middleware.db.dao.DeliveryDriverDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.BaseDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnPaperDeliveryDriver;
-import it.pagopa.pn.paperchannel.model.DeliveryDriverFilter;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Repository;
