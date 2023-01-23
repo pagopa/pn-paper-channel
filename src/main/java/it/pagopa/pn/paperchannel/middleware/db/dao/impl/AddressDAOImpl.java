@@ -34,24 +34,7 @@ public class AddressDAOImpl extends BaseDAO <PnAddress> implements AddressDAO {
 
     @Override
     public Mono<PnAddress> create(PnAddress pnAddress) {
-        return Mono.fromFuture(
-                countOccurrencesEntity(pnAddress.getRequestId())
-                        .thenCompose( total -> {
-                            log.debug("Address with same RequestID : {}", total);
-                            if (total == 0){
-                                return put(pnAddress);
-                            } else {
-                                log.debug("Address already exist");
-                                throw new PnHttpResponseException("Data already existed", HttpStatus.BAD_REQUEST.value());
-                            }
-                        })
-                )
-                .onErrorResume(throwable -> {
-                    return Mono.error(throwable);
-                })
-                .map(entityCreated -> {
-                    return entityCreated;
-                });
+        return Mono.fromFuture(this.decode(put(pnAddress)).thenApply(i-> i));
     }
 
     @Override
