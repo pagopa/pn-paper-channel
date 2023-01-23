@@ -1,7 +1,6 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
-import it.pagopa.pn.commons.log.PnAuditLogEvent;
 import it.pagopa.pn.commons.log.PnAuditLogEventType;
 import it.pagopa.pn.paperchannel.config.HttpConnector;
 import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
@@ -15,13 +14,15 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.SafeStorageClient;
-import it.pagopa.pn.paperchannel.model.*;
+import it.pagopa.pn.paperchannel.model.Address;
+import it.pagopa.pn.paperchannel.model.AttachmentInfo;
+import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
+import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.msclient.generated.pnsafestorage.v1.dto.FileDownloadResponseDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.ProductTypeEnum;
 import it.pagopa.pn.paperchannel.rest.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.service.PaperAsyncService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
-import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -185,52 +186,47 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
 
             //indirizzo diverso da quello del primo invio?
             if(!fromNationalRegistry.convertToHash().equals(hashOldAddress)){
-                String logMessage = String.format("prepare requestId = %s iun = %s and National Registry Address", requestId, iun);
-                PnAuditLogEvent logEvent = auditLogBuilder
-                        .before(PnAuditLogEventType.AUD_FD_RESOLVE_SERVICE, logMessage)
-                        .build();
-                logEvent.log();
+                String logMessage = String.format("prepare requestId = %s with National Registry Address", iun);
+                auditLogBuilder.before(PnAuditLogEventType.AUD_FD_RESOLVE_LOGIC, logMessage)
+                        .iun(iun)
+                        .build().log();
 
                 return fromNationalRegistry;
             }
             //indirizzo ricevuto in input
             else if(discoveredAddress!=null){
-                String logMessage = String.format("prepare requestId = %s iun = %s and Discovered Address", requestId, iun);
-                PnAuditLogEvent logEvent = auditLogBuilder
-                        .before(PnAuditLogEventType.AUD_FD_RESOLVE_LOGIC, logMessage)
-                        .build();
-                logEvent.log();
+                String logMessage = String.format("prepare requestId = %s with Discovered Address", requestId, iun);
+                auditLogBuilder.before(PnAuditLogEventType.AUD_FD_RESOLVE_LOGIC, logMessage)
+                        .iun(iun)
+                        .build().log();
 
                 return discoveredAddress;
             }
             //indirizzo non trovato
             else{
-                String logMessage = String.format("prepare requestId = %s iun = %s Unreachable Address", requestId, iun);
-                PnAuditLogEvent logEvent = auditLogBuilder
-                        .before(PnAuditLogEventType.AUD_FD_RESOLVE_LOGIC, logMessage)
-                        .build();
-                logEvent.generateFailure(logMessage);
+                String logMessage = String.format("prepare requestId = %s Unreachable Address", requestId, iun);
+                auditLogBuilder.before(PnAuditLogEventType.AUD_FD_RESOLVE_LOGIC, logMessage)
+                        .iun(iun)
+                        .build().log();
 
                 throw new PnGenericException(UNTRACEABLE_ADDRESS, UNTRACEABLE_ADDRESS.getMessage());
             }
         }
         //indirizzo ricevuto in input
         else if(discoveredAddress!=null){
-            String logMessage = String.format("prepare requestId = %s iun = %s and Discovered Address", requestId, iun);
-            PnAuditLogEvent logEvent = auditLogBuilder
-                    .before(PnAuditLogEventType.AUD_FD_RESOLVE_LOGIC, logMessage)
-                    .build();
-            logEvent.log();
+            String logMessage = String.format("prepare requestId = %s and Discovered Address", requestId, iun);
+            auditLogBuilder.before(PnAuditLogEventType.AUD_FD_RESOLVE_LOGIC, logMessage)
+                    .iun(iun)
+                    .build().log();
 
             return discoveredAddress;
         }
         //indirizzo non trovato
         else{
             String logMessage = String.format("prepare requestId = %s iun = %s Unreachable Address", requestId, iun);
-            PnAuditLogEvent logEvent = auditLogBuilder
-                    .before(PnAuditLogEventType.AUD_FD_RESOLVE_LOGIC, logMessage)
-                    .build();
-            logEvent.generateFailure(logMessage);
+            auditLogBuilder.before(PnAuditLogEventType.AUD_FD_RESOLVE_LOGIC, logMessage)
+                    .iun(iun)
+                    .build().log();
 
             throw new PnGenericException(UNTRACEABLE_ADDRESS, UNTRACEABLE_ADDRESS.getMessage());
         }

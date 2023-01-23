@@ -1,7 +1,6 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
-import it.pagopa.pn.commons.log.PnAuditLogEvent;
 import it.pagopa.pn.commons.log.PnAuditLogEventType;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.exception.PnPaperEventException;
@@ -119,11 +118,10 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                     })
                     .switchIfEmpty(Mono.defer(() -> saveRequestAndAddress(prepareRequest, null)
                             .flatMap(response -> {
-                                String logMessage = String.format("prepare requestId = %s iun = %s with receiverAddress", requestId, response.getIun());
-                                PnAuditLogEvent logEvent = auditLogBuilder
-                                        .before(PnAuditLogEventType.AUD_FD_RESOLVE_LOGIC, logMessage)
-                                        .build();
-                                logEvent.log();
+                                String logMessage = String.format("prepare requestId = %s iun = %s with receiverAddress", requestId);
+                                auditLogBuilder.before(PnAuditLogEventType.AUD_FD_RESOLVE_LOGIC, logMessage)
+                                        .iun(response.getIun())
+                                        .build().log();
 
                                 PrepareAsyncRequest request = new PrepareAsyncRequest(requestId, null, null, true);
                                 this.sqsSender.pushToInternalQueue(request);
@@ -152,6 +150,11 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                             })
                             .switchIfEmpty(Mono.defer(()-> saveRequestAndAddress(prepareRequest, null)
                                     .flatMap(response -> {
+                                        String logMessage = String.format("prepare requestId = %s search in National Registry", requestId);
+                                        auditLogBuilder.before(PnAuditLogEventType.AUD_FD_RESOLVE_SERVICE, logMessage)
+                                                .iun(response.getIun())
+                                                .build().log();
+
                                         this.finderAddressFromNationalRegistries(response.getRequestId(), response.getFiscalCode(), response.getReceiverType());
                                         throw new PnPaperEventException(PreparePaperResponseMapper.fromEvent(prepareRequest.getRequestId()));
                                     })
