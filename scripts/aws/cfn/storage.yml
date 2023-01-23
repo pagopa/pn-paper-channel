@@ -324,6 +324,9 @@ Resources:
         StreamViewType: NEW_IMAGE
 
 Outputs:
+  PaperDeliveryDriversBucketName:
+    Description: Name of s3 bucket
+    Value: !Ref PaperDeliveryDriversBucket
 
   # Scheduled Requests
   ScheduledRequestsQueueName:
