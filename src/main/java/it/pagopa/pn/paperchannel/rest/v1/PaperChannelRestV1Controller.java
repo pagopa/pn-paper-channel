@@ -23,7 +23,7 @@ public class PaperChannelRestV1Controller implements DeliveryDriverApi {
 
     @Override
     public Mono<ResponseEntity<PageableDeliveryDriverResponseDto>> takeDeliveriesDrivers(String tenderCode, Integer page, Integer size, ServerWebExchange exchange) {
-        return DeliveryDriverApi.super._takeDeliveriesDrivers(tenderCode, page, size, exchange);
+        return this.paperChannelService.getAllDeliveriesDrivers(tenderCode, page, size).map(ResponseEntity::ok) ;
     }
 
     @Override

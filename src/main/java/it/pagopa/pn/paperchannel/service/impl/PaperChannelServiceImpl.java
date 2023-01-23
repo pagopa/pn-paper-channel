@@ -7,16 +7,22 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.DeliveryDriverDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.TenderDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.impl.CostDAOImpl;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnPaperDeliveryDriver;
 import it.pagopa.pn.paperchannel.rest.v1.dto.AllPricesContractorResponseDto;
+import it.pagopa.pn.paperchannel.rest.v1.dto.DeliveryDriverDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PageableDeliveryDriverResponseDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PageableTenderResponseDto;
 import it.pagopa.pn.paperchannel.service.PaperChannelService;
+import it.pagopa.pn.paperchannel.utils.ExcelExporter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
+
+import java.util.List;
+import java.util.Objects;
 
 @Slf4j
 @Service
@@ -43,7 +49,10 @@ public class PaperChannelServiceImpl implements PaperChannelService {
         Pageable pageable = PageRequest.of(page-1, size);
         return deliveryDriverDAO.getDeliveryDriver(tenderCode)
                 .map(list -> DeliveryDriverMapper.toPagination(pageable, list))
-                .map(DeliveryDriverMapper::toPageableResponse);
+                .map(pageModel -> {
+                    ExcelExporter.exportToExcel(pageModel.getContent(), "AllDeliveryDriver.xlsx");
+                    return DeliveryDriverMapper.toPageableResponse(pageModel);
+                });
     }
 
     @Override
