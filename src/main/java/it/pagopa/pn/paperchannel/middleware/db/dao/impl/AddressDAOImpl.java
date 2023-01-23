@@ -34,7 +34,7 @@ public class AddressDAOImpl extends BaseDAO <PnAddress> implements AddressDAO {
 
     @Override
     public Mono<PnAddress> create(PnAddress pnAddress) {
-        return Mono.fromFuture(put(pnAddress).thenApply(i -> pnAddress));
+        return Mono.fromFuture(this.decode(put(pnAddress)).thenApply(i-> i));
     }
 
     @Override
