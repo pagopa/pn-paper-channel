@@ -118,7 +118,7 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                     })
                     .switchIfEmpty(Mono.defer(() -> saveRequestAndAddress(prepareRequest, null)
                             .flatMap(response -> {
-                                String logMessage = String.format("prepare requestId = %s iun = %s with receiverAddress", requestId);
+                                String logMessage = String.format("prepare requestId = %s with receiverAddress", requestId);
                                 auditLogBuilder.before(PnAuditLogEventType.AUD_FD_RESOLVE_LOGIC, logMessage)
                                         .iun(response.getIun())
                                         .build().log();
