@@ -186,7 +186,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
 
             //indirizzo diverso da quello del primo invio?
             if(!fromNationalRegistry.convertToHash().equals(hashOldAddress)){
-                String logMessage = String.format("prepare requestId = %s with National Registry Address", iun);
+                String logMessage = String.format("prepare requestId = %s with National Registry Address", requestId);
                 auditLogBuilder.before(PnAuditLogEventType.AUD_FD_RESOLVE_LOGIC, logMessage)
                         .iun(iun)
                         .build().log();
@@ -195,7 +195,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
             }
             //indirizzo ricevuto in input
             else if(discoveredAddress!=null){
-                String logMessage = String.format("prepare requestId = %s with Discovered Address", requestId, iun);
+                String logMessage = String.format("prepare requestId = %s with Discovered Address", requestId);
                 auditLogBuilder.before(PnAuditLogEventType.AUD_FD_RESOLVE_LOGIC, logMessage)
                         .iun(iun)
                         .build().log();
@@ -204,7 +204,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
             }
             //indirizzo non trovato
             else{
-                String logMessage = String.format("prepare requestId = %s Unreachable Address", requestId, iun);
+                String logMessage = String.format("prepare requestId = %s Unreachable Address", requestId);
                 auditLogBuilder.before(PnAuditLogEventType.AUD_FD_RESOLVE_LOGIC, logMessage)
                         .iun(iun)
                         .build().log();
@@ -214,7 +214,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
         }
         //indirizzo ricevuto in input
         else if(discoveredAddress!=null){
-            String logMessage = String.format("prepare requestId = %s and Discovered Address", requestId, iun);
+            String logMessage = String.format("prepare requestId = %s and Discovered Address", requestId);
             auditLogBuilder.before(PnAuditLogEventType.AUD_FD_RESOLVE_LOGIC, logMessage)
                     .iun(iun)
                     .build().log();
@@ -223,7 +223,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
         }
         //indirizzo non trovato
         else{
-            String logMessage = String.format("prepare requestId = %s iun = %s Unreachable Address", requestId, iun);
+            String logMessage = String.format("prepare requestId = %s Unreachable Address", requestId);
             auditLogBuilder.before(PnAuditLogEventType.AUD_FD_RESOLVE_LOGIC, logMessage)
                     .iun(iun)
                     .build().log();
