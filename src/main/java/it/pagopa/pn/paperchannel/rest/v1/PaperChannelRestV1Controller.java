@@ -2,6 +2,7 @@ package it.pagopa.pn.paperchannel.rest.v1;
 
 import it.pagopa.pn.paperchannel.rest.v1.api.DeliveryDriverApi;
 import it.pagopa.pn.paperchannel.rest.v1.dto.AllPricesContractorResponseDto;
+import it.pagopa.pn.paperchannel.rest.v1.dto.InfoDownloadDTO;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PageableDeliveryDriverResponseDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PageableTenderResponseDto;
 import it.pagopa.pn.paperchannel.service.PaperChannelService;
@@ -29,5 +30,10 @@ public class PaperChannelRestV1Controller implements DeliveryDriverApi {
     @Override
     public Mono<ResponseEntity<AllPricesContractorResponseDto>> takePrices(String tenderCode, String deliveryDriverId, ServerWebExchange exchange) {
         return DeliveryDriverApi.super.takePrices(tenderCode, deliveryDriverId, exchange);
+    }
+
+    @Override
+    public Mono<ResponseEntity<InfoDownloadDTO>> downloadTenderFile(String tenderCode, String uuid, ServerWebExchange exchange) {
+        return this.paperChannelService.downloadTenderFile(tenderCode, uuid).map(ResponseEntity::ok);
     }
 }
