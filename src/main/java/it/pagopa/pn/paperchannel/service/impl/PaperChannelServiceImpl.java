@@ -47,10 +47,9 @@ public class PaperChannelServiceImpl implements PaperChannelService {
     public Mono<PageableDeliveryDriverResponseDto> getAllDeliveriesDrivers(String tenderCode, Integer page, Integer size) {
         Pageable pageable = PageRequest.of(page-1, size);
         return deliveryDriverDAO.getDeliveryDriver(tenderCode)
-                .map(list -> {
-                    excelDAO.createAndSave(ExcelModelMapper.fromDeliveriesDrivers(list));
-                    return DeliveryDriverMapper.toPagination(pageable, list);
-                })
+                .map(list ->
+                    DeliveryDriverMapper.toPagination(pageable, list)
+                )
                 .map(DeliveryDriverMapper::toPageableResponse);
     }
 
