@@ -15,6 +15,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
 import reactor.test.StepVerifier;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 @Slf4j
 class AddressDAOTest extends BaseTest {
 
@@ -25,26 +28,32 @@ class AddressDAOTest extends BaseTest {
     @Test
     void testAddress(){
         PnAddress address = new PnAddress();
-        address.setAddress("Pippo");
-        address.setCap("Ciccio");
-        address.setRequestId("123456566wff");
+        address.setAddress("Via Cristoforo Colombo");
+        address.setCap("21047");
+        address.setRequestId("abc-234-1df");
         addressDAO.create(address).block();
         PnAddress pnAddressFromDb = addressDAO.findByRequestId(address.getRequestId()).block();
-        Assertions.assertNotNull(pnAddressFromDb);
+        assertNotNull(pnAddressFromDb);
+        assertEquals(address.getAddress(), pnAddressFromDb.getAddress());
+        assertEquals(address.getCap(), pnAddressFromDb.getCap());
     }
 
     @Test
-    void testExistAddress(){
+    void addressOverwrittenTest(){
         PnAddress address = new PnAddress();
-        address.setAddress("Pippo");
-        address.setCap("Ciccio");
-        address.setRequestId("123456566wffgggg");
+        address.setAddress("Via Aldo Moro");
+        address.setCap("21004");
+        address.setRequestId("LOP-DF3-412");
         addressDAO.create(address).block();
 
         PnAddress address2 = new PnAddress();
-        address2.setAddress("Pippo");
-        address2.setCap("Ciccio");
-        address2.setRequestId("123456566wffgggg");
-        StepVerifier.create(addressDAO.create(address2)).expectError(PnHttpResponseException.class).verify();
+        address2.setAddress("San Cristoforo");
+        address2.setCap("21004");
+        address2.setRequestId(address.getRequestId());
+        address2 = addressDAO.create(address2).block();
+
+        PnAddress pnAddressFromDb = addressDAO.findByRequestId(address.getRequestId()).block();
+        assertNotNull(address2);
+        assertNotNull(pnAddressFromDb);
     }
 }

@@ -69,9 +69,9 @@ public class CostDAOImpl extends BaseDAO<PnPaperCost> implements CostDAO {
         String index = PnPaperCost.CAP_INDEX;
         if (zone != null) {
             value = zone.getZone();
-            index = PnPaperCost.ZONE_INDEX;
+            index = PnPaperCost.ZONE_INDEX; // remove. nuova variable col = zone/cap
         }
-        String filterExpression = "(" + PnPaperCost.COL_PRODUCT_TYPE + " = :productType)";
+        String filterExpression = "(" + PnPaperCost.COL_PRODUCT_TYPE + " = :productType)"; // adds filter cap or zone
         Map<String, AttributeValue> values = new HashMap<>();
         values.put(":productType", AttributeValue.builder().s(productType).build());
         return this.getByFilter( CONDITION_EQUAL_TO.apply( keyBuild(value, "") ), index, values, filterExpression)

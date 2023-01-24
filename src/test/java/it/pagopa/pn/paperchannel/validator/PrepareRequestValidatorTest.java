@@ -94,4 +94,5 @@ class PrepareRequestValidatorTest {
         address.setNameRow2("Ettore");
         return address;
     }
+    
 }

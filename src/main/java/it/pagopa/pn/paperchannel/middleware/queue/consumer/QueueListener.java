@@ -58,7 +58,7 @@ public class QueueListener {
                 .block();
     }
 
-    //@SqsListener(value = "${pn.paper-channel.queue-national-registries}", deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)
+    @SqsListener(value = "${pn.paper-channel.queue-national-registries}", deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)
     public void pullNationalRegistries(@Payload String node, @Headers Map<String, Object> headers){
         Mono.just(node)
                 .doOnNext(message -> log.info("Do On Next: {}", message))
