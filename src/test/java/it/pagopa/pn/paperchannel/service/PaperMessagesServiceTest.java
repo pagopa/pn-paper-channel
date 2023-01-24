@@ -162,6 +162,8 @@ class PaperMessagesServiceTest extends BaseTest {
                 .thenReturn(new PnAuditLogEvent(PnAuditLogEventType.AUD_FD_RESOLVE_LOGIC, new HashMap<>(), "", new Object()));
         Mockito.when(auditLogBuilder.before(Mockito.any(), Mockito.any()))
                 .thenReturn(auditLogBuilder);
+        Mockito.when(auditLogBuilder.iun(Mockito.anyString()))
+                .thenReturn(auditLogBuilder);
 
         PnAddress address = getPnAddress(deliveryRequestTakingCharge.getRequestId());
         Mockito.when(requestDeliveryDAO.getByRequestId(deliveryRequestTakingCharge.getRequestId())).thenReturn(Mono.empty());
