@@ -9,12 +9,16 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.common.TransactWriterInitiali
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnPaperCost;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnPaperDeliveryDriver;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnZone;
+import it.pagopa.pn.paperchannel.utils.DateUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
+import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
@@ -51,6 +55,18 @@ public class CostDAOImpl extends BaseDAO<PnPaperCost> implements CostDAO {
         pnListCosts.forEach(cost -> transactWriterInitializer.addRequestTransaction(this.dynamoTable, cost, PnPaperCost.class));
         return Mono.fromFuture(putWithTransact(transactWriterInitializer.build()).thenApply(item -> pnDeliveryDriver));
 
+    }
+
+    @Override
+    public Mono<List<PnPaperCost>> retrievePrice(String tenderCode, String deliveryDriver) {
+        QueryConditional conditional = CONDITION_EQUAL_TO.apply(keyBuild(tenderCode, null));
+        if (StringUtils.isNotBlank(deliveryDriver)){
+            String filter = ":deliveryDriver=" + PnPaperCost.COL_ID_DELIVERY_DRIVER;
+            Map<String,AttributeValue> values = new HashMap<>();
+            values.put(":deliveryDriver", AttributeValue.builder().s(deliveryDriver).build());
+            return this.getByFilter(conditional, PnPaperCost.TENDER_INDEX, values, filter).collectList();
+        }
+        return this.getByFilter(conditional, PnPaperCost.TENDER_INDEX, null, null).collectList();
     }
 
     @Override

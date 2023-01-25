@@ -153,14 +153,14 @@ Resources:
     Properties:
       TableName: !Sub '${ProjectName}PaperTender'
       AttributeDefinitions:
-        - AttributeName: "idTender"
+        - AttributeName: "tenderCode"
           AttributeType: "S"
         - AttributeName: "author"
           AttributeType: "S"
         - AttributeName: "startDate"
           AttributeType: "S"
       KeySchema:
-        - AttributeName: "idTender"
+        - AttributeName: "tenderCode"
           KeyType: "HASH"
       GlobalSecondaryIndexes:
         - IndexName: "author-index"
@@ -233,7 +233,7 @@ Resources:
           AttributeType: "S"
         - AttributeName: "zone"
           AttributeType: "S"
-        - AttributeName: "idTender"
+        - AttributeName: "tenderCode"
           AttributeType: "S"
       KeySchema:
         - AttributeName: "idDeliveryDriver"
@@ -261,7 +261,7 @@ Resources:
             WriteCapacityUnits: "5"
         - IndexName: "tender-index"
           KeySchema:
-            - AttributeName: "idTender"
+            - AttributeName: "tenderCode"
               KeyType: "HASH"
           Projection:
             ProjectionType: "ALL"

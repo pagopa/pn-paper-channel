@@ -1,9 +1,7 @@
 package it.pagopa.pn.paperchannel.rest.v1;
 
 import it.pagopa.pn.paperchannel.rest.v1.api.DeliveryDriverApi;
-import it.pagopa.pn.paperchannel.rest.v1.dto.AllPricesContractorResponseDto;
-import it.pagopa.pn.paperchannel.rest.v1.dto.PageableDeliveryDriverResponseDto;
-import it.pagopa.pn.paperchannel.rest.v1.dto.PageableTenderResponseDto;
+import it.pagopa.pn.paperchannel.rest.v1.dto.*;
 import it.pagopa.pn.paperchannel.service.PaperChannelService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -23,11 +21,21 @@ public class PaperChannelRestV1Controller implements DeliveryDriverApi {
 
     @Override
     public Mono<ResponseEntity<PageableDeliveryDriverResponseDto>> takeDeliveriesDrivers(String tenderCode, Integer page, Integer size, ServerWebExchange exchange) {
-        return DeliveryDriverApi.super._takeDeliveriesDrivers(tenderCode, page, size, exchange);
+        return this.paperChannelService.getAllDeliveriesDrivers(tenderCode, page, size).map(ResponseEntity::ok) ;
     }
 
     @Override
     public Mono<ResponseEntity<AllPricesContractorResponseDto>> takePrices(String tenderCode, String deliveryDriverId, ServerWebExchange exchange) {
         return DeliveryDriverApi.super.takePrices(tenderCode, deliveryDriverId, exchange);
+    }
+
+    @Override
+    public Mono<ResponseEntity<PresignedUrlResponseDto>> addTenderFromFile(ServerWebExchange exchange) {
+        return this.paperChannelService.getPresignedUrl().map(ResponseEntity::ok);
+    }
+
+    @Override
+    public Mono<ResponseEntity<InfoDownloadDTO>> downloadTenderFile(String tenderCode, String uuid, ServerWebExchange exchange) {
+        return this.paperChannelService.downloadTenderFile(tenderCode, uuid).map(ResponseEntity::ok);
     }
 }

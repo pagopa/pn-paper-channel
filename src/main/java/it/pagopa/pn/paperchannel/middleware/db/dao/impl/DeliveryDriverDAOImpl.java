@@ -6,7 +6,6 @@ import it.pagopa.pn.paperchannel.encryption.KmsEncryption;
 import it.pagopa.pn.paperchannel.middleware.db.dao.DeliveryDriverDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.BaseDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnPaperDeliveryDriver;
-import it.pagopa.pn.paperchannel.model.DeliveryDriverFilter;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Repository;
@@ -43,11 +42,11 @@ public class DeliveryDriverDAOImpl extends BaseDAO<PnPaperDeliveryDriver> implem
                         keyBuild("PN-PAPER-CHANNEL", startAndEndTimestamp.getSecond().toString()) )
         );
 
-        //String filter = "( " + PnPaperDeliveryDriver.COL_TENDER_CODE + " = :tenderCode )";
-        //Map<String, AttributeValue> values = new HashMap<>();
-        //values.put(":tenderCode", AttributeValue.builder().s(tenderCode).build());
+        String filter = "( " + PnPaperDeliveryDriver.COL_TENDER_CODE + " = :tenderCode )";
+        Map<String, AttributeValue> values = new HashMap<>();
+        values.put(":tenderCode", AttributeValue.builder().s(tenderCode).build());
 
-        return this.getByFilter(conditional, PnPaperDeliveryDriver.AUTHOR_INDEX, null, null)
+        return this.getByFilter(conditional, PnPaperDeliveryDriver.AUTHOR_INDEX, values, filter)
                 .collectList();
     }
 

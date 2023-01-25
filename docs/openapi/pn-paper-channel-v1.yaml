@@ -164,6 +164,36 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
+  /paper-channel/backoffice/v1/delivery-tender/file-download:
+    get:
+      tags:
+        - DeliveryDriver
+      operationId: downloadTenderFile
+      summary: Download Gare
+      description: API che consente il download dell'elenco delle gare d'appalto.
+      parameters:
+        - $ref: '#/components/parameters/queryTenderCode'
+        - $ref: '#/components/parameters/queryUuid'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InfoDownloadDTO'
+        '400':
+          $ref: '#/components/responses/Invalid'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/NotAllowed'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
   /paper-channel/backoffice/v1/delivery-tender:
     post:
       tags:
@@ -198,30 +228,12 @@ paths:
           $ref: '#/components/responses/InternalError'
 
   /paper-channel/backoffice/v1/delivery-tender/file-upload:
-    post:
+    get:
       tags:
         - DeliveryDriver
       operationId: addTenderFromFile
-      summary: Inserimento Gara.
+      summary: Genera la preseigned url.
       description: API che consente di aggiungere una nuova gara e tutti i suoi vincitori attraverso file Excel
-      requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                tender:
-                  $ref: '#/components/schemas/TenderDTO'
-                file:
-                  nullable: false
-                  type: string
-                  format: binary
-              required:
-                - tender
-                - file
-            encoding:
-              tender:
-                contentType: application/json
 
       responses:
         '200':
@@ -229,7 +241,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BaseResponse'
+                $ref: '#/components/schemas/PresignedUrlResponseDto'
         '400':
           $ref: '#/components/responses/Invalid'
         '401':
@@ -244,8 +256,30 @@ paths:
           $ref: '#/components/responses/InternalError'
 
 
+
 components:
   schemas:
+    InfoDownloadDTO:
+      type: object
+      properties:
+        url:
+          type: string
+        retryAfter:
+          type: integer
+          format: int64
+          maximum: 999999999
+          minimum: 1
+        uuid:
+          type: string
+          example: 'A12C34D56789E0'
+          format: '/[^A-Za-z0-9]+/'
+          maxLength: 32
+        status:
+          type: string
+          enum:
+            - UPLOADING
+            - UPLOADED
+
     AllPricesContractorResponseDto:
       type: object
       properties:
@@ -357,6 +391,14 @@ components:
           format: decimal64
           maximum: 1
           minimum: 1
+      additionalProperties: false
+    PresignedUrlResponseDto:
+      type: object
+      properties:
+        presignedUrl:
+          type: string
+        status:
+          $ref: '#/components/schemas/BaseResponse'
       additionalProperties: false
 
     TypeRegisteredLetterEnum:
@@ -585,12 +627,26 @@ components:
       description: Unauthorized
 
   parameters:
+    queryTenderCode:
+      name: tenderCode
+      in: query
+      required: false
+      schema:
+        type: string
+    queryUuid:
+      name: uuid
+      in: query
+      required: false
+      schema:
+        type: string
+
     pathTenderCode:
       name: tenderCode
       in: path
       required: true
       schema:
         type: string
+
     pathDeliveryDriverId:
       name: deliveryDriverId
       in: path

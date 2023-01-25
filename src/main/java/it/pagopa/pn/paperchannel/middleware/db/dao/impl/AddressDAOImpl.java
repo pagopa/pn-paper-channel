@@ -1,6 +1,5 @@
 package it.pagopa.pn.paperchannel.middleware.db.dao.impl;
 
-import it.pagopa.pn.commons.exceptions.PnHttpResponseException;
 import it.pagopa.pn.paperchannel.config.AwsPropertiesConfig;
 import it.pagopa.pn.paperchannel.encryption.KmsEncryption;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
@@ -8,7 +7,6 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.common.BaseDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
@@ -21,7 +19,6 @@ import java.util.concurrent.CompletableFuture;
 
 @Repository
 @Slf4j
-
 public class AddressDAOImpl extends BaseDAO <PnAddress> implements AddressDAO {
 
     public AddressDAOImpl(KmsEncryption kmsEncryption,

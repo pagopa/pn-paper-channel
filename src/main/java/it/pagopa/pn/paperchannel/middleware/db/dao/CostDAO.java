@@ -10,4 +10,5 @@ import java.util.List;
 public interface CostDAO {
     Mono<PnPaperCost> getByCapOrZoneAndProductType (String cap, PnZone zone, String productType);
     Mono<PnPaperDeliveryDriver> createNewContract(PnPaperDeliveryDriver pnDeliveryDriver, List<PnPaperCost> pnListCosts);
-    }
+    Mono<List<PnPaperCost>> retrievePrice(String tenderCode, String deliveryDriver);
+}
