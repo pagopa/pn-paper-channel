@@ -21,6 +21,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import java.io.File;
 import java.util.UUID;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_NOT_EXIST;
@@ -90,14 +91,18 @@ public class PaperChannelServiceImpl implements PaperChannelService {
         file.setUuid(uid);
         file.setStatus(InfoDownloadDTO.StatusEnum.UPLOADING.getValue());
 
-        return fileDownloadDAO.create(file).map(FileMapper::toDownloadFile);
+        return fileDownloadDAO.create(file)
+                .map(item -> {
+                    createAndUploadFileAsync(tenderCode, item.getUuid());
+                    return FileMapper.toDownloadFile(item);
+                });
         // .map(chiamare flusso asyncrono per generare e caricare il file  "createAndUploadFileAsync()");
 
     }
 
     private void createAndUploadFileAsync(String tenderCode,String uuid){
         DeliveriesData excelModel = new DeliveriesData();
-        if(StringUtils.isNotBlank(tenderCode)){
+        if (StringUtils.isNotBlank(tenderCode)) {
             this.deliveryDriverDAO.getDeliveryDriver(tenderCode)
                     .zipWhen(drivers -> this.costDAO.retrievePrice(tenderCode,null))
                     .map(driversAndCosts -> {
@@ -108,7 +113,9 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                         return Mono.just("");
                     });
         } else {
-            this.excelDAO.createAndSave(excelModel);
+            File file = this.excelDAO.createAndSave(excelModel);
+            s3Bucket.putObject(file);
+
             //prendere il file e salvarlo su S3
             //aggiornare il DB (settare nuovamente il pnFile con i nuovi parametri)
         }

@@ -1,12 +1,12 @@
 package it.pagopa.pn.paperchannel.dao;
 
+import java.io.File;
 import java.io.FileInputStream;
 
 public interface ExcelDAO<MODEL> {
 
 
-    void createAndSave(MODEL data);
-
+    File createAndSave(MODEL data);
     MODEL readData(FileInputStream inputStream);
 
 

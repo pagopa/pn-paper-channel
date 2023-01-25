@@ -3,12 +3,16 @@ package it.pagopa.pn.paperchannel.s3.impl;
 import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.PutObjectRequest;
 import it.pagopa.pn.paperchannel.config.AwsBucketProperties;
 import it.pagopa.pn.paperchannel.s3.S3Bucket;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.openxml4j.opc.internal.ContentType;
 import reactor.core.publisher.Mono;
 
+import java.io.File;
 import java.net.URL;
 import java.time.Instant;
 import java.util.Date;
@@ -34,6 +38,18 @@ public class S3BucketImpl implements S3Bucket {
                 .withExpiration(this.getExpirationDate());
         URL url = s3Client.generatePresignedUrl(generatePresignedUrlRequest);
         return Mono.just(url.toString());
+    }
+
+    @Override
+    public Mono<String> putObject(File file) {
+        PutObjectRequest request = new PutObjectRequest(this.awsBucketProperties.getName(), file.getName(), file);
+        // set metadata
+        ObjectMetadata metadata = new ObjectMetadata();
+//        metadata.setContentType(ContentType.);
+        metadata.addUserMetadata("title", file.getName());
+        request.setMetadata(metadata);
+        s3Client.putObject(request);
+        return Mono.just("s");
     }
 
     private Date getExpirationDate() {

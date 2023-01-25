@@ -4,16 +4,20 @@ import it.pagopa.pn.paperchannel.dao.model.ColumnExcel;
 import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.util.TempFile;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.lang.reflect.Field;
 import java.util.*;
 
 @Getter
+@Slf4j
 public class ExcelEngine {
     private final XSSFWorkbook workbook;
     private final List<XSSFSheet> sheets;
@@ -43,15 +47,23 @@ public class ExcelEngine {
         }
     }
 
-    public void saveOnDisk(String fileName){
+    public File saveOnDisk(String fileName){
+        File file = null;
         try {
-            FileOutputStream fileOut = new FileOutputStream(fileName);
-            workbook.write(fileOut);
-            fileOut.close();
+//            FileOutputStream fileOut = new FileOutputStream(fileName);
+//            workbook.write(fileOut);
+//            fileOut.close();
+
+            file = TempFile.createTempFile(fileName, ".xlsx");
+            try (FileOutputStream os = new FileOutputStream(file)) {
+                workbook.write(os);
+            }
             workbook.close();
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Error in file", e.getMessage());
         }
+
+        return file;
     }
 
     private CellStyle getHeaderCellStyle() {
