@@ -51,8 +51,6 @@ public class S3BucketImpl implements S3Bucket {
             fullObject = s3Client.getObject(new GetObjectRequest(this.awsBucketProperties.getName(), file.getName()));
         } catch (Exception e) {
             log.error("Error in upload object in s3", e.getMessage());
-        } finally {
-            //file.cl
         }
         return Mono.just(fullObject.getObjectContent().getHttpRequest().getURI().toString());
     }

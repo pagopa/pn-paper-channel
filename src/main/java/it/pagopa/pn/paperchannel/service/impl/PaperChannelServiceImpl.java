@@ -21,8 +21,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.io.File;
+import java.time.Duration;
 import java.util.UUID;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_NOT_EXIST;
@@ -115,13 +117,20 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                     });
         } else {
             ExcelEngine excelEngine = this.excelDAO.create(excelModel);
-            // save file on s3 bucket
             File f = excelEngine.saveOnDisk();
-            s3Bucket.putObject(f);
-            f.delete();
 
-
-            //aggiornare il DB (settare nuovamente il pnFile con i nuovi parametri)
+            // save file on s3 bucket and update entity
+            Mono.delay(Duration.ofMillis(10)).publishOn(Schedulers.boundedElastic())
+                    .flatMap(i ->  s3Bucket.putObject(f)
+                    .zipWhen(url -> fileDownloadDAO.getUuid(uuid)))
+                    .publishOn(Schedulers.boundedElastic())
+                    .map(entity -> {
+                        f.delete();
+                        entity.getT2().setUrl(entity.getT1());
+                        entity.getT2().setStatus(InfoDownloadDTO.StatusEnum.UPLOADED.getValue());
+                        fileDownloadDAO.create(entity.getT2());
+                        return Mono.empty();
+                    }).subscribeOn(Schedulers.boundedElastic()).subscribe();
         }
     }
 
@@ -148,4 +157,4 @@ public class PaperChannelServiceImpl implements PaperChannelService {
     }
 */
 
-    }
+}
