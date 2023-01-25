@@ -114,7 +114,6 @@ public class PaperChannelServiceImpl implements PaperChannelService {
             //prendere il file e salvarlo su S3
             //aggiornare il DB (settare nuovamente il pnFile con i nuovi parametri)
         }
->>>>>>> 9dfae68f2d4bcdca7698981a10d9704552fdde51
     }
 
 
