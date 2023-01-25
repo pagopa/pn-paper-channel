@@ -61,7 +61,7 @@ public class PaperChannelServiceImpl implements PaperChannelService {
         Pageable pageable = PageRequest.of(page-1, size);
         return deliveryDriverDAO.getDeliveryDriver(tenderCode)
                 .map(list ->
-                    DeliveryDriverMapper.toPagination(pageable, list)
+                        DeliveryDriverMapper.toPagination(pageable, list)
                 )
                 .map(DeliveryDriverMapper::toPageableResponse);
     }
@@ -90,7 +90,11 @@ public class PaperChannelServiceImpl implements PaperChannelService {
         file.setUuid(uid);
         file.setStatus(InfoDownloadDTO.StatusEnum.UPLOADING.getValue());
 
-        return fileDownloadDAO.create(file).map(FileMapper::toDownloadFile);
+        Mono<InfoDownloadDTO> infoDownloadDTO = fileDownloadDAO.create(file).map(FileMapper::toDownloadFile);
+        createAndUploadFileAsync(tenderCode,uid);
+
+        return infoDownloadDTO;
+
         // .map(chiamare flusso asyncrono per generare e caricare il file  "createAndUploadFileAsync()");
 
     }
@@ -137,4 +141,4 @@ public class PaperChannelServiceImpl implements PaperChannelService {
     }
 */
 
-}
+    }
