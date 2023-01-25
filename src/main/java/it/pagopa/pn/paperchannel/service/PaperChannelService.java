@@ -10,6 +10,6 @@ public interface PaperChannelService {
     Mono<PageableDeliveryDriverResponseDto> getAllDeliveriesDrivers(String tenderCode, Integer page, Integer size);
     Mono<AllPricesContractorResponseDto> getAllPricesOfDeliveryDriver(String tenderCode, String deliveryDriver);
     Mono<PresignedUrlResponseDto> getPresignedUrl();
-    Mono<InfoDownloadDTO> downloadTenderFile(String tenderCode,String uuid);
+    Mono<InfoDownloadDTO> downloadTenderFile(String tenderCode, String uuid);
 
 }

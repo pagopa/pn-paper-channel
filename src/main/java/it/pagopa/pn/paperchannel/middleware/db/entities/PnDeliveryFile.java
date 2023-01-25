@@ -13,7 +13,7 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbParti
 @Setter
 @ToString
 @NoArgsConstructor
-public class PnFile {
+public class PnDeliveryFile {
 
     public static final String COL_UUID = "uuid";
     public static final String COL_STATUS = "status";

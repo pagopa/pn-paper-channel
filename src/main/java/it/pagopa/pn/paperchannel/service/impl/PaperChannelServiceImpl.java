@@ -8,7 +8,7 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.DeliveryDriverDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.FileDownloadDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.TenderDAO;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnFile;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryFile;
 import it.pagopa.pn.paperchannel.rest.v1.dto.*;
 import it.pagopa.pn.paperchannel.s3.S3Bucket;
 import it.pagopa.pn.paperchannel.service.PaperChannelService;
@@ -79,15 +79,13 @@ public class PaperChannelServiceImpl implements PaperChannelService {
     }
 
     public Mono<InfoDownloadDTO> downloadTenderFile(String tenderCode,String uuid) {
-
         if(uuid!=null){
-
             return fileDownloadDAO.getUuid(uuid).map(FileMapper::toDownloadFile)
                     .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)));
 
         }
         String uid= UUID.randomUUID().toString();
-        PnFile file = new PnFile();
+        PnDeliveryFile file = new PnDeliveryFile();
         file.setUuid(uid);
         file.setStatus(InfoDownloadDTO.StatusEnum.UPLOADING.getValue());
 

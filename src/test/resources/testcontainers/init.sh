@@ -55,6 +55,16 @@ aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     --provisioned-throughput \
         ReadCapacityUnits=5,WriteCapacityUnits=5
 
+aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
+    dynamodb create-table \
+    --table-name DeliveryFileDynamoTable \
+    --attribute-definitions \
+        AttributeName=uuid,AttributeType=S \
+    --key-schema \
+        AttributeName=uuid,KeyType=HASH \
+    --provisioned-throughput \
+        ReadCapacityUnits=5,WriteCapacityUnits=5
+
 aws  --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     dynamodb put-item \
     --table-name CapDynamoTable  \
@@ -151,5 +161,14 @@ aws  --profile default --region us-east-1 --endpoint-url=http://localstack:4566 
     dynamodb put-item \
     --table-name CapDynamoTable  \
     --item '{"cap": {"S": "03040" }, "city": {"S": "Acquafondata"}}'
+aws  --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
+    dynamodb put-item \
+    --table-name CapDynamoTable  \
+    --item '{"cap": {"S": "03040" }, "city": {"S": "Acquafondata"}}'
+
+aws  --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
+    dynamodb put-item \
+    --table-name DeliveryFileDynamoTable  \
+    --item '{"uuid": {"S": "12345" }, "status": {"S": "UPLOADING"}, "url": {"S": "www.abcd.it"}}'
 
 echo "Initialization terminated"
