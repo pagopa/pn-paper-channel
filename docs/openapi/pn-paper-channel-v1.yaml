@@ -232,8 +232,8 @@ paths:
       tags:
         - DeliveryDriver
       operationId: addTenderFromFile
-      summary: Genera la preseigned url.
-      description: API che consente di aggiungere una nuova gara e tutti i suoi vincitori attraverso file Excel
+      summary: Genera la preseigned url
+      description: API che consente di ottenere la presigned url necessaria al caricamento del file
 
       responses:
         '200':
@@ -397,8 +397,6 @@ components:
       properties:
         presignedUrl:
           type: string
-        status:
-          $ref: '#/components/schemas/BaseResponse'
       additionalProperties: false
 
     TypeRegisteredLetterEnum:

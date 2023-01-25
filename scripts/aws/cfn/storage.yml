@@ -322,6 +322,23 @@ Resources:
         StreamArn: !Ref CdcKinesisSourceStreamArn
       StreamSpecification:
         StreamViewType: NEW_IMAGE
+  DeliveryFileDynamoTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${ProjectName}PaperDeliveryFile'
+      AttributeDefinitions:
+        - AttributeName: "iuun"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "iuun"
+          KeyType: "HASH"
+      ProvisionedThroughput:
+        ReadCapacityUnits: "5"
+        WriteCapacityUnits: "5"
+      KinesisStreamSpecification:
+        StreamArn: !Ref CdcKinesisSourceStreamArn
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
 
 Outputs:
   PaperDeliveryDriversBucketName:
@@ -350,6 +367,14 @@ Outputs:
   RequestDeliveryDynamoTableArn:
     Description: ARN of dynamodb table containing request
     Value: !Sub '${RequestDeliveryDynamoTable.Arn}'
+
+  DeliveryFileDynamoTableName:
+    Description: Name of dynamodb table containing file request
+    Value: !Ref DeliveryFileDynamoTable
+
+  DeliveryFileDynamoTableArn:
+    Description: ARN of dynamodb table containing file request
+    Value: !Sub '${DeliveryFileDynamoTable.Arn}'
 
   AddressDynamoTableName:
     Description: Name of dynamodb table containing address of request delivery
