@@ -14,7 +14,7 @@ public class FileMapper {
         dto.setUuid(pnDeliveryFile.getUuid());
         dto.setUrl(pnDeliveryFile.getUrl());
         dto.setStatus(InfoDownloadDTO.StatusEnum.fromValue(pnDeliveryFile.getStatus()));
-        dto.setRetryAfter((pnDeliveryFile.getStatus().equals("UPLOADED"))?10L:null);
+        dto.setRetryAfter((pnDeliveryFile.getStatus().equals("UPLOADING"))?10L:null);
         return dto;
     }
 }
