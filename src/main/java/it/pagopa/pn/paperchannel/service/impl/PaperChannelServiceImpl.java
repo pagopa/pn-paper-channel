@@ -79,11 +79,12 @@ public class PaperChannelServiceImpl implements PaperChannelService {
     }
 
     public Mono<InfoDownloadDTO> downloadTenderFile(String tenderCode,String uuid) {
-        if(uuid!=null){
-            return fileDownloadDAO.getUuid(uuid).map(FileMapper::toDownloadFile)
+        if(StringUtils.isNotEmpty(uuid)) {
+            return fileDownloadDAO.getUuid(uuid)
+                    .map(FileMapper::toDownloadFile)
                     .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)));
-
         }
+
         String uid= UUID.randomUUID().toString();
         PnDeliveryFile file = new PnDeliveryFile();
         file.setUuid(uid);
@@ -95,7 +96,6 @@ public class PaperChannelServiceImpl implements PaperChannelService {
     }
 
     private void createAndUploadFileAsync(String tenderCode,String uuid){
-
         DeliveriesData excelModel = new DeliveriesData();
         if(StringUtils.isNotBlank(tenderCode)){
             this.deliveryDriverDAO.getDeliveryDriver(tenderCode)
@@ -107,7 +107,7 @@ public class PaperChannelServiceImpl implements PaperChannelService {
 
                         return Mono.just("");
                     });
-        }else{
+        } else {
             this.excelDAO.createAndSave(excelModel);
             //prendere il file e salvarlo su S3
             //aggiornare il DB (settare nuovamente il pnFile con i nuovi parametri)
