@@ -2,16 +2,15 @@ package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.paperchannel.dao.ExcelDAO;
 import it.pagopa.pn.paperchannel.dao.model.DeliveriesData;
-import it.pagopa.pn.paperchannel.mapper.CostMapper;
-import it.pagopa.pn.paperchannel.mapper.DeliveryDriverMapper;
-import it.pagopa.pn.paperchannel.mapper.ExcelModelMapper;
-import it.pagopa.pn.paperchannel.mapper.TenderMapper;
+import it.pagopa.pn.paperchannel.mapper.*;
 import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.DeliveryDriverDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.TenderDAO;
 import it.pagopa.pn.paperchannel.rest.v1.dto.AllPricesContractorResponseDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PageableDeliveryDriverResponseDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PageableTenderResponseDto;
+import it.pagopa.pn.paperchannel.rest.v1.dto.PresignedUrlResponseDto;
+import it.pagopa.pn.paperchannel.s3.S3Bucket;
 import it.pagopa.pn.paperchannel.service.PaperChannelService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +33,12 @@ public class PaperChannelServiceImpl implements PaperChannelService {
     private TenderDAO tenderDAO;
     @Autowired
     private ExcelDAO<DeliveriesData> excelDAO;
+
+    private final S3Bucket s3Bucket;
+
+    public PaperChannelServiceImpl(S3Bucket s3Bucket) {
+        this.s3Bucket = s3Bucket;
+    }
 
     @Override
     public Mono<PageableTenderResponseDto> getAllTender(Integer page, Integer size) {
@@ -58,6 +63,12 @@ public class PaperChannelServiceImpl implements PaperChannelService {
     public Mono<AllPricesContractorResponseDto> getAllPricesOfDeliveryDriver(String tenderCode, String deliveryDriver) {
         return costDAO.retrievePrice(tenderCode, deliveryDriver)
                 .map(CostMapper::toResponse);
+    }
+
+    @Override
+    public Mono<PresignedUrlResponseDto> getPresignedUrl() {
+        return s3Bucket.presignedUrl()
+                .map(presignedUrl -> PresignedUrlResponseMapper.fromResult(presignedUrl));
     }
 
 

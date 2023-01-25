@@ -198,30 +198,12 @@ paths:
           $ref: '#/components/responses/InternalError'
 
   /paper-channel/backoffice/v1/delivery-tender/file-upload:
-    post:
+    get:
       tags:
         - DeliveryDriver
       operationId: addTenderFromFile
-      summary: Inserimento Gara.
+      summary: Genera la preseigned url.
       description: API che consente di aggiungere una nuova gara e tutti i suoi vincitori attraverso file Excel
-      requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                tender:
-                  $ref: '#/components/schemas/TenderDTO'
-                file:
-                  nullable: false
-                  type: string
-                  format: binary
-              required:
-                - tender
-                - file
-            encoding:
-              tender:
-                contentType: application/json
 
       responses:
         '200':
@@ -229,7 +211,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BaseResponse'
+                $ref: '#/components/schemas/PresignedUrlResponseDto'
         '400':
           $ref: '#/components/responses/Invalid'
         '401':
@@ -357,6 +339,14 @@ components:
           format: decimal64
           maximum: 1
           minimum: 1
+      additionalProperties: false
+    PresignedUrlResponseDto:
+      type: object
+      properties:
+        presignedUrl:
+          type: string
+        status:
+          $ref: '#/components/schemas/BaseResponse'
       additionalProperties: false
 
     TypeRegisteredLetterEnum:
