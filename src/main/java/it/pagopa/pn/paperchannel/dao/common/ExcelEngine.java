@@ -7,7 +7,6 @@ import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.util.TempFile;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -16,26 +15,28 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.security.GeneralSecurityException;
 import java.util.*;
 import java.util.function.Function;
 
 @Slf4j
 @Getter
-@Slf4j
 public class ExcelEngine {
     private final XSSFWorkbook workbook;
     private final List<XSSFSheet> sheets;
     private XSSFSheet currentSheet;
+    private String filename;
 
-
-    public ExcelEngine(){
+    public ExcelEngine(String filename){
+        this.filename = filename;
         this.workbook = new XSSFWorkbook();
         this.currentSheet = workbook.createSheet("Sheet 1");
         this.sheets = new ArrayList<>();
         this.sheets.add(this.currentSheet);
     }
 
-    public ExcelEngine(String pathExcel) throws IOException {
+    public ExcelEngine(String filename, String pathExcel) throws IOException {
+        this.filename = filename;
         this.workbook = new XSSFWorkbook(pathExcel);
         int numberOfSheets = this.workbook.getNumberOfSheets();
         this.sheets = new ArrayList<>();
@@ -66,22 +67,24 @@ public class ExcelEngine {
         }
     }
 
-    public File saveOnDisk(String fileName){
+    public File saveOnDisk() {
         File file = null;
         try {
-//            FileOutputStream fileOut = new FileOutputStream(fileName);
-//            workbook.write(fileOut);
-//            fileOut.close();
-
-            file = TempFile.createTempFile(fileName, ".xlsx");
+            file = new File(filename.concat(".xslx"));
+            file.createNewFile();
             try (FileOutputStream os = new FileOutputStream(file)) {
                 workbook.write(os);
             }
-            workbook.close();
         } catch (Exception e) {
             log.error("Error in file", e.getMessage());
+            // TODO lanciare eccezione
+        } finally {
+            try {
+                workbook.close();
+            } catch (IOException ioException) {
+                log.error("Error in file", ioException.getMessage());
+            }
         }
-
         return file;
     }
 
@@ -131,7 +134,7 @@ public class ExcelEngine {
             Map<String, String> mapRow = new HashMap<>();
             Row row = this.currentSheet.getRow(i);
             headerCell.keySet().forEach(key ->
-                mapRow.put(key, row.getCell(headerCell.get(key)).getStringCellValue())
+                    mapRow.put(key, row.getCell(headerCell.get(key)).getStringCellValue())
             );
             rows.add(map.apply(mapRow));
             i++;

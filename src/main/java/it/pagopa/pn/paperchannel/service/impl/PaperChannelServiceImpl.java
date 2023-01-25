@@ -1,6 +1,7 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.paperchannel.dao.ExcelDAO;
+import it.pagopa.pn.paperchannel.dao.common.ExcelEngine;
 import it.pagopa.pn.paperchannel.dao.model.DeliveriesData;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.mapper.*;
@@ -100,21 +101,26 @@ public class PaperChannelServiceImpl implements PaperChannelService {
 
     private void createAndUploadFileAsync(String tenderCode,String uuid){
         DeliveriesData excelModel = new DeliveriesData();
+
         if (StringUtils.isNotBlank(tenderCode)) {
             this.deliveryDriverDAO.getDeliveryDriver(tenderCode)
                     .zipWhen(drivers -> this.costDAO.retrievePrice(tenderCode,null))
                     .map(driversAndCosts -> {
-                        this.excelDAO.createAndSave(ExcelModelMapper.fromDeliveriesDrivers(driversAndCosts.getT1(),driversAndCosts.getT2()));
+                        File f = null;
+                        ExcelEngine excelEngine = this.excelDAO.create(ExcelModelMapper.fromDeliveriesDrivers(driversAndCosts.getT1(),driversAndCosts.getT2()));
                         //prendere il file e salvarlo su S3
                         //aggiornare il DB (settare nuovamente il pnFile con i nuovi parametri)
 
                         return Mono.just("");
                     });
         } else {
-            File file = this.excelDAO.createAndSave(excelModel);
-            s3Bucket.putObject(file);
+            ExcelEngine excelEngine = this.excelDAO.create(excelModel);
+            // save file on s3 bucket
+            File f = excelEngine.saveOnDisk();
+            s3Bucket.putObject(f);
+            f.delete();
 
-            //prendere il file e salvarlo su S3
+
             //aggiornare il DB (settare nuovamente il pnFile con i nuovi parametri)
         }
     }

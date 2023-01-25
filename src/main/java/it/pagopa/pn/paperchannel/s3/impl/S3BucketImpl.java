@@ -2,9 +2,7 @@ package it.pagopa.pn.paperchannel.s3.impl;
 
 import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.model.*;
 import it.pagopa.pn.paperchannel.config.AwsBucketProperties;
 import it.pagopa.pn.paperchannel.s3.S3Bucket;
 import lombok.extern.slf4j.Slf4j;
@@ -42,14 +40,21 @@ public class S3BucketImpl implements S3Bucket {
 
     @Override
     public Mono<String> putObject(File file) {
-        PutObjectRequest request = new PutObjectRequest(this.awsBucketProperties.getName(), file.getName(), file);
-        // set metadata
-        ObjectMetadata metadata = new ObjectMetadata();
-//        metadata.setContentType(ContentType.);
-        metadata.addUserMetadata("title", file.getName());
-        request.setMetadata(metadata);
-        s3Client.putObject(request);
-        return Mono.just("s");
+        S3Object fullObject = null;
+        try {
+            PutObjectRequest request = new PutObjectRequest(this.awsBucketProperties.getName(), file.getName(), file);
+            // set metadata
+            ObjectMetadata metadata = new ObjectMetadata();
+            metadata.addUserMetadata("title", file.getName());
+            request.setMetadata(metadata);
+            s3Client.putObject(request);
+            fullObject = s3Client.getObject(new GetObjectRequest(this.awsBucketProperties.getName(), file.getName()));
+        } catch (Exception e) {
+            log.error("Error in upload object in s3", e.getMessage());
+        } finally {
+            //file.cl
+        }
+        return Mono.just(fullObject.getObjectContent().getHttpRequest().getURI().toString());
     }
 
     private Date getExpirationDate() {

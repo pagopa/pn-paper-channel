@@ -7,18 +7,16 @@ import it.pagopa.pn.paperchannel.dao.model.DeliveriesData;
 import it.pagopa.pn.paperchannel.dao.model.DeliveryAndCost;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
 import java.io.FileInputStream;
 
 @Component
 public class DeliveriesExcelDAO implements ExcelDAO<DeliveriesData> {
 
-
     @Override
-    public File createAndSave(DeliveriesData data) {
-        ExcelEngine excelEngine = new ExcelEngine();
+    public ExcelEngine create(DeliveriesData data) {
+        ExcelEngine excelEngine = new ExcelEngine("DeliveryTemplate");
         excelEngine.fillLikeTable(data.getDeliveriesAndCosts(), DeliveryAndCost.class);
-        return excelEngine.saveOnDisk("DeliveryTemplate.xlsx");
+        return excelEngine;
     }
 
     @Override
