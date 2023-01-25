@@ -99,6 +99,14 @@ Parameters:
     Type: String
     Description: 'ARN of dynamodb table containing request'
 
+  DeliveryFileDynamoTableName:
+    Type: String
+    Description: 'Name of dynamodb table containing file request'
+
+  DeliveryFileDynamoTableArn:
+    Type: String
+    Description: 'ARN of dynamodb table containing file request'
+
   AddressDynamoTableName:
     Type: String
     Description: 'Name of dynamodb table containing address of request delivery'
@@ -205,14 +213,15 @@ Resources:
         ContainerEnvEntry12: !Sub 'AWS_DYNAMODBCOSTTABLE=${CostDynamoTableName}'
         ContainerEnvEntry13: !Sub 'AWS_DYNAMODBZONETABLE=${ZoneDynamoTableName}'
         ContainerEnvEntry14: !Sub 'AWS_DYNAMODBCAPTABLE=${CapDynamoTableName}'
-        ContainerEnvEntry15: !Sub 'AWS_KMS_KEYID=${PCKmsEncDecDynamoDataKeyARN}'
-        ContainerEnvEntry16: !Sub 'AWS_KMS_REGION=${AWS::Region}'
-        ContainerEnvEntry17: !Sub 'PN_PAPERCHANNEL_QUEUEDELIVERYPUSH=${ExternalChannelsOutputsQueueName}'
-        ContainerEnvEntry18: !Sub 'PN_PAPERCHANNEL_QUEUEEXTERNALCHANNEL=${ExternalChannels2PaperChannelQueueName}'
-        ContainerEnvEntry19: !Sub 'PN_PAPERCHANNEL_QUEUENATIONALREGISTRIES=${NationalRegistryGatewayOutputsQueueName}'
-        ContainerEnvEntry20: !Sub 'PN_PAPERCHANNEL_QUEUEINTERNAL=${ScheduledRequestsQueueName}'
-        ContainerEnvEntry21: !Sub 'SPRING_CLOUD_FUNCTIONROUTER_QUEUES_LIST=${ExternalChannelsOutputsQueueName},${ExternalChannels2PaperChannelQueueName},${NationalRegistryGatewayOutputsQueueName},${ScheduledRequestsQueueName}'
-        ContainerEnvEntry22: !Sub 'AWS_BUCKET_NAME=${PaperDeliveryDriversBucketName}'
+        ContainerEnvEntry15: !Sub 'AWS_DYNAMODBDELIVERYFILETABLE=${DeliveryFileDynamoTableName}'
+        ContainerEnvEntry16: !Sub 'AWS_KMS_KEYID=${PCKmsEncDecDynamoDataKeyARN}'
+        ContainerEnvEntry17: !Sub 'AWS_KMS_REGION=${AWS::Region}'
+        ContainerEnvEntry18: !Sub 'PN_PAPERCHANNEL_QUEUEDELIVERYPUSH=${ExternalChannelsOutputsQueueName}'
+        ContainerEnvEntry19: !Sub 'PN_PAPERCHANNEL_QUEUEEXTERNALCHANNEL=${ExternalChannels2PaperChannelQueueName}'
+        ContainerEnvEntry20: !Sub 'PN_PAPERCHANNEL_QUEUENATIONALREGISTRIES=${NationalRegistryGatewayOutputsQueueName}'
+        ContainerEnvEntry21: !Sub 'PN_PAPERCHANNEL_QUEUEINTERNAL=${ScheduledRequestsQueueName}'
+        ContainerEnvEntry22: !Sub 'SPRING_CLOUD_FUNCTIONROUTER_QUEUES_LIST=${ExternalChannelsOutputsQueueName},${ExternalChannels2PaperChannelQueueName},${NationalRegistryGatewayOutputsQueueName},${ScheduledRequestsQueueName}'
+        ContainerEnvEntry23: !Sub 'AWS_BUCKET_NAME=${PaperDeliveryDriversBucketName}'
         MappedPaths: '/paper-channel/*,/paper-channel-private/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds
@@ -276,6 +285,8 @@ Resources:
             Resource:
               - !Sub "${RequestDeliveryDynamoTableArn}"
               - !Sub "${RequestDeliveryDynamoTableArn}/*"
+              - !Sub "${DeliveryFileDynamoTableArn}"
+              - !Sub "${DeliveryFileDynamoTableArn}/*"
               - !Sub "${AddressDynamoTableArn}"
               - !Sub "${AddressDynamoTableArn}/*"
               - !Sub "${TenderDynamoTableArn}"
