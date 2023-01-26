@@ -108,10 +108,22 @@ public class PaperChannelServiceImpl implements PaperChannelService {
             this.deliveryDriverDAO.getDeliveryDriver(tenderCode)
                     .zipWhen(drivers -> this.costDAO.retrievePrice(tenderCode,null))
                     .map(driversAndCosts -> {
-                        File f = null;
+
                         ExcelEngine excelEngine = this.excelDAO.create(ExcelModelMapper.fromDeliveriesDrivers(driversAndCosts.getT1(),driversAndCosts.getT2()));
-                        //prendere il file e salvarlo su S3
-                        //aggiornare il DB (settare nuovamente il pnFile con i nuovi parametri)
+                        File fIle = excelEngine.saveOnDisk();
+
+                        // save file on s3 bucket and update entity
+                        Mono.delay(Duration.ofMillis(10)).publishOn(Schedulers.boundedElastic())
+                                .flatMap(i ->  s3Bucket.putObject(fIle)
+                                        .zipWhen(url -> fileDownloadDAO.getUuid(uuid)))
+                                .publishOn(Schedulers.boundedElastic())
+                                .map(entity -> {
+                                    fIle.delete();
+                                    entity.getT2().setUrl(entity.getT1());
+                                    entity.getT2().setStatus(InfoDownloadDTO.StatusEnum.UPLOADED.getValue());
+                                    fileDownloadDAO.create(entity.getT2());
+                                    return Mono.empty();
+                                }).subscribeOn(Schedulers.boundedElastic()).subscribe();
 
                         return Mono.just("");
                     });
