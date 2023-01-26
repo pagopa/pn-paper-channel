@@ -1,6 +1,7 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.paperchannel.dao.ExcelDAO;
+import it.pagopa.pn.paperchannel.dao.common.ExcelEngine;
 import it.pagopa.pn.paperchannel.dao.model.DeliveriesData;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.mapper.*;
@@ -20,7 +21,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
+import java.io.File;
+import java.time.Duration;
 import java.util.UUID;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_NOT_EXIST;
@@ -61,7 +65,7 @@ public class PaperChannelServiceImpl implements PaperChannelService {
         Pageable pageable = PageRequest.of(page-1, size);
         return deliveryDriverDAO.getDeliveryDriver(tenderCode)
                 .map(list ->
-                    DeliveryDriverMapper.toPagination(pageable, list)
+                        DeliveryDriverMapper.toPagination(pageable, list)
                 )
                 .map(DeliveryDriverMapper::toPageableResponse);
     }
@@ -75,7 +79,7 @@ public class PaperChannelServiceImpl implements PaperChannelService {
     @Override
     public Mono<PresignedUrlResponseDto> getPresignedUrl() {
         return s3Bucket.presignedUrl()
-                .map(presignedUrl -> PresignedUrlResponseMapper.fromResult(presignedUrl));
+                .map(presignedUrlResponse -> presignedUrlResponse);
     }
 
     public Mono<InfoDownloadDTO> downloadTenderFile(String tenderCode,String uuid) {
@@ -90,27 +94,52 @@ public class PaperChannelServiceImpl implements PaperChannelService {
         file.setUuid(uid);
         file.setStatus(InfoDownloadDTO.StatusEnum.UPLOADING.getValue());
 
-        return fileDownloadDAO.create(file).map(FileMapper::toDownloadFile);
-        // .map(chiamare flusso asyncrono per generare e caricare il file  "createAndUploadFileAsync()");
-
+        return fileDownloadDAO.create(file)
+                .map(item -> {
+                    createAndUploadFileAsync(tenderCode, item.getUuid());
+                    return FileMapper.toDownloadFile(item);
+                });
     }
 
     private void createAndUploadFileAsync(String tenderCode,String uuid){
-        DeliveriesData excelModel = new DeliveriesData();
-        if(StringUtils.isNotBlank(tenderCode)){
+        if (StringUtils.isNotBlank(tenderCode)) {
             this.deliveryDriverDAO.getDeliveryDriver(tenderCode)
                     .zipWhen(drivers -> this.costDAO.retrievePrice(tenderCode,null))
                     .map(driversAndCosts -> {
-                        this.excelDAO.createAndSave(ExcelModelMapper.fromDeliveriesDrivers(driversAndCosts.getT1(),driversAndCosts.getT2()));
-                        //prendere il file e salvarlo su S3
-                        //aggiornare il DB (settare nuovamente il pnFile con i nuovi parametri)
+                        ExcelEngine excelEngine = this.excelDAO.create(ExcelModelMapper.fromDeliveriesDrivers(driversAndCosts.getT1(),driversAndCosts.getT2()));
+                        File file = excelEngine.saveOnDisk();
+
+                        // save file on s3 bucket and update entity
+                        Mono.delay(Duration.ofMillis(10)).publishOn(Schedulers.boundedElastic())
+                                .flatMap(i ->  s3Bucket.putObject(file)
+                                        .zipWhen(url -> fileDownloadDAO.getUuid(uuid)))
+                                .publishOn(Schedulers.boundedElastic())
+                                .map(entity -> {
+                                    file.delete();
+                                    entity.getT2().setUrl(entity.getT1());
+                                    entity.getT2().setStatus(InfoDownloadDTO.StatusEnum.UPLOADED.getValue());
+                                    fileDownloadDAO.create(entity.getT2());
+                                    return Mono.empty();
+                                }).subscribeOn(Schedulers.boundedElastic()).subscribe();
 
                         return Mono.just("");
                     });
         } else {
-            this.excelDAO.createAndSave(excelModel);
-            //prendere il file e salvarlo su S3
-            //aggiornare il DB (settare nuovamente il pnFile con i nuovi parametri)
+            ExcelEngine excelEngine = this.excelDAO.create(new DeliveriesData());
+            File f = excelEngine.saveOnDisk();
+
+            // save file on s3 bucket and update entity
+            Mono.delay(Duration.ofMillis(10)).publishOn(Schedulers.boundedElastic())
+                    .flatMap(i ->  s3Bucket.putObject(f)
+                    .zipWhen(url -> fileDownloadDAO.getUuid(uuid)))
+                    .publishOn(Schedulers.boundedElastic())
+                    .map(entity -> {
+                        f.delete();
+                        entity.getT2().setUrl(entity.getT1());
+                        entity.getT2().setStatus(InfoDownloadDTO.StatusEnum.UPLOADED.getValue());
+                        fileDownloadDAO.create(entity.getT2());
+                        return Mono.empty();
+                    }).subscribeOn(Schedulers.boundedElastic()).subscribe();
         }
     }
 

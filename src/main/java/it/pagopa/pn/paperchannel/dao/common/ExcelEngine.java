@@ -1,30 +1,54 @@
 package it.pagopa.pn.paperchannel.dao.common;
 
+import it.pagopa.pn.paperchannel.dao.DAOException;
 import it.pagopa.pn.paperchannel.dao.model.ColumnExcel;
 import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.lang.reflect.Field;
+import java.security.GeneralSecurityException;
 import java.util.*;
+import java.util.function.Function;
 
+@Slf4j
 @Getter
 public class ExcelEngine {
     private final XSSFWorkbook workbook;
     private final List<XSSFSheet> sheets;
     private XSSFSheet currentSheet;
+    private String filename;
 
-
-    public ExcelEngine(){
+    public ExcelEngine(String filename){
+        this.filename = filename;
         this.workbook = new XSSFWorkbook();
         this.currentSheet = workbook.createSheet("Sheet 1");
         this.sheets = new ArrayList<>();
         this.sheets.add(this.currentSheet);
+    }
+
+    public ExcelEngine(String filename, String pathExcel) throws IOException {
+        this.filename = filename;
+        this.workbook = new XSSFWorkbook(pathExcel);
+        int numberOfSheets = this.workbook.getNumberOfSheets();
+        this.sheets = new ArrayList<>();
+        if (numberOfSheets == 0){
+            this.currentSheet = workbook.createSheet("Sheet 1");
+            this.sheets.add(this.currentSheet);
+        } else {
+            for(int i=0; i < numberOfSheets; i++){
+                this.sheets.add(workbook.getSheetAt(i));
+            }
+            this.currentSheet = this.sheets.get(0);
+        }
     }
 
     public void createNewSheet(String nameSheet){
@@ -43,15 +67,25 @@ public class ExcelEngine {
         }
     }
 
-    public void saveOnDisk(String fileName){
+    public File saveOnDisk() {
+        File file = null;
         try {
-            FileOutputStream fileOut = new FileOutputStream(fileName);
-            workbook.write(fileOut);
-            fileOut.close();
-            workbook.close();
+            file = new File(filename.concat(".xslx"));
+            file.createNewFile();
+            try (FileOutputStream os = new FileOutputStream(file)) {
+                workbook.write(os);
+            }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Error in file", e.getMessage());
+            // TODO lanciare eccezione
+        } finally {
+            try {
+                workbook.close();
+            } catch (IOException ioException) {
+                log.error("Error in file", ioException.getMessage());
+            }
         }
+        return file;
     }
 
     private CellStyle getHeaderCellStyle() {
@@ -74,16 +108,38 @@ public class ExcelEngine {
     }
 
     public <T> void fillLikeTable(List<T> data, Class<T> clazz){
-        createHeader(clazz, 1);
+        createHeader(clazz, 0);
 
         if (data != null && !data.isEmpty()){
-            int other = 2;
+            int other = 1;
             for (T element:data) {
                 createRow(element, clazz, other);
                 other ++;
             }
         }
+    }
 
+    public <T> List<T> extractDataLikeTable(Function<Map<String, String>, T> map, Class<T> tClass) throws DAOException {
+        List<T> rows = new ArrayList<>();
+        int lastRow = this.currentSheet.getLastRowNum();
+        int firstRow = this.currentSheet.getFirstRowNum(); //-1 se non ci sono dati
+        if (firstRow == -1 || lastRow == -1) return rows;
+        if (firstRow > lastRow) throw new DAOException("Excel malformed");
+        if ((lastRow-firstRow) <= 1) return rows;
+        int i = firstRow+1;
+        Map<String, Integer> headerCell = getHeaderCellPosition(this.currentSheet.getRow(firstRow), tClass);
+        if (headerCell.isEmpty()) throw new DAOException("Header mismatch with annotation value");
+
+        while (i <= lastRow){
+            Map<String, String> mapRow = new HashMap<>();
+            Row row = this.currentSheet.getRow(i);
+            headerCell.keySet().forEach(key ->
+                    mapRow.put(key, row.getCell(headerCell.get(key)).getStringCellValue())
+            );
+            rows.add(map.apply(mapRow));
+            i++;
+        }
+        return rows;
     }
 
     private <T> void createHeader(Class<T> tClass, int rowNum){
@@ -120,6 +176,31 @@ public class ExcelEngine {
                 field.setAccessible(false);
             }
         }
+    }
+
+    private <T> Map<String, Integer> getHeaderCellPosition(Row header, Class<T> tClass){
+        List<Field> annotatedSortedFields = Arrays.stream(tClass.getDeclaredFields())
+                .filter(field -> field.isAnnotationPresent(ColumnExcel.class))
+                .toList();
+        int firstCell = header.getFirstCellNum();
+        int lastCell = header.getLastCellNum();
+        if (firstCell == -1 || lastCell == -1) return Collections.emptyMap();
+        if (firstCell > lastCell) throw new DAOException("Excel malformed");
+        if ((lastCell-firstCell) <= 1) return Collections.emptyMap();
+        Map<String, Integer> headerPosition = new HashMap<>();
+        int i = firstCell;
+        while (i <= lastCell-1){
+            Cell cell = header.getCell(i);
+
+            List<Field> filters = annotatedSortedFields.stream()
+                    .filter(field -> field.getAnnotation(ColumnExcel.class).value().equals(cell.getStringCellValue()))
+                    .toList();
+            if (!filters.isEmpty()){
+                headerPosition.put(filters.get(0).getAnnotation(ColumnExcel.class).value(), i);
+            }
+            i++;
+        }
+        return headerPosition;
     }
 
 }
