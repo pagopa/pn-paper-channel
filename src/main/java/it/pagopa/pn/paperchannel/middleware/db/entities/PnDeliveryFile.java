@@ -19,7 +19,6 @@ public class PnDeliveryFile {
     public static final String COL_STATUS = "status";
     public static final String COL_URL = "url";
 
-
     @Getter(onMethod = @__({@DynamoDbPartitionKey,@DynamoDbAttribute(COL_UUID)}))
     public String uuid;
 
