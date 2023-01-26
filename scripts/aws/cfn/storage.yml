@@ -327,10 +327,10 @@ Resources:
     Properties:
       TableName: !Sub '${ProjectName}-PaperDeliveryFile'
       AttributeDefinitions:
-        - AttributeName: "iuun"
+        - AttributeName: "uuid"
           AttributeType: "S"
       KeySchema:
-        - AttributeName: "iuun"
+        - AttributeName: "uuid"
           KeyType: "HASH"
       ProvisionedThroughput:
         ReadCapacityUnits: "5"
