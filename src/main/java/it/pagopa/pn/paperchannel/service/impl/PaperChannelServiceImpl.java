@@ -22,6 +22,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
+import reactor.util.function.Tuples;
 
 import java.io.File;
 import java.time.Duration;
@@ -131,21 +132,27 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                         return Mono.just("");
                     });
         } else {
-            ExcelEngine excelEngine = this.excelDAO.create(new DeliveriesData());
-            File f = excelEngine.saveOnDisk();
-
             // save file on s3 bucket and update entity
             Mono.delay(Duration.ofMillis(10)).publishOn(Schedulers.boundedElastic())
-                    .flatMap(i ->  s3Bucket.putObject(f)
-                    .zipWhen(url -> fileDownloadDAO.getUuid(uuid)))
+                    .flatMap(i ->  {
+                        ExcelEngine excelEngine = this.excelDAO.create(new DeliveriesData());
+                        File f = excelEngine.saveOnDisk();
+                        return Mono.just(f);
+                    })
                     .publishOn(Schedulers.boundedElastic())
-                    .map(entity -> {
-                        f.delete();
-                        entity.getT2().setUrl(entity.getT1());
-                        entity.getT2().setStatus(InfoDownloadDTO.StatusEnum.UPLOADED.getValue());
-                        fileDownloadDAO.create(entity.getT2());
+                    .zipWhen(file ->  s3Bucket.putObject(file), (file, url) -> Tuples.of(file, url))
+                    .zipWhen(fileAndUrl -> {
+                        fileAndUrl.getT1().delete();
+                        return fileDownloadDAO.getUuid(uuid);
+                    })
+                    .map(entityAndFile -> Tuples.of(entityAndFile.getT1().getT2(), entityAndFile.getT2()))
+                    .zipWhen(entityAndFile -> {
+                        entityAndFile.getT2().setUrl(entityAndFile.getT1());
+                        entityAndFile.getT2().setStatus(InfoDownloadDTO.StatusEnum.UPLOADED.getValue());
+                        fileDownloadDAO.create(entityAndFile.getT2());
                         return Mono.empty();
-                    }).subscribeOn(Schedulers.boundedElastic()).subscribe();
+                    })
+                    .subscribeOn(Schedulers.boundedElastic()).subscribe();
         }
     }
 

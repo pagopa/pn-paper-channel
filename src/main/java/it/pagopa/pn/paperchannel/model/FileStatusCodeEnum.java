@@ -4,7 +4,7 @@ import lombok.Getter;
 
 @Getter
 public enum FileStatusCodeEnum {
-    UPLOADING("UPLOADED"),UPLOADED("UPLOADED");
+    UPLOADING("UPLOADING"),UPLOADED("UPLOADED");
 
     private final String code;
 
