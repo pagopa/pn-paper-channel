@@ -113,7 +113,6 @@ public class PaperChannelServiceImpl implements PaperChannelService {
 
                         // save file on s3 bucket and update entity
                         Mono.delay(Duration.ofMillis(10)).publishOn(Schedulers.boundedElastic())
-                                // spostare creazione excel
                                 .flatMap(i ->  s3Bucket.putObject(file)
                                         .zipWhen(url -> fileDownloadDAO.getUuid(uuid)))
                                 .publishOn(Schedulers.boundedElastic())

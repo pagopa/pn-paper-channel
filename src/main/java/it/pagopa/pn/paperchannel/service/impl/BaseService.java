@@ -9,6 +9,7 @@ import it.pagopa.pn.paperchannel.model.Contract;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.rest.v1.dto.ProductTypeEnum;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
+import it.pagopa.pn.paperchannel.utils.PnLogAudit;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import reactor.core.publisher.Flux;
@@ -25,9 +26,11 @@ public class BaseService {
     protected final PnAuditLogBuilder auditLogBuilder;
     protected final NationalRegistryClient nationalRegistryClient;
     protected RequestDeliveryDAO requestDeliveryDAO;
+    protected PnLogAudit pnLogAudit;
 
     public BaseService(PnAuditLogBuilder auditLogBuilder, RequestDeliveryDAO requestDeliveryDAO, NationalRegistryClient nationalRegistryClient) {
         this.auditLogBuilder = auditLogBuilder;
+        this.pnLogAudit = new PnLogAudit(auditLogBuilder);
         this.nationalRegistryClient = nationalRegistryClient;
         this.requestDeliveryDAO = requestDeliveryDAO;
     }

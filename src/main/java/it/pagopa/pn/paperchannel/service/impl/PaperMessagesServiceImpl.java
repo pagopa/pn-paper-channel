@@ -23,6 +23,7 @@ import it.pagopa.pn.paperchannel.validator.PrepareRequestValidator;
 import it.pagopa.pn.paperchannel.validator.SendRequestValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -32,6 +33,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static it.pagopa.pn.commons.log.MDCWebFilter.MDC_TRACE_ID_KEY;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_IN_PROCESSING;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_NOT_EXIST;
 
@@ -118,11 +120,6 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                     })
                     .switchIfEmpty(Mono.defer(() -> saveRequestAndAddress(prepareRequest, null)
                             .flatMap(response -> {
-                                String logMessage = String.format("prepare requestId = %s with receiverAddress", requestId);
-                                auditLogBuilder.before(PnAuditLogEventType.AUD_FD_RESOLVE_LOGIC, logMessage)
-                                        .iun(response.getIun())
-                                        .build().log();
-
                                 PrepareAsyncRequest request = new PrepareAsyncRequest(requestId, null, null, true);
                                 this.sqsSender.pushToInternalQueue(request);
                                 throw new PnPaperEventException(PreparePaperResponseMapper.fromEvent(prepareRequest.getRequestId()));
@@ -150,7 +147,7 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                             })
                             .switchIfEmpty(Mono.defer(()-> saveRequestAndAddress(prepareRequest, null)
                                     .flatMap(response -> {
-                                        String logMessage = String.format("prepare requestId = %s search in National Registry", requestId);
+                                        String logMessage = String.format("prepare requestId = %s, trace_id = % search in National Registry", requestId, MDC.get(MDC_TRACE_ID_KEY));
                                         auditLogBuilder.before(PnAuditLogEventType.AUD_FD_RESOLVE_SERVICE, logMessage)
                                                 .iun(response.getIun())
                                                 .build().log();

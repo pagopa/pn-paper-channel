@@ -84,6 +84,8 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                             - indirizzo scoperto dal postino se != null
                         */
                         correctAddress = setCorrectAddress(pnDeliveryRequest.getRequestId(), pnDeliveryRequest.getIun(), pnDeliveryRequest.getAddressHash(), addressFromNationalRegistry, correctAddress);
+                    } else {
+                        pnLogAudit.addsResolveLogic(pnDeliveryRequest.getIun(), String.format("prepare requestId = %s Is receiver address present ?", requestId), String.format("prepare requestId = %s receiver address is present", requestId));
                     }
 
                     if (pnDeliveryRequest.getProductType() == null ) {
@@ -180,12 +182,17 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
     }
 
     private Address setCorrectAddress(String requestId, String iun, String hashOldAddress, Address fromNationalRegistry, Address discoveredAddress) {
+        // è presente indirizzo national ?
 
         //se nationalRegistry è diverso da null
         if(fromNationalRegistry != null){
+            // risposta si è presente
 
             //indirizzo diverso da quello del primo invio?
+            // è diverso ?
             if(!fromNationalRegistry.convertToHash().equals(hashOldAddress)){
+                // audit diverso
+
                 String logMessage = String.format("prepare requestId = %s with National Registry Address", requestId);
                 auditLogBuilder.before(PnAuditLogEventType.AUD_FD_RESOLVE_LOGIC, logMessage)
                         .iun(iun)
@@ -195,6 +202,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
             }
             //indirizzo ricevuto in input
             else if(discoveredAddress!=null){
+
                 String logMessage = String.format("prepare requestId = %s with Discovered Address", requestId);
                 auditLogBuilder.before(PnAuditLogEventType.AUD_FD_RESOLVE_LOGIC, logMessage)
                         .iun(iun)
