@@ -79,7 +79,10 @@ public class PaperChannelServiceImpl implements PaperChannelService {
     @Override
     public Mono<PresignedUrlResponseDto> getPresignedUrl() {
         return s3Bucket.presignedUrl()
-                .map(presignedUrlResponse -> presignedUrlResponse);
+                .map(presignedUrlResponseDto -> {
+                    fileDownloadDAO.create(PresignedUrlResponseMapper.toEntity(presignedUrlResponseDto));
+                    return presignedUrlResponseDto;
+                });
     }
 
     public Mono<InfoDownloadDTO> downloadTenderFile(String tenderCode,String uuid) {
