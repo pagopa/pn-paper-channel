@@ -83,6 +83,8 @@ public class PaperChannelServiceImpl implements PaperChannelService {
     }
 
     public Mono<InfoDownloadDTO> downloadTenderFile(String tenderCode,String uuid) {
+        log.info("Start downloadTenderFile");
+
         if(StringUtils.isNotEmpty(uuid)) {
             return fileDownloadDAO.getUuid(uuid)
                     .map(FileMapper::toDownloadFile)
