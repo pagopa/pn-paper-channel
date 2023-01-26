@@ -397,6 +397,11 @@ components:
       properties:
         presignedUrl:
           type: string
+        uuid:
+          type: string
+          example: 'A12C34D56789E0'
+          format: '/[^A-Za-z0-9]+/'
+          maxLength: 32
       additionalProperties: false
 
     TypeRegisteredLetterEnum:

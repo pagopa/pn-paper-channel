@@ -14,11 +14,14 @@ import java.util.UUID;
 @Component
 public class DeliveriesExcelDAO implements ExcelDAO<DeliveriesData> {
 
+    private String TEMPLATE_FILENAME = "DeliveryTemplate";
+    private String DATA_FILENAME = "Delivery";
+
     @Override
     public ExcelEngine create(DeliveriesData data) {
-        String fileNname = "DeliveryTemplate";
+        String fileNname = TEMPLATE_FILENAME;
         if (CollectionUtils.isNotEmpty(data.getDeliveriesAndCosts())) {
-            fileNname = "Delivery".concat(UUID.randomUUID().toString());
+            fileNname = DATA_FILENAME.concat(UUID.randomUUID().toString());
         }
         ExcelEngine excelEngine = new ExcelEngine(fileNname);
         excelEngine.fillLikeTable(data.getDeliveriesAndCosts(), DeliveryAndCost.class);
