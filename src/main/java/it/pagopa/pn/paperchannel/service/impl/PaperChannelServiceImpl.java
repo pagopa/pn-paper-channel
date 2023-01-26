@@ -102,23 +102,20 @@ public class PaperChannelServiceImpl implements PaperChannelService {
     }
 
     private void createAndUploadFileAsync(String tenderCode,String uuid){
-        DeliveriesData excelModel = new DeliveriesData();
-
         if (StringUtils.isNotBlank(tenderCode)) {
             this.deliveryDriverDAO.getDeliveryDriver(tenderCode)
                     .zipWhen(drivers -> this.costDAO.retrievePrice(tenderCode,null))
                     .map(driversAndCosts -> {
-
                         ExcelEngine excelEngine = this.excelDAO.create(ExcelModelMapper.fromDeliveriesDrivers(driversAndCosts.getT1(),driversAndCosts.getT2()));
-                        File fIle = excelEngine.saveOnDisk();
+                        File file = excelEngine.saveOnDisk();
 
                         // save file on s3 bucket and update entity
                         Mono.delay(Duration.ofMillis(10)).publishOn(Schedulers.boundedElastic())
-                                .flatMap(i ->  s3Bucket.putObject(fIle)
+                                .flatMap(i ->  s3Bucket.putObject(file)
                                         .zipWhen(url -> fileDownloadDAO.getUuid(uuid)))
                                 .publishOn(Schedulers.boundedElastic())
                                 .map(entity -> {
-                                    fIle.delete();
+                                    file.delete();
                                     entity.getT2().setUrl(entity.getT1());
                                     entity.getT2().setStatus(InfoDownloadDTO.StatusEnum.UPLOADED.getValue());
                                     fileDownloadDAO.create(entity.getT2());
@@ -128,7 +125,7 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                         return Mono.just("");
                     });
         } else {
-            ExcelEngine excelEngine = this.excelDAO.create(excelModel);
+            ExcelEngine excelEngine = this.excelDAO.create(new DeliveriesData());
             File f = excelEngine.saveOnDisk();
 
             // save file on s3 bucket and update entity
