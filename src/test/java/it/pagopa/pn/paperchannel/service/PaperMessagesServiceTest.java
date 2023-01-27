@@ -124,6 +124,14 @@ class PaperMessagesServiceTest extends BaseTest {
         Mockito.when(addressDAO.findByRequestId(deliveryRequestTakingCharge.getRequestId())).thenReturn(Mono.just(address));
         Mockito.when(externalChannelClient.sendEngageRequest(Mockito.any())).thenReturn(Mono.just("").then());
         Mockito.when(requestDeliveryDAO.updateData(Mockito.any())).thenReturn(Mono.just(deliveryRequestTakingCharge));
+
+        Mockito.when(auditLogBuilder.build())
+                .thenReturn(new PnAuditLogEvent(PnAuditLogEventType.AUD_FD_SEND, new HashMap<>(), "", new Object()));
+        Mockito.when(auditLogBuilder.before(Mockito.any(), Mockito.any()))
+                .thenReturn(auditLogBuilder);
+        Mockito.when(auditLogBuilder.iun(Mockito.anyString()))
+                .thenReturn(auditLogBuilder);
+
         SendResponse response = paperMessagesService.executionPaper(deliveryRequestTakingCharge.getRequestId(),getRequest(deliveryRequestTakingCharge.getRequestId())).block();
         assertNotNull(response);
         assertNotNull(response.getAmount());
