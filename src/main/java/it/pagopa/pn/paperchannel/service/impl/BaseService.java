@@ -1,17 +1,23 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
+import it.pagopa.pn.paperchannel.mapper.ContractMapper;
+import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnCap;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnZone;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.AttachmentInfo;
 import it.pagopa.pn.paperchannel.model.Contract;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.rest.v1.dto.ProductTypeEnum;
+import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import it.pagopa.pn.paperchannel.utils.PnLogAudit;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -26,22 +32,24 @@ public class BaseService {
     protected final PnAuditLogBuilder auditLogBuilder;
     protected final NationalRegistryClient nationalRegistryClient;
     protected RequestDeliveryDAO requestDeliveryDAO;
+    protected CostDAO costDAO;
     protected PnLogAudit pnLogAudit;
 
-    public BaseService(PnAuditLogBuilder auditLogBuilder, RequestDeliveryDAO requestDeliveryDAO, NationalRegistryClient nationalRegistryClient) {
+    public BaseService(PnAuditLogBuilder auditLogBuilder, RequestDeliveryDAO requestDeliveryDAO, CostDAO costDAO, NationalRegistryClient nationalRegistryClient) {
         this.auditLogBuilder = auditLogBuilder;
         this.pnLogAudit = new PnLogAudit(auditLogBuilder);
         this.nationalRegistryClient = nationalRegistryClient;
         this.requestDeliveryDAO = requestDeliveryDAO;
+        this.costDAO = costDAO;
     }
 
     protected Mono<Double> calculator(List<AttachmentInfo> attachments, Address address, ProductTypeEnum productType){
         if (StringUtils.isNotBlank(address.getCap())) {
-            return getAmount(attachments, address.getCap(), productType)
+            return getAmount(attachments, address.getCap(), null, productType)
                     .map(item -> item);
         }
         return getZone(address.getCountry())
-                .flatMap(zone -> getAmount(attachments, zone, productType).map(item -> item));
+                .flatMap(zone -> getAmount(attachments,null, zone, productType).map(item -> item));
 
     }
 
@@ -87,13 +95,14 @@ public class BaseService {
     }
 
 
-    private Mono<Contract> getContract(String capOrZone, ProductTypeEnum productType) {
-        return Mono.just(new Contract(5.0, 10.0));
+    private Mono<Contract> getContract(String cap, String zone, String productType) {
+        return costDAO.getByCapOrZoneAndProductType(cap, zone, productType).map(ContractMapper::toContract)
+                .onErrorResume(ex -> costDAO.getByCapOrZoneAndProductType(StringUtils.isNotEmpty(cap)? Const.CAP_DEFALUT : null, StringUtils.isNotEmpty(zone)? Const.ZONE_DEFAULT : null, productType).map(ContractMapper::toContract));
     }
 
 
-    private Mono<Double> getAmount(List<AttachmentInfo> attachments, String capOrZone, ProductTypeEnum productType ){
-        return getContract(capOrZone, productType)
+    private Mono<Double> getAmount(List<AttachmentInfo> attachments, String cap, String zone, ProductTypeEnum productType ){
+        return getContract(cap, zone, productType.getValue())
                 .flatMap(contract -> getPriceAttachments(attachments, contract.getPricePerPage())
                         .map(priceForPages -> Double.sum(contract.getPrice(), priceForPages))
                 );

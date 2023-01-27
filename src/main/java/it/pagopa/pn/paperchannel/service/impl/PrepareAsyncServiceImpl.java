@@ -10,6 +10,7 @@ import it.pagopa.pn.paperchannel.mapper.AddressMapper;
 import it.pagopa.pn.paperchannel.mapper.AttachmentMapper;
 import it.pagopa.pn.paperchannel.mapper.PrepareEventMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
@@ -53,8 +54,8 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
     private SqsSender sqsQueueSender;
 
     public PrepareAsyncServiceImpl(PnAuditLogBuilder auditLogBuilder, NationalRegistryClient nationalRegistryClient,
-                                   RequestDeliveryDAO requestDeliveryDAO) {
-        super(auditLogBuilder, requestDeliveryDAO, nationalRegistryClient);
+                                   RequestDeliveryDAO requestDeliveryDAO, CostDAO costDAO) {
+        super(auditLogBuilder, requestDeliveryDAO, costDAO, nationalRegistryClient);
     }
 
     @Override

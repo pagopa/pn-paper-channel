@@ -6,6 +6,7 @@ import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.exception.PnPaperEventException;
 import it.pagopa.pn.paperchannel.mapper.*;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
@@ -50,8 +51,8 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
     private SqsSender sqsSender;
 
     public PaperMessagesServiceImpl(PnAuditLogBuilder auditLogBuilder, NationalRegistryClient nationalRegistryClient,
-                                    RequestDeliveryDAO requestDeliveryDAO) {
-        super(auditLogBuilder, requestDeliveryDAO, nationalRegistryClient);
+                                    RequestDeliveryDAO requestDeliveryDAO, CostDAO costDAO) {
+        super(auditLogBuilder, requestDeliveryDAO, costDAO, nationalRegistryClient);
     }
 
     @Override

@@ -6,6 +6,7 @@ import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.BaseDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.TransactWriterInitializer;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnCap;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnPaperCost;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnPaperDeliveryDriver;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnZone;
@@ -70,11 +71,15 @@ public class CostDAOImpl extends BaseDAO<PnPaperCost> implements CostDAO {
     }
 
     @Override
-    public Mono<PnPaperCost> getByCapOrZoneAndProductType(String cap, PnZone zone, String productType) {
-        String value = cap;
+    public Mono<PnPaperCost> getByCapOrZoneAndProductType(String cap, String zone, String productType) {
+        String value = "";
         String index = PnPaperCost.CAP_INDEX;
-        if (zone != null) {
-            value = zone.getZone();
+        if (cap != null && zone == null){
+            value = cap;
+            index = PnPaperCost.CAP_INDEX;
+        }
+        else if (zone != null && cap == null) {
+            value = zone;
             index = PnPaperCost.ZONE_INDEX; // remove. nuova variable col = zone/cap
         }
         String filterExpression = "(" + PnPaperCost.COL_PRODUCT_TYPE + " = :productType)"; // adds filter cap or zone
