@@ -182,16 +182,16 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
     }
 
     private Address setCorrectAddress(String requestId, String iun, String hashOldAddress, Address fromNationalRegistry, Address discoveredAddress) {
-        pnLogAudit.addsBeforeResolveLogic(iun, String.format("prepare requestId = %s Is national registry address present ?", requestId));
+        pnLogAudit.addsBeforeResolveLogic(iun, String.format("prepare requestId = %s Is National Registry Address present ?", requestId));
 
         //se nationalRegistry è diverso da null
         if(fromNationalRegistry != null){
-            pnLogAudit.addsSuccessResolveLogic(iun, String.format("prepare requestId = %s national registry address is present", requestId));
+            pnLogAudit.addsSuccessResolveLogic(iun, String.format("prepare requestId = %s National Registry Address is present", requestId));
 
-            pnLogAudit.addsBeforeResolveLogic(iun, String.format("prepare requestId = %s Is national registry address not equals previous address ?", requestId));
+            pnLogAudit.addsBeforeResolveLogic(iun, String.format("prepare requestId = %s Is National Registry Address not equals previous address ?", requestId));
             //indirizzo diverso da quello del primo invio?
             if(!fromNationalRegistry.convertToHash().equals(hashOldAddress)){
-                pnLogAudit.addsSuccessResolveLogic(iun, String.format("prepare requestId = %s national registry address is not equals previous address", requestId));
+                pnLogAudit.addsSuccessResolveLogic(iun, String.format("prepare requestId = %s National Registry Address is not equals previous address", requestId));
 
                 String logMessage = String.format("prepare requestId = %s with National Registry Address", requestId);
                 auditLogBuilder.before(PnAuditLogEventType.AUD_FD_RESOLVE_LOGIC, logMessage)
@@ -200,26 +200,26 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
 
                 return fromNationalRegistry;
             } else {
-                pnLogAudit.addsSuccessResolveLogic(iun, String.format("prepare requestId = %s national registry address is equals previous address", requestId));
+                pnLogAudit.addsSuccessResolveLogic(iun, String.format("prepare requestId = %s National Registry Address is equals previous address", requestId));
                 return setAddressFromDiscovered(requestId, iun, discoveredAddress);
             }
 
         } else {
             // national registry is null
-            pnLogAudit.addsSuccessResolveLogic(iun, String.format("prepare requestId = %s national registry address is not present", requestId));
+            pnLogAudit.addsSuccessResolveLogic(iun, String.format("prepare requestId = %s National Registry Address is not present", requestId));
             return setAddressFromDiscovered(requestId, iun, discoveredAddress);
         }
     }
 
     private Address setAddressFromDiscovered(String requestId, String iun, Address discoveredAddress) {
-        pnLogAudit.addsBeforeResolveLogic(iun, String.format("prepare requestId = %s Is discovered address present ?", requestId));
+        pnLogAudit.addsBeforeResolveLogic(iun, String.format("prepare requestId = %s Is Discovered Address present ?", requestId));
 
         if(discoveredAddress!=null){
-            pnLogAudit.addsSuccessResolveLogic(iun, String.format("prepare requestId = %s discovered address is present", requestId));
+            pnLogAudit.addsSuccessResolveLogic(iun, String.format("prepare requestId = %s Discovered Address is present", requestId));
             return discoveredAddress;
         } else { //indirizzo non trovato
-            pnLogAudit.addsSuccessResolveLogic(iun, String.format("prepare requestId = %s discovered address is not present", requestId));
-            pnLogAudit.addsResolveLogic(iun, String.format("prepare requestId = %s Is address Unreachable ?", requestId), String.format("prepare requestId = %s address is Unreachable", requestId));
+            pnLogAudit.addsSuccessResolveLogic(iun, String.format("prepare requestId = %s Discovered Address is not present", requestId));
+            pnLogAudit.addsResolveLogic(iun, String.format("prepare requestId = %s Is Address Unreachable ?", requestId), String.format("prepare requestId = %s address is Unreachable", requestId));
             throw new PnGenericException(UNTRACEABLE_ADDRESS, UNTRACEABLE_ADDRESS.getMessage());
         }
     }
