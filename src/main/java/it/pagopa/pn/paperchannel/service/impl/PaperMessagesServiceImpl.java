@@ -117,7 +117,7 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                                 .map(address-> PreparePaperResponseMapper.fromResult(entity,address))
                                 .switchIfEmpty(Mono.just(PreparePaperResponseMapper.fromResult(entity,null)));
                     })
-                    .switchIfEmpty(Mono.defer(() -> saveRequestAndAddress(prepareRequest, null)
+                    .switchIfEmpty(Mono.defer(() -> saveRequestAndAddress(prepareRequest, prepareRequest.getReceiverAddress())
                             .flatMap(response -> {
                                 PrepareAsyncRequest request = new PrepareAsyncRequest(requestId, null, null, true);
                                 this.sqsSender.pushToInternalQueue(request);
@@ -144,9 +144,9 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                                         .map(address-> PreparePaperResponseMapper.fromResult(newEntity,address))
                                         .switchIfEmpty(Mono.just(PreparePaperResponseMapper.fromResult(newEntity,null)));
                             })
-                            .switchIfEmpty(Mono.defer(()-> saveRequestAndAddress(prepareRequest, null)
+                            .switchIfEmpty(Mono.defer(()-> saveRequestAndAddress(prepareRequest, prepareRequest.getDiscoveredAddress())
                                     .flatMap(response -> {
-                                        String logMessage = String.format("prepare requestId = %s, trace_id = % search in National Registry", requestId, MDC.get(MDC_TRACE_ID_KEY));
+                                        String logMessage = String.format("prepare requestId = %s, trace_id = %s search in National Registry", requestId, MDC.get(MDC_TRACE_ID_KEY));
                                         auditLogBuilder.before(PnAuditLogEventType.AUD_FD_RESOLVE_SERVICE, logMessage)
                                                 .iun(response.getIun())
                                                 .build().log();
@@ -180,16 +180,14 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)));
     }
 
-    private Mono<PnDeliveryRequest> saveRequestAndAddress(PrepareRequest prepareRequest, String correlationId){
-        PnDeliveryRequest pnDeliveryRequest = RequestDeliveryMapper.toEntity(prepareRequest, correlationId);
-        Address address = AddressMapper.fromAnalogToAddress(prepareRequest.getReceiverAddress());
+    private Mono<PnDeliveryRequest> saveRequestAndAddress(PrepareRequest prepareRequest, AnalogAddress address){
+        PnDeliveryRequest pnDeliveryRequest = RequestDeliveryMapper.toEntity(prepareRequest);
         PnAddress addressEntity = null;
 
        if (address != null) {
-           pnDeliveryRequest.setAddressHash(address.convertToHash());
-           if (correlationId == null){
-               addressEntity = AddressMapper.toEntity(address, prepareRequest.getRequestId());
-           }
+           Address mapped = AddressMapper.fromAnalogToAddress(address);
+           pnDeliveryRequest.setAddressHash(mapped.convertToHash());
+           addressEntity = AddressMapper.toEntity(mapped, prepareRequest.getRequestId());
        }
 
         return requestDeliveryDAO.createWithAddress(pnDeliveryRequest, addressEntity);

@@ -13,7 +13,7 @@ public class RequestDeliveryMapper {
         throw new IllegalStateException();
     }
 
-    public static PnDeliveryRequest toEntity(PrepareRequest request, String correlationId){
+    public static PnDeliveryRequest toEntity(PrepareRequest request){
         PnDeliveryRequest entity = new PnDeliveryRequest();
         entity.setRequestId(request.getRequestId());
         entity.setProposalProductType(request.getProposalProductType().getValue());
@@ -22,14 +22,8 @@ public class RequestDeliveryMapper {
         entity.setStatusDetail(StatusDeliveryEnum.IN_PROCESSING.getDescription());
         entity.setIun(request.getIun());
 
-        if (correlationId != null){
-            entity.setStatusCode(StatusDeliveryEnum.NATIONAL_REGISTRY_WAITING.getCode());
-            entity.setStatusDetail(StatusDeliveryEnum.NATIONAL_REGISTRY_WAITING.getDescription());
-        }
-
         entity.setStatusDate(DateUtils.formatDate(new Date()));
         entity.setFiscalCode(request.getReceiverFiscalCode());
-        entity.setCorrelationId(correlationId);
         entity.setPrintType(request.getPrintType());
         entity.setReceiverType(request.getReceiverType());
         entity.setAttachments(request.getAttachmentUrls().stream().map(key -> {
