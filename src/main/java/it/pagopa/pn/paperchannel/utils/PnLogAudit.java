@@ -58,4 +58,8 @@ public class PnLogAudit {
         addsSuccessLog(PnAuditLogEventType.AUD_FD_RECEIVE, iun, msg2);
     }
 
+    public void addsBeforeSend(String iun, String msg) {
+        addsBeforeLog(PnAuditLogEventType.AUD_FD_SEND, iun, msg);
+    }
+
 }

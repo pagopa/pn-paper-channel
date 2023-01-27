@@ -89,7 +89,7 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                 })
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)))
                 .zipWhen(entityAndAmount ->{
-                    pnLogAudit.addsBeforeResolveService(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", requestId, MDC.get(MDC_TRACE_ID_KEY)));
+                    pnLogAudit.addsBeforeSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", requestId, MDC.get(MDC_TRACE_ID_KEY)));
                     return this.externalChannelClient.sendEngageRequest(sendRequest)
                                     .then(this.requestDeliveryDAO.updateData(entityAndAmount.getT1())
                                             .map(item -> item));
