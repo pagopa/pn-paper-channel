@@ -109,25 +109,29 @@ public class PaperChannelServiceImpl implements PaperChannelService {
 
     private InfoDownloadDTO createAndUploadFileAsync(String tenderCode,String uuid){
         if (StringUtils.isNotBlank(tenderCode)) {
-            this.deliveryDriverDAO.getDeliveryDriver(tenderCode)
-                    .zipWhen(drivers -> this.costDAO.retrievePrice(tenderCode,null))
-                    .map(driversAndCosts -> {
-                        ExcelEngine excelEngine = this.excelDAO.create(ExcelModelMapper.fromDeliveriesDrivers(driversAndCosts.getT1(),driversAndCosts.getT2()));
-                        File file = excelEngine.saveOnDisk();
-
-                        // save file on s3 bucket and update entity
-                        Mono.delay(Duration.ofMillis(10)).publishOn(Schedulers.boundedElastic())
-                                // spostare creazione excel
-                                .flatMap(i ->  s3Bucket.putObject(file)
-                                        .zipWhen(url -> fileDownloadDAO.getUuid(uuid)))
+            // save file on s3 bucket and update entity
+            Mono.delay(Duration.ofMillis(10)).publishOn(Schedulers.boundedElastic())
+                    .flatMap(i -> {
+                        this.deliveryDriverDAO.getDeliveryDriver(tenderCode)
+                                .zipWhen(drivers -> this.costDAO.retrievePrice(tenderCode,null))
+                                .flatMap(driversAndCosts -> {
+                                    ExcelEngine excelEngine = this.excelDAO.create(ExcelModelMapper.fromDeliveriesDrivers(driversAndCosts.getT1(),driversAndCosts.getT2()));
+                                    File file = excelEngine.saveOnDisk();
+                                    return Mono.just(file);
+                                })
                                 .publishOn(Schedulers.boundedElastic())
-                                .map(entity -> {
-                                    file.delete();
-                                  //  entity.getT2().setUrl(entity.getT1());
-                                    entity.getT2().setStatus(InfoDownloadDTO.StatusEnum.UPLOADED.getValue());
-                                    fileDownloadDAO.create(entity.getT2());
-                                    return Mono.empty();
-                                }).subscribeOn(Schedulers.boundedElastic()).subscribe();
+                                .zipWhen(file ->  s3Bucket.putObject(file))
+                                .zipWhen(file -> fileDownloadDAO.getUuid(uuid))
+                                .map(entityAndFile -> Tuples.of(entityAndFile.getT1().getT1(), entityAndFile.getT2()))
+                                .zipWhen(entityAndFile -> {
+                                    entityAndFile.getT2().setFilename(entityAndFile.getT1().getName());
+                                    entityAndFile.getT2().setStatus(InfoDownloadDTO.StatusEnum.UPLOADED.getValue());
+                                    // save item and delete file
+                                    fileDownloadDAO.create(entityAndFile.getT2());
+                                    entityAndFile.getT1().delete();
+                                    return Mono.just(FileMapper.toDownloadFile(entityAndFile.getT2(), s3Bucket.getObjectData(entityAndFile.getT2().getFilename())));
+                                })
+                                .subscribeOn(Schedulers.boundedElastic()).subscribe();
 
                         return Mono.just("");
                     });
