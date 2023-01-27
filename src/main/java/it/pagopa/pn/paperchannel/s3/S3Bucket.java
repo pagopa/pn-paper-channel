@@ -8,6 +8,7 @@ import java.io.File;
 public interface S3Bucket {
 
     Mono<PresignedUrlResponseDto> presignedUrl();
-    Mono<String> putObject(File file);
+    Mono<File> putObject(File file);
+    byte[] getObjectData(String filename);
 
 }

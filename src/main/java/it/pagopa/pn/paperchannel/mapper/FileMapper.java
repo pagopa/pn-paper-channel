@@ -9,10 +9,10 @@ public class FileMapper {
         throw new IllegalCallerException();
     }
 
-    public static InfoDownloadDTO toDownloadFile(PnDeliveryFile pnDeliveryFile){
+    public static InfoDownloadDTO toDownloadFile(PnDeliveryFile pnDeliveryFile, byte[] data){
         InfoDownloadDTO dto = new InfoDownloadDTO();
         dto.setUuid(pnDeliveryFile.getUuid());
-        dto.setUrl(pnDeliveryFile.getUrl());
+        dto.setData(data);
         dto.setStatus(InfoDownloadDTO.StatusEnum.fromValue(pnDeliveryFile.getStatus()));
         dto.setRetryAfter((pnDeliveryFile.getStatus().equals("UPLOADING"))?10L:null);
         return dto;

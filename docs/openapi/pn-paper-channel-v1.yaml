@@ -262,8 +262,9 @@ components:
     InfoDownloadDTO:
       type: object
       properties:
-        url:
+        data:
           type: string
+          format: byte
         retryAfter:
           type: integer
           format: int64
