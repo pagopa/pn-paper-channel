@@ -25,7 +25,7 @@ public class PnLogAudit {
     }
 
     public void addsSuccessResolveLogic(String iun, String successMsg) {
-        pnAuditLogBuilder.iun(iun).build().generateSuccess(successMsg);
+        pnAuditLogBuilder.iun(iun).build().generateSuccess(successMsg).log();
     }
 
 }

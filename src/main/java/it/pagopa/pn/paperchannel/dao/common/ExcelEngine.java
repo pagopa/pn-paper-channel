@@ -70,7 +70,7 @@ public class ExcelEngine {
     public File saveOnDisk() {
         File file = null;
         try {
-            file = new File(filename.concat(".xslx"));
+            file = new File(filename.concat(".xlsx"));
             file.createNewFile();
             try (FileOutputStream os = new FileOutputStream(file)) {
                 workbook.write(os);

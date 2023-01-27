@@ -20,6 +20,7 @@ import java.util.UUID;
 public class S3BucketImpl implements S3Bucket {
 
     private String PREFIX_URL = "tender-";
+    private String XSLS_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
     private final AmazonS3 s3Client;
     private final AwsBucketProperties awsBucketProperties;
@@ -50,6 +51,7 @@ public class S3BucketImpl implements S3Bucket {
             // set metadata
             ObjectMetadata metadata = new ObjectMetadata();
             metadata.addUserMetadata("title", file.getName());
+            metadata.setContentType(XSLS_CONTENT_TYPE);
             request.setMetadata(metadata);
             s3Client.putObject(request);
         } catch (Exception e) {
