@@ -1,6 +1,7 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
+import it.pagopa.pn.commons.log.PnAuditLogEventType;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.exception.PnPaperEventException;
 import it.pagopa.pn.paperchannel.mapper.*;
@@ -30,7 +31,6 @@ import reactor.core.publisher.Mono;
 
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static it.pagopa.pn.commons.log.MDCWebFilter.MDC_TRACE_ID_KEY;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_IN_PROCESSING;
@@ -84,7 +84,7 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                         entity.setStatusDate(DateUtils.formatDate(new Date()));
                     }
 
-                    List<AttachmentInfo> attachments = entity.getAttachments().stream().map(AttachmentMapper::fromEntity).collect(Collectors.toList());
+                    List<AttachmentInfo> attachments = entity.getAttachments().stream().map(AttachmentMapper::fromEntity).toList();
                     Address address = AddressMapper.fromAnalogToAddress(sendRequest.getReceiverAddress());
                     return super.calculator(attachments, address, sendRequest.getProductType()).map(value -> value);
                 })
@@ -149,7 +149,7 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                                         auditLogBuilder.before(PnAuditLogEventType.AUD_FD_RESOLVE_SERVICE, logMessage)
                                                 .iun(response.getIun())
                                                 .build().log();
-                                        pnLogAudit.addsBeforeResolveLogic(response.getIun(), String.format("prepare requestId = %s, trace_id = % Request to National Registry service", requestId, MDC.get(MDC_TRACE_ID_KEY)));
+                                        pnLogAudit.addsBeforeResolveLogic(response.getIun(), String.format("prepare requestId = %s, trace_id = %s Request to National Registry service", requestId, MDC.get(MDC_TRACE_ID_KEY)));
 
                                         this.finderAddressFromNationalRegistries(response.getRequestId(), response.getFiscalCode(), response.getReceiverType());
                                         throw new PnPaperEventException(PreparePaperResponseMapper.fromEvent(prepareRequest.getRequestId()));
