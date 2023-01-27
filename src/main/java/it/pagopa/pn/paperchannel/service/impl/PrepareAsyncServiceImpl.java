@@ -217,10 +217,9 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
         if(discoveredAddress!=null){
             pnLogAudit.addsSuccessResolveLogic(iun, String.format("prepare requestId = %s discovered address is present", requestId));
             return discoveredAddress;
-        }
-        //indirizzo non trovato
-        else{
+        } else { //indirizzo non trovato
             pnLogAudit.addsSuccessResolveLogic(iun, String.format("prepare requestId = %s discovered address is not present", requestId));
+            pnLogAudit.addsResolveLogic(iun, String.format("prepare requestId = %s Is address Unreachable ?", requestId), String.format("prepare requestId = %s address is Unreachable", requestId));
             throw new PnGenericException(UNTRACEABLE_ADDRESS, UNTRACEABLE_ADDRESS.getMessage());
         }
     }

@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.time.Instant;
 import java.util.Date;
@@ -45,7 +46,7 @@ public class S3BucketImpl implements S3Bucket {
     }
 
     @Override
-    public Mono<String> putObject(File file) {
+    public Mono<File> putObject(File file) {
         try {
             PutObjectRequest request = new PutObjectRequest(this.awsBucketProperties.getName(), file.getName(), file);
             // set metadata
@@ -57,16 +58,20 @@ public class S3BucketImpl implements S3Bucket {
         } catch (Exception e) {
             log.error("Error in upload object in s3", e.getMessage());
         }
-        return Mono.just(getObjectUrl(file.getName()));
+        return Mono.just(file);
     }
 
-    private String getObjectUrl(String filename) {
-        String url = "";
+    public byte[] getObjectData(String filename) {
+        byte[] data = null;
         S3Object fullObject = s3Client.getObject(new GetObjectRequest(this.awsBucketProperties.getName(), filename));
         if (fullObject != null) {
-            url = fullObject.getObjectContent().getHttpRequest().getURI().toString();
+            try {
+                data = fullObject.getObjectContent().readAllBytes();
+            } catch (IOException ioException) {
+                log.error("getObjectData ", ioException.getMessage());
+            }
         }
-        return url;
+        return data;
     }
 
     private Date getExpirationDate() {
