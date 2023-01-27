@@ -107,7 +107,7 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                 });
     }
 
-    private InfoDownloadDTO createAndUploadFileAsync(String tenderCode,String uuid){
+    private void createAndUploadFileAsync(String tenderCode,String uuid){
         if (StringUtils.isNotBlank(tenderCode)) {
             // save file on s3 bucket and update entity
             Mono.delay(Duration.ofMillis(10)).publishOn(Schedulers.boundedElastic())
@@ -157,7 +157,6 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                     })
                     .subscribeOn(Schedulers.boundedElastic()).subscribe();
         }
-        return new InfoDownloadDTO();
     }
 
 

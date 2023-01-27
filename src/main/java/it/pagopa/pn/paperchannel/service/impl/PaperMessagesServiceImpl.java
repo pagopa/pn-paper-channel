@@ -105,11 +105,10 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
 
     @Override
     public Mono<PaperChannelUpdate> preparePaperSync(String requestId, PrepareRequest prepareRequest){
-        log.info("Start preparePaperSync with requestId {}", requestId);
         prepareRequest.setRequestId(requestId);
 
         if (StringUtils.isEmpty(prepareRequest.getRelatedRequestId())){
-            log.debug("First attempt");
+            log.info("First attempt requestId {}", requestId);
             //case of 204
             return this.requestDeliveryDAO.getByRequestId(prepareRequest.getRequestId())
                     .flatMap(entity -> {
@@ -127,7 +126,7 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                     );
         }
 
-        log.debug("Second attempt");
+        log.info("Second attempt requestId {}", requestId);
         return this.requestDeliveryDAO.getByRequestId(prepareRequest.getRelatedRequestId())
                 .flatMap(oldEntity -> {
                     prepareRequest.setRequestId(oldEntity.getRequestId());
@@ -136,10 +135,10 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                     return this.requestDeliveryDAO.getByRequestId(prepareRequest.getRequestId())
                             .flatMap(newEntity -> {
                                 if (newEntity == null) {
-                                    log.debug("New attempt");
+                                    log.info("New attempt");
                                     return Mono.empty();
                                 }
-                                log.debug("Attempt already exist");
+                                log.info("Attempt already exist");
                                 PrepareRequestValidator.compareRequestEntity(prepareRequest, newEntity, false);
                                 return addressDAO.findByRequestId(requestId)
                                         .map(address-> PreparePaperResponseMapper.fromResult(newEntity,address))
