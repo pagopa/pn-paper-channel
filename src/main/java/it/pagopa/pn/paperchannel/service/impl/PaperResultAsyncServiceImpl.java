@@ -49,7 +49,8 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
         return requestDeliveryDAO.getByRequestId(singleStatusUpdateDto.getAnalogMail().getRequestId())
                 .flatMap(entity -> {
                     log.info("GETTED ENTITY: {}", entity.getRequestId());
-                    pnLogAudit.addsSuccessLog(entity.getIun(), String.format("prepare requestId = %s Response from external-channel status code %", entity.getStatusCode()));
+                    pnLogAudit.addsReceive(entity.getIun(), String.format("prepare requestId = %s Response from external-channel"),
+                            String.format("prepare requestId = %s Response from external-channel status code %", entity.getStatusCode()));
 
                     return updateEntityResult(singleStatusUpdateDto, entity)
                             .flatMap(updatedEntity -> {

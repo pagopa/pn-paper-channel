@@ -62,7 +62,7 @@ public class BaseService {
                     return this.requestDeliveryDAO.getByRequestId(requestId)
                             .flatMap(entity -> {
                                 log.debug("Entity edited with correlation id and new status");
-                                pnLogAudit.addsSuccessLog(iun, String.format("prepare requestId = %s, trace_id = %s Response OK from National Registry service", requestId, MDC.get(MDC_TRACE_ID_KEY)));
+                                pnLogAudit.addsSuccessResolveService(iun, String.format("prepare requestId = %s, trace_id = %s Response OK from National Registry service", requestId, MDC.get(MDC_TRACE_ID_KEY)));
 
                                 entity.setCorrelationId(correlationId);
                                 entity.setStatusCode(StatusDeliveryEnum.NATIONAL_REGISTRY_WAITING.getCode());
