@@ -1,7 +1,6 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
-import it.pagopa.pn.commons.log.PnAuditLogEventType;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.exception.PnPaperEventException;
 import it.pagopa.pn.paperchannel.mapper.*;
@@ -90,8 +89,10 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                 })
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)))
                 .zipWhen(entityAndAmount ->
-                        //(StringUtils.equals(entityAndAmount.getT1().getStatusCode(),StatusDeliveryEnum.TAKING_CHARGE.getCode()))?
-                              this.externalChannelClient.sendEngageRequest(sendRequest).then(this.requestDeliveryDAO.updateData(entityAndAmount.getT1()).map(item -> item)), (entityAndAmount, none) -> entityAndAmount.getT2()
+                        // TODO
+                              this.externalChannelClient.sendEngageRequest(sendRequest)
+                                      .then(this.requestDeliveryDAO.updateData(entityAndAmount.getT1())
+                                      .map(item -> item)), (entityAndAmount, none) -> entityAndAmount.getT2()
 
                 )
                 .map(amount -> {
@@ -145,13 +146,10 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                             })
                             .switchIfEmpty(Mono.defer(()-> saveRequestAndAddress(prepareRequest, prepareRequest.getDiscoveredAddress())
                                     .flatMap(response -> {
-                                        String logMessage = String.format("prepare requestId = %s, trace_id = %s search in National Registry", requestId, MDC.get(MDC_TRACE_ID_KEY));
-                                        auditLogBuilder.before(PnAuditLogEventType.AUD_FD_RESOLVE_SERVICE, logMessage)
-                                                .iun(response.getIun())
-                                                .build().log();
-                                        pnLogAudit.addsBeforeResolveLogic(response.getIun(), String.format("prepare requestId = %s, trace_id = %s Request to National Registry service", requestId, MDC.get(MDC_TRACE_ID_KEY)));
+                                        log.info("Start call national");
+                                        pnLogAudit.addsBeforeResolveService(response.getIun(), String.format("prepare requestId = %s, trace_id = % Request to National Registry service", requestId, MDC.get(MDC_TRACE_ID_KEY)));
 
-                                        this.finderAddressFromNationalRegistries(response.getRequestId(), response.getFiscalCode(), response.getReceiverType());
+                                        this.finderAddressFromNationalRegistries(response.getRequestId(), response.getFiscalCode(), response.getReceiverType(), response.getIun());
                                         throw new PnPaperEventException(PreparePaperResponseMapper.fromEvent(prepareRequest.getRequestId()));
                                     })
                             ));

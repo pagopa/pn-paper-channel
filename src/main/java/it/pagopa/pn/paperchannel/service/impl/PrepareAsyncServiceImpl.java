@@ -186,12 +186,12 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
 
         //se nationalRegistry è diverso da null
         if(fromNationalRegistry != null){
-            pnLogAudit.addsSuccessResolveLogic(iun, String.format("prepare requestId = %s National Registry Address is present", requestId));
+            pnLogAudit.addsSuccessLog(iun, String.format("prepare requestId = %s National Registry Address is present", requestId));
 
             pnLogAudit.addsBeforeResolveLogic(iun, String.format("prepare requestId = %s Is National Registry Address not equals previous address ?", requestId));
             //indirizzo diverso da quello del primo invio?
             if(!fromNationalRegistry.convertToHash().equals(hashOldAddress)){
-                pnLogAudit.addsSuccessResolveLogic(iun, String.format("prepare requestId = %s National Registry Address is not equals previous address", requestId));
+                pnLogAudit.addsSuccessLog(iun, String.format("prepare requestId = %s National Registry Address is not equals previous address", requestId));
 
                 String logMessage = String.format("prepare requestId = %s with National Registry Address", requestId);
                 auditLogBuilder.before(PnAuditLogEventType.AUD_FD_RESOLVE_LOGIC, logMessage)
@@ -200,13 +200,13 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
 
                 return fromNationalRegistry;
             } else {
-                pnLogAudit.addsSuccessResolveLogic(iun, String.format("prepare requestId = %s National Registry Address is equals previous address", requestId));
+                pnLogAudit.addsSuccessLog(iun, String.format("prepare requestId = %s National Registry Address is equals previous address", requestId));
                 return setAddressFromDiscovered(requestId, iun, discoveredAddress);
             }
 
         } else {
             // national registry is null
-            pnLogAudit.addsSuccessResolveLogic(iun, String.format("prepare requestId = %s National Registry Address is not present", requestId));
+            pnLogAudit.addsSuccessLog(iun, String.format("prepare requestId = %s National Registry Address is not present", requestId));
             return setAddressFromDiscovered(requestId, iun, discoveredAddress);
         }
     }
@@ -215,10 +215,10 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
         pnLogAudit.addsBeforeResolveLogic(iun, String.format("prepare requestId = %s Is Discovered Address present ?", requestId));
 
         if(discoveredAddress!=null){
-            pnLogAudit.addsSuccessResolveLogic(iun, String.format("prepare requestId = %s Discovered Address is present", requestId));
+            pnLogAudit.addsSuccessLog(iun, String.format("prepare requestId = %s Discovered Address is present", requestId));
             return discoveredAddress;
         } else { //indirizzo non trovato
-            pnLogAudit.addsSuccessResolveLogic(iun, String.format("prepare requestId = %s Discovered Address is not present", requestId));
+            pnLogAudit.addsSuccessLog(iun, String.format("prepare requestId = %s Discovered Address is not present", requestId));
             pnLogAudit.addsResolveLogic(iun, String.format("prepare requestId = %s Is Address Unreachable ?", requestId), String.format("prepare requestId = %s address is Unreachable", requestId));
             throw new PnGenericException(UNTRACEABLE_ADDRESS, UNTRACEABLE_ADDRESS.getMessage());
         }

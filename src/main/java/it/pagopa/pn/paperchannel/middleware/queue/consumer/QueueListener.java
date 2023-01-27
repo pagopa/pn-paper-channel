@@ -41,6 +41,7 @@ public class QueueListener {
     private PaperResultAsyncService paperResultAsyncService;
     @Autowired
     private ObjectMapper objectMapper;
+
     @SqsListener(value = "${pn.paper-channel.queue-internal}", deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)
     public void pullFromInternalQueue(@Payload String node, @Headers Map<String, Object> headers) {
         Mono.just(node)

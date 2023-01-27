@@ -12,6 +12,7 @@ import it.pagopa.pn.paperchannel.utils.DateUtils;
 import it.pagopa.pn.paperchannel.utils.PnLogAudit;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.MDC;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -19,6 +20,8 @@ import reactor.core.scheduler.Schedulers;
 import java.time.Duration;
 import java.util.Date;
 import java.util.List;
+
+import static it.pagopa.pn.commons.log.MDCWebFilter.MDC_TRACE_ID_KEY;
 
 @Slf4j
 public class BaseService {
@@ -46,19 +49,21 @@ public class BaseService {
     }
 
 
-    protected void finderAddressFromNationalRegistries(String requestId, String fiscalCode, String personType){
+    protected void finderAddressFromNationalRegistries(String requestId, String fiscalCode, String personType, String iun){
         Mono.delay(Duration.ofMillis(20)).publishOn(Schedulers.boundedElastic())
                 .flatMap(i -> {
-                    log.debug("Start call national registries for find address");
+                    log.info("Start call national registries for find address");
                     return this.nationalRegistryClient.finderAddress(fiscalCode, personType);
                 })
                 .publishOn(Schedulers.boundedElastic())
                 .flatMap(address -> {
                     String correlationId = address.getCorrelationId();
-                    log.info("National registries had response");
+                    log.info("National registries has response");
                     return this.requestDeliveryDAO.getByRequestId(requestId)
                             .flatMap(entity -> {
                                 log.debug("Entity edited with correlation id and new status");
+                                pnLogAudit.addsSuccessLog(iun, String.format("prepare requestId = %s, trace_id = % Response OK from National Registry service", requestId, MDC.get(MDC_TRACE_ID_KEY)));
+
                                 entity.setCorrelationId(correlationId);
                                 entity.setStatusCode(StatusDeliveryEnum.NATIONAL_REGISTRY_WAITING.getCode());
                                 entity.setStatusDetail(StatusDeliveryEnum.NATIONAL_REGISTRY_WAITING.getDescription());
@@ -68,6 +73,8 @@ public class BaseService {
                 })
                 .flatMap(Mono::just)
                 .onErrorResume(ex -> {
+                    pnLogAudit.addsFailLog(iun, String.format("prepare requestId = %s, trace_id = % Response KO from National Registry service", requestId, MDC.get(MDC_TRACE_ID_KEY)));
+
                     log.error("NationalRegistries finderaddress in errors");
                     log.error(ex.getMessage());
                     return Mono.empty();
