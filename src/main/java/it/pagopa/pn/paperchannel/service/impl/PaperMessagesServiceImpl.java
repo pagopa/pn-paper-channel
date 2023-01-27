@@ -88,13 +88,12 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                     return super.calculator(attachments, address, sendRequest.getProductType()).map(value -> value);
                 })
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)))
-                .zipWhen(entityAndAmount ->
-                        // TODO
-                              this.externalChannelClient.sendEngageRequest(sendRequest)
-                                      .then(this.requestDeliveryDAO.updateData(entityAndAmount.getT1())
-                                      .map(item -> item)), (entityAndAmount, none) -> entityAndAmount.getT2()
-
-                )
+                .zipWhen(entityAndAmount ->{
+                    pnLogAudit.addsBeforeResolveService(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", requestId, MDC.get(MDC_TRACE_ID_KEY)));
+                    return this.externalChannelClient.sendEngageRequest(sendRequest)
+                                    .then(this.requestDeliveryDAO.updateData(entityAndAmount.getT1())
+                                            .map(item -> item));
+                }, (entityAndAmount, none) -> entityAndAmount.getT2())
                 .map(amount -> {
                     log.info("Amount: {} for requestId {}", amount, requestId);
                     SendResponse sendResponse = new SendResponse();
