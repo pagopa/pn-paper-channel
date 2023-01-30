@@ -1,13 +1,10 @@
 package it.pagopa.pn.paperchannel.mapper;
 
+import it.pagopa.pn.paperchannel.dao.model.DeliveriesData;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnPaperCost;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnPaperDeliveryDriver;
-import it.pagopa.pn.paperchannel.model.PageModel;
-import it.pagopa.pn.paperchannel.rest.v1.dto.DeliveryDriverDto;
-import it.pagopa.pn.paperchannel.rest.v1.dto.PageableDeliveryDriverResponseDto;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-import org.springframework.data.domain.Pageable;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
@@ -15,11 +12,11 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-class DeliveryDriverMapperTest {
+class ExcelModelMapperTest {
 
     @Test
     void exceptionConstructorTest() throws  NoSuchMethodException {
-        Constructor<DeliveryDriverMapper> constructor = DeliveryDriverMapper.class.getDeclaredConstructor();
+        Constructor<ExcelModelMapper> constructor = ExcelModelMapper.class.getDeclaredConstructor();
         Assertions.assertTrue(Modifier.isPrivate(constructor.getModifiers()));
         constructor.setAccessible(true);
         Exception exception = Assertions.assertThrows(Exception.class, () -> constructor.newInstance());
@@ -27,32 +24,34 @@ class DeliveryDriverMapperTest {
     }
 
     @Test
-    void deliveryDriverMapperTest() {
-        DeliveryDriverDto response= DeliveryDriverMapper.deliveryDriverToDto(getPnPaperDeliveryDriver() );
+    void excelModelMapperTest () {
+        DeliveriesData response= ExcelModelMapper.fromDeliveriesDrivers(getDrivers("12345"),getCosts());
         Assertions.assertNotNull(response);
     }
-
     @Test
-    void deliveryDriverToPageableResponseTest() {
-        Pageable pageable =Mockito.mock(Pageable.class, Mockito.CALLS_REAL_METHODS);
-        List<PnPaperDeliveryDriver> list= new ArrayList<>();
-        PageableDeliveryDriverResponseDto response= DeliveryDriverMapper.toPageableResponse(DeliveryDriverMapper.toPagination(pageable, list));
+    void excelModelMapperEmptyTest () {
+        DeliveriesData response= ExcelModelMapper.fromDeliveriesDrivers(getDrivers(""),getCosts());
         Assertions.assertNotNull(response);
     }
-
-    @Test
-    void deliveryDriverToPaginationTest() {
-        Pageable pageable =Mockito.mock(Pageable.class, Mockito.CALLS_REAL_METHODS);
-        List<PnPaperDeliveryDriver> list= new ArrayList<>();
-        PageModel<PnPaperDeliveryDriver> response= DeliveryDriverMapper.toPagination(pageable, list);
-
-        Assertions.assertNotNull(response);
+    public List<PnPaperCost> getCosts(){
+        List<PnPaperCost> paperCostList= new ArrayList<>();
+        PnPaperCost cost = new PnPaperCost();
+        cost.setIdDeliveryDriver("12345");
+        cost.setUuid("12345");
+        cost.setProductType("AR");
+        cost.setCap("00061");
+        cost.setZone("roma");
+        cost.setTenderCode("GARA-2022");
+        cost.setPagePrice(0.5F);
+        cost.setBasePrice(0.1F);
+        paperCostList.add(cost);
+        return paperCostList;
     }
-
-    public PnPaperDeliveryDriver getPnPaperDeliveryDriver() {
+    public List<PnPaperDeliveryDriver> getDrivers(String uniqueCode){
+        List<PnPaperDeliveryDriver> drivers = new ArrayList<>();
         PnPaperDeliveryDriver pnPaperDeliveryDriver = new PnPaperDeliveryDriver();
         pnPaperDeliveryDriver.setFiscalCode("FRDYVB568501A");
-        pnPaperDeliveryDriver.setUniqueCode("123456");
+        pnPaperDeliveryDriver.setUniqueCode(uniqueCode);
         pnPaperDeliveryDriver.setTenderCode("GARA-2022");
         pnPaperDeliveryDriver.setDenomination("denomination");
         pnPaperDeliveryDriver.setTaxId("12345");
@@ -63,6 +62,7 @@ class DeliveryDriverMapperTest {
         pnPaperDeliveryDriver.setPec("mario@pec.it");
         pnPaperDeliveryDriver.setAuthor("author");
         pnPaperDeliveryDriver.setStartDate(new Date().toInstant());
-        return pnPaperDeliveryDriver;
+        drivers.add(pnPaperDeliveryDriver);
+        return drivers;
     }
 }

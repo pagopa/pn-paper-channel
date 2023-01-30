@@ -9,9 +9,20 @@ import it.pagopa.pn.paperchannel.rest.v1.dto.AttachmentDetails;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Modifier;
 import java.time.OffsetDateTime;
 
 class AttachmentMapperTest {
+
+    @Test
+    void exceptionConstructorTest() throws  NoSuchMethodException {
+        Constructor<AttachmentMapper> constructor = AttachmentMapper.class.getDeclaredConstructor();
+        Assertions.assertTrue(Modifier.isPrivate(constructor.getModifiers()));
+        constructor.setAccessible(true);
+        Exception exception = Assertions.assertThrows(Exception.class, () -> constructor.newInstance());
+        Assertions.assertEquals(null, exception.getMessage());
+    }
 
     @Test
     void attachmentMapperToAttachmentDetailsTest() {
