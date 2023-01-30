@@ -38,4 +38,10 @@ public class PaperChannelRestV1Controller implements DeliveryDriverApi {
     public Mono<ResponseEntity<InfoDownloadDTO>> downloadTenderFile(String tenderCode, String uuid, ServerWebExchange exchange) {
         return this.paperChannelService.downloadTenderFile(tenderCode, uuid).map(ResponseEntity::ok);
     }
+
+    @Override
+    public Mono<ResponseEntity<BaseResponse>> notifyUpload(Mono<TenderUploadRequestDto> tenderUploadRequestDto, ServerWebExchange exchange) {
+        return tenderUploadRequestDto.flatMap(request -> paperChannelService.notifyUpload(request))
+                .map(ResponseEntity::ok);
+    }
 }

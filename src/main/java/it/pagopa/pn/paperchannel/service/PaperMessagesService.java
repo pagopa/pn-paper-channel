@@ -13,4 +13,6 @@ public interface PaperMessagesService {
 
     Mono<SendEvent> retrievePaperSendRequest(String requestId);
 
+    void finderAddress(String requestId, String fiscalCode, String receiverType, String iun);
+
 }

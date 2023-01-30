@@ -5,6 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 @Slf4j
 public class Utility {
 
@@ -31,4 +36,33 @@ public class Utility {
         }
     }
 
+    private static boolean isValidFromRegex(String value, String regex){
+        Pattern p = Pattern.compile(regex);
+        Matcher m = p.matcher(value);
+        return m.find() && m.group().equals(value);
+    }
+
+    public static Boolean splitCap(String capList) {
+        String regex = "(\\d{5})(-\\d{5})?+";
+        if (!isValidFromRegex(capList,regex)){
+            return false;
+        }
+        boolean check = false;
+        String[] cap = capList.split(",");
+        for (String item : cap) {
+            if (item.contains("-")) {
+                String[] range = item.trim().split("-");
+                int low = Integer.parseInt(range[0]);
+                int high = Integer.parseInt(range[1]);
+                if (low < high) {
+                    check = true;
+                    System.out.println("Trovato cap in questo range " + item);
+                }
+                else {
+                    check = false;
+                }
+            }
+        }
+        return check;
+    }
 }
