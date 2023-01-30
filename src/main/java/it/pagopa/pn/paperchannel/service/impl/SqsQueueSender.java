@@ -8,6 +8,7 @@ import it.pagopa.pn.paperchannel.middleware.queue.model.DeliveryPushEvent;
 import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.InternalQueueMomProducer;
 import it.pagopa.pn.paperchannel.model.Address;
+import it.pagopa.pn.paperchannel.model.NationalRegistryError;
 import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PaperChannelUpdate;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareEvent;
@@ -66,8 +67,22 @@ public class SqsQueueSender implements SqsSender {
                 .eventType(EventTypeEnum.PREPARE_ASYNC_FLOW.name())
                 .build();
 
-        InternalPushEvent internalPushEvent = new InternalPushEvent(prepareHeader, prepareAsyncRequest);
+        InternalPushEvent<PrepareAsyncRequest> internalPushEvent = new InternalPushEvent<>(prepareHeader, prepareAsyncRequest);
         this.internalQueueMomProducer.push(internalPushEvent);
-
     }
+
+    @Override
+    public void pushNationalRegistriesError(NationalRegistryError nationalRegistryError){
+        GenericEventHeader prepareHeader= GenericEventHeader.builder()
+                .publisher("paper-channel-prepare")
+                .eventId(UUID.randomUUID().toString())
+                .createdAt(Instant.now())
+                .eventType(EventTypeEnum.NATIONAL_REGISTRIES_ERROR.name())
+                .build();
+
+        InternalPushEvent<NationalRegistryError> internalPushEvent = new InternalPushEvent<>(prepareHeader, nationalRegistryError);
+        this.internalQueueMomProducer.push(internalPushEvent);
+    }
+
+
 }

@@ -176,6 +176,11 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)));
     }
 
+    @Override
+    public void finderAddress(String requestId, String fiscalCode, String receiverType, String iun) {
+        this.finderAddressFromNationalRegistries(requestId, fiscalCode, receiverType, iun);
+    }
+
     private Mono<PnDeliveryRequest> saveRequestAndAddress(PrepareRequest prepareRequest, AnalogAddress address){
         PnDeliveryRequest pnDeliveryRequest = RequestDeliveryMapper.toEntity(prepareRequest);
         PnAddress addressEntity = null;

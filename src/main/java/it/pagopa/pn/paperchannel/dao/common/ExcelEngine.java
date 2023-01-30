@@ -4,7 +4,10 @@ import it.pagopa.pn.paperchannel.dao.DAOException;
 import it.pagopa.pn.paperchannel.dao.model.ColumnExcel;
 import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFFont;
@@ -118,7 +121,7 @@ public class ExcelEngine {
         }
     }
 
-    public <T> List<T> extractDataLikeTable(Function<Map<String, String>, T> map, Class<T> tClass) throws DAOException {
+    public <T> List<T> extractDataLikeTable(Function<Map<String, ExcelCell>, T> map, Class<T> tClass) throws DAOException {
         List<T> rows = new ArrayList<>();
         int lastRow = this.currentSheet.getLastRowNum();
         int firstRow = this.currentSheet.getFirstRowNum(); //-1 se non ci sono dati
@@ -130,10 +133,10 @@ public class ExcelEngine {
         if (headerCell.isEmpty()) throw new DAOException("Header mismatch with annotation value");
 
         while (i <= lastRow){
-            Map<String, String> mapRow = new HashMap<>();
+            Map<String, ExcelCell> mapRow = new HashMap<>();
             Row row = this.currentSheet.getRow(i);
             headerCell.keySet().forEach(key ->
-                    mapRow.put(key, row.getCell(headerCell.get(key)).getStringCellValue())
+                    mapRow.put(key, new ExcelCell(row.getRowNum()+1, headerCell.get(key)+1,row.getCell(headerCell.get(key)).getStringCellValue()))
             );
             rows.add(map.apply(mapRow));
             i++;
@@ -201,6 +204,16 @@ public class ExcelEngine {
         }
         if (headerPosition.size() != annotatedSortedFields.size()) throw new DAOException("The header have badly format");
         return headerPosition;
+    }
+
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @ToString
+    public static class ExcelCell {
+        private Integer row;
+        private Integer col;
+        private String value;
     }
 
 }
