@@ -5,6 +5,7 @@ import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.mapper.ContractMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.ZoneDAO;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.AttachmentInfo;
@@ -17,6 +18,7 @@ import it.pagopa.pn.paperchannel.utils.PnLogAudit;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Autowired;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -37,6 +39,9 @@ public class BaseService {
     protected CostDAO costDAO;
     protected PnLogAudit pnLogAudit;
 
+    @Autowired
+    protected ZoneDAO zoneDAO;
+
     public BaseService(PnAuditLogBuilder auditLogBuilder, RequestDeliveryDAO requestDeliveryDAO, CostDAO costDAO, NationalRegistryClient nationalRegistryClient) {
         this.auditLogBuilder = auditLogBuilder;
         this.pnLogAudit = new PnLogAudit(auditLogBuilder);
@@ -48,9 +53,7 @@ public class BaseService {
     protected Mono<Double> calculator(List<AttachmentInfo> attachments, Address address, ProductTypeEnum productType){
         if (StringUtils.isNotBlank(address.getCap())) {
             return getAmount(attachments, address.getCap(), null, getProductType(address, productType))
-                    .map(item -> {
-                        return item;
-                    });
+                    .map(item -> item);
         }
         return getZone(address.getCountry())
                 .flatMap(zone -> getAmount(attachments,null, zone, getProductType(address, productType)).map(item -> item));
@@ -92,6 +95,9 @@ public class BaseService {
 
 
     private Mono<String> getZone(String country) {
+        //TODO decommentare quando la tabella sarà popolata
+//        return zoneDAO.getByCountry(country)
+//                .map(item -> item.getZone());
         return Mono.just("ZONA_1");
     }
 
@@ -109,12 +115,17 @@ public class BaseService {
 
 
     private Mono<Contract> getContract(String cap, String zone, String productType) {
-        return costDAO.getByCapOrZoneAndProductType(cap, zone, productType).map(ContractMapper::toContract)
-                .onErrorResume(PnGenericException.class, ex -> {
-                    log.info("Cost not found try with default");
-                    return costDAO.getByCapOrZoneAndProductType(StringUtils.isNotEmpty(cap)? Const.CAP_DEFALUT : null, StringUtils.isNotEmpty(zone)? Const.ZONE_DEFAULT : null, productType)
-                            .map(ContractMapper::toContract);
-                });
+        // TODO decommentare quando la tabella sarà popolata
+        Contract c = new Contract();
+        c.setPrice(10.0);
+        c.setPricePerPage(1.2);
+        return Mono.just(c);
+//        return costDAO.getByCapOrZoneAndProductType(cap, zone, productType).map(ContractMapper::toContract)
+//                .onErrorResume(PnGenericException.class, ex -> {
+//                    log.info("Cost not found try with default");
+//                    return costDAO.getByCapOrZoneAndProductType(StringUtils.isNotEmpty(cap)? Const.CAP_DEFALUT : null, StringUtils.isNotEmpty(zone)? Const.ZONE_DEFAULT : null, productType)
+//                            .map(ContractMapper::toContract);
+//                });
     }
 
 
