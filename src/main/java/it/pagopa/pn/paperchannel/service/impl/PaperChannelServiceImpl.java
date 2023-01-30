@@ -115,7 +115,7 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                 .switchIfEmpty(Mono.error(new PnGenericException(FILE_NOT_FOUND, FILE_NOT_FOUND.getMessage(), HttpStatus.NOT_FOUND)));
 
         //recuperare file da s3
-        //trasformare il file nel modello
+        //trasformare il file nel modello excel
         //prendere il modello e mapparlo in entity
         //salvare il nuovo modello
     }

@@ -49,7 +49,7 @@ public class BaseService {
     }
 
 
-    protected void finderAddressFromNationalRegistries(String requestId, String fiscalCode, String personType, String iun){
+    void finderAddressFromNationalRegistries(String requestId, String fiscalCode, String personType, String iun){
         Mono.delay(Duration.ofMillis(20)).publishOn(Schedulers.boundedElastic())
                 .flatMap(i -> {
                     log.info("Start call national registries for find address");
