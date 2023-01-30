@@ -14,8 +14,8 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Field;
-import java.security.GeneralSecurityException;
 import java.util.*;
 import java.util.function.Function;
 
@@ -35,9 +35,8 @@ public class ExcelEngine {
         this.sheets.add(this.currentSheet);
     }
 
-    public ExcelEngine(String filename, String pathExcel) throws IOException {
-        this.filename = filename;
-        this.workbook = new XSSFWorkbook(pathExcel);
+    public ExcelEngine(InputStream stream) throws IOException {
+        this.workbook = new XSSFWorkbook(stream);
         int numberOfSheets = this.workbook.getNumberOfSheets();
         this.sheets = new ArrayList<>();
         if (numberOfSheets == 0){
@@ -76,13 +75,13 @@ public class ExcelEngine {
                 workbook.write(os);
             }
         } catch (Exception e) {
-            log.error("Error in file", e.getMessage());
-            // TODO lanciare eccezione
+            log.error("Error in file {}", e.getMessage());
+            throw new DAOException("Error with save on disk file");
         } finally {
             try {
                 workbook.close();
             } catch (IOException ioException) {
-                log.error("Error in file", ioException.getMessage());
+                log.error("Error in file {}", ioException.getMessage());
             }
         }
         return file;
@@ -200,6 +199,7 @@ public class ExcelEngine {
             }
             i++;
         }
+        if (headerPosition.size() != annotatedSortedFields.size()) throw new DAOException("The header have badly format");
         return headerPosition;
     }
 

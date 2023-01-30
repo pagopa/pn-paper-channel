@@ -29,15 +29,14 @@ import java.time.Duration;
 import java.util.UUID;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_NOT_EXIST;
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.FILE_NOT_FOUND;
 
 
 @Slf4j
 @Service
 public class PaperChannelServiceImpl implements PaperChannelService {
-
     @Autowired
     private CostDAO costDAO;
-
     @Autowired
     private DeliveryDriverDAO deliveryDriverDAO;
     @Autowired
@@ -46,7 +45,6 @@ public class PaperChannelServiceImpl implements PaperChannelService {
     private ExcelDAO<DeliveriesData> excelDAO;
     @Autowired
     private FileDownloadDAO fileDownloadDAO;
-
     private final S3Bucket s3Bucket;
 
     public PaperChannelServiceImpl(S3Bucket s3Bucket) {
@@ -80,10 +78,10 @@ public class PaperChannelServiceImpl implements PaperChannelService {
     @Override
     public Mono<PresignedUrlResponseDto> getPresignedUrl() {
         return s3Bucket.presignedUrl()
-                .map(presignedUrlResponseDto -> {
-                    fileDownloadDAO.create(PresignedUrlResponseMapper.toEntity(presignedUrlResponseDto));
-                    return presignedUrlResponseDto;
-                });
+                .flatMap(presignedUrlResponseDto ->
+                        fileDownloadDAO.create(PresignedUrlResponseMapper.toEntity(presignedUrlResponseDto))
+                                .map(pnDeliveryFile -> presignedUrlResponseDto)
+                );
     }
 
     public Mono<InfoDownloadDTO> downloadTenderFile(String tenderCode,String uuid) {
@@ -107,6 +105,21 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                 });
     }
 
+    @Override
+    public Mono<BaseResponse> notifyUpload(TenderUploadRequestDto uploadRequestDto) {
+        String nameFile = S3Bucket.PREFIX_URL + uploadRequestDto.getUuid();
+        return Mono.just(1)
+                .map(i -> s3Bucket.getFileInputStream(nameFile))
+                .map(inputStream -> this.excelDAO.readData(inputStream))
+                .map(deliveriesData -> new BaseResponse())
+                .switchIfEmpty(Mono.error(new PnGenericException(FILE_NOT_FOUND, FILE_NOT_FOUND.getMessage(), HttpStatus.NOT_FOUND)));
+
+        //recuperare file da s3
+        //trasformare il file nel modello
+        //prendere il modello e mapparlo in entity
+        //salvare il nuovo modello
+    }
+
     private void createAndUploadFileAsync(String tenderCode,String uuid){
         Mono.delay(Duration.ofMillis(10)).publishOn(Schedulers.boundedElastic())
                 .flatMap(i ->  {
@@ -125,16 +138,18 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                     }
                 })
                 .publishOn(Schedulers.boundedElastic())
-                .zipWhen(file ->  s3Bucket.putObject(file))
+                .zipWhen(s3Bucket::putObject)
                 .zipWhen(file -> fileDownloadDAO.getUuid(uuid))
                 .map(entityAndFile -> Tuples.of(entityAndFile.getT1().getT1(), entityAndFile.getT2()))
                 .zipWhen(entityAndFile -> {
                     entityAndFile.getT2().setFilename(entityAndFile.getT1().getName());
                     entityAndFile.getT2().setStatus(InfoDownloadDTO.StatusEnum.UPLOADED.getValue());
                     // save item and delete file
-                    fileDownloadDAO.create(entityAndFile.getT2());
-                    entityAndFile.getT1().delete();
-                    return Mono.just(FileMapper.toDownloadFile(entityAndFile.getT2(), s3Bucket.getObjectData(entityAndFile.getT2().getFilename())));
+                    return fileDownloadDAO.create(entityAndFile.getT2())
+                            .map(file -> {
+                                entityAndFile.getT1().delete();
+                                return FileMapper.toDownloadFile(entityAndFile.getT2(), s3Bucket.getObjectData(entityAndFile.getT2().getFilename()));
+                            });
                 })
                 .subscribeOn(Schedulers.boundedElastic()).subscribe();
     }
