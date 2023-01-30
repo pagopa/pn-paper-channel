@@ -36,7 +36,7 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
     private SqsSender sqsSender;
 
     public PaperResultAsyncServiceImpl(PnAuditLogBuilder auditLogBuilder, RequestDeliveryDAO requestDeliveryDAO, NationalRegistryClient nationalRegistryClient) {
-        super(auditLogBuilder, requestDeliveryDAO, nationalRegistryClient);
+        super(auditLogBuilder, requestDeliveryDAO, null, nationalRegistryClient);
     }
 
     @Override
