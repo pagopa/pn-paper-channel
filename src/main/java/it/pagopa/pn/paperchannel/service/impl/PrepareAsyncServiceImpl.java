@@ -90,7 +90,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                     }
 
                     if (pnDeliveryRequest.getProductType() == null ) {
-                        setLetterCode(correctAddress, pnDeliveryRequest);
+                        pnDeliveryRequest.setProductType(getProposalProductType(correctAddress, pnDeliveryRequest.getProposalProductType()));
                     }
 
                     pnDeliveryRequest.setStatusCode(StatusDeliveryEnum.TAKING_CHARGE.getCode());
@@ -137,33 +137,6 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
             default : return StatusDeliveryEnum.PAPER_CHANNEL_DEFAULT_ERROR;
         }
 
-    }
-
-    private void setLetterCode(Address address, PnDeliveryRequest deliveryRequest){
-        //nazionale
-        if(StringUtils.isNotBlank(address.getCap())){
-            if(deliveryRequest.getProposalProductType().equals(RACCOMANDATA_SEMPLICE)){
-                deliveryRequest.setProductType(ProductTypeEnum.RN_RS.getValue());
-            }
-            if(deliveryRequest.getProposalProductType().equals(RACCOMANDATA_890)){
-                deliveryRequest.setProductType(ProductTypeEnum.RN_890.getValue());
-            }
-            if(deliveryRequest.getProposalProductType().equals(RACCOMANDATA_AR)){
-                deliveryRequest.setProductType(ProductTypeEnum.RN_AR.getValue());
-            }
-        }
-        //internazionale
-        else{
-            if(deliveryRequest.getProposalProductType().equals(RACCOMANDATA_SEMPLICE)){
-                deliveryRequest.setProductType(ProductTypeEnum.RI_RS.getValue());
-            }
-            if(deliveryRequest.getProposalProductType().equals(RACCOMANDATA_890)){
-                deliveryRequest.setProductType(ProductTypeEnum.RI_AR.getValue());
-            }
-            if(deliveryRequest.getProposalProductType().equals(RACCOMANDATA_AR)){
-                deliveryRequest.setProductType(ProductTypeEnum.RI_AR.getValue());
-            }
-        }
     }
 
     public void updateStatus (String requestId, String correlationId, StatusDeliveryEnum status ){
