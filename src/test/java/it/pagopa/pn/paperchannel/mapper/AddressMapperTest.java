@@ -8,8 +8,19 @@ import it.pagopa.pn.paperchannel.rest.v1.dto.AnalogAddress;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Modifier;
+
 class AddressMapperTest {
 
+    @Test
+    void exceptionConstructorTest() throws  NoSuchMethodException {
+        Constructor<AddressMapper> constructor = AddressMapper.class.getDeclaredConstructor();
+        Assertions.assertTrue(Modifier.isPrivate(constructor.getModifiers()));
+        constructor.setAccessible(true);
+        Exception exception = Assertions.assertThrows(Exception.class, () -> constructor.newInstance());
+        Assertions.assertEquals(null, exception.getMessage());
+    }
 
     @Test
     void addressMapperFromNationalRegistryTest() {
