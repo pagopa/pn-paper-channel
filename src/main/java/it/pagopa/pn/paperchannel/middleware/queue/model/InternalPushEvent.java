@@ -2,14 +2,13 @@ package it.pagopa.pn.paperchannel.middleware.queue.model;
 
 import it.pagopa.pn.api.dto.events.GenericEvent;
 import it.pagopa.pn.api.dto.events.GenericEventHeader;
-import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
-public class InternalPushEvent implements GenericEvent<GenericEventHeader, PrepareAsyncRequest> {
+public class InternalPushEvent<T> implements GenericEvent<GenericEventHeader, T> {
 
     private GenericEventHeader header;
-    private PrepareAsyncRequest payload;
+    private T payload;
 
 
 
@@ -19,7 +18,7 @@ public class InternalPushEvent implements GenericEvent<GenericEventHeader, Prepa
     }
 
     @Override
-    public PrepareAsyncRequest getPayload() {
+    public T getPayload() {
         return payload;
     }
 }

@@ -227,6 +227,39 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
+  /paper-channel/backoffice/v1/delivery-tender/notify-upload:
+    post:
+      tags:
+        - DeliveryDriver
+      operationId: notifyUpload
+      summary: Notifica di avvenuto caricamento file.
+      description: API che consente di notificare l'avvenuto caricamento del file e avvio del flusso di salvataggio
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TenderUploadRequestDto'
+
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+        '400':
+          $ref: '#/components/responses/Invalid'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/NotAllowed'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
   /paper-channel/backoffice/v1/delivery-tender/file-upload:
     get:
       tags:
@@ -330,8 +363,15 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ContractInsertDTO'
-
       additionalProperties: false
+
+    TenderUploadRequestDto:
+      type: object
+      properties:
+        tender:
+          $ref: "#/components/schemas/TenderDTO"
+        uuid:
+          type: string
 
     ContractDto:
       type: object

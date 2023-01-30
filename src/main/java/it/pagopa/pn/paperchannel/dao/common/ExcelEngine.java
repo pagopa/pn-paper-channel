@@ -4,7 +4,10 @@ import it.pagopa.pn.paperchannel.dao.DAOException;
 import it.pagopa.pn.paperchannel.dao.model.ColumnExcel;
 import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFFont;
@@ -14,8 +17,8 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Field;
-import java.security.GeneralSecurityException;
 import java.util.*;
 import java.util.function.Function;
 
@@ -35,9 +38,8 @@ public class ExcelEngine {
         this.sheets.add(this.currentSheet);
     }
 
-    public ExcelEngine(String filename, String pathExcel) throws IOException {
-        this.filename = filename;
-        this.workbook = new XSSFWorkbook(pathExcel);
+    public ExcelEngine(InputStream stream) throws IOException {
+        this.workbook = new XSSFWorkbook(stream);
         int numberOfSheets = this.workbook.getNumberOfSheets();
         this.sheets = new ArrayList<>();
         if (numberOfSheets == 0){
@@ -76,13 +78,13 @@ public class ExcelEngine {
                 workbook.write(os);
             }
         } catch (Exception e) {
-            log.error("Error in file", e.getMessage());
-            // TODO lanciare eccezione
+            log.error("Error in file {}", e.getMessage());
+            throw new DAOException("Error with save on disk file");
         } finally {
             try {
                 workbook.close();
             } catch (IOException ioException) {
-                log.error("Error in file", ioException.getMessage());
+                log.error("Error in file {}", ioException.getMessage());
             }
         }
         return file;
@@ -119,7 +121,7 @@ public class ExcelEngine {
         }
     }
 
-    public <T> List<T> extractDataLikeTable(Function<Map<String, String>, T> map, Class<T> tClass) throws DAOException {
+    public <T> List<T> extractDataLikeTable(Function<Map<String, ExcelCell>, T> map, Class<T> tClass) throws DAOException {
         List<T> rows = new ArrayList<>();
         int lastRow = this.currentSheet.getLastRowNum();
         int firstRow = this.currentSheet.getFirstRowNum(); //-1 se non ci sono dati
@@ -131,10 +133,10 @@ public class ExcelEngine {
         if (headerCell.isEmpty()) throw new DAOException("Header mismatch with annotation value");
 
         while (i <= lastRow){
-            Map<String, String> mapRow = new HashMap<>();
+            Map<String, ExcelCell> mapRow = new HashMap<>();
             Row row = this.currentSheet.getRow(i);
             headerCell.keySet().forEach(key ->
-                    mapRow.put(key, row.getCell(headerCell.get(key)).getStringCellValue())
+                    mapRow.put(key, new ExcelCell(row.getRowNum()+1, headerCell.get(key)+1,row.getCell(headerCell.get(key)).getStringCellValue()))
             );
             rows.add(map.apply(mapRow));
             i++;
@@ -200,7 +202,18 @@ public class ExcelEngine {
             }
             i++;
         }
+        if (headerPosition.size() != annotatedSortedFields.size()) throw new DAOException("The header have badly format");
         return headerPosition;
+    }
+
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @ToString
+    public static class ExcelCell {
+        private Integer row;
+        private Integer col;
+        private String value;
     }
 
 }
