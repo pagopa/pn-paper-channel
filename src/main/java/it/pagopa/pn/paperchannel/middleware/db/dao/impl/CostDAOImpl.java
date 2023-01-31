@@ -6,14 +6,10 @@ import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.BaseDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.TransactWriterInitializer;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnCap;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnPaperCost;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnPaperDeliveryDriver;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnZone;
-import it.pagopa.pn.paperchannel.utils.DateUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
@@ -94,6 +90,4 @@ public class CostDAOImpl extends BaseDAO<PnPaperCost> implements CostDAO {
                     return items.get(0);
                 });
     }
-
-
 }
