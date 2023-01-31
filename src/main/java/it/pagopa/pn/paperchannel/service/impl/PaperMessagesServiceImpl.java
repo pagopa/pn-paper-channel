@@ -147,7 +147,7 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                             .switchIfEmpty(Mono.defer(()-> saveRequestAndAddress(prepareRequest, prepareRequest.getDiscoveredAddress())
                                     .flatMap(response -> {
                                         log.info("Start call national");
-                                        pnLogAudit.addsBeforeResolveService(response.getIun(), String.format("prepare requestId = %s, trace_id = %s Request to National Registry service", requestId, MDC.get(MDC_TRACE_ID_KEY)));
+                                        pnLogAudit.addsBeforeResolveService(response.getIun(), String.format("prepare requestId = %s, relatedRequestId=%s, trace_id = %s Request to National Registry service", requestId, prepareRequest.getRelatedRequestId(), MDC.get(MDC_TRACE_ID_KEY)));
 
                                         this.finderAddressFromNationalRegistries(response.getRequestId(), response.getFiscalCode(), response.getReceiverType(), response.getIun());
                                         throw new PnPaperEventException(PreparePaperResponseMapper.fromEvent(prepareRequest.getRequestId()));
