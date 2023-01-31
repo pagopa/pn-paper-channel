@@ -63,6 +63,22 @@ Parameters:
     Type: String
     Description: 'Url to the SafeStorage microservice'
 
+  AttemptSafeStorage:
+    Type: Number
+    Description: 'Number of attempts for retrieve file on safe storage'
+
+  AttemptQueueExternalChannel:
+    Type: Number
+    Description: 'Number of attempts for called external channel'
+
+  AttemptQueueNationalRegistries:
+    Type: Number
+    Description: 'Number of attempts for called national registries'
+
+  AttemptQueueSafeStorage:
+    Type: Number
+    Description: 'Number of attempts for called prepare async for retry retrieve file'
+
   SafeStorageCxId:
     Type: String
     Description: 'SafeStorage cx-id'
@@ -231,8 +247,12 @@ Resources:
         ContainerEnvEntry19: !Sub 'PN_PAPERCHANNEL_QUEUEEXTERNALCHANNEL=${ExternalChannels2PaperChannelQueueName}'
         ContainerEnvEntry20: !Sub 'PN_PAPERCHANNEL_QUEUENATIONALREGISTRIES=${NationalRegistryGatewayOutputsQueueName}'
         ContainerEnvEntry21: !Sub 'PN_PAPERCHANNEL_QUEUEINTERNAL=${ScheduledRequestsQueueName}'
-        ContainerEnvEntry22: !Sub 'SPRING_CLOUD_FUNCTIONROUTER_QUEUES_LIST=${ExternalChannelsOutputsQueueName},${ExternalChannels2PaperChannelQueueName},${NationalRegistryGatewayOutputsQueueName},${ScheduledRequestsQueueName}'
-        ContainerEnvEntry23: !Sub 'AWS_BUCKET_NAME=${PaperDeliveryDriversBucketName}'
+        ContainerEnvEntry22: !Sub 'PN_PAPERCHANNEL_ATTEMPTSAFESTORAGE=${AttemptSafeStorage}'
+        ContainerEnvEntry23: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUESAFESTORAGE=${AttemptQueueSafeStorage}'
+        ContainerEnvEntry24: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUENATIONALREGISTRIES=${AttemptQueueNationalRegistries}'
+        ContainerEnvEntry25: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUEEXTERNALCHANNEL=${AttemptQueueExternalChannel}'
+        ContainerEnvEntry26: !Sub 'SPRING_CLOUD_FUNCTIONROUTER_QUEUES_LIST=${ExternalChannelsOutputsQueueName},${ExternalChannels2PaperChannelQueueName},${NationalRegistryGatewayOutputsQueueName},${ScheduledRequestsQueueName}'
+        ContainerEnvEntry27: !Sub 'AWS_BUCKET_NAME=${PaperDeliveryDriversBucketName}'
         MappedPaths: '/paper-channel/*,/paper-channel-private/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds
