@@ -343,19 +343,19 @@ Resources:
           - ','
           - - !GetAtt PaperChannelMicroservice.Outputs.FatalLogsMetricAlarmArn
 
-#  PaperChannelGatewayDeliveryDriver:
-#    Type: AWS::CloudFormation::Stack
-#    Properties:
-#      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/api-gw-expose-service.yaml"
-#      Parameters:
-#        MicroServiceUniqueName: !Sub '${ProjectName}-PaperChannel-bo'
-#        IntendedUsage: BACKOFFICE
-#        DnsName: !Ref WebApiDnsName
-#        ProjectName: !Ref ProjectName
-#        ServiceApiPath: 'paper-channel/backoffice'
-#        NetworkLoadBalancerLink: !Ref NetworkLoadBalancerLink
-#        ApplicationLoadBalancerDomain: !Ref ApplicationLoadBalancerDomain
-#        AlarmSNSTopicArn: !Ref AlarmSNSTopicArn
-#        CloudwatchLogKinesisStreamArn: !Ref LogsKinesisSourceStreamArn
-#        OpenApiBucketName: !Ref MicroserviceBucketName
-#        OpenApiBucketKey: !Sub ${MicroserviceBucketBaseKey}/docs/openapi/pn-paper-channel-v1.yaml
+  PaperChannelGatewayDeliveryDriver:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/api-gw-expose-service.yaml"
+      Parameters:
+        MicroServiceUniqueName: !Sub '${ProjectName}-PaperChannel-bo'
+        IntendedUsage: BACKOFFICE
+        DnsName: !Ref WebApiDnsName
+        ProjectName: !Ref ProjectName
+        ServiceApiPath: 'paper-channel'
+        NetworkLoadBalancerLink: !Ref NetworkLoadBalancerLink
+        ApplicationLoadBalancerDomain: !Ref ApplicationLoadBalancerDomain
+        AlarmSNSTopicArn: !Ref AlarmSNSTopicArn
+        CloudwatchLogKinesisStreamArn: !Ref LogsKinesisSourceStreamArn
+        OpenApiBucketName: !Ref MicroserviceBucketName
+        OpenApiBucketKey: !Sub ${MicroserviceBucketBaseKey}/docs/openapi/pn-paper-channel-v1.yaml
