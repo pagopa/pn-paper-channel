@@ -17,7 +17,9 @@ public class PreparePaperResponseMapper {
 
     public static PaperChannelUpdate fromResult(PnDeliveryRequest item, PnAddress pnAddress){
         PaperChannelUpdate paperChannelUpdate = new PaperChannelUpdate();
-        if (item.getStatusCode().equals(StatusDeliveryEnum.IN_PROCESSING.getCode()) || item.getStatusCode().equals(StatusDeliveryEnum.NATIONAL_REGISTRY_WAITING.getCode())){
+        if (item.getStatusCode().equals(StatusDeliveryEnum.IN_PROCESSING.getCode())
+                || item.getStatusCode().equals(StatusDeliveryEnum.TAKING_CHARGE.getCode())
+                || item.getStatusCode().equals(StatusDeliveryEnum.NATIONAL_REGISTRY_WAITING.getCode())){
             paperChannelUpdate.setPrepareEvent(PrepareEventMapper.fromResult(item,pnAddress));
             return paperChannelUpdate;
         }

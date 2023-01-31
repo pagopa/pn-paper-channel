@@ -6,11 +6,14 @@ import io.awspring.cloud.messaging.listener.annotation.SqsListener;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
+import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
 import it.pagopa.pn.paperchannel.model.Address;
+import it.pagopa.pn.paperchannel.model.NationalRegistryError;
 import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.paperchannel.msclient.generated.pnnationalregistries.v1.dto.AddressSQSMessageDto;
 import it.pagopa.pn.paperchannel.service.PaperAsyncService;
+import it.pagopa.pn.paperchannel.service.PaperMessagesService;
 import it.pagopa.pn.paperchannel.service.PaperResultAsyncService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.Utility;
@@ -34,6 +37,8 @@ public class QueueListener {
     @Autowired
     private PaperAsyncService paperAsyncService;
     @Autowired
+    private PaperMessagesService paperMessagesService;
+    @Autowired
     private SqsSender sender;
     @Autowired
     private RequestDeliveryDAO requestDeliveryDAO;
@@ -41,21 +46,45 @@ public class QueueListener {
     private PaperResultAsyncService paperResultAsyncService;
     @Autowired
     private ObjectMapper objectMapper;
+
     @SqsListener(value = "${pn.paper-channel.queue-internal}", deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)
     public void pullFromInternalQueue(@Payload String node, @Headers Map<String, Object> headers) {
-        Mono.just(node)
-                .doOnNext(message -> log.info("Do On Next: {}", message))
-                .mapNotNull(json -> Utility.jsonToObject(this.objectMapper, json, PrepareAsyncRequest.class))
-                .switchIfEmpty(Mono.error(new PnGenericException(MAPPER_ERROR, MAPPER_ERROR.getMessage())))
-                .flatMap(prepareRequest -> this.paperAsyncService.prepareAsync(prepareRequest))
-                .doOnSuccess(resultFromAsync -> {
-                    log.info("End of prepare async internal");
-                })
-                .doOnError(throwable -> {
-                    log.error(throwable.getMessage());
-                    throw new PnGenericException(PREPARE_ASYNC_LISTENER_EXCEPTION, PREPARE_ASYNC_LISTENER_EXCEPTION.getMessage());
-                })
-                .block();
+        if (headers.containsKey("eventType") && headers.get("eventType") instanceof String){
+            if (headers.get("eventType").equals(EventTypeEnum.NATIONAL_REGISTRIES_ERROR)) {
+                Mono.just(node)
+                        .doOnNext(message -> log.info("Do On Next: {}", message))
+                        .mapNotNull(json -> Utility.jsonToObject(this.objectMapper, json, NationalRegistryError.class))
+                        .doOnSuccess(nationalRegistryError -> {
+                            log.info("Called national Registries");
+                            this.paperMessagesService.finderAddress(
+                                    nationalRegistryError.getRequestId(),
+                                    nationalRegistryError.getFiscalCode(),
+                                    nationalRegistryError.getReceiverType(),
+                                    nationalRegistryError.getIun()
+                            );
+                        })
+                        .doOnError(throwable -> {
+                            log.error(throwable.getMessage());
+                            throw new PnGenericException(PREPARE_ASYNC_LISTENER_EXCEPTION, PREPARE_ASYNC_LISTENER_EXCEPTION.getMessage());
+                        })
+                        .block();
+            } else if(headers.get("eventType").equals(EventTypeEnum.PREPARE_ASYNC_FLOW)){
+                Mono.just(node)
+                        .doOnNext(message -> log.info("Do On Next: {}", message))
+                        .mapNotNull(json -> Utility.jsonToObject(this.objectMapper, json, PrepareAsyncRequest.class))
+                        .switchIfEmpty(Mono.error(new PnGenericException(MAPPER_ERROR, MAPPER_ERROR.getMessage())))
+                        .flatMap(prepareRequest -> this.paperAsyncService.prepareAsync(prepareRequest))
+                        .doOnSuccess(resultFromAsync -> {
+                            log.info("End of prepare async internal");
+                        })
+                        .doOnError(throwable -> {
+                            log.error(throwable.getMessage());
+                            throw new PnGenericException(PREPARE_ASYNC_LISTENER_EXCEPTION, PREPARE_ASYNC_LISTENER_EXCEPTION.getMessage());
+                        })
+                        .block();
+            }
+        }
+
     }
 
     @SqsListener(value = "${pn.paper-channel.queue-national-registries}", deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)

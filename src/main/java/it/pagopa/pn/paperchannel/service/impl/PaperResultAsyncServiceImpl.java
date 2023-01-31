@@ -1,10 +1,12 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
+import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
 import it.pagopa.pn.paperchannel.mapper.AttachmentMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
+import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.AttachmentDetails;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PaperChannelUpdate;
@@ -26,12 +28,16 @@ import static it.pagopa.pn.paperchannel.validator.SendRequestValidator.comparePr
 
 @Slf4j
 @Service
-public class PaperResultAsyncServiceImpl implements PaperResultAsyncService {
+public class PaperResultAsyncServiceImpl extends BaseService implements PaperResultAsyncService {
 
     @Autowired
     private RequestDeliveryDAO requestDeliveryDAO;
     @Autowired
     private SqsSender sqsSender;
+
+    public PaperResultAsyncServiceImpl(PnAuditLogBuilder auditLogBuilder, RequestDeliveryDAO requestDeliveryDAO, NationalRegistryClient nationalRegistryClient) {
+        super(auditLogBuilder, requestDeliveryDAO, null, nationalRegistryClient);
+    }
 
     @Override
     public Mono<PnDeliveryRequest> resultAsyncBackground(SingleStatusUpdateDto singleStatusUpdateDto) {
@@ -43,6 +49,8 @@ public class PaperResultAsyncServiceImpl implements PaperResultAsyncService {
         return requestDeliveryDAO.getByRequestId(singleStatusUpdateDto.getAnalogMail().getRequestId())
                 .flatMap(entity -> {
                     log.info("GETTED ENTITY: {}", entity.getRequestId());
+                    pnLogAudit.addsReceive(entity.getIun(), String.format("prepare requestId = %s Response from external-channel", entity.getRequestId()),
+                            String.format("prepare requestId = %s Response from external-channel status code %s",  entity.getRequestId(), entity.getStatusCode()));
 
                     return updateEntityResult(singleStatusUpdateDto, entity)
                             .flatMap(updatedEntity -> {
