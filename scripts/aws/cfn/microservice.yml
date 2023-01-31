@@ -163,11 +163,11 @@ Parameters:
     Type: String
     Description: 'Push delivery-push messages to this Queue'
 
-  NationalRegistryGatewayOutputsQueueName:
+  NationalRegistries2PaperChannelQueueName:
     Type: String
     Description: 'Pull nationa-registry messages to this Queue'
 
-  NationalRegistryGatewayOutputsQueueARN:
+  NationalRegistries2PaperChannelQueueARN:
     Type: String
     Description: 'Pull nationa-registry messages to this Queue'
 
@@ -229,9 +229,9 @@ Resources:
         ContainerEnvEntry17: !Sub 'AWS_KMS_REGION=${AWS::Region}'
         ContainerEnvEntry18: !Sub 'PN_PAPERCHANNEL_QUEUEDELIVERYPUSH=${ExternalChannelsOutputsQueueName}'
         ContainerEnvEntry19: !Sub 'PN_PAPERCHANNEL_QUEUEEXTERNALCHANNEL=${ExternalChannels2PaperChannelQueueName}'
-        ContainerEnvEntry20: !Sub 'PN_PAPERCHANNEL_QUEUENATIONALREGISTRIES=${NationalRegistryGatewayOutputsQueueName}'
+        ContainerEnvEntry20: !Sub 'PN_PAPERCHANNEL_QUEUENATIONALREGISTRIES=${NationalRegistries2PaperChannelQueueName}'
         ContainerEnvEntry21: !Sub 'PN_PAPERCHANNEL_QUEUEINTERNAL=${ScheduledRequestsQueueName}'
-        ContainerEnvEntry22: !Sub 'SPRING_CLOUD_FUNCTIONROUTER_QUEUES_LIST=${ExternalChannelsOutputsQueueName},${ExternalChannels2PaperChannelQueueName},${NationalRegistryGatewayOutputsQueueName},${ScheduledRequestsQueueName}'
+        ContainerEnvEntry22: !Sub 'SPRING_CLOUD_FUNCTIONROUTER_QUEUES_LIST=${ExternalChannelsOutputsQueueName},${ExternalChannels2PaperChannelQueueName},${NationalRegistries2PaperChannelQueueName},${ScheduledRequestsQueueName}'
         ContainerEnvEntry23: !Sub 'AWS_BUCKET_NAME=${PaperDeliveryDriversBucketName}'
         MappedPaths: '/paper-channel/*,/paper-channel-private/*'
         ECSClusterName: !Ref ECSClusterName
@@ -273,7 +273,7 @@ Resources:
               - !Ref ExternalChannelsOutputsQueueARN
               - !Ref ExternalChannels2PaperChannelQueueARN
               - !Ref ScheduledRequestsQueueARN
-              - !Ref NationalRegistryGatewayOutputsQueueARN
+              - !Ref NationalRegistries2PaperChannelQueueARN
           - Effect: Allow
             Action:
               - kms:Encrypt
