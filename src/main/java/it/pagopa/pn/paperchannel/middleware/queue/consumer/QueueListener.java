@@ -4,6 +4,7 @@ import io.awspring.cloud.messaging.listener.SqsMessageDeletionPolicy;
 import io.awspring.cloud.messaging.listener.annotation.SqsListener;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
+import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
 import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
 import it.pagopa.pn.paperchannel.middleware.queue.model.InternalEventHeader;
 import it.pagopa.pn.paperchannel.model.ExternalChannelError;
@@ -30,7 +31,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 import static it.pagopa.pn.api.dto.events.GenericEventHeader.PN_EVENT_HEADER_EVENT_TYPE;
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.MAPPER_ERROR;
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 import static it.pagopa.pn.paperchannel.middleware.queue.model.InternalEventHeader.PN_EVENT_HEADER_ATTEMPT;
 import static it.pagopa.pn.paperchannel.middleware.queue.model.InternalEventHeader.PN_EVENT_HEADER_EXPIRED;
 
@@ -45,6 +46,8 @@ public class QueueListener {
     private SqsSender sqsSender;
     @Autowired
     private ObjectMapper objectMapper;
+    @Autowired
+    private PaperRequestErrorDAO paperRequestErrorDAO;
 
     @SqsListener(value = "${pn.paper-channel.queue-internal}", deletionPolicy = SqsMessageDeletionPolicy.ALWAYS)
     public void pullFromInternalQueue(@Payload String node, @Headers Map<String, Object> headers){
@@ -57,7 +60,12 @@ public class QueueListener {
             boolean noAttempt = paperChannelConfig.getAttemptQueueNationalRegistries() != -1 || paperChannelConfig.getAttemptQueueNationalRegistries() < internalEventHeader.getAttempt();
             NationalRegistryError error = convertToObject(node, NationalRegistryError.class);
             execution(error, noAttempt, internalEventHeader.getAttempt(), internalEventHeader.getExpired(), NationalRegistryError.class,
-                    (entityAndAttempt) -> {
+                    entity -> {
+                        paperRequestErrorDAO.created(entity.getRequestId(), "ERROR WITH RETRIEVE ADDRESS", EventTypeEnum.NATIONAL_REGISTRIES_ERROR.name())
+                                .subscribe();
+                        return null;
+                    },
+                    entityAndAttempt -> {
                         this.queueListenerService.nationalRegistriesErrorListener(entityAndAttempt.getFirst(), entityAndAttempt.getSecond());
                         return null;
                     });
@@ -67,7 +75,15 @@ public class QueueListener {
             boolean noAttempt = paperChannelConfig.getAttemptQueueExternalChannel() != -1 || paperChannelConfig.getAttemptQueueExternalChannel() < internalEventHeader.getAttempt();
             ExternalChannelError error = convertToObject(node, ExternalChannelError.class);
             execution(error, noAttempt, internalEventHeader.getAttempt(), internalEventHeader.getExpired(), ExternalChannelError.class,
-                    (entityAndAttempt) -> {
+                    entity -> {
+                        paperRequestErrorDAO.created(
+                                entity.getAnalogMail().getRequestId(),
+                                        EXTERNAL_CHANNEL_LISTENER_EXCEPTION.getMessage(),
+                                        EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name())
+                                .subscribe();
+                        return null;
+                    },
+                    entityAndAttempt -> {
                         SingleStatusUpdateDto dto = new SingleStatusUpdateDto();
                         dto.setAnalogMail(entityAndAttempt.getFirst().getAnalogMail());
                         this.queueListenerService.externalChannelListener(dto, entityAndAttempt.getSecond());
@@ -79,7 +95,15 @@ public class QueueListener {
             boolean noAttempt = paperChannelConfig.getAttemptQueueSafeStorage() != -1 || paperChannelConfig.getAttemptQueueSafeStorage() < internalEventHeader.getAttempt();
             PrepareAsyncRequest error = convertToObject(node, PrepareAsyncRequest.class);
             execution(error, noAttempt, internalEventHeader.getAttempt(), internalEventHeader.getExpired(), PrepareAsyncRequest.class,
-                    (entityAndAttempt) -> {
+                    entity -> {
+                        paperRequestErrorDAO.created(
+                                        entity.getRequestId(),
+                                        DOCUMENT_NOT_DOWNLOADED.getMessage(),
+                                        EventTypeEnum.SAFE_STORAGE_ERROR.name())
+                                .subscribe();
+                        return null;
+                    },
+                    entityAndAttempt -> {
                         this.queueListenerService.internalListener(entityAndAttempt.getFirst(), entityAndAttempt.getSecond());
                         return null;
                     });
@@ -127,8 +151,13 @@ public class QueueListener {
     }
 
     private <T> void execution(T entity, boolean noAttempt, int attempt, Instant expired, Class<T> tClass,
+                               Function<T, Void> traceErrorDB,
                                Function<Pair<T, Integer>, Void> pushQueue){
-        if (noAttempt) return;
+        if (noAttempt) {
+            traceErrorDB.apply(entity);
+            return;
+        }
+
         if (expired.isAfter(Instant.now())){
             Mono.delay(Duration.ofMillis(1)).publishOn(Schedulers.boundedElastic())
                     .map(i -> {
