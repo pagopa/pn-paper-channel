@@ -8,7 +8,6 @@ import it.pagopa.pn.paperchannel.service.PaperAsyncService;
 import it.pagopa.pn.paperchannel.service.PaperResultAsyncService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -116,7 +115,7 @@ class QueueListenerTest extends BaseTest {
     @Test
     void pullExternalChannelOkTest(){
         String json = "{\"digitalCourtesy\": null, \"digitalLegal\": null, \"analogMail\": { \"requestId\": \"AKUZ-AWPL-LTPX-20230415\", \"registeredLetterCode\": null, \"productType\": \"AR\", \"iun\": \"AKUZ-AWPL-LTPX-20230415\", \"statusCode\": \"002\", \"statusDescription\": \"Mock status\", \"statusDateTime\": \"2023-01-12T14:35:35.135725152Z\", \"deliveryFailureCause\": null, \"attachments\": null, \"discoveredAddress\": null, \"clientRequestTimeStamp\": \"2023-01-12T14:35:35.13572075Z\"}}";
-        Mockito.when(paperResultAsyncService.resultAsyncBackground(Mockito.any())).thenReturn(Mono.just(new PnDeliveryRequest()));
+        Mockito.when(paperResultAsyncService.resultAsyncBackground(Mockito.any(), 0)).thenReturn(Mono.just(new PnDeliveryRequest()));
         queueListener.pullExternalChannel(json, new HashMap<>());
         assertTrue(true);
     }

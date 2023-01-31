@@ -5,7 +5,6 @@ import it.pagopa.pn.api.dto.events.AbstractSqsMomProducer;
 import it.pagopa.pn.paperchannel.middleware.queue.model.DeliveryPushEvent;
 import lombok.extern.slf4j.Slf4j;
 import software.amazon.awssdk.services.sqs.SqsClient;
-
 @Slf4j
 public class DeliveryPushMomProducer extends AbstractSqsMomProducer<DeliveryPushEvent> {
 

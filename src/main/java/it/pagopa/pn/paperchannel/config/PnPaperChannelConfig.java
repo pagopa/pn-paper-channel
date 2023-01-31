@@ -25,5 +25,10 @@ public class PnPaperChannelConfig {
     private String queueNationalRegistries;
     private String queueExternalChannel;
     private String queueInternal;
+    private Integer attemptSafeStorage;
+    private Integer attemptQueueSafeStorage;
+    private Integer attemptQueueExternalChannel;
+    private Integer attemptQueueNationalRegistries;
+
 
 }

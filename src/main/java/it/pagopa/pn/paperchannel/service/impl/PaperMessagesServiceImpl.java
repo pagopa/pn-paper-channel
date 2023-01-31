@@ -45,12 +45,11 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
 
     @Autowired
     private ExternalChannelClient externalChannelClient;
-    @Autowired
-    private SqsSender sqsSender;
 
     public PaperMessagesServiceImpl(PnAuditLogBuilder auditLogBuilder, NationalRegistryClient nationalRegistryClient,
-                                    RequestDeliveryDAO requestDeliveryDAO, CostDAO costDAO) {
-        super(auditLogBuilder, requestDeliveryDAO, costDAO, nationalRegistryClient);
+                                    RequestDeliveryDAO requestDeliveryDAO, SqsSender sqsSender, CostDAO costDAO) {
+
+        super(auditLogBuilder, requestDeliveryDAO, costDAO, nationalRegistryClient, sqsSender);
     }
 
     @Override
@@ -119,7 +118,7 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                     })
                     .switchIfEmpty(Mono.defer(() -> saveRequestAndAddress(prepareRequest, prepareRequest.getReceiverAddress())
                             .flatMap(response -> {
-                                PrepareAsyncRequest request = new PrepareAsyncRequest(requestId, null, null, true);
+                                PrepareAsyncRequest request = new PrepareAsyncRequest(requestId, null, null, false, 0);
                                 this.sqsSender.pushToInternalQueue(request);
                                 throw new PnPaperEventException(PreparePaperResponseMapper.fromEvent(prepareRequest.getRequestId()));
                             }))
@@ -149,7 +148,11 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                                         log.info("Start call national");
                                         pnLogAudit.addsBeforeResolveService(response.getIun(), String.format("prepare requestId = %s, relatedRequestId=%s, trace_id = %s Request to National Registry service", requestId, prepareRequest.getRelatedRequestId(), MDC.get(MDC_TRACE_ID_KEY)));
 
-                                        this.finderAddressFromNationalRegistries(response.getRequestId(), response.getFiscalCode(), response.getReceiverType(), response.getIun());
+                                        this.finderAddressFromNationalRegistries(
+                                                response.getRequestId(),
+                                                response.getFiscalCode(),
+                                                response.getReceiverType(),
+                                                response.getIun(), 0);
                                         throw new PnPaperEventException(PreparePaperResponseMapper.fromEvent(prepareRequest.getRequestId()));
                                     })
                             ));
@@ -178,8 +181,8 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
     }
 
     @Override
-    public void finderAddress(String requestId, String fiscalCode, String receiverType, String iun) {
-        this.finderAddressFromNationalRegistries(requestId, fiscalCode, receiverType, iun);
+    public void finderAddress(String requestId, String fiscalCode, String receiverType, String iun, Integer attempt) {
+        this.finderAddressFromNationalRegistries(requestId, fiscalCode, receiverType, iun, attempt);
     }
 
     private Mono<PnDeliveryRequest> saveRequestAndAddress(PrepareRequest prepareRequest, AnalogAddress address){

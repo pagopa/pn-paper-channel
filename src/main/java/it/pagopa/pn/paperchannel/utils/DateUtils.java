@@ -1,11 +1,13 @@
 package it.pagopa.pn.paperchannel.utils;
 
+import io.swagger.v3.oas.models.security.SecurityScheme;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.util.Pair;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.BADLY_FILTER_REQUEST;
@@ -31,7 +33,10 @@ public class DateUtils {
         LocalDateTime localDate = LocalDateTime.parse(date, formatter);
         ZonedDateTime time = localDate.atZone(italianZoneId);
         return Date.from(time.toInstant());
+    }
 
+    public static Instant parseStringTOInstant(String date) {
+        return Instant.parse(date);
     }
 
     public static Long getTimeStampOfMills(LocalDateTime time){
@@ -64,6 +69,12 @@ public class DateUtils {
         }
 
         return Pair.of(start, end);
+    }
+
+    public static Instant addedTime(Integer first, Integer second){
+        Instant now = Instant.now();
+        int tot = first * second;
+        return now.plus(tot, ChronoUnit.MINUTES);
     }
 
 }
