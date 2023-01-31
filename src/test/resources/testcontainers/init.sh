@@ -171,4 +171,41 @@ aws  --profile default --region us-east-1 --endpoint-url=http://localstack:4566 
     --table-name DeliveryFileDynamoTable  \
     --item '{"uuid": {"S": "12345" }, "status": {"S": "UPLOADING"}, "url": {"S": "www.abcd.it"}}'
 
+aws  --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
+    dynamodb put-item \
+    --table-name DeliveryDriverDynamoTable  \
+    --item '{"uniqueCode": {"S": "CXJ564" }, "tenderCode": {"S": "GARA-2022"},  "denomination": {"S": "GLS"}, "taxId": {"S": "1234957483"}, "phoneNumber": {"S": "351543654"}, "fsu": {"BOOL": false}, "author":{"S": "PN-PAPER-CHANNEL"}, "startDate": {"S": "2023-01-22T10:15:30Z"}}'
+
+
+aws  --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
+    dynamodb put-item \
+    --table-name DeliveryDriverDynamoTable  \
+    --item '{"uniqueCode": {"S": "CXJ664" }, "tenderCode": {"S": "GARA-2022"},  "denomination": {"S": "NEXIVE"}, "taxId": {"S": "12312434324"}, "phoneNumber": {"S": "23432432234"}, "fsu": {"BOOL": false}, "author":{"S": "PN-PAPER-CHANNEL"}, "startDate": {"S": "2023-01-22T10:15:30Z"}}'
+
+
+aws  --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
+    dynamodb put-item \
+    --table-name DeliveryDriverDynamoTable  \
+    --item '{"uniqueCode": {"S": "LOP3222" }, "tenderCode": {"S": "GARA-2022"},  "denomination": {"S": "BRT"}, "taxId": {"S": "21432432342"}, "phoneNumber": {"S": "32423455322"}, "fsu": {"BOOL": false}, "author":{"S": "PN-PAPER-CHANNEL"}, "startDate": {"S": "2023-01-22T10:15:30Z"}}'
+
+aws  --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
+    dynamodb put-item \
+    --table-name CostDynamoTable \
+    --item '{"idDeliveryDriver": {"S": "LOP3222"}, "tenderCode": {"S": "GARA-2022"}, "uuid": {"S": "abc12345"}, "cap": {"S": "99999"}, "productType": {"S": "AR"}, "basePrice":{"S": "30.00"}, "pagePrice": {"S": "10.00"}}'
+
+aws  --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
+    dynamodb put-item \
+    --table-name CostDynamoTable \
+    --item '{"idDeliveryDriver": {"S": "LOP3222"}, "tenderCode": {"S": "GARA-2022"}, "uuid": {"S": "abc6789"}, "zone": {"S": "ZONE_1"}, "productType": {"S": "AR"}, "basePrice":{"S": "5.00"}, "pagePrice": {"S": "1.00"}}'
+
+aws  --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
+    dynamodb put-item \
+    --table-name ZoneDynamoTable  \
+    --item '{"zone": {"S": "ZONE_1" }, "countryEn": {"S": "Albania"}, "countryIt": {"S": "Albania"}}'
+
+aws  --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
+    dynamodb put-item \
+    --table-name ZoneDynamoTable  \
+    --item '{"zone": {"S": "ZONE_1" }, "countryEn": {"S": "Andorra"}, "countryIt": {"S": "Andorra"}}'
+
 echo "Initialization terminated"

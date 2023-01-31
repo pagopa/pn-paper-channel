@@ -12,6 +12,7 @@ import reactor.core.publisher.Mono;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.time.Instant;
 import java.util.Date;
@@ -19,13 +20,10 @@ import java.util.UUID;
 
 @Slf4j
 public class S3BucketImpl implements S3Bucket {
-
-    private String PREFIX_URL = "tender-";
-    private String XSLS_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+    private static final String XSLS_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
     private final AmazonS3 s3Client;
     private final AwsBucketProperties awsBucketProperties;
-    private GeneratePresignedUrlRequest generatePresignedUrlRequest;
 
     public S3BucketImpl(AmazonS3 s3Client, AwsBucketProperties awsBucketProperties) {
         this.s3Client = s3Client;
@@ -36,7 +34,7 @@ public class S3BucketImpl implements S3Bucket {
     public Mono<PresignedUrlResponseDto> presignedUrl() {
         String uuid = UUID.randomUUID().toString();
         String fileName = PREFIX_URL.concat(uuid);
-        generatePresignedUrlRequest = new GeneratePresignedUrlRequest(this.awsBucketProperties.getName(), fileName)
+        GeneratePresignedUrlRequest generatePresignedUrlRequest = new GeneratePresignedUrlRequest(this.awsBucketProperties.getName(), fileName)
                 .withMethod(HttpMethod.PUT)
                 .withExpiration(this.getExpirationDate());
         URL url = s3Client.generatePresignedUrl(generatePresignedUrlRequest);
@@ -56,7 +54,7 @@ public class S3BucketImpl implements S3Bucket {
             request.setMetadata(metadata);
             s3Client.putObject(request);
         } catch (Exception e) {
-            log.error("Error in upload object in s3", e.getMessage());
+            log.error("Error in upload object in s3 {}", e.getMessage());
         }
         return Mono.just(file);
     }
@@ -68,10 +66,18 @@ public class S3BucketImpl implements S3Bucket {
             try {
                 data = fullObject.getObjectContent().readAllBytes();
             } catch (IOException ioException) {
-                log.error("getObjectData ", ioException.getMessage());
+                log.error("getObjectData {}", ioException.getMessage());
             }
         }
         return data;
+    }
+
+    public InputStream getFileInputStream(String filename) {
+        S3Object fullObject = s3Client.getObject(new GetObjectRequest(this.awsBucketProperties.getName(), filename));
+        if (fullObject != null) {
+            return fullObject.getObjectContent().getDelegateStream();
+        }
+        return null;
     }
 
     private Date getExpirationDate() {

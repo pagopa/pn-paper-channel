@@ -10,6 +10,7 @@ import it.pagopa.pn.paperchannel.mapper.AddressMapper;
 import it.pagopa.pn.paperchannel.mapper.AttachmentMapper;
 import it.pagopa.pn.paperchannel.mapper.PrepareEventMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
@@ -53,8 +54,8 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
     private SqsSender sqsQueueSender;
 
     public PrepareAsyncServiceImpl(PnAuditLogBuilder auditLogBuilder, NationalRegistryClient nationalRegistryClient,
-                                   RequestDeliveryDAO requestDeliveryDAO) {
-        super(auditLogBuilder, requestDeliveryDAO, nationalRegistryClient);
+                                   RequestDeliveryDAO requestDeliveryDAO, CostDAO costDAO) {
+        super(auditLogBuilder, requestDeliveryDAO, costDAO, nationalRegistryClient);
     }
 
     @Override
@@ -89,7 +90,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                     }
 
                     if (pnDeliveryRequest.getProductType() == null ) {
-                        setLetterCode(correctAddress, pnDeliveryRequest);
+                        pnDeliveryRequest.setProductType(getProposalProductType(correctAddress, pnDeliveryRequest.getProposalProductType()));
                     }
 
                     pnDeliveryRequest.setStatusCode(StatusDeliveryEnum.TAKING_CHARGE.getCode());
@@ -136,33 +137,6 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
             default : return StatusDeliveryEnum.PAPER_CHANNEL_DEFAULT_ERROR;
         }
 
-    }
-
-    private void setLetterCode(Address address, PnDeliveryRequest deliveryRequest){
-        //nazionale
-        if(StringUtils.isNotBlank(address.getCap())){
-            if(deliveryRequest.getProposalProductType().equals(RACCOMANDATA_SEMPLICE)){
-                deliveryRequest.setProductType(ProductTypeEnum.RN_RS.getValue());
-            }
-            if(deliveryRequest.getProposalProductType().equals(RACCOMANDATA_890)){
-                deliveryRequest.setProductType(ProductTypeEnum.RN_890.getValue());
-            }
-            if(deliveryRequest.getProposalProductType().equals(RACCOMANDATA_AR)){
-                deliveryRequest.setProductType(ProductTypeEnum.RN_AR.getValue());
-            }
-        }
-        //internazionale
-        else{
-            if(deliveryRequest.getProposalProductType().equals(RACCOMANDATA_SEMPLICE)){
-                deliveryRequest.setProductType(ProductTypeEnum.RI_RS.getValue());
-            }
-            if(deliveryRequest.getProposalProductType().equals(RACCOMANDATA_890)){
-                deliveryRequest.setProductType(ProductTypeEnum.RI_AR.getValue());
-            }
-            if(deliveryRequest.getProposalProductType().equals(RACCOMANDATA_AR)){
-                deliveryRequest.setProductType(ProductTypeEnum.RI_AR.getValue());
-            }
-        }
     }
 
     public void updateStatus (String requestId, String correlationId, StatusDeliveryEnum status ){

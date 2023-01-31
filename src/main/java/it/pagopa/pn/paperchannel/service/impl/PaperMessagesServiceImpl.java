@@ -5,6 +5,7 @@ import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.exception.PnPaperEventException;
 import it.pagopa.pn.paperchannel.mapper.*;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
@@ -48,8 +49,8 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
     private SqsSender sqsSender;
 
     public PaperMessagesServiceImpl(PnAuditLogBuilder auditLogBuilder, NationalRegistryClient nationalRegistryClient,
-                                    RequestDeliveryDAO requestDeliveryDAO) {
-        super(auditLogBuilder, requestDeliveryDAO, nationalRegistryClient);
+                                    RequestDeliveryDAO requestDeliveryDAO, CostDAO costDAO) {
+        super(auditLogBuilder, requestDeliveryDAO, costDAO, nationalRegistryClient);
     }
 
     @Override
@@ -174,6 +175,11 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                 })
                 .map(entityAndAddress -> SendEventMapper.fromResult(entityAndAddress.getT1(),entityAndAddress.getT2()))
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)));
+    }
+
+    @Override
+    public void finderAddress(String requestId, String fiscalCode, String receiverType, String iun) {
+        this.finderAddressFromNationalRegistries(requestId, fiscalCode, receiverType, iun);
     }
 
     private Mono<PnDeliveryRequest> saveRequestAndAddress(PrepareRequest prepareRequest, AnalogAddress address){
