@@ -350,7 +350,7 @@ Resources:
         - AttributeName: "created"
           AttributeType: "S"
       KeySchema:
-        - AttributeName: "uuid"
+        - AttributeName: "requestId"
           KeyType: "HASH"
         - AttributeName: "created"
           KeyType: "RANGE"
