@@ -340,6 +340,28 @@ Resources:
       StreamSpecification:
         StreamViewType: NEW_IMAGE
 
+  PaperRequestErrorDynamoTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${ProjectName}-PaperRequestError'
+      AttributeDefinitions:
+        - AttributeName: "requestId"
+          AttributeType: "S"
+        - AttributeName: "created"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "uuid"
+          KeyType: "HASH"
+        - AttributeName: "created"
+          KeyType: "RANGE"
+      ProvisionedThroughput:
+        ReadCapacityUnits: "5"
+        WriteCapacityUnits: "5"
+      KinesisStreamSpecification:
+        StreamArn: !Ref CdcKinesisSourceStreamArn
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+
 Outputs:
   PaperDeliveryDriversBucketName:
     Description: Name of s3 bucket
@@ -367,6 +389,14 @@ Outputs:
   RequestDeliveryDynamoTableArn:
     Description: ARN of dynamodb table containing request
     Value: !Sub '${RequestDeliveryDynamoTable.Arn}'
+
+  PaperRequestErrorTableName:
+    Description: Name of dynamodb table containing request error
+    Value: !Ref PaperRequestErrorDynamoTable
+
+  PaperRequestErrorTableARN:
+    Description: ARN of dynamodb table containing request error
+    Value: !Sub '${PaperRequestErrorDynamoTable.Arn}'
 
   DeliveryFileDynamoTableName:
     Description: Name of dynamodb table containing file request

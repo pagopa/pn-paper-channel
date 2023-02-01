@@ -122,12 +122,12 @@ aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     --attribute-definitions \
         AttributeName=idDeliveryDriver,AttributeType=S \
         AttributeName=uuid,AttributeType=S \
-		AttributeName=cap,AttributeType=S \
-		AttributeName=zone,AttributeType=S \
-		AttributeName=tenderCode,AttributeType=S \
+		    AttributeName=cap,AttributeType=S \
+		    AttributeName=zone,AttributeType=S \
+		    AttributeName=tenderCode,AttributeType=S \
     --key-schema \
         AttributeName=idDeliveryDriver,KeyType=HASH \
-		AttributeName=uuid,KeyType=SORT \
+		    AttributeName=uuid,KeyType=SORT \
     --provisioned-throughput \
         ReadCapacityUnits=5,WriteCapacityUnits=5 \
     --global-secondary-indexes \
@@ -167,6 +167,18 @@ aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
         }
 
     ]"
+
+aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
+    dynamodb create-table \
+    --table-name PaperRequestErrorDynamoTable  \
+    --attribute-definitions \
+        AttributeName=requestId,AttributeType=S \
+        AttributeName=created,AttributeType=S \
+    --key-schema \
+        AttributeName=requestId,KeyType=HASH \
+        AttributeName=created,KeyType=RANGE \
+    --provisioned-throughput \
+        ReadCapacityUnits=10,WriteCapacityUnits=5
 
 aws  --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     dynamodb put-item \
