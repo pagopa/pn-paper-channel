@@ -8,6 +8,7 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.common.BaseDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.TransactWriterInitializer;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnPaperCost;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnPaperDeliveryDriver;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnPaperTender;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Repository;
@@ -31,6 +32,8 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.COST_NOT_FOU
 public class CostDAOImpl extends BaseDAO<PnPaperCost> implements CostDAO {
 
     private final DynamoDbAsyncTable<PnPaperDeliveryDriver> deliveryDriverTable;
+    private final DynamoDbAsyncTable<PnPaperTender> tenderTable;
+
     private final TransactWriterInitializer transactWriterInitializer;
 
     public CostDAOImpl(KmsEncryption kmsEncryption,
@@ -41,17 +44,22 @@ public class CostDAOImpl extends BaseDAO<PnPaperCost> implements CostDAO {
                 awsPropertiesConfig.getDynamodbCostTable(), PnPaperCost.class);
         this.deliveryDriverTable = dynamoDbEnhancedAsyncClient.table(awsPropertiesConfig.getDynamodbDeliveryDriverTable(), TableSchema.fromBean(PnPaperDeliveryDriver.class));
         this.transactWriterInitializer = transactWriterInitializer;
+        this.tenderTable = dynamoDbEnhancedAsyncClient.table(awsPropertiesConfig.getDynamodbTenderTable(), TableSchema.fromBean(PnPaperTender.class));
     }
 
-    public Mono<PnPaperDeliveryDriver> createNewContract(PnPaperDeliveryDriver pnDeliveryDriver, List<PnPaperCost> pnListCosts) {
+    public Mono<PnPaperTender> createNewContract(Map<PnPaperDeliveryDriver, List<PnPaperCost>> deliveriesAndCost, PnPaperTender tender) {
         this.transactWriterInitializer.init();
-        if (pnDeliveryDriver != null) {
-            pnDeliveryDriver.setStartDate(Instant.now());
-            transactWriterInitializer.addRequestTransaction(deliveryDriverTable, pnDeliveryDriver, PnPaperDeliveryDriver.class);
-        }
-        pnListCosts.forEach(cost -> transactWriterInitializer.addRequestTransaction(this.dynamoTable, cost, PnPaperCost.class));
-        return Mono.fromFuture(putWithTransact(transactWriterInitializer.build()).thenApply(item -> pnDeliveryDriver));
+        transactWriterInitializer.addRequestTransaction(tenderTable, tender, PnPaperTender.class);
+        List<PnPaperDeliveryDriver> deliveries = deliveriesAndCost.keySet().stream().toList();
+        deliveries.forEach(delivery -> {
+            delivery.setStartDate(Instant.now());
+            delivery.setAuthor("PN-PAPER-CHANNEL");
+            transactWriterInitializer.addRequestTransaction(deliveryDriverTable, delivery, PnPaperDeliveryDriver.class);
+            List<PnPaperCost> costs = deliveriesAndCost.get(delivery);
+            costs.forEach(cost -> transactWriterInitializer.addRequestTransaction(this.dynamoTable, cost, PnPaperCost.class));
+        });
 
+        return Mono.fromFuture(putWithTransact(transactWriterInitializer.build()).thenApply(item -> tender));
     }
 
     @Override

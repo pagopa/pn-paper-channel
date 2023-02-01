@@ -28,7 +28,7 @@ public class PnPaperTender {
     public String tenderCode;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_DATE)}))
-    public String date;
+    public Instant date;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_DESCRIPTION)}))
     public String description;
@@ -43,6 +43,6 @@ public class PnPaperTender {
     public Instant startDate;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_END_DATE)}))
-    public String endDate;
+    public Instant endDate;
 
 }

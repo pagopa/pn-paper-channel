@@ -36,13 +36,13 @@ public class Utility {
         }
     }
 
-    private static boolean isValidFromRegex(String value, String regex){
+    public static boolean isValidFromRegex(String value, String regex){
         Pattern p = Pattern.compile(regex);
         Matcher m = p.matcher(value);
         return m.find() && m.group().equals(value);
     }
 
-    public static Boolean splitCap(String capList) {
+    public static Boolean isValidCap(String capList) {
         String regex = "(\\d{5})(-\\d{5})?+";
         if (!isValidFromRegex(capList,regex)){
             return false;
