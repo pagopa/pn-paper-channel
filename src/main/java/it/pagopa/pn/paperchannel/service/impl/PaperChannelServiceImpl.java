@@ -16,6 +16,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnTender;
 import it.pagopa.pn.paperchannel.rest.v1.dto.*;
 import it.pagopa.pn.paperchannel.s3.S3Bucket;
 import it.pagopa.pn.paperchannel.service.PaperChannelService;
+import it.pagopa.pn.paperchannel.utils.Const;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -125,7 +126,7 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                     tender.setDate(Instant.now());
                     tender.setEndDate(uploadRequestDto.getTender().getEndDate().toInstant());
                     tender.setStartDate(uploadRequestDto.getTender().getStartDate().toInstant());
-                    tender.setAuthor("PN-PAPER-CHANNEL");
+                    tender.setAuthor(Const.PN_PAPER_CHANNEL);
                     tender.setDescription(uploadRequestDto.getTender().getName());
                     Map<PnDeliveryDriver, List<PnCost>> map = DeliveryDriverMapper.toEntityFromExcel(deliveriesData, tenderCode);
                     return this.costDAO.createNewContract(map,tender);
@@ -161,7 +162,8 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                     // save item and delete file
                     return fileDownloadDAO.create(entityAndFile.getT2())
                             .map(file -> {
-                                entityAndFile.getT1().delete();
+                                boolean delete = entityAndFile.getT1().delete();
+                                log.debug("Deleted file "+delete);
                                 return FileMapper.toDownloadFile(entityAndFile.getT2(), s3Bucket.getObjectData(entityAndFile.getT2().getFilename()));
                             });
                 })

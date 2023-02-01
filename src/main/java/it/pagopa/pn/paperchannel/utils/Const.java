@@ -2,6 +2,7 @@ package it.pagopa.pn.paperchannel.utils;
 
 public class Const {
 
+    public static final String PN_PAPER_CHANNEL = "PN-PAPER-CHANNEL";
     public static final String PN_AAR = "PN_AAR";
     public static final String RACCOMANDATA_SEMPLICE = "RS";
     public static final String RACCOMANDATA_890 = "890";
