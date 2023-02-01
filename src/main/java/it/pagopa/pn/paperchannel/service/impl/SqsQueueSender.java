@@ -29,10 +29,13 @@ import static it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum.*;
 @Slf4j
 public class SqsQueueSender implements SqsSender {
 
+    private static final String PUBLISHER_UPDATE = "paper-channel-update";
+    private static final String PUBLISHER_PREPARE = "paper-channel-prepare";
+
     @Autowired
     private DeliveryPushMomProducer deliveryPushMomProducer;
-     @Autowired
-     private InternalQueueMomProducer internalQueueMomProducer;
+    @Autowired
+    private InternalQueueMomProducer internalQueueMomProducer;
 
     @Override
     public void pushSendEvent(SendEvent event) {
@@ -47,7 +50,7 @@ public class SqsQueueSender implements SqsSender {
     private void push(SendEvent sendEvent, PrepareEvent prepareEvent){
         log.info("Push event to queue {}", (sendEvent != null ? sendEvent.getRequestId() : prepareEvent.getRequestId()));
         GenericEventHeader deliveryHeader= GenericEventHeader.builder()
-                .publisher("paper-channel-update")
+                .publisher(PUBLISHER_UPDATE)
                 .eventId(UUID.randomUUID().toString())
                 .createdAt(Instant.now())
                 .eventType((sendEvent == null) ? EventTypeEnum.PREPARE_ANALOG_RESPONSE.name(): EventTypeEnum.SEND_ANALOG_RESPONSE.name())
@@ -66,7 +69,7 @@ public class SqsQueueSender implements SqsSender {
     @Override
     public void pushToInternalQueue(PrepareAsyncRequest prepareAsyncRequest){
         InternalEventHeader prepareHeader= InternalEventHeader.builder()
-                .publisher("paper-channel-prepare")
+                .publisher(PUBLISHER_PREPARE)
                 .eventId(UUID.randomUUID().toString())
                 .createdAt(Instant.now())
                 .eventType(EventTypeEnum.PREPARE_ASYNC_FLOW.name())
@@ -83,7 +86,7 @@ public class SqsQueueSender implements SqsSender {
         EventTypeEnum eventTypeEnum = getTypeEnum(tClass);
         if (eventTypeEnum == null) return;
         InternalEventHeader prepareHeader= InternalEventHeader.builder()
-                .publisher("paper-channel-prepare")
+                .publisher(PUBLISHER_PREPARE)
                 .eventId(UUID.randomUUID().toString())
                 .createdAt(Instant.now())
                 .attempt(attempt+1)
@@ -98,7 +101,7 @@ public class SqsQueueSender implements SqsSender {
         EventTypeEnum eventTypeEnum = getTypeEnum(tClass);
         if (eventTypeEnum == null) return;
         InternalEventHeader prepareHeader= InternalEventHeader.builder()
-                .publisher("paper-channel-prepare")
+                .publisher(PUBLISHER_PREPARE)
                 .eventId(UUID.randomUUID().toString())
                 .createdAt(Instant.now())
                 .attempt(attempt)
