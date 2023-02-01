@@ -21,6 +21,7 @@ public class RequestDeliveryMapper {
         entity.setStatusCode(StatusDeliveryEnum.IN_PROCESSING.getCode());
         entity.setStatusDetail(StatusDeliveryEnum.IN_PROCESSING.getDescription());
         entity.setIun(request.getIun());
+        entity.setRelatedRequestId(request.getRelatedRequestId());
 
         entity.setStatusDate(DateUtils.formatDate(new Date()));
         entity.setFiscalCode(request.getReceiverFiscalCode());

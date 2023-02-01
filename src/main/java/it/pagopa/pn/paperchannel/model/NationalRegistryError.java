@@ -13,4 +13,5 @@ public class NationalRegistryError {
     private String iun;
 
 
+
 }

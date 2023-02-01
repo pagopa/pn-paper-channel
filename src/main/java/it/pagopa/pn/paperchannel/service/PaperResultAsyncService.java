@@ -5,5 +5,5 @@ import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.SingleSt
 import reactor.core.publisher.Mono;
 
 public interface PaperResultAsyncService {
-    Mono<PnDeliveryRequest> resultAsyncBackground(SingleStatusUpdateDto singleStatusUpdateDto);
+    Mono<PnDeliveryRequest> resultAsyncBackground(SingleStatusUpdateDto singleStatusUpdateDto, Integer attempt);
 }

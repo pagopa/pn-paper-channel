@@ -7,6 +7,7 @@ public enum StatusDeliveryEnum {
     IN_PROCESSING("PC000", "In elaborazione"),
     TAKING_CHARGE("PC001","Presa in carico"),
     NATIONAL_REGISTRY_WAITING("PC002", "In attesa di indirizzo da National Registry"),
+    NATIONAL_REGISTRY_ERROR("PC005", "Errore con il recupero indirizzo da National Registry"),
     READY_TO_SEND("PC003","Pronto per l'invio"),
     UNTRACEABLE("PC010", "Irreperibile totale"),
     PRINTED("001", "Stampato"),
@@ -20,6 +21,8 @@ public enum StatusDeliveryEnum {
     IN_STOCK("009", "Compiuta giacenza"),
     PAPER_CHANNEL_NEW_REQUEST("PC001", "Paper channel nuova richiesta invio cartaceo, a valle di un fallimento temporaneo"),
     PAPER_CHANNEL_DEFAULT_ERROR("PC011", "Notifica in errore"),
+    PAPER_CHANNEL_ASYNC_ERROR("PC012", "Errore nella fase di prepare"),
+    SAFE_STORAGE_IN_ERROR("PC013", "Errore durante il recupero degli allegati"),
 
     ;
 

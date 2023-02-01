@@ -3,6 +3,7 @@ package it.pagopa.pn.paperchannel.service.impl;
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.commons.log.PnAuditLogEventType;
 import it.pagopa.pn.paperchannel.config.HttpConnector;
+import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.exception.PnRetryStorageException;
@@ -20,7 +21,6 @@ import it.pagopa.pn.paperchannel.model.AttachmentInfo;
 import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.msclient.generated.pnsafestorage.v1.dto.FileDownloadResponseDto;
-import it.pagopa.pn.paperchannel.rest.v1.dto.ProductTypeEnum;
 import it.pagopa.pn.paperchannel.rest.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.service.PaperAsyncService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
@@ -37,10 +37,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.Date;
-import java.util.stream.Collectors;
-
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
-import static it.pagopa.pn.paperchannel.utils.Const.*;
 
 @Slf4j
 @Service
@@ -51,11 +48,12 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
     @Autowired
     private AddressDAO addressDAO;
     @Autowired
-    private SqsSender sqsQueueSender;
+    private PnPaperChannelConfig paperChannelConfig;
 
     public PrepareAsyncServiceImpl(PnAuditLogBuilder auditLogBuilder, NationalRegistryClient nationalRegistryClient,
-                                   RequestDeliveryDAO requestDeliveryDAO, CostDAO costDAO) {
-        super(auditLogBuilder, requestDeliveryDAO, costDAO, nationalRegistryClient);
+                                   RequestDeliveryDAO requestDeliveryDAO,SqsSender sqsQueueSender, CostDAO costDAO ) {
+
+        super(auditLogBuilder, requestDeliveryDAO, costDAO, nationalRegistryClient, sqsQueueSender);
     }
 
     @Override
@@ -99,7 +97,9 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                     return Tuples.of(pnDeliveryRequest, correctAddress);
                 })
 
-                .zipWhen(deliveryRequestAndAddress -> getAttachmentsInfo(deliveryRequestAndAddress.getT1()).map(newModel -> newModel)
+                .zipWhen(deliveryRequestAndAddress ->
+                                getAttachmentsInfo(deliveryRequestAndAddress.getT1(), request)
+                                        .map(newModel -> newModel)
                         //Ritorno la tupla composta dall'indirizzo e il risultato ottentuto da attachment info
                         ,(input, output) -> Tuples.of(output, input.getT2())
                 )
@@ -116,43 +116,45 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                 .flatMap(deliveryRequestAndAddress -> {
                     PnDeliveryRequest pnDeliveryRequest = deliveryRequestAndAddress.getT1();
                     Address address = deliveryRequestAndAddress.getT2();
-                    this.sqsQueueSender.pushPrepareEvent(PrepareEventMapper.toPrepareEvent(pnDeliveryRequest, address, StatusCodeEnum.OK));
+                    this.sqsSender.pushPrepareEvent(PrepareEventMapper.toPrepareEvent(pnDeliveryRequest, address, StatusCodeEnum.OK));
 
                     return this.requestDeliveryDAO.updateData(pnDeliveryRequest);
                 })
                 .onErrorResume(ex -> {
                     log.error("on Error : {}", ex.getMessage());
-                    StatusDeliveryEnum statusDeliveryEnum = StatusDeliveryEnum.PAPER_CHANNEL_DEFAULT_ERROR;
+                    StatusDeliveryEnum statusDeliveryEnum = StatusDeliveryEnum.PAPER_CHANNEL_ASYNC_ERROR;
                     if(ex instanceof PnGenericException) {
-                        statusDeliveryEnum=mapper(((PnGenericException) ex).getExceptionType()) ;
+                        statusDeliveryEnum = mapper(((PnGenericException) ex).getExceptionType()) ;
                     }
-                    updateStatus(requestId, correlationId, statusDeliveryEnum);
-                    return Mono.error(ex);
+                    return updateStatus(requestId, correlationId, statusDeliveryEnum)
+                            .flatMap(entity -> Mono.error(ex));
                 });
     }
 
     private StatusDeliveryEnum mapper(ExceptionTypeEnum ex){
-        switch (ex){
-            case UNTRACEABLE_ADDRESS : return StatusDeliveryEnum.UNTRACEABLE;
-            default : return StatusDeliveryEnum.PAPER_CHANNEL_DEFAULT_ERROR;
-        }
+        return switch (ex) {
+            case UNTRACEABLE_ADDRESS -> StatusDeliveryEnum.UNTRACEABLE;
+            case DOCUMENT_NOT_DOWNLOADED -> StatusDeliveryEnum.SAFE_STORAGE_IN_ERROR;
+            case DOCUMENT_URL_NOT_FOUND -> StatusDeliveryEnum.SAFE_STORAGE_IN_ERROR;
+            default -> StatusDeliveryEnum.PAPER_CHANNEL_DEFAULT_ERROR;
+        };
 
     }
 
-    public void updateStatus (String requestId, String correlationId, StatusDeliveryEnum status ){
+    public Mono<PnDeliveryRequest> updateStatus(String requestId, String correlationId, StatusDeliveryEnum status ){
         Mono<PnDeliveryRequest> pnDeliveryRequest;
         if (StringUtils.isNotEmpty(requestId) && !StringUtils.isNotEmpty(correlationId) ){
             pnDeliveryRequest= this.requestDeliveryDAO.getByRequestId(requestId);
         }else{
             pnDeliveryRequest= this.requestDeliveryDAO.getByCorrelationId(correlationId);
         }
-        pnDeliveryRequest.map(
+        return pnDeliveryRequest.flatMap(
                 entity -> {
                     entity.setStatusCode(status.getCode());
                     entity.setStatusDetail(status.getDescription());
                     entity.setStatusDate(DateUtils.formatDate(new Date()));
                     return this.requestDeliveryDAO.updateData(entity);
-                }).block();
+                });
     }
 
     private Address setCorrectAddress(String requestId, String iun, String hashOldAddress, Address fromNationalRegistry, Address discoveredAddress) {
@@ -215,21 +217,25 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
         }
     }
 
-    private Mono<PnDeliveryRequest> getAttachmentsInfo(PnDeliveryRequest deliveryRequest){
+    private Mono<PnDeliveryRequest> getAttachmentsInfo(PnDeliveryRequest deliveryRequest, PrepareAsyncRequest request){
 
         if(deliveryRequest.getAttachments().isEmpty() ||
-                !deliveryRequest.getAttachments().stream().filter(a ->a.getNumberOfPage()!=null && a.getNumberOfPage()>0).collect(Collectors.toList()).isEmpty()){
+                !deliveryRequest.getAttachments().stream().filter(a ->a.getNumberOfPage()!=null && a.getNumberOfPage()>0).toList().isEmpty()){
             return Mono.just(deliveryRequest);
         }
 
         return Flux.fromStream(deliveryRequest.getAttachments().stream())
                 .parallel()
-                .flatMap( attachment -> getFileRecursive(3, attachment.getFileKey(), new BigDecimal(0)))
+                .flatMap( attachment -> getFileRecursive(
+                        paperChannelConfig.getAttemptSafeStorage(),
+                        attachment.getFileKey(),
+                        new BigDecimal(0))
+                )
                 .flatMap(fileResponse -> {
 
                     AttachmentInfo info = AttachmentMapper.fromSafeStorage(fileResponse);
                     if (info.getUrl() == null)
-                        throw new PnGenericException(DOCUMENT_URL_NOT_FOUND, DOCUMENT_URL_NOT_FOUND.getMessage());
+                        return Flux.error(new PnGenericException(DOCUMENT_URL_NOT_FOUND, DOCUMENT_URL_NOT_FOUND.getMessage()));
                     return HttpConnector.downloadFile(info.getUrl())
                             .map(pdDocument -> {
                                 try {
@@ -251,6 +257,10 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                 .map(listAttachment -> {
                     deliveryRequest.setAttachments(listAttachment);
                     return deliveryRequest;
+                })
+                .onErrorResume(ex -> {
+                    this.sqsSender.pushInternalError(request, request.getAttemptRetry(), PrepareAsyncRequest.class);
+                    return Mono.error(ex);
                 });
     }
 
