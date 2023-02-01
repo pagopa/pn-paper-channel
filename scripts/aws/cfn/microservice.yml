@@ -175,7 +175,7 @@ Parameters:
     Type: String
     Description: 'Name of dynamodb table containing request error'
 
-  PaperRequestErrorTableARN:
+  PaperRequestErrorTableArn:
     Type: String
     Description: 'ARN of dynamodb table containing request error'
 
@@ -339,8 +339,8 @@ Resources:
               - !Sub "${ZoneDynamoTableArn}/*"
               - !Sub "${CapDynamoTableArn}"
               - !Sub "${CapDynamoTableArn}/*"
-              - !Sub "${PaperRequestErrorTableARN}"
-              - !Sub "${PaperRequestErrorTableARN}/*"
+              - !Sub "${PaperRequestErrorTableArn}"
+              - !Sub "${PaperRequestErrorTableArn}/*"
 
 
   # Dashboard
