@@ -8,6 +8,7 @@ import lombok.Setter;
 public class NationalRegistryError {
     private String message;
     private String requestId;
+    private String relatedRequestId;
     private String fiscalCode;
     private String receiverType;
     private String iun;
