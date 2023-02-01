@@ -73,4 +73,12 @@ public class PnLogAudit {
         addsBeforeLog(PnAuditLogEventType.AUD_FD_SEND, iun, msg);
     }
 
+    public void addsSuccessSend(String iun, String msg) {
+        addsSuccessLog(PnAuditLogEventType.AUD_FD_SEND, iun, msg);
+    }
+
+    public void addsFailSend(String iun, String msg) {
+        addsFailLog(PnAuditLogEventType.AUD_FD_SEND, iun, msg);
+    }
+
 }

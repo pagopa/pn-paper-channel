@@ -91,8 +91,14 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                 .zipWhen(entityAndAmount ->{
                     pnLogAudit.addsBeforeSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", requestId, MDC.get(MDC_TRACE_ID_KEY)));
                     return this.externalChannelClient.sendEngageRequest(sendRequest)
-                                    .then(this.requestDeliveryDAO.updateData(entityAndAmount.getT1())
-                                            .map(item -> item));
+                                    .then(Mono.defer(() -> {
+                                        pnLogAudit.addsSuccessSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", requestId, MDC.get(MDC_TRACE_ID_KEY)));
+                                        return this.requestDeliveryDAO.updateData(entityAndAmount.getT1()).map(item -> item);
+                                    }))
+                                    .onErrorResume(ex -> {
+                                        pnLogAudit.addsFailSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", requestId, MDC.get(MDC_TRACE_ID_KEY)));
+                                        return Mono.error(ex);
+                                    });
                 }, (entityAndAmount, none) -> entityAndAmount.getT2())
                 .map(amount -> {
                     log.info("Amount: {} for requestId {}", amount, requestId);

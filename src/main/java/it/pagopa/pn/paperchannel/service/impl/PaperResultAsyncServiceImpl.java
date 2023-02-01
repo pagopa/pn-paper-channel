@@ -48,12 +48,12 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
                                 sendPaperResponse(updatedEntity, singleStatusUpdateDto);
                                 pnLogAudit.addsSuccessReceive(entity.getIun(), String.format("prepare requestId = %s Response from external-channel status code %s",  entity.getRequestId(), entity.getStatusCode()));
                                 return Mono.just(updatedEntity);
+                            })
+                            .onErrorResume(ex -> {
+                                //TODO case of retry event from external-channel queue
+                                ex.printStackTrace();
+                                return Mono.error(ex);
                             });
-                })
-                //TODO case of retry event from external-channel queue
-                .onErrorResume(ex -> {
-                    ex.printStackTrace();
-                    return Mono.error(ex);
                 });
     }
 
