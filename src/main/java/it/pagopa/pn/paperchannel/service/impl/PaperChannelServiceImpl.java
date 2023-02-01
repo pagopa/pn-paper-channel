@@ -10,13 +10,12 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.DeliveryDriverDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.FileDownloadDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.TenderDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryFile;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnPaperCost;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnPaperDeliveryDriver;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnPaperTender;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnCost;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryDriver;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnTender;
 import it.pagopa.pn.paperchannel.rest.v1.dto.*;
 import it.pagopa.pn.paperchannel.s3.S3Bucket;
 import it.pagopa.pn.paperchannel.service.PaperChannelService;
-import it.pagopa.pn.paperchannel.utils.DateUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +30,6 @@ import reactor.util.function.Tuples;
 import java.io.File;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -121,7 +119,7 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                 .map(inputStream -> this.excelDAO.readData(inputStream))
                 .flatMap(deliveriesData -> {
                     String tenderCode = UUID.randomUUID().toString();
-                    PnPaperTender tender = new PnPaperTender();
+                    PnTender tender = new PnTender();
                     tender.setTenderCode(tenderCode);
                     tender.setStatus("CREATED");
                     tender.setDate(Instant.now());
@@ -129,7 +127,7 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                     tender.setStartDate(uploadRequestDto.getTender().getStartDate().toInstant());
                     tender.setAuthor("PN-PAPER-CHANNEL");
                     tender.setDescription(uploadRequestDto.getTender().getName());
-                    Map<PnPaperDeliveryDriver, List<PnPaperCost>> map = DeliveryDriverMapper.toEntityFromExcel(deliveriesData, tenderCode);
+                    Map<PnDeliveryDriver, List<PnCost>> map = DeliveryDriverMapper.toEntityFromExcel(deliveriesData, tenderCode);
                     return this.costDAO.createNewContract(map,tender);
                 })
                 .map(tender -> new BaseResponse())

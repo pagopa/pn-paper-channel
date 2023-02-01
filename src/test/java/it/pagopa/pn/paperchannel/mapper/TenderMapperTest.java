@@ -1,6 +1,6 @@
 package it.pagopa.pn.paperchannel.mapper;
 
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnPaperTender;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnTender;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PageableTenderResponseDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.TenderDTO;
 import org.junit.jupiter.api.Assertions;
@@ -27,15 +27,15 @@ class TenderMapperTest {
     @Test
     void deliveryDriverToPageableResponseTest() {
         Pageable pageable = Mockito.mock(Pageable.class, Mockito.CALLS_REAL_METHODS);
-        List<PnPaperTender> list= new ArrayList<>();
+        List<PnTender> list= new ArrayList<>();
         PageableTenderResponseDto response= TenderMapper.toPageableResponse(TenderMapper.toPagination(pageable, list));
         Assertions.assertNotNull(response);
     }
 
     @Test
     void deliveryDriverTenderToDtoTest() {
-        PnPaperTender pnPaperTender = new PnPaperTender();
-        TenderDTO response= TenderMapper.tenderToDto(pnPaperTender);
+        PnTender pnTender = new PnTender();
+        TenderDTO response= TenderMapper.tenderToDto(pnTender);
         Assertions.assertNotNull(response);
     }
 }

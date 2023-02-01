@@ -1,8 +1,8 @@
 package it.pagopa.pn.paperchannel.mapper;
 
 import it.pagopa.pn.paperchannel.dao.model.DeliveriesData;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnPaperCost;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnPaperDeliveryDriver;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnCost;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryDriver;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -33,9 +33,9 @@ class ExcelModelMapperTest {
         DeliveriesData response= ExcelModelMapper.fromDeliveriesDrivers(getDrivers(""),getCosts());
         Assertions.assertNotNull(response);
     }
-    public List<PnPaperCost> getCosts(){
-        List<PnPaperCost> paperCostList= new ArrayList<>();
-        PnPaperCost cost = new PnPaperCost();
+    public List<PnCost> getCosts(){
+        List<PnCost> paperCostList= new ArrayList<>();
+        PnCost cost = new PnCost();
         cost.setIdDeliveryDriver("12345");
         cost.setUuid("12345");
         cost.setProductType("AR");
@@ -47,22 +47,22 @@ class ExcelModelMapperTest {
         paperCostList.add(cost);
         return paperCostList;
     }
-    public List<PnPaperDeliveryDriver> getDrivers(String uniqueCode){
-        List<PnPaperDeliveryDriver> drivers = new ArrayList<>();
-        PnPaperDeliveryDriver pnPaperDeliveryDriver = new PnPaperDeliveryDriver();
-        pnPaperDeliveryDriver.setFiscalCode("FRDYVB568501A");
-        pnPaperDeliveryDriver.setUniqueCode(uniqueCode);
-        pnPaperDeliveryDriver.setTenderCode("GARA-2022");
-        pnPaperDeliveryDriver.setDenomination("denomination");
-        pnPaperDeliveryDriver.setTaxId("12345");
-        pnPaperDeliveryDriver.setPhoneNumber("3397755223");
-        pnPaperDeliveryDriver.setFsu(true);
-        pnPaperDeliveryDriver.setBusinessName("develop");
-        pnPaperDeliveryDriver.setRegisteredOffice("roma");
-        pnPaperDeliveryDriver.setPec("mario@pec.it");
-        pnPaperDeliveryDriver.setAuthor("author");
-        pnPaperDeliveryDriver.setStartDate(new Date().toInstant());
-        drivers.add(pnPaperDeliveryDriver);
+    public List<PnDeliveryDriver> getDrivers(String uniqueCode){
+        List<PnDeliveryDriver> drivers = new ArrayList<>();
+        PnDeliveryDriver pnDeliveryDriver = new PnDeliveryDriver();
+        pnDeliveryDriver.setFiscalCode("FRDYVB568501A");
+        pnDeliveryDriver.setUniqueCode(uniqueCode);
+        pnDeliveryDriver.setTenderCode("GARA-2022");
+        pnDeliveryDriver.setDenomination("denomination");
+        pnDeliveryDriver.setTaxId("12345");
+        pnDeliveryDriver.setPhoneNumber("3397755223");
+        pnDeliveryDriver.setFsu(true);
+        pnDeliveryDriver.setBusinessName("develop");
+        pnDeliveryDriver.setRegisteredOffice("roma");
+        pnDeliveryDriver.setPec("mario@pec.it");
+        pnDeliveryDriver.setAuthor("author");
+        pnDeliveryDriver.setStartDate(new Date().toInstant());
+        drivers.add(pnDeliveryDriver);
         return drivers;
     }
 }

@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 public interface CostDAO {
-    Mono<PnPaperCost> getByCapOrZoneAndProductType (String cap, String zone, String productType);
-    Mono<PnPaperTender> createNewContract(Map<PnPaperDeliveryDriver, List<PnPaperCost>> deliveriesAndCost, PnPaperTender tender);
-    Mono<List<PnPaperCost>> retrievePrice(String tenderCode, String deliveryDriver);
+    Mono<PnCost> getByCapOrZoneAndProductType (String cap, String zone, String productType);
+    Mono<PnTender> createNewContract(Map<PnDeliveryDriver, List<PnCost>> deliveriesAndCost, PnTender tender);
+    Mono<List<PnCost>> retrievePrice(String tenderCode, String deliveryDriver);
 }

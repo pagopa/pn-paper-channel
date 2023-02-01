@@ -14,7 +14,7 @@ import java.util.Objects;
 @Setter
 @ToString
 @NoArgsConstructor
-public class PnPaperDeliveryDriver {
+public class PnDeliveryDriver {
     public static final String COL_UNIQUE_CODE = "uniqueCode";
     public static final String COL_TENDER_CODE = "tenderCode";
     public static final String COL_DENOMINATION = "denomination";
@@ -66,7 +66,7 @@ public class PnPaperDeliveryDriver {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        PnPaperDeliveryDriver that = (PnPaperDeliveryDriver) o;
+        PnDeliveryDriver that = (PnDeliveryDriver) o;
         return uniqueCode.equals(that.uniqueCode);
     }
 

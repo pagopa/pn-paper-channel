@@ -1,6 +1,6 @@
 package it.pagopa.pn.paperchannel.mapper;
 
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnPaperDeliveryDriver;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryDriver;
 import it.pagopa.pn.paperchannel.model.PageModel;
 import it.pagopa.pn.paperchannel.rest.v1.dto.DeliveryDriverDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PageableDeliveryDriverResponseDto;
@@ -35,7 +35,7 @@ class DeliveryDriverMapperTest {
     @Test
     void deliveryDriverToPageableResponseTest() {
         Pageable pageable =Mockito.mock(Pageable.class, Mockito.CALLS_REAL_METHODS);
-        List<PnPaperDeliveryDriver> list= new ArrayList<>();
+        List<PnDeliveryDriver> list= new ArrayList<>();
         PageableDeliveryDriverResponseDto response= DeliveryDriverMapper.toPageableResponse(DeliveryDriverMapper.toPagination(pageable, list));
         Assertions.assertNotNull(response);
     }
@@ -43,26 +43,26 @@ class DeliveryDriverMapperTest {
     @Test
     void deliveryDriverToPaginationTest() {
         Pageable pageable =Mockito.mock(Pageable.class, Mockito.CALLS_REAL_METHODS);
-        List<PnPaperDeliveryDriver> list= new ArrayList<>();
-        PageModel<PnPaperDeliveryDriver> response= DeliveryDriverMapper.toPagination(pageable, list);
+        List<PnDeliveryDriver> list= new ArrayList<>();
+        PageModel<PnDeliveryDriver> response= DeliveryDriverMapper.toPagination(pageable, list);
 
         Assertions.assertNotNull(response);
     }
 
-    public PnPaperDeliveryDriver getPnPaperDeliveryDriver() {
-        PnPaperDeliveryDriver pnPaperDeliveryDriver = new PnPaperDeliveryDriver();
-        pnPaperDeliveryDriver.setFiscalCode("FRDYVB568501A");
-        pnPaperDeliveryDriver.setUniqueCode("123456");
-        pnPaperDeliveryDriver.setTenderCode("GARA-2022");
-        pnPaperDeliveryDriver.setDenomination("denomination");
-        pnPaperDeliveryDriver.setTaxId("12345");
-        pnPaperDeliveryDriver.setPhoneNumber("3397755223");
-        pnPaperDeliveryDriver.setFsu(true);
-        pnPaperDeliveryDriver.setBusinessName("develop");
-        pnPaperDeliveryDriver.setRegisteredOffice("roma");
-        pnPaperDeliveryDriver.setPec("mario@pec.it");
-        pnPaperDeliveryDriver.setAuthor("author");
-        pnPaperDeliveryDriver.setStartDate(new Date().toInstant());
-        return pnPaperDeliveryDriver;
+    public PnDeliveryDriver getPnPaperDeliveryDriver() {
+        PnDeliveryDriver pnDeliveryDriver = new PnDeliveryDriver();
+        pnDeliveryDriver.setFiscalCode("FRDYVB568501A");
+        pnDeliveryDriver.setUniqueCode("123456");
+        pnDeliveryDriver.setTenderCode("GARA-2022");
+        pnDeliveryDriver.setDenomination("denomination");
+        pnDeliveryDriver.setTaxId("12345");
+        pnDeliveryDriver.setPhoneNumber("3397755223");
+        pnDeliveryDriver.setFsu(true);
+        pnDeliveryDriver.setBusinessName("develop");
+        pnDeliveryDriver.setRegisteredOffice("roma");
+        pnDeliveryDriver.setPec("mario@pec.it");
+        pnDeliveryDriver.setAuthor("author");
+        pnDeliveryDriver.setStartDate(new Date().toInstant());
+        return pnDeliveryDriver;
     }
 }

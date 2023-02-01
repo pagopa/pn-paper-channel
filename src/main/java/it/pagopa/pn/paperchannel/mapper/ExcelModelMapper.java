@@ -2,8 +2,8 @@ package it.pagopa.pn.paperchannel.mapper;
 
 import it.pagopa.pn.paperchannel.dao.model.DeliveriesData;
 import it.pagopa.pn.paperchannel.dao.model.DeliveryAndCost;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnPaperCost;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnPaperDeliveryDriver;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnCost;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryDriver;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,12 +15,12 @@ public class ExcelModelMapper {
     }
 
 
-    public static DeliveriesData fromDeliveriesDrivers(List<PnPaperDeliveryDriver> drivers, List<PnPaperCost> costs){
+    public static DeliveriesData fromDeliveriesDrivers(List<PnDeliveryDriver> drivers, List<PnCost> costs){
         DeliveriesData data = new DeliveriesData();
         if (drivers != null && !drivers.isEmpty())  {
             data.setDeliveriesAndCosts(new ArrayList<>());
             drivers.forEach(driver -> {
-                List<PnPaperCost> driverCosts = costs.stream().filter(cost -> cost.getIdDeliveryDriver().equals(driver.getUniqueCode()))
+                List<PnCost> driverCosts = costs.stream().filter(cost -> cost.getIdDeliveryDriver().equals(driver.getUniqueCode()))
                         .toList();
                 if (!driverCosts.isEmpty()){
                     data.getDeliveriesAndCosts().addAll(driverCosts.stream().map(cost -> {

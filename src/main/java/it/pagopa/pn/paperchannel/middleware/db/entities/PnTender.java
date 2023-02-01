@@ -13,7 +13,7 @@ import java.time.Instant;
 @Setter
 @ToString
 @NoArgsConstructor
-public class PnPaperTender {
+public class PnTender {
     public static final String COL_TENDER_CODE = "tenderCode";
     public static final String COL_DATE = "date";
     public static final String COL_DESCRIPTION= "description";

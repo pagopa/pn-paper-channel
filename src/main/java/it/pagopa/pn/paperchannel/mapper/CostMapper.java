@@ -1,13 +1,11 @@
 package it.pagopa.pn.paperchannel.mapper;
 
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnPaperCost;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnCost;
 import it.pagopa.pn.paperchannel.rest.v1.dto.*;
-import it.pagopa.pn.paperchannel.utils.DateUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 
@@ -17,9 +15,9 @@ public class CostMapper {
         throw new IllegalCallerException();
     }
 
-    public static PnPaperCost fromContractDTO(ContractDto contractDto){
+    public static PnCost fromContractDTO(ContractDto contractDto){
 
-        PnPaperCost costs = new PnPaperCost();
+        PnCost costs = new PnCost();
         costs.setBasePrice(contractDto.getPrice());
         costs.setPagePrice(contractDto.getPriceAdditional());
         costs.setProductType(contractDto.getRegisteredLetter().getValue());
@@ -32,7 +30,7 @@ public class CostMapper {
         return costs;
     }
 
-    public static AllPricesContractorResponseDto toResponse(List<PnPaperCost> paperCosts){
+    public static AllPricesContractorResponseDto toResponse(List<PnCost> paperCosts){
         AllPricesContractorResponseDto dto = new AllPricesContractorResponseDto();
         BaseResponse baseResponse =  new BaseResponse();
         baseResponse.setResult(true);
@@ -56,7 +54,7 @@ public class CostMapper {
     }
 
 
-    public static NationalContractDto toNationalContract(PnPaperCost paperCost){
+    public static NationalContractDto toNationalContract(PnCost paperCost){
         NationalContractDto dto = new NationalContractDto();
         dto.setCap(paperCost.getCap());
         dto.setPrice(BigDecimal.valueOf(paperCost.getBasePrice()));
@@ -65,7 +63,7 @@ public class CostMapper {
         return dto;
     }
 
-    public static InternationalContractDto toInternationalContract(PnPaperCost paperCost){
+    public static InternationalContractDto toInternationalContract(PnCost paperCost){
         InternationalContractDto dto = new InternationalContractDto();
         dto.setZone(InternationalZoneEnum.fromValue(paperCost.getZone()));
         dto.setPrice(BigDecimal.valueOf(paperCost.getBasePrice()));
