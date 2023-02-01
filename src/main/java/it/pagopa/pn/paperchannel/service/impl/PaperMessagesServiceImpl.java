@@ -118,7 +118,7 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                     })
                     .switchIfEmpty(Mono.defer(() -> saveRequestAndAddress(prepareRequest, prepareRequest.getReceiverAddress())
                             .flatMap(response -> {
-                                PrepareAsyncRequest request = new PrepareAsyncRequest(requestId, null, null, false, 0);
+                                PrepareAsyncRequest request = new PrepareAsyncRequest(requestId, response.getIun(), null, null, false, 0);
                                 this.sqsSender.pushToInternalQueue(request);
                                 throw new PnPaperEventException(PreparePaperResponseMapper.fromEvent(prepareRequest.getRequestId()));
                             }))
