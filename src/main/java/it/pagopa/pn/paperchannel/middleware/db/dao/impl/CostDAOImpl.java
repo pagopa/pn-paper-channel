@@ -98,6 +98,4 @@ public class CostDAOImpl extends BaseDAO<PnPaperCost> implements CostDAO {
                     return items.get(0);
                 });
     }
-
-
 }

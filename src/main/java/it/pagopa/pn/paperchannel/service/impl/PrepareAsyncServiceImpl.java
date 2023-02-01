@@ -255,6 +255,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                     return deliveryRequest;
                 })
                 .onErrorResume(ex -> {
+                    request.setIun(deliveryRequest.getIun());
                     this.sqsSender.pushInternalError(request, request.getAttemptRetry(), PrepareAsyncRequest.class);
                     return Mono.error(ex);
                 });

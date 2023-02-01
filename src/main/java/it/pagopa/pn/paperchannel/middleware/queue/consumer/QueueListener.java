@@ -78,9 +78,9 @@ public class QueueListener {
                     entity -> {
                         paperRequestErrorDAO.created(
                                 entity.getAnalogMail().getRequestId(),
-                                        EXTERNAL_CHANNEL_LISTENER_EXCEPTION.getMessage(),
-                                        EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name())
-                                .subscribe();
+                                EXTERNAL_CHANNEL_LISTENER_EXCEPTION.getMessage(),
+                                EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name()
+                        ).subscribe();
                         return null;
                     },
                     entityAndAttempt -> {

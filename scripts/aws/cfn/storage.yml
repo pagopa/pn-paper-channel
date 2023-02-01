@@ -394,7 +394,7 @@ Outputs:
     Description: Name of dynamodb table containing request error
     Value: !Ref PaperRequestErrorDynamoTable
 
-  PaperRequestErrorTableARN:
+  PaperRequestErrorTableArn:
     Description: ARN of dynamodb table containing request error
     Value: !Sub '${PaperRequestErrorDynamoTable.Arn}'
 
