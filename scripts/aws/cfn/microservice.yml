@@ -175,7 +175,7 @@ Parameters:
     Type: String
     Description: 'Name of dynamodb table containing request error'
 
-  PaperRequestErrorTableARN:
+  PaperRequestErrorTableArn:
     Type: String
     Description: 'ARN of dynamodb table containing request error'
 
