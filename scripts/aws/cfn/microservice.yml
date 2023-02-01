@@ -339,8 +339,8 @@ Resources:
               - !Sub "${ZoneDynamoTableArn}/*"
               - !Sub "${CapDynamoTableArn}"
               - !Sub "${CapDynamoTableArn}/*"
-              - !Sub "${PaperRequestErrorTableArn}"
-              - !Sub "${PaperRequestErrorTableArn}/*"
+              - !Sub "${PaperRequestErrorTableARN}"
+              - !Sub "${PaperRequestErrorTableARN}/*"
 
 
   # Dashboard
