@@ -57,7 +57,7 @@ public class BaseService {
     }
 
 
-    protected void finderAddressFromNationalRegistries(String requestId, String fiscalCode, String personType, String iun, Integer attempt){
+    protected void finderAddressFromNationalRegistries(String requestId, String relatedRequestId, String fiscalCode, String personType, String iun, Integer attempt){
         Mono.delay(Duration.ofMillis(20)).publishOn(Schedulers.boundedElastic())
                 .flatMap(i -> {
                     log.info("Start call national registries for find address");
@@ -69,6 +69,7 @@ public class BaseService {
                                 error.setFiscalCode(fiscalCode);
                                 error.setReceiverType(personType);
                                 error.setRequestId(requestId);
+                                error.setRelatedRequestId(relatedRequestId);
                                 saveErrorAndPushError(requestId, NATIONAL_REGISTRY_ERROR, error, payload -> {
                                     sqsSender.pushInternalError(payload, attempt, NationalRegistryError.class);
                                     return null;
@@ -83,7 +84,7 @@ public class BaseService {
                     return this.requestDeliveryDAO.getByRequestId(requestId)
                             .flatMap(entity -> {
                                 log.debug("Entity edited with correlation id and new status");
-                                pnLogAudit.addsSuccessResolveService(iun, String.format("prepare requestId = %s, relatedRequestId = %s trace_id = %s Response OK from National Registry service", requestId, entity.getRelatedRequestId(), MDC.get(MDC_TRACE_ID_KEY)));
+                                pnLogAudit.addsSuccessResolveService(iun, String.format("prepare requestId = %s, relatedRequestId = %s, trace_id = %s Response OK from National Registry service", requestId, entity.getRelatedRequestId(), MDC.get(MDC_TRACE_ID_KEY)));
 
                                 entity.setCorrelationId(correlationId);
                                 entity.setStatusCode(StatusDeliveryEnum.NATIONAL_REGISTRY_WAITING.getCode());
@@ -94,7 +95,7 @@ public class BaseService {
                 })
                 .flatMap(Mono::just)
                 .onErrorResume(ex -> {
-                    pnLogAudit.addsFailLog(iun, String.format("prepare requestId = %s, trace_id = %s Response KO from National Registry service", requestId, MDC.get(MDC_TRACE_ID_KEY)));
+                    pnLogAudit.addsFailResolveService(iun, String.format("prepare requestId = %s, relatedRequestId = %s, trace_id = %s Response KO from National Registry service", requestId, relatedRequestId, MDC.get(MDC_TRACE_ID_KEY)));
 
                     log.error("NationalRegistries finder address in errors");
                     log.error(ex.getMessage());

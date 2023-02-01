@@ -91,8 +91,14 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                 .zipWhen(entityAndAmount ->{
                     pnLogAudit.addsBeforeSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", requestId, MDC.get(MDC_TRACE_ID_KEY)));
                     return this.externalChannelClient.sendEngageRequest(sendRequest)
-                                    .then(this.requestDeliveryDAO.updateData(entityAndAmount.getT1())
-                                            .map(item -> item));
+                                    .then(Mono.defer(() -> {
+                                        pnLogAudit.addsSuccessSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", requestId, MDC.get(MDC_TRACE_ID_KEY)));
+                                        return this.requestDeliveryDAO.updateData(entityAndAmount.getT1()).map(item -> item);
+                                    }))
+                                    .onErrorResume(ex -> {
+                                        pnLogAudit.addsFailSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", requestId, MDC.get(MDC_TRACE_ID_KEY)));
+                                        return Mono.error(ex);
+                                    });
                 }, (entityAndAmount, none) -> entityAndAmount.getT2())
                 .map(amount -> {
                     log.info("Amount: {} for requestId {}", amount, requestId);
@@ -118,7 +124,7 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                     })
                     .switchIfEmpty(Mono.defer(() -> saveRequestAndAddress(prepareRequest, prepareRequest.getReceiverAddress())
                             .flatMap(response -> {
-                                PrepareAsyncRequest request = new PrepareAsyncRequest(requestId, null, null, false, 0);
+                                PrepareAsyncRequest request = new PrepareAsyncRequest(requestId, response.getIun(), null, null, false, 0);
                                 this.sqsSender.pushToInternalQueue(request);
                                 throw new PnPaperEventException(PreparePaperResponseMapper.fromEvent(prepareRequest.getRequestId()));
                             }))
@@ -146,10 +152,11 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                             .switchIfEmpty(Mono.defer(()-> saveRequestAndAddress(prepareRequest, prepareRequest.getDiscoveredAddress())
                                     .flatMap(response -> {
                                         log.info("Start call national");
-                                        pnLogAudit.addsBeforeResolveService(response.getIun(), String.format("prepare requestId = %s, relatedRequestId=%s, trace_id = %s Request to National Registry service", requestId, prepareRequest.getRelatedRequestId(), MDC.get(MDC_TRACE_ID_KEY)));
+                                        pnLogAudit.addsBeforeResolveService(response.getIun(), String.format("prepare requestId = %s, relatedRequestId= %s, trace_id = %s Request to National Registry service", requestId, prepareRequest.getRelatedRequestId(), MDC.get(MDC_TRACE_ID_KEY)));
 
                                         this.finderAddressFromNationalRegistries(
                                                 response.getRequestId(),
+                                                response.getRelatedRequestId(),
                                                 response.getFiscalCode(),
                                                 response.getReceiverType(),
                                                 response.getIun(), 0);
@@ -181,8 +188,8 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
     }
 
     @Override
-    public void finderAddress(String requestId, String fiscalCode, String receiverType, String iun, Integer attempt) {
-        this.finderAddressFromNationalRegistries(requestId, fiscalCode, receiverType, iun, attempt);
+    public void finderAddress(String requestId, String relatedRequestId, String fiscalCode, String receiverType, String iun, Integer attempt) {
+        this.finderAddressFromNationalRegistries(requestId, relatedRequestId, fiscalCode, receiverType, iun, attempt);
     }
 
     private Mono<PnDeliveryRequest> saveRequestAndAddress(PrepareRequest prepareRequest, AnalogAddress address){

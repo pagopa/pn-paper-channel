@@ -9,8 +9,8 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
+
 
 public class ExcelValidator {
     private ExcelValidator() {
@@ -50,11 +50,17 @@ public class ExcelValidator {
         if (StringUtils.isBlank(fiscalCode.getValue())){
             errors.add(new PnExcelValidatorException.ErrorCell(fiscalCode.getRow(), fiscalCode.getCol(), "La cella non può essere vuota"));
         }
+        if (!Utility.isValidFromRegex(fiscalCode.getValue(),Const.fiscalCodeRegex)){
+            errors.add(new PnExcelValidatorException.ErrorCell(fiscalCode.getRow(), fiscalCode.getCol(), "Problema nel fiscalCode inserito."));
+        }
         //taxId check
         ExcelEngine.ExcelCell taxId = data.get("TAX_ID");
         deliveryAndCost.setTaxId(taxId.getValue());
         if (StringUtils.isBlank(taxId.getValue())){
             errors.add(new PnExcelValidatorException.ErrorCell(taxId.getRow(), taxId.getCol(), "La cella non può essere vuota"));
+        }
+        if (!Utility.isValidFromRegex(taxId.getValue(),Const.taxIdRegex)){
+            errors.add(new PnExcelValidatorException.ErrorCell(taxId.getRow(), taxId.getCol(), "Problema nel taxId inserito."));
         }
         //phoneNumber check
         ExcelEngine.ExcelCell phoneNumber = data.get("PHONE_NUMBER");
@@ -62,11 +68,18 @@ public class ExcelValidator {
         if (StringUtils.isBlank(phoneNumber.getValue())){
             errors.add(new PnExcelValidatorException.ErrorCell(phoneNumber.getRow(), phoneNumber.getCol(), "La cella non può essere vuota"));
         }
+        if (!Utility.isValidFromRegex(phoneNumber.getValue(), Const.phoneNumberRegex)){
+            errors.add(new PnExcelValidatorException.ErrorCell(phoneNumber.getRow(), phoneNumber.getCol(), "Problema nel phoneNumber inserito."));
+        }
         //uniqueCode check
         ExcelEngine.ExcelCell uniqueCode = data.get("UNIQUE_CODE");
         deliveryAndCost.setUniqueCode(uniqueCode.getValue());
         if (StringUtils.isBlank(uniqueCode.getValue())){
             errors.add(new PnExcelValidatorException.ErrorCell(uniqueCode.getRow(), uniqueCode.getCol(), "La cella non può essere vuota"));
+        }
+        if (!Utility.isValidFromRegex(uniqueCode.getValue(),Const.uniqueCodeRegex)){
+            errors.add(new PnExcelValidatorException.ErrorCell(uniqueCode.getRow(), uniqueCode.getCol(), "Problema nello uniqueCode inserito."));
+
         }
         //fsu check
         ExcelEngine.ExcelCell fsu = data.get("FSU");
@@ -84,21 +97,29 @@ public class ExcelValidator {
         if (StringUtils.isBlank(cap.getValue())){
             errors.add(new PnExcelValidatorException.ErrorCell(cap.getRow(), cap.getCol(), "La cella non può essere vuota"));
         }
-        if (!Utility.splitCap(cap.getValue())){
+        if (!Utility.isValidCap(cap.getValue())){
             errors.add(new PnExcelValidatorException.ErrorCell(cap.getRow(), cap.getCol(), "Problema nei cap inseriti."));
         }
-
         //zone check
         ExcelEngine.ExcelCell zone = data.get("ZONE");
         deliveryAndCost.setZone(zone.getValue());
         if (StringUtils.isBlank(zone.getValue())){
             errors.add(new PnExcelValidatorException.ErrorCell(zone.getRow(), zone.getCol(), "La cella non può essere vuota"));
         }
+        if (!Utility.isValidFromRegex(zone.getValue(), Const.zoneRegex)){
+            errors.add(new PnExcelValidatorException.ErrorCell(zone.getRow(), zone.getCol(), "Problema nelle zone inserite."));
+        }
+        if (!zone.getValue().equals(Const.ZONA_1) && !zone.getValue().equals(Const.ZONA_2) && !zone.getValue().equals(Const.ZONA_3)){
+            errors.add(new PnExcelValidatorException.ErrorCell(zone.getRow(), zone.getCol(), "Il tipo di dato non è quello desiderato."));
+        }
         //productType check
         ExcelEngine.ExcelCell productType = data.get("PRODUCT_TYPE");
         deliveryAndCost.setProductType(productType.getValue());
         if (StringUtils.isBlank(productType.getValue())){
             errors.add(new PnExcelValidatorException.ErrorCell(productType.getRow(), productType.getCol(), "La cella non può essere vuota"));
+        }
+        if (!productType.getValue().equals(Const.RACCOMANDATA_AR) && !productType.getValue().equals(Const.RACCOMANDATA_890) && !productType.getValue().equals(Const.RACCOMANDATA_SEMPLICE)){
+            errors.add(new PnExcelValidatorException.ErrorCell(productType.getRow(), productType.getCol(), "Il tipo di dato non è quello desiderato."));
         }
         //basePrice check
         ExcelEngine.ExcelCell basePrice = data.get("BASE_PRICE");

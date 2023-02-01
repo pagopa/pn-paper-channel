@@ -41,20 +41,19 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
         return requestDeliveryDAO.getByRequestId(singleStatusUpdateDto.getAnalogMail().getRequestId())
                 .flatMap(entity -> {
                     log.info("GETTED ENTITY: {}", entity.getRequestId());
-                    pnLogAudit.addsReceive(entity.getIun(), String.format("prepare requestId = %s Response from external-channel", entity.getRequestId()),
-                            String.format("prepare requestId = %s Response from external-channel status code %s",  entity.getRequestId(), entity.getStatusCode()));
-
+                    pnLogAudit.addsBeforeReceive(entity.getIun(), String.format("prepare requestId = %s Response from external-channel", entity.getRequestId()));
                     return updateEntityResult(singleStatusUpdateDto, entity)
                             .flatMap(updatedEntity -> {
                                 log.info("UPDATED ENTITY: {}", updatedEntity.getRequestId());
                                 sendPaperResponse(updatedEntity, singleStatusUpdateDto);
+                                pnLogAudit.addsSuccessReceive(entity.getIun(), String.format("prepare requestId = %s Response from external-channel status code %s",  entity.getRequestId(), entity.getStatusCode()));
                                 return Mono.just(updatedEntity);
+                            })
+                            .onErrorResume(ex -> {
+                                //TODO case of retry event from external-channel queue
+                                ex.printStackTrace();
+                                return Mono.error(ex);
                             });
-                })
-                //TODO case of retry event from external-channel queue
-                .onErrorResume(ex -> {
-                    ex.printStackTrace();
-                    return Mono.error(ex);
                 });
     }
 

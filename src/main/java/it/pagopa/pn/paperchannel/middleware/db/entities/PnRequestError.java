@@ -17,7 +17,7 @@ import java.time.Instant;
 @Setter
 @ToString
 @NoArgsConstructor
-public class PnPaperRequestError {
+public class PnRequestError {
     public static final String COL_REQUEST_ID = "requestId";
     public static final String COL_CREATED = "created";
     public static final String COL_ERROR_TYPE = "error";

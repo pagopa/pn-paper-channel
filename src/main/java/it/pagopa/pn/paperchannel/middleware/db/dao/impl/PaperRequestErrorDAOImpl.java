@@ -4,7 +4,7 @@ import it.pagopa.pn.paperchannel.config.AwsPropertiesConfig;
 import it.pagopa.pn.paperchannel.encryption.KmsEncryption;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.BaseDAO;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnPaperRequestError;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnRequestError;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
@@ -15,7 +15,7 @@ import java.time.Instant;
 
 @Repository
 @Slf4j
-public class PaperRequestErrorDAOImpl extends BaseDAO<PnPaperRequestError> implements PaperRequestErrorDAO {
+public class PaperRequestErrorDAOImpl extends BaseDAO<PnRequestError> implements PaperRequestErrorDAO {
 
 
     public PaperRequestErrorDAOImpl(KmsEncryption kmsEncryption,
@@ -23,11 +23,11 @@ public class PaperRequestErrorDAOImpl extends BaseDAO<PnPaperRequestError> imple
                        DynamoDbAsyncClient dynamoDbAsyncClient,
                        AwsPropertiesConfig awsPropertiesConfig) {
         super(kmsEncryption, dynamoDbEnhancedAsyncClient, dynamoDbAsyncClient,
-                awsPropertiesConfig.getDynamodbPaperRequestErrorTable(), PnPaperRequestError.class);}
+                awsPropertiesConfig.getDynamodbPaperRequestErrorTable(), PnRequestError.class);}
 
     @Override
-    public Mono<PnPaperRequestError> created(String requestId, String error, String flowThrow) {
-        PnPaperRequestError requestError = new PnPaperRequestError();
+    public Mono<PnRequestError> created(String requestId, String error, String flowThrow) {
+        PnRequestError requestError = new PnRequestError();
         requestError.setRequestId(requestId);
         requestError.setError(error);
         requestError.setCreated(Instant.now());

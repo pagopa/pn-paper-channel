@@ -29,8 +29,8 @@ public class PnLogAudit {
                 .build().generateSuccess(successMsg).log();
     }
 
-    public void addsFailLog(String iun, String successMsg) {
-        pnAuditLogBuilder.iun(iun).build().generateFailure(successMsg).log();
+    public void addsFailLog(PnAuditLogEventType type, String iun, String successMsg) {
+        pnAuditLogBuilder.before(type, successMsg).iun(iun).build().generateFailure(successMsg).log();
     }
 
     public void addsResolveLogic(String iun, String msg1, String msg2) {
@@ -53,13 +53,32 @@ public class PnLogAudit {
         addsSuccessLog(PnAuditLogEventType.AUD_FD_RESOLVE_SERVICE, iun, msg);
     }
 
-    public void addsReceive(String iun, String msg, String msg2) {
+    public void addsFailResolveService(String iun, String msg) {
+        addsFailLog(PnAuditLogEventType.AUD_FD_RESOLVE_SERVICE, iun, msg);
+    }
+
+    public void addsBeforeReceive(String iun, String msg) {
         addsBeforeLog(PnAuditLogEventType.AUD_FD_RECEIVE, iun, msg);
-        addsSuccessLog(PnAuditLogEventType.AUD_FD_RECEIVE, iun, msg2);
+    }
+
+    public void addsSuccessReceive(String iun, String msg) {
+        addsSuccessLog(PnAuditLogEventType.AUD_FD_RECEIVE, iun, msg);
+    }
+
+    public void addsFailReceive(String iun, String msg) {
+        addsFailLog(PnAuditLogEventType.AUD_FD_RECEIVE, iun, msg);
     }
 
     public void addsBeforeSend(String iun, String msg) {
         addsBeforeLog(PnAuditLogEventType.AUD_FD_SEND, iun, msg);
+    }
+
+    public void addsSuccessSend(String iun, String msg) {
+        addsSuccessLog(PnAuditLogEventType.AUD_FD_SEND, iun, msg);
+    }
+
+    public void addsFailSend(String iun, String msg) {
+        addsFailLog(PnAuditLogEventType.AUD_FD_SEND, iun, msg);
     }
 
 }

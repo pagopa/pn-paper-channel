@@ -11,7 +11,7 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
 @Setter
 @ToString
 @NoArgsConstructor
-public class PnPaperCost {
+public class PnCost {
     public static final String COL_ID_DELIVERY_DRIVER = "idDeliveryDriver";
     public static final String COL_UUID = "uuid";
     public static final String COL_CAP = "cap";

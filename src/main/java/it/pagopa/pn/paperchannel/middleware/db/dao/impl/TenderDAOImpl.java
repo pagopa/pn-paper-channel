@@ -5,7 +5,7 @@ import it.pagopa.pn.paperchannel.config.AwsPropertiesConfig;
 import it.pagopa.pn.paperchannel.encryption.KmsEncryption;
 import it.pagopa.pn.paperchannel.middleware.db.dao.TenderDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.BaseDAO;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnPaperTender;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnTender;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Repository;
@@ -13,15 +13,12 @@ import reactor.core.publisher.Mono;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 import java.time.Instant;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Repository
-public class TenderDAOImpl extends BaseDAO<PnPaperTender> implements TenderDAO {
+public class TenderDAOImpl extends BaseDAO<PnTender> implements TenderDAO {
 
     public TenderDAOImpl(PnAuditLogBuilder auditLogBuilder,
                                  KmsEncryption kmsEncryption,
@@ -29,11 +26,11 @@ public class TenderDAOImpl extends BaseDAO<PnPaperTender> implements TenderDAO {
                                  DynamoDbAsyncClient dynamoDbAsyncClient,
                                  AwsPropertiesConfig awsPropertiesConfig) {
         super(kmsEncryption, dynamoDbEnhancedAsyncClient, dynamoDbAsyncClient,
-                awsPropertiesConfig.getDynamodbTenderTable(), PnPaperTender.class);
+                awsPropertiesConfig.getDynamodbTenderTable(), PnTender.class);
     }
 
     @Override
-    public Mono<List<PnPaperTender>> getTenders() {
+    public Mono<List<PnTender>> getTenders() {
         Pair<Instant, Instant> startAndEndTimestamp = DateUtils.getStartAndEndTimestamp(null, null);
 
         QueryConditional conditional = CONDITION_BETWEEN.apply(
@@ -41,7 +38,7 @@ public class TenderDAOImpl extends BaseDAO<PnPaperTender> implements TenderDAO {
                         keyBuild("PN-PAPER-CHANNEL", startAndEndTimestamp.getSecond().toString()) )
         );
 
-        return this.getByFilter(conditional, PnPaperTender.AUTHOR_INDEX, null, null)
+        return this.getByFilter(conditional, PnTender.AUTHOR_INDEX, null, null)
                 .collectList();
     }
 }

@@ -1,6 +1,6 @@
 package it.pagopa.pn.paperchannel.mapper;
 
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnPaperCost;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnCost;
 import it.pagopa.pn.paperchannel.rest.v1.dto.AllPricesContractorResponseDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.ContractDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.InternationalContractDto;
@@ -42,7 +42,7 @@ class CostMapperTest {
     }
     @Test
     void costMapperFromContractDTOTest() {
-        PnPaperCost response=CostMapper.fromContractDTO(getContractDto());
+        PnCost response=CostMapper.fromContractDTO(getContractDto());
         Assertions.assertNotNull(response);
     }
     private ContractDto getContractDto(){
@@ -54,16 +54,16 @@ class CostMapperTest {
         contractDto.setRegisteredLetter(TypeRegisteredLetterInterEnum.fromValue("AR_INTER"));
         return contractDto;
     }
-    private PnPaperCost getPnPaperCost(String str){
-        PnPaperCost pnPaperCost = new PnPaperCost();
-        pnPaperCost.setCap("00061");
-        pnPaperCost.setPagePrice(0.1F);
-        pnPaperCost.setBasePrice(0.5F);
-        pnPaperCost.setTenderCode("GARA-2022");
-        pnPaperCost.setZone("ZONE_1");
-        pnPaperCost.setProductType(str);
-        pnPaperCost.setIdDeliveryDriver("12345");
-        pnPaperCost.setUuid("12345");
-        return pnPaperCost;
+    private PnCost getPnPaperCost(String str){
+        PnCost pnCost = new PnCost();
+        pnCost.setCap("00061");
+        pnCost.setPagePrice(0.1F);
+        pnCost.setBasePrice(0.5F);
+        pnCost.setTenderCode("GARA-2022");
+        pnCost.setZone("ZONE_1");
+        pnCost.setProductType(str);
+        pnCost.setIdDeliveryDriver("12345");
+        pnCost.setUuid("12345");
+        return pnCost;
     }
 }

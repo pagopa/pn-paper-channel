@@ -7,13 +7,14 @@ import lombok.ToString;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
 
 import java.time.Instant;
+import java.util.Objects;
 
 @DynamoDbBean
 @Getter
 @Setter
 @ToString
 @NoArgsConstructor
-public class PnPaperDeliveryDriver {
+public class PnDeliveryDriver {
     public static final String COL_UNIQUE_CODE = "uniqueCode";
     public static final String COL_TENDER_CODE = "tenderCode";
     public static final String COL_DENOMINATION = "denomination";
@@ -60,4 +61,17 @@ public class PnPaperDeliveryDriver {
     private String pec;
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_FISCAL_CODE)}))
     private String fiscalCode;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        PnDeliveryDriver that = (PnDeliveryDriver) o;
+        return uniqueCode.equals(that.uniqueCode);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(uniqueCode);
+    }
 }

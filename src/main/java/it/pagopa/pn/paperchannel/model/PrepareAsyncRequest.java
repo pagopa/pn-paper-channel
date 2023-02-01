@@ -13,6 +13,10 @@ public class PrepareAsyncRequest {
 
     @JsonProperty("requestId")
     private String requestId;
+
+    @JsonProperty("iun")
+    private String iun;
+
     @JsonProperty("correlationId")
     private String correlationId;
     @JsonProperty("address")

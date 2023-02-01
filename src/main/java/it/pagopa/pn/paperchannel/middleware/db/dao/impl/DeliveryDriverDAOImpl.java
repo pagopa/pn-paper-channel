@@ -4,7 +4,7 @@ import it.pagopa.pn.paperchannel.config.AwsPropertiesConfig;
 import it.pagopa.pn.paperchannel.encryption.KmsEncryption;
 import it.pagopa.pn.paperchannel.middleware.db.dao.DeliveryDriverDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.BaseDAO;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnPaperDeliveryDriver;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryDriver;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Repository;
@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 @Repository
-public class DeliveryDriverDAOImpl extends BaseDAO<PnPaperDeliveryDriver> implements DeliveryDriverDAO {
+public class DeliveryDriverDAOImpl extends BaseDAO<PnDeliveryDriver> implements DeliveryDriverDAO {
 
 
     public DeliveryDriverDAOImpl(KmsEncryption kmsEncryption,
@@ -28,11 +28,11 @@ public class DeliveryDriverDAOImpl extends BaseDAO<PnPaperDeliveryDriver> implem
                                  DynamoDbAsyncClient dynamoDbAsyncClient,
                                  AwsPropertiesConfig awsPropertiesConfig) {
         super(kmsEncryption, dynamoDbEnhancedAsyncClient, dynamoDbAsyncClient,
-                awsPropertiesConfig.getDynamodbDeliveryDriverTable(), PnPaperDeliveryDriver.class);
+                awsPropertiesConfig.getDynamodbDeliveryDriverTable(), PnDeliveryDriver.class);
     }
 
     @Override
-    public Mono<List<PnPaperDeliveryDriver>> getDeliveryDriver(String tenderCode) {
+    public Mono<List<PnDeliveryDriver>> getDeliveryDriver(String tenderCode) {
         Pair<Instant, Instant> startAndEndTimestamp = DateUtils.getStartAndEndTimestamp(null, null);
 
         QueryConditional conditional = CONDITION_BETWEEN.apply(
@@ -40,11 +40,11 @@ public class DeliveryDriverDAOImpl extends BaseDAO<PnPaperDeliveryDriver> implem
                         keyBuild("PN-PAPER-CHANNEL", startAndEndTimestamp.getSecond().toString()) )
         );
 
-        String filter = "( " + PnPaperDeliveryDriver.COL_TENDER_CODE + " = :tenderCode )";
+        String filter = "( " + PnDeliveryDriver.COL_TENDER_CODE + " = :tenderCode )";
         Map<String, AttributeValue> values = new HashMap<>();
         values.put(":tenderCode", AttributeValue.builder().s(tenderCode).build());
 
-        return this.getByFilter(conditional, PnPaperDeliveryDriver.AUTHOR_INDEX, values, filter)
+        return this.getByFilter(conditional, PnDeliveryDriver.AUTHOR_INDEX, values, filter)
                 .collectList();
     }
 

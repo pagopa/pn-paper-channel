@@ -71,7 +71,7 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                 })
                 .doOnSuccess(correlationAndAddress -> {
                     PrepareAsyncRequest prepareAsyncRequest =
-                            new PrepareAsyncRequest(null, correlationAndAddress.getT1(), correlationAndAddress.getT2(), false, 0);
+                            new PrepareAsyncRequest(null, null, correlationAndAddress.getT1(), correlationAndAddress.getT2(), false, 0);
                     this.sqsSender.pushToInternalQueue(prepareAsyncRequest);
                 })
                 .doOnError(throwable -> {
@@ -88,6 +88,7 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                 log.info("Called national Registries");
                 this.finderAddressFromNationalRegistries(
                         nationalRegistryError.getRequestId(),
+                        nationalRegistryError.getRelatedRequestId(),
                         nationalRegistryError.getFiscalCode(),
                         nationalRegistryError.getReceiverType(),
                         nationalRegistryError.getIun(),

@@ -1,15 +1,13 @@
 package it.pagopa.pn.paperchannel.middleware.db.dao;
 
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnCap;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnPaperCost;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnPaperDeliveryDriver;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnZone;
+import it.pagopa.pn.paperchannel.middleware.db.entities.*;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.Map;
 
 public interface CostDAO {
-    Mono<PnPaperCost> getByCapOrZoneAndProductType (String cap, String zone, String productType);
-    Mono<PnPaperDeliveryDriver> createNewContract(PnPaperDeliveryDriver pnDeliveryDriver, List<PnPaperCost> pnListCosts);
-    Mono<List<PnPaperCost>> retrievePrice(String tenderCode, String deliveryDriver);
+    Mono<PnCost> getByCapOrZoneAndProductType (String cap, String zone, String productType);
+    Mono<PnTender> createNewContract(Map<PnDeliveryDriver, List<PnCost>> deliveriesAndCost, PnTender tender);
+    Mono<List<PnCost>> retrievePrice(String tenderCode, String deliveryDriver);
 }
