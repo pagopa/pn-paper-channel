@@ -14,6 +14,7 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbParti
 @ToString
 @NoArgsConstructor
 public class PnCap {
+    
     public static final String COL_CAP = "cap";
     public static final String COL_CITY = "city";
 
