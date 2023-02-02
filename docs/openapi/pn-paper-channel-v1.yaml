@@ -37,7 +37,7 @@ paths:
         '200':
           description: JSON contenente lo stato.
 
-  /paper-channel-bo/v1/tenders:
+  /paper-channel/v1/tenders:
     get:
       tags:
         - DeliveryDriver
@@ -85,7 +85,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /paper-channel-bo/v1/deliveries-drivers/{tenderCode}:
+  /paper-channel/v1/deliveries-drivers/{tenderCode}:
     get:
       tags:
         - DeliveryDriver
@@ -134,7 +134,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /paper-channel-bo/v1/delivery-driver/{tenderCode}/prices/{deliveryDriverId}:
+  /paper-channel/v1/delivery-driver/{tenderCode}/prices/{deliveryDriverId}:
     get:
       tags:
         - DeliveryDriver
@@ -164,7 +164,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /paper-channel-bo/v1/delivery-tender/file-download:
+  /paper-channel/v1/delivery-tender/file-download:
     get:
       tags:
         - DeliveryDriver
@@ -194,7 +194,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /paper-channel-bo/v1/delivery-tender:
+  /paper-channel/v1/delivery-tender:
     post:
       tags:
         - DeliveryDriver
@@ -227,7 +227,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /paper-channel-bo/v1/delivery-tender/notify-upload:
+  /paper-channel/v1/delivery-tender/notify-upload:
     post:
       tags:
         - DeliveryDriver
@@ -260,7 +260,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /paper-channel-bo/v1/delivery-tender/file-upload:
+  /paper-channel/v1/delivery-tender/file-upload:
     get:
       tags:
         - DeliveryDriver
