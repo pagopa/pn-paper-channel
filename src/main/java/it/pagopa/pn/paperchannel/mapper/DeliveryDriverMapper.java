@@ -24,17 +24,7 @@ public class DeliveryDriverMapper {
     private static final BaseMapper<PnDeliveryDriver, DeliveryAndCost> mapperDeliveryCost = new BaseMapperImpl<>(PnDeliveryDriver.class, DeliveryAndCost.class);
     private static final BaseMapper<PnCost, DeliveryAndCost> mapperCost = new BaseMapperImpl<>(PnCost.class, DeliveryAndCost.class);
 
-    /*
-    public static PnPaperDeliveryDriver toContractRequest(ContractInsertRequestDto contractInsertRequestDto){
-        PnPaperDeliveryDriver contractRequest = new PnPaperDeliveryDriver();
-        contractRequest.setUniqueCode(contractInsertRequestDto.getUniqueCode());
-        contractRequest.setDenomination(contractInsertRequestDto.getDenomination());
-        contractRequest.setTaxId(contractInsertRequestDto.getTaxId());
-        contractRequest.setPhoneNumber(contractInsertRequestDto.getPhoneNumber());
-        contractRequest.setFsu(contractInsertRequestDto.getFsu());
-        return contractRequest;
-    }
-*/
+
     public static Map<PnDeliveryDriver, List<PnCost>> toEntityFromExcel(DeliveriesData deliveriesData, String tenderCode){
         Map<PnDeliveryDriver, List<PnCost>> map = new HashMap<>();
         deliveriesData.getDeliveriesAndCosts().forEach(deliveryAndCost -> {

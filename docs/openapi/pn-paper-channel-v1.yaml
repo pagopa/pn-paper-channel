@@ -246,7 +246,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BaseResponse'
+                $ref: '#/components/schemas/NotifyResponseDto'
         '400':
           $ref: '#/components/responses/Invalid'
         '401':
@@ -636,6 +636,23 @@ components:
           maximum: 999999999
           minimum: 1
       additionalProperties: false
+
+    NotifyResponseDto:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - IN_PROGRESS
+            - COMPLETE
+        uuid:
+          type: string
+        retryAfter:
+          type: number
+          format: int64
+      required:
+        - status
+        - uuid
 
     BaseResponse:
       type: object

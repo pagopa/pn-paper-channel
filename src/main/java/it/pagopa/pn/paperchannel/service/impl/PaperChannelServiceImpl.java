@@ -113,7 +113,7 @@ public class PaperChannelServiceImpl implements PaperChannelService {
     }
 
     @Override
-    public Mono<BaseResponse> notifyUpload(TenderUploadRequestDto uploadRequestDto) {
+    public Mono<NotifyResponseDto> notifyUpload(TenderUploadRequestDto uploadRequestDto) {
         String nameFile = S3Bucket.PREFIX_URL + uploadRequestDto.getUuid();
         return Mono.just(1)
                 .map(i -> s3Bucket.getFileInputStream(nameFile))
@@ -131,7 +131,12 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                     Map<PnDeliveryDriver, List<PnCost>> map = DeliveryDriverMapper.toEntityFromExcel(deliveriesData, tenderCode);
                     return this.costDAO.createNewContract(map,tender);
                 })
-                .map(tender -> new BaseResponse())
+                .map(tender -> {
+                    NotifyResponseDto response = new NotifyResponseDto();
+                    response.setUuid(UUID.randomUUID().toString());
+                    response.setStatus(NotifyResponseDto.StatusEnum.COMPLETE);
+                    return response;
+                })
                 .switchIfEmpty(Mono.error(new PnGenericException(FILE_NOT_FOUND, FILE_NOT_FOUND.getMessage(), HttpStatus.NOT_FOUND)));
     }
 
@@ -156,7 +161,7 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                 .zipWhen(s3Bucket::putObject)
                 .zipWhen(file -> fileDownloadDAO.getUuid(uuid))
                 .map(entityAndFile -> Tuples.of(entityAndFile.getT1().getT1(), entityAndFile.getT2()))
-                .zipWhen(entityAndFile -> {
+                .flatMap(entityAndFile -> {
                     entityAndFile.getT2().setFilename(entityAndFile.getT1().getName());
                     entityAndFile.getT2().setStatus(InfoDownloadDTO.StatusEnum.UPLOADED.getValue());
                     // save item and delete file
@@ -171,26 +176,6 @@ public class PaperChannelServiceImpl implements PaperChannelService {
     }
 
 
-    /*
-    @Override
-    public Mono<BaseResponse> createContract(ContractInsertRequestDto request) {
-        PnPaperDeliveryDriver pnPaperDeliveryDriver = DeliveryDriverMapper.toContractRequest(request);
-        List<PnPaperCost> costs = request.getList().stream().map(CostMapper::fromContractDTO).collect(Collectors.toList());
-        return this.costDAO.createNewContract(pnPaperDeliveryDriver, costs).map(deliveryDriver -> {
-            BaseResponse baseResponse = new BaseResponse();
-            baseResponse.setResult(true);
-            baseResponse.setCode(BaseResponse.CodeEnum.NUMBER_0);
-            return baseResponse;
-        });
-    }
 
-    @Override
-    public Mono<PageableDeliveryDriverResponseDto> takeDeliveryDriver(DeliveryDriverFilter filter) {
-        Pageable pageable = PageRequest.of(filter.getPage()-1, filter.getSize());
-        return deliveryDriverDAO.getDeliveryDriver(filter)
-                .map(list -> DeliveryDriverMapper.paginateList(pageable, list))
-                .map(DeliveryDriverMapper::deliveryDriverToPageableDeliveryDriverDto);
-    }
-*/
 
 }
