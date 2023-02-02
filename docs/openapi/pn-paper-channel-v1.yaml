@@ -24,6 +24,8 @@ tags:
     description: metodo di health
   - name: DeliveryDriver
     description: operazioni legate ai recapitisti
+  - name: SelectList
+    description: operazioni per il recupero delle liste di valori
 
 paths:
   /status:
@@ -287,8 +289,39 @@ paths:
           $ref: '#/components/responses/NotAllowed'
         '500':
           $ref: '#/components/responses/InternalError'
-
-
+  /paper-channel/v1/cap:
+    get:
+      tags:
+        - SelectList
+      operationId: getAllCap
+      summary: Elenco di tutti i cap.
+      description: API che consente il recupero di tutti i cap
+      parameters:
+        - name: cap
+          in: query
+          description: Cap
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CapResponseDto'
+        '400':
+          $ref: '#/components/responses/Invalid'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/NotAllowed'
+        '500':
+          $ref: '#/components/responses/InternalError'
 
 components:
   schemas:
@@ -672,6 +705,24 @@ components:
           maximum: 999999999
           minimum: 1
       additionalProperties: false
+
+    CapResponseDto:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/CapDto'
+          maxItems: 999999999
+          minItems: 1
+      additionalProperties: false
+    CapDto:
+      type: object
+      properties:
+        cap:
+          type: string
+        city:
+          type: string
 
   responses:
     Forbidden:
