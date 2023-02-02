@@ -116,6 +116,7 @@ public abstract class BaseDAO<T> {
         return Flux.from(dynamoTable.query(qeRequest.build()).flatMapIterable(Page::items));
     }
 
+
     protected <A> A encode(A data, Class<A> aClass) {
         if(aClass == PnAddress.class) {
             ((PnAddress) data).setFullName(kmsEncryption.encode(((PnAddress) data).getFullName()));

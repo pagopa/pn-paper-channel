@@ -12,7 +12,6 @@ import reactor.core.publisher.Mono;
 @Service
 public class PaperListServiceImpl implements PaperListService {
 
-
     @Override
     public Mono<CapResponseDto> getAllCap(String cap) {
         return null;
