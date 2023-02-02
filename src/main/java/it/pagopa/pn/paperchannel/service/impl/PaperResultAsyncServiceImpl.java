@@ -42,11 +42,12 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
                 .flatMap(entity -> {
                     log.info("GETTED ENTITY: {}", entity.getRequestId());
                     pnLogAudit.addsBeforeReceive(entity.getIun(), String.format("prepare requestId = %s Response from external-channel", entity.getRequestId()));
+                    pnLogAudit.addsSuccessReceive(entity.getIun(), String.format("prepare requestId = %s Response from external-channel status code %s",  entity.getRequestId(), entity.getStatusCode()));
+
                     return updateEntityResult(singleStatusUpdateDto, entity)
                             .flatMap(updatedEntity -> {
                                 log.info("UPDATED ENTITY: {}", updatedEntity.getRequestId());
                                 sendPaperResponse(updatedEntity, singleStatusUpdateDto);
-                                pnLogAudit.addsSuccessReceive(entity.getIun(), String.format("prepare requestId = %s Response from external-channel status code %s",  entity.getRequestId(), entity.getStatusCode()));
                                 return Mono.just(updatedEntity);
                             })
                             .onErrorResume(ex -> {

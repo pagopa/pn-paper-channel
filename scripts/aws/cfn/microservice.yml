@@ -235,7 +235,7 @@ Resources:
         AlarmSNSTopicArn: !Ref AlarmSNSTopicArn
         ContainerImageURI: !Sub '${ContainerImageUri}'
         ContainerEnvEntry1: !Sub 'AWS_REGIONCODE=${AWS::Region}'
-        ContainerEnvEntry2: !Sub 'CORS_ALLOWED_DOMAINS=${CorsAllowedDomains}, http://localhost:3000'
+        ContainerEnvEntry2: !Sub 'CORS_ALLOWED_DOMAINS=${CorsAllowedDomains}'
         ContainerEnvEntry3: !Sub 'PN_PAPERCHANNEL_CLIENTSAFESTORAGEBASEPATH=${SandboxSafeStorageBaseUrl}'
         ContainerEnvEntry4: !Sub 'PN_PAPERCHANNEL_CLIENTNATIONALREGISTRIESBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
         ContainerEnvEntry5: !Sub 'PN_PAPERCHANNEL_CLIENTEXTERNALCHANNELBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
@@ -260,9 +260,8 @@ Resources:
         ContainerEnvEntry24: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUESAFESTORAGE=${AttemptQueueSafeStorage}'
         ContainerEnvEntry25: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUENATIONALREGISTRIES=${AttemptQueueNationalRegistries}'
         ContainerEnvEntry26: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUEEXTERNALCHANNEL=${AttemptQueueExternalChannel}'
-        ContainerEnvEntry27: !Sub 'SPRING_CLOUD_FUNCTIONROUTER_QUEUES_LIST=${ExternalChannelsOutputsQueueName},${ExternalChannels2PaperChannelQueueName},${NationalRegistries2PaperChannelQueueName},${ScheduledRequestsQueueName}'
-        ContainerEnvEntry28: !Sub 'AWS_BUCKET_NAME=${PaperDeliveryDriversBucketName}'
-        MappedPaths: '/paper-channel/*,/paper-channel-private/*'
+        ContainerEnvEntry27: !Sub 'AWS_BUCKET_NAME=${PaperDeliveryDriversBucketName}'
+        MappedPaths: '/paper-channel-bo/*,/paper-channel-private/*,'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds
         VpcId: !Ref VpcId
@@ -363,7 +362,7 @@ Resources:
         IntendedUsage: BACKOFFICE
         DnsName: !Ref WebApiDnsName
         ProjectName: !Ref ProjectName
-        ServiceApiPath: 'paper-channel'
+        ServiceApiPath: 'paper-channel-bo'
         NetworkLoadBalancerLink: !Ref NetworkLoadBalancerLink
         ApplicationLoadBalancerDomain: !Ref ApplicationLoadBalancerDomain
         AlarmSNSTopicArn: !Ref AlarmSNSTopicArn
