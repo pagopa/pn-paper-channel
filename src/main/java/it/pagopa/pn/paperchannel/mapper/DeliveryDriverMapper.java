@@ -9,6 +9,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryDriver;
 import it.pagopa.pn.paperchannel.model.PageModel;
 import it.pagopa.pn.paperchannel.rest.v1.dto.DeliveryDriverDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PageableDeliveryDriverResponseDto;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Pageable;
 
 import java.util.*;
@@ -23,17 +24,7 @@ public class DeliveryDriverMapper {
     private static final BaseMapper<PnDeliveryDriver, DeliveryAndCost> mapperDeliveryCost = new BaseMapperImpl<>(PnDeliveryDriver.class, DeliveryAndCost.class);
     private static final BaseMapper<PnCost, DeliveryAndCost> mapperCost = new BaseMapperImpl<>(PnCost.class, DeliveryAndCost.class);
 
-    /*
-    public static PnPaperDeliveryDriver toContractRequest(ContractInsertRequestDto contractInsertRequestDto){
-        PnPaperDeliveryDriver contractRequest = new PnPaperDeliveryDriver();
-        contractRequest.setUniqueCode(contractInsertRequestDto.getUniqueCode());
-        contractRequest.setDenomination(contractInsertRequestDto.getDenomination());
-        contractRequest.setTaxId(contractInsertRequestDto.getTaxId());
-        contractRequest.setPhoneNumber(contractInsertRequestDto.getPhoneNumber());
-        contractRequest.setFsu(contractInsertRequestDto.getFsu());
-        return contractRequest;
-    }
-*/
+
     public static Map<PnDeliveryDriver, List<PnCost>> toEntityFromExcel(DeliveriesData deliveriesData, String tenderCode){
         Map<PnDeliveryDriver, List<PnCost>> map = new HashMap<>();
         deliveriesData.getDeliveriesAndCosts().forEach(deliveryAndCost -> {
@@ -44,11 +35,33 @@ public class DeliveryDriverMapper {
                 map.put(driver, new ArrayList<>());
             }
             List<PnCost> costList = map.get(driver);
-            PnCost cost = mapperCost.toEntity(deliveryAndCost);
-            cost.setIdDeliveryDriver(driver.getUniqueCode());
-            cost.setUuid(UUID.randomUUID().toString());
-            cost.setTenderCode(tenderCode);
-            costList.add(cost);
+            if (StringUtils.isNotBlank(deliveryAndCost.getCap())){
+                if (deliveryAndCost.getCap().contains(",")) {
+                    List<String> caps = Arrays.stream(deliveryAndCost.getCap().split(",")).toList();
+                    for (String cap : caps) {
+                        if (cap.contains("-")) {
+                            List<String> capRange = Arrays.stream(cap.split("-")).toList();
+                            int first = Integer.parseInt(capRange.get(0));
+                            int last = Integer.parseInt(capRange.get(1));
+                            for (int i = first; i <= last; i++) {
+                                PnCost newCost = getCost(driver, tenderCode, i+ "", deliveryAndCost);
+                                costList.add(newCost);
+                            }
+                        } else {
+                            PnCost newCost = getCost(driver, tenderCode, cap, deliveryAndCost);
+                            costList.add(newCost);
+                        }
+                    }
+                }
+                else{
+                    PnCost newCost = getCost(driver, tenderCode, deliveryAndCost.getCap(), deliveryAndCost);
+                    costList.add(newCost);
+                }
+            }
+            else{
+                PnCost singleCost = getCost(driver, tenderCode, null, deliveryAndCost);
+                costList.add(singleCost);
+            }
         });
         return map;
     }
@@ -73,6 +86,15 @@ public class DeliveryDriverMapper {
 
     public static PageModel<PnDeliveryDriver> toPagination(Pageable pageable, List<PnDeliveryDriver> list){
         return PageModel.builder(list, pageable);
+    }
+
+    private static PnCost getCost(PnDeliveryDriver deliveryDriver, String tenderCode, String cap, DeliveryAndCost rowExcel){
+        PnCost cost = mapperCost.toEntity(rowExcel);
+        cost.setIdDeliveryDriver(deliveryDriver.getUniqueCode());
+        cost.setUuid(UUID.randomUUID().toString());
+        cost.setTenderCode(tenderCode);
+        cost.setCap(cap);
+        return cost;
     }
 
 }

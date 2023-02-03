@@ -904,11 +904,15 @@ Resources:
     Properties:
       TableName: !Sub '${ProjectName}-PaperCap'
       AttributeDefinitions:
-        - AttributeName: "cap"
+        - AttributeName: "author"
           AttributeType: "S"
-      KeySchema:
         - AttributeName: "cap"
+            AttributeType: "S"
+      KeySchema:
+        - AttributeName: "author"
           KeyType: "HASH"
+        - AttributeName: "cap"
+          KeyType: "RANGE"
       ProvisionedThroughput:
         ReadCapacityUnits: "5"
         WriteCapacityUnits: "5"

@@ -17,7 +17,7 @@ public class PaperChannelRestV1Controller implements DeliveryDriverApi {
 
     @Override
     public Mono<ResponseEntity<PageableTenderResponseDto>> takeTender(Integer page, Integer size, ServerWebExchange exchange) {
-        return DeliveryDriverApi.super.takeTender(page, size, exchange);
+        return this.paperChannelService.getAllTender(page, size).map(ResponseEntity::ok);
     }
 
     @Override
@@ -41,7 +41,7 @@ public class PaperChannelRestV1Controller implements DeliveryDriverApi {
     }
 
     @Override
-    public Mono<ResponseEntity<BaseResponse>> notifyUpload(Mono<TenderUploadRequestDto> tenderUploadRequestDto, ServerWebExchange exchange) {
+    public Mono<ResponseEntity<NotifyResponseDto>> notifyUpload(Mono<TenderUploadRequestDto> tenderUploadRequestDto, ServerWebExchange exchange) {
         return tenderUploadRequestDto.flatMap(request -> paperChannelService.notifyUpload(request))
                 .map(ResponseEntity::ok);
     }

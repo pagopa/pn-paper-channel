@@ -36,6 +36,7 @@ public abstract class BaseDAO<T> {
     protected final DynamoDbAsyncTable<T> dynamoTable;
     protected final String table;
     protected static final Function<Key, QueryConditional> CONDITION_EQUAL_TO = QueryConditional::keyEqualTo;
+    protected static final Function<Key, QueryConditional> CONDITION_BEGINS_WITH = QueryConditional::sortBeginsWith;
     protected static final Function<BaseDAO.Keys, QueryConditional> CONDITION_BETWEEN = keys -> QueryConditional.sortBetween(keys.getFrom(), keys.getTo());
 
     private final Class<T> tClass;
@@ -103,10 +104,13 @@ public abstract class BaseDAO<T> {
         return dynamoDbAsyncClient.query(qeRequest.build()).thenApply(QueryResponse::count);
     }
 
-    protected Flux<T> getByFilter(QueryConditional conditional, String index, Map<String, AttributeValue> values, String filterExpression){
+    protected Flux<T> getByFilter(QueryConditional conditional, String index, Map<String, AttributeValue> values, String filterExpression, Integer maxElemsnts){
         QueryEnhancedRequest.Builder qeRequest = QueryEnhancedRequest
                 .builder()
                 .queryConditional(conditional);
+        if (maxElemsnts != null) {
+            qeRequest.limit(maxElemsnts);
+        }
         if (!StringUtils.isBlank(filterExpression)){
             qeRequest.filterExpression(Expression.builder().expression(filterExpression).expressionValues(values).build());
         }
@@ -115,6 +119,11 @@ public abstract class BaseDAO<T> {
         }
         return Flux.from(dynamoTable.query(qeRequest.build()).flatMapIterable(Page::items));
     }
+
+    protected Flux<T> getByFilter(QueryConditional conditional, String index, Map<String, AttributeValue> values, String filterExpression){
+        return getByFilter(conditional, index, values, null);
+    }
+
 
     protected <A> A encode(A data, Class<A> aClass) {
         if(aClass == PnAddress.class) {

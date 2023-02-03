@@ -1,12 +1,7 @@
 package it.pagopa.pn.paperchannel.mapper;
 
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnCost;
-import it.pagopa.pn.paperchannel.rest.v1.dto.AllPricesContractorResponseDto;
-import it.pagopa.pn.paperchannel.rest.v1.dto.ContractDto;
-import it.pagopa.pn.paperchannel.rest.v1.dto.InternationalContractDto;
-import it.pagopa.pn.paperchannel.rest.v1.dto.InternationalZoneEnum;
-import it.pagopa.pn.paperchannel.rest.v1.dto.NationalContractDto;
-import it.pagopa.pn.paperchannel.rest.v1.dto.TypeRegisteredLetterInterEnum;
+import it.pagopa.pn.paperchannel.rest.v1.dto.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -27,12 +22,12 @@ class CostMapperTest {
 
     @Test
     void costMappertoInternationalContractTest() {
-        InternationalContractDto response=CostMapper.toInternationalContract(getPnPaperCost("AR_INTER"));
+        CostDto response=CostMapper.toCostDTO(getPnPaperCost(ProductTypeEnumDto.SEMPLICE.getValue()));
         Assertions.assertNotNull(response);
     }
     @Test
     void costMapperToNationalContractTest() {
-        NationalContractDto response=CostMapper.toNationalContract(getPnPaperCost("AR"));
+        CostDto response=CostMapper.toCostDTO(getPnPaperCost(ProductTypeEnumDto.AR.getValue()));
         Assertions.assertNotNull(response);
     }
     @Test
@@ -45,13 +40,13 @@ class CostMapperTest {
         PnCost response=CostMapper.fromContractDTO(getContractDto());
         Assertions.assertNotNull(response);
     }
-    private ContractDto getContractDto(){
-        ContractDto contractDto = new ContractDto();
+    private CostDto getContractDto(){
+        CostDto contractDto = new CostDto();
         contractDto.setCap("00061");
-        contractDto.setZone(InternationalZoneEnum.fromValue("ZONE_1"));
+        contractDto.setZone(InternationalZoneEnum._1);
         contractDto.setPrice(0.1F);
         contractDto.setPriceAdditional(0.2F);
-        contractDto.setRegisteredLetter(TypeRegisteredLetterInterEnum.fromValue("AR_INTER"));
+        contractDto.setProductType(ProductTypeEnumDto.AR);
         return contractDto;
     }
     private PnCost getPnPaperCost(String str){
