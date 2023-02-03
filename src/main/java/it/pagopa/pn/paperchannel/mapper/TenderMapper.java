@@ -1,14 +1,20 @@
 package it.pagopa.pn.paperchannel.mapper;
 
+import it.pagopa.pn.paperchannel.dao.model.DeliveriesData;
+import it.pagopa.pn.paperchannel.dao.model.DeliveryAndCost;
 import it.pagopa.pn.paperchannel.mapper.common.BaseMapper;
 import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnTender;
 import it.pagopa.pn.paperchannel.model.PageModel;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PageableTenderResponseDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.TenderDTO;
+import it.pagopa.pn.paperchannel.rest.v1.dto.TenderUploadRequestDto;
+import it.pagopa.pn.paperchannel.utils.Const;
 import org.springframework.data.domain.Pageable;
 
+import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 
 public class TenderMapper {
     private TenderMapper() {
@@ -30,6 +36,18 @@ public class TenderMapper {
         pageableTenderResponseDto.setEmpty(pagePnPaperTender.isEmpty());
         pageableTenderResponseDto.setContent(pagePnPaperTender.mapTo(TenderMapper::tenderToDto));
         return pageableTenderResponseDto;
+    }
+    public static PnTender toTender(TenderUploadRequestDto tenderUploadRequestDto){
+        PnTender tender = new PnTender();
+        String tenderCode = UUID.randomUUID().toString();
+        tender.setTenderCode(tenderCode);
+        tender.setStatus("CREATED");
+        tender.setDate(Instant.now());
+        tender.setEndDate(tenderUploadRequestDto.getTender().getEndDate().toInstant());
+        tender.setStartDate(tenderUploadRequestDto.getTender().getStartDate().toInstant());
+        tender.setAuthor(Const.PN_PAPER_CHANNEL);
+        tender.setDescription(tenderUploadRequestDto.getTender().getName());
+        return tender;
     }
 
     public static TenderDTO tenderToDto(PnTender pnTender) {
