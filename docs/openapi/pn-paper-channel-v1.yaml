@@ -289,7 +289,7 @@ paths:
           $ref: '#/components/responses/NotAllowed'
         '500':
           $ref: '#/components/responses/InternalError'
-  /paper-channel/v1/cap:
+  /paper-channel-bo/v1/cap:
     get:
       tags:
         - SelectList
@@ -725,7 +725,7 @@ components:
       required: true
       schema:
         type: string
-  
+
   securitySchemes:
     ApiKeyAuth:
       type: apiKey
