@@ -4,9 +4,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
 
 @DynamoDbBean
 @Getter
@@ -14,10 +12,15 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbParti
 @ToString
 @NoArgsConstructor
 public class PnCap {
+
+    public static final String AUTHOR_INDEX = "author";
     public static final String COL_CAP = "cap";
     public static final String COL_CITY = "city";
 
-    @Getter(onMethod = @__({@DynamoDbPartitionKey,@DynamoDbAttribute(COL_CAP)}))
+    @Getter(onMethod = @__({@DynamoDbPartitionKey,@DynamoDbAttribute(AUTHOR_INDEX)}))
+    public String author;
+
+    @Getter(onMethod = @__({@DynamoDbSortKey, @DynamoDbAttribute(COL_CAP)}))
     public String cap;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_CITY)}))

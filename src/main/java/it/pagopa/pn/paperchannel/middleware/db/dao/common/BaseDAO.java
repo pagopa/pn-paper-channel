@@ -36,6 +36,7 @@ public abstract class BaseDAO<T> {
     protected final DynamoDbAsyncTable<T> dynamoTable;
     protected final String table;
     protected static final Function<Key, QueryConditional> CONDITION_EQUAL_TO = QueryConditional::keyEqualTo;
+    protected static final Function<Key, QueryConditional> CONDITION_BEGINS_WITH = QueryConditional::sortBeginsWith;
     protected static final Function<BaseDAO.Keys, QueryConditional> CONDITION_BETWEEN = keys -> QueryConditional.sortBetween(keys.getFrom(), keys.getTo());
 
     private final Class<T> tClass;

@@ -14,9 +14,13 @@ import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
+import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.COUNTRY_NOT_FOUND;
 
@@ -34,23 +38,13 @@ public class CapDAOImpl extends BaseDAO<PnCap> implements CapDAO {
 
     @Override
     public Mono<List<PnCap>> getAllCap(String cap) {
-        return null;
-//        if (StringUtils.isNotEmpty(cap)) {
-//            return Mono.fromFuture
-//                    (this.get(uuid, null)
-//                            .thenApply(item -> item));
-//        }
-//
-//
-//        return Mono.fromFuture(this.get(cap,null).thenApply(item->item))
-//                .switchIfEmpty(this.getBySecondaryIndex(PnCap.COL_CAP,cap,null)
-//                        .collectList()
-//                        .map(items->{
-//                            if (items.isEmpty()) {
-//                                throw new PnGenericException(COUNTRY_NOT_FOUND,COUNTRY_NOT_FOUND.getMessage());
-//                            }
-//                            return items.get(0);
-//                        })
-//                );
+        QueryConditional conditional = CONDITION_BEGINS_WITH.apply(keyBuild(cap, null));
+        if (StringUtils.isNotBlank(cap)){
+            String filter = ":cap=" + PnCap.COL_CAP;
+            Map<String, AttributeValue> values = new HashMap<>();
+            values.put(":cap", AttributeValue.builder().s(cap).build());
+            return this.getByFilter(conditional, PnCap.AUTHOR_INDEX, values, filter).collectList();
+        }
+        return this.getByFilter(conditional, PnCap.AUTHOR_INDEX, null, null).collectList();
     }
 }
