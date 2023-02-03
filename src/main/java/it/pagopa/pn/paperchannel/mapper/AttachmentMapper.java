@@ -9,9 +9,6 @@ import it.pagopa.pn.paperchannel.model.AttachmentInfo;
 import it.pagopa.pn.paperchannel.rest.v1.dto.AttachmentDetails;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.joda.time.DateTimeUtils;
-
-import java.util.Date;
 
 @Slf4j
 public class AttachmentMapper {
