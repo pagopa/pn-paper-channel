@@ -18,8 +18,8 @@ public class PaperListServiceImpl implements PaperListService {
     private CapDAO capDAO;
 
     @Override
-    public Mono<CapResponseDto> getAllCap(String cap) {
-        return capDAO.getAllCap(cap)
+    public Mono<CapResponseDto> getAllCap(String value) {
+        return capDAO.getAllCap(value)
                 .map(list -> CapMapper.toResponse(list));
     }
 }

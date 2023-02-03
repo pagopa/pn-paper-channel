@@ -18,4 +18,5 @@ public class Const {
     public static final String uniqueCodeRegex = "/^[A-Za-z0-9~\\-_]{7}$/i";
     public static final String phoneNumberRegex = "/^[0-9]{10}$/i";
     public static final String fiscalCodeRegex = "/^[a-zA-Z0-9-]+$/";
+    public static final Integer maxElements = 10;
 }

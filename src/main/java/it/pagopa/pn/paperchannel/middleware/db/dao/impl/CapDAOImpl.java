@@ -8,6 +8,7 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.CapDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.BaseDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnCap;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnCost;
+import it.pagopa.pn.paperchannel.utils.Const;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.annotation.Import;
 import org.springframework.stereotype.Repository;
@@ -33,18 +34,15 @@ public class CapDAOImpl extends BaseDAO<PnCap> implements CapDAO {
                       DynamoDbAsyncClient dynamoDbAsyncClient,
                       AwsPropertiesConfig awsPropertiesConfig) {
         super(kmsEncryption, dynamoDbEnhancedAsyncClient, dynamoDbAsyncClient,
-                awsPropertiesConfig.getDynamodbZoneTable(), PnCap.class);
+                awsPropertiesConfig.getDynamodbCapTable(), PnCap.class);
     }
 
     @Override
     public Mono<List<PnCap>> getAllCap(String cap) {
-        QueryConditional conditional = CONDITION_BEGINS_WITH.apply(keyBuild(cap, null));
-        if (StringUtils.isNotBlank(cap)){
-            String filter = ":cap=" + PnCap.COL_CAP;
-            Map<String, AttributeValue> values = new HashMap<>();
-            values.put(":cap", AttributeValue.builder().s(cap).build());
-            return this.getByFilter(conditional, PnCap.AUTHOR_INDEX, values, filter).collectList();
+        QueryConditional conditional = CONDITION_EQUAL_TO.apply(keyBuild(Const.PN_PAPER_CHANNEL, cap));
+        if (StringUtils.isNotEmpty(cap)) {
+            conditional = CONDITION_BEGINS_WITH.apply(keyBuild(Const.PN_PAPER_CHANNEL, cap));
         }
-        return this.getByFilter(conditional, PnCap.AUTHOR_INDEX, null, null).collectList();
+        return this.getByFilter(conditional, null, null, null, Const.maxElements).collectList();
     }
 }

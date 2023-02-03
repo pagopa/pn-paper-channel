@@ -5,5 +5,5 @@ import reactor.core.publisher.Mono;
 
 public interface PaperListService {
 
-    Mono<CapResponseDto> getAllCap(String cap);
+    Mono<CapResponseDto> getAllCap(String value);
 }

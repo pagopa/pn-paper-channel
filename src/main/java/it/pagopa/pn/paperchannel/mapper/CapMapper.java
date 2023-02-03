@@ -26,8 +26,9 @@ public class CapMapper {
         CapResponseDto responseDto = new CapResponseDto();
         List<CapDto> lst = new ArrayList<>();
         paperCosts.forEach(i -> {
-            responseDto.addContentItem(fromEntity(i));
+            lst.add(fromEntity(i));
         });
+        responseDto.setContent(lst);
         return responseDto;
     }
 }

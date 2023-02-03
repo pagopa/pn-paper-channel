@@ -17,7 +17,7 @@ public class PaperListRestV1Controller implements SelectListApi {
     private PaperListService paperListService;
 
     @Override
-    public Mono<ResponseEntity<CapResponseDto>> getAllCap(String cap, ServerWebExchange exchange) {
-        return paperListService.getAllCap(cap).map(ResponseEntity::ok);
+    public Mono<ResponseEntity<CapResponseDto>> getAllCap(String value, ServerWebExchange exchange) {
+        return paperListService.getAllCap(value).map(ResponseEntity::ok);
     }
 }
