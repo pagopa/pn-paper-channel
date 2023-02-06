@@ -73,10 +73,12 @@ public class ExcelEngine {
         File file = null;
         try {
             file = new File(filename.concat(".xlsx"));
-            file.createNewFile();
-            try (FileOutputStream os = new FileOutputStream(file)) {
-                workbook.write(os);
+            if (file.createNewFile()) {
+                try (FileOutputStream os = new FileOutputStream(file)) {
+                    workbook.write(os);
+                }
             }
+
         } catch (Exception e) {
             log.error("Error in file {}", e.getMessage());
             throw new DAOException("Error with save on disk file");

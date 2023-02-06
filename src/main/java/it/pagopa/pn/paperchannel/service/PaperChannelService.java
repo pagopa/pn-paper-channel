@@ -11,6 +11,6 @@ public interface PaperChannelService {
     Mono<PresignedUrlResponseDto> getPresignedUrl();
     Mono<InfoDownloadDTO> downloadTenderFile(String tenderCode, String uuid);
 
-    Mono<BaseResponse> notifyUpload(TenderUploadRequestDto uploadRequestDto);
+    Mono<NotifyResponseDto> notifyUpload(TenderUploadRequestDto uploadRequestDto);
 
 }

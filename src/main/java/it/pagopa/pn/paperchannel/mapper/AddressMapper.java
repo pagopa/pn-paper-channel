@@ -12,11 +12,11 @@ import it.pagopa.pn.paperchannel.utils.DateUtils;
 import java.time.LocalDateTime;
 
 public class AddressMapper {
-    private static final BaseMapper<Address, AnalogAddress> mapperAnalog = new BaseMapperImpl(Address.class, AnalogAddress.class);
+    private static final BaseMapper<Address, AnalogAddress> mapperAnalog = new BaseMapperImpl<>(Address.class, AnalogAddress.class);
 
-    private static final BaseMapper<PnAddress, Address> mapperToAddressEntity = new BaseMapperImpl(PnAddress.class, Address.class);
+    private static final BaseMapper<PnAddress, Address> mapperToAddressEntity = new BaseMapperImpl<>(PnAddress.class, Address.class);
 
-    private static final BaseMapper<AnalogAddress, DiscoveredAddressDto> mapperToAnalog = new BaseMapperImpl(AnalogAddress.class, DiscoveredAddressDto.class);
+    private static final BaseMapper<AnalogAddress, DiscoveredAddressDto> mapperToAnalog = new BaseMapperImpl<>(AnalogAddress.class, DiscoveredAddressDto.class);
 
     private AddressMapper(){
         throw new IllegalCallerException("the constructor must not called");

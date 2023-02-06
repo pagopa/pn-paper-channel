@@ -9,6 +9,7 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.common.TransactWriterInitiali
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnCost;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryDriver;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnTender;
+import it.pagopa.pn.paperchannel.utils.Const;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Repository;
@@ -53,7 +54,7 @@ public class CostDAOImpl extends BaseDAO<PnCost> implements CostDAO {
         List<PnDeliveryDriver> deliveries = deliveriesAndCost.keySet().stream().toList();
         deliveries.forEach(delivery -> {
             delivery.setStartDate(Instant.now());
-            delivery.setAuthor("PN-PAPER-CHANNEL");
+            delivery.setAuthor(Const.PN_PAPER_CHANNEL);
             transactWriterInitializer.addRequestTransaction(deliveryDriverTable, delivery, PnDeliveryDriver.class);
             List<PnCost> costs = deliveriesAndCost.get(delivery);
             costs.forEach(cost -> transactWriterInitializer.addRequestTransaction(this.dynamoTable, cost, PnCost.class));

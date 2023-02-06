@@ -19,6 +19,7 @@ public class PnDeliveryFile {
     public static final String COL_STATUS = "status";
     public static final String COL_URL = "url";
     public static final String COL_FILENAME = "filename";
+    public static final String COL_ERROR = "error";
 
     @Getter(onMethod = @__({@DynamoDbPartitionKey,@DynamoDbAttribute(COL_UUID)}))
     public String uuid;
@@ -28,7 +29,9 @@ public class PnDeliveryFile {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_URL)}))
     public String url;
-
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_FILENAME)}))
     public String filename;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_ERROR)}))
+    public String error;
 }
