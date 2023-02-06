@@ -17,6 +17,7 @@ import it.pagopa.pn.paperchannel.rest.v1.dto.*;
 import it.pagopa.pn.paperchannel.s3.S3Bucket;
 import it.pagopa.pn.paperchannel.service.PaperChannelService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -118,7 +119,12 @@ public class PaperChannelServiceImpl implements PaperChannelService {
 
         return fileDownloadDAO.getUuid(uploadRequestDto.getUuid())
                 .map(item -> {
-                    if (!StringUtils.equals(item.getStatus(), FileStatusCodeEnum.UPLOADING.getCode())) {
+                    if (StringUtils.equals(item.getStatus(), FileStatusCodeEnum.ERROR.getCode())) {
+                        if (CollectionUtils.isEmpty(item.getErrorMessage().getErrorDetails())) {
+                            throw new PnGenericException(ExceptionTypeEnum.EXCEL_BADLY_CONTENT, item.getErrorMessage().getMessage());
+                        }
+                        throw new PnExcelValidatorException(ExceptionTypeEnum.BADLY_REQUEST, ErrorDetailMapper.toDtos(item.getErrorMessage().getErrorDetails()));
+                    } else if (!StringUtils.equals(item.getStatus(), FileStatusCodeEnum.UPLOADING.getCode())) {
                         return NotifyResponseMapper.toDto(item);
                     } else {
                         String fileName = S3Bucket.PREFIX_URL + uploadRequestDto.getUuid();
@@ -130,35 +136,6 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                     }
                     return null;
                 }).switchIfEmpty(Mono.error(new PnGenericException(ExceptionTypeEnum.FILE_REQUEST_ASYNC_NOT_FOUND, ExceptionTypeEnum.FILE_REQUEST_ASYNC_NOT_FOUND.getMessage(), HttpStatus.NOT_FOUND)));
-
-//        String nameFile = S3Bucket.PREFIX_URL + uploadRequestDto.getUuid();
-//        String uuid = uploadRequestDto.getUuid();
-//        if(StringUtils.isNotEmpty(uuid)) {
-//            return fileDownloadDAO.getUuid(uuid)
-//                    .map(NotifyResponseMapper::toDto)
-//                    .map(item -> {
-//                        if (item.getStatus().getValue().equals(FileStatusCodeEnum.ERROR.getCode())){
-//                            //lancio eccezione
-//                        }
-//                        return item;
-//                    })
-//                    .switchIfEmpty(Mono.error(new PnGenericException(ExceptionTypeEnum.FILE_REQUEST_ASYNC_NOT_FOUND, ExceptionTypeEnum.FILE_REQUEST_ASYNC_NOT_FOUND.getMessage(), HttpStatus.NOT_FOUND)));
-//        }
-//        return Mono.just(1)
-//                .map(i -> s3Bucket.getFileInputStream(nameFile))
-//                .switchIfEmpty(Mono.error(new PnGenericException(FILE_NOT_FOUND, FILE_NOT_FOUND.getMessage(), HttpStatus.NOT_FOUND)))
-//                .map(inputStream -> this.excelDAO.readData(inputStream))
-//                .flatMap(deliveriesData -> {
-//                    PnTender tender = TenderMapper.toTender(uploadRequestDto);
-//                    Map<PnDeliveryDriver, List<PnCost>> map = DeliveryDriverMapper.toEntityFromExcel(deliveriesData, tender.getTenderCode());
-//                    return this.costDAO.createNewContract(map,tender);
-//                })
-//                .map(tender -> {
-//                    NotifyResponseDto response = new NotifyResponseDto();
-//                    response.setUuid(UUID.randomUUID().toString());
-//                    response.setStatus(NotifyResponseDto.StatusEnum.COMPLETE);
-//                    return response;
-//                });
     }
 
     public void notifyUploadAsync(PnDeliveryFile item, InputStream inputStream, TenderUploadRequestDto tenderRequest){
@@ -183,25 +160,6 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                     return Mono.error(ex);
                 })
                 .subscribeOn(Schedulers.boundedElastic()).subscribe();
-
-
-//                .flatMap(i -> {
-//                    return this.excelDAO.readData(inputStream)
-//                            .zipWhen(deliveriesData -> {
-//                                PnTender tender = TenderMapper.toTender(tenderRequest);
-//                                Map<PnDeliveryDriver, List<PnCost>> map = DeliveryDriverMapper.toEntityFromExcel(deliveriesData, tender.getTenderCode());
-//                                return this.costDAO.createNewContract(map,tender);
-//                            })
-//                            .onErrorResume(ex -> {
-//                                if (ex instanceof PnExcelValidatorException){
-//                                    //SALVO ERRORI IN COLONNA
-//                                }
-//                                else{
-//                                    ex.getMessage();
-//                                }
-//                                return Mono.error(ex);
-//                            });
-//                });
     }
 
     private void createAndUploadFileAsync(String tenderCode,String uuid){
@@ -238,8 +196,4 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                 })
                 .subscribeOn(Schedulers.boundedElastic()).subscribe();
     }
-
-
-
-
 }

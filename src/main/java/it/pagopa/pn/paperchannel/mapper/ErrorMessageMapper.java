@@ -22,7 +22,7 @@ public class ErrorMessageMapper {
 
     public static PnErrorMessage toEntity(PnExcelValidatorException dto){
         PnErrorMessage entity = new PnErrorMessage();
-        entity.setMessage(dto.getMessage());
+        entity.setMessage(dto.getErrorType().getMessage());
         List<PnErrorDetails> detailsList = new ArrayList<>();
         dto.getErrors().forEach(errorCell -> {
             detailsList.add(ErrorDetailMapper.toEntity(errorCell));
