@@ -1,9 +1,5 @@
 package it.pagopa.pn.paperchannel.mapper;
 
-import it.pagopa.pn.paperchannel.dao.model.DeliveriesData;
-import it.pagopa.pn.paperchannel.dao.model.DeliveryAndCost;
-import it.pagopa.pn.paperchannel.mapper.common.BaseMapper;
-import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnTender;
 import it.pagopa.pn.paperchannel.model.PageModel;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PageableTenderResponseDto;
@@ -14,6 +10,7 @@ import it.pagopa.pn.paperchannel.utils.Const;
 import org.springframework.data.domain.Pageable;
 
 import java.time.Instant;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -21,8 +18,6 @@ public class TenderMapper {
     private TenderMapper() {
         throw new IllegalCallerException();
     }
-
-    private static final BaseMapper<PnTender, TenderDTO> mapperTenderToDto = new BaseMapperImpl<>(PnTender.class, TenderDTO.class);
 
     public static PageableTenderResponseDto toPageableResponse(PageModel<PnTender> pagePnPaperTender) {
         PageableTenderResponseDto pageableTenderResponseDto = new PageableTenderResponseDto();
@@ -54,7 +49,7 @@ public class TenderMapper {
     public static PnTender toTenderRequest(TenderCreateRequestDTO dto){
         PnTender tender = new PnTender();
         tender.setTenderCode(UUID.randomUUID().toString());
-        tender.setStatus("CREATED");
+        tender.setStatus(TenderDTO.StatusEnum.CREATED.toString());
         tender.setDescription(dto.getName());
         tender.setDate(Instant.now());
         tender.setAuthor(Const.PN_PAPER_CHANNEL);
@@ -64,7 +59,13 @@ public class TenderMapper {
     }
 
     public static TenderDTO tenderToDto(PnTender pnTender) {
-        return mapperTenderToDto.toDTO(pnTender);
+        TenderDTO tender = new TenderDTO();
+        tender.setCode(pnTender.getTenderCode());
+        tender.setName(pnTender.getDescription());
+        tender.setStatus(TenderDTO.StatusEnum.valueOf(pnTender.getStatus()));
+        tender.setStartDate(Date.from(pnTender.getStartDate()));
+        tender.setEndDate(Date.from(pnTender.getEndDate()));
+        return tender;
     }
 
     public static PageModel<PnTender> toPagination(Pageable pageable, List<PnTender> list){
