@@ -19,8 +19,6 @@ public class PnExcelValidatorException extends RuntimeException{
         this.errors = errors;
     }
 
-
-
     @Getter
     @Setter
     @AllArgsConstructor
@@ -29,6 +27,5 @@ public class PnExcelValidatorException extends RuntimeException{
         private Integer col;
         private String message;
     }
-
 
 }

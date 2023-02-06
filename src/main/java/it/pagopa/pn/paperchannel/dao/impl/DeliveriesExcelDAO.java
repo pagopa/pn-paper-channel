@@ -45,20 +45,17 @@ public class DeliveriesExcelDAO implements ExcelDAO<DeliveriesData> {
     @Override
     public DeliveriesData readData(InputStream inputStream) {
         log.info("Start to read data");
+        List<PnExcelValidatorException.ErrorCell> errors = new ArrayList<>();
+        DeliveriesData response = null;
         try {
-            List<PnExcelValidatorException.ErrorCell> errors = new ArrayList<>();
             ExcelEngine engine = new ExcelEngine(inputStream);
             List<DeliveryAndCost> data = engine.extractDataLikeTable(map -> {
                 log.info(map.toString());
                 return ExcelValidator.validateExcel(errors, map);
             }, DeliveryAndCost.class);
-            if (!errors.isEmpty()){
-                throw new PnExcelValidatorException(EXCEL_BADLY_FORMAT, errors);
-            }
-
-            DeliveriesData response = new DeliveriesData();
+            response =  new DeliveriesData();
             response.setDeliveriesAndCosts(data);
-            return response;
+
         } catch (IOException e) {
             log.error("ERROR WITH EXCEL : {}", e.getMessage());
             return null;
@@ -67,6 +64,11 @@ public class DeliveriesExcelDAO implements ExcelDAO<DeliveriesData> {
         } catch (Exception e) {
             throw new PnGenericException(EXCEL_BADLY_CONTENT, e.getMessage());
         }
+
+        if (!errors.isEmpty()){
+            throw new PnExcelValidatorException(EXCEL_BADLY_FORMAT, errors);
+        }
+        return response;
     }
 
 }
