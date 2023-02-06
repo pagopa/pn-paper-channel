@@ -48,7 +48,10 @@ public class TenderMapper {
 
     public static PnTender toTenderRequest(TenderCreateRequestDTO dto){
         PnTender tender = new PnTender();
-        tender.setTenderCode(UUID.randomUUID().toString());
+        tender.setTenderCode(dto.getCode());
+        if (tender.getTenderCode() == null){
+            tender.setTenderCode(UUID.randomUUID().toString());
+        }
         tender.setStatus(TenderDTO.StatusEnum.CREATED.toString());
         tender.setDescription(dto.getName());
         tender.setDate(Instant.now());
