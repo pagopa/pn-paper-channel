@@ -673,7 +673,7 @@ Resources:
         - AttributeName: "author"
           AttributeType: "S"
         - AttributeName: "cap"
-            AttributeType: "S"
+          AttributeType: "S"
       KeySchema:
         - AttributeName: "author"
           KeyType: "HASH"
