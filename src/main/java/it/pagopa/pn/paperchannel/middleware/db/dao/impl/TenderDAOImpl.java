@@ -41,4 +41,14 @@ public class TenderDAOImpl extends BaseDAO<PnTender> implements TenderDAO {
         return this.getByFilter(conditional, PnTender.AUTHOR_INDEX, null, null)
                 .collectList();
     }
+
+    @Override
+    public Mono<PnTender> getTender(String tenderCode) {
+        return Mono.fromFuture(this.get(tenderCode, null).thenApply(item -> item));
+    }
+
+    @Override
+    public Mono<PnTender> createOrUpdate(PnTender tender) {
+        return Mono.fromFuture(put(tender).thenApply(i -> tender));
+    }
 }

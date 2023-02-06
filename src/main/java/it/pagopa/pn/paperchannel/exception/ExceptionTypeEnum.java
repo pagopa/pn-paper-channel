@@ -24,7 +24,9 @@ public enum ExceptionTypeEnum{
     EXCEL_BADLY_FORMAT("EXCEL_BADLY_FORMAT", "Il file è formattato male"),
     EXCEL_BADLY_CONTENT("EXCEL_BADLY_CONTENT", "Il file è corrotto"),
     BADLY_REQUEST("BADLY_REQUEST", "Campi obbligatori mancanti"),
+    BADLY_DATE_INTERVAL("BADLY_DATE_INTERVAL", "L'intervallo di data è errato"),
     LISTENER_QUEUE_NOT_EXPIRED("LISTENER_QUEUE_NOT_EXPIRED", "Evento non ancora disponibile"),
+    TENDER_NOT_EXISTED("TENDER_NOT_EXISTED", "La gara non esiste"),
     FILE_REQUEST_ASYNC_NOT_FOUND("FILE_REQUEST_ASYNC_NOT_FOUND", "File non trovato, flusso asincrono");
 
     private final String title;

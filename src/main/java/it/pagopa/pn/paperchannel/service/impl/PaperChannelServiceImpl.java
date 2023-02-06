@@ -11,13 +11,16 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.DeliveryDriverDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.FileDownloadDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.TenderDAO;
-import it.pagopa.pn.paperchannel.middleware.db.entities.*;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryFile;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnCost;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryDriver;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnTender;
 import it.pagopa.pn.paperchannel.model.FileStatusCodeEnum;
 import it.pagopa.pn.paperchannel.rest.v1.dto.*;
 import it.pagopa.pn.paperchannel.s3.S3Bucket;
 import it.pagopa.pn.paperchannel.service.PaperChannelService;
+import it.pagopa.pn.paperchannel.utils.Const;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -31,11 +34,13 @@ import reactor.util.function.Tuples;
 import java.io.File;
 import java.io.InputStream;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_NOT_EXIST;
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.FILE_NOT_FOUND;
 
 
 @Slf4j
@@ -196,4 +201,8 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                 })
                 .subscribeOn(Schedulers.boundedElastic()).subscribe();
     }
+
+
+
+
 }
