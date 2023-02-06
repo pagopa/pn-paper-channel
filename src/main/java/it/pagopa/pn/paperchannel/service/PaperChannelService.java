@@ -13,4 +13,6 @@ public interface PaperChannelService {
 
     Mono<NotifyResponseDto> notifyUpload(TenderUploadRequestDto uploadRequestDto);
 
+    Mono<TenderCreateResponseDTO> createOrUpdateTender(TenderCreateRequestDTO request);
+
 }

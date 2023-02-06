@@ -19,7 +19,6 @@ import it.pagopa.pn.paperchannel.model.FileStatusCodeEnum;
 import it.pagopa.pn.paperchannel.rest.v1.dto.*;
 import it.pagopa.pn.paperchannel.s3.S3Bucket;
 import it.pagopa.pn.paperchannel.service.PaperChannelService;
-import it.pagopa.pn.paperchannel.utils.Const;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,13 +33,11 @@ import reactor.util.function.Tuples;
 import java.io.File;
 import java.io.InputStream;
 import java.time.Duration;
-import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_NOT_EXIST;
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.FILE_NOT_FOUND;
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 
 
 @Slf4j
@@ -165,6 +162,22 @@ public class PaperChannelServiceImpl implements PaperChannelService {
 //                    response.setStatus(NotifyResponseDto.StatusEnum.COMPLETE);
 //                    return response;
 //                });
+    }
+
+    @Override
+    public Mono<TenderCreateResponseDTO> createOrUpdateTender(TenderCreateRequestDTO request) {
+        if (request.getEndDate().before(request.getStartDate())){
+            throw new PnGenericException(BADLY_DATE_INTERVAL, BADLY_DATE_INTERVAL.getMessage());
+        }
+        return Mono.just(TenderMapper.toTenderRequest(request))
+                .flatMap(entity -> this.tenderDAO.createOrUpdate(entity))
+                .map(entity -> {
+                    TenderCreateResponseDTO response = new TenderCreateResponseDTO();
+                    response.setTender(TenderMapper.tenderToDto(entity));
+                    response.setCode(TenderCreateResponseDTO.CodeEnum.NUMBER_0);
+                    response.setResult(true);
+                    return response;
+                });
     }
 
     public void notifyUploadAsync(PnDeliveryFile item, InputStream inputStream, TenderUploadRequestDto tenderRequest){

@@ -7,6 +7,7 @@ import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnTender;
 import it.pagopa.pn.paperchannel.model.PageModel;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PageableTenderResponseDto;
+import it.pagopa.pn.paperchannel.rest.v1.dto.TenderCreateRequestDTO;
 import it.pagopa.pn.paperchannel.rest.v1.dto.TenderDTO;
 import it.pagopa.pn.paperchannel.rest.v1.dto.TenderUploadRequestDto;
 import it.pagopa.pn.paperchannel.utils.Const;
@@ -47,6 +48,18 @@ public class TenderMapper {
         tender.setStartDate(tenderUploadRequestDto.getTender().getStartDate().toInstant());
         tender.setAuthor(Const.PN_PAPER_CHANNEL);
         tender.setDescription(tenderUploadRequestDto.getTender().getName());
+        return tender;
+    }
+
+    public static PnTender toTenderRequest(TenderCreateRequestDTO dto){
+        PnTender tender = new PnTender();
+        tender.setTenderCode(UUID.randomUUID().toString());
+        tender.setStatus("CREATED");
+        tender.setDescription(dto.getName());
+        tender.setDate(Instant.now());
+        tender.setAuthor(Const.PN_PAPER_CHANNEL);
+        tender.setStartDate(dto.getStartDate().toInstant());
+        tender.setEndDate(dto.getEndDate().toInstant());
         return tender;
     }
 

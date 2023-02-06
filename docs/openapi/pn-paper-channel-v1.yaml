@@ -196,18 +196,18 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /paper-channel-bo/v1/delivery-tender:
+  /paper-channel-bo/v1/tender:
     post:
       tags:
         - DeliveryDriver
-      operationId: addTender
-      summary: Inserimento Gara.
-      description: API che consente di aggiungere una nuova gara e tutti i suoi vincitori
+      operationId: createUpdateTender
+      summary: Inserimento o modifica Gara.
+      description: API che consente di aggiungere o modificare i dettagli di una gara
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TenderCreateRequestDto'
+              $ref: '#/components/schemas/TenderCreateRequestDTO'
 
       responses:
         '200':
@@ -215,7 +215,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BaseResponse'
+                $ref: '#/components/schemas/TenderCreateResponseDTO'
         '400':
           $ref: '#/components/responses/Invalid'
         '401':
@@ -373,20 +373,26 @@ components:
           minItems: 1
       additionalProperties: false
 
+    TenderCreateRequestDTO:
+      type: object
+      properties:
+        name:
+          type: string
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+      additionalProperties: false
 
-
-    TenderCreateRequestDto:
+    TenderCreateResponseDTO:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
       type: object
       properties:
         tender:
-          $ref: "#/components/schemas/TenderDTO"
-        fsu:
-          $ref: '#/components/schemas/DriverInsertDTO'
-        deliveryDrivers:
-          type: array
-          items:
-            $ref: '#/components/schemas/DriverInsertDTO'
-      additionalProperties: false
+          $ref: '#/components/schemas/TenderDTO'
 
     TenderUploadRequestDto:
       type: object
