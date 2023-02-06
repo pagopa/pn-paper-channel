@@ -32,6 +32,7 @@ import reactor.core.scheduler.Schedulers;
 import reactor.util.function.Tuples;
 
 import java.io.File;
+import java.io.InputStream;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -117,43 +118,60 @@ public class PaperChannelServiceImpl implements PaperChannelService {
 
     @Override
     public Mono<NotifyResponseDto> notifyUpload(TenderUploadRequestDto uploadRequestDto) {
-        String nameFile = S3Bucket.PREFIX_URL + uploadRequestDto.getUuid();
-        String uuid = uploadRequestDto.getUuid();
-        if(StringUtils.isNotEmpty(uuid)) {
-            return fileDownloadDAO.getUuid(uuid)
-                    .map(NotifyResponseMapper::toUploadFile)
-                    .map(item -> {
-                        if (item.getStatus().getValue().equals(FileStatusCodeEnum.ERROR.getCode())){
-                            //lancio eccezione
-                        }
-                        return item;
-                    })
-                    .switchIfEmpty(Mono.error(new PnGenericException(ExceptionTypeEnum.FILE_REQUEST_ASYNC_NOT_FOUND, ExceptionTypeEnum.FILE_REQUEST_ASYNC_NOT_FOUND.getMessage(), HttpStatus.NOT_FOUND)));
+        if (StringUtils.isEmpty(uploadRequestDto.getUuid())) {
+            return Mono.error(new PnGenericException(ExceptionTypeEnum.BADLY_REQUEST, ExceptionTypeEnum.BADLY_REQUEST.getMessage(), HttpStatus.BAD_REQUEST));
         }
-        return Mono.just(1)
-                .map(i -> s3Bucket.getFileInputStream(nameFile))
-                .switchIfEmpty(Mono.error(new PnGenericException(FILE_NOT_FOUND, FILE_NOT_FOUND.getMessage(), HttpStatus.NOT_FOUND)))
-                .map(inputStream -> this.excelDAO.readData(inputStream))
-                .flatMap(deliveriesData -> {
-                    PnTender tender = TenderMapper.toTender(uploadRequestDto);
-                    Map<PnDeliveryDriver, List<PnCost>> map = DeliveryDriverMapper.toEntityFromExcel(deliveriesData, tender.getTenderCode());
-                    return this.costDAO.createNewContract(map,tender);
-                })
-                .map(tender -> {
-                    NotifyResponseDto response = new NotifyResponseDto();
-                    response.setUuid(UUID.randomUUID().toString());
-                    response.setStatus(NotifyResponseDto.StatusEnum.COMPLETE);
-                    return response;
-                });
+
+        return fileDownloadDAO.getUuid(uploadRequestDto.getUuid())
+                .map(item -> {
+                    if (!StringUtils.equals(item.getStatus(), FileStatusCodeEnum.UPLOADING.getCode())) {
+                        return NotifyResponseMapper.toDto(item);
+                    } else {
+                        String fileName = S3Bucket.PREFIX_URL + uploadRequestDto.getUuid();
+                        InputStream inputStream = s3Bucket.getFileInputStream(fileName);
+                        if (inputStream != null) {
+                            notifyUploadAsync(item, inputStream, uploadRequestDto);
+                            return NotifyResponseMapper.toDto(item);
+                        }
+                    }
+                    return null;
+                }).switchIfEmpty(Mono.error(new PnGenericException(ExceptionTypeEnum.FILE_REQUEST_ASYNC_NOT_FOUND, ExceptionTypeEnum.FILE_REQUEST_ASYNC_NOT_FOUND.getMessage(), HttpStatus.NOT_FOUND)));
+
+//        String nameFile = S3Bucket.PREFIX_URL + uploadRequestDto.getUuid();
+//        String uuid = uploadRequestDto.getUuid();
+//        if(StringUtils.isNotEmpty(uuid)) {
+//            return fileDownloadDAO.getUuid(uuid)
+//                    .map(NotifyResponseMapper::toDto)
+//                    .map(item -> {
+//                        if (item.getStatus().getValue().equals(FileStatusCodeEnum.ERROR.getCode())){
+//                            //lancio eccezione
+//                        }
+//                        return item;
+//                    })
+//                    .switchIfEmpty(Mono.error(new PnGenericException(ExceptionTypeEnum.FILE_REQUEST_ASYNC_NOT_FOUND, ExceptionTypeEnum.FILE_REQUEST_ASYNC_NOT_FOUND.getMessage(), HttpStatus.NOT_FOUND)));
+//        }
+//        return Mono.just(1)
+//                .map(i -> s3Bucket.getFileInputStream(nameFile))
+//                .switchIfEmpty(Mono.error(new PnGenericException(FILE_NOT_FOUND, FILE_NOT_FOUND.getMessage(), HttpStatus.NOT_FOUND)))
+//                .map(inputStream -> this.excelDAO.readData(inputStream))
+//                .flatMap(deliveriesData -> {
+//                    PnTender tender = TenderMapper.toTender(uploadRequestDto);
+//                    Map<PnDeliveryDriver, List<PnCost>> map = DeliveryDriverMapper.toEntityFromExcel(deliveriesData, tender.getTenderCode());
+//                    return this.costDAO.createNewContract(map,tender);
+//                })
+//                .map(tender -> {
+//                    NotifyResponseDto response = new NotifyResponseDto();
+//                    response.setUuid(UUID.randomUUID().toString());
+//                    response.setStatus(NotifyResponseDto.StatusEnum.COMPLETE);
+//                    return response;
+//                });
     }
 
-    public void notifyUploadAsync (TenderUploadRequestDto tenderRequest){
-        String nameFile = S3Bucket.PREFIX_URL + tenderRequest.getUuid();
+    public void notifyUploadAsync(PnDeliveryFile item, InputStream inputStream, TenderUploadRequestDto tenderRequest){
         Mono.delay(Duration.ofMillis(10)).publishOn(Schedulers.boundedElastic())
-                .map(i -> s3Bucket.getFileInputStream(nameFile))
-                .switchIfEmpty(Mono.error(new PnGenericException(FILE_NOT_FOUND, FILE_NOT_FOUND.getMessage(), HttpStatus.NOT_FOUND)))
-                .map(inputStream -> this.excelDAO.readData(inputStream))
-                .flatMap(deliveriesData -> {
+                .publishOn(Schedulers.boundedElastic())
+                .map(i -> this.excelDAO.readData(inputStream))
+                .zipWhen(deliveriesData -> {
                     PnTender tender = TenderMapper.toTender(tenderRequest);
                     Map<PnDeliveryDriver, List<PnCost>> map = DeliveryDriverMapper.toEntityFromExcel(deliveriesData, tender.getTenderCode());
                     return this.costDAO.createNewContract(map,tender);
@@ -161,12 +179,33 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                 .onErrorResume(ex -> {
                     if (ex instanceof PnExcelValidatorException){
                         //SALVO ERRORI IN COLONNA
-                    }
-                    else{
-                        ex.getMessage();
+                    } else {
+                        item.setStatus(FileStatusCodeEnum.ERROR.getCode());
+                        item.setError(ex.getMessage());
+                        fileDownloadDAO.create(item);
                     }
                     return Mono.error(ex);
-                });
+                })
+                .subscribeOn(Schedulers.boundedElastic()).subscribe();
+
+
+//                .flatMap(i -> {
+//                    return this.excelDAO.readData(inputStream)
+//                            .zipWhen(deliveriesData -> {
+//                                PnTender tender = TenderMapper.toTender(tenderRequest);
+//                                Map<PnDeliveryDriver, List<PnCost>> map = DeliveryDriverMapper.toEntityFromExcel(deliveriesData, tender.getTenderCode());
+//                                return this.costDAO.createNewContract(map,tender);
+//                            })
+//                            .onErrorResume(ex -> {
+//                                if (ex instanceof PnExcelValidatorException){
+//                                    //SALVO ERRORI IN COLONNA
+//                                }
+//                                else{
+//                                    ex.getMessage();
+//                                }
+//                                return Mono.error(ex);
+//                            });
+//                });
     }
 
     private void createAndUploadFileAsync(String tenderCode,String uuid){

@@ -640,6 +640,7 @@ components:
           enum:
             - IN_PROGRESS
             - COMPLETE
+            - ERROR
         uuid:
           type: string
         retryAfter:

@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.EXCEL_BADLY_CONTENT;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.EXCEL_BADLY_FORMAT;
 
 @Slf4j
@@ -43,6 +44,7 @@ public class DeliveriesExcelDAO implements ExcelDAO<DeliveriesData> {
 
     @Override
     public DeliveriesData readData(InputStream inputStream) {
+        log.info("Start to read data");
         try {
             List<PnExcelValidatorException.ErrorCell> errors = new ArrayList<>();
             ExcelEngine engine = new ExcelEngine(inputStream);
@@ -50,7 +52,6 @@ public class DeliveriesExcelDAO implements ExcelDAO<DeliveriesData> {
                 log.info(map.toString());
                 return ExcelValidator.validateExcel(errors, map);
             }, DeliveryAndCost.class);
-
             if (!errors.isEmpty()){
                 throw new PnExcelValidatorException(EXCEL_BADLY_FORMAT, errors);
             }
@@ -63,6 +64,8 @@ public class DeliveriesExcelDAO implements ExcelDAO<DeliveriesData> {
             return null;
         } catch (DAOException e){
             throw new PnGenericException(EXCEL_BADLY_FORMAT, e.getMessage());
+        } catch (Exception e) {
+            throw new PnGenericException(EXCEL_BADLY_CONTENT, e.getMessage());
         }
     }
 
