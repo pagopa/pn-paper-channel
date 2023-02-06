@@ -25,6 +25,10 @@ public class DeliveryDriverMapper {
     private static final BaseMapper<PnCost, DeliveryAndCost> mapperCost = new BaseMapperImpl<>(PnCost.class, DeliveryAndCost.class);
 
 
+    public static PnDeliveryDriver toEntity(DeliveryDriverDto dto){
+        return mapperDeliveryDriverToDto.toEntity(dto);
+    }
+
     public static Map<PnDeliveryDriver, List<PnCost>> toEntityFromExcel(DeliveriesData deliveriesData, String tenderCode){
         Map<PnDeliveryDriver, List<PnCost>> map = new HashMap<>();
         deliveriesData.getDeliveriesAndCosts().forEach(deliveryAndCost -> {

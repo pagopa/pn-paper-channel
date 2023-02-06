@@ -50,4 +50,8 @@ public class DeliveryDriverDAOImpl extends BaseDAO<PnDeliveryDriver> implements 
     }
 
 
+    @Override
+    public Mono<PnDeliveryDriver> createOrUpdate(PnDeliveryDriver data) {
+        return Mono.fromFuture(this.put(data).thenApply(i -> data));
+    }
 }

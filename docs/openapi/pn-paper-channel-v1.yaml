@@ -229,6 +229,36 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
+  /paper-channel-bo/v1/delivery-driver/{tenderCode}:
+    post:
+      tags:
+        - DeliveryDriver
+      operationId: createUpdateDriver
+      summary: Inserimento o modifica Recapitista.
+      description: API che consente di aggiungere o modificare i dettagli di un recapitista
+      parameters:
+        - $ref: '#/components/parameters/pathTenderCode'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeliveryDriverDto'
+      responses:
+        '200':
+          description: OK
+        '400':
+          $ref: '#/components/responses/Invalid'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/NotAllowed'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
   /paper-channel-bo/v1/delivery-tender/notify-upload:
     post:
       tags:
@@ -410,18 +440,6 @@ components:
         uuid:
           type: string
 
-    DriverInsertDTO:
-      type: object
-      allOf:
-        - $ref: '#/components/schemas/DeliveryDriverDto'
-      properties:
-        contracts:
-          type: array
-          items:
-            $ref: '#/components/schemas/CostDto'
-          maxItems: 999999999
-          minItems: 1
-
     CostDto:
       type: object
       properties:
@@ -574,6 +592,16 @@ components:
         fsu:
           type: boolean
       additionalProperties: false
+      required:
+        - denomination
+        - businessName
+        - registeredOffice
+        - pec
+        - fiscalCode
+        - taxId
+        - phoneNumber
+        - uniqueCode
+        - fsu
 
     Pageable:
       type: object

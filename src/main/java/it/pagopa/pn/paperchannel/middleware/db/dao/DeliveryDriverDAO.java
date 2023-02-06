@@ -8,4 +8,7 @@ import java.util.List;
 public interface DeliveryDriverDAO {
 
     Mono<List<PnDeliveryDriver>> getDeliveryDriver(String tenderCode);
+
+    Mono<PnDeliveryDriver> createOrUpdate(PnDeliveryDriver data);
+
 }

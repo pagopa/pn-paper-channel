@@ -180,6 +180,18 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                 });
     }
 
+    @Override
+    public Mono<Void> createOrUpdateDriver(String tenderCode, DeliveryDriverDto request) {
+        return this.tenderDAO.getTender(tenderCode)
+                .switchIfEmpty(Mono.error(new PnGenericException(TENDER_NOT_EXISTED, TENDER_NOT_EXISTED.getMessage())))
+                .map(tender -> {
+                    PnDeliveryDriver driver = DeliveryDriverMapper.toEntity(request);
+                    driver.setTenderCode(tenderCode);
+                    return driver;
+                }).flatMap(entity -> this.deliveryDriverDAO.createOrUpdate(entity))
+                .mapNotNull(entity -> null);
+    }
+
     public void notifyUploadAsync(PnDeliveryFile item, InputStream inputStream, TenderUploadRequestDto tenderRequest){
         Mono.delay(Duration.ofMillis(10)).publishOn(Schedulers.boundedElastic())
                 .publishOn(Schedulers.boundedElastic())
