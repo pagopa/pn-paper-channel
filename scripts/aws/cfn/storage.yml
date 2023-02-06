@@ -56,11 +56,11 @@ Resources:
                   if the_event == 'Create':
                       print("Creating csv file")
                       capsList = [
-                          ['20100', 'Milano'],
-                          ['00100', 'Roma']
+                          ['PN-PAPER-CHANNEL', '20100', 'Milano'],
+                          ['PN-PAPER-CHANNEL', '00100', 'Roma']
                           ]
                       i = 0
-                      multiLine = "cap,city\n"
+                      multiLine = "author,cap,city\n"
                       for item in capsList:
                         newLine = ','.join(map(str, item))
                         if i > 0:
