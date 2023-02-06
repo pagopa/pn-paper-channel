@@ -376,6 +376,8 @@ components:
     TenderCreateRequestDTO:
       type: object
       properties:
+        code:
+          type: string
         name:
           type: string
         startDate:
@@ -385,6 +387,10 @@ components:
           type: string
           format: date
       additionalProperties: false
+      required:
+        - name
+        - startDate
+        - endDate
 
     TenderCreateResponseDTO:
       allOf:
@@ -393,6 +399,8 @@ components:
       properties:
         tender:
           $ref: '#/components/schemas/TenderDTO'
+      required:
+        - tender
 
     TenderUploadRequestDto:
       type: object
@@ -513,6 +521,12 @@ components:
         status:
           type: string
           enum: [CREATED, IN_PROGRESS, ENDED]
+      required:
+        - code
+        - name
+        - startDate
+        - endDate
+        - status
 
     DeliveryDriverDto:
       type: object
