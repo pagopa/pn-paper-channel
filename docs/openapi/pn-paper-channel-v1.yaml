@@ -10,7 +10,7 @@ info:
     email: support@pagopa.com
   termsOfService: termsOfService
   x-api-id: ppr-chnnl
-  x-summary: smmry
+  x-summary: summary
 
 servers:
   - url: 'https://.*'
@@ -259,6 +259,36 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
+  /paper-channel-bo/v1/delivery-driver/{deliveryDriverId}/cost:
+    post:
+      tags:
+        - DeliveryDriver
+      operationId: createUpdateCost
+      summary: Inserimento o modifica di un costo legato al deliveryDriver.
+      description: API che consente di aggiungere o modificare i dettagli di un costo legato al deliveryDriver
+      parameters:
+        - $ref: '#/components/parameters/pathDeliveryDriverId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CostDTO'
+      responses:
+        '200':
+          description: OK
+        '400':
+          $ref: '#/components/responses/Invalid'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/NotAllowed'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
   /paper-channel-bo/v1/delivery-tender/notify-upload:
     post:
       tags:
@@ -392,13 +422,13 @@ components:
         nationals:
           type: array
           items:
-            $ref: '#/components/schemas/CostDto'
+            $ref: '#/components/schemas/CostDTO'
           maxItems: 999999999
           minItems: 1
         internationals:
           type: array
           items:
-            $ref: '#/components/schemas/CostDto'
+            $ref: '#/components/schemas/CostDTO'
           maxItems: 999999999
           minItems: 1
       additionalProperties: false
@@ -440,9 +470,11 @@ components:
         uuid:
           type: string
 
-    CostDto:
+    CostDTO:
       type: object
       properties:
+        code:
+          type: string
         price:
           type: number
           format: float

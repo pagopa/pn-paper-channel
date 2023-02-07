@@ -58,4 +58,11 @@ public class PaperChannelRestV1Controller implements DeliveryDriverApi {
         return deliveryDriverDto.flatMap(request -> this.paperChannelService.createOrUpdateDriver(tenderCode, request))
                 .map(ResponseEntity::ok);
     }
+
+
+    @Override
+    public Mono<ResponseEntity<Void>> createUpdateCost(String deliveryDriverId, Mono<CostDTO> costDTO, ServerWebExchange exchange) {
+        return costDTO.flatMap(request -> this.paperChannelService.createOrUpdateCost(deliveryDriverId, request))
+                .map(ResponseEntity::ok);
+    }
 }

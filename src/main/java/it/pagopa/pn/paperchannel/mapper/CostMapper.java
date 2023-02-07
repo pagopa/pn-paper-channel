@@ -4,8 +4,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnCost;
 import it.pagopa.pn.paperchannel.rest.v1.dto.*;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 
 public class CostMapper {
@@ -14,17 +13,22 @@ public class CostMapper {
         throw new IllegalCallerException();
     }
 
-    public static PnCost fromContractDTO(CostDto contractDto){
-
-        PnCost costs = new PnCost();
-        costs.setBasePrice(contractDto.getPrice());
-        costs.setPagePrice(contractDto.getPriceAdditional());
-        costs.setProductType(contractDto.getProductType().getValue());
-        costs.setCap(contractDto.getCap());
-        if (contractDto.getZone() != null ) {
-            costs.setZone(contractDto.getZone().getValue());
+    public static PnCost fromCostDTO(String tenderCode, String driverCode, CostDTO dto){
+        PnCost cost = new PnCost();
+        cost.setTenderCode(tenderCode);
+        cost.setIdDeliveryDriver(driverCode);
+        cost.setUuid(dto.getCode());
+        if (StringUtils.isBlank(cost.getUuid())){
+            cost.setUuid(UUID.randomUUID().toString());
         }
-        return costs;
+        cost.setBasePrice(dto.getPrice());
+        cost.setPagePrice(dto.getPriceAdditional());
+        cost.setProductType(dto.getProductType().getValue());
+        cost.setCap(dto.getCap());
+        if (dto.getZone() != null ) {
+            cost.setZone(dto.getZone().getValue());
+        }
+        return cost;
     }
 
     public static AllPricesContractorResponseDto toResponse(List<PnCost> paperCosts){
@@ -51,12 +55,24 @@ public class CostMapper {
     }
 
 
-    public static CostDto toCostDTO(PnCost paperCost){
-        CostDto dto = new CostDto();
+    public static CostDTO toCostDTO(PnCost paperCost){
+        CostDTO dto = new CostDTO();
         dto.setCap(paperCost.getCap());
         dto.setPrice(paperCost.getBasePrice());
         dto.setPriceAdditional(paperCost.getPagePrice());
         dto.setProductType(ProductTypeEnumDto.fromValue(paperCost.productType));
         return dto;
+    }
+
+    public static List<PnCost> toEntity(String tenderCode, String uniqueCode, CostDTO request) {
+        if (request.getZone() != null ){
+            return Collections.singletonList(fromCostDTO(tenderCode, uniqueCode, request));
+        }
+        List<String> caps = Arrays.stream(request.getCap().split(",")).toList();
+        return caps.stream()
+                .map(cap ->{
+                    request.setCap(cap);
+                    return fromCostDTO(tenderCode, uniqueCode, request);
+                }).toList();
     }
 }

@@ -16,4 +16,6 @@ public interface PaperChannelService {
     Mono<TenderCreateResponseDTO> createOrUpdateTender(TenderCreateRequestDTO request);
     Mono<Void> createOrUpdateDriver(String tenderCode, DeliveryDriverDto request);
 
+    Mono<Void> createOrUpdateCost(String deliveryDriverCode, CostDTO request);
+
 }
