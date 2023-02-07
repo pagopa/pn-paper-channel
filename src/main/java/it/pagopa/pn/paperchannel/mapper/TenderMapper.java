@@ -7,6 +7,7 @@ import it.pagopa.pn.paperchannel.rest.v1.dto.TenderCreateRequestDTO;
 import it.pagopa.pn.paperchannel.rest.v1.dto.TenderDTO;
 import it.pagopa.pn.paperchannel.rest.v1.dto.TenderUploadRequestDto;
 import it.pagopa.pn.paperchannel.utils.Const;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Pageable;
 
 import java.time.Instant;
@@ -65,9 +66,9 @@ public class TenderMapper {
         TenderDTO tender = new TenderDTO();
         tender.setCode(pnTender.getTenderCode());
         tender.setName(pnTender.getDescription());
-        tender.setStatus(TenderDTO.StatusEnum.valueOf(pnTender.getStatus()));
-        tender.setStartDate(Date.from(pnTender.getStartDate()));
-        tender.setEndDate(Date.from(pnTender.getEndDate()));
+        if (StringUtils.isNotEmpty(pnTender.getStatus())) tender.setStatus(TenderDTO.StatusEnum.valueOf(pnTender.getStatus()));
+        if (pnTender.getStartDate() != null) tender.setStartDate(Date.from(pnTender.getStartDate()));
+        if (pnTender.getEndDate() != null) tender.setEndDate(Date.from(pnTender.getEndDate()));
         return tender;
     }
 
