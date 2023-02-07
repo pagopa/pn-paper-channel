@@ -1,14 +1,12 @@
 package it.pagopa.pn.paperchannel.middleware.db.dao;
 
-import it.pagopa.pn.paperchannel.middleware.db.entities.*;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnCost;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
-import java.util.Map;
 
 public interface CostDAO {
     Mono<PnCost> getByCapOrZoneAndProductType (String cap, String zone, String productType);
-    Mono<PnTender> createNewContract(Map<PnDeliveryDriver, List<PnCost>> deliveriesAndCost, PnTender tender);
 
     /**
      * @param tenderCode NOT NULL

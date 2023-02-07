@@ -144,7 +144,7 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                 .zipWhen(deliveriesData -> {
                     PnTender tender = TenderMapper.toTender(tenderRequest);
                     Map<PnDeliveryDriver, List<PnCost>> map = DeliveryDriverMapper.toEntityFromExcel(deliveriesData, tender.getTenderCode());
-                    return this.costDAO.createNewContract(map,tender);
+                    return this.tenderDAO.createNewContract(map,tender);
                 })
                 .onErrorResume(ex -> {
                     item.setStatus(FileStatusCodeEnum.ERROR.getCode());
