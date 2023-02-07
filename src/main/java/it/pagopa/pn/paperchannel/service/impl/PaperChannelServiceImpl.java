@@ -229,7 +229,7 @@ public class PaperChannelServiceImpl implements PaperChannelService {
     }
 
     @Override
-    public Mono<Void> createOrUpdateDriver(String tenderCode, DeliveryDriverDto request) {
+    public Mono<Void> createOrUpdateDriver(String tenderCode, DeliveryDriverDTO request) {
         return this.tenderDAO.getTender(tenderCode)
                 .switchIfEmpty(Mono.error(new PnGenericException(ExceptionTypeEnum.TENDER_NOT_EXISTED, ExceptionTypeEnum.TENDER_NOT_EXISTED.getMessage())))
                 .map(tender -> {

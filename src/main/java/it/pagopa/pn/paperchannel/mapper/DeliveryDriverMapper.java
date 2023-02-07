@@ -7,7 +7,7 @@ import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnCost;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryDriver;
 import it.pagopa.pn.paperchannel.model.PageModel;
-import it.pagopa.pn.paperchannel.rest.v1.dto.DeliveryDriverDto;
+import it.pagopa.pn.paperchannel.rest.v1.dto.DeliveryDriverDTO;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PageableDeliveryDriverResponseDto;
 import it.pagopa.pn.paperchannel.utils.Const;
 import org.apache.commons.lang3.StringUtils;
@@ -22,12 +22,12 @@ public class DeliveryDriverMapper {
         throw new IllegalCallerException();
     }
 
-    private static final BaseMapper<PnDeliveryDriver, DeliveryDriverDto> mapperDeliveryDriverToDto = new BaseMapperImpl<>(PnDeliveryDriver.class, DeliveryDriverDto.class);
+    private static final BaseMapper<PnDeliveryDriver, DeliveryDriverDTO> mapperDeliveryDriverToDto = new BaseMapperImpl<>(PnDeliveryDriver.class, DeliveryDriverDTO.class);
     private static final BaseMapper<PnDeliveryDriver, DeliveryAndCost> mapperDeliveryCost = new BaseMapperImpl<>(PnDeliveryDriver.class, DeliveryAndCost.class);
     private static final BaseMapper<PnCost, DeliveryAndCost> mapperCost = new BaseMapperImpl<>(PnCost.class, DeliveryAndCost.class);
 
 
-    public static PnDeliveryDriver toEntity(DeliveryDriverDto dto){
+    public static PnDeliveryDriver toEntity(DeliveryDriverDTO dto){
         return mapperDeliveryDriverToDto.toEntity(dto);
     }
 
@@ -87,7 +87,7 @@ public class DeliveryDriverMapper {
         return pageableDeliveryDriverResponseDto;
     }
 
-    public static DeliveryDriverDto deliveryDriverToDto(PnDeliveryDriver pnDeliveryDriver) {
+    public static DeliveryDriverDTO deliveryDriverToDto(PnDeliveryDriver pnDeliveryDriver) {
         return mapperDeliveryDriverToDto.toDTO(pnDeliveryDriver);
     }
 

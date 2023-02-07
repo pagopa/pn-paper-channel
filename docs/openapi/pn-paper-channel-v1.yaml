@@ -164,6 +164,35 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
+  /paper-channel-bo/v1/deliveries-drivers/{tenderCode}/fsu:
+    get:
+      tags:
+        - DeliveryDriver
+      operationId: getDetailFSU
+      summary: Recupero del FSU di una gara
+      description: API che consente il recupero dei dettagli di un FSU
+      parameters:
+        - $ref: '#/components/parameters/pathTenderCode'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FSUResponseDTO'
+        '400':
+          $ref: '#/components/responses/Invalid'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/NotAllowed'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
   /paper-channel-bo/v1/delivery-driver/{tenderCode}/prices/{deliveryDriverId}:
     get:
       tags:
@@ -270,7 +299,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DeliveryDriverDto'
+              $ref: '#/components/schemas/DeliveryDriverDTO'
       responses:
         '200':
           description: OK
@@ -498,6 +527,16 @@ components:
         uuid:
           type: string
 
+    FSUResponseDTO:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+      type: object
+      properties:
+        fsu:
+          $ref: '#/components/schemas/DeliveryDriverDTO'
+      required:
+        - tender
+
     CostDTO:
       type: object
       properties:
@@ -560,7 +599,7 @@ components:
         content:
           type: array
           items:
-            $ref: '#/components/schemas/DeliveryDriverDto'
+            $ref: '#/components/schemas/DeliveryDriverDTO'
           maxItems: 999999999
           minItems: 1
       additionalProperties: false
@@ -616,7 +655,7 @@ components:
         - endDate
         - status
 
-    DeliveryDriverDto:
+    DeliveryDriverDTO:
       type: object
       properties:
         denomination:
