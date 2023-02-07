@@ -2,7 +2,7 @@ package it.pagopa.pn.paperchannel.mapper;
 
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryDriver;
 import it.pagopa.pn.paperchannel.model.PageModel;
-import it.pagopa.pn.paperchannel.rest.v1.dto.DeliveryDriverDto;
+import it.pagopa.pn.paperchannel.rest.v1.dto.DeliveryDriverDTO;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PageableDeliveryDriverResponseDto;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -28,7 +28,7 @@ class DeliveryDriverMapperTest {
 
     @Test
     void deliveryDriverMapperTest() {
-        DeliveryDriverDto response= DeliveryDriverMapper.deliveryDriverToDto(getPnPaperDeliveryDriver() );
+        DeliveryDriverDTO response= DeliveryDriverMapper.deliveryDriverToDto(getPnPaperDeliveryDriver() );
         Assertions.assertNotNull(response);
     }
 
