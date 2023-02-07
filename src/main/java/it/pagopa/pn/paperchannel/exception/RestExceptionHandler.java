@@ -6,6 +6,7 @@ import it.pagopa.pn.paperchannel.rest.v1.dto.Problem;
 import it.pagopa.pn.paperchannel.rest.v1.dto.ProblemError;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -41,8 +42,8 @@ public class RestExceptionHandler {
         return Mono.just(ResponseEntity.noContent().build());
     }
 
-     @ExceptionHandler(PnInputValidatorException.class)
-     public Mono<ResponseEntity<Problem>> handlePnInputValidatorException(final PnInputValidatorException exception){
+    @ExceptionHandler(PnInputValidatorException.class)
+    public Mono<ResponseEntity<Problem>> handlePnInputValidatorException(final PnInputValidatorException exception){
         log.error(exception.toString());
         final Problem problem = new Problem();
         problem.setTitle(exception.getExceptionType().getTitle());
@@ -59,7 +60,28 @@ public class RestExceptionHandler {
         problem.setTimestamp(new Date());
 
         return Mono.just(ResponseEntity.status(exception.getHttpStatus()).body(problem));
-     }
+    }
+
+    @ExceptionHandler(PnExcelValidatorException.class)
+    public Mono<ResponseEntity<Problem>> handlePnInputValidatorException(final PnExcelValidatorException exception){
+        log.error(exception.toString());
+        final Problem problem = new Problem();
+        problem.setType(exception.getErrorType().getTitle());
+        problem.setTitle(exception.getErrorType().getTitle());
+        problem.setDetail(exception.getErrorType().getMessage());
+        problem.setStatus(HttpStatus.BAD_REQUEST.value());
+        problem.setErrors(exception.getErrors().stream().map(error-> {
+            ProblemError item = new ProblemError();
+            item.setCode(error.getRow().toString());
+            item.setDetail(error.getCol().toString());
+            item.setElement(error.getMessage());
+            return item;
+        }).collect(Collectors.toList()));
+        settingTraceId(problem);
+        problem.setTimestamp(new Date());
+
+        return Mono.just(ResponseEntity.status(problem.getStatus()).body(problem));
+    }
 
 
     private void settingTraceId(Problem problem){

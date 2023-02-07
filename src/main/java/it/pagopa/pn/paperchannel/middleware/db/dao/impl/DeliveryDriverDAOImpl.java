@@ -33,7 +33,7 @@ public class DeliveryDriverDAOImpl extends BaseDAO<PnDeliveryDriver> implements 
     }
 
     @Override
-    public Mono<List<PnDeliveryDriver>> getDeliveryDriver(String tenderCode) {
+    public Mono<List<PnDeliveryDriver>> getDeliveryDriverFromTender(String tenderCode) {
         Pair<Instant, Instant> startAndEndTimestamp = DateUtils.getStartAndEndTimestamp(null, null);
 
         QueryConditional conditional = CONDITION_BETWEEN.apply(
@@ -49,5 +49,16 @@ public class DeliveryDriverDAOImpl extends BaseDAO<PnDeliveryDriver> implements 
                 .collectList();
     }
 
+    @Override
+    public Mono<PnDeliveryDriver> getDeliveryDriverFromCode(String deliveryDriverCode) {
+        return Mono.fromFuture(this.get(deliveryDriverCode, null).thenApply(i -> i));
+    }
 
+
+    @Override
+    public Mono<PnDeliveryDriver> createOrUpdate(PnDeliveryDriver data) {
+        data.setAuthor(Const.PN_PAPER_CHANNEL);
+        data.setStartDate(Instant.now());
+        return Mono.fromFuture(this.put(data).thenApply(i -> data));
+    }
 }

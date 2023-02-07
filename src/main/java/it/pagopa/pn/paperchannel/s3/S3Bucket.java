@@ -12,7 +12,6 @@ public interface S3Bucket {
     Mono<PresignedUrlResponseDto> presignedUrl();
     Mono<File> putObject(File file);
     byte[] getObjectData(String filename);
-
     InputStream getFileInputStream(String filename);
 
 }

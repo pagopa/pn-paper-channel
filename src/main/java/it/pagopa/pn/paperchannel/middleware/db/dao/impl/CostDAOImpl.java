@@ -7,21 +7,15 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.BaseDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.TransactWriterInitializer;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnCost;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryDriver;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnTender;
-import it.pagopa.pn.paperchannel.utils.Const;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
-import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
-import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
-import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,9 +26,6 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.COST_NOT_FOU
 @Slf4j
 public class CostDAOImpl extends BaseDAO<PnCost> implements CostDAO {
 
-    private final DynamoDbAsyncTable<PnDeliveryDriver> deliveryDriverTable;
-    private final DynamoDbAsyncTable<PnTender> tenderTable;
-
     private final TransactWriterInitializer transactWriterInitializer;
 
     public CostDAOImpl(KmsEncryption kmsEncryption,
@@ -43,24 +34,7 @@ public class CostDAOImpl extends BaseDAO<PnCost> implements CostDAO {
                        AwsPropertiesConfig awsPropertiesConfig, TransactWriterInitializer transactWriterInitializer) {
         super(kmsEncryption, dynamoDbEnhancedAsyncClient, dynamoDbAsyncClient,
                 awsPropertiesConfig.getDynamodbCostTable(), PnCost.class);
-        this.deliveryDriverTable = dynamoDbEnhancedAsyncClient.table(awsPropertiesConfig.getDynamodbDeliveryDriverTable(), TableSchema.fromBean(PnDeliveryDriver.class));
         this.transactWriterInitializer = transactWriterInitializer;
-        this.tenderTable = dynamoDbEnhancedAsyncClient.table(awsPropertiesConfig.getDynamodbTenderTable(), TableSchema.fromBean(PnTender.class));
-    }
-
-    public Mono<PnTender> createNewContract(Map<PnDeliveryDriver, List<PnCost>> deliveriesAndCost, PnTender tender) {
-        this.transactWriterInitializer.init();
-        transactWriterInitializer.addRequestTransaction(tenderTable, tender, PnTender.class);
-        List<PnDeliveryDriver> deliveries = deliveriesAndCost.keySet().stream().toList();
-        deliveries.forEach(delivery -> {
-            delivery.setStartDate(Instant.now());
-            delivery.setAuthor(Const.PN_PAPER_CHANNEL);
-            transactWriterInitializer.addRequestTransaction(deliveryDriverTable, delivery, PnDeliveryDriver.class);
-            List<PnCost> costs = deliveriesAndCost.get(delivery);
-            costs.forEach(cost -> transactWriterInitializer.addRequestTransaction(this.dynamoTable, cost, PnCost.class));
-        });
-
-        return Mono.fromFuture(putWithTransact(transactWriterInitializer.build()).thenApply(item -> tender));
     }
 
     @Override
@@ -73,6 +47,37 @@ public class CostDAOImpl extends BaseDAO<PnCost> implements CostDAO {
             return this.getByFilter(conditional, PnCost.TENDER_INDEX, values, filter).collectList();
         }
         return this.getByFilter(conditional, PnCost.TENDER_INDEX, null, null).collectList();
+    }
+
+    @Override
+    public Mono<List<PnCost>> retrievePrice(String tenderCode, String deliveryDriver, Boolean isNational) {
+        QueryConditional conditional = CONDITION_EQUAL_TO.apply(keyBuild(tenderCode, null));
+
+        String filter = "";
+        Map<String,AttributeValue> values = new HashMap<>();
+        if (StringUtils.isNotBlank(deliveryDriver)) {
+            filter += ":deliveryDriver=" + PnCost.COL_ID_DELIVERY_DRIVER + " ";
+            values.put(":deliveryDriver", AttributeValue.builder().s(deliveryDriver).build());
+        }
+        if (isNational != null){
+            if (isNational) {
+                filter += ":nullable <> " + PnCost.COL_CAP + " ";
+            } else {
+                filter += ":nullable <> " + PnCost.COL_ZONE + " ";
+            }
+            values.put(":nullable", AttributeValue.builder().nul(true).build());
+        }
+
+        return this.getByFilter(conditional, PnCost.TENDER_INDEX, values, filter).collectList();
+    }
+
+    @Override
+    public Mono<List<PnCost>> createOrUpdate(List<PnCost> entities) {
+        this.transactWriterInitializer.init();
+        entities.forEach(cost ->
+            transactWriterInitializer.addRequestTransaction(this.dynamoTable, cost, PnCost.class)
+        );
+        return Mono.fromFuture(putWithTransact(transactWriterInitializer.build()).thenApply(item -> entities));
     }
 
     @Override

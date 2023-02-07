@@ -15,23 +15,24 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbParti
 @NoArgsConstructor
 public class PnDeliveryFile {
 
-    public static final String COL_UUID = "uuid";
-    public static final String COL_STATUS = "status";
-    public static final String COL_URL = "url";
-    public static final String COL_FILENAME = "filename";
-    public static final String COL_ERROR = "error";
+    private static final String COL_UUID = "uuid";
+    private static final String COL_STATUS = "status";
+    private static final String COL_URL = "url";
+    private static final String COL_FILENAME = "filename";
+    private static final String COL_ERROR = "error";
 
     @Getter(onMethod = @__({@DynamoDbPartitionKey,@DynamoDbAttribute(COL_UUID)}))
-    public String uuid;
+    private String uuid;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_STATUS)}))
-    public String status;
+    private String status;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_URL)}))
-    public String url;
+    private String url;
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_FILENAME)}))
-    public String filename;
+    private String filename;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_ERROR)}))
-    public String error;
+    private PnErrorMessage errorMessage;
+
 }

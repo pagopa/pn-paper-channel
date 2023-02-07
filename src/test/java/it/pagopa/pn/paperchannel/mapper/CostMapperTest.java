@@ -22,12 +22,12 @@ class CostMapperTest {
 
     @Test
     void costMappertoInternationalContractTest() {
-        CostDto response=CostMapper.toCostDTO(getPnPaperCost(ProductTypeEnumDto.SEMPLICE.getValue()));
+        CostDTO response=CostMapper.toCostDTO(getPnPaperCost(ProductTypeEnumDto.SEMPLICE.getValue()));
         Assertions.assertNotNull(response);
     }
     @Test
     void costMapperToNationalContractTest() {
-        CostDto response=CostMapper.toCostDTO(getPnPaperCost(ProductTypeEnumDto.AR.getValue()));
+        CostDTO response=CostMapper.toCostDTO(getPnPaperCost(ProductTypeEnumDto.AR.getValue()));
         Assertions.assertNotNull(response);
     }
     @Test
@@ -37,11 +37,11 @@ class CostMapperTest {
     }
     @Test
     void costMapperFromContractDTOTest() {
-        PnCost response=CostMapper.fromContractDTO(getContractDto());
+        PnCost response=CostMapper.fromCostDTO("ABX_xxx", "driverId", getContractDto());
         Assertions.assertNotNull(response);
     }
-    private CostDto getContractDto(){
-        CostDto contractDto = new CostDto();
+    private CostDTO getContractDto(){
+        CostDTO contractDto = new CostDTO();
         contractDto.setCap("00061");
         contractDto.setZone(InternationalZoneEnum._1);
         contractDto.setPrice(0.1F);

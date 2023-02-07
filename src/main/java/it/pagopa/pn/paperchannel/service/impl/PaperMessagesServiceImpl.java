@@ -103,7 +103,7 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                 .map(amount -> {
                     log.info("Amount: {} for requestId {}", amount, requestId);
                     SendResponse sendResponse = new SendResponse();
-                    sendResponse.setAmount(amount.intValue());
+                    sendResponse.setAmount(amount.floatValue());
                     return sendResponse;
                 });
     }

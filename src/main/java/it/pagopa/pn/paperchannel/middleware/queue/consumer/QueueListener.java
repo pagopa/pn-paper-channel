@@ -2,6 +2,7 @@ package it.pagopa.pn.paperchannel.middleware.queue.consumer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.awspring.cloud.messaging.listener.SqsMessageDeletionPolicy;
 import io.awspring.cloud.messaging.listener.annotation.SqsListener;
+import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
@@ -14,8 +15,10 @@ import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.SingleSt
 import it.pagopa.pn.paperchannel.msclient.generated.pnnationalregistries.v1.dto.AddressSQSMessageDto;
 import it.pagopa.pn.paperchannel.service.QueueListenerService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
+import it.pagopa.pn.paperchannel.utils.PnLogAudit;
 import it.pagopa.pn.paperchannel.utils.Utility;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
 import org.springframework.messaging.handler.annotation.Headers;
@@ -31,6 +34,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 import static it.pagopa.pn.api.dto.events.GenericEventHeader.PN_EVENT_HEADER_EVENT_TYPE;
+import static it.pagopa.pn.commons.log.MDCWebFilter.MDC_TRACE_ID_KEY;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 import static it.pagopa.pn.paperchannel.middleware.queue.model.InternalEventHeader.PN_EVENT_HEADER_ATTEMPT;
 import static it.pagopa.pn.paperchannel.middleware.queue.model.InternalEventHeader.PN_EVENT_HEADER_EXPIRED;
@@ -49,6 +53,8 @@ public class QueueListener {
     @Autowired
     private PaperRequestErrorDAO paperRequestErrorDAO;
 
+    private PnAuditLogBuilder pnAuditLogBuilder = new PnAuditLogBuilder();
+
     @SqsListener(value = "${pn.paper-channel.queue-internal}", deletionPolicy = SqsMessageDeletionPolicy.ALWAYS)
     public void pullFromInternalQueue(@Payload String node, @Headers Map<String, Object> headers){
         log.info("Headers : {}", headers);
@@ -61,8 +67,11 @@ public class QueueListener {
             NationalRegistryError error = convertToObject(node, NationalRegistryError.class);
             execution(error, noAttempt, internalEventHeader.getAttempt(), internalEventHeader.getExpired(), NationalRegistryError.class,
                     entity -> {
+                        PnLogAudit pnLogAudit = new PnLogAudit(pnAuditLogBuilder);
+                        pnLogAudit.addsBeforeDiscard(entity.getIun(), String.format("requestId = %s finish retry to National Registry", entity.getRequestId()));
                         paperRequestErrorDAO.created(entity.getRequestId(), "ERROR WITH RETRIEVE ADDRESS", EventTypeEnum.NATIONAL_REGISTRIES_ERROR.name())
                                 .subscribe();
+                        pnLogAudit.addsSuccessDiscard(entity.getIun(), String.format("requestId = %s finish retry to National Registry", entity.getRequestId()));
                         return null;
                     },
                     entityAndAttempt -> {
@@ -76,11 +85,15 @@ public class QueueListener {
             ExternalChannelError error = convertToObject(node, ExternalChannelError.class);
             execution(error, noAttempt, internalEventHeader.getAttempt(), internalEventHeader.getExpired(), ExternalChannelError.class,
                     entity -> {
+                        PnLogAudit pnLogAudit = new PnLogAudit(pnAuditLogBuilder);
+                        pnLogAudit.addsBeforeDiscard(entity.getAnalogMail().getIun(), String.format("requestId = %s finish retry to External Channel", entity.getAnalogMail().getRequestId()));
                         paperRequestErrorDAO.created(
                                 entity.getAnalogMail().getRequestId(),
                                 EXTERNAL_CHANNEL_LISTENER_EXCEPTION.getMessage(),
                                 EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name()
                         ).subscribe();
+                        pnLogAudit.addsSuccessDiscard(entity.getAnalogMail().getIun(), String.format("requestId = %s finish retry to External Channel", entity.getAnalogMail().getRequestId()));
+
                         return null;
                     },
                     entityAndAttempt -> {
@@ -96,11 +109,15 @@ public class QueueListener {
             PrepareAsyncRequest error = convertToObject(node, PrepareAsyncRequest.class);
             execution(error, noAttempt, internalEventHeader.getAttempt(), internalEventHeader.getExpired(), PrepareAsyncRequest.class,
                     entity -> {
+                        PnLogAudit pnLogAudit = new PnLogAudit(pnAuditLogBuilder);
+                        pnLogAudit.addsBeforeDiscard(entity.getIun(), String.format("requestId = %s finish retry to Safe Storage", entity.getRequestId()));
+
                         paperRequestErrorDAO.created(
                                         entity.getRequestId(),
                                         DOCUMENT_NOT_DOWNLOADED.getMessage(),
                                         EventTypeEnum.SAFE_STORAGE_ERROR.name())
                                 .subscribe();
+                        pnLogAudit.addsSuccessDiscard(entity.getIun(), String.format("requestId = %s finish retry to Safe Storage", entity.getRequestId()));
                         return null;
                     },
                     entityAndAttempt -> {

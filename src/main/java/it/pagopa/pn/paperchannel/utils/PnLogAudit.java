@@ -1,7 +1,6 @@
 package it.pagopa.pn.paperchannel.utils;
 
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
-import it.pagopa.pn.commons.log.PnAuditLogEvent;
 import it.pagopa.pn.commons.log.PnAuditLogEventType;
 
 public class PnLogAudit {
@@ -24,7 +23,7 @@ public class PnLogAudit {
     }
 
     public void addsSuccessLog(PnAuditLogEventType type, String iun, String successMsg) {
-       pnAuditLogBuilder.before(type, successMsg)
+        pnAuditLogBuilder.before(type, successMsg)
                 .iun(iun)
                 .build().generateSuccess(successMsg).log();
     }
@@ -80,5 +79,14 @@ public class PnLogAudit {
     public void addsFailSend(String iun, String msg) {
         addsFailLog(PnAuditLogEventType.AUD_FD_SEND, iun, msg);
     }
+
+    public void addsBeforeDiscard(String iun, String msg) {
+        addsBeforeLog(PnAuditLogEventType.AUD_FD_DISCARD, iun, msg);
+    }
+
+    public void addsSuccessDiscard(String iun, String msg) {
+        addsSuccessLog(PnAuditLogEventType.AUD_FD_DISCARD, iun, msg);
+    }
+
 
 }

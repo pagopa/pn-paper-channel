@@ -22,7 +22,8 @@ public enum StatusDeliveryEnum {
     PAPER_CHANNEL_NEW_REQUEST("PC001", "Paper channel nuova richiesta invio cartaceo, a valle di un fallimento temporaneo"),
     PAPER_CHANNEL_DEFAULT_ERROR("PC011", "Notifica in errore"),
     PAPER_CHANNEL_ASYNC_ERROR("PC012", "Errore nella fase di prepare"),
-    SAFE_STORAGE_IN_ERROR("PC013", "Errore durante il recupero degli allegati");
+    SAFE_STORAGE_IN_ERROR("PC013", "Errore durante il recupero degli allegati"),
+    DEFAULT_ERROR("PC014", "Errore");
 
     private final String code;
     private final String description;

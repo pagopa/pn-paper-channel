@@ -1,32 +1,45 @@
 package it.pagopa.pn.paperchannel.middleware.db.dao.impl;
 
-import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.paperchannel.config.AwsPropertiesConfig;
 import it.pagopa.pn.paperchannel.encryption.KmsEncryption;
 import it.pagopa.pn.paperchannel.middleware.db.dao.TenderDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.BaseDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.common.TransactWriterInitializer;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnCost;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryDriver;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnTender;
+import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 
 @Repository
 public class TenderDAOImpl extends BaseDAO<PnTender> implements TenderDAO {
 
-    public TenderDAOImpl(PnAuditLogBuilder auditLogBuilder,
-                                 KmsEncryption kmsEncryption,
+    private final DynamoDbAsyncTable<PnDeliveryDriver> deliveryDriverTable;
+    private final DynamoDbAsyncTable<PnCost> costTable;
+
+    private final TransactWriterInitializer transactWriterInitializer;
+
+    public TenderDAOImpl(KmsEncryption kmsEncryption,
                                  DynamoDbEnhancedAsyncClient dynamoDbEnhancedAsyncClient,
                                  DynamoDbAsyncClient dynamoDbAsyncClient,
-                                 AwsPropertiesConfig awsPropertiesConfig) {
+                                 AwsPropertiesConfig awsPropertiesConfig, TransactWriterInitializer transactWriterInitializer) {
         super(kmsEncryption, dynamoDbEnhancedAsyncClient, dynamoDbAsyncClient,
                 awsPropertiesConfig.getDynamodbTenderTable(), PnTender.class);
+        this.transactWriterInitializer = transactWriterInitializer;
+        this.deliveryDriverTable = dynamoDbEnhancedAsyncClient.table(awsPropertiesConfig.getDynamodbDeliveryDriverTable(), TableSchema.fromBean(PnDeliveryDriver.class));
+        this.costTable = dynamoDbEnhancedAsyncClient.table(awsPropertiesConfig.getDynamodbCostTable(), TableSchema.fromBean(PnCost.class));
     }
 
     @Override
@@ -40,5 +53,30 @@ public class TenderDAOImpl extends BaseDAO<PnTender> implements TenderDAO {
 
         return this.getByFilter(conditional, PnTender.AUTHOR_INDEX, null, null)
                 .collectList();
+    }
+
+    @Override
+    public Mono<PnTender> getTender(String tenderCode) {
+        return Mono.fromFuture(this.get(tenderCode, null).thenApply(item -> item));
+    }
+
+    @Override
+    public Mono<PnTender> createOrUpdate(PnTender tender) {
+        return Mono.fromFuture(put(tender).thenApply(i -> tender));
+    }
+
+    public Mono<PnTender> createNewContract(Map<PnDeliveryDriver, List<PnCost>> deliveriesAndCost, PnTender tender) {
+        this.transactWriterInitializer.init();
+        transactWriterInitializer.addRequestTransaction(this.dynamoTable, tender, PnTender.class);
+        List<PnDeliveryDriver> deliveries = deliveriesAndCost.keySet().stream().toList();
+        deliveries.forEach(delivery -> {
+            delivery.setStartDate(Instant.now());
+            delivery.setAuthor(Const.PN_PAPER_CHANNEL);
+            transactWriterInitializer.addRequestTransaction(deliveryDriverTable, delivery, PnDeliveryDriver.class);
+            List<PnCost> costs = deliveriesAndCost.get(delivery);
+            costs.forEach(cost -> transactWriterInitializer.addRequestTransaction(this.costTable, cost, PnCost.class));
+        });
+
+        return Mono.fromFuture(putWithTransact(transactWriterInitializer.build()).thenApply(item -> tender));
     }
 }
