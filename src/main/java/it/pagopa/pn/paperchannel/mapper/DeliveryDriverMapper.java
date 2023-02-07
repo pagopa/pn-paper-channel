@@ -9,9 +9,11 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryDriver;
 import it.pagopa.pn.paperchannel.model.PageModel;
 import it.pagopa.pn.paperchannel.rest.v1.dto.DeliveryDriverDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PageableDeliveryDriverResponseDto;
+import it.pagopa.pn.paperchannel.utils.Const;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Pageable;
 
+import java.time.Instant;
 import java.util.*;
 
 public class DeliveryDriverMapper {
@@ -36,6 +38,8 @@ public class DeliveryDriverMapper {
             driver.setUniqueCode(deliveryAndCost.getUniqueCode());
             if(!map.containsKey(driver)){
                 driver = mapperDeliveryCost.toEntity(deliveryAndCost);
+                driver.setUniqueCode(deliveryAndCost.getUniqueCode());
+                driver.setTenderCode(tenderCode);
                 map.put(driver, new ArrayList<>());
             }
             List<PnCost> costList = map.get(driver);
@@ -56,8 +60,7 @@ public class DeliveryDriverMapper {
                             costList.add(newCost);
                         }
                     }
-                }
-                else{
+                } else{
                     PnCost newCost = getCost(driver, tenderCode, deliveryAndCost.getCap(), deliveryAndCost);
                     costList.add(newCost);
                 }

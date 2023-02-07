@@ -158,6 +158,10 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                     Map<PnDeliveryDriver, List<PnCost>> map = DeliveryDriverMapper.toEntityFromExcel(deliveriesData, tender.getTenderCode());
                     return this.tenderDAO.createNewContract(map,tender);
                 })
+                .map(i -> {
+                    item.setStatus(FileStatusCodeEnum.COMPLETE.getCode());
+                    return fileDownloadDAO.create(item);
+                })
                 .onErrorResume(ex -> {
                     item.setStatus(FileStatusCodeEnum.ERROR.getCode());
                     if (ex instanceof PnExcelValidatorException){

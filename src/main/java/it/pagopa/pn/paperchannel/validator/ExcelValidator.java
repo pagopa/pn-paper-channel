@@ -93,20 +93,21 @@ public class ExcelValidator {
         }
         //cap check
         ExcelEngine.ExcelCell cap = data.get("CAP");
-        deliveryAndCost.setCap(cap.getValue());
         if (!StringUtils.isBlank(cap.getValue()) && !Utility.isValidCap(cap.getValue())){
             errors.add(new PnExcelValidatorException.ErrorCell(cap.getRow(), cap.getCol(), "Problema nei cap inseriti."));
+        } else {
+            deliveryAndCost.setCap(cap.getValue().substring(0, cap.getValue().indexOf(".")));
         }
         //zone check
         ExcelEngine.ExcelCell zone = data.get("ZONE");
-        deliveryAndCost.setZone(zone.getValue());
         if (!StringUtils.isBlank(zone.getValue()) && !Utility.isValidFromRegex(zone.getValue(), Const.zoneRegex)){
             errors.add(new PnExcelValidatorException.ErrorCell(zone.getRow(), zone.getCol(), "Problema nelle zone inserite."));
+        } else if (StringUtils.isNotEmpty(zone.getValue())) {
+            deliveryAndCost.setZone(zone.getValue());
         }
         if (!StringUtils.isBlank(zone.getValue()) && !zone.getValue().equals(Const.ZONA_1) && !zone.getValue().equals(Const.ZONA_2) && !zone.getValue().equals(Const.ZONA_3)){
             errors.add(new PnExcelValidatorException.ErrorCell(zone.getRow(), zone.getCol(), "Il tipo di dato non è quello desiderato."));
         }
-
         if (StringUtils.isBlank(zone.getValue()) && StringUtils.isBlank(cap.getValue())){
             errors.add(new PnExcelValidatorException.ErrorCell(zone.getRow(), zone.getCol(), "Cap o Zone deve essere valorizzato"));
         }
@@ -125,8 +126,8 @@ public class ExcelValidator {
         if (StringUtils.isBlank(basePrice.getValue())){
             errors.add(new PnExcelValidatorException.ErrorCell(basePrice.getRow(), basePrice.getCol(), "Il campo base price deve essere valorizzato"));
         } else{
-            deliveryAndCost.setPagePrice(getFloat(basePrice.getValue()));
-            if (deliveryAndCost.getPagePrice() == null) {
+            deliveryAndCost.setBasePrice(getFloat(basePrice.getValue()));
+            if (deliveryAndCost.getBasePrice() == null) {
                 errors.add(new PnExcelValidatorException.ErrorCell(basePrice.getRow(), basePrice.getCol(), "Formato non valido."));
             }
         }
