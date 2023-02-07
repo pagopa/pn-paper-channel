@@ -10,7 +10,7 @@ info:
     email: support@pagopa.com
   termsOfService: termsOfService
   x-api-id: ppr-chnnl
-  x-summary: smmry
+  x-summary: summary
 
 servers:
   - url: 'https://.*'
@@ -86,6 +86,34 @@ paths:
           $ref: '#/components/responses/NotAllowed'
         '500':
           $ref: '#/components/responses/InternalError'
+  /paper-channel-bo/v1/tenders/{tenderCode}:
+    get:
+      tags:
+        - DeliveryDriver
+      operationId: getTenderDetails
+      summary: Recupero della gara.
+      description: API che consente il recupero dei dettagli di una gara
+      parameters:
+        - $ref: '#/components/parameters/pathTenderCode'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenderDetailResponseDTO'
+        '400':
+          $ref: '#/components/responses/Invalid'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/NotAllowed'
+        '500':
+          $ref: '#/components/responses/InternalError'
 
   /paper-channel-bo/v1/deliveries-drivers/{tenderCode}:
     get:
@@ -123,6 +151,35 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PageableDeliveryDriverResponseDto'
+        '400':
+          $ref: '#/components/responses/Invalid'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/NotAllowed'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /paper-channel-bo/v1/deliveries-drivers/{tenderCode}/fsu:
+    get:
+      tags:
+        - DeliveryDriver
+      operationId: getDetailFSU
+      summary: Recupero del FSU di una gara
+      description: API che consente il recupero dei dettagli di un FSU
+      parameters:
+        - $ref: '#/components/parameters/pathTenderCode'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FSUResponseDTO'
         '400':
           $ref: '#/components/responses/Invalid'
         '401':
@@ -196,18 +253,18 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /paper-channel-bo/v1/delivery-tender:
+  /paper-channel-bo/v1/tender:
     post:
       tags:
         - DeliveryDriver
-      operationId: addTender
-      summary: Inserimento Gara.
-      description: API che consente di aggiungere una nuova gara e tutti i suoi vincitori
+      operationId: createUpdateTender
+      summary: Inserimento o modifica Gara.
+      description: API che consente di aggiungere o modificare i dettagli di una gara
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TenderCreateRequestDto'
+              $ref: '#/components/schemas/TenderCreateRequestDTO'
 
       responses:
         '200':
@@ -215,7 +272,67 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BaseResponse'
+                $ref: '#/components/schemas/TenderCreateResponseDTO'
+        '400':
+          $ref: '#/components/responses/Invalid'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/NotAllowed'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /paper-channel-bo/v1/delivery-driver/{tenderCode}:
+    post:
+      tags:
+        - DeliveryDriver
+      operationId: createUpdateDriver
+      summary: Inserimento o modifica Recapitista.
+      description: API che consente di aggiungere o modificare i dettagli di un recapitista
+      parameters:
+        - $ref: '#/components/parameters/pathTenderCode'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeliveryDriverDTO'
+      responses:
+        '200':
+          description: OK
+        '400':
+          $ref: '#/components/responses/Invalid'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/NotAllowed'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /paper-channel-bo/v1/delivery-driver/{deliveryDriverId}/cost:
+    post:
+      tags:
+        - DeliveryDriver
+      operationId: createUpdateCost
+      summary: Inserimento o modifica di un costo legato al deliveryDriver.
+      description: API che consente di aggiungere o modificare i dettagli di un costo legato al deliveryDriver
+      parameters:
+        - $ref: '#/components/parameters/pathDeliveryDriverId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CostDTO'
+      responses:
+        '200':
+          description: OK
         '400':
           $ref: '#/components/responses/Invalid'
         '401':
@@ -362,31 +479,45 @@ components:
         nationals:
           type: array
           items:
-            $ref: '#/components/schemas/CostDto'
+            $ref: '#/components/schemas/CostDTO'
           maxItems: 999999999
           minItems: 1
         internationals:
           type: array
           items:
-            $ref: '#/components/schemas/CostDto'
+            $ref: '#/components/schemas/CostDTO'
           maxItems: 999999999
           minItems: 1
       additionalProperties: false
 
+    TenderCreateRequestDTO:
+      type: object
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+      additionalProperties: false
+      required:
+        - name
+        - startDate
+        - endDate
 
-
-    TenderCreateRequestDto:
+    TenderCreateResponseDTO:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
       type: object
       properties:
         tender:
-          $ref: "#/components/schemas/TenderDTO"
-        fsu:
-          $ref: '#/components/schemas/DriverInsertDTO'
-        deliveryDrivers:
-          type: array
-          items:
-            $ref: '#/components/schemas/DriverInsertDTO'
-      additionalProperties: false
+          $ref: '#/components/schemas/TenderDTO'
+      required:
+        - tender
 
     TenderUploadRequestDto:
       type: object
@@ -396,21 +527,21 @@ components:
         uuid:
           type: string
 
-    DriverInsertDTO:
-      type: object
+    FSUResponseDTO:
       allOf:
-        - $ref: '#/components/schemas/DeliveryDriverDto'
-      properties:
-        contracts:
-          type: array
-          items:
-            $ref: '#/components/schemas/CostDto'
-          maxItems: 999999999
-          minItems: 1
-
-    CostDto:
+        - $ref: '#/components/schemas/BaseResponse'
       type: object
       properties:
+        fsu:
+          $ref: '#/components/schemas/DeliveryDriverDTO'
+      required:
+        - tender
+
+    CostDTO:
+      type: object
+      properties:
+        code:
+          type: string
         price:
           type: number
           format: float
@@ -468,10 +599,20 @@ components:
         content:
           type: array
           items:
-            $ref: '#/components/schemas/DeliveryDriverDto'
+            $ref: '#/components/schemas/DeliveryDriverDTO'
           maxItems: 999999999
           minItems: 1
       additionalProperties: false
+
+    TenderDetailResponseDTO:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+      type: object
+      properties:
+        tender:
+          $ref: '#/components/schemas/TenderDTO'
+      required:
+        - tender
 
     PageableTenderResponseDto:
       type: object
@@ -507,8 +648,14 @@ components:
         status:
           type: string
           enum: [CREATED, IN_PROGRESS, ENDED]
+      required:
+        - code
+        - name
+        - startDate
+        - endDate
+        - status
 
-    DeliveryDriverDto:
+    DeliveryDriverDTO:
       type: object
       properties:
         denomination:
@@ -554,6 +701,16 @@ components:
         fsu:
           type: boolean
       additionalProperties: false
+      required:
+        - denomination
+        - businessName
+        - registeredOffice
+        - pec
+        - fiscalCode
+        - taxId
+        - phoneNumber
+        - uniqueCode
+        - fsu
 
     Pageable:
       type: object
@@ -640,6 +797,7 @@ components:
           enum:
             - IN_PROGRESS
             - COMPLETE
+            - ERROR
         uuid:
           type: string
         retryAfter:

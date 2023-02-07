@@ -22,9 +22,16 @@ public enum ExceptionTypeEnum{
     BADLY_FILTER_REQUEST("BADLY_FILTER_REQUEST", "I filtri contengono valori non corretti"),
     FILE_NOT_FOUND("FILE_NOT_FOUND", "Il file non è stato caricato o non esiste"),
     EXCEL_BADLY_FORMAT("EXCEL_BADLY_FORMAT", "Il file è formattato male"),
+    EXCEL_BADLY_CONTENT("EXCEL_BADLY_CONTENT", "Il file è corrotto"),
+    BADLY_REQUEST("BADLY_REQUEST", "Campi obbligatori mancanti"),
+    BADLY_DATE_INTERVAL("BADLY_DATE_INTERVAL", "L'intervallo di data è errato"),
     LISTENER_QUEUE_NOT_EXPIRED("LISTENER_QUEUE_NOT_EXPIRED", "Evento non ancora disponibile"),
+    TENDER_NOT_EXISTED("TENDER_NOT_EXISTED", "La gara non è presente nel sistema"),
+    DELIVERY_DRIVER_NOT_EXISTED("DELIVERY_DRIVER_NOT_EXISTED", "Il recapitisca non è presente nel sistema"),
+    COST_ALREADY_EXIST("COST_ALREADY_EXIST", "Il costo è già presente nel sistema associato ad un altro recapitista"),
+    COST_BADLY_CONTENT("COST_BADLY_CONTENT", "Informazioni errate per il costo"),
     FILE_REQUEST_ASYNC_NOT_FOUND("FILE_REQUEST_ASYNC_NOT_FOUND", "File non trovato, flusso asincrono");
-    ;
+
     private final String title;
     private final String message;
 

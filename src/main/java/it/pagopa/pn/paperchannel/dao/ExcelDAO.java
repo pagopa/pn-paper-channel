@@ -4,9 +4,9 @@ import it.pagopa.pn.paperchannel.dao.common.ExcelEngine;
 
 import java.io.InputStream;
 
-public interface ExcelDAO<MODEL> {
+public interface ExcelDAO<M> {
 
-    ExcelEngine create(MODEL data);
-    MODEL readData(InputStream inputStream);
+    ExcelEngine create(M data);
+    M readData(InputStream inputStream);
 
 }

@@ -129,7 +129,7 @@ public class ExcelEngine {
         int firstRow = this.currentSheet.getFirstRowNum(); //-1 se non ci sono dati
         if (firstRow == -1 || lastRow == -1) return rows;
         if (firstRow > lastRow) throw new DAOException("Excel malformed");
-        if ((lastRow-firstRow) <= 1) return rows;
+        if ((lastRow-firstRow) <= 0) return rows;
         int i = firstRow+1;
         Map<String, Integer> headerCell = getHeaderCellPosition(this.currentSheet.getRow(firstRow), tClass);
         if (headerCell.isEmpty()) throw new DAOException("Header mismatch with annotation value");
@@ -137,8 +137,13 @@ public class ExcelEngine {
         while (i <= lastRow){
             Map<String, ExcelCell> mapRow = new HashMap<>();
             Row row = this.currentSheet.getRow(i);
-            headerCell.keySet().forEach(key ->
-                    mapRow.put(key, new ExcelCell(row.getRowNum()+1, headerCell.get(key)+1,row.getCell(headerCell.get(key)).getStringCellValue()))
+            headerCell.keySet().forEach(key -> {
+                if (row.getCell(headerCell.get(key)).getCellType() == CellType.NUMERIC) {
+                    mapRow.put(key, new ExcelCell(row.getRowNum()+1, headerCell.get(key)+1, String.valueOf(row.getCell(headerCell.get(key)).getNumericCellValue())));
+                } else {
+                    mapRow.put(key, new ExcelCell(row.getRowNum()+1, headerCell.get(key)+1, row.getCell(headerCell.get(key)).getStringCellValue()));
+                }
+            }
             );
             rows.add(map.apply(mapRow));
             i++;

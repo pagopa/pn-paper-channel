@@ -7,11 +7,13 @@ import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnCost;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryDriver;
 import it.pagopa.pn.paperchannel.model.PageModel;
-import it.pagopa.pn.paperchannel.rest.v1.dto.DeliveryDriverDto;
+import it.pagopa.pn.paperchannel.rest.v1.dto.DeliveryDriverDTO;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PageableDeliveryDriverResponseDto;
+import it.pagopa.pn.paperchannel.utils.Const;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Pageable;
 
+import java.time.Instant;
 import java.util.*;
 
 public class DeliveryDriverMapper {
@@ -20,10 +22,14 @@ public class DeliveryDriverMapper {
         throw new IllegalCallerException();
     }
 
-    private static final BaseMapper<PnDeliveryDriver, DeliveryDriverDto> mapperDeliveryDriverToDto = new BaseMapperImpl<>(PnDeliveryDriver.class, DeliveryDriverDto.class);
+    private static final BaseMapper<PnDeliveryDriver, DeliveryDriverDTO> mapperDeliveryDriverToDto = new BaseMapperImpl<>(PnDeliveryDriver.class, DeliveryDriverDTO.class);
     private static final BaseMapper<PnDeliveryDriver, DeliveryAndCost> mapperDeliveryCost = new BaseMapperImpl<>(PnDeliveryDriver.class, DeliveryAndCost.class);
     private static final BaseMapper<PnCost, DeliveryAndCost> mapperCost = new BaseMapperImpl<>(PnCost.class, DeliveryAndCost.class);
 
+
+    public static PnDeliveryDriver toEntity(DeliveryDriverDTO dto){
+        return mapperDeliveryDriverToDto.toEntity(dto);
+    }
 
     public static Map<PnDeliveryDriver, List<PnCost>> toEntityFromExcel(DeliveriesData deliveriesData, String tenderCode){
         Map<PnDeliveryDriver, List<PnCost>> map = new HashMap<>();
@@ -32,6 +38,8 @@ public class DeliveryDriverMapper {
             driver.setUniqueCode(deliveryAndCost.getUniqueCode());
             if(!map.containsKey(driver)){
                 driver = mapperDeliveryCost.toEntity(deliveryAndCost);
+                driver.setUniqueCode(deliveryAndCost.getUniqueCode());
+                driver.setTenderCode(tenderCode);
                 map.put(driver, new ArrayList<>());
             }
             List<PnCost> costList = map.get(driver);
@@ -52,8 +60,7 @@ public class DeliveryDriverMapper {
                             costList.add(newCost);
                         }
                     }
-                }
-                else{
+                } else{
                     PnCost newCost = getCost(driver, tenderCode, deliveryAndCost.getCap(), deliveryAndCost);
                     costList.add(newCost);
                 }
@@ -80,7 +87,7 @@ public class DeliveryDriverMapper {
         return pageableDeliveryDriverResponseDto;
     }
 
-    public static DeliveryDriverDto deliveryDriverToDto(PnDeliveryDriver pnDeliveryDriver) {
+    public static DeliveryDriverDTO deliveryDriverToDto(PnDeliveryDriver pnDeliveryDriver) {
         return mapperDeliveryDriverToDto.toDTO(pnDeliveryDriver);
     }
 

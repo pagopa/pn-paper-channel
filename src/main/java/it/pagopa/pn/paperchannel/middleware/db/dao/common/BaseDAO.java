@@ -104,12 +104,12 @@ public abstract class BaseDAO<T> {
         return dynamoDbAsyncClient.query(qeRequest.build()).thenApply(QueryResponse::count);
     }
 
-    protected Flux<T> getByFilter(QueryConditional conditional, String index, Map<String, AttributeValue> values, String filterExpression, Integer maxElemsnts){
+    protected Flux<T> getByFilter(QueryConditional conditional, String index, Map<String, AttributeValue> values, String filterExpression, Integer maxElements){
         QueryEnhancedRequest.Builder qeRequest = QueryEnhancedRequest
                 .builder()
                 .queryConditional(conditional);
-        if (maxElemsnts != null) {
-            qeRequest.limit(maxElemsnts);
+        if (maxElements != null) {
+            qeRequest.limit(maxElements);
         }
         if (!StringUtils.isBlank(filterExpression)){
             qeRequest.filterExpression(Expression.builder().expression(filterExpression).expressionValues(values).build());
@@ -121,7 +121,7 @@ public abstract class BaseDAO<T> {
     }
 
     protected Flux<T> getByFilter(QueryConditional conditional, String index, Map<String, AttributeValue> values, String filterExpression){
-        return getByFilter(conditional, index, values, null);
+        return getByFilter(conditional, index, values, filterExpression, null);
     }
 
 
