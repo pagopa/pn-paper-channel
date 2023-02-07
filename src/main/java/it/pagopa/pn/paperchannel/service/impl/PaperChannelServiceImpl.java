@@ -31,10 +31,9 @@ import reactor.util.function.Tuples;
 import java.io.File;
 import java.io.InputStream;
 import java.time.Duration;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.COST_BADLY_CONTENT;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_NOT_EXIST;
 
 
@@ -68,7 +67,7 @@ public class PaperChannelServiceImpl implements PaperChannelService {
     @Override
     public Mono<PageableDeliveryDriverResponseDto> getAllDeliveriesDrivers(String tenderCode, Integer page, Integer size) {
         Pageable pageable = PageRequest.of(page-1, size);
-        return deliveryDriverDAO.getDeliveryDriver(tenderCode)
+        return deliveryDriverDAO.getDeliveryDriverFromTender(tenderCode)
                 .map(list ->
                         DeliveryDriverMapper.toPagination(pageable, list)
                 )
@@ -166,7 +165,7 @@ public class PaperChannelServiceImpl implements PaperChannelService {
         Mono.delay(Duration.ofMillis(10)).publishOn(Schedulers.boundedElastic())
                 .flatMap(i ->  {
                     if (StringUtils.isNotBlank(tenderCode)) {
-                        return this.deliveryDriverDAO.getDeliveryDriver(tenderCode)
+                        return this.deliveryDriverDAO.getDeliveryDriverFromTender(tenderCode)
                                 .zipWhen(drivers -> this.costDAO.retrievePrice(tenderCode,null))
                                 .flatMap(driversAndCosts -> {
                                     ExcelEngine excelEngine = this.excelDAO.create(ExcelModelMapper.fromDeliveriesDrivers(driversAndCosts.getT1(),driversAndCosts.getT2()));
@@ -223,6 +222,34 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                     return driver;
                 }).flatMap(entity -> this.deliveryDriverDAO.createOrUpdate(entity))
                 .mapNotNull(entity -> null);
+    }
+
+    @Override
+    public Mono<Void> createOrUpdateCost(String deliveryDriverCode, CostDTO request) {
+        if (StringUtils.isBlank(request.getCap()) && request.getZone() == null){
+            throw new PnGenericException(COST_BADLY_CONTENT, COST_BADLY_CONTENT.getMessage());
+        }
+        return this.deliveryDriverDAO.getDeliveryDriverFromCode(deliveryDriverCode)
+                .flatMap(driver -> {
+                    String tenderCode = driver.getTenderCode();
+                    List<PnCost> fromRequest = CostMapper.toEntity(tenderCode, driver.uniqueCode, request);
+                    return this.costDAO.retrievePrice(tenderCode, null, (request.getZone() == null))
+                            .zipWhen(listFromDB -> Mono.just(fromRequest));
+                })
+                .flatMap(fromDbAndFromRequest -> {
+                    List<PnCost> fromDB = fromDbAndFromRequest.getT1();
+                    List<PnCost> fromRequest = fromDbAndFromRequest.getT2();
+                    //Call validator
+                    return this.costDAO.createOrUpdate(fromRequest).flatMap(item -> Mono.empty());
+                });
+
+        //retrieve deliveryDriver with deliveryDriverCode - DONE
+        //get tenderCode from deliveryDriver - DONE
+        // retrieve all cost with tenderCode - DONE
+            // check if request is a valid cost -DONE
+                // - if National -> CAP, PRODUCT-TYPE not could exist occurrences
+                // - if International -> ZONE, PRODUCT-TYPE not could exist occurrences - product-type : AR o SEMPLICE
+            // if validation doesn't return any error, you can update the cost
     }
 
 

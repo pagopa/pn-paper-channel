@@ -76,6 +76,37 @@ public class CostDAOImpl extends BaseDAO<PnCost> implements CostDAO {
     }
 
     @Override
+    public Mono<List<PnCost>> retrievePrice(String tenderCode, String deliveryDriver, Boolean isNational) {
+        QueryConditional conditional = CONDITION_EQUAL_TO.apply(keyBuild(tenderCode, null));
+
+        String filter = "";
+        Map<String,AttributeValue> values = new HashMap<>();
+        if (StringUtils.isNotBlank(deliveryDriver)) {
+            filter += ":deliveryDriver=" + PnCost.COL_ID_DELIVERY_DRIVER + " ";
+            values.put(":deliveryDriver", AttributeValue.builder().s(deliveryDriver).build());
+        }
+        if (isNational != null){
+            if (isNational) {
+                filter += ":nullable <> " + PnCost.COL_CAP + " ";
+            } else {
+                filter += ":nullable <> " + PnCost.COL_ZONE + " ";
+            }
+            values.put(":nullable", AttributeValue.builder().nul(true).build());
+        }
+
+        return this.getByFilter(conditional, PnCost.TENDER_INDEX, values, filter).collectList();
+    }
+
+    @Override
+    public Mono<List<PnCost>> createOrUpdate(List<PnCost> entities) {
+        this.transactWriterInitializer.init();
+        entities.forEach(cost ->
+            transactWriterInitializer.addRequestTransaction(this.dynamoTable, cost, PnCost.class)
+        );
+        return Mono.fromFuture(putWithTransact(transactWriterInitializer.build()).thenApply(item -> entities));
+    }
+
+    @Override
     public Mono<PnCost> getByCapOrZoneAndProductType(String cap, String zone, String productType) {
         String value = "";
         String index = PnCost.CAP_INDEX;
