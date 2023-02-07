@@ -1,6 +1,5 @@
 package it.pagopa.pn.paperchannel.middleware.db.dao.impl;
 
-import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.paperchannel.config.AwsPropertiesConfig;
 import it.pagopa.pn.paperchannel.encryption.KmsEncryption;
 import it.pagopa.pn.paperchannel.middleware.db.dao.TenderDAO;
@@ -20,8 +19,7 @@ import java.util.List;
 @Repository
 public class TenderDAOImpl extends BaseDAO<PnTender> implements TenderDAO {
 
-    public TenderDAOImpl(PnAuditLogBuilder auditLogBuilder,
-                                 KmsEncryption kmsEncryption,
+    public TenderDAOImpl(KmsEncryption kmsEncryption,
                                  DynamoDbEnhancedAsyncClient dynamoDbEnhancedAsyncClient,
                                  DynamoDbAsyncClient dynamoDbAsyncClient,
                                  AwsPropertiesConfig awsPropertiesConfig) {
