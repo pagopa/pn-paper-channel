@@ -6,6 +6,8 @@ import reactor.core.publisher.Mono;
 public interface PaperChannelService {
 
     Mono<PageableTenderResponseDto> getAllTender(Integer page, Integer size);
+
+    Mono<TenderDetailResponseDTO> getTenderDetails(String tenderCode);
     Mono<PageableDeliveryDriverResponseDto> getAllDeliveriesDrivers(String tenderCode, Integer page, Integer size);
     Mono<AllPricesContractorResponseDto> getAllPricesOfDeliveryDriver(String tenderCode, String deliveryDriver);
     Mono<PresignedUrlResponseDto> getPresignedUrl();

@@ -33,8 +33,7 @@ import java.io.InputStream;
 import java.time.Duration;
 import java.util.*;
 
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.COST_BADLY_CONTENT;
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_NOT_EXIST;
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 
 
 @Slf4j
@@ -62,6 +61,19 @@ public class PaperChannelServiceImpl implements PaperChannelService {
         return tenderDAO.getTenders()
                 .map(list -> TenderMapper.toPagination(pageable, list))
                 .map(TenderMapper::toPageableResponse);
+    }
+
+    @Override
+    public Mono<TenderDetailResponseDTO> getTenderDetails(String tenderCode) {
+        return this.tenderDAO.getTender(tenderCode)
+                .switchIfEmpty(Mono.error(new PnGenericException(TENDER_NOT_EXISTED, TENDER_NOT_EXISTED.getMessage())))
+                .map(tender -> {
+                    TenderDetailResponseDTO response = new TenderDetailResponseDTO();
+                    response.setCode(TenderDetailResponseDTO.CodeEnum.NUMBER_0);
+                    response.setResult(true);
+                    response.setTender(TenderMapper.tenderToDto(tender));
+                    return response;
+                });
     }
 
     @Override
