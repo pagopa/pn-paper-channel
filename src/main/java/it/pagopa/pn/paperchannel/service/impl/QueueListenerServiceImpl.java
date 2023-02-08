@@ -70,6 +70,7 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
 
                     String correlationId = dto.getCorrelationId();
                     log.info("Received message from National Registry queue with correlationId"+correlationId);
+
                     requestDeliveryDAO.getByCorrelationId(correlationId)
                             .map(i -> {
                                 pnLogAudit.addsSuccessResolveService(i.getIun(), String.format("prepare requestId = %s, relatedRequestId = %s Response OK from National Registry service", i.getRequestId(), i.getRelatedRequestId()));
