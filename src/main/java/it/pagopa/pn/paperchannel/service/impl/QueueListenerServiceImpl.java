@@ -5,6 +5,7 @@ import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.NationalRegistryError;
@@ -17,11 +18,13 @@ import it.pagopa.pn.paperchannel.service.QueueListenerService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuples;
 
+import static it.pagopa.pn.commons.log.MDCWebFilter.MDC_TRACE_ID_KEY;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.EXTERNAL_CHANNEL_LISTENER_EXCEPTION;
 
@@ -60,10 +63,19 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
 
     @Override
     public void nationalRegistriesResponseListener(AddressSQSMessageDto body) {
+        log.info("Received message from National Registry queue");
         Mono.just(body)
                 .map(dto -> {
                     if (dto==null || StringUtils.isBlank(dto.getCorrelationId())) throw new PnGenericException(UNTRACEABLE_ADDRESS, UNTRACEABLE_ADDRESS.getMessage());
+
                     String correlationId = dto.getCorrelationId();
+                    log.info("Received message from National Registry queue with correlationId"+correlationId);
+                    requestDeliveryDAO.getByCorrelationId(correlationId)
+                            .map(i -> {
+                                pnLogAudit.addsSuccessResolveService(i.getIun(), String.format("prepare requestId = %s, relatedRequestId = %s Response OK from National Registry service", i.getRequestId(), i.getRelatedRequestId()));
+                                return i;
+                            });
+
                     Address address = null;
                     if (dto.getPhysicalAddress()!=null)
                         address= AddressMapper.fromNationalRegistry(dto.getPhysicalAddress());
