@@ -65,8 +65,8 @@ components:
       type: object
       properties:
         amount:
-          type: number
-          format: float
+          type: integer
+          format: int32
           description: ammontare in eurocent del costo per l'invio della notifica
             in forma cartacea
 
