@@ -29,4 +29,18 @@ public class PrepareAsyncRequest {
     @JsonProperty("attempt")
     private Integer attemptRetry;
 
+
+    // Constructor used only national registry listener
+    public PrepareAsyncRequest(String correlationId, Address address) {
+        this.correlationId = correlationId;
+        this.address = address;
+    }
+
+
+    public PrepareAsyncRequest(String requestId, String iun, boolean isSecondAttempt, Integer attemptRetry) {
+        this.requestId = requestId;
+        this.iun = iun;
+        this.isSecondAttempt = isSecondAttempt;
+        this.attemptRetry = attemptRetry;
+    }
 }

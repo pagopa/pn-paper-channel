@@ -88,7 +88,10 @@ public class RequestDeliveryDAOImpl extends BaseDAO<PnDeliveryRequest> implement
     public Mono<PnDeliveryRequest> getByCorrelationId(String correlationId) {
         return this.getBySecondaryIndex(PnDeliveryRequest.CORRELATION_INDEX, correlationId, null)
                 .collectList()
-                .map(item -> item.get(0));
+                .flatMap(item -> {
+                    if (item.isEmpty()) return Mono.empty();
+                    return Mono.just(item.get(0));
+                });
     }
 
     @Override

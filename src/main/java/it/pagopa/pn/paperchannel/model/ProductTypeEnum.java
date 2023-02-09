@@ -6,7 +6,10 @@ public enum ProductTypeEnum {
 
     RN_890("RN_890"),
 
-    RN_RS("RN_RS");
+    RN_RS("RN_RS"),
+    RI_AR("RI_AR"),
+
+    RI_RS("RI_RS");
 
     private final String value;
 
