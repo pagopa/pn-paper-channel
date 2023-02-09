@@ -62,7 +62,6 @@ public class BaseService {
                 .flatMap(i -> {
                     log.info("Start call national registries for find address");
                     pnLogAudit.addsBeforeResolveService(iun, String.format("prepare requestId = %s, relatedRequestId= %s, trace_id = %s Request to National Registry service", requestId, relatedRequestId, correlationId));
-
                     return this.nationalRegistryClient.finderAddress(correlationId, fiscalCode, personType)
                             .onErrorResume(e -> {
                                 NationalRegistryError error = new NationalRegistryError();

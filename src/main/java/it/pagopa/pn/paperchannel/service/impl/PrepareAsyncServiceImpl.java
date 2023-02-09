@@ -69,7 +69,8 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
             requestDeliveryEntityMono = requestDeliveryDAO.getByRequestId(requestId);
 
         return requestDeliveryEntityMono
-                .zipWhen(entity -> addressDAO.findByRequestId(entity.getRequestId()).map(item->item))
+                .zipWhen(entity -> addressDAO.findByRequestId(entity.getRequestId()).map(item->item)
+                        .switchIfEmpty(Mono.error(new PnGenericException(UNTRACEABLE_ADDRESS, UNTRACEABLE_ADDRESS.getMessage()))))
                 .map(entityAndAddress -> {
 
                     PnDeliveryRequest pnDeliveryRequest = entityAndAddress.getT1();
