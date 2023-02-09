@@ -33,16 +33,25 @@ public class Address {
     private boolean fromNationalRegistry = false;
 
     public String convertToHash() {
-        StringBuilder builder = new StringBuilder();
-        builder.append(Utility.convertToHash(this.address));
-        builder.append(Utility.convertToHash(this.fullName));
-        builder.append(Utility.convertToHash(this.nameRow2));
-        builder.append(Utility.convertToHash(this.addressRow2));
-        builder.append(Utility.convertToHash(this.cap));
-        builder.append(Utility.convertToHash(this.city));
-        builder.append(Utility.convertToHash(this.city2));
-        builder.append(Utility.convertToHash(this.pr));
-        builder.append(Utility.convertToHash(this.country));
-        return builder.toString();
+        if (
+            this.address == null &&
+            this.fullName == null &&
+            this.nameRow2 == null &&
+            this.addressRow2 == null &&
+            this.cap == null &&
+            this.city == null &&
+            this.city2 == null &&
+            this.pr == null &&
+            this.country == null ) return null;
+
+        return Utility.convertToHash(this.address) +
+                Utility.convertToHash(this.fullName) +
+                Utility.convertToHash(this.nameRow2) +
+                Utility.convertToHash(this.addressRow2) +
+                Utility.convertToHash(this.cap) +
+                Utility.convertToHash(this.city) +
+                Utility.convertToHash(this.city2) +
+                Utility.convertToHash(this.pr) +
+                Utility.convertToHash(this.country);
     }
 }

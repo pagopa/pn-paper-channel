@@ -123,9 +123,9 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                                 .map(address-> PreparePaperResponseMapper.fromResult(entity,address))
                                 .switchIfEmpty(Mono.just(PreparePaperResponseMapper.fromResult(entity,null)));
                     })
-                    .switchIfEmpty(Mono.defer(() -> saveRequestAndAddress(prepareRequest, prepareRequest.getReceiverAddress())
+                    .switchIfEmpty(Mono.defer(() -> saveRequestAndAddress(prepareRequest, null, prepareRequest.getReceiverAddress())
                             .flatMap(response -> {
-                                PrepareAsyncRequest request = new PrepareAsyncRequest(requestId, response.getIun(), null, null, false, 0);
+                                PrepareAsyncRequest request = new PrepareAsyncRequest(requestId, response.getIun(), false, 0);
                                 this.sqsSender.pushToInternalQueue(request);
                                 throw new PnPaperEventException(PreparePaperResponseMapper.fromEvent(prepareRequest.getRequestId()));
                             }))
@@ -138,6 +138,7 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                     prepareRequest.setRequestId(oldEntity.getRequestId());
                     PrepareRequestValidator.compareRequestEntity(prepareRequest, oldEntity, false);
                     prepareRequest.setRequestId(requestId);
+
                     return this.requestDeliveryDAO.getByRequestId(prepareRequest.getRequestId())
                             .flatMap(newEntity -> {
                                 if (newEntity == null) {
@@ -150,7 +151,7 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                                         .map(address-> PreparePaperResponseMapper.fromResult(newEntity,address))
                                         .switchIfEmpty(Mono.just(PreparePaperResponseMapper.fromResult(newEntity,null)));
                             })
-                            .switchIfEmpty(Mono.defer(()-> saveRequestAndAddress(prepareRequest, prepareRequest.getDiscoveredAddress())
+                            .switchIfEmpty(Mono.defer(()-> saveRequestAndAddress(prepareRequest, oldEntity.getAddressHash(), prepareRequest.getDiscoveredAddress())
                                     .flatMap(response -> {
 
                                         log.info("Start call national");
@@ -188,14 +189,16 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)));
     }
 
-    private Mono<PnDeliveryRequest> saveRequestAndAddress(PrepareRequest prepareRequest, AnalogAddress address){
+    private Mono<PnDeliveryRequest> saveRequestAndAddress(PrepareRequest prepareRequest, String oldAddress, AnalogAddress address){
         PnDeliveryRequest pnDeliveryRequest = RequestDeliveryMapper.toEntity(prepareRequest);
+        pnDeliveryRequest.setHashOldAddress(oldAddress);
         PnAddress addressEntity = null;
 
        if (address != null) {
            Address mapped = AddressMapper.fromAnalogToAddress(address);
            pnDeliveryRequest.setAddressHash(mapped.convertToHash());
            addressEntity = AddressMapper.toEntity(mapped, prepareRequest.getRequestId());
+           pnDeliveryRequest.setProductType(getProposalProductType(mapped, pnDeliveryRequest.getProposalProductType()));
        }
 
         return requestDeliveryDAO.createWithAddress(pnDeliveryRequest, addressEntity);

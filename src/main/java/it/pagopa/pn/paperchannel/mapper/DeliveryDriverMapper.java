@@ -7,13 +7,16 @@ import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnCost;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryDriver;
 import it.pagopa.pn.paperchannel.model.PageModel;
+import it.pagopa.pn.paperchannel.model.ProductTypeEnum;
 import it.pagopa.pn.paperchannel.rest.v1.dto.DeliveryDriverDTO;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PageableDeliveryDriverResponseDto;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Pageable;
 
 import java.util.*;
 
+@Slf4j
 public class DeliveryDriverMapper {
 
     private DeliveryDriverMapper() {
@@ -29,8 +32,18 @@ public class DeliveryDriverMapper {
         return mapperDeliveryDriverToDto.toEntity(dto);
     }
 
+    private static ProductTypeEnum getCorrectProductType(DeliveryAndCost data){
+        String prefix = (StringUtils.isBlank(data.getCap())) ? "RI_" : "RN_";
+        return ProductTypeEnum.valueOf(prefix+data.getProductType());
+    }
+
     public static Map<PnDeliveryDriver, List<PnCost>> toEntityFromExcel(DeliveriesData deliveriesData, String tenderCode){
+        Set<DeliveryAndCost> costSet = new HashSet<>(deliveriesData.getDeliveriesAndCosts());
+        log.info("COST SET SIZE : {}", costSet.size() );
         Map<PnDeliveryDriver, List<PnCost>> map = new HashMap<>();
+        return map;
+        /*
+        Map<PnDeliveryDriver, Map<ProductTypeEnum, PnCost>> map = new HashMap<>();
         deliveriesData.getDeliveriesAndCosts().forEach(deliveryAndCost -> {
             PnDeliveryDriver driver = new PnDeliveryDriver();
             driver.setUniqueCode(deliveryAndCost.getUniqueCode());
@@ -38,12 +51,19 @@ public class DeliveryDriverMapper {
                 driver = mapperDeliveryCost.toEntity(deliveryAndCost);
                 driver.setUniqueCode(deliveryAndCost.getUniqueCode());
                 driver.setTenderCode(tenderCode);
-                map.put(driver, new ArrayList<>());
+                map.put(driver, new HashMap<>());
             }
-            List<PnCost> costList = map.get(driver);
+            Map<ProductTypeEnum, PnCost> costMap = map.get(driver);
+            ProductTypeEnum productType = getCorrectProductType(deliveryAndCost);
+
+            if (costMap.containsKey(productType)){
+
+            }
+
+
             if (StringUtils.isNotBlank(deliveryAndCost.getCap())){
                 if (deliveryAndCost.getCap().contains(",")) {
-                    List<String> caps = Arrays.stream(deliveryAndCost.getCap().split(",")).toList();
+                    List<String> capsWithRange = Arrays.stream(deliveryAndCost.getCap().split(",")).toList();
                     for (String cap : caps) {
                         if (cap.contains("-")) {
                             List<String> capRange = Arrays.stream(cap.split("-")).toList();
@@ -69,6 +89,7 @@ public class DeliveryDriverMapper {
             }
         });
         return map;
+         */
     }
     public static PageableDeliveryDriverResponseDto toPageableResponse(PageModel<PnDeliveryDriver> pagePnPaperDeliveryDriver) {
         PageableDeliveryDriverResponseDto pageableDeliveryDriverResponseDto = new PageableDeliveryDriverResponseDto();

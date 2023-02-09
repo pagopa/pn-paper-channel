@@ -78,28 +78,16 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
 
                 .flatMap(addressAndEntity -> {
                     pnLogAudit.addsSuccessResolveService(addressAndEntity.getT2().getIun(), String.format("prepare requestId = %s, relatedRequestId = %s, traceId = %s Response OK from National Registry service", addressAndEntity.getT2().getRequestId(), addressAndEntity.getT2().getRelatedRequestId(), addressAndEntity.getT2().getCorrelationId()));
+                    Address address = null;
 
-                    if (addressAndEntity.getT1().getPhysicalAddress()!=null) {
-                        Address address = AddressMapper.fromNationalRegistry(addressAndEntity.getT1().getPhysicalAddress());
-                        PnDeliveryRequest deliveryRequest = addressAndEntity.getT2();
-                        deliveryRequest.setAddressHash(address.convertToHash());
-                        return this.requestDeliveryDAO.updateData(deliveryRequest)
-                                .flatMap(requestDeliveryEntity ->
-                                        this.addressDAO.create(AddressMapper.toEntity(address, requestDeliveryEntity.getRequestId()))
-                                                .map(item -> Tuples.of(requestDeliveryEntity.getCorrelationId(), address))
-                                );
+                    if (addressAndEntity.getT1().getPhysicalAddress() != null) {
+                        address = AddressMapper.fromNationalRegistry(addressAndEntity.getT1().getPhysicalAddress());
                     }
-                    return Mono.error(new PnGenericException(NATIONAL_REGISTRY_ADDRESS_NOT_FOUND, NATIONAL_REGISTRY_ADDRESS_NOT_FOUND.getMessage()));
-                })
-                .doOnSuccess(correlationAndAddress -> {
 
                     PrepareAsyncRequest prepareAsyncRequest =
-                            new PrepareAsyncRequest(null, null, correlationAndAddress.getT1(), correlationAndAddress.getT2(), false, 0);
+                            new PrepareAsyncRequest(addressAndEntity.getT2().getCorrelationId(), address);
                     this.sqsSender.pushToInternalQueue(prepareAsyncRequest);
-                })
-                .doOnError(throwable -> {
-                    log.error(throwable.getMessage());
-                    throw new PnGenericException(UNTRACEABLE_ADDRESS, UNTRACEABLE_ADDRESS.getMessage());
+                    return Mono.empty();
                 })
                 .block();
     }

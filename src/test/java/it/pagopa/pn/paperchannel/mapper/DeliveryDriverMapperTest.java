@@ -1,5 +1,7 @@
 package it.pagopa.pn.paperchannel.mapper;
 
+import it.pagopa.pn.paperchannel.dao.model.DeliveriesData;
+import it.pagopa.pn.paperchannel.dao.model.DeliveryAndCost;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryDriver;
 import it.pagopa.pn.paperchannel.model.PageModel;
 import it.pagopa.pn.paperchannel.rest.v1.dto.DeliveryDriverDTO;
@@ -49,7 +51,51 @@ class DeliveryDriverMapperTest {
         Assertions.assertNotNull(response);
     }
 
-    public PnDeliveryDriver getPnPaperDeliveryDriver() {
+
+
+
+    @Test
+    void toEntityFromExcelTest(){
+        DeliveryDriverMapper.toEntityFromExcel(getDeliveries(), "ABC");
+    }
+
+    private DeliveriesData getDeliveries() {
+        DeliveriesData deliveriesData = new DeliveriesData();
+        DeliveryAndCost d1 = new DeliveryAndCost();
+        d1.setUniqueCode("AAAAA");
+        d1.setTaxId("ID-1");
+        d1.setProductType("AR");
+        d1.setCap("81029, 23945");
+        d1.setFsu(false);
+        DeliveryAndCost d2 = new DeliveryAndCost();
+        d2.setUniqueCode("AAAAA");
+        d2.setTaxId("ID-1");
+        d2.setProductType("AR");
+        d2.setCap("11029, 43945");
+        d2.setFsu(false);
+        DeliveryAndCost d3 = new DeliveryAndCost();
+        d3.setUniqueCode("AAAAA");
+        d3.setTaxId("ID-1");
+        d3.setProductType("890");
+        d3.setZone("ZONE_1");
+        d3.setFsu(false);
+        DeliveryAndCost d4 = new DeliveryAndCost();
+        d4.setUniqueCode("AAAAA");
+        d4.setTaxId("ID-1");
+        d4.setProductType("SEMPLICE");
+        d4.setCap("81029, 23945");
+        d4.setFsu(false);
+        DeliveryAndCost d5 = new DeliveryAndCost();
+        d5.setUniqueCode("AAAAA");
+        d5.setTaxId("ID-1");
+        d5.setProductType("890");
+        d5.setZone("ZONE_1");
+        d5.setFsu(false);
+        deliveriesData.setDeliveriesAndCosts(List.of(d1, d2,d3,d4,d5));
+        return deliveriesData;
+    }
+
+    private PnDeliveryDriver getPnPaperDeliveryDriver() {
         PnDeliveryDriver pnDeliveryDriver = new PnDeliveryDriver();
         pnDeliveryDriver.setFiscalCode("FRDYVB568501A");
         pnDeliveryDriver.setUniqueCode("123456");

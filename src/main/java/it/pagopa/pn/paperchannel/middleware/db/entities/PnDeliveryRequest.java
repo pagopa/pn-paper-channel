@@ -50,6 +50,7 @@ public class PnDeliveryRequest {
 
     private static final String COL_PRODUCT_TYPE = "productType";
     private static final String COL_RELATED_REQUEST_ID = "relatedRequestId";
+    private static final String COL_HASH_OLD_ADDRESS = "hashOldAddress";
 
     @Getter(onMethod = @__({@DynamoDbPartitionKey,@DynamoDbAttribute(COL_REQUEST_ID)}))
     private String requestId;
@@ -68,6 +69,9 @@ public class PnDeliveryRequest {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_ADDRESS_HASH)}))
     private String addressHash;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_HASH_OLD_ADDRESS)}))
+    private String hashOldAddress;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_STATUS_CODE)}))
     private String statusCode;
