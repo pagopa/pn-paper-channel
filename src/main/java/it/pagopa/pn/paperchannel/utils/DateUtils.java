@@ -17,7 +17,6 @@ public class DateUtils {
     private static final String START_DATE = "2020-01-01T10:15:30";
     private static final ZoneId italianZoneId =  ZoneId.of("Europe/Rome");
 
-
     private DateUtils(){}
 
     public static String formatDate(Date date)  {
