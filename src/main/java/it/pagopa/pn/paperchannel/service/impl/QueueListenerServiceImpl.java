@@ -5,7 +5,6 @@ import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.NationalRegistryError;
@@ -18,15 +17,12 @@ import it.pagopa.pn.paperchannel.service.QueueListenerService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuples;
 
-import static it.pagopa.pn.commons.log.MDCWebFilter.MDC_TRACE_ID_KEY;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.EXTERNAL_CHANNEL_LISTENER_EXCEPTION;
 
 @Slf4j
 @Service
@@ -65,22 +61,21 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
     public void nationalRegistriesResponseListener(AddressSQSMessageDto body) {
         log.info("Received message from National Registry queue");
         Mono.just(body)
-                .map(dto -> {
-                    if (dto==null || StringUtils.isBlank(dto.getCorrelationId())) throw new PnGenericException(UNTRACEABLE_ADDRESS, UNTRACEABLE_ADDRESS.getMessage());
-
-                    String correlationId = dto.getCorrelationId();
-                    log.info("Received message from National Registry queue with correlationId"+correlationId);
-
-                    requestDeliveryDAO.getByCorrelationId(correlationId)
-                            .map(i -> {
-                                pnLogAudit.addsSuccessResolveService(i.getIun(), String.format("prepare requestId = %s, relatedRequestId = %s Response OK from National Registry service", i.getRequestId(), i.getRelatedRequestId()));
-                                return i;
-                            });
-
+                .map(msg -> {
+                    if (msg==null || StringUtils.isBlank(msg.getCorrelationId())) throw new PnGenericException(UNTRACEABLE_ADDRESS, UNTRACEABLE_ADDRESS.getMessage());
+                    else return msg;
+                })
+                .zipWhen(msgDto -> {
+                    String correlationId = msgDto.getCorrelationId();
+                    log.info("Received message from National Registry queue with correlationId "+correlationId);
+                    return requestDeliveryDAO.getByCorrelationId(correlationId);
+                })
+                .map(entityAndDto -> {
+                    pnLogAudit.addsSuccessResolveService(entityAndDto.getT2().getIun(), String.format("prepare requestId = %s, relatedRequestId = %s, traceId = %s Response OK from National Registry service", entityAndDto.getT2().getRequestId(), entityAndDto.getT2().getRelatedRequestId(), entityAndDto.getT2().getCorrelationId()));
                     Address address = null;
-                    if (dto.getPhysicalAddress()!=null)
-                        address= AddressMapper.fromNationalRegistry(dto.getPhysicalAddress());
-                    return Tuples.of(correlationId, address);
+                    if (entityAndDto.getT1().getPhysicalAddress()!=null)
+                        address= AddressMapper.fromNationalRegistry(entityAndDto.getT1().getPhysicalAddress());
+                    return Tuples.of(entityAndDto.getT2().getCorrelationId(), address);
                 })
                 .doOnSuccess(correlationAndAddress -> {
                     PrepareAsyncRequest prepareAsyncRequest =
@@ -97,22 +92,23 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
     @Override
     public void nationalRegistriesErrorListener(NationalRegistryError data, int attempt) {
         Mono.just(data)
-            .doOnSuccess(nationalRegistryError -> {
-                log.info("Called national Registries");
-                this.finderAddressFromNationalRegistries(
-                        nationalRegistryError.getRequestId(),
-                        nationalRegistryError.getRelatedRequestId(),
-                        nationalRegistryError.getFiscalCode(),
-                        nationalRegistryError.getReceiverType(),
-                        nationalRegistryError.getIun(),
-                        attempt
-                );
-            })
-            .doOnError(throwable -> {
-                log.error(throwable.getMessage());
-                throw new PnGenericException(PREPARE_ASYNC_LISTENER_EXCEPTION, PREPARE_ASYNC_LISTENER_EXCEPTION.getMessage());
-            })
-            .block();
+                .doOnSuccess(nationalRegistryError -> {
+                    log.info("Called national Registries");
+                    this.finderAddressFromNationalRegistries(
+                            nationalRegistryError.getCorrelationId(),
+                            nationalRegistryError.getRequestId(),
+                            nationalRegistryError.getRelatedRequestId(),
+                            nationalRegistryError.getFiscalCode(),
+                            nationalRegistryError.getReceiverType(),
+                            nationalRegistryError.getIun(),
+                            attempt
+                    );
+                })
+                .doOnError(throwable -> {
+                    log.error(throwable.getMessage());
+                    throw new PnGenericException(PREPARE_ASYNC_LISTENER_EXCEPTION, PREPARE_ASYNC_LISTENER_EXCEPTION.getMessage());
+                })
+                .block();
     }
 
     @Override

@@ -12,7 +12,6 @@ public class NationalRegistryError {
     private String fiscalCode;
     private String receiverType;
     private String iun;
-
-
+    private String correlationId;
 
 }
