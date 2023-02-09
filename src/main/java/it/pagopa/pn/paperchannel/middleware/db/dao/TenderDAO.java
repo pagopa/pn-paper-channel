@@ -13,6 +13,8 @@ public interface TenderDAO {
 
     Mono<PnTender> getTender(String tenderCode);
 
+    Mono<PnTender> findActiveTender();
+
     Mono<PnTender> createOrUpdate(PnTender tender);
     Mono<PnTender> createNewContract(Map<PnDeliveryDriver, List<PnCost>> deliveriesAndCost, PnTender tender);
 

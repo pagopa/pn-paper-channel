@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
 
 class CostMapperTest {
 
@@ -31,18 +30,13 @@ class CostMapperTest {
         Assertions.assertNotNull(response);
     }
     @Test
-    void costMapperToResponseTest() {
-        AllPricesContractorResponseDto response=CostMapper.toResponse(new ArrayList<>());
-        Assertions.assertNotNull(response);
-    }
-    @Test
     void costMapperFromContractDTOTest() {
         PnCost response=CostMapper.fromCostDTO("ABX_xxx", "driverId", getContractDto());
         Assertions.assertNotNull(response);
     }
     private CostDTO getContractDto(){
         CostDTO contractDto = new CostDTO();
-        contractDto.setCap("00061");
+        //contractDto.setCap("00061");
         contractDto.setZone(InternationalZoneEnum._1);
         contractDto.setPrice(0.1F);
         contractDto.setPriceAdditional(0.2F);
@@ -51,13 +45,13 @@ class CostMapperTest {
     }
     private PnCost getPnPaperCost(String str){
         PnCost pnCost = new PnCost();
-        pnCost.setCap("00061");
+        //pnCost.setCap("00061");
         pnCost.setPagePrice(0.1F);
         pnCost.setBasePrice(0.5F);
         pnCost.setTenderCode("GARA-2022");
         pnCost.setZone("ZONE_1");
         pnCost.setProductType(str);
-        pnCost.setIdDeliveryDriver("12345");
+        pnCost.setDeliveryDriverCode("12345");
         pnCost.setUuid("12345");
         return pnCost;
     }

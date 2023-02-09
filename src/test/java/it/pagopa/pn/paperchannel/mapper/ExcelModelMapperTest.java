@@ -36,10 +36,10 @@ class ExcelModelMapperTest {
     public List<PnCost> getCosts(){
         List<PnCost> paperCostList= new ArrayList<>();
         PnCost cost = new PnCost();
-        cost.setIdDeliveryDriver("12345");
+        cost.setDeliveryDriverCode("12345");
         cost.setUuid("12345");
         cost.setProductType("AR");
-        cost.setCap("00061");
+        //cost.setCap("00061");
         cost.setZone("roma");
         cost.setTenderCode("GARA-2022");
         cost.setPagePrice(0.5F);

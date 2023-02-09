@@ -6,5 +6,5 @@ import reactor.core.publisher.Mono;
 
 public interface NationalRegistryClient {
 
-    Mono<AddressOKDto> finderAddress(String recipientTaxId,String recipientType);
+    Mono<AddressOKDto> finderAddress(String correlationId, String recipientTaxId,String recipientType);
 }

@@ -43,12 +43,12 @@ public class NationalRegistryClientImpl extends BaseClient implements NationalRe
     }
 
     @Override
-    public Mono<AddressOKDto> finderAddress(String recipientTaxId,String recipientType) {
+    public Mono<AddressOKDto> finderAddress(String correlationId, String recipientTaxId,String recipientType) {
 
         log.debug("Getting fiscalCode {} key", recipientTaxId);
         AddressRequestBodyDto addressRequestBodyDto = new AddressRequestBodyDto();
         AddressRequestBodyFilterDto filterDto = new AddressRequestBodyFilterDto();
-        filterDto.setCorrelationId(UUID.randomUUID().toString());
+        filterDto.setCorrelationId(correlationId);
         filterDto.setDomicileType(AddressRequestBodyFilterDto.DomicileTypeEnum.PHYSICAL);
         filterDto.setTaxId(recipientTaxId);
         filterDto.setReferenceRequestDate(DateUtils.formatDate(new Date()));
