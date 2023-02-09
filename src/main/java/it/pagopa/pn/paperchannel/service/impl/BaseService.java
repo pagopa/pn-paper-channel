@@ -57,11 +57,13 @@ public class BaseService {
     }
 
 
-    protected void finderAddressFromNationalRegistries(String requestId, String relatedRequestId, String fiscalCode, String personType, String iun, Integer attempt){
+    protected void finderAddressFromNationalRegistries(String correlationId, String requestId, String relatedRequestId, String fiscalCode, String personType, String iun, Integer attempt){
         Mono.delay(Duration.ofMillis(20)).publishOn(Schedulers.boundedElastic())
                 .flatMap(i -> {
                     log.info("Start call national registries for find address");
-                    return this.nationalRegistryClient.finderAddress(fiscalCode, personType)
+                    pnLogAudit.addsBeforeResolveService(iun, String.format("prepare requestId = %s, relatedRequestId= %s, trace_id = %s Request to National Registry service", requestId, relatedRequestId, correlationId));
+
+                    return this.nationalRegistryClient.finderAddress(correlationId, fiscalCode, personType)
                             .onErrorResume(e -> {
                                 NationalRegistryError error = new NationalRegistryError();
                                 error.setIun(iun);
@@ -79,13 +81,11 @@ public class BaseService {
                 })
                 .publishOn(Schedulers.boundedElastic())
                 .flatMap(address -> {
-                    String correlationId = address.getCorrelationId();
                     log.info("National registries has response");
                     return this.requestDeliveryDAO.getByRequestId(requestId)
                             .flatMap(entity -> {
                                 log.debug("Entity edited with correlation id and new status");
-                                pnLogAudit.addsSuccessResolveService(iun, String.format("prepare requestId = %s, relatedRequestId = %s, trace_id = %s Response OK from National Registry service", requestId, entity.getRelatedRequestId(), MDC.get(MDC_TRACE_ID_KEY)));
-
+                                
                                 entity.setCorrelationId(correlationId);
                                 entity.setStatusCode(StatusDeliveryEnum.NATIONAL_REGISTRY_WAITING.getCode());
                                 entity.setStatusDetail(StatusDeliveryEnum.NATIONAL_REGISTRY_WAITING.getDescription());

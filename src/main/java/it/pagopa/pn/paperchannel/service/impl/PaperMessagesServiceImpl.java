@@ -31,6 +31,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 import static it.pagopa.pn.commons.log.MDCWebFilter.MDC_TRACE_ID_KEY;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_IN_PROCESSING;
@@ -103,7 +104,7 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                 .map(amount -> {
                     log.info("Amount: {} for requestId {}", amount, requestId);
                     SendResponse sendResponse = new SendResponse();
-                    sendResponse.setAmount(amount.floatValue());
+                    sendResponse.setAmount(amount.intValue()*100);
                     return sendResponse;
                 });
     }
@@ -151,10 +152,10 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                             })
                             .switchIfEmpty(Mono.defer(()-> saveRequestAndAddress(prepareRequest, prepareRequest.getDiscoveredAddress())
                                     .flatMap(response -> {
-                                        log.info("Start call national");
-                                        pnLogAudit.addsBeforeResolveService(response.getIun(), String.format("prepare requestId = %s, relatedRequestId= %s, trace_id = %s Request to National Registry service", requestId, prepareRequest.getRelatedRequestId(), MDC.get(MDC_TRACE_ID_KEY)));
 
+                                        log.info("Start call national");
                                         this.finderAddressFromNationalRegistries(
+                                                (MDC.get(MDC_TRACE_ID_KEY) == null ? UUID.randomUUID().toString() : MDC.get(MDC_TRACE_ID_KEY)),
                                                 response.getRequestId(),
                                                 response.getRelatedRequestId(),
                                                 response.getFiscalCode(),
@@ -188,8 +189,8 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
     }
 
     @Override
-    public void finderAddress(String requestId, String relatedRequestId, String fiscalCode, String receiverType, String iun, Integer attempt) {
-        this.finderAddressFromNationalRegistries(requestId, relatedRequestId, fiscalCode, receiverType, iun, attempt);
+    public void finderAddress(String correlationId, String requestId, String relatedRequestId, String fiscalCode, String receiverType, String iun, Integer attempt) {
+        this.finderAddressFromNationalRegistries(correlationId, requestId, relatedRequestId, fiscalCode, receiverType, iun, attempt);
     }
 
     private Mono<PnDeliveryRequest> saveRequestAndAddress(PrepareRequest prepareRequest, AnalogAddress address){

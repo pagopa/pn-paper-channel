@@ -23,7 +23,6 @@ import reactor.core.publisher.Mono;
 import reactor.util.function.Tuples;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.EXTERNAL_CHANNEL_LISTENER_EXCEPTION;
 
 @Slf4j
 @Service
@@ -60,14 +59,23 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
 
     @Override
     public void nationalRegistriesResponseListener(AddressSQSMessageDto body) {
+        log.info("Received message from National Registry queue");
         Mono.just(body)
-                .map(dto -> {
-                    if (dto==null || StringUtils.isBlank(dto.getCorrelationId())) throw new PnGenericException(UNTRACEABLE_ADDRESS, UNTRACEABLE_ADDRESS.getMessage());
-                    String correlationId = dto.getCorrelationId();
+                .map(msg -> {
+                    if (msg==null || StringUtils.isBlank(msg.getCorrelationId())) throw new PnGenericException(UNTRACEABLE_ADDRESS, UNTRACEABLE_ADDRESS.getMessage());
+                    else return msg;
+                })
+                .zipWhen(msgDto -> {
+                    String correlationId = msgDto.getCorrelationId();
+                    log.info("Received message from National Registry queue with correlationId "+correlationId);
+                    return requestDeliveryDAO.getByCorrelationId(correlationId);
+                })
+                .map(entityAndDto -> {
+                    pnLogAudit.addsSuccessResolveService(entityAndDto.getT2().getIun(), String.format("prepare requestId = %s, relatedRequestId = %s, traceId = %s Response OK from National Registry service", entityAndDto.getT2().getRequestId(), entityAndDto.getT2().getRelatedRequestId(), entityAndDto.getT2().getCorrelationId()));
                     Address address = null;
-                    if (dto.getPhysicalAddress()!=null)
-                        address= AddressMapper.fromNationalRegistry(dto.getPhysicalAddress());
-                    return Tuples.of(correlationId, address);
+                    if (entityAndDto.getT1().getPhysicalAddress()!=null)
+                        address= AddressMapper.fromNationalRegistry(entityAndDto.getT1().getPhysicalAddress());
+                    return Tuples.of(entityAndDto.getT2().getCorrelationId(), address);
                 })
                 .doOnSuccess(correlationAndAddress -> {
                     PrepareAsyncRequest prepareAsyncRequest =
@@ -84,22 +92,23 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
     @Override
     public void nationalRegistriesErrorListener(NationalRegistryError data, int attempt) {
         Mono.just(data)
-            .doOnSuccess(nationalRegistryError -> {
-                log.info("Called national Registries");
-                this.finderAddressFromNationalRegistries(
-                        nationalRegistryError.getRequestId(),
-                        nationalRegistryError.getRelatedRequestId(),
-                        nationalRegistryError.getFiscalCode(),
-                        nationalRegistryError.getReceiverType(),
-                        nationalRegistryError.getIun(),
-                        attempt
-                );
-            })
-            .doOnError(throwable -> {
-                log.error(throwable.getMessage());
-                throw new PnGenericException(PREPARE_ASYNC_LISTENER_EXCEPTION, PREPARE_ASYNC_LISTENER_EXCEPTION.getMessage());
-            })
-            .block();
+                .doOnSuccess(nationalRegistryError -> {
+                    log.info("Called national Registries");
+                    this.finderAddressFromNationalRegistries(
+                            nationalRegistryError.getCorrelationId(),
+                            nationalRegistryError.getRequestId(),
+                            nationalRegistryError.getRelatedRequestId(),
+                            nationalRegistryError.getFiscalCode(),
+                            nationalRegistryError.getReceiverType(),
+                            nationalRegistryError.getIun(),
+                            attempt
+                    );
+                })
+                .doOnError(throwable -> {
+                    log.error(throwable.getMessage());
+                    throw new PnGenericException(PREPARE_ASYNC_LISTENER_EXCEPTION, PREPARE_ASYNC_LISTENER_EXCEPTION.getMessage());
+                })
+                .block();
     }
 
     @Override
