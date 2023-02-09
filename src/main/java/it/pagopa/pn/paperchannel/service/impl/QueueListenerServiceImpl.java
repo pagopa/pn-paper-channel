@@ -3,8 +3,10 @@ package it.pagopa.pn.paperchannel.service.impl;
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
+import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.NationalRegistryError;
@@ -31,6 +33,8 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
     private PaperResultAsyncService paperResultAsyncService;
     @Autowired
     private PaperAsyncService paperAsyncService;
+    @Autowired
+    private AddressDAO addressDAO;
 
     public QueueListenerServiceImpl(PnAuditLogBuilder auditLogBuilder,
                                     RequestDeliveryDAO requestDeliveryDAO,
@@ -68,16 +72,27 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                 .zipWhen(msgDto -> {
                     String correlationId = msgDto.getCorrelationId();
                     log.info("Received message from National Registry queue with correlationId "+correlationId);
-                    return requestDeliveryDAO.getByCorrelationId(correlationId);
+                    return requestDeliveryDAO.getByCorrelationId(correlationId)
+                            .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage())));
                 })
-                .map(entityAndDto -> {
-                    pnLogAudit.addsSuccessResolveService(entityAndDto.getT2().getIun(), String.format("prepare requestId = %s, relatedRequestId = %s, traceId = %s Response OK from National Registry service", entityAndDto.getT2().getRequestId(), entityAndDto.getT2().getRelatedRequestId(), entityAndDto.getT2().getCorrelationId()));
-                    Address address = null;
-                    if (entityAndDto.getT1().getPhysicalAddress()!=null)
-                        address= AddressMapper.fromNationalRegistry(entityAndDto.getT1().getPhysicalAddress());
-                    return Tuples.of(entityAndDto.getT2().getCorrelationId(), address);
+
+                .flatMap(addressAndEntity -> {
+                    pnLogAudit.addsSuccessResolveService(addressAndEntity.getT2().getIun(), String.format("prepare requestId = %s, relatedRequestId = %s, traceId = %s Response OK from National Registry service", addressAndEntity.getT2().getRequestId(), addressAndEntity.getT2().getRelatedRequestId(), addressAndEntity.getT2().getCorrelationId()));
+
+                    if (addressAndEntity.getT1().getPhysicalAddress()!=null) {
+                        Address address = AddressMapper.fromNationalRegistry(addressAndEntity.getT1().getPhysicalAddress());
+                        PnDeliveryRequest deliveryRequest = addressAndEntity.getT2();
+                        deliveryRequest.setAddressHash(address.convertToHash());
+                        return this.requestDeliveryDAO.updateData(deliveryRequest)
+                                .flatMap(requestDeliveryEntity ->
+                                        this.addressDAO.create(AddressMapper.toEntity(address, requestDeliveryEntity.getRequestId()))
+                                                .map(item -> Tuples.of(requestDeliveryEntity.getCorrelationId(), address))
+                                );
+                    }
+                    return Mono.error(new PnGenericException(NATIONAL_REGISTRY_ADDRESS_NOT_FOUND, NATIONAL_REGISTRY_ADDRESS_NOT_FOUND.getMessage()));
                 })
                 .doOnSuccess(correlationAndAddress -> {
+
                     PrepareAsyncRequest prepareAsyncRequest =
                             new PrepareAsyncRequest(null, null, correlationAndAddress.getT1(), correlationAndAddress.getT2(), false, 0);
                     this.sqsSender.pushToInternalQueue(prepareAsyncRequest);

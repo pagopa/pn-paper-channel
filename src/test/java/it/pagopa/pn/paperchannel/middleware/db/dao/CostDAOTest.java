@@ -53,11 +53,11 @@ class CostDAOTest extends BaseTest {
 
     @Test
     void findAllFromTenderCodeTest(){
-        List<PnCost> prices = this.costDAO.findAllFromTenderCode(costNational.getTenderCode()).block();
+        List<PnCost> prices = this.costDAO.findAllFromTenderCode(costNational.getTenderCode(), null).collectList().block();
         assertNotNull(prices);
         assertEquals(2, prices.size());
 
-        prices = this.costDAO.findAllFromTenderCode("TEST_ERROR_TENDER_CODE").block();
+        prices = this.costDAO.findAllFromTenderCode("TEST_ERROR_TENDER_CODE", null).collectList().block();
         assertNotNull(prices);
         assertEquals(0, prices.size());
 
