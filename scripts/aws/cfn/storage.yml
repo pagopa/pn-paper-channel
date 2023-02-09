@@ -588,10 +588,6 @@ Resources:
           AttributeType: "S"
         - AttributeName: "uuidCode"
           AttributeType: "S"
-        - AttributeName: "cap"
-          AttributeType: "S"
-        - AttributeName: "zone"
-          AttributeType: "S"
         - AttributeName: "tenderCode"
           AttributeType: "S"
       KeySchema:
