@@ -2,8 +2,6 @@ package it.pagopa.pn.paperchannel.validator;
 
 import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnCost;
-import it.pagopa.pn.paperchannel.utils.Const;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;

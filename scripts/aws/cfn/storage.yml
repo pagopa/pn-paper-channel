@@ -741,7 +741,7 @@ Resources:
           AttributeType: "S"
         - AttributeName: "author"
           AttributeType: "S"
-        - AttributeName: "startDate"
+        - AttributeName: "date"
           AttributeType: "S"
       KeySchema:
         - AttributeName: "tenderCode"
@@ -751,7 +751,7 @@ Resources:
           KeySchema:
             - AttributeName: "author"
               KeyType: "HASH"
-            - AttributeName: "startDate"
+            - AttributeName: "date"
               KeyType: "RANGE"
           Projection:
             ProjectionType: "ALL"
@@ -796,6 +796,15 @@ Resources:
           ProvisionedThroughput:
             ReadCapacityUnits: "5"
             WriteCapacityUnits: "5"
+        - IndexName: "tender-index"
+          KeySchema:
+            - AttributeName: "tenderCode"
+              KeyType: "HASH"
+          Projection:
+            ProjectionType: "ALL"
+          ProvisionedThroughput:
+            ReadCapacityUnits: "5"
+            WriteCapacityUnits: "5"
       ProvisionedThroughput:
         ReadCapacityUnits: "5"
         WriteCapacityUnits: "5"
@@ -809,9 +818,9 @@ Resources:
     Properties:
       TableName: !Sub '${ProjectName}-PaperCost'
       AttributeDefinitions:
-        - AttributeName: "idDeliveryDriver"
+        - AttributeName: "driverCode"
           AttributeType: "S"
-        - AttributeName: "uuid"
+        - AttributeName: "uuidCode"
           AttributeType: "S"
         - AttributeName: "cap"
           AttributeType: "S"
@@ -820,29 +829,11 @@ Resources:
         - AttributeName: "tenderCode"
           AttributeType: "S"
       KeySchema:
-        - AttributeName: "idDeliveryDriver"
+        - AttributeName: "driverCode"
           KeyType: "HASH"
-        - AttributeName: "uuid"
+        - AttributeName: "uuidCode"
           KeyType: "RANGE"
       GlobalSecondaryIndexes:
-        - IndexName: "cap-index"
-          KeySchema:
-            - AttributeName: "cap"
-              KeyType: "HASH"
-          Projection:
-            ProjectionType: "ALL"
-          ProvisionedThroughput:
-            ReadCapacityUnits: "5"
-            WriteCapacityUnits: "5"
-        - IndexName: "zone-index"
-          KeySchema:
-            - AttributeName: "zone"
-              KeyType: "HASH"
-          Projection:
-            ProjectionType: "ALL"
-          ProvisionedThroughput:
-            ReadCapacityUnits: "5"
-            WriteCapacityUnits: "5"
         - IndexName: "tender-index"
           KeySchema:
             - AttributeName: "tenderCode"
@@ -907,7 +898,7 @@ Resources:
         - AttributeName: "author"
           AttributeType: "S"
         - AttributeName: "cap"
-            AttributeType: "S"
+          AttributeType: "S"
       KeySchema:
         - AttributeName: "author"
           KeyType: "HASH"

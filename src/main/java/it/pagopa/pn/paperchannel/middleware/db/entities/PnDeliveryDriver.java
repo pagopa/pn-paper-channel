@@ -27,12 +27,13 @@ public class PnDeliveryDriver {
     public static final String COL_FISCAL_CODE = "fiscalCode";
     public static final String COL_AUTHOR = "author";
     public static final String AUTHOR_INDEX = "author-index";
+    public static final String TENDER_CODE_INDEX = "tender-index";
     public static final String COL_START_DATE = "startDate";
 
     @Getter(onMethod = @__({@DynamoDbPartitionKey, @DynamoDbAttribute(COL_UNIQUE_CODE)}))
     public String uniqueCode;
 
-    @Getter(onMethod = @__({@DynamoDbSortKey, @DynamoDbAttribute(COL_TENDER_CODE)}))
+    @Getter(onMethod = @__({@DynamoDbSortKey, @DynamoDbSecondaryPartitionKey(indexNames = TENDER_CODE_INDEX), @DynamoDbAttribute(COL_TENDER_CODE)}))
     public String tenderCode;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_DENOMINATION)}))

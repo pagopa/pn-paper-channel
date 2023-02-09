@@ -18,8 +18,10 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -47,8 +49,8 @@ public class TenderDAOImpl extends BaseDAO<PnTender> implements TenderDAO {
         Pair<Instant, Instant> startAndEndTimestamp = DateUtils.getStartAndEndTimestamp(null, null);
 
         QueryConditional conditional = CONDITION_BETWEEN.apply(
-                new Keys(keyBuild("PN-PAPER-CHANNEL", startAndEndTimestamp.getFirst().toString()),
-                        keyBuild("PN-PAPER-CHANNEL", startAndEndTimestamp.getSecond().toString()) )
+                new Keys(keyBuild(Const.PN_PAPER_CHANNEL, startAndEndTimestamp.getFirst().toString()),
+                        keyBuild(Const.PN_PAPER_CHANNEL, startAndEndTimestamp.getSecond().toString()) )
         );
 
         return this.getByFilter(conditional, PnTender.AUTHOR_INDEX, null, null)
@@ -58,6 +60,32 @@ public class TenderDAOImpl extends BaseDAO<PnTender> implements TenderDAO {
     @Override
     public Mono<PnTender> getTender(String tenderCode) {
         return Mono.fromFuture(this.get(tenderCode, null).thenApply(item -> item));
+    }
+
+    @Override
+    public Mono<PnTender> findActiveTender() {
+        Pair<Instant, Instant> startAndEndTimestamp = DateUtils.getStartAndEndTimestamp(null, null);
+
+        QueryConditional conditional = CONDITION_BETWEEN.apply(
+                new Keys(keyBuild(Const.PN_PAPER_CHANNEL, startAndEndTimestamp.getFirst().toString()),
+                        keyBuild(Const.PN_PAPER_CHANNEL, startAndEndTimestamp.getSecond().toString()) )
+        );
+
+        String filter = PnTender.COL_STATUS + " = :activeStatus AND "
+                + PnTender.COL_START_DATE + " <= :dateNow AND " + PnTender.COL_END_DATE + " >= :dateNow";
+
+        Map<String, AttributeValue> values = new HashMap<>();
+        values.put(":activeStatus", AttributeValue.builder().s("IN_PROGRESS").build());
+        values.put(":dateNow", AttributeValue.builder().s(Instant.now().toString()).build());
+
+        return this.getByFilter(conditional, PnTender.AUTHOR_INDEX, values, filter)
+                .collectList()
+                .flatMap(list -> {
+                    if (list == null || list.isEmpty()){
+                        return Mono.empty();
+                    }
+                    return Mono.just(list.get(0));
+                });
     }
 
     @Override

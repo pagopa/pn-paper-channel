@@ -47,6 +47,32 @@ aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
 
 aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     dynamodb create-table \
+    --table-name TenderDynamoTable \
+    --attribute-definitions \
+        AttributeName=tenderCode,AttributeType=S \
+		    AttributeName=author,AttributeType=S \
+		    AttributeName=date,AttributeType=S \
+    --key-schema \
+        AttributeName=tenderCode,KeyType=HASH \
+    --provisioned-throughput \
+        ReadCapacityUnits=5,WriteCapacityUnits=5 \
+	--global-secondary-indexes \
+    "[
+        {
+            \"IndexName\": \"author-index\",
+            \"KeySchema\": [{\"AttributeName\":\"author\",\"KeyType\":\"HASH\"},{\"AttributeName\":\"date\",\"KeyType\":\"RANGE\"}],
+            \"Projection\":{
+                \"ProjectionType\":\"ALL\"
+            },
+            \"ProvisionedThroughput\": {
+                \"ReadCapacityUnits\": 5,
+                \"WriteCapacityUnits\": 5
+            }
+        }
+	]"
+
+aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
+    dynamodb create-table \
     --table-name CapDynamoTable \
     --attribute-definitions \
         AttributeName=author,AttributeType=S \
@@ -97,10 +123,12 @@ aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     --table-name DeliveryDriverDynamoTable \
     --attribute-definitions \
         AttributeName=uniqueCode,AttributeType=S \
-		AttributeName=author,AttributeType=S \
-		AttributeName=startDate,AttributeType=S \
+        AttributeName=tenderCode,AttributeType=S \
+		    AttributeName=author,AttributeType=S \
+		    AttributeName=startDate,AttributeType=S \
     --key-schema \
         AttributeName=uniqueCode,KeyType=HASH \
+        AttributeName=tenderCode,KeyType=RANGE \
     --provisioned-throughput \
         ReadCapacityUnits=5,WriteCapacityUnits=5 \
 	--global-secondary-indexes \
@@ -115,6 +143,17 @@ aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
                 \"ReadCapacityUnits\": 5,
                 \"WriteCapacityUnits\": 5
             }
+        },
+        {
+            \"IndexName\": \"tender-index\",
+            \"KeySchema\": [{\"AttributeName\":\"tenderCode\",\"KeyType\":\"HASH\"}],
+            \"Projection\":{
+                \"ProjectionType\":\"ALL\"
+            },
+            \"ProvisionedThroughput\": {
+                \"ReadCapacityUnits\": 5,
+                \"WriteCapacityUnits\": 5
+            }
         }
 	]"
 
@@ -122,40 +161,16 @@ aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     dynamodb create-table \
     --table-name CostDynamoTable \
     --attribute-definitions \
-        AttributeName=idDeliveryDriver,AttributeType=S \
-        AttributeName=uuid,AttributeType=S \
-		    AttributeName=cap,AttributeType=S \
-		    AttributeName=zone,AttributeType=S \
+        AttributeName=driverCode,AttributeType=S \
+        AttributeName=uuidCode,AttributeType=S \
 		    AttributeName=tenderCode,AttributeType=S \
     --key-schema \
-        AttributeName=idDeliveryDriver,KeyType=HASH \
-		    AttributeName=uuid,KeyType=SORT \
+        AttributeName=driverCode,KeyType=HASH \
+		    AttributeName=uuidCode,KeyType=SORT \
     --provisioned-throughput \
         ReadCapacityUnits=5,WriteCapacityUnits=5 \
     --global-secondary-indexes \
     "[
-        {
-            \"IndexName\": \"cap-index\",
-            \"KeySchema\": [{\"AttributeName\":\"cap\",\"KeyType\":\"HASH\"}],
-            \"Projection\":{
-                \"ProjectionType\":\"ALL\"
-            },
-            \"ProvisionedThroughput\": {
-                \"ReadCapacityUnits\": 5,
-                \"WriteCapacityUnits\": 5
-            }
-        },
-		{
-            \"IndexName\": \"zone-index\",
-            \"KeySchema\": [{\"AttributeName\":\"zone\",\"KeyType\":\"HASH\"}],
-            \"Projection\":{
-                \"ProjectionType\":\"ALL\"
-            },
-            \"ProvisionedThroughput\": {
-                \"ReadCapacityUnits\": 5,
-                \"WriteCapacityUnits\": 5
-            }
-        },
 		{
             \"IndexName\": \"tender-index\",
             \"KeySchema\": [{\"AttributeName\":\"tenderCode\",\"KeyType\":\"HASH\"}],

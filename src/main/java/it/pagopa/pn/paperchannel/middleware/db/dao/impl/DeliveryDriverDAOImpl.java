@@ -50,8 +50,24 @@ public class DeliveryDriverDAOImpl extends BaseDAO<PnDeliveryDriver> implements 
     }
 
     @Override
-    public Mono<PnDeliveryDriver> getDeliveryDriverFromCode(String deliveryDriverCode) {
-        return Mono.fromFuture(this.get(deliveryDriverCode, null).thenApply(i -> i));
+    public Mono<PnDeliveryDriver> getDeliveryDriverFSU(String tenderCode) {
+        QueryConditional conditional = CONDITION_EQUAL_TO.apply(keyBuild(tenderCode, null));
+        String filterExpression = ":fsu = " + PnDeliveryDriver.COL_FSU;
+        Map<String, AttributeValue> values = new HashMap<>();
+        values.put(":fsu", AttributeValue.builder().bool(true).build());
+
+        return this.getByFilter(conditional, PnDeliveryDriver.TENDER_CODE_INDEX, values, filterExpression,1).collectList()
+                .flatMap(item -> {
+                    if (item == null || item.isEmpty()){
+                        return Mono.empty();
+                    }
+                    return Mono.just(item.get(0));
+                });
+    }
+
+    @Override
+    public Mono<PnDeliveryDriver> getDeliveryDriver(String tenderCode, String deliveryDriverCode) {
+        return Mono.fromFuture(this.get(deliveryDriverCode, tenderCode).thenApply(item -> item));
     }
 
 

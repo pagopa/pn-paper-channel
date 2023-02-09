@@ -47,26 +47,8 @@ paths:
       summary: Elenco gare d'appalto.
       description: API che consente il recupero di tutte le gare
       parameters:
-        - name: page
-          in: query
-          description: Risultati di pagina che si vuole ottenere (0..N)
-          required: false
-          schema:
-            type: integer
-            default: 0
-            format: int32
-            maximum: 999999999
-            minimum: 0
-        - name: size
-          in: query
-          description: Numero di elementi per pagina.
-          required: false
-          schema:
-            type: integer
-            default: 5
-            format: int32
-            maximum: 999999999
-            minimum: 1
+        - $ref: '#/components/parameters/queryNumberPage'
+        - $ref: '#/components/parameters/querySizePage'
       responses:
         '200':
           description: OK
@@ -124,26 +106,8 @@ paths:
       description: API che consente il recupero di tutti i recapitisti di una gara
       parameters:
         - $ref: '#/components/parameters/pathTenderCode'
-        - name: page
-          in: query
-          description: Risultati di pagina che si vuole ottenere (0..N)
-          required: false
-          schema:
-            type: integer
-            default: 0
-            format: int32
-            maximum: 999999999
-            minimum: 0
-        - name: size
-          in: query
-          description: Numero di elementi per pagina.
-          required: false
-          schema:
-            type: integer
-            default: 5
-            format: int32
-            maximum: 999999999
-            minimum: 1
+        - $ref: '#/components/parameters/queryNumberPage'
+        - $ref: '#/components/parameters/querySizePage'
       responses:
         '200':
           description: OK
@@ -180,36 +144,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/FSUResponseDTO'
-        '400':
-          $ref: '#/components/responses/Invalid'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '405':
-          $ref: '#/components/responses/NotAllowed'
-        '500':
-          $ref: '#/components/responses/InternalError'
-
-  /paper-channel-bo/v1/delivery-driver/{tenderCode}/prices/{deliveryDriverId}:
-    get:
-      tags:
-        - DeliveryDriver
-      operationId: takePrices
-      summary: Listino prezzi.
-      description: API che consente il recupero dei prezzi di un vincitore della gara
-      parameters:
-        - $ref: '#/components/parameters/pathTenderCode'
-        - $ref: '#/components/parameters/pathDeliveryDriverId'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AllPricesContractorResponseDto'
         '400':
           $ref: '#/components/responses/Invalid'
         '401':
@@ -316,7 +250,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /paper-channel-bo/v1/delivery-driver/{deliveryDriverId}/cost:
+  /paper-channel-bo/v1/{tenderCode}/delivery-driver/{deliveryDriverId}/cost:
     post:
       tags:
         - DeliveryDriver
@@ -324,6 +258,7 @@ paths:
       summary: Inserimento o modifica di un costo legato al deliveryDriver.
       description: API che consente di aggiungere o modificare i dettagli di un costo legato al deliveryDriver
       parameters:
+        - $ref: '#/components/parameters/pathTenderCode'
         - $ref: '#/components/parameters/pathDeliveryDriverId'
       requestBody:
         content:
@@ -333,6 +268,39 @@ paths:
       responses:
         '200':
           description: OK
+        '400':
+          $ref: '#/components/responses/Invalid'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/NotAllowed'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+
+  /paper-channel-bo/v1/{tenderCode}/delivery-driver/{deliveryDriverId}/get-cost:
+    get:
+      tags:
+        - DeliveryDriver
+      operationId: getAllCostOfDriverAndTender
+      summary: Recupero dei costi di una recapitista e di una specifica gara
+      description: API che consente di recuperare e paginare tutti i costi di un recapitista che partecipa ad una specifica gara
+      parameters:
+        - $ref: '#/components/parameters/pathTenderCode'
+        - $ref: '#/components/parameters/pathDeliveryDriverId'
+        - $ref: '#/components/parameters/queryNumberPage'
+        - $ref: '#/components/parameters/querySizePage'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageableCostResponseDto'
         '400':
           $ref: '#/components/responses/Invalid'
         '401':
@@ -406,6 +374,7 @@ paths:
           $ref: '#/components/responses/NotAllowed'
         '500':
           $ref: '#/components/responses/InternalError'
+
   /paper-channel-bo/v1/cap:
     get:
       tags:
@@ -463,32 +432,6 @@ components:
           enum:
             - UPLOADING
             - UPLOADED
-
-    AllPricesContractorResponseDto:
-      type: object
-      properties:
-        status:
-          $ref: '#/components/schemas/BaseResponse'
-        data:
-          $ref: '#/components/schemas/AllPricesDeliveryDriverDto'
-      additionalProperties: false
-
-    AllPricesDeliveryDriverDto:
-      type: object
-      properties:
-        nationals:
-          type: array
-          items:
-            $ref: '#/components/schemas/CostDTO'
-          maxItems: 999999999
-          minItems: 1
-        internationals:
-          type: array
-          items:
-            $ref: '#/components/schemas/CostDTO'
-          maxItems: 999999999
-          minItems: 1
-      additionalProperties: false
 
     TenderCreateRequestDTO:
       type: object
@@ -555,7 +498,10 @@ components:
         productType:
           $ref: '#/components/schemas/ProductTypeEnumDto'
         cap:
-          type: string
+          type: array
+          items:
+            type: string
+            format: '/^[0-9]{5}$/'
         zone:
           $ref: '#/components/schemas/InternationalZoneEnum'
       required:
@@ -604,6 +550,21 @@ components:
           minItems: 1
       additionalProperties: false
 
+    PageableCostResponseDto:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Page'
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/CostDTO'
+          maxItems: 999999999
+          minItems: 1
+      additionalProperties: false
+      required:
+        - content
+
     TenderDetailResponseDTO:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -626,6 +587,8 @@ components:
           maxItems: 999999999
           minItems: 1
       additionalProperties: false
+      required:
+        - content
 
     TenderDTO:
       type: object
@@ -788,6 +751,12 @@ components:
           maximum: 999999999
           minimum: 1
       additionalProperties: false
+      required:
+        - number
+        - numberOfElements
+        - size
+        - totalElements
+        - totalPages
 
     NotifyResponseDto:
       type: object
@@ -836,11 +805,16 @@ components:
           maxItems: 999999999
           minItems: 1
       additionalProperties: false
+      required:
+        - content
+
     CapDto:
       type: object
       properties:
         cap:
           type: string
+      required:
+        - cap
 
   responses:
     Forbidden:
@@ -869,6 +843,29 @@ components:
       required: false
       schema:
         type: string
+
+    querySizePage:
+      name: size
+      in: query
+      description: Numero di elementi per pagina.
+      required: false
+      schema:
+        type: integer
+        default: 5
+        format: int32
+        maximum: 999999999
+        minimum: 1
+    queryNumberPage:
+      name: page
+      in: query
+      description: Risultati di pagina che si vuole ottenere (0..N)
+      required: false
+      schema:
+        type: integer
+        default: 0
+        format: int32
+        maximum: 999999999
+        minimum: 0
 
     pathTenderCode:
       name: tenderCode

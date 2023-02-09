@@ -26,11 +26,6 @@ public class PaperChannelRestV1Controller implements DeliveryDriverApi {
     }
 
     @Override
-    public Mono<ResponseEntity<AllPricesContractorResponseDto>> takePrices(String tenderCode, String deliveryDriverId, ServerWebExchange exchange) {
-        return DeliveryDriverApi.super.takePrices(tenderCode, deliveryDriverId, exchange);
-    }
-
-    @Override
     public Mono<ResponseEntity<PresignedUrlResponseDto>> addTenderFromFile(ServerWebExchange exchange) {
         return this.paperChannelService.getPresignedUrl().map(ResponseEntity::ok);
     }
@@ -61,8 +56,8 @@ public class PaperChannelRestV1Controller implements DeliveryDriverApi {
 
 
     @Override
-    public Mono<ResponseEntity<Void>> createUpdateCost(String deliveryDriverId, Mono<CostDTO> costDTO, ServerWebExchange exchange) {
-        return costDTO.flatMap(request -> this.paperChannelService.createOrUpdateCost(deliveryDriverId, request))
+    public Mono<ResponseEntity<Void>> createUpdateCost(String tenderCode, String deliveryDriverId, Mono<CostDTO> costDTO, ServerWebExchange exchange) {
+        return costDTO.flatMap(request -> this.paperChannelService.createOrUpdateCost(tenderCode, deliveryDriverId, request))
                 .map(ResponseEntity::ok);
     }
 
@@ -70,6 +65,19 @@ public class PaperChannelRestV1Controller implements DeliveryDriverApi {
     @Override
     public Mono<ResponseEntity<TenderDetailResponseDTO>> getTenderDetails(String tenderCode, ServerWebExchange exchange) {
         return this.paperChannelService.getTenderDetails(tenderCode)
+                .map(ResponseEntity::ok);
+    }
+
+
+    @Override
+    public Mono<ResponseEntity<FSUResponseDTO>> getDetailFSU(String tenderCode, ServerWebExchange exchange) {
+        return this.paperChannelService.getDetailsFSU(tenderCode)
+                .map(ResponseEntity::ok);
+    }
+
+    @Override
+    public Mono<ResponseEntity<PageableCostResponseDto>> getAllCostOfDriverAndTender(String tenderCode, String deliveryDriverId, Integer page, Integer size, ServerWebExchange exchange) {
+        return this.paperChannelService.getAllCostFromTenderAndDriver(tenderCode, deliveryDriverId, page, size)
                 .map(ResponseEntity::ok);
     }
 }

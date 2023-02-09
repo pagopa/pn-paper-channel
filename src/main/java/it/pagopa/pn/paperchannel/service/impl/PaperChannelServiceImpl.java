@@ -16,6 +16,7 @@ import it.pagopa.pn.paperchannel.model.FileStatusCodeEnum;
 import it.pagopa.pn.paperchannel.rest.v1.dto.*;
 import it.pagopa.pn.paperchannel.s3.S3Bucket;
 import it.pagopa.pn.paperchannel.service.PaperChannelService;
+import it.pagopa.pn.paperchannel.validator.CostValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -77,6 +78,19 @@ public class PaperChannelServiceImpl implements PaperChannelService {
     }
 
     @Override
+    public Mono<FSUResponseDTO> getDetailsFSU(String tenderCode) {
+        return this.deliveryDriverDAO.getDeliveryDriverFSU(tenderCode)
+                .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_DRIVER_NOT_EXISTED, DELIVERY_DRIVER_NOT_EXISTED.getMessage(), HttpStatus.NOT_FOUND)))
+                .map(fsu -> {
+                    FSUResponseDTO response = new FSUResponseDTO();
+                    response.setCode(FSUResponseDTO.CodeEnum.NUMBER_0);
+                    response.setResult(true);
+                    response.setFsu(DeliveryDriverMapper.deliveryDriverToDto(fsu));
+                    return response;
+                });
+    }
+
+    @Override
     public Mono<PageableDeliveryDriverResponseDto> getAllDeliveriesDrivers(String tenderCode, Integer page, Integer size) {
         Pageable pageable = PageRequest.of(page-1, size);
         return deliveryDriverDAO.getDeliveryDriverFromTender(tenderCode)
@@ -87,9 +101,14 @@ public class PaperChannelServiceImpl implements PaperChannelService {
     }
 
     @Override
-    public Mono<AllPricesContractorResponseDto> getAllPricesOfDeliveryDriver(String tenderCode, String deliveryDriver) {
-        return costDAO.retrievePrice(tenderCode, deliveryDriver)
-                .map(CostMapper::toResponse);
+    public Mono<PageableCostResponseDto> getAllCostFromTenderAndDriver(String tenderCode, String driverCode, Integer page, Integer size) {
+        Pageable pageable = PageRequest.of(page-1, size);
+        return costDAO.findAllFromTenderCode(tenderCode, driverCode)
+                .collectList()
+                .map(list ->
+                        CostMapper.toPagination(pageable, list)
+                )
+                .map(CostMapper::toPageableResponse);
     }
 
     @Override
@@ -182,7 +201,7 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                 .flatMap(i ->  {
                     if (StringUtils.isNotBlank(tenderCode)) {
                         return this.deliveryDriverDAO.getDeliveryDriverFromTender(tenderCode)
-                                .zipWhen(drivers -> this.costDAO.retrievePrice(tenderCode,null))
+                                .zipWhen(drivers -> this.costDAO.findAllFromTenderCode(tenderCode, null).collectList())
                                 .flatMap(driversAndCosts -> {
                                     ExcelEngine excelEngine = this.excelDAO.create(ExcelModelMapper.fromDeliveriesDrivers(driversAndCosts.getT1(),driversAndCosts.getT2()));
                                     File file = excelEngine.saveOnDisk();
@@ -241,31 +260,33 @@ public class PaperChannelServiceImpl implements PaperChannelService {
     }
 
     @Override
-    public Mono<Void> createOrUpdateCost(String deliveryDriverCode, CostDTO request) {
-        if (StringUtils.isBlank(request.getCap()) && request.getZone() == null){
-            throw new PnGenericException(COST_BADLY_CONTENT, COST_BADLY_CONTENT.getMessage());
+    public Mono<Void> createOrUpdateCost(String tenderCode, String deliveryDriverCode, CostDTO request) {
+        if ((request.getCap() == null || request.getCap().isEmpty()) && request.getZone() == null){
+            return Mono.error(new PnGenericException(COST_BADLY_CONTENT, COST_BADLY_CONTENT.getMessage()));
         }
-        return this.deliveryDriverDAO.getDeliveryDriverFromCode(deliveryDriverCode)
+
+        return this.deliveryDriverDAO.getDeliveryDriver(tenderCode, deliveryDriverCode)
+                .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_DRIVER_NOT_EXISTED, DELIVERY_DRIVER_NOT_EXISTED.getMessage())))
                 .flatMap(driver -> {
-                    String tenderCode = driver.getTenderCode();
-                    List<PnCost> fromRequest = CostMapper.toEntity(tenderCode, driver.uniqueCode, request);
-                    return this.costDAO.retrievePrice(tenderCode, null, (request.getZone() == null))
+                    PnCost fromRequest = CostMapper.fromCostDTO(driver.getTenderCode(), driver.getUniqueCode(), request);
+                    String code = request.getCode();
+                    return this.costDAO.findAllFromTenderAndProductTypeAndExcludedUUID(tenderCode, fromRequest.getProductType(), code)
                             .zipWhen(listFromDB -> Mono.just(fromRequest));
                 })
                 .flatMap(fromDbAndFromRequest -> {
                     List<PnCost> fromDB = fromDbAndFromRequest.getT1();
-                    List<PnCost> fromRequest = fromDbAndFromRequest.getT2();
-                    //Call validator
+                    PnCost fromRequest = fromDbAndFromRequest.getT2();
+                    if (fromRequest.getCap() != null && fromRequest.getZone() == null){
+                        List<String> caps = new ArrayList<>();
+                        fromDB.forEach(cost -> {
+                            if (cost.getCap() != null){
+                                caps.addAll(cost.getCap());
+                            }
+                        });
+                        CostValidator.validateCosts(caps, fromRequest.getCap());
+                    }
                     return this.costDAO.createOrUpdate(fromRequest).flatMap(item -> Mono.empty());
                 });
-
-        //retrieve deliveryDriver with deliveryDriverCode - DONE
-        //get tenderCode from deliveryDriver - DONE
-        // retrieve all cost with tenderCode - DONE
-            // check if request is a valid cost -DONE
-                // - if National -> CAP, PRODUCT-TYPE not could exist occurrences
-                // - if International -> ZONE, PRODUCT-TYPE not could exist occurrences - product-type : AR o SEMPLICE
-            // if validation doesn't return any error, you can update the cost
     }
 
 

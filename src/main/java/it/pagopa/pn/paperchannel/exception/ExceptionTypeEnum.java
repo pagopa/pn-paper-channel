@@ -27,6 +27,7 @@ public enum ExceptionTypeEnum{
     BADLY_DATE_INTERVAL("BADLY_DATE_INTERVAL", "L'intervallo di data è errato"),
     LISTENER_QUEUE_NOT_EXPIRED("LISTENER_QUEUE_NOT_EXPIRED", "Evento non ancora disponibile"),
     TENDER_NOT_EXISTED("TENDER_NOT_EXISTED", "La gara non è presente nel sistema"),
+    ACTIVE_TENDER_NOT_FOUND("ACTIVE_TENDER_NOT_FOUND", "Errore, non esistono gare in corso"),
     DELIVERY_DRIVER_NOT_EXISTED("DELIVERY_DRIVER_NOT_EXISTED", "Il recapitisca non è presente nel sistema"),
     COST_ALREADY_EXIST("COST_ALREADY_EXIST", "Il costo è già presente nel sistema associato ad un altro recapitista"),
     COST_BADLY_CONTENT("COST_BADLY_CONTENT", "Informazioni errate per il costo"),
