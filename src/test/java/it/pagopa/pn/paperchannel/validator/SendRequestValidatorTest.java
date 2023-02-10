@@ -9,6 +9,7 @@ import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.PaperPro
 import it.pagopa.pn.paperchannel.rest.v1.dto.AnalogAddress;
 import it.pagopa.pn.paperchannel.rest.v1.dto.ProductTypeEnum;
 import it.pagopa.pn.paperchannel.rest.v1.dto.SendRequest;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -34,6 +35,7 @@ class SendRequestValidatorTest {
             assertNotNull(ex);
             assertEquals(DIFFERENT_DATA_REQUEST, ex.getExceptionType());
         }
+        Assertions.assertNotNull(getEntity().getAddressHash());
     }
 
     @Test
@@ -42,6 +44,8 @@ class SendRequestValidatorTest {
         PnDeliveryRequest deliveryRequest = new PnDeliveryRequest();
         dto.setIun("123-asd");
         deliveryRequest.setIun("132-der");
+        getEntity().setAddressHash(null);
+
 
         try {
             SendRequestValidator.compareProgressStatusRequestEntity(dto, deliveryRequest);

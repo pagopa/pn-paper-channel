@@ -7,11 +7,9 @@ import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnCost;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryDriver;
 import it.pagopa.pn.paperchannel.model.PageModel;
-import it.pagopa.pn.paperchannel.model.ProductTypeEnum;
 import it.pagopa.pn.paperchannel.rest.v1.dto.DeliveryDriverDTO;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PageableDeliveryDriverResponseDto;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Pageable;
 
 import java.util.*;
@@ -30,11 +28,6 @@ public class DeliveryDriverMapper {
 
     public static PnDeliveryDriver toEntity(DeliveryDriverDTO dto){
         return mapperDeliveryDriverToDto.toEntity(dto);
-    }
-
-    private static ProductTypeEnum getCorrectProductType(DeliveryAndCost data){
-        String prefix = (StringUtils.isBlank(data.getCap())) ? "RI_" : "RN_";
-        return ProductTypeEnum.valueOf(prefix+data.getProductType());
     }
 
     public static Map<PnDeliveryDriver, List<PnCost>> toEntityFromExcel(DeliveriesData deliveriesData, String tenderCode){

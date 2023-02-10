@@ -96,7 +96,7 @@ public class ExcelValidator {
         if (!StringUtils.isBlank(cap.getValue()) && !Utility.isValidCap(cap.getValue())){
             errors.add(new PnExcelValidatorException.ErrorCell(cap.getRow(), cap.getCol(), "Problema nei cap inseriti."));
         } else {
-            deliveryAndCost.setCap(cap.getValue().substring(0, cap.getValue().indexOf(".")));
+            //deliveryAndCost.setCap(cap.getValue().substring(0, cap.getValue().indexOf(".")));
         }
         //zone check
         ExcelEngine.ExcelCell zone = data.get("ZONE");
