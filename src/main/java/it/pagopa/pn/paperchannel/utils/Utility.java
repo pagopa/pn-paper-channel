@@ -6,6 +6,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -54,9 +58,9 @@ public class Utility {
         return isValidFromRegex(value, regex);
     }
 
-    public static Boolean isValidCap(String capList) {
+    public static List<String> isValidCap(String capList) {
         String regex = Const.capRegex;
-
+        List<String> capsFinded = new ArrayList<>();
         boolean check = false;
         String[] cap = capList.split(",");
         if (cap != null && cap.length > 0) {
@@ -65,23 +69,38 @@ public class Utility {
                     String[] range = item.trim().split("-");
                     int low = Integer.parseInt(range[0]);
                     int high = Integer.parseInt(range[1]);
+                    if (!isValidFromRegex(String.valueOf(low),regex) || !isValidFromRegex(String.valueOf(high),regex))
+                        return null;
                     if (low < high) {
                         log.info("Trovato cap in questo range " + item);
-                        if (!isValidCapFromRegex(item,regex)) {
-                            return false;
+                        //TO DO
+                        //vedere caso cap che iniziano con 0
+                        for (int i = low; i < high; i++){
+                            capsFinded.add(String.valueOf(i));
                         }
                     } else {
-                        return false;
+                        log.info("Intervallo errato.");
+                        return null;
                     }
                 } else {
                     check = isValidCapFromRegex(item,regex);
-                    if (!check) return false;
+                    if (check) capsFinded.add(item);
+                    if (!check) return null;
                 }
+            }
+            Set<String> findedEquals = new HashSet<>(capsFinded);
+            findedEquals.addAll(capsFinded);
+            if (findedEquals.size() == capsFinded.size()){
+                log.info("Non è stato trovato alcun cap duplicato.");
+                return capsFinded;
+            }
+            else{
+                log.info("Trovato cap duplicato.");
+                return null;
             }
         } else {
             check = isValidCapFromRegex(capList,regex);
         }
-
-        return check;
+        return capsFinded;
     }
 }

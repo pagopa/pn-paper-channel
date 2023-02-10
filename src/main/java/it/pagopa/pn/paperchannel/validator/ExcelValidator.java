@@ -93,9 +93,14 @@ public class ExcelValidator {
         }
         //cap check
         ExcelEngine.ExcelCell cap = data.get("CAP");
-        if (!StringUtils.isBlank(cap.getValue()) && !Utility.isValidCap(cap.getValue())){
+        if (!StringUtils.isBlank(cap.getValue())){
             errors.add(new PnExcelValidatorException.ErrorCell(cap.getRow(), cap.getCol(), "Problema nei cap inseriti."));
-        } else {
+        }
+        else {
+            List<String> caps = Utility.isValidCap(cap.getValue());
+            if(caps == null){
+                errors.add(new PnExcelValidatorException.ErrorCell(cap.getRow(), cap.getCol(), "Sono presenti duplicati nei cap inseriti."));
+            }
             //deliveryAndCost.setCap(cap.getValue().substring(0, cap.getValue().indexOf(".")));
         }
         //zone check
