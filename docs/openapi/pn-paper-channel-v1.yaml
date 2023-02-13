@@ -68,6 +68,7 @@ paths:
           $ref: '#/components/responses/NotAllowed'
         '500':
           $ref: '#/components/responses/InternalError'
+
   /paper-channel-bo/v1/tenders/{tenderCode}:
     get:
       tags:
@@ -84,6 +85,36 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TenderDetailResponseDTO'
+        '400':
+          $ref: '#/components/responses/Invalid'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/NotAllowed'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /paper-channel-bo/v1/deliveries-drivers/{tenderCode}/detail/{deliveryDriverId}:
+    get:
+      tags:
+        - DeliveryDriver
+      operationId: getDriverDetails
+      summary: Recupero di un recapitista.
+      description: API che consente il recupero dei dettagli di uno specifico recapitista
+      parameters:
+        - $ref: '#/components/parameters/pathTenderCode'
+        - $ref: '#/components/parameters/pathDeliveryDriverId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeliveryDriverResponseDTO'
         '400':
           $ref: '#/components/responses/Invalid'
         '401':
@@ -462,6 +493,16 @@ components:
       required:
         - tender
 
+    DeliveryDriverResponseDTO:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+      type: object
+      properties:
+        driver:
+          $ref: '#/components/schemas/DeliveryDriverDTO'
+      required:
+        - driver
+
     TenderUploadRequestDto:
       type: object
       properties:
@@ -483,7 +524,7 @@ components:
     CostDTO:
       type: object
       properties:
-        code:
+        uid:
           type: string
         price:
           type: number
@@ -505,6 +546,7 @@ components:
         zone:
           $ref: '#/components/schemas/InternationalZoneEnum'
       required:
+        - uid
         - productType
         - price
         - priceAdditional
