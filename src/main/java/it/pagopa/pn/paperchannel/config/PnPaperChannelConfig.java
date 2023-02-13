@@ -21,6 +21,7 @@ public class PnPaperChannelConfig {
     private String clientExternalChannelBasepath;
     private String safeStorageCxId;
     private String xPagopaExtchCxId;
+    private String nationalRegistryCxId;
     private String queueDeliveryPush;
     private String queueNationalRegistries;
     private String queueExternalChannel;

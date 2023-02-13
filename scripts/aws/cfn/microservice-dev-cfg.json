@@ -3,6 +3,7 @@
     "NotificationCheckAddress": "true",
     "SafeStorageCxId": "pn-cons-000",
     "XPagopaExtchCxId": "pn-cons-000",
+    "NationalRegistryCxId": "pn-paper-channel",
     "AttemptSafeStorage": "4",
     "AttemptQueueExternalChannel": "3",
     "AttemptQueueNationalRegistries": "3",

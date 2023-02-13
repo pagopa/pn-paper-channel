@@ -3,7 +3,7 @@ info:
   title: PN-NationalRegistries REST APIs
   description: |-
     Nell’ambito del progetto Piattaforme Notifiche, il componente PN-NationalRegistries si occuperà di recuperare i dati dalle banche dati esterne previste. Tali banche dati esporranno delle interfacce web verso il componente PN-NationalRegistries, accessibili tramite piattaforma di interoperabilità.
-  version: 1.0.0
+  version: 0.11.2
 servers:
   - url: http://127.0.0.1
 tags:
@@ -113,6 +113,10 @@ paths:
       operationId: getAddresses
       parameters:
         - $ref: '#/components/parameters/pathRecipientType'
+        - name: pn-national-registries-cx-id
+          in: header
+          schema:
+            type: string
       requestBody:
         content:
           application/json:
@@ -280,6 +284,11 @@ paths:
       summary: 'Consente di ottenere la PEC dell’impresa oppure del professionista corrispondente al codice fiscale al momento della consultazione. In caso di impresa si restituisce anche l’indirizzo della sede legale.'
       description: 'Consente di ottenere la PEC dell’impresa oppure del professionista corrispondente al codice fiscale al momento della consultazione. In caso di impresa si restituisce anche l’indirizzo della sede legale.'
       operationId: digitalAddressIniPEC
+      parameters:
+        - name: pn-national-registries-cx-id
+          in: header
+          schema:
+            type: string
       requestBody:
         description: Consente di ottenere la PEC dell’impresa oppure del professionista corrispondente al codice fiscale al momento della consultazione. In caso di impresa si restituisce anche l’indirizzo della sede legale.
         content:
@@ -773,7 +782,7 @@ components:
           type: string
           example: BBBCCC00H00T000Z
         verificationResult:
-          type: boolean
+          type: string
     InfoCamereLegalError:
       type: object
       properties:
@@ -787,7 +796,7 @@ components:
         traceId:
           type: string
         timestamp:
-          type: integer
+          type: string
         errors:
           type: array
           items:
@@ -892,6 +901,9 @@ components:
           type: string
         taxId:
           type: string
+        error:
+          type: string
+          description: Se presente indica che si è verificato un errore durante l'esecuzione dell'operazione richiesta.
         digitalAddress:
           type: array
           description: >
