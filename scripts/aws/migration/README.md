@@ -19,7 +19,7 @@ export ENDPOINT="http://dynamodb.eu-south-1.amazonaws.com"
 Per caricare i dati su localstack:
 
 ```
-export PROFILE="dev"  
+export PROFILE="default"  
 export REGION="us-east-1"  
 export ENV="localstack"  
 export ENDPOINT="http://localstack:4566"  

@@ -1,3970 +1,4672 @@
-cap,city
-36100,Vicenza
-33080,Andreis/Barcis/Cimolais/Claut/Erto e Casso/Fiume Veneto/Frisanco/Porcia/Prata di Pordenone/Roveredo in Piano/San Quirino/Vajont/Zoppola
-33081,Aviano
-54021,Bagnone
-33082,Azzano Decimo
-33083,Chions
-54023,Filattiera
-33084,Cordenons
-33085,Maniago
-33086,Montereale Valcellina
-54026,Mulazzo
-33087,Pasiano di Pordenone
-54027,Pontremoli
-54028,Villafranca in Lunigiana
-54029,Zeri
-67100,LAquila
-85020,Atella/Filiano/Ginestra/Maschito/Montemilone/Pescopagano/Rapone/Ripacandida/Ruvo del Monte/San Fele
-85021,Avigliano
-85022,Barile
-85023,Forenza
-85024,Lavello
-85025,Melfi
-85026,Palazzo San Gervasio
-85027,Rapolla
-23030,Bianzone/Castello dellAcqua/Chiuro/Livigno/Lovero/Mazzo di Valtellina/Sernio/Tovo di SantAgata/Valdisotto/Valfurva/Vervio/Villa di Tirano
-85028,Rionero in Vulture
-23031,Aprica
-85029,Venosa
-23032,Bormio
-23033,Grosio
-23034,Grosotto
-23035,Sondalo
-23036,Teglio
-23037,Tirano
-23038,Valdidentro
-33090,Arba/Castelnovo del Friuli/Clauzetto/Sequals/Tramonti di Sopra/Tramonti di Sotto/Travesio/Vito dAsio
-33092,Cavasso Nuovo/Fanna/Meduno
-33094,Pinzano al Tagliamento
-54033,Carrara
-33095,San Giorgio della Richinvelda
-54035,Fosdinovo
-33097,Spilimbergo
-33098,Arzene/San Martino al Tagliamento/Valvasone
-33099,Vivaro
-54038,Montignoso
-85030,Calvera/Carbone/Castronuovo di SantAndrea/Cersosimo/San Chirico Raparo/San Costantino Albanese/San Martino dAgri/San Paolo Albanese/San Severino Lucano/Terranova di Pollino
-85031,Castelsaraceno
-85032,Chiaromonte/Teana
-85033,Episcopia
-85034,Fardella/Francavilla in Sinni
-85035,Noepoli
-85036,Roccanova
-85037,SantArcangelo
-85038,Senise
-85039,Spinoso
-09010,Buggerru/Decimoputzu/Domus De Maria/Fluminimaggiore/Giba/Gonnesa/Masainas/Musei/Narcao/Nuxis/Perdaxius/Piscinas/Portoscuso/Pula/San Giovanni Suergiu/Santadi/SantAnna Arresi/Siliqua/Tratalias/Uta/Vallermosa/Villa San Pietro/Villamassargia/Villaperuccio/Villaspeciosa
-09011,Calasetta
-09012,Capoterra
-09013,Carbonia
-09014,Carloforte
-09015,Domusnovas
-09016,Iglesias
-09017,SantAntioco
-09018,Sarroch
-09019,Teulada
-85040,Castelluccio Inferiore/Castelluccio Superiore/Nemoli/Rivello/Viggianello
-85042,Lagonegro
-85043,Latronico
-85044,Lauria
-85046,Maratea
-85047,Moliterno
-85048,Rotonda
-85049,Trecchina
-09020,Collinas/Genuri/Gesturi/Las Plassas/Pauli Arbarei/Pimentel/Samatzai/Siddi/Turri/Ussana/Ussaramanna/Villamar/Villanovaforru/Villanovafranca
-09021,Barumini
-09022,Lunamatrona
-09023,Monastir
-09024,Nuraminis
-09025,Sanluri
-09026,San Sperate
-09027,Serrenti
-09028,Sestu
-09029,Setzu/Tuili
-85050,Balvano/Baragiano/Brienza/Castelgrande/Grumento Nova/Marsicovetere/Paterno/SantAngelo Le Fratte/Sarconi/Sasso di Castalda/Satriano di Lucania/Savoia di Lucania/Tito
-85051,Bella
-85052,Marsico Nuovo
-85053,Montemurro
-85054,Muro Lucano
-85055,Picerno
-85056,Ruoti
-85057,Tramutola
-85058,Vietri di Potenza
-85059,Viggiano
-09030,Elmas/Pabillonis/Samassi/Sardara
-09031,Arbus
-09032,Assemini
-09033,Decimomannu
-09034,Villasor
-09035,Gonnosfanadiga
-09036,Guspini
-09037,San Gavino Monreale
-09038,Serramanna
-09039,Villacidro
-13010,Caresana/Civiasco/Guardabosone/Motta de Conti/Pezzana/Postua/Stroppiana/Villata
-13011,Borgosesia
-13012,Borgo Vercelli/Prarolo
-13017,Quarona
-13018,Valduggia
-13019,Varallo
-44011,Argenta
-44012,Bondeno
-44015,Portomaggiore
-09040,Armungia/Ballao/Barrali/Burcei/Castiadas/Donori/Furtei/Gesico/Goni/Guamaggiore/Guasila/Mandas/Maracalagonis/Ortacesus/San Basilio/San Nicolò Gerrei/San Vito/SantAndrea Frius/Segariu/Selegas/Senorbì/Serdiana/Settimo San Pietro/Silius/Siurgus Donigala/Soleminis/Suelli/Villaputzu/Villasalto
-09041,Dolianova
-44019,Voghiera
-09042,Monserrato
-09043,Muravera
-09044,Quartucciu
-09045,Quartu SantElena
-09047,Selargius
-09048,Sinnai
-09049,Villasimius
-75010,Aliano/Calciano/Cirigliano/Craco/Garaguso/Gorgoglione/Grottole/Miglionico/Oliveto Lucano/San Mauro Forte
-75011,Accettura
-75012,Bernalda
-75013,Ferrandina
-75014,Grassano
-75015,Pisticci
-75016,Pomarico
-75017,Salandra
-13020,Balmuccia/Breia/Cravagliana/Mollia/Pila/Piode/Rassa/Rimella/Riva Valdobbia/Rossa/Sabbia/Vocca
-75018,Stigliano
-13021,Alagna Valsesia
-75019,Tricarico
-13022,Boccioleto
-13023,Campertogno
-13024,Cellio
-13025,Cervatto/Fobello
-13026,Carcoforo/Rima San Giuseppe/Rimasco
-13027,Scopa
-13028,Scopello
-26100,Cremona
-44020,Goro/Masi Torello/Migliaro/Ostellato
-44021,Codigoro
-44022,Comacchio
-44023,Lagosanto
-44025,Massa Fiscaglia
-44026,Mesola
-44027,Migliarino
-44028,Poggio Renatico
-7112x,Foggia
-75020,Nova Siri/Scanzano Jonico
-75021,Colobraro
-75022,Irsina
-75023,Montalbano Jonico
-75024,Montescaglioso
-75025,Policoro
-75026,Rotondella
-75027,San Giorgio Lucano
-13030,Albano Vercellese/Caresanablot/Casanova Elvo/Collobiano/Formigliana/Ghislarengo/Greggio/Oldenico/Pertengo/Quinto Vercellese/Rive/San Giacomo Vercellese/Villarboit
-75028,Tursi
-13031,Arborio
-75029,Valsinni
-13032,Asigliano Vercellese
-13033,Costanzana
-13034,Desana/Lignana
-13035,Lenta
-13036,Ronsecco
-13037,Serravalle Sesia
-13038,Tricerro
-13039,Trino
-88100,Catanzaro
-44030,Ro
-44033,Berra
-44034,Copparo
-44035,Formignana
-44037,Jolanda di Savoia
-44039,Tresigallo
-13040,Alice Castello/Balocco/Borgo dAle/Buronzo/Carisio/Crova/Fontanetto Po/Moncrivello/Palazzolo Vercellese/Rovasenda/Salasco/Sali Vercellese/Saluggia
-13041,Bianzè
-13043,Cigliano
-13044,Crescentino
-13045,Gattinara/Lozzolo
-13046,Lamporo/Livorno Ferraris
-13047,Olcenengo/San Germano Vercellese
-13048,Santhià
-13049,Tronzano Vercellese
-44042,Cento
-44043,Mirabello
-44047,SantAgostino
-09070,Aidomaggiore/Baratili San Pietro/Bauladu/Bonarcado/Milis/Narbolia/Norbello/Nurachi/Paulilatino/Riola Sardo/San Vero Milis/Seneghe/Siamaggiore/Tramatza/Zeddiani/Zerfaliu
-09071,Abbasanta
-44049,Vigarano Mainarda
-09072,Cabras
-09073,Cuglieri
-09074,Ghilarza
-09075,Santu Lussurgiu
-09076,Sedilo
-09077,Solarussa
-09078,Scano di Montiferro/Sennariolo
-09079,Tresnuraghes
-841xx,Salerno
-89900,Vibo Valentia
-09080,Allai/Assolo/Asuni/Bidonì/Boroneddu/Mogorella/Neoneli/Nughedu Santa Vittoria/Nureci/Senis/Siamanna/Siapiccia/Soddì/Sorradile/Tadasuni/Ulà Tirso/Villa SantAntonio/Villaurbana
-09081,Ardauli
-09082,Busachi
-09083,Fordongianus
-09084,Villanova Truschedu
-09085,Ruinas
-09086,Samugheo
-09088,Ollastra/Simaxis
-92100,Agrigento
-13060,Roasio
-09090,Albagiara/Baradili/Baressa/Curcuris/Gonnoscodina/Gonnosnò/Masullas/Morgongiori/Palmas Arborea/Pau/Simala/Sini/Siris/Usellus/Villa Verde
-09091,Ales
-03010,Acuto/Collepardo/Filettino/Fumone/Patrica/Piglio/Serrone/Sgurgola/Torre Cajetani/Trevi nel Lazio/Trivigliano/Vico nel Lazio
-09092,Arborea
-03011,Alatri
-09093,Gonnostramatza/Pompu
-03012,Anagni
-09094,Marrubiu
-03013,Ferentino
-09095,Mogoro
-03014,Fiuggi
-09096,Santa Giusta
-09097,San Nicolò dArcidano
-03016,Guarcino
-09098,Terralba
-03017,Morolo
-09099,Uras
-03018,Paliano
-03019,Supino
-34010,Sgonico
-34011,Duino-Aurisina
-34015,Muggia
-34016,Monrupino
-34018,San Dorligo della Valle - Dolina
-65010,Brittoli/Cappelle sul Tavo/Carpineto della Nora/Civitaquana/Civitella Casanova/Collecorvino/Elice/Farindola/Montebello di Bertona/Moscufo/Nocciano/Picciano/Spoltore/Vicoli/Villa Celiera
-65011,Catignano
-65012,Cepagatti
-65013,Città SantAngelo
-65014,Loreto Aprutino
-65015,Montesilvano
-03020,Arnara/Castro dei Volsci/Falvaterra/Giuliano di Roma/Pastena/Pico/Strangolagalli/Torrice/Vallecorsa/Villa Santo Stefano
-65017,Penne
-03021,Amaseno
-03022,Boville Ernica
-65019,Pianella
-03023,Ceccano
-03024,Ceprano
-03025,Monte San Giovanni Campano
-03026,Pofi
-03027,Ripi
-03028,San Giovanni Incarico
-03029,Veroli
-96010,Buccheri/Buscemi/Canicattini Bagni/Cassaro/Ferla/Melilli/Palazzolo Acreide/Portopalo di Capo Passero/Priolo Gargallo/Solarino/Sortino
-96011,Augusta
-96012,Avola
-96013,Carlentini
-96014,Floridia
-96015,Francofonte
-96016,Lentini
-96017,Noto
-96018,Pachino
-96019,Rosolini
-6112x,Pesaro
-65022,Bussi sul Tirino
-65023,Caramanico Terme
-65024,Manoppello
-65025,Serramonacesca
-65026,Popoli
-65027,Scafa
-03030,Broccostella/Campoli Appennino/Casalattico/Castelliri/Castrocielo/Colfelice/Colle San Magno/Fontechiari/Pescosolido/Piedimonte San Germano/Posta Fibreno/Rocca dArce/Santopadre/Vicalvi/Villa Santa Lucia
-65028,Tocco da Casauria
-03031,Aquino
-65029,Torre De Passeri
-03032,Arce
-03033,Arpino
-03034,Casalvieri
-03035,Fontana Liri
-03036,Isola del Liri
-03037,Pontecorvo
-03038,Roccasecca
-03039,Sora
-03040,Acquafondata/Ausonia/Belmonte Castello/Castelnuovo Parano/Coreno Ausonio/Gallinaro/Picinisco/Pignataro Interamna/San Biagio Saracinisco/San Vittore del Lazio/SantAmbrogio sul Garigliano/SantAndrea del Garigliano/Settefrati/Terelle/Vallemaio/Vallerotonda/Villa Latina/Viticuso
-03041,Alvito
-03042,Atina
-03043,Cassino
-03044,Cervaro
-03045,Esperia
-03046,San Donato Val di Comino
-03047,San Giorgio a Liri
-03048,SantApollinare
-03049,SantElia Fiumerapido
-51100,Pistoia
-82100,Benevento
-4712x,Forlì
-34070,Capriva del Friuli/Doberdò del Lago/Dolegna del Collio/Fogliano Redipuglia/Mariano del Friuli/Moraro/Mossa/San Floriano del Collio/San Lorenzo Isontino/San Pier dIsonzo/Savogna dIsonzo/Turriaco/Villesse
-34071,Cormons
-34072,Farra dIsonzo/Gradisca dIsonzo
-34073,Grado
-34074,Monfalcone
-34075,San Canzian dIsonzo
-34076,Medea/Romans dIsonzo
-34077,Ronchi dei Legionari
-34078,Sagrado
-34079,Staranzano
-24010,Algua/Averara/Blello/Bracca/Branzi/Camerata Cornello/Carona/Cassiglio/Costa Serina/Cusio/Dossena/Foppolo/Gerosa/Isola di Fondra/Lenna/Mezzoldo/Moio de Calvi/Olmo al Brembo/Ornica/Piazzatorre/Piazzolo/Ponteranica/Roncobello/Santa Brigida/Sedrina/Sorisole/Taleggio/Ubiale Clanezzo/Valleve/Valnegra/Valtorta/Vedeseta
-24011,Almè
-24012,Brembilla
-24013,Oltre il Colle
-24014,Piazza Brembana
-24015,San Giovanni Bianco
-24016,San Pellegrino Terme
-24017,Cornalba/Serina
-24018,Villa dAlmè
-24019,Zogno
-55011,Altopascio
-55012,Capannori
-55015,Montecarlo
-55016,Porcari
-55019,Villa Basilica
-86010,Busso/Campodipietra/Casalciprano/Castropignano/Cercepiccola/Ferrazzano/Gildone/Mirabello Sannitico/Oratino/San Giovanni in Galdo/San Giuliano del Sannio/Tufara
-86011,Baranello
-86012,Cercemaggiore
-86013,Gambatesa
-86014,Guardiaregia
-86015,Jelsi
-86016,Riccia
-86017,Sepino
-24020,Ardesio/Aviatico/Azzone/Casnigo/Castione della Presolana/Cene/Cerete/Colere/Colzate/Fino del Monte/Fiorano al Serio/Gandellino/Gorle/Gorno/Gromo/Oltressenda Alta/Oneta/Onore/Parre/Peia/Piario/Pradalunga/Premolo/Ranica/Rovetta/Scanzorosciate/Schilpario/Selvino/Songavazzo/Torre Boldone/Valbondione/Valgoglio/Villa di Serio/Villa dOgna/Vilminore di Scalve
-86018,Toro
-24021,Albino
-86019,Vinchiaturo
-24022,Alzano Lombardo
-24023,Clusone
-24024,Gandino
-24025,Gazzaniga
-24026,Cazzano SantAndrea/Leffe
-24027,Nembro
-24028,Ponte Nossa
-24029,Vertova
-55020,Fabbriche di Vallico/Fosciandora/Molazzana/Vergemoli
-55022,Bagni di Lucca
-55023,Borgo a Mozzano
-55025,Coreglia Antelminelli
-55027,Gallicano
-86020,Campochiaro/Castellino del Biferno/Colle dAnchise/Duronia/Fossalto/Molise/Pietracupa/Roccavivara/San Biase/San Polo Matese/SantAngelo Limosano/Spinete
-86021,Bojano
-86022,Limosano
-86023,Montagano
-86024,Petrella Tifernina
-86025,Ripalimosani
-86026,Salcito
-86027,San Massimo
-24030,Almenno San Bartolomeo/Ambivere/Barzana/Bedulita/Berbenno/Brembate di Sopra/Capizzone/Caprino Bergamasco/Carvico/Corna Imagna/Costa Valle Imagna/Fuipiano Valle Imagna/Locatello/Mapello/Medolago/Mozzo/Paladina/Palazzago/Pontida/Presezzo/Roncola/Solza/Strozza/Terno dIsola/Valbrembo/Valsecca/Villa dAdda
-86028,Torella del Sannio
-24031,Almenno San Salvatore
-86029,Trivento
-24033,Calusco dAdda
-24034,Cisano Bergamasco
-24035,Curno
-24036,Ponte San Pietro
-24037,Brumano/Rota dImagna
-24038,SantOmobono Terme
-24039,Sotto il Monte Giovanni XXIII
-55030,Careggine/Giuncugnano/Sillano/Vagli Sotto/Villa Collemandina
-55031,Camporgiano
-55032,Castelnuovo di Garfagnana
-55033,Castiglione di Garfagnana
-55034,Minucciano
-55035,Piazza al Serchio
-55036,Pieve Fosciana
-55038,San Romano in Garfagnana
-86030,Acquaviva Collecroce/Castelbottaccio/Civitacampomarano/Guardialfiera/Lucito/Lupara/Mafalda/Matrice/Montemitro/San Felice del Molise/San Giacomo degli Schiavoni/Tavenna
-86031,Castelmauro
-86032,Montecilfone
-86033,Montefalcone nel Sannio
-86034,Guglionesi
-86035,Larino
-86036,Montenero di Bisaccia
-24040,Arcene/Arzago dAdda/Barbata/Boltiere/Bonate Sopra/Bonate Sotto/Bottanuco/Calvenzano/Canonica dAdda/Casirate dAdda/Castel Rozzone/Chignolo dIsola/Ciserano/Comun Nuovo/Filago/Fornovo San Giovanni/Isso/Lallio/Levate/Madone/Misano di Gera dAdda/Osio Sopra/Pagazzano/Pognano/Pontirolo Nuovo/Stezzano/Suisio/Verdellino
-86037,Palata
-24041,Brembate
-86038,Petacciato
-86039,Termoli
-24042,Capriate San Gervasio
-24043,Caravaggio
-24044,Dalmine
-24045,Fara Gera dAdda
-24046,Osio Sotto
-24047,Treviglio
-24048,Treviolo
-24049,Verdello
-90010,Altavilla Milicia/Campofelice di Roccella/Cerda/Ficarazzi/Geraci Siculo/Gratteri/Isnello/Lascari/Pollina/San Mauro Castelverde/Ustica
-90011,Bagheria
-90012,Caccamo
-90013,Castelbuono
-90014,Casteldaccia
-90015,Cefalù
-90016,Collesano
-55040,Stazzema
-90017,Santa Flavia
-90018,Termini Imerese
-55041,Camaiore
-90019,Trabia
-55042,Forte dei Marmi
-55045,Pietrasanta
-55047,Seravezza
-55049,Viareggio
-86040,Campolieto/Macchia Valfortore/Monacilioni/Montelongo/Montorio nei Frentani/Morrone del Sannio/Pietracatella/Provvidenti/Ripabottoni/Rotello/San Giuliano di Puglia
-86041,Bonefro
-86042,Campomarino
-86043,Casacalenda
-86044,Colletorto
-86045,Portocannone
-86046,San Martino in Pensilis
-86047,Santa Croce di Magliano
-24050,Bariano/Calcinate/Cavernago/Cividate al Piano/Cortenuova/Covo/Ghisalba/Grassobbio/Lurano/Morengo/Mornico al Serio/Mozzanica/Orio al Serio/Palosco/Pumenengo/Spirano/Torre Pallavicina/Zanica
-86048,SantElia a Pianisi
-24051,Antegnate
-86049,Ururi
-24052,Azzano San Paolo
-24053,Brignano Gera dAdda
-951xx,Catania
-24054,Calcio
-24055,Cologno al Serio
-24056,Fontanella
-24057,Martinengo
-24058,Fara Olivana con Sola/Romano di Lombardia
-24059,Urgnano
-72100,Brindisi
-90020,Alimena/Aliminusa/Baucina/Blufi/Bompietro/Castellana Sicula/Montemaggiore Belsito/Roccapalumba/Sciara/Scillato/Sclafani Bagni/Ventimiglia di Sicilia/Vicari
-90021,Alia
-90022,Caltavuturo
-90023,Ciminna
-90024,Gangi
-90025,Lercara Friddi
-90026,Petralia Soprana
-90027,Petralia Sottana
-55051,Barga
-90028,Polizzi Generosa
-90029,Valledolmo
-55054,Massarosa
-24060,Adrara San Martino/Adrara San Rocco/Bagnatica/Berzo San Fermo/Bianzano/Bolgare/Borgo di Terzo/Bossico/Brusaporto/Carobbio degli Angeli/Casazza/Castelli Calepio/Cenate Sopra/Chiuduno/Costa di Mezzate/Credaro/Endine Gaiano/Entratico/Fonteno/Foresto Sparso/Gandosso/Gaverina Terme/Gorlago/Grone/Monasterolo del Castello/Montello/Parzanica/Pianico/Predore/Ranzanico/Riva di Solto/Rogno/San Paolo dArgon/Solto Collina/Sovere/Spinone al Lago/Tavernola Bergamasca/Telgate/Torre de Roveri/Viadanica/Vigano San Martino/Vigolo/Villongo/Zandobbio
-24061,Albano SantAlessandro
-24062,Costa Volpino
-24063,Castro
-24064,Grumello del Monte
-24065,Lovere
-24066,Pedrengo
-24067,Sarnico
-24068,Seriate
-24069,Cenate Sotto/Luzzana/Trescore Balneario
-90030,Altofonte/Bolognetta/Campofelice di Fitalia/Campofiorito/Castronovo di Sicilia/Cefalà Diana/Contessa Entellina/Giuliana/Godrano/Mezzojuso/Palazzo Adriano/Santa Cristina Gela/Villafrati
-90031,Belmonte Mezzagno
-90032,Bisacquino
-90033,Chiusa Sclafani
-90034,Corleone
-90035,Marineo
-90036,Misilmeri
-90037,Piana degli Albanesi
-90038,Prizzi
-90039,Villabate
-55064,Pescaglia
-14010,Antignano/Cantarana/Cellarengo/Celle Enomondo/Cisterna dAsti/Cortazzone/Dusino San Michele/Revigliasco dAsti/San Martino Alfieri/San Paolo Solbrito/Viale
-14011,Baldichieri dAsti
-14012,Ferrere
-14013,Castellero/Cortandone/Monale
-14014,Capriglio/Montafia
-14015,San Damiano dAsti
-14016,Tigliole
-14017,Valfenera
-14018,Maretto/Roatto/Villafranca dAsti
-14019,Villanova dAsti
-45010,Ceregnano/Gavello/Papozze/Pettorazza Grimani/Rosolina/Villadose
-45011,Adria
-45012,Ariano nel Polesine
-45014,Porto Viro
-45015,Corbola
-45017,Loreo
-45018,Porto Tolle
-45019,Taglio di Po
-191xx,La Spezia
-90040,Capaci/Giardinello/Isola delle Femmine/Montelepre/Roccamena/San Cipirello/Torretta/Trappeto
-90041,Balestrate
-90042,Borgetto
-90043,Camporeale
-90044,Carini
-90045,Cinisi
-90046,Monreale
-90047,Partinico
-90048,San Giuseppe Jato
-90049,Terrasini
-76011,Bisceglie
-76012,Canosa di Puglia
-76013,Minervino Murge
-76014,Spinazzola
-76015,Trinitapoli
-76016,Margherita di Savoia
-76017,San Ferdinando di Puglia
-14020,Aramengo/Berzano di San Pietro/Camerano Casasco/Cerreto dAsti/Cinaglio/Corsione/Cortanze/Cossombrato/Passerano Marmorito/Piea/Pino dAsti/Robella/Settime/Soglio/Villa San Secondo
-14021,Buttigliera dAsti
-14022,Albugnano/Castelnuovo Don Bosco
-14023,Cocconato/Moransengo/Tonengo
-14024,Moncucco Torinese
-14025,Chiusano dAsti/Montechiaro dAsti
-14026,Cunico/Montiglio Monferrato/Piovà Massaia
-4112x,Modena
-86070,Conca Casale/Fornelli/Macchia dIsernia/Montaquila/Rocchetta a Volturno/SantAgapito/Scapoli
-86071,Castel San Vincenzo/Pizzone
-86072,Cerro al Volturno
-86073,Colli a Volturno
-27100,Pavia
-86074,Filignano
-86075,Monteroduni
-86077,Pozzilli
-86078,Sesto Campano
-45020,Canda/Castelguglielmo/Giacciano con Baruchella/Lusia/Pincara/San Bellino/Villanova del Ghebbo
-86079,Venafro
-45021,Badia Polesine
-45022,Bagnolo di Po
-45023,Costa di Rovigo
-45024,Fiesso Umbertiano
-45025,Fratta Polesine
-45026,Lendinara
-45027,Trecenta
-58100,Grosseto
-14030,Azzano dAsti/Castagnole Monferrato/Cerro Tanaro/Frinco/Montemagno/Penango/Refrancore/Rocca dArazzo/Rocchetta Tanaro/Scurzolengo/Viarigi
-14031,Calliano/Grana
-14032,Casorzo
-14033,CastellAlfero
-14034,Castello di Annone
-14035,Grazzano Badoglio
-14036,Moncalvo
-14037,Portacomaro
-14039,Tonco
-86080,Acquaviva dIsernia/Belmonte del Sannio/Castel del Giudice/Castelverrino/Miranda/Montenero Val Cocchiara/Pescopennataro/Roccasicura/SantAngelo del Pesco
-86081,Agnone
-86082,Capracotta
-86083,Carovilli
-86084,Forlì del Sannio
-86085,Pietrabbondante
-86086,Poggio Sannita
-86087,Rionero Sannitico
-86088,San Pietro Avellana
-45030,Calto/Castelnovo Bariano/Ceneselli/Crespino/Frassinelle Polesine/Gaiba/Guarda Veneta/Occhiobello/Pontecchio Polesine/Salara/San Martino di Venezze/Villamarzana/Villanova Marchesana
-86089,Vastogirardi
-45031,Arquà Polesine
-45032,Bergantino
-45033,Bosaro
-45034,Canaro
-45035,Castelmassa
-45036,Ficarolo
-45037,Melara
-45038,Polesella
-45039,Stienta
-14040,Belveglio/Castel Boglione/Castelletto Molina/Castelnuovo Calcea/Cortiglione/Maranzana/Mongardino/Montabone/Quaranti/Vigliano dAsti/Vinchio
-14041,Agliano Terme
-14042,Calamandrana/Rocchetta Palafea
-14043,Castelnuovo Belbo
-14044,Castel Rocchero/Fontanile
-14045,Incisa Scapaccino
-14046,Bruno/Mombaruzzo
-14047,Mombercelli
-14048,Montaldo Scarampi/Montegrosso dAsti
-14049,Nizza Monferrato/Vaglio Serra
-86090,Castelpetroso/Castelpizzuto/Longano/Pesche/Pettoranello del Molise
-86091,Bagnoli del Trigno
-80010,Quarto/Villaricca
-86092,Cantalupo nel Sannio/Roccamandolfi
-80011,Acerra
-86093,Carpinone
-80012,Calvizzano
-86094,Civitanova del Sannio
-80013,Casalnuovo di Napoli
-86095,Frosolone/SantElena Sannita
-80014,Giugliano in Campania
-86096,Macchiagodena/Santa Maria del Molise
-86097,Chiauci/Pescolanciano/Sessano del Molise
-80016,Marano di Napoli
-80017,Melito di Napoli
-80018,Mugnano di Napoli
-80019,Qualiano
-31100,Treviso
-14050,Cassinasco/Cessole/Moasca/Mombaldone/Olmo Gentile/Roccaverano/San Marzano Oliveto/Serole
-14051,Bubbio/Loazzolo
-14052,Calosso
-14053,Canelli
-14054,Castagnole delle Lanze/Coazzolo
-14055,Costigliole dAsti
-14057,Isola dAsti
-14058,Monastero Bormida/Sessame
-14059,San Giorgio Scarampi/Vesime
-62100,Macerata
-80020,Casavatore/Crispano/Frattaminore
-80021,Afragola
-80022,Arzano
-80023,Caivano
-80024,Cardito
-80025,Casandrino
-80026,Casoria
-80027,Frattamaggiore
-80028,Grumo Nevano
-80029,SantAntimo
-93100,Caltanissetta
-80030,Camposano/Carbonara di Nola/Castello di Cisterna/Cimitile/Comiziano/Liveri/Mariglianella/Roccarainola/San Paolo Bel Sito/San Vitaliano/Scisciano/Tufino/Visciano
-80031,Brusciano
-80032,Casamarciano
-80033,Cicciano
-80034,Marigliano
-80035,Nola
-80036,Palma Campania
-80038,Pomigliano dArco
-80039,Saviano
-04010,Bassiano/Cori/Maenza/Norma/Prossedi/Rocca Massima/Roccagorga/Roccasecca dei Volsci/Sonnino
-04011,Aprilia
-04012,Cisterna di Latina
-04013,Sermoneta
-04014,Pontinia
-04015,Priverno
-04016,Sabaudia
-04017,San Felice Circeo
-04018,Sezze
-04019,Terracina
-35010,Borgoricco/Cadoneghe/Campo San Martino/Campodoro/Carmignano di Brenta/Curtarolo/Gazzo/Grantorto/Limena/Loreggia/Massanzago/San Giorgio delle Pertiche/San Giorgio in Bosco/San Pietro in Gu/Santa Giustina in Colle/Trebaseleghe/Vigodarzere/Vigonza/Villa del Conte/Villafranca Padovana/Villanova di Camposampiero
-35011,Campodarsego
-35012,Camposampiero
-35013,Cittadella
-35014,Fontaniva
-35015,Galliera Veneta
-35016,Piazzola sul Brenta
-35017,Piombino Dese
-35018,San Martino di Lupari
-35019,Tombolo
-091xx,Cagliari
-63900,Fermo
-80040,Cercola/Massa di Somma/Poggiomarino/Pollena Trocchia/San Gennaro Vesuviano/San Sebastiano al Vesuvio/Striano/Terzigno/Trecase/Volla
-80041,Boscoreale
-80042,Boscotrecase
-2892x,Verbania
-80044,Ottaviano
-80045,Pompei
-80046,San Giorgio a Cremano
-80047,San Giuseppe Vesuviano
-80048,SantAnastasia
-66010,Ari/Canosa Sannita/Casacanditella/Civitella Messer Raimondo/Colledimacine/Fara Filiorum Petri/Gessopalena/Giuliano Teatino/Lama dei Peligni/Lettopalena/Miglianico/Montenerodomo/Palombaro/Pennapiedimonte/Pretoro/Rapino/Ripa Teatina/Roccamontepiano/San Martino sulla Marrucina/Tollo/Torrevecchia Teatina/Vacri/Villamagna
-80049,Somma Vesuviana
-66011,Bucchianico
-66012,Casalincontrada
-66014,Crecchio
-66015,Fara San Martino
-66016,Guardiagrele
-04020,Campodimele/Itri/Monte San Biagio/Santi Cosma e Damiano/Spigno Saturnia/Ventotene
-66017,Palena
-66018,Taranta Peligna
-04021,Castelforte
-66019,Torricella Peligna
-04022,Fondi
-04023,Formia
-04024,Gaeta
-04025,Lenola
-04026,Minturno
-04027,Ponza
-04029,Sperlonga
-97010,Giarratana/Monterosso Almo
-97012,Chiaramonte Gulfi
-17100,Savona
-97013,Comiso
-97014,Ispica
-97015,Modica
-97016,Pozzallo
-97017,Santa Croce Camerina
-35020,Albignasego/Arre/Arzergrande/Brugine/Candiana/Casalserugo/Codevigo/Correzzola/Due Carrare/Legnaro/Maserà di Padova/Pernumia/Polverara/Ponte San Nicolò/Pozzonovo/San Pietro Viminario/SantAngelo di Piove di Sacco/Saonara/Terrassa Padovana/Tribano
-97018,Scicli
-35021,Agna
-97019,Vittoria
-35022,Anguillara Veneta
-35023,Bagnoli di Sopra
-35024,Bovolenta
-35025,Cartura
-35026,Conselve
-35027,Noventa Padovana
-35028,Piove di Sacco
-35029,Pontelongo
-80050,Casola di Napoli/Lettere/Pimonte/Santa Maria la Carità
-80051,Agerola
-80053,Castellammare di Stabia
-80054,Gragnano
-80055,Portici
-80056,Ercolano
-80057,SantAntonio Abate
-80058,Torre Annunziata
-66020,Paglieta/Pollutri/Rocca San Giovanni/San Giovanni Teatino/Scerni/Torino di Sangro/Villalfonsina
-80059,Torre del Greco
-66021,Casalbordino
-66022,Fossacesia
-66023,Francavilla al Mare
-66026,Ortona
-35030,Baone/Cervarese Santa Croce/Cinto Euganeo/Galzignano Terme/Rovolon/Rubano/Saccolongo/Selvazzano Dentro/Veggiano/Vo
-35032,Arquà Petrarca
-35034,Lozzo Atestino
-35035,Mestrino
-35036,Montegrotto Terme
-35037,Teolo
-35038,Torreglia
-80061,Massa Lubrense
-80062,Meta
-80063,Piano di Sorrento
-80065,SantAgnello
-80067,Sorrento
-66030,Arielli/Carpineto Sinello/Filetto/Frisa/Montazzoli/Mozzagrogna/Poggiofiorito/Santa Maria Imbaro/Treglio
-80069,Vico Equense
-66031,Casalanguida
-66032,Castel Frentano
-66033,Castiglione Messer Marino
-66034,Lanciano
-66036,Orsogna
-66037,SantEusanio del Sangro
-66038,San Vito Chietino
-70010,Adelfia/Capurso/Casamassima/Cellamare/Locorotondo/Sammichele di Bari/Turi/Valenzano
-70011,Alberobello
-70013,Castellana Grotte
-70014,Conversano
-70015,Noci
-70016,Noicàttaro
-70017,Putignano
-35040,Barbona/Boara Pisani/Carceri/Casale di Scodosia/Castelbaldo/Granze/Masi/Megliadino San Fidenzio/Megliadino San Vitale/Merlara/Piacenza dAdige/Ponso/Santa Margherita dAdige/SantElena/SantUrbano/Urbana/Vescovana/Vighizzolo dEste/Villa Estense
-70018,Rutigliano
-35041,Battaglia Terme
-70019,Triggiano
-35042,Este
-35043,Monselice
-35044,Montagnana
-35045,Ospedaletto Euganeo
-35046,Saletto
-35047,Solesino
-35048,Stanghella
-80070,Bacoli/Barano dIschia/Monte di Procida/Serrara Fontana
-80071,Anacapri
-80073,Capri
-21100,Varese
-80074,Casamicciola Terme
-80075,Forio
-80076,Lacco Ameno
-80077,Ischia
-80078,Pozzuoli
-66040,Altino/Borrello/Castelguidone/Civitaluparella/Colledimezzo/Fallo/Gamberale/Montebello sul Sangro/Monteferrante/Montelapiano/Pennadomo/Perano/Pietraferrazzana/Pizzoferrato/Quadri/Roccascalegna/Roio del Sangro/Rosello
-80079,Procida
-66041,Atessa
-66042,Bomba
-66043,Casoli
-66044,Archi
-66045,Schiavi di Abruzzo
-66046,Tornareccio
-66047,Villa Santa Maria
-52100,Arezzo
-70020,Binetto/Bitetto/Bitritto/Cassano delle Murge/Poggiorsini/Toritto
-70021,Acquaviva delle Fonti
-70022,Altamura
-70023,Gioia del Colle
-70024,Gravina in Puglia
-70025,Grumo Appula
-70026,Modugno
-70027,Palo del Colle
-70028,Sannicandro di Bari
-70029,Santeramo in Colle
-83100,Avellino
-4812x,Ravenna
-66050,Carunchio/Celenza sul Trigno/Dogliola/Fraine/Fresagrandinaria/Furci/Guilmi/Lentella/Liscia/Monteodorisio/Palmoli/Roccaspinalveti/San Buono/San Giovanni Lipioni/San Salvo/Torrebruna/Tufillo
-66051,Cupello
-66052,Gissi
-66054,Vasto
-70032,Bitonto
-70033,Corato
-70037,Ruvo di Puglia
-70038,Terlizzi
-70042,Mola di Bari
-70043,Monopoli
-70044,Polignano a Mare
-25010,Acquafredda/Borgosatollo/Isorella/Limone sul Garda/Montirone/Pozzolengo/Remedello/San Felice del Benaco/San Zeno Naviglio/Tremosine/Visano
-25011,Calcinato
-25012,Calvisano
-25013,Carpenedolo
-25014,Castenedolo
-25015,Desenzano del Garda
-25016,Ghedi
-25017,Lonato del Garda
-25018,Montichiari
-25019,Sirmione
-56010,Vicopisano
-56011,Calci
-56012,Calcinaia
-70054,Giovinazzo
-70056,Molfetta
-56017,San Giuliano Terme
-56019,Vecchiano
-87010,Acquaformosa/Cervicati/Civita/Firmo/Frascineto/Lattarico/Lungro/Malvito/Mottafollone/Rota Greca/San Basile/San Donato di Ninea/San Martino di Finita/San Sosti/Santa Caterina Albanese/SantAgata di Esaro/Saracena/Terranova da Sibari/Torano Castello
-87011,Cassano allIonio
-87012,Castrovillari
-07100,Sassari
-87013,Fagnano Castello
-87014,Laino Borgo
-87015,Laino Castello
-87016,Morano Calabro
-87017,Roggiano Gravina
-25020,Alfianello/Azzano Mella/Bassano Bresciano/Capriano del Colle/Cigole/Dello/Fiesse/Flero/Gambara/Milzano/Offlaga/Pavone del Mella/Poncarale/Pralboino/San Gervasio Bresciano/San Paolo/Seniga
-87018,San Marco Argentano
-25021,Bagnolo Mella
-87019,Spezzano Albanese
-25022,Borgo San Giacomo
-25023,Gottolengo
-25024,Leno
-25025,Manerbio
-25026,Pontevico
-25027,Quinzano dOglio
-25028,Verolanuova
-26811,Boffalora dAdda
-25029,Verolavecchia
-26812,Borghetto Lodigiano
-26813,Graffignana
-26814,Livraga
-26815,Massalengo
-26816,Ossago Lodigiano
-26817,San Martino in Strada
-26818,Villanova del Sillaro
-56020,Montopoli in Val dArno/Santa Maria a Monte
-56021,Cascina
-56022,Castelfranco di Sotto
-56025,Pontedera
-56028,San Miniato
-56029,Santa Croce sullArno
-87020,Acquappesa/Aieta/Bonifati/Buonvicino/Grisolia/Guardia Piemontese/Maierà/Orsomarso/Papasidero/San Nicola Arcella/Sangineto/Santa Domenica Talao/Santa Maria del Cedro/Tortora/Verbicaro
-87021,Belvedere Marittimo
-87022,Cetraro
-87023,Diamante
-87024,Fuscaldo
-87026,Mormanno
-87027,Paola
-25030,Adro/Barbariga/Berlingo/Brandico/Castel Mella/Castelcovati/Castrezzato/Coccaglio/Comezzano-Cizzago/Corzano/Erbusco/Lograto/Longhena/Maclodio/Mairano/Orzivecchi/Paratico/Pompiano/Roccafranca/Roncadelle/Rudiano/Torbole Casaglia/Trenzano/Urago dOglio/Villachiara
-60010,Barbara/Castel Colonna/Castelleone di Suasa/Monterado/Ostra/Ostra Vetere/Ripe
-87028,Praia a Mare
-25031,Capriolo
-60011,Arcevia
-88811,Cirò Marina
-87029,Scalea
-25032,Chiari
-88812,Crucoli
-25033,Cologne
-60013,Corinaldo
-88813,Cirò
-25034,Orzinuovi
-88814,Melissa
-25035,Ospitaletto
-60015,Falconara Marittima
-88816,Strongoli
-25036,Palazzolo sullOglio
-25037,Pontoglio
-88817,Carfizzi/San Nicola dellAlto
-25038,Rovato
-26821,Bertonico
-60018,Montemarciano
-88818,Pallagorio
-88819,Verzino
-25039,Travagliato
-60019,Senigallia
-26822,Brembio
-26823,Camairago/Castiglione dAdda
-26824,Cavenago dAdda
-26825,Mairago
-26826,Secugnago
-26827,Terranova dei Passerini
-26828,Turano Lodigiano
-341xx,Trieste
-91010,San Vito Lo Capo/Vita
-56030,Lajatico/Terricciola
-56031,Bientina
-91011,Alcamo
-56032,Buti
-91012,Buseto Palizzolo
-11100,Aosta
-56033,Capannoli
-91013,Calatafimi Segesta
-56034,Casciana Terme/Chianni
-91014,Castellammare del Golfo
-56035,Lari
-91015,Custonaci
-56036,Palaia
-91016,Erice
-56037,Peccioli
-91017,Pantelleria
-91018,Salemi
-56038,Ponsacco
-91019,Valderice
-87030,Belsito/Carolei/Cleto/Domanico/Falconara Albanese/Fiumefreddo Bruzio/Longobardi/Malito/San Pietro in Amantea/San Vincenzo la Costa/Serra dAiello
-87031,Aiello Calabro
-87032,Amantea
-87033,Belmonte Calabro
-87034,Grimaldi
-87035,Lago
-87036,Rende
-87037,San Fili
-25040,Angolo Terme/Artogne/Berzo Demo/Berzo Inferiore/Bienno/Braone/Cerveno/Ceto/Cevo/Cividate Camuno/Corte Franca/Corteno Golgi/Esine/Gianico/Incudine/Lozio/Malonno/Monno/Monticelli Brusati/Ono San Pietro/Prestine/Saviore dellAdamello
-60020,Agugliano/Camerata Picena/Offagna/Polverigi/Sirolo
-87038,San Lucido
-60021,Camerano
-88821,Rocca di Neto
-25042,Borno
-60022,Castelfidardo
-88822,Casabona
-88823,Umbriatico
-25043,Breno
-25044,Capo di Ponte
-60024,Filottrano
-88824,Belvedere di Spinello
-88825,Savelli
-25045,Castegnato
-60025,Loreto
-25046,Cazzago San Martino
-60026,Numana
-25047,Darfo Boario Terme
-60027,Osimo
-26831,Casalmaiocco
-25048,Edolo/Sonico
-26832,Cervignano dAdda/Galgagnano
-25049,Iseo
-26833,Comazzo/Merlino
-26835,Crespiatica
-26836,Montanaso Lombardo
-26837,Mulazzano
-26838,Tavazzano con Villavesco
-26839,Zelo Buon Persico
-56040,Casale Marittimo/Castellina Marittima/Crespina/Guardistallo/Montecatini Val di Cecina/Montescudaio/Monteverdi Marittimo/Orciano Pisano/Santa Luce
-91020,Petrosino/Poggioreale/Salaparuta
-56041,Castelnuovo di Val di Cecina
-91021,Campobello di Mazara
-91022,Castelvetrano
-56043,Fauglia/Lorenzana
-91023,Favignana
-91024,Gibellina
-56045,Pomarance
-91025,Marsala
-56046,Riparbella
-91026,Mazara del Vallo
-91027,Paceco
-56048,Volterra
-91028,Partanna
-91029,Santa Ninfa
-87040,Altilia/Castiglione Cosentino/Castrolibero/Cerzeto/Luzzi/Marano Marchesato/Marano Principato/Mendicino/Mongrassano/Parenti/Paterno Calabro/Rose/San Benedetto Ullano/San Lorenzo del Vallo/Tarsia/Zumpano
-87041,Acri
-87042,Altomonte
-87043,Bisignano
-87044,Cerisano
-87045,Dipignano
-87046,Montalto Uffugo
-87047,San Pietro in Guarano
-25050,Cimbergo/Losine/Monte Isola/Niardo/Ome/Ossimo/Paderno Franciacorta/Paisco Loveno/Paspardo/Passirano/Pian Camuno/Provaglio dIseo/Rodengo Saiano/Sellero/Temù/Vione/Zone
-60030,Belvedere Ostrense/Castelbellino/Maiolati Spontini/Mergo/Monsano/Monte Roberto/Morro dAlba/Poggio San Marcello/Rosora/San Marcello/Santa Maria Nuova/Serra de Conti
-87048,Santa Sofia DEpiro
-88831,San Mauro Marchesato/Scandale
-25051,Cedegolo
-60031,Castelplanio
-88832,Santa Severina
-25052,Piancogno
-25053,Malegno
-60033,Chiaravalle
-88833,Caccuri/Cerenzia
-25054,Marone
-60034,Cupramontana
-88834,Castelsilano
-25055,Pisogne
-60035,Jesi
-88835,Roccabernarda
-25056,Ponte di Legno
-60036,Montecarotto
-88836,Cotronei
-25057,Sale Marasino
-60037,Monte San Vito
-88837,Petilia Policastro
-25058,Sulzano
-60038,San Paolo di Jesi
-88838,Mesoraca
-26841,Casalpusterlengo
-25059,Vezza dOglio
-60039,Staffolo
-26842,Caselle Landi/Cornovecchio
-26843,Castelnuovo Bocca dAdda/Maccastorna/Meleti
-26844,Cavacurta
-26845,Codogno
-26846,Corno Giovine
-26847,Maleo
-26848,San Fiorano
-26849,Santo Stefano Lodigiano
-73100,Lecce
-3812x,Trento
-87050,Bianchi/Carpanzano/Casole Bruzio/Cellara/Colosimi/Figline Vegliaturo/Lappano/Mangone/Marzi/Panettieri/Pedace/Pedivigliano/Piane Crati/Pietrafitta/Rovito/Serra Pedace/Spezzano Piccolo/Trenta
-87051,Aprigliano
-87053,Celico
-87054,Rogliano
-87055,San Giovanni in Fiore
-87056,Santo Stefano di Rogliano
-87057,Scigliano
-60040,Genga
-25060,Brione/Cellatica/Collebeato/Collio/Lodrino/Marcheno/Marmentino/Pezzaze/Polaveno/Tavernole sul Mella
-87058,Spezzano della Sila
-60041,Sassoferrato
-88841,Isola di Capo Rizzuto
-25061,Bovegno/Irma
-88842,Cutro
-25062,Concesio
-60043,Cerreto dEsi
-25063,Gardone Val Trompia
-60044,Fabriano
-25064,Gussago
-25065,Lumezzane
-60048,Serra San Quirico
-25068,Sarezzo
-26851,Borgo San Giovanni
-25069,Villa Carcina
-26852,Casaletto Lodigiano
-26853,Caselle Lurani
-26854,Cornegliano Laudense/Pieve Fissiraga
-26855,Lodi Vecchio
-26856,Senna Lodigiana
-26857,Salerano sul Lambro
-26858,Sordio
-26859,Valera Fratta
-15010,Alice Bel Colle/Castelletto dErro/Cavatore/Cremolino/Denice/Frascaro/Gamalero/Grognardo/Melazzo/Merana/Montaldo Bormida/Montechiaro dAcqui/Morbello/Morsasco/Orsara Bormida/Pareto/Ponti/Ponzone/Prasco/Ricaldone/Rivalta Bormida/Terzo/Visone
-15011,Acqui Terme
-15012,Bistagno
-15013,Borgoratto Alessandrino
-15015,Cartosio/Malvicino
-15016,Cassine
-15017,Castelnuovo Bormida
-15018,Spigno Monferrato
-15019,Strevi
-87060,Bocchigliero/Calopezzati/Caloveto/Cropalati/Crosia/Mandatoriccio/Paludi/Pietrapaola/San Cosmo Albanese/San Giorgio Albanese/Scala Coeli/Terravecchia/Vaccarizzo Albanese
-87061,Campana
-87062,Cariati
-87064,Corigliano Calabro
-87066,Longobucco
-87067,Rossano
-25070,Anfo/Barghe/Bione/Caino/Capovalle/Casto/Mura/Pertica Alta/Preseglie/Provaglio Val Sabbia/Sabbio Chiese/Treviso Bresciano
-25071,Agnosine
-46010,Commessaggio/Curtatone/Gazzuolo/Marcaria/Mariana Mantovana/Redondesco/San Martino dallArgine
-87069,San Demetrio Corone
-25072,Bagolino
-46011,Acquanegra sul Chiese
-25073,Bovezzo
-46012,Bozzolo
-25074,Idro/Lavenone
-46013,Canneto sullOglio
-25075,Nave
-46014,Castellucchio
-25076,Odolo
-25077,Roè Volciano
-26861,Fombio
-25078,Pertica Bassa/Vestone
-46017,Rivarolo Mantovano
-25079,Vobarno
-46018,Sabbioneta
-26862,Guardamiglio
-46019,Viadana
-26863,Orio Litta
-26864,Ospedaletto Lodigiano
-26865,San Rocco al Porto
-26866,Castiraga Vidardo/Marudo/SantAngelo Lodigiano
-26867,Somaglia
-15020,Camino/Castelletto Merli/Cereseto/Cerrina Monferrato/Gabiano/Mombello Monferrato/Moncestino/Murisengo/Odalengo Grande/Odalengo Piccolo/Ponzano Monferrato/San Giorgio Monferrato/Serralunga di Crea/Solonghello/Villadeati/Villamiroglio
-15021,Alfiano Natta
-15022,Bergamasco
-15023,Felizzano
-15024,Masio
-15025,Morano sul Po
-15026,Carentino/Oviglio
-15027,Pontestura
-15028,Quattordio
-15029,Solero
-4212x,Reggio Emilia
-87070,Albidona/Alessandria del Carretto/Canna/Castroregio/Cerchiara di Calabria/Montegiordano/Nocara/Plataci/Roseto Capo Spulico/San Lorenzo Bellizzi
-87071,Amendolara
-87072,Francavilla Marittima
-87073,Oriolo
-28100,Novara
-87074,Rocca Imperiale
-87075,Trebisacce
-87076,Villapiana
-25080,Calvagese della Riviera/Magasa/Manerba del Garda/Mazzano/Moniga del Garda/Muscoline/Nuvolento/Nuvolera/Padenghe sul Garda/Paitone/Polpenazze del Garda/Prevalle/Puegnago sul Garda/Serle/Soiano del Lago/Tignale/Vallio Terme/Valvestino
-25081,Bedizzole
-46020,Borgofranco sul Po/Carbonara di Po/Magnacavallo/Motteggiana/Pegognaga/Pieve di Coriano/Quingentole/San Giacomo delle Segnate/San Giovanni del Dosso/Schivenoglia/Villa Poma
-25082,Botticino
-25083,Gardone Riviera
-46022,Felonica
-25084,Gargnano
-46023,Gonzaga
-25085,Gavardo
-46024,Moglia
-25086,Rezzato
-46025,Poggio Rusco
-25087,Salò
-46026,Quistello
-25088,Toscolano-Maderno
-46027,San Benedetto Po
-25089,Villanuova sul Clisi
-46028,Sermide
-46029,Suzzara
-59100,Prato
-15030,Camagna Monferrato/Coniolo/Conzano/Olivola/Rosignano Monferrato/Sala Monferrato/Terruggia/Treville/Villanova Monferrato
-15031,Balzola
-15032,Borgo San Martino
-15033,Casale Monferrato
-15034,Cella Monte
-15035,Frassinello Monferrato
-15036,Giarole
-15038,Ottiglio
-15039,Ozzano Monferrato
-46030,Bigarello/Borgoforte/Dosolo/Pomponesco/San Giorgio di Mantova/Serravalle a Po/Sustinente/Virgilio
-46031,Bagnolo San Vito
-46032,Castelbelforte
-46033,Castel dArio
-47814,Bellaria-Igea Marina
-46035,Ostiglia
-46036,Revere
-46037,Roncoferraro
-46039,Villimpenta
-50012,Bagno a Ripoli
-50013,Campi Bisenzio
-50014,Fiesole
-15040,Alluvioni Cambiò/Bozzole/Castelletto Monferrato/Cuccaro Monferrato/Frassineto Po/Lu/Mirabello Monferrato/Montecastello/Occimiano/Pecetto di Valenza/Pietra Marazzi/Piovera/Pomaro Monferrato/Rivarone/Ticineto/Valmacca
-50018,Scandicci
-15041,Altavilla Monferrato
-50019,Sesto Fiorentino
-15042,Bassignana
-15043,Fubine
-15044,Quargnento
-15045,Sale
-15046,San Salvatore Monferrato
-15048,Valenza
-15049,Vignale Monferrato
-241xx,Bergamo
-81010,Ailano/Baia e Latina/Castel Campagnano/Ciorlano/Dragoni/Gallo Matese/Gioia Sannitica/Letino/Prata Sannita/Pratella/Ruviano/San Gregorio Matese/Valle Agricola
-81011,Alife
-81012,Alvignano
+CAP,Provincia
+99999,-
+00010,Roma
+00012,Roma
+00013,Roma
+00015,Roma
+00017,Roma
+00018,Roma
+00019,Roma
+00020,Roma
+00021,Roma
+00022,Roma
+00023,Roma
+00024,Roma
+00025,Roma
+00026,Roma
+00027,Roma
+00028,Roma
+00029,Roma
+00030,Roma
+00031,Roma
+00032,Roma
+00033,Roma
+00034,Roma
+00035,Roma
+00036,Roma
+00037,Roma
+00038,Roma
+00039,Roma
+00040,Roma
+00041,Roma
+00042,Roma
+00043,Roma
+00044,Roma
+00045,Roma
+00046,Roma
+00047,Roma
+00048,Roma
+00049,Roma
+00051,Roma
+00052,Roma
+00053,Roma
+00054,Roma
+00055,Roma
+00058,Roma
+00059,Roma
+00060,Roma
+00061,Roma
+00062,Roma
+00063,Roma
+00065,Roma
+00066,Roma
+00067,Roma
+00068,Roma
+00069,Roma
+00071,Roma
+00072,Roma
+00073,Roma
+00074,Roma
+00075,Roma
+00076,Roma
+00077,Roma
+00078,Roma
+00079,Roma
+00118,Roma
+00119,Roma
+00121,Roma
+00122,Roma
+00123,Roma
+00124,Roma
+00125,Roma
+00126,Roma
+00127,Roma
+00128,Roma
+00131,Roma
+00132,Roma
+00133,Roma
+00134,Roma
+00135,Roma
+00136,Roma
+00137,Roma
+00138,Roma
+00139,Roma
+00141,Roma
+00142,Roma
+00143,Roma
+00144,Roma
+00145,Roma
+00146,Roma
+00147,Roma
+00148,Roma
+00149,Roma
+00151,Roma
+00152,Roma
+00153,Roma
+00154,Roma
+00155,Roma
+00156,Roma
+00157,Roma
+00158,Roma
+00159,Roma
+00161,Roma
+00162,Roma
+00163,Roma
+00164,Roma
+00165,Roma
+00166,Roma
+00167,Roma
+00168,Roma
+00169,Roma
+00171,Roma
+00172,Roma
+00173,Roma
+00174,Roma
+00175,Roma
+00176,Roma
+00177,Roma
+00178,Roma
+00179,Roma
+00181,Roma
+00182,Roma
+00183,Roma
+00184,Roma
+00185,Roma
+00186,Roma
+00187,Roma
+00188,Roma
+00189,Roma
+00191,Roma
+00192,Roma
+00193,Roma
+00195,Roma
+00196,Roma
+00197,Roma
+00198,Roma
+00199,Roma
+01010,Viterbo
+01011,Viterbo
+01012,Viterbo
+01014,Viterbo
+01015,Viterbo
+01016,Viterbo
+01017,Viterbo
+01018,Viterbo
+01019,Viterbo
+01020,Viterbo
+01021,Viterbo
+01022,Viterbo
+01023,Viterbo
+01024,Viterbo
+01025,Viterbo
+01027,Viterbo
+01028,Viterbo
+01030,Viterbo
+01032,Viterbo
+01033,Viterbo
+01034,Viterbo
+01035,Viterbo
+01036,Viterbo
+01037,Viterbo
+01038,Viterbo
+01039,Viterbo
 01100,Viterbo
-81013,Caiazzo/Piana di Monte Verna
-81014,Capriati a Volturno/Fontegreca
-81016,Castello del Matese/Piedimonte Matese/San Potito Sannitico
-46040,Casalmoro/Casaloldo/Casalromano/Cavriana/Ceresara/Gazoldo degli Ippoliti/Guidizzolo/Monzambano/Piubega/Ponti sul Mincio/Rodigo/Solferino
-81017,Raviscanina/SantAngelo dAlife
-46041,Asola
-47822,Santarcangelo di Romagna
-46042,Castel Goffredo
-46043,Castiglione delle Stiviere
-47824,Poggio Berni
-46044,Goito
-47825,Torriana
-46045,Marmirolo
-47826,Verucchio
-46046,Medole
-46047,Porto Mantovano
-46048,Roverbella
-20811,Cesano Maderno
-46049,Volta Mantovana
-20812,Limbiate
-20813,Bovisio-Masciago
-20814,Varedo
-20815,Cogliate
-20816,Ceriano Laghetto
-32100,Belluno
-50021,Barberino Val dElsa
-50022,Greve in Chianti
-50023,Impruneta
-50025,Montespertoli
-50026,San Casciano in Val di Pesa
-15050,Alzano Scrivia/Avolasca/Berzano di Tortona/Brignano-Frascata/Carbonara Scrivia/Casasco/Castellar Guidobono/Cerreto Grue/Costa Vescovato/Garbagna/Guazzora/Isola SantAntonio/Molino dei Torti/Momperone/Montacuto/Montegioco/Montemarzino/Paderna/Pozzol Groppo/SantAgata Fossili/Sarezzano/Spineto Scrivia/Villalvernia/Villaromagnano/Volpeglino
-50028,Tavarnelle Val di Pesa
-15051,Carezzano/Castellania
-15052,Casalnoceto
-15053,Castelnuovo Scrivia
-15054,Fabbrica Curone
-15055,Pontecurone
-15056,Dernice/Gremiasco/San Sebastiano Curone
-15057,Tortona
-15058,Viguzzolo
-15059,Monleale/Volpedo
-63100,Ascoli Piceno
-81020,Capodrise/Casapulla/Castel Morrone/Recale/San Marco Evangelista/San Nicola la Strada/Valle di Maddaloni
-81021,Arienzo
-81022,Casagiove
-81023,Cervino
-81024,Maddaloni
-81025,Marcianise
-81027,San Felice a Cancello
-81028,Santa Maria a Vico
-47832,San Clemente
-47833,Morciano di Romagna
-47834,Montefiore Conca
-47835,Saludecio
-47836,Mondaino
-47837,Montegridolfo
-20821,Meda
-47838,Riccione
-20822,Seveso
-20823,Lentate sul Seveso
-20824,Lazzate
-20825,Barlassina
-20826,Misinto
-94100,Enna
-50031,Barberino di Mugello
-50032,Borgo San Lorenzo
-50033,Firenzuola
-50034,Marradi
-50035,Palazzuolo sul Senio
-50036,Vaglia
-50037,San Piero a Sieve
-15060,Albera Ligure/Basaluzzo/Borghetto di Borbera/Bosio/Cabella Ligure/Cantalupo Ligure/Capriata dOrba/Carrega Ligure/Carrosio/Castelletto dOrba/Fraconalto/Francavilla Bisio/Grondona/Mongiardino Ligure/Montaldeo/Parodi Ligure/Pasturana/Roccaforte Ligure/Rocchetta Ligure/San Cristoforo/Sardigliano/Silvano dOrba/Stazzano/Tassarolo/Vignole Borbera/Voltaggio
-50038,Scarperia
-15061,Arquata Scrivia
-50039,Vicchio
-15062,Bosco Marengo
-15063,Cassano Spinola/Gavazzana
-15064,Fresonara
-15065,Frugarolo
-15066,Gavi
-15067,Novi Ligure
-15068,Pozzolo Formigaro
-15069,Serravalle Scrivia
-81030,Cancello ed Arnone/Carinola/Casaluce/Casapesenna/Castel Volturno/Cellole/Cesa/Falciano del Massico/Frignano/Gricignano di Aversa/Lusciano/Orta di Atella/Parete/San Marcellino/SantArpino/Succivo/Teverola/Villa di Briano
-81031,Aversa
-81032,Carinaro
-81033,Casal di Principe
-81034,Mondragone
-81035,Marzano Appio/Roccamonfina
-81036,San Cipriano dAversa
-81037,Sessa Aurunca
-81038,Trentola-Ducenta
-47841,Cattolica
-81039,Villa Literno
-47842,San Giovanni in Marignano
-47843,Misano Adriatico
-20831,Seregno
-05010,Montegabbione/Parrano/Porano/San Venanzo
-20832,Desio
-05011,Allerona
-20833,Giussano
-05012,Attigliano
-20834,Nova Milanese
-05013,Castel Giorgio
-20835,Muggiò
-05014,Castel Viscardo
-20836,Briosco
-05015,Fabro
-20837,Veduggio con Colzano
-05016,Ficulle
-20838,Renate
-05017,Monteleone dOrvieto
-05018,Orvieto
-50041,Calenzano
-15070,Belforte Monferrato/Casaleggio Boiro/Cassinelle/Castelspina/Lerma/Tagliolo Monferrato/Trisobbio
-15071,Carpeneto
-36010,Carrè/Chiuppano/Cogollo del Cengio/Foza/Laghi/Monticello Conte Otto/Posina/Roana/Rotzo/Velo dAstico/Zanè
-15072,Casal Cermelli
-36011,Arsiero
-15073,Castellazzo Bormida
-36012,Asiago
-15074,Molare
-36013,Piovene Rocchette
-36014,Santorso
-15075,Mornese
-36015,Schio
-15076,Ovada
-36016,Thiene
-15077,Predosa
-15078,Rocca Grimalda
-15079,Sezzadio
-81040,Castel di Sasso/Curti/Formicola/Liberi/Pietravairano/Pontelatone/Rocca DEvandro
-81041,Bellona/Vitulazio
-81042,Calvi Risorta/Giano Vetusto/Rocchetta e Croce
-81043,Capua
-81044,Conca della Campania/Galluccio/Tora e Piccilli
-81046,Grazzanise
-81047,Macerata Campania
-67010,Barete
-81049,Mignano Monte Lungo/San Pietro Infine
-47853,Coriano
-901xx,Palermo
-67012,Cagnano Amiterno
-47854,Monte Colombo/Montescudo
-67013,Campotosto
-47855,Gemmano
-67014,Capitignano
-67015,Montereale
-05020,Alviano/Avigliano Umbro/Lugnano in Teverina/Montecchio
-67017,Pizzoli
-20841,Carate Brianza
-05021,Acquasparta
-20842,Besana in Brianza
-20843,Verano Brianza
-67019,Scoppito
-05022,Amelia
-20844,Triuggio
-05023,Baschi
-20845,Sovico
-05024,Giove
-05025,Guardea
-20846,Macherio
-05026,Montecastrilli
-20847,Albiate
-05028,Penna in Teverina
-05029,San Gemini
-50050,Capraia e Limite/Cerreto Guidi/Gambassi Terme/Montaione
-50051,Castelfiorentino
-50052,Certaldo
-50053,Empoli
-50054,Fucecchio
-18100,Imperia
-50055,Lastra a Signa
-50056,Montelupo Fiorentino
-50058,Signa
-36020,Agugliaro/Albettone/Asigliano Veneto/Campiglia dei Berici/Campolongo sul Brenta/Castegnero/Cismon del Grappa/Pove del Grappa/San Nazario/Solagna/Valstagna/Zovencedo
-50059,Vinci
-36021,Barbarano Vicentino/Villaga
-36022,Cassola
-36023,Longare
-36024,Mossano/Nanto
-36025,Noventa Vicentina
-36026,Pojana Maggiore
-36027,Rosà
-36028,Rossano Veneto
-81050,Camigliano/Francolise/Pastorano/Portico di Caserta/Presenzano/San Tammaro/Santa Maria La Fossa
-81051,Pietramelara/Roccaromana
-81052,Pignataro Maggiore
-81053,Riardo
-81054,San Prisco
-81055,Santa Maria Capua Vetere
-81056,Sparanise
-81057,Teano
-81058,Vairano Patenora
-47861,Casteldelci
-67020,Acciano/Calascio/Caporciano/Carapelle Calvisio/Castel di Ieri/Castelvecchio Calvisio/Collepietro/Fagnano Alto/Fontecchio/Fossa/Gagliano Aterno/Molina Aterno/Navelli/Prata dAnsidonia/San Benedetto in Perillis/San Pio delle Camere/SantEusanio Forconese/Santo Stefano di Sessanio/Tione degli Abruzzi/Villa Santa Lucia degli Abruzzi/Villa SantAngelo
-47862,Maiolo
-81059,Caianello
-67021,Barisciano
-47863,Novafeltria
-67022,Capestrano
-47864,Pennabilli
-67023,Castel del Monte
-47865,San Leo
-67024,Castelvecchio Subequo
-47866,SantAgata Feltria
-67025,Ofena
-47867,Talamello
-67026,Poggio Picenze
-67027,Raiano
-20851,Lissone
-05030,Montefranco/Otricoli/Polino
-20852,Villasanta
-67028,San Demetrio ne Vestini
-05031,Arrone
-67029,Secinaro
-20853,Biassono
-05032,Calvi dellUmbria
-20854,Vedano al Lambro
-20855,Lesmo
-05034,Ferentillo
-20856,Correzzana
-05035,Narni
-20857,Camparada
-05039,Stroncone
-50060,Londa/Pelago/San Godenzo
-98020,Alì/Mandanici/Pagliara
-50062,Dicomano
-98021,Alì Terme
-50063,Figline Valdarno
-98022,Fiumedinisi
-50064,Incisa in Val dArno
-98023,Furci Siculo
-50065,Pontassieve
-50066,Reggello
-98025,Itala
-50067,Rignano sullArno
-98026,Nizza di Sicilia
-50068,Rufina
-36030,Caldogno/Caltrano/Calvene/Costabissara/Fara Vicentino/Lugo di Vicenza/Monte di Malo/Montecchio Precalcino/San Vito di Leguzzano/Sarcedo/Valli del Pasubio/Villaverla/Zugliano
-98027,Roccalumera
-98028,Santa Teresa di Riva
-36031,Dueville
-98029,Scaletta Zanclea
-36032,Gallio
-36033,Isola Vicentina
-36034,Malo
-36035,Marano Vicentino
-36036,Torrebelvicino
-40010,Bentivoglio/Sala Bolognese
-67030,Alfedena/Anversa degli Abruzzi/Ateleta/Barrea/Bugnara/Campo di Giove/Cansano/Civitella Alfedena/Cocullo/Corfinio/Goriano Sicoli/Introdacqua/Opi/Pacentro/Prezza/Rocca Pia/Roccacasale/Scontrone/Villalago/Villetta Barrea/Vittorito
-40011,Anzola dellEmilia
-67031,Castel di Sangro
-40012,Calderara di Reno
-67032,Pescasseroli
-40013,Castel Maggiore
-67033,Pescocostanzo
-40014,Crevalcore
-67034,Pettorano sul Gizio
-40015,Galliera
-67035,Pratola Peligna
-40016,San Giorgio di Piano
-67036,Rivisondoli
-40017,San Giovanni in Persiceto
-67037,Roccaraso
-20861,Brugherio
-67038,Scanno
-40018,San Pietro in Casale
-20862,Arcore
-67039,Sulmona
-40019,SantAgata Bolognese
-20863,Concorezzo
-20864,Agrate Brianza
-20865,Usmate Velate
-20866,Carnate
-20867,Caponago
-71010,Cagnano Varano/Carpino/Chieuti/Ischitella/Lesina/Peschici/Poggio Imperiale/Rignano Garganico/San Paolo di Civitate/Serracapriola
-98030,Antillo/Castelmola/Floresta/Forza dAgrò/Gaggi/Gallodoro/Limina/Malvagna/Moio Alcantara/Mongiuffi Melia/Motta Camastra/Roccafiorita/Roccella Valdemone/San Teodoro/Santa Domenica Vittoria/SantAlessio Siculo
-71011,Apricena
-98031,Capizzi
-71012,Rodi Garganico
-98032,Casalvecchio Siculo
-71013,San Giovanni Rotondo
-98033,Cesarò
-71014,San Marco in Lamis
-98034,Francavilla di Sicilia
-71015,San Nicandro Garganico
-98035,Giardini-Naxos
-71016,San Severo
-98036,Graniti
-71017,Torremaggiore
-98037,Letojanni
-36040,Brendola/Grancona/Grisignano di Zocco/Grumolo delle Abbadesse/Lastebasse/Orgiano/Pedemonte/Salcedo/San Germano dei Berici/Sarego/Sossano/Tonezza del Cimone/Torri di Quartesolo/Valdastico
-71018,Vico del Gargano
-98038,Savoca
-71019,Vieste
-98039,Taormina
-36042,Breganze
-36043,Camisano Vicentino
-36045,Alonte/Lonigo
-36046,Lusiana
-36047,Montegalda/Montegaldella
-22100,Como
-67040,Collarmele/Ocre
-40020,Casalfiumanese
-67041,Aielli
-40021,Borgo Tossignano
-40022,Castel del Rio
-67043,Celano
-40023,Castel Guelfo di Bologna
-67044,Cerchio
-40024,Castel San Pietro Terme
-67045,Lucoli
-40025,Fontanelice
-40026,Imola
-67046,Ovindoli
-20871,Vimercate
-40027,Mordano
-67047,Rocca di Cambio
-20872,Cornate dAdda
-67048,Rocca di Mezzo
-67049,Tornimparte
-20873,Cavenago di Brianza
-20874,Busnago
-20875,Burago di Molgora
-20876,Ornago
-20877,Roncello
-53100,Siena
-98040,Condrò/Gualtieri Sicaminò/Merì/Roccavaldina/Torregrotta/Valdina/Venetico
-71020,Anzano di Puglia/Castelluccio Valmaggiore/Celle di San Vito/Faeto/Monteleone di Puglia/Panni/Rocchetta SantAntonio
-98041,Monforte San Giorgio
-98042,Pace del Mela
-71022,Ascoli Satriano
-98043,Rometta
-71023,Bovino
-98044,San Filippo del Mela
-71024,Candela
-98045,San Pier Niceto
-71025,Castelluccio dei Sauri
-98046,Santa Lucia del Mela
-71026,Deliceto
-98047,Saponara
-36050,Bolzano Vicentino/Bressanvido/Cartigliano/Gambugliano/Monteviale/Montorso Vicentino/Pozzoleone/Quinto Vicentino/Sovizzo/Zermeghedo
-71027,Orsara di Puglia
-98048,Spadafora
-71028,SantAgata di Puglia
-36051,Creazzo
-98049,Villafranca Tirrena
-71029,Troia
-36052,Enego
-36053,Gambellara
-36054,Montebello Vicentino
-36055,Nove
-36056,Tezze sul Brenta
-36057,Arcugnano
-40030,Castel di Casio/Grizzana Morandi
-67050,Bisegna/Canistro/Castellafiume/Civita dAntino/Collelongo/Lecce nei Marsi/Massa dAlbe/Morino/Ortona dei Marsi/Ortucchio/San Vincenzo Valle Roveto/Villavallelonga
-67051,Avezzano
-40032,Camugnano
-67052,Balsorano
-40033,Casalecchio di Reno
-67053,Capistrello
-40034,Castel dAiano
-67054,Civitella Roveto
-40035,Castiglione dei Pepoli
-67055,Gioia dei Marsi
-40036,Monzuno
-67056,Luco dei Marsi
-40037,Sasso Marconi
-67057,Pescina
-20881,Bernareggio
-40038,Vergato
-67058,San Benedetto dei Marsi
-20882,Bellusco
-67059,Trasacco
-20883,Mezzago
-20884,Sulbiate
-20885,Ronco Briantino
-20886,Aicurzio
-71030,Carlantino/Casalvecchio di Puglia/Mattinata/Motta Montecorvino/San Marco la Catola/Volturara Appula/Volturino/Zapponeta
-98050,Fondachelli-Fantina/Leni/Malfa/Santa Marina Salina/Terme Vigliatore
-71031,Alberona
-98051,Barcellona Pozzo di Gotto
-71032,Biccari
-71033,Casalnuovo Monterotaro
-98053,Castroreale
-71034,Castelnuovo della Daunia
-98054,Furnari
-71035,Celenza Valfortore
-98055,Lipari
-71036,Lucera
-98056,Mazzarrà SantAndrea
-36060,Molvena/Pianezze/Romano dEzzelino/Schiavon
-71037,Monte SantAngelo
-98057,Milazzo
-36061,Bassano del Grappa
-71038,Pietramontecorvino
-98058,Novara di Sicilia
-71039,Roseto Valfortore
-98059,Rodì Milici
-36062,Conco
-36063,Marostica
-36064,Mason Vicentino
-36065,Mussolente
-36066,Sandrigo
-23900,Lecco
-67060,Cappadocia
-40041,Gaggio Montano
-67061,Carsoli
-40042,Lizzano in Belvedere
-67062,Magliano de Marsi
-40043,Marzabotto
-67063,Oricola
-67064,Pereto
-40045,Granaglione
-40046,Porretta Terme
-67066,Rocca di Botte
-67067,Sante Marie
-67068,Scurcola Marsicana
-40048,San Benedetto Val di Sambro
-26010,Azzanello/Bagnolo Cremasco/Camisano/Campagnola Cremasca/Capergnanica/Capralba/Casale Cremasco-Vidolasco/Casaletto Ceredano/Casaletto Vaprio/Castel Gabbiano/Castelvisconti/Chieve/Corte de Frati/Credera Rubbiano/Cremosano/Dovera/Fiesco/Izano/Monte Cremasco/Montodine/Moscazzano/Offanengo/Olmeneta/Pianengo/Pozzaglio ed Uniti/Ricengo/Ripalta Arpina/Ripalta Cremasca/Ripalta Guerina/Robecco dOglio/Salvirola/Sergnano/Vaiano Cremasco
-67069,Tagliacozzo
-26011,Casalbuttano ed Uniti
-26012,Castelleone
-26013,Crema
-26014,Casaletto di Sopra/Romanengo
-26015,Soresina
-26016,Spino dAdda
-26017,Pieranica/Quintano/Torlino Vimercati/Trescore Cremasco
-26018,Trigolo
-26019,Vailate
-71040,Isole Tremiti/Ordona
-98060,Basicò/Falcone/Montagnareale/Oliveri/Piraino/SantAngelo di Brolo/Tripi/Ucria
-71041,Carapelle
-98061,Brolo
-71042,Cerignola
-98062,Ficarra
-71043,Manfredonia
-98063,Gioiosa Marea
-98064,Librizzi
-71045,Orta Nova
-98065,Montalbano Elicona
-98066,Patti
-71047,Stornara
-36070,Altissimo/Brogliano/Castelgomberto/Crespadoro/Nogarole Vicentino/San Pietro Mussolino/Trissino
-98067,Raccuja
-71048,Stornarella
-98068,San Piero Patti
-36071,Arzignano
-98069,Sinagra
-36072,Chiampo
-36073,Cornedo Vicentino
-801xx,Napoli
-36075,Montecchio Maggiore
-57014,Collesalvetti
-36076,Recoaro Terme
-57016,Rosignano Marittimo
-36077,Altavilla Vicentina
-36078,Valdagno
-40050,Argelato/Castello dArgile/Castello di Serravalle/Loiano/Monte San Pietro/Monterenzio/Monteveglio
-40051,Malalbergo
-40052,Baricella
-40053,Bazzano
-40054,Budrio
-08100,Nuoro
-40055,Castenaso
-40056,Crespellano
-40057,Granarolo dellEmilia
-26020,Acquanegra Cremonese/Agnadello/Bordolano/Cappella Cantone/Casalmorano/Corte de Cortesi con Cignone/Crotta dAdda/Cumignano sul Naviglio/Formigara/Genivolta/Gombito/Madignano/Palazzo Pignano/San Bassano/Spinadesco/Ticengo
-40059,Medicina
-26021,Annicco
-26022,Castelverde
-26023,Grumello Cremonese ed Uniti
-26024,Paderno Ponchielli
-26025,Pandino
-26026,Pizzighettone
-26027,Rivolta dAdda
-26028,Sesto ed Uniti
-26029,Soncino
-98070,Acquedolci/Alcara Li Fusi/Capri Leone/Castel di Lucio/CastellUmberto/Frazzanò/Galati Mamertino/Longi/Militello Rosmarino/Mirto/Motta dAffermo/Pettineo/Reitano/San Marco DAlunzio/San Salvatore di Fitalia/Torrenova
-98071,Capo dOrlando
-98072,Caronia
-98073,Mistretta
-98074,Naso
-98075,San Fratello
-98076,SantAgata di Militello
-98077,Santo Stefano di Camastra
-98078,Tortorici
-57020,Bibbona/Sassetta
-98079,Tusa
-57021,Campiglia Marittima
-57022,Castagneto Carducci
-57023,Cecina
-57025,Piombino
-57027,San Vincenzo
-57028,Suvereto
-40060,Dozza/Savigno
-88020,Cortale/Jacurso
-40061,Minerbio
-88021,Borgia/San Floro
-40062,Molinella
-88022,Curinga
-40063,Monghidoro
-40064,Ozzano dellEmilia
-88024,Girifalco
-40065,Pianoro
-88025,Maida/San Pietro a Maida
-40066,Pieve di Cento
-40068,San Lazzaro di Savena
-26030,Ca dAndrea/Calvatone/Cappella de Picenardi/Casteldidone/Cicognolo/Gabbioneta-Binanuova/Gadesco-Pieve Delmona/Malagnino/Pessina Cremonese/Solarolo Rainerio/Spineda/Tornata/Volongo/Voltido
-40069,Zola Predosa
-26031,Isola Dovarese
-26032,Ostiano
-26033,Pescarolo ed Uniti
-26034,Drizzona/Piadena
-26035,Pieve San Giacomo
-26036,Rivarolo del Re ed Uniti
-26037,San Giovanni in Croce
-26038,Torre de Picenardi
-26039,Vescovato
-39100,Bolzano
-30010,Campagna Lupia/Campolongo Maggiore/Camponogara/Cona
-57030,Marciana
-57031,Capoliveri
-57032,Capraia Isola
-30013,Cavallino-Treporti
-57033,Marciana Marina
-30014,Cavarzere
-57034,Campo nellElba
-30015,Chioggia
-30016,Jesolo
-57036,Porto Azzurro
-57037,Portoferraio
-57038,Rio Marina
-57039,Rio nellElba
-61010,Monte Cerignone/Monte Grimano Terme/Tavullia
-61011,Gabicce Mare
-61012,Gradara
-89812,Pizzo
-61013,Mercatino Conca/Sassofeltrio
-89813,Polia
-61014,Montecopiolo
-89814,Filadelfia
-89815,Francavilla Angitola
-89816,Cessaniti
-26040,Bonemerse/Cella Dati/Derovere/Gerre de Caprioli/Gussola/Martignana di Po/Pieve dOlmi/San Martino del Lago/Scandolara Ravara/Torricella del Pizzo
-89817,Briatico
-26041,Casalmaggiore
-89818,Capistrano
-26042,Cingia de Botti
-89819,Monterosso Calabro
-26043,Persico Dosimo
-26044,Grontardo
-26045,Motta Baluffi
-26046,San Daniele Po
-26047,Scandolara Ripa dOglio
-26048,Sospiro
-26049,Stagno Lombardo
-351xx,Padova
-92010,Alessandria della Rocca/Bivona/Burgio/Calamonaci/Caltabellotta/Joppolo Giancaxio/Lampedusa e Linosa/Lucca Sicula/Montallegro/Montevago/Realmonte/Siculiana
-92011,Cattolica Eraclea
-92012,Cianciana
-12100,Cuneo
-92013,Menfi
-92014,Porto Empedocle
-92015,Raffadali
-92016,Ribera
-92017,Sambuca di Sicilia
-30020,Annone Veneto/Cinto Caomaggiore/Eraclea/Fossalta di Piave/Gruaro/Marcon/Meolo/Noventa di Piave/Pramaggiore/Quarto dAltino/Torre di Mosto
-92018,Santa Margherita di Belice
-30021,Caorle
-92019,Sciacca
-30022,Ceggia
-30023,Concordia Sagittaria
-30024,Musile di Piave
-30025,Fossalta di Portogruaro/Teglio Veneto
-30026,Portogruaro
-30027,San Donà di Piave
-30028,San Michele al Tagliamento
-30029,Santo Stino di Livenza
-61020,Auditore/Montecalvo in Foglia/Petriano/SantAngelo in Lizzola/Tavoleto
-88040,Amato/Carlopoli/Cicala/Conflenti/Feroleto Antico/Gizzeria/Martirano/Martirano Lombardo/Miglierina/Motta Santa Lucia/Pianopoli/Platania/San Mango dAquino/San Pietro Apostolo/Serrastretta/Settingiano
-89821,San Nicola da Crissa/Vallelonga
-61021,Carpegna/Frontino
-88041,Decollatura
-61022,Colbordolo
-89822,Brognaturo/Serra San Bruno/Simbario/Spadola
-88042,Falerna
-61023,Macerata Feltria/Pietrarubbia
-89823,Fabrizia/Mongiana
-61024,Mombaroccio/Monteciccardo
-89824,Nardodipace
-88044,Marcellinara
-61025,Montelabbate
-88045,Gimigliano
-61026,Belforte allIsauro/Lunano/Piandimeleto
-88046,Lamezia Terme
-88047,Nocera Terinese
-61028,Sassocorvaro
-61029,Urbino
-88049,Soveria Mannelli
-92020,Camastra/Castrofilippo/Comitini/Grotte/Palma di Montechiaro/Racalmuto/San Biagio Platani/San Giovanni Gemini/Santa Elisabetta/SantAngelo Muxaro/Santo Stefano Quisquina/Villafranca Sicula
-92021,Aragona
-92022,Cammarata
-92023,Campobello di Licata
-92024,Canicattì
-92025,Casteltermini
-92026,Favara
-30030,Fossò/Martellago/Pianiga/Salzano/Vigonovo
-92027,Licata
-30031,Dolo
-92028,Naro
-30032,Fiesso dArtico
-92029,Ravanusa
-30033,Noale
-30034,Mira
-30035,Mirano
-30036,Santa Maria di Sala
-30037,Scorzè
-30038,Spinea
-30039,Stra
-61030,Cartoceto/Isola del Piano/Montefelcino/Montemaggiore al Metauro/Piagge/Saltara/San Giorgio di Pesaro/Serrungarina
-88050,Amaroni/Andali/Belcastro/Caraffa di Catanzaro/Cerva/Fossato Serralta/Magisano/Marcedusa/Palermiti/Pentone/Petronà/Sellia/Sellia Marina/Simeri Crichi/Sorbo San Basile/Soveria Simeri/Vallefiorita/Zagarise
-89831,Gerocarne/Sorianello/Soriano Calabro
-88051,Cropani
-61032,Fano
-89832,Acquaro/Arena/Dasà
-61033,Fermignano
-89833,Dinami
-88054,Sersale
-61034,Fossombrone
-89834,Pizzoni/Vazzano
-88055,Albi/Taverna
-88056,Tiriolo
-61037,Mondolfo
-61038,Orciano di Pesaro
-61039,San Costanzo
-13900,Biella
-61040,Barchi/Borgo Pace/Fratte Rosa/Frontone/Mercatello sul Metauro/Mondavio/Monte Porzio/SantIppolito/Serra SantAbbondio
-88060,Argusto/Badolato/Davoli/Gagliato/Gasperina/Isca sullo Ionio/Montauro/Montepaone/Petrizzi/San Sostene/Santa Caterina dello Ionio/SantAndrea Apostolo dello Ionio/Satriano/Torre di Ruggiero
-61041,Acqualagna
-89841,Filandari/Rombiolo
-89842,San Calogero
-61042,Apecchio
-88062,Cardinale
-61043,Cagli
-89843,Filogaso/Maierato/SantOnofrio/Stefanaconi
-61044,Cantiano
-89844,Limbadi/Nicotera
-88064,Chiaravalle Centrale
-61045,Pergola
-88065,Guardavalle
-61046,Piobbico
-61047,San Lorenzo in Campo
-88067,Cenadi/Centrache/Olivadi/San Vito sullo Ionio
-88068,Soverato
-61048,SantAngelo in Vado
-88069,Squillace/Stalettì
-61049,Peglio/Urbania
-701xx,Bari
-16010,Crocefieschi/Masone/Mele/Rossiglione/SantOlcese/Savignone/Serra Riccò/Tiglieto/Valbrevenna/Vobbia
-16011,Arenzano
-16012,Busalla
-16013,Campo Ligure
-16014,Campomorone/Ceranesi
-16015,Casella
-16016,Cogoleto
-16017,Isola del Cantone
-16018,Mignanego
-16019,Ronco Scrivia
-4312x,Parma
-88070,Botricello
-89851,Francica/Ionadi/San Costantino Calabro
-47010,Galeata/Portico e San Benedetto/Premilcuore
-89852,Mileto
-47011,Castrocaro Terme e Terra del Sole
-89853,San Gregorio dIppona
-47012,Civitella di Romagna
-47013,Dovadola
-47014,Meldola
-47015,Modigliana
-47016,Predappio
-47017,Rocca San Casciano
-47018,Santa Sofia
-47019,Tredozio
-7412x,Taranto
-16020,Fascia/Gorreto
-16021,Bargagli
-16022,Davagna
-16023,Fontanigorda
-16024,Lumarzo
-16025,Montebruno/Rondanina
-16026,Montoggio
-16027,Propata
-16028,Rovegno
-16029,Torriglia
-89861,Parghelia/Tropea
-47020,Longiano/Montiano/Roncofreddo
-89862,Drapia
-47021,Bagno di Romagna
-89863,Joppolo
-89864,Spilinga
-89866,Ricadi
-47025,Mercato Saraceno
-89867,Zaccanopoli/Zungri
-89868,Zambrone
-47027,Sarsina
-20010,Arluno/Bareggio/Bernate Ticino/Boffalora Sopra Ticino/Buscate/Canegrate/Casorezzo/Cornaredo/Inveruno/Marcallo con Casone/Mesero/Ossona/Pogliano Milanese/Pregnana Milanese/San Giorgio su Legnano/Santo Stefano Ticino/Vanzago/Vittuone
-47028,Verghereto
-20011,Corbetta
-20012,Cuggiono
-20013,Magenta
-20014,Nerviano
-20015,Parabiago
-20016,Pero
-20017,Rho
-20018,Sedriano
-20019,Settimo Milanese
-16030,Avegno/Casarza Ligure/Castiglione Chiavarese/Cogorno/Moneglia/Pieve Ligure/Sori/Tribogna/Uscio/Zoagli
-51010,Marliana/Massa e Cozzile/Uzzano
-16031,Bogliasco
-51011,Buggiano
-16032,Camogli
-16033,Lavagna
-51013,Chiesina Uzzanese
-16034,Portofino
-16035,Rapallo
-51015,Monsummano Terme
-16036,Recco
-51016,Montecatini-Terme
-51017,Pescia
-16038,Santa Margherita Ligure
-51018,Pieve a Nievole
-16039,Sestri Levante
-51019,Ponte Buggianese
-47030,Borghi/San Mauro Pascoli/Sogliano al Rubicone
-82010,Arpaise/Bucciano/Ceppaloni/Moiano/San Leucio del Sannio/San Martino Sannita/San Nicola Manfredi/SantAngelo a Cupolo
-82011,Airola/Arpaia/Forchia/Paolisi
-47032,Bertinoro
-82013,Bonea
-47034,Forlimpopoli
-47035,Gambettola
-82015,Durazzano
-82016,Montesarchio
-20020,Arconate/Arese/Busto Garolfo/Cesate/Dairago/Lainate/Magnago/Nosate/Robecchetto con Induno/Solaro/Vanzaghello/Villa Cortese
-82017,Pannarano
-20021,Baranzate/Bollate
-82018,Calvi/San Giorgio del Sannio/San Nazzaro
-47039,Savignano sul Rubicone
-82019,SantAgata De Goti
-20022,Castano Primo
-20023,Cerro Maggiore
-20024,Garbagnate Milanese
-20025,Legnano
-20026,Novate Milanese
-20027,Rescaldina
-20028,San Vittore Olona
-20029,Turbigo
-16040,Coreglia Ligure/Favale di Malvaro/Leivi/Ne/Neirone/Orero/San Colombano Certenoli
-51020,Piteglio/Sambuca Pistoiese
-16041,Borzonasca
-16042,Carasco
-16043,Chiavari
-16044,Cicagna
-51024,Cutigliano
-16045,Lorsica
-16046,Mezzanego
-16047,Moconesi
-51028,San Marcello Pistoiese
-16048,Rezzoaglio
-16049,Santo Stefano dAveto
-251xx,Brescia
+02010,Rieti
+02011,Rieti
+02012,Rieti
+02013,Rieti
+02014,Rieti
+02015,Rieti
+02016,Rieti
+02018,Rieti
+02019,Rieti
+02020,Rieti
+02021,Rieti
+02022,Rieti
+02023,Rieti
+02024,Rieti
+02025,Rieti
+02026,Rieti
+02030,Rieti
+02031,Rieti
+02032,Rieti
+02033,Rieti
+02034,Rieti
+02035,Rieti
+02037,Rieti
+02038,Rieti
+02039,Rieti
+02040,Rieti
+02041,Rieti
+02042,Rieti
+02043,Rieti
+02044,Rieti
+02045,Rieti
+02046,Rieti
+02047,Rieti
+02048,Rieti
+02049,Rieti
 02100,Rieti
-82020,Baselice/Buonalbergo/Campolattaro/Circello/Foiano di Val Fortore/Fragneto LAbate/Fragneto Monforte/Ginestra degli Schiavoni/Molinara/Paduli/Pago Veiano/Pesco Sannita/Pietrelcina/Reino/San Giorgio La Molara/Santa Croce del Sannio
-82021,Apice/SantArcangelo Trimonte
-47042,Cesenatico
-82022,Castelfranco in Miscano
-47043,Gatteo
-82023,Castelvetere in Val Fortore
-82024,Castelpagano/Colle Sannita
-82025,Montefalcone di Val Fortore
-82026,Morcone/Sassinoro
-20030,Senago
-82027,Casalduni/Pontelandolfo
-82028,San Bartolomeo in Galdo
-82029,San Marco dei Cavoti
-20032,Cormano
-20037,Paderno Dugnano
-33100,Udine
-51030,Serravalle Pistoiese
-51031,Agliana
-51035,Lamporecchio
-51036,Larciano
-51037,Montale
-51039,Quarrata
-64100,Teramo
-2912x,Piacenza
-82030,Apollosa/Campoli del Monte Taburno/Castelpoto/Cautano/Dugenta/Faicchio/Foglianise/Frasso Telesino/Limatola/Melizzano/Paupisi/Pietraroja/Ponte/Puglianello/San Lorenzello/San Salvatore Telesino/Tocco Caudio/Torrecuso
-82031,Amorosi
-82032,Cerreto Sannita
-82033,Cusano Mutri
-82034,Guardia Sanframondi/San Lorenzo Maggiore/San Lupo
-82036,Solopaca
-82037,Castelvenere/Telese Terme
-20040,Cambiago
-82038,Vitulano
-601xx,Ancona
-06010,Citerna/Monte Santa Maria Tiberina
-06012,Città di Castello
-06014,Montone
-20056,Grezzago/Trezzo sullAdda
-06016,San Giustino
-06019,Umbertide
-37010,Affi/Brenzone/Cavaion Veronese/Costermano/Pastrengo/Rivoli Veronese/San Zeno di Montagna/Torri del Benaco
-37011,Bardolino
-37012,Bussolengo
-37013,Caprino Veronese
-37014,Castelnuovo del Garda
-37015,SantAmbrogio di Valpolicella
-37016,Garda
-37017,Lazise
-37018,Malcesine
-37019,Peschiera del Garda
-20060,Basiano/Bellinzago Lombardo/Bussero/Cassina de Pecchi/Colturano/Gessate/Liscate/Masate/Mediglia/Pessano con Bornago/Pozzo dAdda/Pozzuolo Martesana/Trezzano Rosa/Truccazzano/Vignate
-20061,Carugate
-20062,Cassano dAdda
-06021,Costacciaro
-20063,Cernusco sul Naviglio
-06022,Fossato di Vico
-20064,Gorgonzola
-06023,Gualdo Tadino
-20065,Inzago
-06024,Gubbio
-20066,Melzo
-06025,Nocera Umbra
-20067,Paullo/Tribiano
-06026,Pietralunga
-06027,Scheggia e Pascelupo
-20068,Peschiera Borromeo
-20069,Vaprio dAdda
-06028,Sigillo
-06029,Valfabbrica
-4752x,Cesena
-37020,Brentino Belluno/Cerro Veronese/Dolcè/Erbezzo/Ferrara di Monte Baldo/Marano di Valpolicella/SantAnna dAlfaedo
-37021,Bosco Chiesanuova
-37022,Fumane
-37023,Grezzana
-37024,Negrar
-37026,Pescantina
-37028,Roverè Veronese
-37029,San Pietro in Cariano
-20070,Cerro al Lambro/Dresano/San Zenone al Lambro/Vizzolo Predabissi
-06030,Giano dellUmbria/Sellano/Valtopina
-06031,Bevagna
-06033,Cannara
-06034,Foligno
-06035,Gualdo Cattaneo
-20077,Melegnano
-06036,Montefalco
-20078,San Colombano al Lambro
-06038,Spello
-06039,Trevi
-37030,Badia Calavena/Cazzano di Tramigna/Colognola ai Colli/Lavagno/Mezzane di Sotto/Montecchia di Crosara/Roncà/San Mauro di Saline/Selva di Progno/Velo Veronese/Vestenanova
-10010,Albiano dIvrea/Alice Superiore/Andrate/Azeglio/Bairo/Banchette/Barone Canavese/Burolo/Candia Canavese/Caravino/Carema/Cascinette dIvrea/Chiaverano/Colleretto Giacosa/Cossano Canavese/Fiorano Canavese/Lessolo/Loranzè/Mercenasco/Nomaglio/Orio Canavese/Palazzo Canavese/Parella/Perosa Canavese/Piverone/Quagliuzzo/Quassolo/Quincinetto/Rueglio/Salerano Canavese/Samone/San Martino Canavese/Scarmagno/Settimo Rottaro/Settimo Vittone/Strambinello/Tavagnasco/Torre Canavese
-37031,Illasi
-10011,Agliè
-37032,Monteforte dAlpone
-10012,Bollengo
-10013,Borgofranco dIvrea
-10014,Caluso
-37035,San Giovanni Ilarione
-10015,Ivrea
-37036,San Martino Buon Albergo
-10016,Montalto Dora
-10017,Montanaro
-37038,Soave
-10018,Pavone Canavese
-37039,Tregnago
-10019,Strambino
-41011,Campogalliano
-41012,Carpi
-41013,Castelfranco Emilia
-41014,Castelvetro di Modena
-41015,Nonantola
-20080,Albairate/Basiglio/Besate/Bubbiano/Calvignasco/Carpiano/Casarile/Cisliano/Ozzero/Vermezzo/Vernate/Zelo Surrigone/Zibido San Giacomo
-41016,Novi di Modena
-06040,Poggiodomo/SantAnatolia di Narco/Scheggino/Vallo di Nera
-41017,Ravarino
-41018,San Cesario sul Panaro
-20082,Binasco/Noviglio
-06041,Cerreto di Spoleto
-41019,Soliera
-20083,Gaggiano
-06042,Campello sul Clitunno
-20084,Lacchiarella
-06043,Cascia
-20085,Locate di Triulzi
-06044,Castel Ritaldi
-20086,Motta Visconti
-06045,Monteleone di Spoleto
-20087,Robecco sul Naviglio
-06046,Norcia
-20088,Gudo Visconti/Rosate
-06047,Preci
-20089,Rozzano
-06049,Spoleto
-72012,Carovigno
-72013,Ceglie Messapica
-72014,Cisternino
-72015,Fasano
-72017,Ostuni
-10020,Andezeno/Arignano/Baldissero Torinese/Brozolo/Brusasco/Cambiano/Casalborgone/Cavagnolo/Lauriano/Marentino/Mombello di Torino/Montaldo Torinese/Monteu da Po/Moriondo Torinese/Pavarolo/Pecetto Torinese/Riva Presso Chieri/San Sebastiano da Po/Verrua Savoia
-37040,Arcole/Bevilacqua/Bonavigo/Boschi SantAnna/Pressana/Roveredo di Guà/Terrazzo/Veronella/Zimella
-72018,San Michele Salentino
-37041,Albaredo dAdige
-72019,San Vito dei Normanni
-10022,Carmagnola
-37042,Caldiero
-10023,Chieri
-37043,Castagnaro
-10024,Moncalieri
-37044,Cologna Veneta
-10025,Pino Torinese
-37045,Legnago
-10026,Santena
-37046,Minerbe
-37047,San Bonifacio
-10028,Trofarello
-10029,Villastellone
-37049,Villa Bartolomea
-23100,Sondrio
-41020,Riolunato
-41021,Fanano
-41022,Fiumalbo
-41023,Lama Mocogno
-41025,Montecreto
-20090,Assago/Buccinasco/Cesano Boscone/Cusago/Opera/Pantigliate/Pieve Emanuele/Rodano/Segrate/Settala/Trezzano sul Naviglio/Vimodrone
-41026,Pavullo nel Frignano
-20091,Bresso
-06050,Collazzone
-41027,Pievepelago
-41028,Serramazzoni
-20092,Cinisello Balsamo
-41029,Sestola
-20093,Cologno Monzese
-20094,Corsico
-06053,Deruta
-20095,Cusano Milanino
-06054,Fratta Todina
-20096,Pioltello
-06055,Marsciano
-20097,San Donato Milanese
-06056,Massa Martana
-20098,San Giuliano Milanese
-06057,Monte Castello di Vibio
-20099,Sesto San Giovanni
-06059,Todi
-54100,Massa
-72020,Cellino San Marco/Erchie/Torchiarolo
-72021,Francavilla Fontana
-72022,Latiano
-72023,Mesagne
-72024,Oria
-72025,San Donaci
-72026,San Pancrazio Salentino
-72027,San Pietro Vernotico
-10030,Maglione/Rondissone/Vestignè/Villareggia/Vische
-37050,Angiari/Belfiore/Concamarise/Isola Rizza/Oppeano/Palù/Roverchiara/San Pietro di Morubio
-72028,Torre Santa Susanna
-10031,Borgomasino
-37051,Bovolone
-72029,Villa Castelli
-10032,Brandizzo
-37052,Casaleone
-37053,Cerea
-10034,Chivasso
-37054,Nogara
-37055,Ronco allAdige
-10035,Mazzè
-10036,Settimo Torinese
-37056,Salizzole
-10037,Torrazza Piemonte
-37057,San Giovanni Lupatoto
-10038,Verolengo
-37058,Sanguinetto
-37059,Zevio
-85100,Potenza
-41030,Bastiglia/Bomporto/San Prospero
-41031,Camposanto
-41032,Cavezzo
-41033,Concordia sulla Secchia
-41034,Finale Emilia
-41036,Medolla
-06060,Lisciano Niccone/Paciano
-41037,Mirandola
-41038,San Felice sul Panaro
-06061,Castiglione del Lago
-41039,San Possidonio
-06062,Città della Pieve
-06063,Magione
-06064,Panicale
-06065,Passignano sul Trasimeno
-06066,Piegaro
-06069,Tuoro sul Trasimeno
-33170,Pordenone
-10040,Almese/Caprie/Caselette/Cumiana/Druento/Givoletto/La Cassa/La Loggia/Leini/Lombardore/Lombriasco/Osasio/Piobesi Torinese/Pralormo/Rivalta di Torino/Rivarossa/Rubiana/San Gillio/Val della Torre/Villar Dora/Volvera
-37060,Buttapietra/Castel dAzzano/Erbè/Gazzo Veronese/Mozzecane/Nogarole Rocca/Sona/Sorgà/Trevenzuolo
-10041,Carignano
-10042,Nichelino
-10043,Orbassano
-37063,Isola della Scala
-10044,Pianezza
-37064,Povegliano Veronese
-10045,Piossasco
-37066,Sommacampagna
-10046,Isolabella/Poirino
-37067,Valeggio sul Mincio
-10048,Vinovo
-37068,Vigasio
-37069,Villafranca di Verona
-41040,Polinago
-41042,Fiorano Modenese
-41043,Formigine
-41044,Frassinoro
-41045,Montefiorino
-41046,Palagano
-41048,Prignano sulla Secchia
-27010,Albuzzano/Badia Pavese/Bascapè/Borgarello/Bornasco/Ceranova/Copiano/Costa de Nobili/Cura Carpignano/Filighera/Gerenzago/Giussago/Inverno e Monteleone/Linarolo/Magherno/Marzano/Miradolo Terme/Monticelli Pavese/Rognano/Roncaro/San Genesio ed Uniti/San Zenone al Po/Santa Cristina e Bissone/Siziano/Spessa/Torre dArese/Torrevecchia Pia/Valle Salimbene/Vellezzo Bellini/Vistarino/Zeccone
-41049,Sassuolo
-27011,Belgioioso/Torre de Negri
-27012,Certosa di Pavia
-06073,Corciano
-501xx,Firenze
-27013,Chignolo Po
-27014,Corteolona/Genzone
-27015,Landriano
-27016,Lardirago/SantAlessio con Vialone
-27017,Pieve Porto Morone/Zerbo
-27018,Vidigulfo
-27019,Villanterio
-10050,Borgone Susa/Bruzolo/Chianocco/Chiomonte/Chiusa di San Michele/Claviere/Coazze/Exilles/Giaglione/Gravere/Mattie/Meana di Susa/Moncenisio/Novalesa/Salbertrand/San Didero/San Giorio di Susa/SantAntonino di Susa/Sauze dOulx/Vaie/Venaus/Villar Focchiardo
-58010,Sorano
-10051,Avigliana
-58011,Capalbio
-10052,Bardonecchia
-58012,Isola del Giglio
-10053,Bussoleno
-10054,Cesana Torinese/Sauze di Cesana
-58014,Manciano
-10055,Condove
-58015,Orbetello
-10056,Oulx
-10057,SantAmbrogio di Torino
-10058,Sestriere
-58017,Pitigliano
-10059,Mompantero/Susa
-58019,Monte Argentario
-41051,Castelnuovo Rangone
-89010,Molochio/Scido/Terranova Sappo Minulio/Varapodio
-41052,Guiglia
-89011,Bagnara Calabra
-41053,Maranello
-89012,Delianuova
-89013,Gioia Tauro
-41054,Marano sul Panaro
-89014,Oppido Mamertina
-41055,Montese
-41056,Savignano sul Panaro
-89015,Palmi
-41057,Spilamberto
-89016,Rizziconi
-41058,Vignola
-89017,San Giorgio Morgeto
-27020,Alagna/Albonese/Battuda/Borgo San Siro/Breme/Carbonara al Ticino/Cergnago/Dorno/Gravellona Lomellina/Marcignago/Nicorvo/Olevano di Lomellina/Parona/San Giorgio di Lomellina/Sartirana Lomellina/Scaldasole/Semiana/Torre dIsola/Travacò Siccomario/Trivolzio/Tromello/Trovo/Valeggio/Valle Lomellina/Velezzo Lomellina/Zerbolò
-06081,Assisi
-41059,Zocca
-89018,Villa San Giovanni
-28801,Cossogno
-27021,Bereguardo
-06083,Bastia Umbra
-28802,Mergozzo
-27022,Casorate Primo
-06084,Bettona
-28803,Premosello-Chiovenda
-27023,Cassolnovo
-28804,San Bernardino Verbano
-27024,Cilavegna
-28805,Vogogna
-27025,Gambolò
-27026,Garlasco
-27027,Gropello Cairoli
-06089,Torgiano
-27028,San Martino Siccomario
-27029,Vigevano
-10060,Airasca/Angrogna/Bibiana/Bobbio Pellice/Bricherasio/Buriasco/Campiglione-Fenile/Candiolo/Cantalupa/Castagnole Piemonte/Cercenasco/Fenestrelle/Frossasco/Garzigliana/Inverso Pinasca/Lusernetta/Macello/Massello/None/Osasco/Pancalieri/Perrero/Pinasca/Piscina/Porte/Pragelato/Prali/Prarostino/Roletto/Rorà/Roure/Salza di Pinerolo/San Pietro Val Lemina/San Secondo di Pinerolo/Scalenghe/Usseaux/Villar Pellice/Virle Piemonte
-58020,Scarlino
-10061,Cavour
-10062,Luserna San Giovanni
-58022,Follonica
-10063,Perosa Argentina/Pomaretto
-58023,Gavorrano
-10064,Pinerolo
-58024,Massa Marittima
-10065,Pramollo/San Germano Chisone
-10066,Torre Pellice
-58025,Monterotondo Marittimo
-10067,Vigone
-58026,Montieri
-10068,Villafranca Piemonte
-10069,Villar Perosa
-89020,Anoia/Candidoni/Giffone/Maropati/Melicuccà/Melicucco/San Pietro di Caridà/San Procopio/Serrata/Sinopoli
-89021,Cinquefrondi
-89022,Cittanova
-89023,Laureana di Borrello
-89024,Polistena
-89025,Rosarno
-89026,San Ferdinando
-89027,SantEufemia dAspromonte
-00010,Casape/Gallicano nel Lazio/Marcellina/Monteflavio/Montelibretti/Montorio Romano/Moricone/Poli/San Gregorio da Sassola/San Polo dei Cavalieri/SantAngelo Romano
-27030,Castello dAgogna/Castelnovetto/Ceretto Lomellina/Confienza/Cozzo/Frascarolo/Gambarana/Langosco/Mezzana Bigli/Mezzana Rabattone/Ottobiano/Palestro/Pieve Albignola/Rosasco/SantAngelo Lomellina/Suardi/Torre Beretti e Castellaro/Villanova dArdenghi/Zeme/Zinasco
-89028,Seminara
-28811,Arizzano
-27031,Candia Lomellina
-89029,Taurianova
-00012,Guidonia Montecelio
-28812,Aurano
-27032,Ferrera Erbognone
-00013,Fonte Nuova/Mentana
-28813,Bee
-28814,Cambiasca
-27034,Galliavola/Lomello
-00015,Monterotondo
-28815,Caprezzo
-27035,Mede/Villa Biscossi
-28816,Intragna
-27036,Mortara
-00017,Nerola
-28817,Miazzina
-27037,Pieve del Cairo
-00018,Palombara Sabina
-28818,Premeno
-27038,Robbio
-28819,Vignone
-00019,Tivoli
-27039,Sannazzaro de Burgondi
-10070,Ala di Stura/Balangero/Balme/Barbania/Cafasse/Cantoira/Ceres/Chialamberto/Coassolo Torinese/Corio/Fiano/Front/Germagnano/Groscavallo/Grosso/Lemie/Levone/Mezzenile/Monastero di Lanzo/Pessinetto/Robassomero/Rocca Canavese/San Carlo Canavese/San Francesco al Campo/Traves/Usseglio/Vallo Torinese/Varisella/Vauda Canavese/Villanova Canavese/Viù
-10071,Borgaro Torinese
-31010,Cimadolmo/Farra di Soligo/Fonte/Fregona/Godega di SantUrbano/Mareno di Piave/Maser/Monfumo/Moriago della Battaglia/Orsago
-10072,Caselle Torinese
-31011,Asolo
-58031,Arcidosso
-10073,Ciriè
-31012,Cappella Maggiore
-10074,Lanzo Torinese
-31013,Codognè
-58033,Castel del Piano
-10075,Mathi
-31014,Colle Umberto
-58034,CastellAzzara
-10076,Nole
-31015,Conegliano
-10077,San Maurizio Canavese
-31016,Cordignano
-58036,Roccastrada
-10078,Venaria Reale
-58037,Santa Fiora
-31017,Crespano del Grappa/Paderno del Grappa
-58038,Seggiano
-31018,Gaiarine
-89030,Africo/Benestare/Bruzzano Zeffirio/Caraffa del Bianco/Careri/Casignana/Condofuri/Ferruzzano/Samo/San Luca/SantAgata del Bianco/Staiti
-62010,Appignano/Mogliano/Montecassiano/Montecosaro/Montefano/Montelupone/Morrovalle/Pollenza/Treia/Urbisaglia
-89031,Ardore
-62011,Cingoli
-89032,Bianco
-62012,Civitanova Marche
-89033,Bova
-89034,Bovalino
-62014,Corridonia/Petriolo
-89035,Bova Marina
-62015,Monte San Giusto
-89036,Brancaleone
-00020,Agosta/Arcinazzo Romano/Camerata Nuova/Canterano/Cerreto Laziale/Cervara di Roma/Ciciliano/Cineto Romano/Jenne/Mandela/Marano Equo/Percile/Pisoniano/Riofreddo/Rocca Canterano/Roccagiovine/Sambuci/Saracinesco/Vallepietra/Vallinfreda/Vivaro Romano
-27040,Albaredo Arnaboldi/Arena Po/Borgo Priolo/Borgoratto Mormorolo/Bosnasco/Calvignano/Campospinoso/Canevino/Casatisma/Castana/Castelletto di Branduzzo/Cigognola/Fortunago/Lirio/Mezzanino/Montalto Pavese/Montescano/Montù Beccaria/Mornico Losana/Pietra de Giorgi/Pinarolo Po/Portalbera/Rea/Rocca de Giorgi/Rovescala/Ruino/San Damiano al Colle/Verrua Po
-62017,Porto Recanati
-00021,Affile
-28821,Cannero Riviera
-27041,Barbianello/Casanova Lonati
-62018,Potenza Picena
-89038,Palizzi
-00022,Anticoli Corrado
-28822,Cannobio
-27042,Bressana Bottarone/Robecco Pavese
-62019,Recanati
-89039,Platì
-00023,Arsoli
-28823,Ghiffa
-27043,Broni/San Cipriano Po
-00024,Castel Madama
-28824,Oggebbio
-27044,Canneto Pavese
-00025,Gerano
-28825,Cavaglio-Spoccia
-27045,Casteggio
-28826,Trarego Viggiona
-27046,Santa Giuletta
-00026,Licenza
-00027,Roviano
-28827,Cursolo-Orasso/Falmenta
-27047,Golferenzo/Montecalvo Versiggia/Santa Maria della Versa/Volpara
-00028,Subiaco
-27048,Sommo
-28828,Gurro
-00029,Vicovaro
-27049,Stradella/Zenevredo
-93010,Acquaviva Platani/Bompensiere/Campofranco/Delia/Marianopoli/Milena/Montedoro/Resuttano/Serradifalco/Sutera/Vallelunga Pratameno/Villalba
-93011,Butera
-93012,Gela
-13100,Vercelli
-93013,Mazzarino
-93014,Mussomeli
-93015,Niscemi
-10080,Alpette/Baldissero Canavese/Borgiallo/Bosconero/Brosso/Busano/Canischio/Castelnuovo Nigra/Ceresole Reale/Chiesanuova/Ciconio/Cintano/Colleretto Castelnuovo/Feletto/Frassinetto/Ingria/Issiglio/Locana/Lugnacco/Lusigliè/Meugliano/Noasca/Oglianico/Ozegna/Pecco/Pertusio/Prascorsano/Pratiglione/Ribordone/Rivara/Ronco Canavese/Salassa/San Benigno Canavese/San Colombano Belmonte/San Ponso/Sparone/Trausella/Traversella/Valprato Soana/Vico Canavese/Vidracco/Vistrorio
-93016,Riesi
-93017,San Cataldo
-10081,Castellamonte
-31020,Refrontolo/Revine Lago/San Fior/San Pietro di Feletto/San Polo di Piave/San Vendemiano/San Zenone degli Ezzelini/Sernaglia della Battaglia/Tarzo/Vidor/Villorba
-93018,Santa Caterina Villarmosa
-10082,Cuorgnè
-31021,Mogliano Veneto
-93019,Sommatino
-10083,Favria
-31022,Preganziol
-58042,Campagnatico
-10084,Forno Canavese
-31023,Resana
-58043,Castiglione della Pescaia
-10085,Pont-Canavese
-31024,Ormelle
-58044,Cinigiano
-31025,Santa Lucia di Piave
-10086,Rivarolo Canavese
-58045,Civitella Paganico
-10087,Valperga
-31026,Sarmede
-10088,Volpiano
-31027,Spresiano
-31028,Vazzola
-31029,Vittorio Veneto
-62020,Belforte del Chienti/Caldarola/Camporotondo di Fiastrone/Cessapalombo/Colmurano/Gualdo/Loro Piceno/Monte San Martino/Penna San Giovanni/Ripe San Ginesio/SantAngelo in Pontano/Serrapetrona
-89040,Agnana Calabra/Antonimina/Bivongi/Camini/Canolo/Ciminà/Gerace/Martone/Monasterace/Pazzano/Placanica/Portigliola/Riace/San Giovanni di Gerace/SantIlario dello Ionio/Stignano
-62021,Apiro/Poggio San Vicino
-89041,Caulonia
-62022,Castelraimondo/Gagliole
-89042,Gioiosa Ionica
-89043,Grotteria
-62024,Esanatoglia/Matelica
-89044,Locri
-62025,Fiuminata/Pioraco/Sefro
-89045,Mammola
-62026,San Ginesio
-89046,Marina di Gioiosa Ionica
-62027,San Severino Marche
-89047,Roccella Ionica
-00030,Bellegra/Capranica Prenestina/Castel San Pietro Romano/Colonna/Gavignano/Genazzano/Gorga/Labico/Montelanico/Rocca di Cave/Rocca Santo Stefano/Roiate/San Cesareo/San Vito Romano
-27050,Bagnaria/Bastida de Dossi/Bastida Pancarana/Brallo di Pregola/Casei Gerola/Cecima/Cervesina/Codevilla/Corana/Cornale/Corvino San Quirico/Menconico/Oliva Gessi/Pancarana/Pizzale/Ponte Nizza/Redavalle/Retorbido/Romagnese/Santa Margherita di Staffora/Silvano Pietra/Torrazza Coste/Torricella Verzate/Val di Nizza/Valverde
-89048,Siderno
-62028,Sarnano
-00031,Artena
-28831,Baveno
-27051,Cava Manara
-62029,Tolentino
-89049,Stilo
-00032,Carpineto Romano
-28832,Belgirate
-27052,Godiasco/Montesegale/Rocca Susella
-00033,Cave
-28833,Brovello-Carpugnino
-27053,Lungavilla/Verretto
-981xx,Messina
-00034,Colleferro
-27054,Montebello della Battaglia
-00035,Olevano Romano
-27055,Rivanazzano Terme
-00036,Palestrina
-28836,Gignese
-27057,Varzi
-00037,Segni
-27058,Voghera
-00038,Valmontone
-28838,Stresa
-27059,Zavattarello
-00039,Zagarolo
-75100,Matera
-10090,Bruino/Buttigliera Alta/Castagneto Po/Castiglione Torinese/Cinzano/Cuceglio/Foglizzo/Gassino Torinese/Montalenghe/Reano/Rivalba/Romano Canavese/Rosta/San Giorgio Canavese/San Giusto Canavese/San Raffaele Cimena/Sangano/Sciolze/Trana/Vialfrè/Villarbasse
-31030,Altivole/Arcade/Borso del Grappa/Breda di Piave/Carbonera/Casier/Castelcucco/Castello di Godego/Cison di Valmarino
-10091,Alpignano
-31031,Caerano di San Marco
-58051,Magliano in Toscana
-10092,Beinasco
-31032,Casale sul Sile
-10093,Collegno
-31033,Castelfranco Veneto
-58053,Roccalbegna
-10094,Giaveno/Valgioie
-58054,Scansano
-31034,Cavaso del Tomba
-10095,Grugliasco
-58055,Semproniano
-31035,Crocetta del Montello
-31036,Istrana
-31037,Loria
-10098,Rivoli
-10099,San Mauro Torinese
-31038,Paese
-31039,Riese Pio X
-89050,Calanna/Cosoleto/Feroleto della Chiesa/Fiumara/Laganadi/San Roberto/SantAlessio in Aspromonte
-63811,SantElpidio a Mare
-63812,Montegranaro
-62032,Camerino
-89052,Campo Calabro
-63813,Monte Urano
-63814,Torre San Patrizio
-62034,Muccia
-89054,Galatro
-63815,Monte San Pietrangeli
-62035,Acquacanina/Bolognola/Fiastra/Fiordimonte/Pievebovigliana
-89056,Santa Cristina dAspromonte
-63816,Francavilla dEte
-62036,Monte Cavallo/Pieve Torina
-89057,Santo Stefano in Aspromonte
-00040,Ardea/Ariccia/Castel Gandolfo/Lanuvio/Lariano/Monte Compatri/Monte Porzio Catone/Nemi/Pomezia/Rocca di Papa/Rocca Priora
-62038,Serravalle di Chienti
-89058,Scilla
-00041,Albano Laziale
-28841,Antrona Schieranco/Viganella
-62039,Castelsantangelo sul Nera/Ussita/Visso
-00042,Anzio
-28842,Bognanco
-00043,Ciampino
-28843,Montescheno/Seppiana
-28844,Villadossola
-00044,Frascati
-00045,Genzano di Roma
-28845,Domodossola
-00046,Grottaferrata
-00047,Marino
-00048,Nettuno
-00049,Velletri
-31040,Cessalto/Chiarano/Giavera del Montello/Gorgo al Monticano/Mansuè/Meduna di Livenza/Nervesa della Battaglia/Pederobba/Portobuffolè/Salgareda/Segusino/Trevignano/Volpago del Montello
-31041,Cornuda
-31043,Fontanelle
-31044,Montebelluna
-31045,Motta di Livenza
-31046,Oderzo
-31047,Ponte di Piave
-31048,San Biagio di Callalta
-17010,Giusvalla/Osiglia
-31049,Valdobbiadene
-17011,Albisola Superiore
-401xx,Bologna
-17012,Albissola Marina
-17013,Murialdo
-17014,Cairo Montenotte
-17015,Celle Ligure
-17017,Cosseria/Millesimo/Roccavignale
-17019,Varazze
-89060,Bagaladi/Cardeto/Roccaforte del Greco/Roghudi
-63821,Porto SantElpidio
-63822,Porto San Giorgio
-89063,Melito di Porto Salvo
-63823,Lapedona
-89064,Montebello Ionico
-63824,Altidona
-89065,Motta San Giovanni
-63825,Monterubbiano
-63826,Moresco
-63827,Pedaso
-48010,Bagnara di Romagna/Casola Valsenio/Cotignola/Fusignano
-00051,Allumiere
-28851,Beura-Cardezza
-63828,Campofilone
-89069,San Lorenzo
-48011,Alfonsine
-00052,Cerveteri
-28852,Craveggia
-48012,Bagnacavallo
-00053,Civitavecchia
-28853,Druogno
-48013,Brisighella
-00054,Fiumicino
-28854,Malesco
-48014,Castel Bolognese
-00055,Ladispoli
-28855,Masera
-48015,Cervia
-28856,Re/Villette
-28857,Santa Maria Maggiore
-28858,Toceno
-00058,Santa Marinella
-48017,Conselice
-28859,Trontano
-00059,Tolfa
-48018,Faenza
-31050,Miane/Monastier di Treviso/Morgano/Ponzano Veneto/Povegliano/Vedelago/Zenson di Piave
-31051,Follina
-31052,Maserada sul Piave
-31053,Pieve di Soligo
-31054,Possagno
-31055,Quinto di Treviso
-31056,Roncade
-31057,Silea
-31058,Susegana
-17020,Balestrino/Calice Ligure/Magliolo/Rialto/Stellanello/Testico/Tovo San Giacomo
-31059,Zero Branco
-17021,Alassio
-17022,Borgio Verezzi
-17023,Ceriale
-17024,Finale Ligure/Orco Feglino
-17025,Loano
-17026,Noli
-17027,Giustenice/Pietra Ligure
-17028,Bergeggi/Spotorno/Vezzi Portio
-4412x,Ferrara
-63831,Rapagnano
-63832,Magliano di Tenna
-63833,Montegiorgio
-63834,Massa Fermana
-63835,Montappone
-63836,Monte Vidon Corrado
-00060,Canale Monterano/Capena/Castelnuovo di Porto/Civitella San Paolo/Filacciano/Formello/Magliano Romano/Mazzano Romano/Nazzano/Ponzano Romano/Riano/Sacrofano/SantOreste/Torrita Tiberina
-63837,Falerone
-48020,SantAgata sul Santerno
-00061,Anguillara Sabazia
-28861,Baceno
-63838,Belmonte Piceno
-63839,Servigliano
-00062,Bracciano
-28862,Crodo
-00063,Campagnano di Roma
-28863,Formazza
-48022,Lugo
-28864,Montecrestese
-00065,Fiano Romano
-28865,Crevoladossola
-48024,Massa Lombarda
-00066,Manziana
-28866,Premia
-48025,Riolo Terme
-48026,Russi
-00067,Morlupo
-28868,Trasquera/Varzo
-48027,Solarolo
-00068,Rignano Flaminio
-00069,Trevignano Romano
-17030,Castelbianco/Erli/Nasino
-17031,Albenga
-17032,Arnasco/Vendone
-17033,Casanova Lerrone/Garlenda
-17034,Castelvecchio di Rocca Barbena
-17035,Cisano sul Neva
-17037,Onzo/Ortovero
-17038,Villanova dAlbenga
-17039,Zuccarello
-63841,Monteleone di Fermo
-63842,Monsampietro Morico
-63843,Montottone
-09170,Oristano
-63844,Grottazzolina
-63845,Ponzano di Fermo
-63846,Monte Giberto
-63847,Monte Vidon Combatte
-28871,Bannio Anzino
-21010,Agra/Arsago Seprio/Besnate/Brezzo di Bedero/Cardano al Campo/Castelveccana/Curiglia con Monteviasco/Dumenza/Ferno/Germignaga/Golasecca/Maccagno/Montegrino Valtravaglia/Pino sulla Sponda del Lago Maggiore/Porto Valtravaglia/Tronzano Lago Maggiore/Veddasca/Vizzola Ticino
-63848,Petritoli
-21011,Casorate Sempione
-28873,Calasca-Castiglione
-21012,Cassano Magnago
-21013,Gallarate
-28875,Ceppo Morelli
-21014,Laveno-Mombello
-28876,Macugnaga
-21015,Lonate Pozzolo
-28877,Anzola dOssola/Ornavasso
-21016,Luino
-21017,Samarate
-28879,Vanzone con San Carlo
-21018,Osmate/Sesto Calende
-21019,Somma Lombardo
-52010,Capolona/Chitignano/Chiusi della Verna/Montemignaio/Ortignano Raggiolo/Subbiano/Talla
-52011,Bibbiena
-52014,Poppi
-52015,Pratovecchio
-52016,Castel Focognano
-52017,Stia
-17040,Mioglia
-17041,Altare
-52018,Castel San Niccolò
-17042,Pontinvrea
-17043,Carcare/Pallare/Plodio
-17044,Stella
-17045,Bormida/Mallare
-17046,Sassello
-17047,Quiliano/Vado Ligure
-17048,Urbe
-63851,Ortezzano
-83010,Capriglia Irpina/Chianche/Grottolella/Petruro Irpino/SantAngelo a Scala/Summonte/Torrioni/Tufo
-63852,Monte Rinaldo
-83011,Altavilla Irpina
-63853,Montelparo
-83012,Cervinara
-63854,Santa Vittoria in Matenano
+03010,Frosinone
+03011,Frosinone
+03012,Frosinone
+03013,Frosinone
+03014,Frosinone
+03016,Frosinone
+03017,Frosinone
+03018,Frosinone
+03019,Frosinone
+03020,Frosinone
+03021,Frosinone
+03022,Frosinone
+03023,Frosinone
+03024,Frosinone
+03025,Frosinone
+03026,Frosinone
+03027,Frosinone
+03028,Frosinone
+03029,Frosinone
+03030,Frosinone
+03031,Frosinone
+03032,Frosinone
+03033,Frosinone
+03034,Frosinone
+03035,Frosinone
+03036,Frosinone
+03037,Frosinone
+03038,Frosinone
+03039,Frosinone
+03040,Frosinone
+03041,Frosinone
+03042,Frosinone
+03043,Frosinone
+03044,Frosinone
+03045,Frosinone
+03046,Frosinone
+03047,Frosinone
+03048,Frosinone
+03049,Frosinone
 03100,Frosinone
-83013,Mercogliano
-63855,Montefalcone Appennino
-83014,Ospedaletto dAlpinolo
-63856,Smerillo
-83015,Pietrastornina
-63857,Amandola
-83016,Roccabascerana
-83017,Rotondi
-21020,Barasso/Bardello/Bodio Lomnago/Brebbia/Bregano/Brunello/Buguggiate/Cadrezzate/Casale Litta/Casciago/Cazzago Brabbia/Comabbio/Crosio della Valle/Daverio/Galliate Lombardo/Inarzo/Luvinate/Malgesso/Mercallo/Monvalle/Mornago/Ranco/Taino/Ternate/Varano Borghi
-63858,Montefortino
-28881,Casale Corte Cerro
-83018,San Martino Valle Caudina
-21021,Angera
-21022,Azzate
-28883,Gravellona Toce
-21023,Besozzo
-28884,Pallanzeno
-21024,Biandronno
-28885,Piedimulera
-21025,Comerio
-28886,Pieve Vergonte
-21026,Gavirate
-28887,Germagno/Omegna
-21027,Ispra
-21028,Travedona-Monate
-21029,Vergiate
-571xx,Livorno
-52020,Castelfranco di Sopra/Laterina/Pergine Valdarno
-52021,Bucine
-52022,Cavriglia
-52024,Loro Ciuffenna
-52025,Montevarchi
-52026,Pian di Sco
-52027,San Giovanni Valdarno
-52028,Terranuova Bracciolini
-17051,Andora
-52029,Castiglion Fibocchi
-17052,Borghetto Santo Spirito
-17053,Laigueglia
-17054,Boissano
-17055,Toirano
-17056,Cengio
-17057,Bardineto/Calizzano
-17058,Dego/Piana Crixia
-83020,Aiello del Sabato/Cesinali/Contrada/Domicella/Forino/Marzano di Nola/Moschiano/Pago del Vallo di Lauro/Quadrelle/Quindici/San Michele di Serino/Santa Lucia di Serino/Sirignano/Sperone/Taurano
-83021,Avella
-83022,Baiano
-83023,Lauro
-83024,Monteforte Irpino
-83025,Montoro Inferiore
-83026,Montoro Superiore
-83027,Mugnano del Cardinale
-28891,Cesara/Nonio
-21030,Azzio/Brenta/Brinzio/Brissago-Valtravaglia/Casalzuigno/Cassano Valcuvia/Castello Cabiaglio/Cremenaga/Cugliate-Fabiasco/Cuveglio/Cuvio/Duno/Ferrera di Varese/Grantola/Marchirolo/Marzio/Masciago Primo/Mesenzana/Orino/Rancio Valcuvia
-83028,Serino
-21031,Cadegliano-Viconago
-83029,Solofra
-28893,Loreglia
-21032,Caravate
-28894,Madonna del Sasso
-21033,Cittiglio
-28895,Massiola
-21034,Cocquio-Trevisago
-28896,Quarna Sotto
-21035,Cunardo
-28897,Valstrona
-21036,Gemonio
-28898,Quarna Sopra
-21037,Lavena Ponte Tresa
-28899,Arola
-21038,Leggiuno/Sangiano
-21039,Bedero Valcuvia/Valganna
-96100,Siracusa
-52031,Anghiari
-52032,Badia Tedalda
-52033,Caprese Michelangelo
-52035,Monterchi
-52036,Pieve Santo Stefano
-52037,Sansepolcro
-52038,Sestino
-83030,Greci/Lapio/Manocalzati/Melito Irpino/Montaguto/Montefalcione/Montefredane/Montefusco/Pietradefusi/Prata di Principato Ultra/Santa Paolina/Savignano Irpino/Taurasi/Torre Le Nocelle/Venticano/Villanova del Battista/Zungoli
-83031,Ariano Irpino
-83032,Bonito
-83034,Casalbore
-83035,Grottaminarda
-83036,Mirabella Eclano
-83037,Montecalvo Irpino
-21040,Carnago/Caronno Varesino/Castronno/Cislago/Gerenzano/Gornate-Olona/Jerago con Orago/Lozza/Morazzone/Oggiona con Santo Stefano/Origgio/Sumirago/Uboldo/Vedano Olona/Venegono Inferiore/Venegono Superiore
-83038,Montemiletto
-21041,Albizzate
-83039,Pratola Serra
-21042,Caronno Pertusella
-21043,Castiglione Olona
-21044,Cavaria con Premezzo
-21045,Gazzada Schianno
-21046,Malnate
-21047,Saronno
-21048,Solbiate Arno
-21049,Tradate
-301xx,Venezia
-52041,Civitella in Val di Chiana
-52043,Castiglion Fiorentino
-52044,Cortona
-52045,Foiano della Chiana
-52046,Lucignano
-52047,Marciano della Chiana
-52048,Monte San Savino
-83040,Andretta/Cairano/Calabritto/Candida/Caposele/Carife/Cassano Irpino/Castel Baronia/Castelfranci/Castelvetere sul Calore/Chiusano di San Domenico/Conza della Campania/Flumeri/Fontanarosa/Frigento/Gesualdo/Guardia Lombardi/Luogosano/Montemarano/Morra De Sanctis
-83041,Aquilonia
-83042,Atripalda
-83043,Bagnoli Irpino
-83044,Bisaccia
-83045,Calitri
-83046,Lacedonia
-21050,Besano/Bisuschio/Brusimpiano/Cairate/Cantello/Castelseprio/Clivio/Cuasso al Monte/Gorla Maggiore/Lonate Ceppino/Marnate/Porto Ceresio/Saltrio
-83047,Lioni
-21051,Arcisate
-07010,Anela/Ardara/Benetutti/Bottidda/Bultei/Burgos/Cossoine/Esporlatu/Giave/Illorai/Ittireddu/Mara/Monteleone Rocca Doria/Nughedu San Nicolò/Nule/Romana/Semestene/Tula
-83048,Montella
-21052,Busto Arsizio
-07011,Bono
-83049,Monteverde
-21053,Castellanza
-07012,Bonorva
-21054,Fagnano Olona
-07013,Mores
-21055,Gorla Minore
-07014,Ozieri
-21056,Induno Olona
-07015,Padria
-21057,Olgiate Olona
-07016,Pattada
-21058,Solbiate Olona
-07017,Ploaghe
-21059,Viggiù
-07018,Pozzomaggiore
-07019,Villanova Monteleone
-38010,Andalo/Campodenno/Cavedago/Coredo/Cunevo/Dambel/Denno/Faedo/Fai della Paganella/Flavon/Nanno/Nave San Rocco/Romeno/Ronzone/Ruffrè-Mendola/San Michele allAdige/Sanzeno/Sfruz/Smarano/Spormaggiore/Sporminore/Tassullo/Terres/Ton/Tres/Vervò/Zambana
-38011,Amblar/Cavareno/Don/Sarnonico
-38012,Taio
-38013,Fondo/Malosco
-38015,Lavis
-38016,Mezzocorona
-38017,Mezzolombardo
-38018,Molveno
-38019,Tuenno
-6512x,Pescara
-83050,Parolise/Rocca San Felice/Salza Irpina/San Mango sul Calore/San Nicola Baronia/San Potito Ultra/San Sossio Baronia/SantAngelo allEsca/Santo Stefano del Sole/Scampitella/Senerchia/Sorbo Serpico/Vallesaccarda/Villamaina/Volturara Irpina
-83051,Nusco
-83052,Paternopoli
-83053,SantAndrea di Conza
-83054,SantAngelo dei Lombardi
-83055,Sturno
-83056,Teora
-83057,Torella dei Lombardi
-83058,Trevico
-07020,Aggius/Aglientu/Alà dei Sardi/Buddusò/Golfo Aranci/Loiri Porto San Paolo/Luogosanto/Monti/Padru/Palau/Telti
-83059,Vallata
-07021,Arzachena
-07022,Berchidda
-07023,Calangianus
-07024,La Maddalena
-07025,Luras
-07026,Olbia
-07027,Oschiri
-07028,Santa Teresa Gallura
-07029,Tempio Pausania
-38020,Bresimo/Castelfondo/Cis/Cloz/Commezzadura/Livo/Mezzana/Monclassico/Pellizzano/Rabbi/Rumo
-38021,Brez
-38022,Caldes/Cavizzana
-38023,Cles
-38024,Peio
-38025,Dimaro
-38026,Ossana
-38027,Croviana/Malè/Terzolas
-38028,Cagnò/Revò/Romallo
-38029,Vermiglio
-07030,Badesi/Bortigiadas/Bulzi/Cargeghe/Chiaramonti/Erula/Florinas/Laerru/Martis/Muros/Santa Maria Coghinas/SantAntonio di Gallura/Tergu/Viddalba
-07031,Castelsardo
-07032,Nulvi
-07033,Osilo
-07034,Perfugas
-07035,Sedini
-07036,Sennori
-07037,Sorso
-07038,Trinità dAgultu e Vignola
-07039,Valledoria
-38030,Capriana/Castello-Molina di Fiemme/Daiano/Faver/Giovo/Grauno/Grumes/Lisignago/Mazzin/Panchià/Roverè della Luna/Soraga/Valda/Varena/Ziano di Fiemme
-11010,Allein/Avise/Aymavilles/Bionaz/Doues/Gignod/Introd/Ollomont/Oyace/Prè-Saint-Didier/Rhemes-Notre-Dame/Rhemes-Saint-Georges/Roisan/Saint-Nicolas/Saint-Pierre/Saint-Rhémy-en-Bosses/Sarre/Valgrisenche/Valpelline/Valsavarenche
-38031,Campitello di Fassa
-11011,Arvier
-38032,Canazei
-11012,Cogne
-38033,Carano/Cavalese
-11013,Courmayeur
-38034,Cembra
-11014,Etroubles/Saint-Oyen
-38035,Moena
-11015,La Salle
-38036,Pozza di Fassa
-11016,La Thuile
-38037,Predazzo
-11017,Morgex
-11018,Villeneuve
-38038,Tesero
-38039,Vigo di Fassa
-42010,Rio Saliceto/Toano
-42011,Bagnolo in Piano
-42012,Campagnola Emilia
-42013,Casalgrande
-42014,Castellarano
-42015,Correggio
-42016,Guastalla
-07040,Banari/Bessude/Borutta/Cheremule/Codrongianos/Olmedo/Putifigari/Siligo/Stintino/Tissi/Uri
-42017,Novellara
-42018,San Martino in Rio
-07041,Alghero
-42019,Scandiano
-07043,Bonnanaro
-07044,Ittiri
-07045,Ossi
-07046,Porto Torres
-07047,Thiesi
-07048,Torralba
-07049,Usini
-161xx,Genova
-73010,Arnesano/Caprarica di Lecce/Guagnano/Lequile/Porto Cesareo/San Donato di Lecce/San Pietro in Lama/Sogliano Cavour/Soleto/Sternatia/Surbo/Veglie/Zollino
-73011,Alezio
-73012,Campi Salentina
-73013,Galatina
-73014,Gallipoli
-73015,Salice Salentino
-73016,San Cesario di Lecce
-73017,Sannicola
-11020,Antey-Saint-Andrè/Arnad/Ayas/Bard/Brissogne/Challand-Saint-Anselme/Challand-Saint-Victor/Chamois/Champdepraz/Champorcher/Charvensod/Donnas/Emarèse/Fénis/Fontainemore/Gaby/Gressan/Gressoney-la-Trinitè/Hone/Issime/Issogne/Jovencan/La Magdeleine/Lillianes/Montjovet/Nus/Perloz/Pollein/Pontboset/Quart/Saint-Christophe/Saint-Marcel/Torgnon/Verrayes
-38040,Centa San Nicolò/Fornace/Lona-Lases/Luserna/Valfloriana
-73018,Squinzano
-38041,Albiano
-73019,Trepuzzi
-11022,Brusson
-38042,Baselga di Pinè
-11023,Chambave/Saint-Denis
-38043,Bedollo
-11024,Chatillon/Pontey
-11025,Gressoney-Saint-Jean
-38045,Civezzano
-11026,Pont-Saint-Martin
-38046,Lavarone
-38047,Segonzano
-11027,Saint-Vincent
-11028,Valtournenche
-38048,Sover
-11029,Verrès
-38049,Bosentino/Vattaro/Vigolo Vattaro
-42020,Albinea/Quattro Castella/San Polo dEnza/Vetto
-42021,Bibbiano
-42022,Boretto
-42023,Cadelbosco di Sopra
-42024,Castelnovo di Sotto
-42025,Cavriago
-42026,Canossa
-42027,Montecchio Emilia
-42028,Poviglio
-55100,Lucca
-73020,Bagnolo del Salento/Botrugno/Cannole/Carpignano Salentino/Castri di Lecce/Castrignano de Greci/Cavallino/Cursi/Cutrofiano/Giurdignano/Martignano/Melpignano/Nociglia/Palmariggi/San Cassiano/Santa Cesarea Terme/Scorrano/Uggiano La Chiesa
-73021,Calimera
-34170,Gorizia
-73022,Corigliano dOtranto
-73023,Lizzanello
-73024,Maglie
-73025,Martano
-73026,Melendugno
-38050,Bieno/Calceranica al Lago/Canal San Bovo/Carzano/Castelnuovo/Cinte Tesino/Fierozzo/Frassilongo/Imer/Mezzano/Novaledo/Ospedaletto/Palù del Fersina/Pieve Tesino/Roncegno Terme/Ronchi Valsugana/Sagron Mis/SantOrsola Terme/Scurelle/Telve/Telve di Sopra/Tenna/Torcegno
-73027,Minervino di Lecce
-38051,Borgo Valsugana
-73028,Otranto
-73029,Vernole
-38052,Caldonazzo
-38053,Castello Tesino
-38054,Fiera di Primiero/Siror/Tonadico/Transacqua
-38055,Grigno
-38056,Levico Terme
-38057,Pergine Valsugana/Vignola-Falesina
-38059,Ivano-Fracena/Samone/Spera/Strigno/Villa Agnedo
-201xx,Milano
-86100,Campobasso
-42030,Ramiseto/Vezzano sul Crostolo/Viano/Villa Minozzo
-42031,Baiso
-42032,Busana
-42033,Carpineti
-42034,Casina
-42035,Castelnovo ne Monti
-42037,Collagna
-42039,Ligonchio
-73030,Castro/Diso/Giuggianello/Montesano Salentino/Ortelle/Sanarica/Surano/Tiggiano
-73031,Alessano
-73032,Andrano
-73033,Corsano
-73034,Gagliano del Capo
-73035,Miggiano
-73036,Muro Leccese
-38060,Aldeno/Besenello/Brentonico/Calliano/Cimone/Garniga Terme/Isera/Nogaredo/Nomi/Pomarolo/Ronzo-Chienis/Tenno/Terragnolo/Vallarsa/Villa Lagarina/Volano
-73037,Poggiardo
-73038,Spongano
-38061,Ala
-73039,Tricase
-38062,Arco
-38063,Avio
-38064,Folgaria
-38065,Mori
-38066,Riva del Garda
-38067,Ledro
-38068,Rovereto/Trambileno
-38069,Nago-Torbole
-42040,Campegine
-42041,Brescello
-42042,Fabbrico
-42043,Gattatico
-42044,Gualtieri
-42045,Luzzara
-42046,Reggiolo
-42047,Rolo
-42048,Rubiera
-28010,Agrate Conturbia/Ameno/Barengo/Boca/Bogogno/Bolzano Novarese/Briga Novarese/Caltignaga/Cavaglietto/Cavaglio dAgogna/Cavallirio/Colazza/Divignano/Fontaneto dAgogna/Gargallo/Miasino/Nebbiuno/Pella/Pisano/Soriso/Vaprio dAgogna/Veruno
-42049,SantIlario dEnza
-28011,Armeno
-28012,Cressa
-28013,Gattico
-28014,Maggiora
-28015,Momo
-28016,Orta San Giulio
-28017,San Maurizio dOpaglio
-28019,Suno
-73040,Acquarica del Capo/Alliste/Aradeo/Castrignano del Capo/Collepasso/Melissano/Morciano di Leuca/Neviano/Specchia/Supersano
-73041,Carmiano
-73042,Casarano
-73043,Copertino
-73044,Galatone
-73045,Leverano
-73046,Matino
-38070,Dorsino/Montagne/Padergnone/Preore/Ragoli/Stenico/Terlago/Vezzano
-73047,Monteroni di Lecce
-38071,Bleggio Superiore
-73048,Nardò
-73049,Ruffano
-38072,Calavino
-38073,Cavedine
-38074,Drena/Dro
-59013,Montemurlo
-38075,Fiavè
-38076,Lasino
-59015,Carmignano
-38077,Comano Terme
-59016,Poggio a Caiano
-38078,San Lorenzo in Banale
-38079,Bolbeno/Pelugo/Tione di Trento/Zuclo
-28021,Borgomanero
-28024,Gozzano
-28028,Pettenasco
-73050,Salve/Seclì
-73051,Novoli
-73052,Parabita
-73053,Patù
-73054,Presicce
-73055,Racale
-73056,Taurisano
-73057,Taviano
-38080,Bocenago/Bondone/Caderzone Terme/Carisolo/Daone/Darè/Praso/Strembo/Vigo Rendena/Villa Rendena
-73058,Tuglie
-38081,Bondo/Breguzzo
-59021,Vaiano
-73059,Ugento
-38082,Castel Condino/Cimego
-38083,Brione/Condino
-59024,Vernio
-38085,Bersone/Pieve di Bono/Prezzo
-59025,Cantagallo
-38086,Giustino/Massimeno/Pinzolo
-38087,Lardaro/Roncone
-38088,Spiazzo
-38089,Storo
-01010,Arlena di Castro/Barbarano Romano/Blera/Capodimonte/Cellere/Farnese/Gradoli/Ischia di Castro/Latera/Marta/Monte Romano/Onano/Oriolo Romano/Piansano/Tessennano/Vejano/Villa San Giovanni in Tuscia
-01011,Canino
-01012,Capranica
-01014,Montalto di Castro
-01015,Sutri
-01016,Tarquinia
-01017,Tuscania
-01018,Valentano
-01019,Vetralla
-32010,Castellavazzo/Chies dAlpago/Ospitale di Cadore/Perarolo di Cadore/Pieve dAlpago/Soverzene/Tambre/Zoldo Alto/Zoppè di Cadore
-32012,Forno di Zoldo
-32013,Longarone
-32014,Ponte nelle Alpi
-32015,Puos dAlpago
-32016,Farra dAlpago
-061xx,Perugia
-01020,Bomarzo/Celleno/Civitella dAgliano/Graffignano/Lubriano/Proceno/San Lorenzo Nuovo
-28040,Borgo Ticino/Dormelletto/Lesa/Marano Ticino/Massino Visconti/Mezzomerico/Oleggio Castello/Paruzzaro/Varallo Pombia
-01021,Acquapendente
-28041,Arona
-01022,Bagnoregio
-01023,Bolsena
-28043,Bellinzago Novarese
-01024,Castiglione in Teverina
-01025,Grotte di Castro
-28045,Invorio
-28046,Meina
-01027,Montefiascone
-28047,Oleggio
-01028,Orte
-371xx,Verona
-94010,Aidone/Assoro/Calascibetta/Catenanuova/Centuripe/Cerami/Gagliano Castelferrato/Nissoria/Sperlinga/Villarosa
-94011,Agira
-94012,Barrafranca
-14100,Asti
-94013,Leonforte
-94014,Nicosia
-94015,Piazza Armerina
-94016,Pietraperzia
-32020,Canale dAgordo/Cencenighe Agordino/Colle Santa Lucia/Falcade/Gosaldo/La Valle Agordina/Lentiai/Limana/Livinallongo del Col di Lana/Rivamonte Agordino/Rocca Pietore/San Tomaso Agordino/Selva di Cadore/Vallada Agordina/Voltago Agordino
-94017,Regalbuto
-94018,Troina
-32021,Agordo
-94019,Valguarnera Caropepe
-32022,Alleghe
-32026,Mel
-32027,Taibon Agordino
-32028,Trichiana
-45100,Rovigo
-28050,Pombia
-01030,Bassano in Teverina/Bassano Romano/Calcata/Canepina/Carbognano/Castel SantElia/Corchiano/Faleria/Monterosi/Vallerano/Vasanello/Vitorchiano
-01032,Caprarola
-28053,Castelletto Sopra Ticino
-01033,Civita Castellana
-01034,Fabrica di Roma
-01035,Gallese
-01036,Nepi
-01037,Ronciglione
-01038,Soriano nel Cimino
-01039,Vignanello
-32030,Arsiè/Cesiomaggiore/Fonzaso/Quero/San Gregorio nelle Alpi/Seren del Grappa/Sovramonte/Vas
-32031,Alano di Piave
-32032,Feltre
-32033,Lamon
-32034,Pedavena
-32035,Santa Giustina
-32036,Sedico
-32037,Sospirolo
-28060,Casalbeltrame/Casaleggio Novara/Casalino/Casalvolone/Castellazzo Novarese/Comignago/Cureggio/Granozzo con Monticello/Mandello Vitta/Recetto/San Nazzaro Sesia/San Pietro Mosezzo/Sozzago/Vicolungo/Vinzaglio
-28061,Biandrate
-28062,Cameri
-28064,Carpignano Sesia/Landiona/Sillavengo
-28065,Cerano
-28066,Galliate
-28068,Romentino
-28069,Trecate
-101xx,Torino
-32040,Borca di Cadore/Cibiana di Cadore/Comelico Superiore/Danta di Cadore/Domegge di Cadore/Lorenzago di Cadore/Lozzo di Cadore/San Nicolò di Comelico/San Pietro di Cadore/Valle di Cadore/Vigo di Cadore/Vodo Cadore
-32041,Auronzo di Cadore
-32042,Calalzo di Cadore
-32043,Cortina dAmpezzo
-32044,Pieve di Cadore
-32045,Santo Stefano di Cadore
-32046,San Vito di Cadore
-32047,Sappada
-18010,Badalucco/Carpasio/Cervo/Molini di Triora/Montalto Ligure/Pietrabruna/Santo Stefano al Mare/Terzorio/Triora/Villa Faraldi
-18011,Castellaro
-18012,Bordighera/Seborga/Vallebona
-18013,Diano Arentino/Diano Castello/Diano Marina/Diano San Pietro
-18014,Ospedaletti
-18015,Pompeiana/Riva Ligure
-18016,San Bartolomeo al Mare
-18017,Cipressa/Civezza/Costarainera/San Lorenzo al Mare
-18018,Taggia
-18019,Vallecrosia
-86170,Isernia
-28070,Garbagna Novarese/Nibbiola/Sizzano/Terdobbiate/Tornaco
-28071,Borgolavezzaro
-28072,Briona
-28073,Fara Novarese
-28074,Ghemme
-28075,Grignasco
-28076,Pogno
-28077,Prato Sesia
-28078,Romagnano Sesia
-28079,Vespolate
-76121,Barletta
-76123,Andria
-76125,Trani
-18020,Aquila dArroscia/Aurigo/Borghetto dArroscia/Caravonica/Dolcedo/Lucinasco/Prelà/Ranzo/Vasia
-18021,Borgomaro
-18022,Cesio
-18023,Cosio dArroscia
-18024,Pornassio
-18025,Briga Alta/Mendatica/Montegrosso Pian Latte
-18026,Armo/Pieve di Teco/Rezzo/Vessalico
-18027,Chiusanico/Chiusavecchia/Pontedassio
-18030,Airole/Castel Vittorio/Olivetta San Michele/Rocchetta Nervina
-18031,Bajardo
-18032,Perinaldo
-18033,Camporosso
-18034,Ceriana
-18035,Apricale/Dolceacqua/Isolabona
-18036,San Biagio della Cima/Soldano
-18037,Pigna
-18038,Sanremo
-18039,Ventimiglia
-63061,Massignano
-63062,Montefiore dellAso
-63063,Carassai
-63064,Cupra Marittima
-63065,Ripatransone
-63066,Grottammare
-63067,Cossignano
-22010,Argegno/Bene Lario/Brienno/Carate Urio/Carlazzo/Cavargna/Claino con Osteno/Colonno/Corrido/Cremia/Cusino/Dosso del Liro/Garzeno/Gera Lario/Grandola ed Uniti/Laglio/Livo/Mezzegra/Moltrasio/Montemezzo/Musso/Ossuccio/Peglio/Pianello del Lario/Plesio/Sala Comacina/San Bartolomeo Val Cavargna/San Nazzaro Val Cavargna/San Siro/Sorico/Stazzona/Trezzone/Val Rezzo/Valsolda
-63068,Montalto delle Marche
-22011,Griante
-63069,Montedinove
-22012,Cernobbio
-22013,Domaso/Vercana
-22014,Dongo
-22015,Gravedona ed Uniti
-22016,Lenno
-22017,Menaggio
-22018,Porlezza
-22019,Tremezzo
-53011,Castellina in Chianti
-53012,Chiusdino
-53013,Gaiole in Chianti
-53014,Monteroni dArbia
-53015,Monticiano
-53016,Murlo
-53017,Radda in Chianti
-53018,Sovicille
-53019,Castelnuovo Berardenga
-63071,Rotella
-84010,Atrani/Cetara/Conca dei Marini/Corbara/Furore/Maiori/Minori/Praiano/Ravello/San Marzano sul Sarno/San Valentino Torio/SantEgidio del Monte Albino/Scala/Tramonti
-63072,Castignano
-84011,Amalfi
-63073,Offida
-84012,Angri
-63074,San Benedetto del Tronto
+04010,Latina
+04011,Latina
+04012,Latina
+04013,Latina
+04014,Latina
+04015,Latina
+04016,Latina
+04017,Latina
+04018,Latina
+04019,Latina
+04020,Latina
+04021,Latina
+04022,Latina
+04023,Latina
+04024,Latina
+04025,Latina
+04026,Latina
+04027,Latina
+04029,Latina
+04031,Latina
 04100,Latina
-84013,Cava de Tirreni
-63075,Acquaviva Picena
-84014,Nocera Inferiore
-63076,Monteprandone
-84015,Nocera Superiore
-63077,Monsampolo del Tronto
-84016,Pagani
-63078,Spinetoli
-22020,Bizzarone/Blevio/Cavallasca/Cerano dIntelvi/Dizzasco/Drezzo/Faggeto Lario/Faloppio/Gironico/Laino/Nesso/Parè/Pellio Intelvi/Pigra/Pognana Lario/Ponna/Ramponio Verna/San Fermo della Battaglia/Schignano/Torno/Veleso/Zelbio
-84017,Positano
-84018,Scafati
-22021,Bellagio
-63079,Colli del Tronto
-23801,Calolziocorte
-84019,Vietri sul Mare
-22022,Casasco dIntelvi
-23802,Carenno
-22023,Castiglione dIntelvi
-22024,Lanzo dIntelvi
-23804,Monte Marenzo
-22025,Lezzeno
-23805,Erve
-23806,Torre de Busi
-22026,Maslianico
-22027,Ronago
-23807,Merate
-23808,Vercurago
-22028,Blessagno/San Fedele Intelvi
-22029,Uggiate-Trevano
-53020,San Giovanni dAsso/Trequanda
-53022,Buonconvento
-53023,Castiglione dOrcia
-53024,Montalcino
-53025,Piancastagnaio
-53026,Pienza
-53027,San Quirico dOrcia
-891xx,Reggio Calabria
-66100,Chieti
-63081,Castorano
-84020,Aquara/Bellosguardo/Castelcivita/Castelnuovo di Conza/Colliano/Controne/Corleto Monforte/Laviano/Oliveto Citra/Ottati/Palomonte/Petina/Ricigliano/Romagnano al Monte/Roscigno/Salvitelle/San Gregorio Magno/Santomenna/Valva
-63082,Castel di Lama
-84021,Buccino
-63083,Appignano del Tronto
-84022,Campagna
-63084,Folignano
-63085,Maltignano
-84024,Contursi Terme
-63086,Force
-84025,Eboli
-84026,Postiglione
-63087,Comunanza
-84027,SantAngelo a Fasanella
-22030,Barni/Caglio/Caslino dErba/Castelmarte/Civenna/Eupilio/Lasnigo/Lipomo/Longone al Segrino/Magreglio/Montorfano/Orsenigo/Proserpio/Pusiano/Rezzago/Sormano
-63088,Montemonaco
-84028,Serre
-23811,Ballabio/Morterone
-22031,Albavilla
-84029,Sicignano degli Alburni
-22032,Albese con Cassano
-23813,Cortenova
-22033,Asso
-23814,Cremeno
-22034,Brunate
-23815,Introbio
-22035,Canzo
-23816,Barzio
-22036,Erba
-23817,Cassina Valsassina/Moggio
-22037,Ponte Lambro
-22038,Tavernerio
-23818,Pasturo
-22039,Valbrona
-23819,Primaluna
-97100,Ragusa
-53030,Radicondoli
-53031,Casole dElsa
-53034,Colle di Val dElsa
-53035,Monteriggioni
-53036,Poggibonsi
-53037,San Gimignano
-001xx,Roma
-63091,Venarotta
-84030,Atena Lucana/Caggiano/Casalbuono/Casaletto Spartano/Caselle in Pittari/Monte San Giacomo/Morigerati/Pertosa/San Pietro al Tanagro/San Rufo/Sanza/Torraca/Tortorella
-84031,Auletta
-63092,Palmiano
-84032,Buonabitacolo
-63093,Roccafluvione
-84033,Montesano sulla Marcellana
-63094,Montegallo
-84034,Padula
-63095,Acquasanta Terme
-84035,Polla
-63096,Arquata del Tronto
-84036,Sala Consilina
-84037,SantArsenio
-22040,Alserio/Alzate Brianza/Anzano del Parco/Brenna/Lurago dErba/Monguzzo
-84038,Sassano
-84039,Teggiano
-23822,Bellano/Vestreno
-23823,Colico
-23824,Dervio/Dorio
-22044,Inverigo
-23825,Esino Lario
-22045,Lambrugo
-23826,Mandello del Lario
-22046,Merone
-23827,Lierna
-23828,Perledo
-08010,Birori/Dualchi/Flussio/Lei/Magomadas/Montresta/Noragugume/Sagama/Suni/Tinnura
-23829,Varenna
-08011,Bolotana
-08012,Bortigali
-08013,Bosa
-08015,Macomer
-08016,Borore
-08017,Silanus
-08018,Sindia
-08019,Modolo
-53040,Cetona/Radicofani/Rapolano Terme/San Casciano dei Bagni
-53041,Asciano
-53042,Chianciano Terme
-53043,Chiusi
-53045,Montepulciano
-53047,Sarteano
-53048,Sinalunga
-53049,Torrita di Siena
-84040,Alfano/Camerota/Campora/Cannalonga/Casal Velino/Castelnuovo Cilento/Celle di Bulgheria
-84042,Acerno
-84043,Agropoli
-84044,Albanella
-84045,Altavilla Silentina
-84046,Ascea
-84047,Capaccio
-23831,Casargo
-84048,Castellabate
-23832,Crandola Valsassina/Margno
-84049,Castel San Lorenzo
-23833,Pagnona
-23834,Premana
-23835,Introzzo/Sueglio
-23836,Tremenico
-23837,Parlasco/Taceno
-23838,Vendrogno
-08020,Budoni/Galtellì/Gavoi/Irgoli/Loculi/Lodè/Lodine/Lula/Ollolai/Olzai/Onanì/Onifai/Oniferi/Orotelli/Orune/Osidda/Ottana/Ovodda/Posada/San Teodoro/Sarule/Tiana/Torpè
-08021,Bitti
-08022,Dorgali
-08023,Fonni
-08024,Mamoiada
-08025,Oliena
-08026,Orani
-08027,Orgosolo
-08028,Orosei
-08029,Siniscola
-39010,Andriano/Avelengo/Caines/Cermes/Gargazzone/Meltina/Nalles/Rifiano/San Martino in Passiria/San Pancrazio/Senale-San Felice/Tesimo/Verano
-39011,Lana
-39012,Merano
-39013,Moso in Passiria
-39014,Postal
-39015,San Leonardo in Passiria
-39016,Ultimo
-39017,Scena
-39018,Terlano
-39019,Tirolo
-84050,Cuccaro Vetere/Futani/Giungano/Ispani/Laureana Cilento/Laurito/Lustra/Magliano Vetere
-84051,Centola
-84052,Ceraso
-84053,Cicerale
-84055,Felitto
-84056,Gioi
-22060,Arosio/Cabiate/Campione dItalia/Carimate/Carugo/Cucciago/Figino Serenza/Novedrate
-84057,Laurino
-23841,Annone di Brianza
-23842,Bosisio Parini
-22063,Cantù
-23843,Dolzago
-23844,Sirone
-23845,Costa Masnaga
-22066,Mariano Comense
-23846,Garbagnate Monastero
-23847,Molteno
-08030,Atzara/Austis/Belvì/Escolca/Esterzili/Gadoni/Genoni/Gergei/Meana Sardo/Nuragus/Nurallao/Orroli/Sadali/Serri/Seulo/Teti/Villanova Tulo
-23848,Ello/Oggiono
-22069,Rovellasca
-23849,Rogeno
-08031,Aritzo
-08032,Desulo
-08033,Isili
-08034,Laconi
-08035,Nurri
-08036,Ortueri
-08037,Seui
-08038,Sorgono
-08039,Tonara
-39020,Castelbello-Ciardes/Glorenza/Marlengo/Martello/Parcines/Senales/Sluderno/Tubre
-39021,Laces
-39022,Lagundo
-39023,Lasa
-39024,Malles Venosta
-39025,Naturno/Plaus
-39026,Prato allo Stelvio
-39027,Curon Venosta
-12010,Aisone/Argentera/Bernezzo/Cervasca/Entracque/Gaiola/Moiola/Pietraporzio/Rittana/Roaschia/Roccasparvera/Sambuco/Valdieri/Valloriate/Vignolo/Vinadio
-39028,Silandro
-12011,Borgo San Dalmazzo
-39029,Stelvio
-12012,Boves
-12013,Chiusa di Pesio
-12014,Demonte
-12015,Limone Piemonte
-12016,Peveragno
-12017,Robilante
-12018,Roccavione
-12019,Vernante
-84060,Moio della Civitella/Montano Antilia/Montecorice/Monteforte Cilento/Novi Velia/Omignano/Orria/Perdifumo/Perito/Prignano Cilento/Roccagloriosa
-84061,Ogliastro Cilento
-84062,Olevano sul Tusciano
-84065,Piaggine
-84066,Pisciotta
-22070,Albiolo/Appiano Gentile/Beregazzo con Figliaro/Binago/Bregnano/Bulgarograsso/Cagno/Capiago Intimiano/Carbonate/Casnate con Bernate/Cassina Rizzardi/Castelnuovo Bozzente/Cirimido/Fenegrò/Grandate/Guanzate/Limido Comasco/Locate Varesino/Luisago/Lurago Marinone/Montano Lucino/Oltrona di San Mamette/Rodero/Rovello Porro/Senna Comasco/Solbiate/Valmorea/Veniano/Vertemate con Minoprio
-43010,Fontevivo/Monchio delle Corti/Polesine Parmense/Roccabianca/Trecasali/Zibello
-84068,Pollica
-23851,Galbiate
-22071,Cadorago
-43011,Busseto
-84069,Roccadaspide
-23852,Garlate
-22072,Cermenate
-43012,Fontanellato
-22073,Fino Mornasco
-43013,Langhirano
-23854,Olginate
-22074,Lomazzo
-43014,Medesano
-23855,Pescate
-22075,Lurate Caccivio
-43015,Noceto
-22076,Mozzate
-23857,Valgreghentino
-22077,Olgiate Comasco
-22078,Turate
-43017,San Secondo Parmense
-08040,Arzana/Baunei/Cardedu/Elini/Gairo/Girasole/Ilbono/Loceri/Lotzorai/Osini/Talana/Triei/Ulassai/Urzulei/Ussassai
-22079,Villa Guardia
-43018,Sissa
-43019,Soragna
-08042,Bari Sardo
-08043,Escalaplano
-08044,Jerzu
-08045,Lanusei
-08046,Perdasdefogu
-08047,Tertenia
-08048,Tortolì
-08049,Villagrande Strisaili
-74010,Statte
-39030,Braies/Chienes/Falzes/Gais/La Valle/Marebbe/Perca/Predoi/Rasun Anterselva/San Lorenzo di Sebato/San Martino in Badia/Selva dei Molini/Sesto/Terento/Valdaora/Valle Aurina/Valle di Casies/Vandoies
-39031,Brunico
-74011,Castellaneta
-39032,Campo Tures
-74012,Crispiano
-39033,Corvara in Badia
-74013,Ginosa
-39034,Dobbiaco
-74014,Laterza
-39035,Monguelfo-Tesido
-74015,Martina Franca
-39036,Badia
-74016,Massafra
-39037,Rio di Pusteria/Rodengo
-74017,Mottola
-12020,Bellino/Brossasco/Canosio/Cartignano/Casteldelfino/Castelmagno/Celle di Macra/Elva/Frassino/Isasca/Macra/Marmora/Melle/Monterosso Grana/Pontechianale/Roccabruna/Rossana/Sampeyre/Stroppo/Tarantasca/Valgrana/Valmala/Venasca/Villafalletto/Villar San Costanzo/Vottignasco
-39038,San Candido
-74018,Palagianello
-39039,Villabassa
-74019,Palagiano
-12022,Busca
-12023,Caraglio
-12024,Costigliole Saluzzo
-12025,Dronero/Montemale di Cuneo
-12026,Piasco
-12027,Pradleves
-12028,Prazzo
-12029,San Damiano Macra
-84070,Rofrano/Rutino/Sacco/Salento/San Giovanni a Piro/San Mauro Cilento/San Mauro La Bruca/Santa Marina/Serramezzana/Stella Cilento/Trentinara/Valle dellAngelo
-84073,Sapri
-84074,Sessa Cilento
-84075,Stio
-84076,Torchiara
-84077,Torre Orsaia
-84078,Vallo della Lucania
-23861,Cesana Brianza
-84079,Vibonati
-23862,Civate
-43021,Corniglio
-43022,Montechiarugolo
-23864,Malgrate
-23865,Oliveto Lario
-43024,Neviano degli Arduini
-43025,Palanzano
-23867,Suello
-23868,Valmadrera
-43028,Tizzano Val Parma
-43029,Traversetolo
-39040,Aldino/Anterivo/Barbiano/Campo di Trens/Castelrotto/Cortaccia sulla Strada del Vino/Cortina sulla Strada del Vino/Funes/Laion/Lauregno/Luson/Magrè sulla Strada del Vino/Montagna/Naz-Sciaves/Ora/Ponte Gardena/Proves/Racines/Salorno/Termeno sulla Strada del Vino/Trodena nel parco naturale/Varna/Velturno/Villandro
-74020,Avetrana/Faggiano/Leporano/Lizzano/Maruggio/Monteiasi/Montemesola/Monteparano/Roccaforzata/San Marzano di San Giuseppe/Torricella
-39041,Brennero
-74021,Carosino
-39042,Bressanone
-74022,Fragagnano
-39043,Chiusa
-74023,Grottaglie
-39044,Egna
-74024,Manduria
-39045,Fortezza
-39046,Ortisei
-74026,Pulsano
-39047,Santa Cristina Valgardena
-74027,San Giorgio Ionico
-12030,Brondello/Caramagna Piemonte/Cardè/Casalgrasso/Castellar/Cavallerleone/Cavallermaggiore/Crissolo/Envie/Faule/Gambasca/Lagnasco/Manta/Marene/Martiniana Po/Monasterolo di Savigliano/Murello/Oncino/Ostana/Pagno/Polonghera/Rifreddo/Ruffia/Sanfront/Scarnafigi/Torre San Giorgio/Villanova Solaro
-39048,Selva di Val Gardena
-74028,Sava
-13811,Andorno Micca/Tavigliano
-12031,Bagnolo Piemonte
-39049,Val di Vizze/Vipiteno
-13812,Campiglia Cervo/Piedicavallo/Quittengo/San Paolo Cervo
-12032,Barge
-12033,Moretta
-13814,Pollone
-12034,Paesana
-13815,Rosazza
-12035,Racconigi
-13816,Miagliano/Sagliano Micca
-12036,Revello
-13817,Sordevolo
-12037,Saluzzo
-13818,Tollegno
-12038,Savigliano
-12039,Verzuolo
-84080,Calvanico/Pellezzano
-84081,Baronissi
-84082,Bracigliano
-84083,Castel San Giorgio
-84084,Fisciano
-84085,Mercato San Severino
-84086,Roccapiemonte
-84087,Sarno
-23870,Cernusco Lombardone
-84088,Siano
-23871,Lomagna
-43030,Bore/Calestano
-23873,Missaglia
-43032,Bardi
-23874,Montevecchia
-23875,Osnago
-23876,Monticello Brianza
-43035,Felino
-23877,Paderno dAdda
-43036,Fidenza
-23878,Verderio Superiore
-43037,Lesignano de Bagni
-23879,Verderio Inferiore
-43038,Sala Baganza
-43039,Salsomaggiore Terme
-39050,Fiè allo Sciliar/Nova Ponente/San Genesio Atesino/Tires
-39051,Bronzolo/Vadena
-39052,Caldaro sulla Strada del Vino
-39053,Cornedo allIsarco
-39054,Renon
-39055,Laives
-39056,Nova Levante
-12040,Baldissero dAlba/Castelletto Stura/Ceresole Alba/Cervere/Corneliano dAlba/Genola/Govone/Margarita/Montaldo Roero/Montanera/Monteu Roero/Morozzo/Piobesi dAlba/Priocca/Salmour/Sanfrè/SantAlbano Stura/Santo Stefano Roero/Sommariva Perno/Vezza dAlba
-39057,Appiano sulla Strada del Vino
-39058,Sarentino
-12041,Bene Vagienna
-13821,Callabiana/Camandona
-12042,Bra
-13822,Mosso
-13823,Strona
-12043,Canale
-13824,Veglio
-12044,Centallo
-13825,Valle Mosso
-12045,Fossano
-12046,Montà
-12047,Rocca de Baldi
-12048,Sommariva del Bosco
-12049,Trinità
-87100,Cosenza
-84090,Castiglione del Genovesi/Giffoni Sei Casali/Montecorvino Pugliano/San Mango Piemonte
-84091,Battipaglia
-84092,Bellizzi
-26900,Lodi
-84095,Giffoni Valle Piana
-84096,Montecorvino Rovella
-23880,Casatenovo
-43040,Solignano/Terenzo/Varano de Melegari
-84098,Pontecagnano Faiano
-23881,Airuno
-84099,San Cipriano Picentino
-43041,Bedonia
-43042,Berceto
-23883,Brivio
-43043,Borgo Val di Taro
-23884,Castello di Brianza
-43044,Collecchio
-23885,Calco
-43045,Fornovo di Taro
-23886,Colle Brianza
-23887,Olgiate Molgora
-43047,Pellegrino Parmense
-23888,Perego/Rovagnate
-23889,Santa Maria Hoè
-43049,Varsi
-12050,Albaretto della Torre/Arguello/Barbaresco/Benevello/Borgomale/Bosia/Camo/Castagnito/Castellinaldo/Castino/Cerretto Langhe/Cissone/Cravanzana/Feisoglio/Guarene/Lequio Berria/Magliano Alfieri/Montelupo Albese/Neviglie/Niella Belbo/Rocchetta Belbo/Roddino/Rodello/San Benedetto Belbo/Serralunga dAlba/Serravalle Langhe/Sinio/Torre Bormida/Treiso/Trezzo Tinella
-13831,Mezzana Mortigliengo
-12051,Alba
-12052,Neive
-13833,Portula
-12053,Castiglione Tinella
-13834,Soprana
-12054,Cossano Belbo
-13835,Trivero
-12055,Diano dAlba
-13836,Cossato
-12056,Mango
-12058,Santo Stefano Belbo
-88900,Crotone
-23890,Barzago
-43050,Valmozzola
-23891,Barzanò
-43051,Albareto
-29010,Agazzano/Alseno/Besenzone/Cadeo/Calendasco/Caminata/Castelvetro Piacentino/Gazzola/Gragnano Trebbiense/Monticelli dOngina/Nibbiano/Pecorara/Pianello Val Tidone/Piozzano/Pontenure/Rottofreno/San Pietro in Cerro/Sarmato/Vernasca/Villanova sullArda/Ziano Piacentino
-23892,Bulciago
-43052,Colorno
-29011,Borgonovo Val Tidone
-23893,Cassago Brianza
-43053,Compiano
-29012,Caorso
-23894,Cremella
-29013,Carpaneto Piacentino
-23895,Nibionno
-23896,Sirtori
-43055,Mezzani
-29014,CastellArquato
-23897,Viganò
-43056,Torrile
-29015,Castel San Giovanni
-29016,Cortemaggiore
-23898,Imbersago
-43058,Sorbolo
-29017,Fiorenzuola dArda
-23899,Robbiate
-43059,Tornolo
-29018,Lugagnano Val DArda
-29019,San Giorgio Piacentino
-91100,Trapani
-12060,Barolo/Bastia Mondovì/Belvedere Langhe/Bonvicino/Bossolasco/Castellino Tanaro/Castiglione Falletto/Cigliè/Clavesana/Farigliano/Grinzane Cavour/Igliano/Lequio Tanaro/Magliano Alpi/Marsaglia/Monchiero/Murazzano/Niella Tanaro/Novello/Piozzo/Pocapaglia/Rocca Cigliè/Roddi/Somano/Verduno
-13841,Bioglio/Selve Marcone
-12061,Carrù
-12062,Cherasco
-13843,Pettinengo
-12063,Dogliani
-13844,Piatto/Ternengo
-12064,La Morra
-13845,Ronco Biellese
-12065,Monforte dAlba
-12066,Monticello dAlba
-13847,Vallanzengo/Valle San Nicolao
-13848,Zumaglia
-12068,Narzole
-12069,Santa Vittoria dAlba
-29020,Cerignale/Coli/Corte Brugnatella/Gossolengo/Morfasso/Travo/Vigolzone/Zerba
-29021,Bettola
-29022,Bobbio
-29023,Farini
-29024,Ferriere
-29025,Gropparello
-29026,Ottone
-29027,Podenzano
-29028,Ponte dellOlio
-29029,Rivergaro
-5612x,Pisa
-12070,Alto/Battifollo/Caprauna/Castelletto Uzzone/Castelnuovo di Ceva/Gorzegno/Gottasecca/Levice/Lisio/Mombarcaro/Mombasiglio/Montezemolo/Nucetto/Paroldo/Perletto/Perlo/Pezzolo Valle Uzzone/Priero/Priola/Sale delle Langhe/Sale San Giovanni/Scagnello/Torresina/Viola
-13851,Castelletto Cervo
-12071,Bagnasco/Massimino
-13852,Cerreto Castello
-12072,Camerana
-13853,Crosa/Lessona
-12073,Ceva/Roascio
-13854,Quaregna
-12074,Bergolo/Cortemilia
-13855,Valdengo
-12075,Garessio
-13856,Vigliano Biellese
-12076,Lesegno
-12077,Monesiglio/Prunetto
-12078,Ormea
-12079,Saliceto
-02010,Borbona/Borgo Velino/Castel SantAngelo/Cittareale/Colli sul Velino/Labro/Micigliano/Morro Reatino/Rivodutri
-02011,Accumoli
-02012,Amatrice
-02013,Antrodoco
-02014,Cantalice
-02015,Cittaducale
-02016,Leonessa
-02018,Poggio Bustone
-02019,Posta
-33010,Bordano/Cassacco/Chiusaforte/Colloredo di Monte Albano/Dogna/Lusevera/Magnano in Riviera/Malborghetto Valbruna/Montenars/Osoppo/Pagnacco/Reana del Rojale/Resia/Resiutta/Tavagnacco/Trasaghis/Treppo Grande/Venzone
-33011,Artegna
-33013,Gemona del Friuli
-33015,Moggio Udinese
-12080,Briaglia/Monastero di Vasco/Monasterolo Casotto/Montaldo di Mondovì/Pianfei/Roburent/San Michele Mondovì/Torre Mondovì/Vicoforte
-33016,Pontebba
-33017,Tarcento
-12081,Beinette
-13861,Ailoche
-33018,Tarvisio
-12082,Frabosa Soprana
-13862,Brusnengo
-33019,Tricesimo
-12083,Frabosa Sottana
-13863,Coggiola
-12084,Mondovì
-13864,Caprile/Crevacuore
-13865,Curino
-13866,Casapinta/Masserano
-12087,Pamparato
-13867,Pray
-13868,Sostegno/Villa del Bosco
-12088,Roccaforte Mondovì
-12089,Villanova Mondovì
-64010,Ancarano/Civitella del Tronto/Colonnella/Controguerra/Rocca Santa Maria/Torano Nuovo/Torricella Sicura/Valle Castellana
-64011,Alba Adriatica
-64012,Campli
-64013,Corropoli
-64014,Martinsicuro
-64015,Nereto
-64016,SantEgidio alla Vibrata
-02020,Ascrea/Belmonte in Sabina/Castel di Tora/Colle di Tora/Collegiove/Concerviano/Longone Sabino/Marcetelli/Nespolo/Paganico Sabino/Turania/Varco Sabino
-64018,Tortoreto
-02021,Borgorose
-02022,Collalto Sabino
-02023,Fiamignano
-02024,Pescorocchiano
-02025,Petrella Salto
-02026,Rocca Sinibalda
-95010,Milo/Santa Venerina/SantAlfio
-95011,Calatabiano
-95012,Castiglione di Sicilia
-95013,Fiumefreddo di Sicilia
-95014,Giarre
-95015,Linguaglossa
-95016,Mascali
-33020,Amaro/Cavazzo Carnico/Cercivento/Enemonzo/Forni Avoltri/Forni di Sotto/Ligosullo/Prato Carnico/Preone/Ravascletto/Rigolato/Sauris/Socchieve/Sutrio/Treppo Carnico/Verzegnis/Zuglio
-95017,Piedimonte Etneo
-33021,Ampezzo
-95018,Riposto
-95019,Zafferana Etnea
-33022,Arta Terme
-33023,Comeglians
-33024,Forni di Sopra
-33025,Ovaro
-33026,Paluzza
-33027,Paularo
-13871,Benna/Verrone
-33028,Tolmezzo
-13872,Borriana
-33029,Lauco/Raveo/Villa Santina
-13873,Massazza
-13874,Gifflenga/Mottalciata
-13875,Ponderano
-13876,Sandigliano
-13877,Villanova Biellese
-13878,Candelo
-46100,Mantova
-64020,Bellante/Canzano/Castellalto/Morro dOro
-64021,Giulianova
-64023,Mosciano SantAngelo
-64024,Notaresco
-64025,Pineto
-64026,Roseto degli Abruzzi
-64027,SantOmero
-02030,Casaprota/Frasso Sabino/Poggio Nativo/Poggio San Lorenzo/Pozzaglia Sabina/Torricella in Sabina
-64028,Silvi
-02031,Castelnuovo di Farfa
-02032,Fara in Sabina
-02033,Monteleone Sabino
-02034,Montopoli di Sabina
-02035,Orvinio
-02037,Poggio Moiano
-02038,Scandriglia
-02039,Toffia
-95020,Aci Bonaccorsi
-95021,Aci Castello
-95022,Aci Catena
-95024,Acireale
-95025,Aci SantAntonio
-95027,San Gregorio di Catania
-33030,Buja/Camino al Tagliamento/Campoformido/Coseano/Dignano/Flaibano/Forgaria nel Friuli/Majano/Moruzzo/Ragogna/Rive DArcano/San Vito di Fagagna/Talmassons/Varmo
-95028,Valverde
-33031,Basiliano
-95029,Viagrande
-33032,Bertiolo
-33033,Codroipo
-33034,Fagagna
-33035,Martignacco
-33036,Mereto di Tomba
-33037,Pasian di Prato
-13881,Cavaglià/Dorzano
-33038,San Daniele del Friuli
-13882,Cerrione
-33039,Sedegliano
-13883,Roppolo
-13884,Sala Biellese/Torrazzo
-13885,Salussola
-13886,Viverone
-13887,Magnano/Zimone
-13888,Mongrando/Zubiena
-64030,Basciano/Castel Castagna/Montefino
-64031,Arsita
-64032,Atri
-64033,Bisenti
-64034,Castiglione Messer Raimondo
-64035,Castilenti
-64036,Cellino Attanasio
-64037,Cermignano
-02040,Cantalupo in Sabina/Configni/Cottanello/Mompeo/Montasola/Monte San Giovanni in Sabina/Montebuono/Montenero Sabino/Poggio Catino/Roccantica/Salisano/Selci/Tarano/Vacone
-02041,Casperia
-64039,Penna SantAndrea
-02042,Collevecchio
-02043,Contigliano
-02044,Forano
-02045,Greccio
-02046,Magliano Sabina
-02047,Poggio Mirteto
-02048,Stimigliano
-02049,Torri in Sabina
-95030,Gravina di Catania/Maniace/Mascalucia/Nicolosi/Pedara/Ragalna/San Pietro Clarenza/SantAgata Li Battiati/Tremestieri Etneo
-95031,Adrano
-95032,Belpasso
-95033,Biancavilla
-95034,Bronte
-95035,Maletto
-95036,Randazzo
-95037,San Giovanni la Punta
-33040,Attimis/Campolongo Tapogliano/Corno di Rosazzo/Drenchia/Faedis/Grimacco/Moimacco/Povoletto/Pradamano/Premariacco/Prepotto/San Leonardo/Savogna/Stregna/Taipana/Torreano/Visco
-95038,Santa Maria di Licodia
-33041,Aiello del Friuli
-95039,Trecastagni
-33042,Buttrio
-33043,Cividale del Friuli
-33044,Manzano
-33045,Nimis
-33046,Pulfero
-13891,Camburzano
-33047,Remanzacco
-33048,Chiopris-Viscone/San Giovanni al Natisone
-19010,Maissana
-33049,San Pietro al Natisone
-13893,Donato
-19011,Bonassola
-13894,Gaglianico
-19012,Carro
-13895,Graglia/Muzzano
-19013,Deiva Marina
-13896,Netro
-19014,Framura
-13897,Occhieppo Inferiore
-19015,Levanto
-13898,Occhieppo Superiore
-19016,Monterosso al Mare
-13899,Pralungo
-19017,Riomaggiore
-19018,Vernazza
-64040,Cortino
-64041,Castelli
-64042,Colledara
-64043,Crognaleto
-64044,Fano Adriano
-64045,Isola del Gran Sasso dItalia
-64046,Montorio al Vomano
-64047,Pietracamela
-64049,Tossicia
-95040,Camporotondo Etneo/Castel di Iudica/Licodia Eubea/Mazzarrone/Mirabella Imbaccari/Motta SantAnastasia/Raddusa/Ramacca/San Cono/San Michele di Ganzaria
-95041,Caltagirone
-95042,Grammichele
-95043,Militello in Val di Catania
-95044,Mineo
-1512x,Alessandria
-95045,Misterbianco
-95046,Palagonia
-95047,Paternò
-33050,Bagnaria Arsa/Bicinicco/Carlino/Castions di Strada/Fiumicello/Gonars/Lestizza/Marano Lagunare/Mortegliano/Pavia di Udine/Pocenia/Porpetto/Pozzuolo del Friuli/Precenicco/Rivignano/Ronchis/Ruda/San Vito al Torre/Santa Maria La Longa/Teor/Terzo dAquileia/Torviscosa/Trivignano Udinese
-95048,Scordia
-33051,Aquileia
-95049,Vizzini
-33052,Cervignano del Friuli
-33053,Latisana
-33054,Lignano Sabbiadoro
-33055,Muzzana del Turgnano
-33056,Palazzolo dello Stella
-33057,Palmanova
-33058,San Giorgio di Nogaro
-19020,Beverino/Bolano/Borghetto di Vara/Brugnato/Calice al Cornoviglio/Carrodano/Follo/Pignone/Riccò del Golfo di Spezia/Rocchetta di Vara/Sesta Godano/Vezzano Ligure/Zignago
-33059,Villa Vicentina
-19021,Arcola
-19025,Portovenere
-19028,Varese Ligure
-81100,Caserta
-20900,Monza
-19031,Ameglia
-19032,Lerici
-19033,Castelnuovo Magra
-19034,Ortonovo
-19037,Santo Stefano di Magra
-19038,Sarzana
-23010,Albaredo per San Marco/Albosaggia/Bema/Berbenno di Valtellina/Buglio in Monte/Caiolo/Cedrasco/Cino/Civo/Colorina/Dazio/Forcola/Fusine/Gerola Alta/Mello/Pedesina/Piantedo/Postalesio/Rasura/Rogolo/Tartano/Val Masino
-23011,Ardenno
-23012,Castione Andevenno
-23013,Cosio Valtellino
-23014,Andalo Valtellino/Delebio
-23015,Dubino
-23016,Cercino/Mantello
-23017,Morbegno
-23018,Talamona
-23019,Traona
-33070,Brugnera/Budoia/Caneva/Polcenigo
-54010,Podenzana
-33072,Casarsa della Delizia
-54011,Aulla
-54012,Tresana
-33074,Fontanafredda
-54013,Fivizzano
-33075,Cordovado/Morsano al Tagliamento
-54014,Casola in Lunigiana
-33076,Pravisdomini
-54015,Comano
-33077,Sacile
-54016,Licciana Nardi
-33078,San Vito al Tagliamento
-33079,Sesto al Reghena
-4792x,Rimini
-85011,Acerenza
-85012,Corleto Perticara
+05010,Terni
+05011,Terni
+05012,Terni
+05013,Terni
+05014,Terni
+05015,Terni
+05016,Terni
+05017,Terni
+05018,Terni
+05020,Terni
+05021,Terni
+05022,Terni
+05023,Terni
+05024,Terni
+05025,Terni
+05026,Terni
+05028,Terni
+05029,Terni
+05030,Terni
+05031,Terni
+05032,Terni
+05034,Terni
+05035,Terni
+05039,Terni
 05100,Terni
-85013,Genzano di Lucania
-85014,Laurenzana
-85015,Oppido Lucano
-85016,Pietragalla
-85017,Tolve
-23020,Caspoggio/Faedo Valtellino/Gordona/Lanzada/Menarola/Mese/Montagna in Valtellina/Piateda/Piuro/Poggiridenti/Prata Camportaccio/San Giacomo Filippo/Spriana/Torre di Santa Maria/Tresivio/Verceia
-85018,Trivigno
-23021,Campodolcino
-23022,Chiavenna
-23023,Chiesa in Valmalenco
-23024,Madesimo
-23025,Novate Mezzola
-23026,Ponte in Valtellina
-23027,Samolaco
-23029,Villa di Chiavenna
-12021,Acceglio
-20081,Abbiategrasso/Cassinetta di Lugagnano/Morimondo
-23821,Abbadia Lariana
-26834,Abbadia Cerreto/Corte Palasio
-51021,Abetone
-53021,Abbadia San Salvatore
-65020,Abbateggio/Alanno/Bolognano/Castiglione a Casauria/Corvara/Cugnoli/Lettomanoppello/Pescosansonesco/Pietranico/Roccamorice/Rosciano/Salle/San Valentino in Abruzzo Citeriore/SantEufemia a Maiella/Turrivalignani
-71021,Accadia
-85010,Abriola/Albano di Lucania/Anzi/Armento/Banzi/Brindisi Montagna/Calvello/Campomaggiore/Cancellara/Castelmezzano/Gallicchio/Guardia Perticara/Missanello/Pietrapertosa/Pignola/San Chirico Nuovo/Vaglio Basilicata
-97011,Acate
+06010,Perugia
+06012,Perugia
+06014,Perugia
+06016,Perugia
+06018,Perugia
+06019,Perugia
+06021,Perugia
+06022,Perugia
+06023,Perugia
+06024,Perugia
+06025,Perugia
+06026,Perugia
+06027,Perugia
+06028,Perugia
+06029,Perugia
+06030,Perugia
+06031,Perugia
+06033,Perugia
+06034,Perugia
+06035,Perugia
+06036,Perugia
+06038,Perugia
+06039,Perugia
+06040,Perugia
+06041,Perugia
+06042,Perugia
+06043,Perugia
+06044,Perugia
+06045,Perugia
+06046,Perugia
+06047,Perugia
+06049,Perugia
+06050,Perugia
+06051,Perugia
+06053,Perugia
+06054,Perugia
+06055,Perugia
+06056,Perugia
+06057,Perugia
+06059,Perugia
+06060,Perugia
+06061,Perugia
+06062,Perugia
+06063,Perugia
+06064,Perugia
+06065,Perugia
+06066,Perugia
+06068,Perugia
+06069,Perugia
+06072,Perugia
+06073,Perugia
+06081,Perugia
+06083,Perugia
+06084,Perugia
+06089,Perugia
+06121,Perugia
+06122,Perugia
+06123,Perugia
+06124,Perugia
+06125,Perugia
+06126,Perugia
+06127,Perugia
+06128,Perugia
+06129,Perugia
+06131,Perugia
+06132,Perugia
+06133,Perugia
+06134,Perugia
+06135,Perugia
+07010,Sassari
+07011,Sassari
+07012,Sassari
+07013,Sassari
+07014,Sassari
+07015,Sassari
+07016,Sassari
+07017,Sassari
+07018,Sassari
+07019,Sassari
+07020,Sassari
+07021,Sassari
+07022,Sassari
+07023,Sassari
+07024,Sassari
+07025,Sassari
+07026,Sassari
+07027,Sassari
+07028,Sassari
+07029,Sassari
+07030,Sassari
+07031,Sassari
+07032,Sassari
+07033,Sassari
+07034,Sassari
+07035,Sassari
+07036,Sassari
+07037,Sassari
+07038,Sassari
+07039,Sassari
+07040,Sassari
+07041,Sassari
+07043,Sassari
+07044,Sassari
+07045,Sassari
+07046,Sassari
+07047,Sassari
+07048,Sassari
+07049,Sassari
+07051,Sassari
+07052,Sassari
+07100,Sassari
+08010,Nuoro
+08011,Nuoro
+08012,Nuoro
+08015,Nuoro
+08016,Nuoro
+08017,Nuoro
+08018,Nuoro
+08020,Nuoro
+08021,Nuoro
+08022,Nuoro
+08023,Nuoro
+08024,Nuoro
+08025,Nuoro
+08026,Nuoro
+08027,Nuoro
+08028,Nuoro
+08029,Nuoro
+08030,Nuoro
+08031,Nuoro
+08032,Nuoro
+08036,Nuoro
+08038,Nuoro
+08039,Nuoro
+08040,Nuoro
+08042,Nuoro
+08044,Nuoro
+08045,Nuoro
+08046,Nuoro
+08047,Nuoro
+08048,Nuoro
+08049,Nuoro
+08100,Nuoro
+09010,Sud Sardegna
+09011,Sud Sardegna
+09012,Cagliari
+09013,Sud Sardegna
+09014,Sud Sardegna
+09015,Sud Sardegna
+09016,Sud Sardegna
+09017,Sud Sardegna
+09018,Cagliari
+09019,Sud Sardegna
+09020,Sud Sardegna
+09021,Sud Sardegna
+09022,Sud Sardegna
+09023,Sud Sardegna
+09024,Sud Sardegna
+09025,Sud Sardegna
+09026,Sud Sardegna
+09027,Sud Sardegna
+09028,Cagliari
+09029,Sud Sardegna
+09030,Sud Sardegna
+09031,Sud Sardegna
+09032,Cagliari
+09033,Cagliari
+09034,Sud Sardegna
+09035,Sud Sardegna
+09036,Sud Sardegna
+09037,Sud Sardegna
+09038,Sud Sardegna
+09039,Sud Sardegna
+09040,Sud Sardegna
+09041,Sud Sardegna
+09042,Cagliari
+09043,Sud Sardegna
+09044,Cagliari
+09045,Cagliari
+09047,Cagliari
+09048,Cagliari
+09049,Sud Sardegna
+09050,Cagliari
+09051,Sud Sardegna
+09052,Sud Sardegna
+09053,Sud Sardegna
+09054,Sud Sardegna
+09055,Sud Sardegna
+09056,Sud Sardegna
+09057,Sud Sardegna
+09058,Sud Sardegna
+09059,Sud Sardegna
+09060,Cagliari
+09061,Sud Sardegna
+09062,Sud Sardegna
+09063,Sud Sardegna
+09064,Sud Sardegna
+09065,Sud Sardegna
+09066,Sud Sardegna
+09067,Cagliari
+09068,Cagliari
+09069,Cagliari
+09070,Oristano
+09071,Oristano
+09072,Oristano
+09073,Oristano
+09074,Oristano
+09075,Oristano
+09076,Oristano
+09077,Oristano
+09078,Oristano
+09079,Oristano
+09080,Oristano
+09081,Oristano
+09082,Oristano
+09083,Oristano
+09084,Oristano
+09085,Oristano
+09086,Oristano
+09088,Oristano
+09089,Oristano
+09090,Oristano
+09091,Oristano
+09092,Oristano
+09093,Oristano
+09094,Oristano
+09095,Oristano
+09096,Oristano
+09097,Oristano
+09098,Oristano
+09099,Oristano
+09121,Cagliari
+09122,Cagliari
+09123,Cagliari
+09124,Cagliari
+09125,Cagliari
+09126,Cagliari
+09127,Cagliari
+09128,Cagliari
+09129,Cagliari
+09131,Cagliari
+09134,Cagliari
+09170,Oristano
+10010,Torino
+10011,Torino
+10012,Torino
+10013,Torino
+10014,Torino
+10015,Torino
+10016,Torino
+10017,Torino
+10018,Torino
+10019,Torino
+10020,Torino
+10022,Torino
+10023,Torino
+10024,Torino
+10025,Torino
+10026,Torino
+10028,Torino
+10029,Torino
+10030,Torino
+10031,Torino
+10032,Torino
+10034,Torino
+10035,Torino
+10036,Torino
+10037,Torino
+10038,Torino
+10039,Torino
+10040,Torino
+10041,Torino
+10042,Torino
+10043,Torino
+10044,Torino
+10045,Torino
+10046,Torino
+10048,Torino
+10050,Torino
+10051,Torino
+10052,Torino
+10053,Torino
+10054,Torino
+10055,Torino
+10056,Torino
+10057,Torino
+10058,Torino
+10059,Torino
+10060,Torino
+10061,Torino
+10062,Torino
+10063,Torino
+10064,Torino
+10065,Torino
+10066,Torino
+10067,Torino
+10068,Torino
+10069,Torino
+10070,Torino
+10071,Torino
+10072,Torino
+10073,Torino
+10074,Torino
+10075,Torino
+10076,Torino
+10077,Torino
+10078,Torino
+10079,Torino
+10080,Torino
+10081,Torino
+10082,Torino
+10083,Torino
+10084,Torino
+10085,Torino
+10086,Torino
+10087,Torino
+10088,Torino
+10089,Torino
+10090,Torino
+10091,Torino
+10092,Torino
+10093,Torino
+10094,Torino
+10095,Torino
+10098,Torino
+10099,Torino
+10121,Torino
+10122,Torino
+10123,Torino
+10124,Torino
+10125,Torino
+10126,Torino
+10127,Torino
+10128,Torino
+10129,Torino
+10131,Torino
+10132,Torino
+10133,Torino
+10134,Torino
+10135,Torino
+10136,Torino
+10137,Torino
+10138,Torino
+10139,Torino
+10141,Torino
+10142,Torino
+10143,Torino
+10144,Torino
+10145,Torino
+10146,Torino
+10147,Torino
+10148,Torino
+10149,Torino
+10151,Torino
+10152,Torino
+10153,Torino
+10154,Torino
+10155,Torino
+10156,Torino
+11010,Valle d'Aosta
+11011,Valle d'Aosta
+11012,Valle d'Aosta
+11013,Valle d'Aosta
+11014,Valle d'Aosta
+11015,Valle d'Aosta
+11016,Valle d'Aosta
+11017,Valle d'Aosta
+11018,Valle d'Aosta
+11020,Valle d'Aosta
+11021,Valle d'Aosta
+11022,Valle d'Aosta
+11023,Valle d'Aosta
+11024,Valle d'Aosta
+11025,Valle d'Aosta
+11026,Valle d'Aosta
+11027,Valle d'Aosta
+11028,Valle d'Aosta
+11029,Valle d'Aosta
+11100,Valle d'Aosta
+12010,Cuneo
+12011,Cuneo
+12012,Cuneo
+12013,Cuneo
+12014,Cuneo
+12015,Cuneo
+12016,Cuneo
+12017,Cuneo
+12018,Cuneo
+12019,Cuneo
+12020,Cuneo
+12021,Cuneo
+12022,Cuneo
+12023,Cuneo
+12024,Cuneo
+12025,Cuneo
+12026,Cuneo
+12027,Cuneo
+12028,Cuneo
+12029,Cuneo
+12030,Cuneo
+12031,Cuneo
+12032,Cuneo
+12033,Cuneo
+12034,Cuneo
+12035,Cuneo
+12036,Cuneo
+12037,Cuneo
+12038,Cuneo
+12039,Cuneo
+12040,Cuneo
+12041,Cuneo
+12042,Cuneo
+12043,Cuneo
+12044,Cuneo
+12045,Cuneo
+12046,Cuneo
+12047,Cuneo
+12048,Cuneo
+12049,Cuneo
+12050,Cuneo
+12051,Cuneo
+12052,Cuneo
+12053,Cuneo
+12054,Cuneo
+12055,Cuneo
+12056,Cuneo
+12058,Cuneo
+12060,Cuneo
+12061,Cuneo
+12062,Cuneo
+12063,Cuneo
+12064,Cuneo
+12065,Cuneo
+12066,Cuneo
+12068,Cuneo
+12069,Cuneo
+12070,Cuneo
+12071,Savona
+12072,Cuneo
+12073,Cuneo
+12074,Cuneo
+12075,Cuneo
+12076,Cuneo
+12077,Cuneo
+12078,Cuneo
+12079,Cuneo
+12080,Cuneo
+12081,Cuneo
+12082,Cuneo
+12083,Cuneo
+12084,Cuneo
+12087,Cuneo
+12088,Cuneo
+12089,Cuneo
+12100,Cuneo
+13010,Vercelli
+13011,Vercelli
+13012,Vercelli
+13017,Vercelli
+13018,Vercelli
+13019,Vercelli
+13020,Vercelli
+13021,Vercelli
+13022,Vercelli
+13023,Vercelli
+13024,Vercelli
+13025,Vercelli
+13026,Vercelli
+13027,Vercelli
+13028,Vercelli
+13029,Vercelli
+13030,Vercelli
+13031,Vercelli
+13032,Vercelli
+13033,Vercelli
+13034,Vercelli
+13035,Vercelli
+13036,Vercelli
+13037,Vercelli
+13038,Vercelli
+13039,Vercelli
+13040,Vercelli
+13041,Vercelli
+13043,Vercelli
+13044,Vercelli
+13045,Vercelli
+13046,Vercelli
+13047,Vercelli
+13048,Vercelli
+13049,Vercelli
+13060,Vercelli
+13100,Vercelli
+13811,Biella
+13812,Biella
+13814,Biella
+13815,Biella
+13816,Biella
+13817,Biella
+13818,Biella
+13821,Biella
+13823,Biella
+13824,Biella
+13831,Biella
+13833,Biella
+13835,Biella
+13836,Biella
+13841,Biella
+13843,Biella
+13844,Biella
+13845,Biella
+13847,Biella
+13848,Biella
+13851,Biella
+13853,Biella
+13854,Biella
+13855,Biella
+13856,Biella
+13861,Biella
+13862,Biella
+13863,Biella
+13864,Biella
+13865,Biella
+13866,Biella
+13867,Biella
+13868,Biella
+13871,Biella
+13872,Biella
+13873,Biella
+13874,Biella
+13875,Biella
+13876,Biella
+13877,Biella
+13878,Biella
+13881,Biella
+13882,Biella
+13883,Biella
+13884,Biella
+13885,Biella
+13886,Biella
+13887,Biella
+13888,Biella
+13891,Biella
+13893,Biella
+13894,Biella
+13895,Biella
+13896,Biella
+13897,Biella
+13898,Biella
+13899,Biella
+13900,Biella
+14010,Asti
+14011,Asti
+14012,Asti
+14013,Asti
+14014,Asti
+14015,Asti
+14016,Asti
+14017,Asti
+14018,Asti
+14019,Asti
+14020,Asti
+14021,Asti
+14022,Asti
+14023,Asti
+14024,Asti
+14025,Asti
+14026,Asti
+14030,Asti
+14031,Asti
+14032,Asti
+14033,Asti
+14034,Asti
+14035,Asti
+14036,Asti
+14037,Asti
+14039,Asti
+14040,Asti
+14041,Asti
+14042,Asti
+14043,Asti
+14044,Asti
+14045,Asti
+14046,Asti
+14047,Asti
+14048,Asti
+14049,Asti
+14050,Asti
+14051,Asti
+14052,Asti
+14053,Asti
+14054,Asti
+14055,Asti
+14057,Asti
+14058,Asti
+14059,Asti
+14100,Asti
+15010,Alessandria
+15011,Alessandria
+15012,Alessandria
+15013,Alessandria
+15015,Alessandria
+15016,Alessandria
+15017,Alessandria
+15018,Alessandria
+15019,Alessandria
+15020,Alessandria
+15021,Alessandria
+15022,Alessandria
+15023,Alessandria
+15024,Alessandria
+15025,Alessandria
+15026,Alessandria
+15027,Alessandria
+15028,Alessandria
+15029,Alessandria
+15030,Alessandria
+15031,Alessandria
+15032,Alessandria
+15033,Alessandria
+15034,Alessandria
+15035,Alessandria
+15036,Alessandria
+15037,Alessandria
+15038,Alessandria
+15039,Alessandria
+15040,Alessandria
+15041,Alessandria
+15042,Alessandria
+15043,Alessandria
+15044,Alessandria
+15045,Alessandria
+15046,Alessandria
+15047,Alessandria
+15048,Alessandria
+15049,Alessandria
+15050,Alessandria
+15051,Alessandria
+15052,Alessandria
+15053,Alessandria
+15054,Alessandria
+15055,Alessandria
+15056,Alessandria
+15057,Alessandria
+15058,Alessandria
+15059,Alessandria
+15060,Alessandria
+15061,Alessandria
+15062,Alessandria
+15063,Alessandria
+15064,Alessandria
+15065,Alessandria
+15066,Alessandria
+15067,Alessandria
+15068,Alessandria
+15069,Alessandria
+15070,Alessandria
+15071,Alessandria
+15072,Alessandria
+15073,Alessandria
+15074,Alessandria
+15075,Alessandria
+15076,Alessandria
+15077,Alessandria
+15078,Alessandria
+15079,Alessandria
+15121,Alessandria
+15122,Alessandria
+16010,Genova
+16011,Genova
+16012,Genova
+16013,Genova
+16014,Genova
+16015,Genova
+16016,Genova
+16017,Genova
+16018,Genova
+16019,Genova
+16020,Genova
+16021,Genova
+16022,Genova
+16023,Genova
+16024,Genova
+16025,Genova
+16026,Genova
+16027,Genova
+16028,Genova
+16029,Genova
+16030,Genova
+16031,Genova
+16032,Genova
+16033,Genova
+16034,Genova
+16035,Genova
+16036,Genova
+16038,Genova
+16039,Genova
+16040,Genova
+16041,Genova
+16042,Genova
+16043,Genova
+16044,Genova
+16045,Genova
+16046,Genova
+16047,Genova
+16048,Genova
+16049,Genova
+16121,Genova
+16122,Genova
+16123,Genova
+16124,Genova
+16125,Genova
+16126,Genova
+16127,Genova
+16128,Genova
+16129,Genova
+16131,Genova
+16132,Genova
+16133,Genova
+16134,Genova
+16135,Genova
+16136,Genova
+16137,Genova
+16138,Genova
+16139,Genova
+16141,Genova
+16142,Genova
+16143,Genova
+16144,Genova
+16145,Genova
+16146,Genova
+16147,Genova
+16148,Genova
+16149,Genova
+16151,Genova
+16152,Genova
+16153,Genova
+16154,Genova
+16155,Genova
+16156,Genova
+16157,Genova
+16158,Genova
+16159,Genova
+16161,Genova
+16162,Genova
+16163,Genova
+16164,Genova
+16165,Genova
+16166,Genova
+16167,Genova
+17010,Savona
+17011,Savona
+17012,Savona
+17013,Savona
+17014,Savona
+17015,Savona
+17017,Savona
+17019,Savona
+17020,Savona
+17021,Savona
+17022,Savona
+17023,Savona
+17024,Savona
+17025,Savona
+17026,Savona
+17027,Savona
+17028,Savona
+17030,Savona
+17031,Savona
+17032,Savona
+17033,Savona
+17034,Savona
+17035,Savona
+17037,Savona
+17038,Savona
+17039,Savona
+17040,Savona
+17041,Savona
+17042,Savona
+17043,Savona
+17044,Savona
+17045,Savona
+17046,Savona
+17047,Savona
+17048,Savona
+17051,Savona
+17052,Savona
+17053,Savona
+17054,Savona
+17055,Savona
+17056,Savona
+17057,Savona
+17058,Savona
+17100,Savona
+18010,Imperia
+18011,Imperia
+18012,Imperia
+18013,Imperia
+18014,Imperia
+18015,Imperia
+18016,Imperia
+18017,Imperia
+18018,Imperia
+18019,Imperia
+18020,Imperia
+18021,Imperia
+18022,Imperia
+18023,Imperia
+18024,Imperia
+18025,Imperia
+18026,Imperia
+18027,Imperia
+18028,Imperia
+18030,Imperia
+18031,Imperia
+18032,Imperia
+18033,Imperia
+18034,Imperia
+18035,Imperia
+18036,Imperia
+18037,Imperia
+18038,Imperia
+18039,Imperia
+18100,Imperia
+19010,La Spezia
+19011,La Spezia
+19012,La Spezia
+19013,La Spezia
+19014,La Spezia
+19015,La Spezia
+19016,La Spezia
+19017,La Spezia
+19018,La Spezia
+19020,La Spezia
+19021,La Spezia
+19025,La Spezia
+19028,La Spezia
+19031,La Spezia
+19032,La Spezia
+19033,La Spezia
+19034,La Spezia
+19037,La Spezia
+19038,La Spezia
+19121,La Spezia
+19122,La Spezia
+19123,La Spezia
+19124,La Spezia
+19125,La Spezia
+19126,La Spezia
+19131,La Spezia
+19132,La Spezia
+19133,La Spezia
+19134,La Spezia
+19135,La Spezia
+19136,La Spezia
+19137,La Spezia
+20001,Milano
+20002,Milano
+20003,Milano
+20004,Milano
+20005,Milano
+20006,Milano
+20007,Milano
+20008,Milano
+20009,Milano
+20010,Milano
+20011,Milano
+20012,Milano
+20013,Milano
+20014,Milano
+20015,Milano
+20016,Milano
+20017,Milano
+20018,Milano
+20019,Milano
+20020,Milano
+20021,Milano
+20022,Milano
+20023,Milano
+20024,Milano
+20025,Milano
+20026,Milano
+20027,Milano
+20028,Milano
+20029,Milano
+20030,Milano
+20031,Milano
+20032,Milano
+20033,Milano
+20034,Milano
+20035,Milano
+20036,Milano
+20037,Milano
+20038,Milano
+20039,Milano
+20040,Milano
+20041,Milano
+20042,Milano
+20043,Milano
+20044,Milano
+20045,Milano
+20046,Milano
+20047,Milano
+20048,Milano
+20049,Milano
+20050,Milano
+20051,Milano
+20052,Milano
+20053,Milano
+20054,Milano
+20055,Milano
+20056,Milano
+20057,Milano
+20058,Milano
+20059,Milano
+20060,Milano
+20061,Milano
+20062,Milano
+20063,Milano
+20064,Milano
+20065,Milano
+20066,Milano
+20067,Milano
+20068,Milano
+20069,Milano
+20070,Milano
+20071,Milano
+20072,Milano
+20073,Milano
+20074,Milano
+20075,Milano
+20076,Milano
+20077,Milano
+20078,Milano
+20079,Milano
+20080,Milano
+20081,Milano
+20082,Milano
+20083,Milano
+20084,Milano
+20085,Milano
+20086,Milano
+20087,Milano
+20088,Milano
+20089,Milano
+20090,Milano
+20091,Milano
+20092,Milano
+20093,Milano
+20094,Milano
+20095,Milano
+20096,Milano
+20097,Milano
+20098,Milano
+20099,Milano
+20121,Milano
+20122,Milano
+20123,Milano
+20124,Milano
+20125,Milano
+20126,Milano
+20127,Milano
+20128,Milano
+20129,Milano
+20131,Milano
+20132,Milano
+20133,Milano
+20134,Milano
+20135,Milano
+20136,Milano
+20137,Milano
+20138,Milano
+20139,Milano
+20141,Milano
+20142,Milano
+20143,Milano
+20144,Milano
+20145,Milano
+20146,Milano
+20147,Milano
+20148,Milano
+20149,Milano
+20151,Milano
+20152,Milano
+20153,Milano
+20154,Milano
+20155,Milano
+20156,Milano
+20157,Milano
+20158,Milano
+20159,Milano
+20161,Milano
+20162,Milano
+20811,Monza e della Brianza
+20812,Monza e della Brianza
+20813,Monza e della Brianza
+20814,Monza e della Brianza
+20815,Monza e della Brianza
+20816,Monza e della Brianza
+20821,Monza e della Brianza
+20822,Monza e della Brianza
+20823,Monza e della Brianza
+20824,Monza e della Brianza
+20825,Monza e della Brianza
+20826,Monza e della Brianza
+20831,Monza e della Brianza
+20832,Monza e della Brianza
+20833,Monza e della Brianza
+20834,Monza e della Brianza
+20835,Monza e della Brianza
+20836,Monza e della Brianza
+20837,Monza e della Brianza
+20838,Monza e della Brianza
+20841,Monza e della Brianza
+20842,Monza e della Brianza
+20843,Monza e della Brianza
+20844,Monza e della Brianza
+20845,Monza e della Brianza
+20846,Monza e della Brianza
+20847,Monza e della Brianza
+20851,Monza e della Brianza
+20852,Monza e della Brianza
+20853,Monza e della Brianza
+20854,Monza e della Brianza
+20855,Monza e della Brianza
+20856,Monza e della Brianza
+20857,Monza e della Brianza
+20861,Monza e della Brianza
+20862,Monza e della Brianza
+20863,Monza e della Brianza
+20864,Monza e della Brianza
+20865,Monza e della Brianza
+20866,Monza e della Brianza
+20867,Monza e della Brianza
+20871,Monza e della Brianza
+20872,Monza e della Brianza
+20873,Monza e della Brianza
+20874,Monza e della Brianza
+20875,Monza e della Brianza
+20876,Monza e della Brianza
+20877,Monza e della Brianza
+20881,Monza e della Brianza
+20882,Monza e della Brianza
+20883,Monza e della Brianza
+20884,Monza e della Brianza
+20885,Monza e della Brianza
+20886,Monza e della Brianza
+20900,Monza e della Brianza
+21010,Varese
+21011,Varese
+21012,Varese
+21013,Varese
+21014,Varese
+21015,Varese
+21016,Varese
+21017,Varese
+21018,Varese
+21019,Varese
+21020,Varese
+21021,Varese
+21022,Varese
+21023,Varese
+21024,Varese
+21025,Varese
+21026,Varese
+21027,Varese
+21028,Varese
+21029,Varese
+21030,Varese
+21031,Varese
+21032,Varese
+21033,Varese
+21034,Varese
+21035,Varese
+21036,Varese
+21037,Varese
+21038,Varese
+21039,Varese
+21040,Varese
+21041,Varese
+21042,Varese
+21043,Varese
+21044,Varese
+21045,Varese
+21046,Varese
+21047,Varese
+21048,Varese
+21049,Varese
+21050,Varese
+21051,Varese
+21052,Varese
+21053,Varese
+21054,Varese
+21055,Varese
+21056,Varese
+21057,Varese
+21058,Varese
+21059,Varese
+21061,Varese
+21062,Varese
+21100,Varese
+22010,Como
+22011,Como
+22012,Como
+22013,Como
+22014,Como
+22015,Como
+22016,Como
+22017,Como
+22018,Como
+22019,Como
+22020,Como
+22021,Como
+22023,Como
+22024,Como
+22025,Como
+22026,Como
+22027,Como
+22028,Como
+22029,Como
+22030,Como
+22031,Como
+22032,Como
+22033,Como
+22034,Como
+22035,Como
+22036,Como
+22037,Como
+22038,Como
+22039,Como
+22040,Como
+22041,Como
+22042,Como
+22043,Como
+22044,Como
+22045,Como
+22046,Como
+22060,Como
+22061,Como
+22063,Como
+22066,Como
+22069,Como
+22070,Como
+22071,Como
+22072,Como
+22073,Como
+22074,Como
+22075,Como
+22076,Como
+22077,Como
+22078,Como
+22079,Como
+22100,Como
+23009,Sondrio
+23010,Sondrio
+23011,Sondrio
+23012,Sondrio
+23013,Sondrio
+23014,Sondrio
+23015,Sondrio
+23016,Sondrio
+23017,Sondrio
+23018,Sondrio
+23019,Sondrio
+23020,Sondrio
+23021,Sondrio
+23022,Sondrio
+23023,Sondrio
+23024,Sondrio
+23025,Sondrio
+23026,Sondrio
+23027,Sondrio
+23029,Sondrio
+23030,Sondrio
+23031,Sondrio
+23032,Sondrio
+23033,Sondrio
+23034,Sondrio
+23035,Sondrio
+23036,Sondrio
+23037,Sondrio
+23038,Sondrio
+23041,Sondrio
+23100,Sondrio
+23801,Lecco
+23802,Lecco
+23804,Lecco
+23805,Lecco
+23807,Lecco
+23808,Lecco
+23811,Lecco
+23813,Lecco
+23814,Lecco
+23815,Lecco
+23816,Lecco
+23817,Lecco
+23818,Lecco
+23819,Lecco
+23821,Lecco
+23822,Lecco
+23823,Lecco
+23824,Lecco
+23825,Lecco
+23826,Lecco
+23827,Lecco
+23828,Lecco
+23829,Lecco
+23831,Lecco
+23832,Lecco
+23833,Lecco
+23834,Lecco
+23835,Lecco
+23836,Lecco
+23837,Lecco
+23841,Lecco
+23842,Lecco
+23843,Lecco
+23844,Lecco
+23845,Lecco
+23846,Lecco
+23847,Lecco
+23848,Lecco
+23849,Lecco
+23851,Lecco
+23852,Lecco
+23854,Lecco
+23855,Lecco
+23857,Lecco
+23861,Lecco
+23862,Lecco
+23864,Lecco
+23865,Lecco
+23867,Lecco
+23868,Lecco
+23870,Lecco
+23871,Lecco
+23873,Lecco
+23874,Lecco
+23875,Lecco
+23876,Lecco
+23877,Lecco
+23878,Lecco
+23879,Lecco
+23880,Lecco
+23881,Lecco
+23883,Lecco
+23884,Lecco
+23885,Lecco
+23886,Lecco
+23887,Lecco
+23888,Lecco
+23889,Lecco
+23890,Lecco
+23891,Lecco
+23892,Lecco
+23893,Lecco
+23894,Lecco
+23895,Lecco
+23896,Lecco
+23897,Lecco
+23898,Lecco
+23899,Lecco
+23900,Lecco
+24010,Bergamo
+24011,Bergamo
+24012,Bergamo
+24013,Bergamo
+24014,Bergamo
+24015,Bergamo
+24016,Bergamo
+24017,Bergamo
+24018,Bergamo
+24019,Bergamo
+24020,Bergamo
+24021,Bergamo
+24022,Bergamo
+24023,Bergamo
+24024,Bergamo
+24025,Bergamo
+24026,Bergamo
+24027,Bergamo
+24028,Bergamo
+24029,Bergamo
+24030,Bergamo
+24031,Bergamo
+24032,Bergamo
+24033,Bergamo
+24034,Bergamo
+24035,Bergamo
+24036,Bergamo
+24037,Bergamo
+24038,Bergamo
+24039,Bergamo
+24040,Bergamo
+24041,Bergamo
+24042,Bergamo
+24043,Bergamo
+24044,Bergamo
+24045,Bergamo
+24046,Bergamo
+24047,Bergamo
+24048,Bergamo
+24049,Bergamo
+24050,Bergamo
+24051,Bergamo
+24052,Bergamo
+24053,Bergamo
+24054,Bergamo
+24055,Bergamo
+24056,Bergamo
+24057,Bergamo
+24058,Bergamo
+24059,Bergamo
+24060,Bergamo
+24061,Bergamo
+24062,Bergamo
+24063,Bergamo
+24064,Bergamo
+24065,Bergamo
+24066,Bergamo
+24067,Bergamo
+24068,Bergamo
+24069,Bergamo
+24121,Bergamo
+24122,Bergamo
+24123,Bergamo
+24124,Bergamo
+24125,Bergamo
+24126,Bergamo
+24127,Bergamo
+24128,Bergamo
+24129,Bergamo
+25010,Brescia
+25011,Brescia
+25012,Brescia
+25013,Brescia
+25014,Brescia
+25015,Brescia
+25016,Brescia
+25017,Brescia
+25018,Brescia
+25019,Brescia
+25020,Brescia
+25021,Brescia
+25022,Brescia
+25023,Brescia
+25024,Brescia
+25025,Brescia
+25026,Brescia
+25027,Brescia
+25028,Brescia
+25029,Brescia
+25030,Brescia
+25031,Brescia
+25032,Brescia
+25033,Brescia
+25034,Brescia
+25035,Brescia
+25036,Brescia
+25037,Brescia
+25038,Brescia
+25039,Brescia
+25040,Brescia
+25042,Brescia
+25043,Brescia
+25044,Brescia
+25045,Brescia
+25046,Brescia
+25047,Brescia
+25048,Brescia
+25049,Brescia
+25050,Brescia
+25051,Brescia
+25052,Brescia
+25053,Brescia
+25054,Brescia
+25055,Brescia
+25056,Brescia
+25057,Brescia
+25058,Brescia
+25059,Brescia
+25060,Brescia
+25061,Brescia
+25062,Brescia
+25063,Brescia
+25064,Brescia
+25065,Brescia
+25068,Brescia
+25069,Brescia
+25070,Brescia
+25071,Brescia
+25072,Brescia
+25073,Brescia
+25074,Brescia
+25075,Brescia
+25076,Brescia
+25077,Brescia
+25078,Brescia
+25079,Brescia
+25080,Brescia
+25081,Brescia
+25082,Brescia
+25083,Brescia
+25084,Brescia
+25085,Brescia
+25086,Brescia
+25087,Brescia
+25088,Brescia
+25089,Brescia
+25121,Brescia
+25122,Brescia
+25123,Brescia
+25124,Brescia
+25125,Brescia
+25126,Brescia
+25127,Brescia
+25128,Brescia
+25129,Brescia
+25131,Brescia
+25132,Brescia
+25133,Brescia
+25134,Brescia
+25135,Brescia
+25136,Brescia
+26010,Cremona
+26011,Cremona
+26012,Cremona
+26013,Cremona
+26014,Cremona
+26015,Cremona
+26016,Cremona
+26017,Cremona
+26018,Cremona
+26019,Cremona
+26020,Cremona
+26021,Cremona
+26022,Cremona
+26023,Cremona
+26024,Cremona
+26025,Cremona
+26026,Cremona
+26027,Cremona
+26028,Cremona
+26029,Cremona
+26030,Cremona
+26031,Cremona
+26032,Cremona
+26033,Cremona
+26034,Cremona
+26035,Cremona
+26036,Cremona
+26037,Cremona
+26038,Cremona
+26039,Cremona
+26040,Cremona
+26041,Cremona
+26042,Cremona
+26043,Cremona
+26044,Cremona
+26045,Cremona
+26046,Cremona
+26047,Cremona
+26048,Cremona
+26049,Cremona
+26100,Cremona
+26811,Lodi
+26812,Lodi
+26813,Lodi
+26814,Lodi
+26815,Lodi
+26816,Lodi
+26817,Lodi
+26818,Lodi
+26821,Lodi
+26822,Lodi
+26823,Lodi
+26824,Lodi
+26825,Lodi
+26826,Lodi
+26827,Lodi
+26828,Lodi
+26831,Lodi
+26832,Lodi
+26833,Lodi
+26834,Lodi
+26835,Lodi
+26836,Lodi
+26837,Lodi
+26838,Lodi
+26839,Lodi
+26841,Lodi
+26842,Lodi
+26843,Lodi
+26844,Lodi
+26845,Lodi
+26846,Lodi
+26847,Lodi
+26848,Lodi
+26849,Lodi
+26851,Lodi
+26852,Lodi
+26853,Lodi
+26854,Lodi
+26855,Lodi
+26856,Lodi
+26857,Lodi
+26858,Lodi
+26859,Lodi
+26861,Lodi
+26862,Lodi
+26863,Lodi
+26864,Lodi
+26865,Lodi
+26866,Lodi
+26867,Lodi
+26900,Lodi
+27010,Pavia
+27011,Pavia
+27012,Pavia
+27013,Pavia
+27014,Pavia
+27015,Pavia
+27016,Pavia
+27017,Pavia
+27018,Pavia
+27019,Pavia
+27020,Pavia
+27021,Pavia
+27022,Pavia
+27023,Pavia
+27024,Pavia
+27025,Pavia
+27026,Pavia
+27027,Pavia
+27028,Pavia
+27029,Pavia
+27030,Pavia
+27031,Pavia
+27032,Pavia
+27033,Pavia
+27034,Pavia
+27035,Pavia
+27036,Pavia
+27037,Pavia
+27038,Pavia
+27039,Pavia
+27040,Pavia
+27041,Pavia
+27042,Pavia
+27043,Pavia
+27044,Pavia
+27045,Pavia
+27046,Pavia
+27047,Pavia
+27048,Pavia
+27049,Pavia
+27050,Pavia
+27051,Pavia
+27052,Pavia
+27053,Pavia
+27054,Pavia
+27055,Pavia
+27056,Pavia
+27057,Pavia
+27058,Pavia
+27059,Pavia
+27061,Pavia
+27100,Pavia
+28010,Novara
+28011,Novara
+28012,Novara
+28013,Novara
+28014,Novara
+28015,Novara
+28016,Novara
+28017,Novara
+28019,Novara
+28021,Novara
+28024,Novara
+28028,Novara
+28040,Novara
+28041,Novara
+28043,Novara
+28045,Novara
+28046,Novara
+28047,Novara
+28050,Novara
+28053,Novara
+28060,Novara
+28061,Novara
+28062,Novara
+28064,Novara
+28065,Novara
+28066,Novara
+28068,Novara
+28069,Novara
+28070,Novara
+28071,Novara
+28072,Novara
+28073,Novara
+28074,Novara
+28075,Novara
+28076,Novara
+28077,Novara
+28078,Novara
+28079,Novara
+28100,Novara
+28801,Verbano-Cusio-Ossola
+28802,Verbano-Cusio-Ossola
+28803,Verbano-Cusio-Ossola
+28804,Verbano-Cusio-Ossola
+28805,Verbano-Cusio-Ossola
+28811,Verbano-Cusio-Ossola
+28812,Verbano-Cusio-Ossola
+28813,Verbano-Cusio-Ossola
+28814,Verbano-Cusio-Ossola
+28815,Verbano-Cusio-Ossola
+28816,Verbano-Cusio-Ossola
+28817,Verbano-Cusio-Ossola
+28818,Verbano-Cusio-Ossola
+28819,Verbano-Cusio-Ossola
+28821,Verbano-Cusio-Ossola
+28822,Verbano-Cusio-Ossola
+28823,Verbano-Cusio-Ossola
+28824,Verbano-Cusio-Ossola
+28826,Verbano-Cusio-Ossola
+28827,Verbano-Cusio-Ossola
+28828,Verbano-Cusio-Ossola
+28831,Verbano-Cusio-Ossola
+28832,Verbano-Cusio-Ossola
+28833,Verbano-Cusio-Ossola
+28836,Verbano-Cusio-Ossola
+28838,Verbano-Cusio-Ossola
+28841,Verbano-Cusio-Ossola
+28842,Verbano-Cusio-Ossola
+28843,Verbano-Cusio-Ossola
+28844,Verbano-Cusio-Ossola
+28845,Verbano-Cusio-Ossola
+28846,Verbano-Cusio-Ossola
+28851,Verbano-Cusio-Ossola
+28852,Verbano-Cusio-Ossola
+28853,Verbano-Cusio-Ossola
+28854,Verbano-Cusio-Ossola
+28855,Verbano-Cusio-Ossola
+28856,Verbano-Cusio-Ossola
+28857,Verbano-Cusio-Ossola
+28858,Verbano-Cusio-Ossola
+28859,Verbano-Cusio-Ossola
+28861,Verbano-Cusio-Ossola
+28862,Verbano-Cusio-Ossola
+28863,Verbano-Cusio-Ossola
+28864,Verbano-Cusio-Ossola
+28865,Verbano-Cusio-Ossola
+28866,Verbano-Cusio-Ossola
+28868,Verbano-Cusio-Ossola
+28871,Verbano-Cusio-Ossola
+28873,Verbano-Cusio-Ossola
+28875,Verbano-Cusio-Ossola
+28876,Verbano-Cusio-Ossola
+28877,Verbano-Cusio-Ossola
+28879,Verbano-Cusio-Ossola
+28881,Verbano-Cusio-Ossola
+28883,Verbano-Cusio-Ossola
+28884,Verbano-Cusio-Ossola
+28885,Verbano-Cusio-Ossola
+28886,Verbano-Cusio-Ossola
+28887,Verbano-Cusio-Ossola
+28891,Verbano-Cusio-Ossola
+28893,Verbano-Cusio-Ossola
+28894,Verbano-Cusio-Ossola
+28895,Verbano-Cusio-Ossola
+28896,Verbano-Cusio-Ossola
+28897,Verbano-Cusio-Ossola
+28898,Verbano-Cusio-Ossola
+28899,Verbano-Cusio-Ossola
+28921,Verbano-Cusio-Ossola
+28922,Verbano-Cusio-Ossola
+28923,Verbano-Cusio-Ossola
+28924,Verbano-Cusio-Ossola
+28925,Verbano-Cusio-Ossola
+29010,Piacenza
+29011,Piacenza
+29012,Piacenza
+29013,Piacenza
+29014,Piacenza
+29015,Piacenza
+29016,Piacenza
+29017,Piacenza
+29018,Piacenza
+29019,Piacenza
+29020,Piacenza
+29021,Piacenza
+29022,Piacenza
+29023,Piacenza
+29024,Piacenza
+29025,Piacenza
+29026,Piacenza
+29027,Piacenza
+29028,Piacenza
+29029,Piacenza
+29031,Piacenza
+29121,Piacenza
+29122,Piacenza
+30010,Venezia
+30013,Venezia
+30014,Venezia
+30015,Venezia
+30016,Venezia
+30020,Venezia
+30021,Venezia
+30022,Venezia
+30023,Venezia
+30024,Venezia
+30025,Venezia
+30026,Venezia
+30027,Venezia
+30028,Venezia
+30029,Venezia
+30030,Venezia
+30031,Venezia
+30032,Venezia
+30033,Venezia
+30034,Venezia
+30035,Venezia
+30036,Venezia
+30037,Venezia
+30038,Venezia
+30039,Venezia
+30121,Venezia
+30122,Venezia
+30123,Venezia
+30124,Venezia
+30125,Venezia
+30126,Venezia
+30132,Venezia
+30133,Venezia
+30135,Venezia
+30141,Venezia
+30142,Venezia
+30171,Venezia
+30172,Venezia
+30173,Venezia
+30174,Venezia
+30175,Venezia
+30176,Venezia
+31010,Treviso
+31011,Treviso
+31012,Treviso
+31013,Treviso
+31014,Treviso
+31015,Treviso
+31016,Treviso
+31017,Treviso
+31018,Treviso
+31020,Treviso
+31021,Treviso
+31022,Treviso
+31023,Treviso
+31024,Treviso
+31025,Treviso
+31026,Treviso
+31027,Treviso
+31028,Treviso
+31029,Treviso
+31030,Treviso
+31031,Treviso
+31032,Treviso
+31033,Treviso
+31034,Treviso
+31035,Treviso
+31036,Treviso
+31037,Treviso
+31038,Treviso
+31039,Treviso
+31040,Treviso
+31041,Treviso
+31042,Treviso
+31043,Treviso
+31044,Treviso
+31045,Treviso
+31046,Treviso
+31047,Treviso
+31048,Treviso
+31049,Treviso
+31050,Treviso
+31051,Treviso
+31052,Treviso
+31053,Treviso
+31054,Treviso
+31055,Treviso
+31056,Treviso
+31057,Treviso
+31058,Treviso
+31059,Treviso
+31100,Treviso
+32010,Belluno
+32012,Belluno
+32013,Belluno
+32014,Belluno
+32016,Belluno
+32020,Belluno
+32021,Belluno
+32022,Belluno
+32023,Belluno
+32026,Belluno
+32027,Belluno
+32030,Belluno
+32031,Belluno
+32032,Belluno
+32033,Belluno
+32034,Belluno
+32035,Belluno
+32036,Belluno
+32037,Belluno
+32038,Belluno
+32040,Belluno
+32041,Belluno
+32042,Belluno
+32043,Belluno
+32044,Belluno
+32045,Belluno
+32046,Belluno
+32100,Belluno
+33010,Udine
+33011,Udine
+33012,Udine
+33013,Udine
+33014,Udine
+33015,Udine
+33016,Udine
+33017,Udine
+33018,Udine
+33019,Udine
+33020,Udine
+33021,Udine
+33022,Udine
+33023,Udine
+33024,Udine
+33025,Udine
+33026,Udine
+33027,Udine
+33028,Udine
+33029,Udine
+33030,Udine
+33031,Udine
+33032,Udine
+33033,Udine
+33034,Udine
+33035,Udine
+33036,Udine
+33037,Udine
+33038,Udine
+33039,Udine
+33040,Udine
+33041,Udine
+33042,Udine
+33043,Udine
+33044,Udine
+33045,Udine
+33046,Udine
+33047,Udine
+33048,Udine
+33049,Udine
+33050,Udine
+33051,Udine
+33052,Udine
+33053,Udine
+33054,Udine
+33055,Udine
+33056,Udine
+33057,Udine
+33058,Udine
+33059,Udine
+33061,Udine
+33070,Pordenone
+33072,Pordenone
+33074,Pordenone
+33075,Pordenone
+33076,Pordenone
+33077,Pordenone
+33078,Pordenone
+33079,Pordenone
+33080,Pordenone
+33081,Pordenone
+33082,Pordenone
+33083,Pordenone
+33084,Pordenone
+33085,Pordenone
+33086,Pordenone
+33087,Pordenone
+33090,Pordenone
+33092,Pordenone
+33094,Pordenone
+33095,Pordenone
+33097,Pordenone
+33098,Pordenone
+33099,Pordenone
+33100,Udine
+33170,Pordenone
+34010,Trieste
+34011,Trieste
+34015,Trieste
+34016,Trieste
+34018,Trieste
+34070,Gorizia
+34071,Gorizia
+34072,Gorizia
+34073,Gorizia
+34074,Gorizia
+34075,Gorizia
+34076,Gorizia
+34077,Gorizia
+34078,Gorizia
+34079,Gorizia
+34121,Trieste
+34122,Trieste
+34123,Trieste
+34124,Trieste
+34125,Trieste
+34126,Trieste
+34127,Trieste
+34128,Trieste
+34129,Trieste
+34131,Trieste
+34132,Trieste
+34133,Trieste
+34134,Trieste
+34135,Trieste
+34136,Trieste
+34137,Trieste
+34138,Trieste
+34139,Trieste
+34141,Trieste
+34142,Trieste
+34143,Trieste
+34144,Trieste
+34145,Trieste
+34146,Trieste
+34147,Trieste
+34148,Trieste
+34149,Trieste
+34151,Trieste
+34170,Gorizia
+35010,Padova
+35011,Padova
+35012,Padova
+35013,Padova
+35014,Padova
+35015,Padova
+35016,Padova
+35017,Padova
+35018,Padova
+35019,Padova
+35020,Padova
+35021,Padova
+35022,Padova
+35023,Padova
+35024,Padova
+35025,Padova
+35026,Padova
+35027,Padova
+35028,Padova
+35029,Padova
+35030,Padova
+35031,Padova
+35032,Padova
+35034,Padova
+35035,Padova
+35036,Padova
+35037,Padova
+35038,Padova
+35040,Padova
+35041,Padova
+35042,Padova
+35043,Padova
+35044,Padova
+35045,Padova
+35046,Padova
+35047,Padova
+35048,Padova
+35121,Padova
+35122,Padova
+35123,Padova
+35124,Padova
+35125,Padova
+35126,Padova
+35127,Padova
+35128,Padova
+35129,Padova
+35131,Padova
+35132,Padova
+35133,Padova
+35134,Padova
+35135,Padova
+35136,Padova
+35137,Padova
+35138,Padova
+35139,Padova
+35141,Padova
+35142,Padova
+35143,Padova
+36010,Vicenza
+36011,Vicenza
+36012,Vicenza
+36013,Vicenza
+36014,Vicenza
+36015,Vicenza
+36016,Vicenza
+36020,Vicenza
+36021,Vicenza
+36022,Vicenza
+36023,Vicenza
+36024,Vicenza
+36025,Vicenza
+36026,Vicenza
+36027,Vicenza
+36028,Vicenza
+36029,Vicenza
+36030,Vicenza
+36031,Vicenza
+36032,Vicenza
+36033,Vicenza
+36034,Vicenza
+36035,Vicenza
+36036,Vicenza
+36040,Vicenza
+36042,Vicenza
+36043,Vicenza
+36044,Vicenza
+36045,Vicenza
+36046,Vicenza
+36047,Vicenza
+36048,Vicenza
+36050,Vicenza
+36051,Vicenza
+36052,Vicenza
+36053,Vicenza
+36054,Vicenza
+36055,Vicenza
+36056,Vicenza
+36057,Vicenza
+36060,Vicenza
+36061,Vicenza
+36063,Vicenza
+36064,Vicenza
+36065,Vicenza
+36066,Vicenza
+36070,Vicenza
+36071,Vicenza
+36072,Vicenza
+36073,Vicenza
+36075,Vicenza
+36076,Vicenza
+36077,Vicenza
+36078,Vicenza
+36100,Vicenza
+37010,Verona
+37011,Verona
+37012,Verona
+37013,Verona
+37014,Verona
+37015,Verona
+37016,Verona
+37017,Verona
+37018,Verona
+37019,Verona
+37020,Verona
+37021,Verona
+37022,Verona
+37023,Verona
+37024,Verona
+37026,Verona
+37028,Verona
+37029,Verona
+37030,Verona
+37031,Verona
+37032,Verona
+37035,Verona
+37036,Verona
+37038,Verona
+37039,Verona
+37040,Verona
+37041,Verona
+37042,Verona
+37043,Verona
+37044,Verona
+37045,Verona
+37046,Verona
+37047,Verona
+37049,Verona
+37050,Verona
+37051,Verona
+37052,Verona
+37053,Verona
+37054,Verona
+37055,Verona
+37056,Verona
+37057,Verona
+37058,Verona
+37059,Verona
+37060,Verona
+37062,Verona
+37063,Verona
+37064,Verona
+37066,Verona
+37067,Verona
+37068,Verona
+37069,Verona
+37121,Verona
+37122,Verona
+37123,Verona
+37124,Verona
+37125,Verona
+37126,Verona
+37127,Verona
+37128,Verona
+37129,Verona
+37131,Verona
+37132,Verona
+37133,Verona
+37134,Verona
+37135,Verona
+37136,Verona
+37137,Verona
+37138,Verona
+37139,Verona
+37141,Verona
+37142,Verona
+38010,Trento
+38011,Trento
+38012,Trento
+38013,Trento
+38015,Trento
+38016,Trento
+38017,Trento
+38018,Trento
+38019,Trento
+38020,Trento
+38022,Trento
+38023,Trento
+38024,Trento
+38025,Trento
+38026,Trento
+38027,Trento
+38028,Trento
+38029,Trento
+38030,Trento
+38031,Trento
+38032,Trento
+38033,Trento
+38034,Trento
+38035,Trento
+38036,Trento
+38037,Trento
+38038,Trento
+38040,Trento
+38041,Trento
+38042,Trento
+38043,Trento
+38045,Trento
+38046,Trento
+38047,Trento
+38048,Trento
+38049,Trento
+38050,Trento
+38051,Trento
+38052,Trento
+38053,Trento
+38054,Trento
+38055,Trento
+38056,Trento
+38057,Trento
+38059,Trento
+38060,Trento
+38061,Trento
+38062,Trento
+38063,Trento
+38064,Trento
+38065,Trento
+38066,Trento
+38067,Trento
+38068,Trento
+38069,Trento
+38070,Trento
+38071,Trento
+38073,Trento
+38074,Trento
+38075,Trento
+38076,Trento
+38077,Trento
+38078,Trento
+38079,Trento
+38080,Trento
+38082,Trento
+38083,Trento
+38085,Trento
+38086,Trento
+38087,Trento
+38088,Trento
+38089,Trento
+38091,Trento
+38092,Trento
+38093,Trento
+38094,Trento
+38095,Trento
+38096,Trento
+38097,Trento
+38098,Trento
+38099,Trento
+38121,Trento
+38122,Trento
+38123,Trento
+39010,Bolzano/Bozen
+39011,Bolzano/Bozen
+39012,Bolzano/Bozen
+39013,Bolzano/Bozen
+39014,Bolzano/Bozen
+39015,Bolzano/Bozen
+39016,Bolzano/Bozen
+39017,Bolzano/Bozen
+39018,Bolzano/Bozen
+39019,Bolzano/Bozen
+39020,Bolzano/Bozen
+39021,Bolzano/Bozen
+39022,Bolzano/Bozen
+39023,Bolzano/Bozen
+39024,Bolzano/Bozen
+39025,Bolzano/Bozen
+39026,Bolzano/Bozen
+39027,Bolzano/Bozen
+39028,Bolzano/Bozen
+39029,Bolzano/Bozen
+39030,Bolzano/Bozen
+39031,Bolzano/Bozen
+39032,Bolzano/Bozen
+39033,Bolzano/Bozen
+39034,Bolzano/Bozen
+39035,Bolzano/Bozen
+39036,Bolzano/Bozen
+39037,Bolzano/Bozen
+39038,Bolzano/Bozen
+39039,Bolzano/Bozen
+39040,Bolzano/Bozen
+39041,Bolzano/Bozen
+39042,Bolzano/Bozen
+39043,Bolzano/Bozen
+39044,Bolzano/Bozen
+39045,Bolzano/Bozen
+39046,Bolzano/Bozen
+39047,Bolzano/Bozen
+39048,Bolzano/Bozen
+39049,Bolzano/Bozen
+39050,Bolzano/Bozen
+39051,Bolzano/Bozen
+39052,Bolzano/Bozen
+39053,Bolzano/Bozen
+39054,Bolzano/Bozen
+39055,Bolzano/Bozen
+39056,Bolzano/Bozen
+39057,Bolzano/Bozen
+39058,Bolzano/Bozen
+39100,Bolzano/Bozen
+40010,Bologna
+40011,Bologna
+40012,Bologna
+40013,Bologna
+40014,Bologna
+40015,Bologna
+40016,Bologna
+40017,Bologna
+40018,Bologna
+40019,Bologna
+40020,Bologna
+40021,Bologna
+40022,Bologna
+40023,Bologna
+40024,Bologna
+40025,Bologna
+40026,Bologna
+40027,Bologna
+40030,Bologna
+40032,Bologna
+40033,Bologna
+40034,Bologna
+40035,Bologna
+40036,Bologna
+40037,Bologna
+40038,Bologna
+40041,Bologna
+40042,Bologna
+40043,Bologna
+40046,Bologna
+40048,Bologna
+40050,Bologna
+40051,Bologna
+40052,Bologna
+40053,Bologna
+40054,Bologna
+40055,Bologna
+40056,Bologna
+40057,Bologna
+40059,Bologna
+40060,Bologna
+40061,Bologna
+40062,Bologna
+40063,Bologna
+40064,Bologna
+40065,Bologna
+40066,Bologna
+40067,Bologna
+40068,Bologna
+40069,Bologna
+40121,Bologna
+40122,Bologna
+40123,Bologna
+40124,Bologna
+40125,Bologna
+40126,Bologna
+40127,Bologna
+40128,Bologna
+40129,Bologna
+40131,Bologna
+40132,Bologna
+40133,Bologna
+40134,Bologna
+40135,Bologna
+40136,Bologna
+40137,Bologna
+40138,Bologna
+40139,Bologna
+40141,Bologna
+41011,Modena
+41012,Modena
+41013,Modena
+41014,Modena
+41015,Modena
+41016,Modena
+41017,Modena
+41018,Modena
+41019,Modena
+41020,Modena
+41021,Modena
+41022,Modena
+41023,Modena
+41025,Modena
+41026,Modena
+41027,Modena
+41028,Modena
+41029,Modena
+41030,Modena
+41031,Modena
+41032,Modena
+41033,Modena
+41034,Modena
+41035,Modena
+41036,Modena
+41037,Modena
+41038,Modena
+41039,Modena
+41040,Modena
+41042,Modena
+41043,Modena
+41044,Modena
+41045,Modena
+41046,Modena
+41048,Modena
+41049,Modena
+41051,Modena
+41052,Modena
+41053,Modena
+41054,Modena
+41055,Modena
+41056,Modena
+41057,Modena
+41058,Modena
+41059,Modena
+41121,Modena
+41122,Modena
+41123,Modena
+41124,Modena
+41125,Modena
+41126,Modena
+42010,Reggio nell'Emilia
+42011,Reggio nell'Emilia
+42012,Reggio nell'Emilia
+42013,Reggio nell'Emilia
+42014,Reggio nell'Emilia
+42015,Reggio nell'Emilia
+42016,Reggio nell'Emilia
+42017,Reggio nell'Emilia
+42018,Reggio nell'Emilia
+42019,Reggio nell'Emilia
+42020,Reggio nell'Emilia
+42021,Reggio nell'Emilia
+42022,Reggio nell'Emilia
+42023,Reggio nell'Emilia
+42024,Reggio nell'Emilia
+42025,Reggio nell'Emilia
+42026,Reggio nell'Emilia
+42027,Reggio nell'Emilia
+42028,Reggio nell'Emilia
+42030,Reggio nell'Emilia
+42031,Reggio nell'Emilia
+42032,Reggio nell'Emilia
+42033,Reggio nell'Emilia
+42034,Reggio nell'Emilia
+42035,Reggio nell'Emilia
+42040,Reggio nell'Emilia
+42041,Reggio nell'Emilia
+42042,Reggio nell'Emilia
+42043,Reggio nell'Emilia
+42044,Reggio nell'Emilia
+42045,Reggio nell'Emilia
+42046,Reggio nell'Emilia
+42047,Reggio nell'Emilia
+42048,Reggio nell'Emilia
+42049,Reggio nell'Emilia
+42121,Reggio nell'Emilia
+42122,Reggio nell'Emilia
+42123,Reggio nell'Emilia
+42124,Reggio nell'Emilia
+43010,Parma
+43011,Parma
+43012,Parma
+43013,Parma
+43014,Parma
+43015,Parma
+43016,Parma
+43017,Parma
+43018,Parma
+43019,Parma
+43021,Parma
+43022,Parma
+43024,Parma
+43025,Parma
+43028,Parma
+43029,Parma
+43030,Parma
+43032,Parma
+43035,Parma
+43036,Parma
+43037,Parma
+43038,Parma
+43039,Parma
+43040,Parma
+43041,Parma
+43042,Parma
+43043,Parma
+43044,Parma
+43045,Parma
+43046,Parma
+43047,Parma
+43048,Parma
+43049,Parma
+43050,Parma
+43051,Parma
+43052,Parma
+43053,Parma
+43056,Parma
+43058,Parma
+43059,Parma
+43121,Parma
+43122,Parma
+43123,Parma
+43124,Parma
+43125,Parma
+43126,Parma
+44011,Ferrara
+44012,Ferrara
+44015,Ferrara
+44019,Ferrara
+44020,Ferrara
+44021,Ferrara
+44022,Ferrara
+44023,Ferrara
+44026,Ferrara
+44027,Ferrara
+44028,Ferrara
+44029,Ferrara
+44033,Ferrara
+44034,Ferrara
+44037,Ferrara
+44039,Ferrara
+44041,Ferrara
+44042,Ferrara
+44045,Ferrara
+44047,Ferrara
+44049,Ferrara
+44121,Ferrara
+44122,Ferrara
+44123,Ferrara
+44124,Ferrara
+45010,Rovigo
+45011,Rovigo
+45012,Rovigo
+45014,Rovigo
+45015,Rovigo
+45017,Rovigo
+45018,Rovigo
+45019,Rovigo
+45020,Rovigo
+45021,Rovigo
+45022,Rovigo
+45023,Rovigo
+45024,Rovigo
+45025,Rovigo
+45026,Rovigo
+45027,Rovigo
+45030,Rovigo
+45031,Rovigo
+45032,Rovigo
+45033,Rovigo
+45034,Rovigo
+45035,Rovigo
+45036,Rovigo
+45037,Rovigo
+45038,Rovigo
+45039,Rovigo
+45100,Rovigo
+46010,Mantova
+46011,Mantova
+46012,Mantova
+46013,Mantova
+46014,Mantova
+46017,Mantova
+46018,Mantova
+46019,Mantova
+46020,Mantova
+46021,Mantova
+46023,Mantova
+46024,Mantova
+46025,Mantova
+46026,Mantova
+46027,Mantova
+46028,Mantova
+46029,Mantova
+46030,Mantova
+46031,Mantova
+46032,Mantova
+46033,Mantova
+46034,Mantova
+46035,Mantova
+46036,Mantova
+46037,Mantova
+46039,Mantova
+46040,Mantova
+46041,Mantova
+46042,Mantova
+46043,Mantova
+46044,Mantova
+46045,Mantova
+46046,Mantova
+46047,Mantova
+46048,Mantova
+46049,Mantova
+46051,Mantova
+46100,Mantova
+47010,Forlì-Cesena
+47011,Forlì-Cesena
+47012,Forlì-Cesena
+47013,Forlì-Cesena
+47014,Forlì-Cesena
+47015,Forlì-Cesena
+47016,Forlì-Cesena
+47017,Forlì-Cesena
+47018,Forlì-Cesena
+47019,Forlì-Cesena
+47020,Forlì-Cesena
+47021,Forlì-Cesena
+47025,Forlì-Cesena
+47027,Forlì-Cesena
+47028,Forlì-Cesena
+47030,Forlì-Cesena
+47032,Forlì-Cesena
+47034,Forlì-Cesena
+47035,Forlì-Cesena
+47039,Forlì-Cesena
+47042,Forlì-Cesena
+47043,Forlì-Cesena
+47121,Forlì-Cesena
+47122,Forlì-Cesena
+47521,Forlì-Cesena
+47522,Forlì-Cesena
+47814,Rimini
+47822,Rimini
+47824,Rimini
+47826,Rimini
+47832,Rimini
+47833,Rimini
+47834,Rimini
+47835,Rimini
+47836,Rimini
+47837,Rimini
+47838,Rimini
+47841,Rimini
+47842,Rimini
+47843,Rimini
+47853,Rimini
+47854,Rimini
+47855,Rimini
+47861,Rimini
+47862,Rimini
+47863,Rimini
+47864,Rimini
+47865,Rimini
+47866,Rimini
+47867,Rimini
+47868,Rimini
+47869,Rimini
+47921,Rimini
+47922,Rimini
+47923,Rimini
+47924,Rimini
+48011,Ravenna
+48012,Ravenna
+48013,Ravenna
+48014,Ravenna
+48015,Ravenna
+48017,Ravenna
+48018,Ravenna
+48020,Ravenna
+48022,Ravenna
+48024,Ravenna
+48025,Ravenna
+48026,Ravenna
+48027,Ravenna
+48031,Ravenna
+48032,Ravenna
+48033,Ravenna
+48034,Ravenna
+48121,Ravenna
+48122,Ravenna
+48123,Ravenna
+48124,Ravenna
+48125,Ravenna
+50012,Firenze
+50013,Firenze
+50014,Firenze
+50018,Firenze
+50019,Firenze
+50022,Firenze
+50023,Firenze
+50025,Firenze
+50026,Firenze
+50027,Firenze
+50028,Firenze
+50031,Firenze
+50032,Firenze
+50033,Firenze
+50034,Firenze
+50035,Firenze
+50036,Firenze
+50037,Firenze
+50038,Firenze
+50039,Firenze
+50041,Firenze
+50050,Firenze
+50051,Firenze
+50052,Firenze
+50053,Firenze
+50054,Firenze
+50055,Firenze
+50056,Firenze
+50058,Firenze
+50059,Firenze
+50060,Firenze
+50061,Firenze
+50062,Firenze
+50063,Firenze
+50064,Firenze
+50065,Firenze
+50066,Firenze
+50067,Firenze
+50068,Firenze
+50121,Firenze
+50122,Firenze
+50123,Firenze
+50124,Firenze
+50125,Firenze
+50126,Firenze
+50127,Firenze
+50129,Firenze
+50131,Firenze
+50132,Firenze
+50133,Firenze
+50134,Firenze
+50135,Firenze
+50136,Firenze
+50137,Firenze
+50139,Firenze
+50141,Firenze
+50142,Firenze
+50143,Firenze
+50144,Firenze
+50145,Firenze
+51010,Pistoia
+51011,Pistoia
+51012,Pistoia
+51013,Pistoia
+51015,Pistoia
+51016,Pistoia
+51017,Pistoia
+51018,Pistoia
+51019,Pistoia
+51020,Pistoia
+51024,Pistoia
+51028,Pistoia
+51031,Pistoia
+51034,Pistoia
+51035,Pistoia
+51036,Pistoia
+51037,Pistoia
+51039,Pistoia
+51100,Pistoia
+52010,Arezzo
+52011,Arezzo
+52014,Arezzo
+52015,Arezzo
+52016,Arezzo
+52017,Arezzo
+52018,Arezzo
+52019,Arezzo
+52020,Arezzo
+52021,Arezzo
+52022,Arezzo
+52024,Arezzo
+52025,Arezzo
+52026,Arezzo
+52027,Arezzo
+52028,Arezzo
+52029,Arezzo
+52031,Arezzo
+52032,Arezzo
+52033,Arezzo
+52035,Arezzo
+52036,Arezzo
+52037,Arezzo
+52038,Arezzo
+52041,Arezzo
+52043,Arezzo
+52044,Arezzo
+52045,Arezzo
+52046,Arezzo
+52047,Arezzo
+52048,Arezzo
+52100,Arezzo
+53011,Siena
+53012,Siena
+53013,Siena
+53014,Siena
+53015,Siena
+53016,Siena
+53017,Siena
+53018,Siena
+53019,Siena
+53020,Siena
+53021,Siena
+53022,Siena
+53023,Siena
+53024,Siena
+53025,Siena
+53026,Siena
+53027,Siena
+53030,Siena
+53031,Siena
+53034,Siena
+53035,Siena
+53036,Siena
+53037,Siena
+53040,Siena
+53041,Siena
+53042,Siena
+53043,Siena
+53045,Siena
+53047,Siena
+53048,Siena
+53049,Siena
+53100,Siena
+54010,Massa-Carrara
+54011,Massa-Carrara
+54012,Massa-Carrara
+54013,Massa-Carrara
+54014,Massa-Carrara
+54015,Massa-Carrara
+54016,Massa-Carrara
+54021,Massa-Carrara
+54023,Massa-Carrara
+54026,Massa-Carrara
+54027,Massa-Carrara
+54028,Massa-Carrara
+54029,Massa-Carrara
+54033,Massa-Carrara
+54035,Massa-Carrara
+54038,Massa-Carrara
+54100,Massa-Carrara
+55010,Lucca
+55011,Lucca
+55012,Lucca
+55013,Lucca
+55014,Lucca
+55015,Lucca
+55016,Lucca
+55018,Lucca
+55019,Lucca
+55020,Lucca
+55021,Lucca
+55022,Lucca
+55023,Lucca
+55025,Lucca
+55027,Lucca
+55030,Lucca
+55031,Lucca
+55032,Lucca
+55033,Lucca
+55034,Lucca
+55035,Lucca
+55036,Lucca
+55038,Lucca
+55039,Lucca
+55040,Lucca
+55041,Lucca
+55042,Lucca
+55045,Lucca
+55047,Lucca
+55049,Lucca
+55051,Lucca
+55054,Lucca
+55060,Lucca
+55061,Lucca
+55062,Lucca
+55064,Lucca
+55100,Lucca
+56010,Pisa
+56011,Pisa
+56012,Pisa
+56017,Pisa
+56019,Pisa
+56020,Pisa
+56021,Pisa
+56022,Pisa
+56023,Pisa
+56024,Pisa
+56025,Pisa
+56028,Pisa
+56029,Pisa
+56030,Pisa
+56031,Pisa
+56032,Pisa
+56033,Pisa
+56034,Pisa
+56035,Pisa
+56036,Pisa
+56037,Pisa
+56038,Pisa
+56040,Pisa
+56041,Pisa
+56042,Pisa
+56043,Pisa
+56044,Pisa
+56045,Pisa
+56046,Pisa
+56048,Pisa
+56121,Pisa
+56122,Pisa
+56123,Pisa
+56124,Pisa
+56125,Pisa
+56126,Pisa
+56127,Pisa
+56128,Pisa
+57014,Livorno
+57016,Livorno
+57017,Livorno
+57020,Livorno
+57021,Livorno
+57022,Livorno
+57023,Livorno
+57025,Livorno
+57027,Livorno
+57028,Livorno
+57030,Livorno
+57031,Livorno
+57032,Livorno
+57033,Livorno
+57034,Livorno
+57036,Livorno
+57037,Livorno
+57038,Livorno
+57121,Livorno
+57122,Livorno
+57123,Livorno
+57124,Livorno
+57125,Livorno
+57126,Livorno
+57127,Livorno
+57128,Livorno
+58010,Grosseto
+58011,Grosseto
+58012,Grosseto
+58014,Grosseto
+58015,Grosseto
+58017,Grosseto
+58018,Grosseto
+58019,Grosseto
+58020,Grosseto
+58022,Grosseto
+58023,Grosseto
+58024,Grosseto
+58025,Grosseto
+58026,Grosseto
+58027,Grosseto
+58031,Grosseto
+58033,Grosseto
+58034,Grosseto
+58036,Grosseto
+58037,Grosseto
+58038,Grosseto
+58042,Grosseto
+58043,Grosseto
+58044,Grosseto
+58045,Grosseto
+58051,Grosseto
+58053,Grosseto
+58054,Grosseto
+58055,Grosseto
+58100,Grosseto
+59011,Prato
+59013,Prato
+59015,Prato
+59016,Prato
+59021,Prato
+59024,Prato
+59025,Prato
+59026,Prato
+59100,Prato
+60010,Ancona
+60011,Ancona
+60012,Ancona
+60013,Ancona
+60015,Ancona
+60018,Ancona
+60019,Ancona
+60020,Ancona
+60021,Ancona
+60022,Ancona
+60024,Ancona
+60025,Ancona
+60026,Ancona
+60027,Ancona
+60030,Ancona
+60031,Ancona
+60033,Ancona
+60034,Ancona
+60035,Ancona
+60036,Ancona
+60037,Ancona
+60038,Ancona
+60039,Ancona
+60040,Ancona
+60041,Ancona
+60043,Ancona
+60044,Ancona
+60048,Ancona
+60121,Ancona
+60122,Ancona
+60123,Ancona
+60124,Ancona
+60125,Ancona
+60126,Ancona
+60127,Ancona
+60128,Ancona
+60129,Ancona
+60131,Ancona
+61010,Pesaro e Urbino
+61011,Pesaro e Urbino
+61012,Pesaro e Urbino
+61013,Pesaro e Urbino
+61020,Pesaro e Urbino
+61021,Pesaro e Urbino
+61022,Pesaro e Urbino
+61023,Pesaro e Urbino
+61024,Pesaro e Urbino
+61025,Pesaro e Urbino
+61026,Pesaro e Urbino
+61028,Pesaro e Urbino
+61029,Pesaro e Urbino
+61030,Pesaro e Urbino
+61032,Pesaro e Urbino
+61033,Pesaro e Urbino
+61034,Pesaro e Urbino
+61036,Pesaro e Urbino
+61037,Pesaro e Urbino
+61038,Pesaro e Urbino
+61039,Pesaro e Urbino
+61040,Pesaro e Urbino
+61041,Pesaro e Urbino
+61042,Pesaro e Urbino
+61043,Pesaro e Urbino
+61044,Pesaro e Urbino
+61045,Pesaro e Urbino
+61046,Pesaro e Urbino
+61047,Pesaro e Urbino
+61048,Pesaro e Urbino
+61049,Pesaro e Urbino
+61121,Pesaro e Urbino
+61122,Pesaro e Urbino
+62010,Macerata
+62011,Macerata
+62012,Macerata
+62014,Macerata
+62015,Macerata
+62017,Macerata
+62018,Macerata
+62019,Macerata
+62020,Macerata
+62021,Macerata
+62022,Macerata
+62024,Macerata
+62025,Macerata
+62026,Macerata
+62027,Macerata
+62028,Macerata
+62029,Macerata
+62031,Macerata
+62032,Macerata
+62034,Macerata
+62035,Macerata
+62036,Macerata
+62038,Macerata
+62039,Macerata
+62100,Macerata
+63061,Ascoli Piceno
+63062,Ascoli Piceno
+63063,Ascoli Piceno
+63064,Ascoli Piceno
+63065,Ascoli Piceno
+63066,Ascoli Piceno
+63067,Ascoli Piceno
+63068,Ascoli Piceno
+63069,Ascoli Piceno
+63071,Ascoli Piceno
+63072,Ascoli Piceno
+63073,Ascoli Piceno
+63074,Ascoli Piceno
+63075,Ascoli Piceno
+63076,Ascoli Piceno
+63077,Ascoli Piceno
+63078,Ascoli Piceno
+63079,Ascoli Piceno
+63081,Ascoli Piceno
+63082,Ascoli Piceno
+63083,Ascoli Piceno
+63084,Ascoli Piceno
+63085,Ascoli Piceno
+63086,Ascoli Piceno
+63087,Ascoli Piceno
+63088,Ascoli Piceno
+63091,Ascoli Piceno
+63092,Ascoli Piceno
+63093,Ascoli Piceno
+63094,Ascoli Piceno
+63095,Ascoli Piceno
+63096,Ascoli Piceno
+63100,Ascoli Piceno
+63811,Fermo
+63812,Fermo
+63813,Fermo
+63814,Fermo
+63815,Fermo
+63816,Fermo
+63821,Fermo
+63822,Fermo
+63823,Fermo
+63824,Fermo
+63825,Fermo
+63826,Fermo
+63827,Fermo
+63828,Fermo
+63831,Fermo
+63832,Fermo
+63833,Fermo
+63834,Fermo
+63835,Fermo
+63836,Fermo
+63837,Fermo
+63838,Fermo
+63839,Fermo
+63841,Fermo
+63842,Fermo
+63843,Fermo
+63844,Fermo
+63845,Fermo
+63846,Fermo
+63847,Fermo
+63848,Fermo
+63851,Fermo
+63852,Fermo
+63853,Fermo
+63854,Fermo
+63855,Fermo
+63856,Fermo
+63857,Fermo
+63858,Fermo
+63900,Fermo
+64010,Teramo
+64011,Teramo
+64012,Teramo
+64013,Teramo
+64014,Teramo
+64015,Teramo
+64016,Teramo
+64018,Teramo
+64020,Teramo
+64021,Teramo
+64023,Teramo
+64024,Teramo
+64025,Teramo
+64026,Teramo
+64027,Teramo
+64028,Teramo
+64030,Teramo
+64031,Teramo
+64032,Teramo
+64033,Teramo
+64034,Teramo
+64035,Teramo
+64036,Teramo
+64037,Teramo
+64039,Teramo
+64040,Teramo
+64041,Teramo
+64042,Teramo
+64043,Teramo
+64044,Teramo
+64045,Teramo
+64046,Teramo
+64047,Teramo
+64049,Teramo
+64100,Teramo
+65010,Pescara
+65011,Pescara
+65012,Pescara
+65013,Pescara
+65014,Pescara
+65015,Pescara
+65017,Pescara
+65019,Pescara
+65020,Pescara
+65022,Pescara
+65023,Pescara
+65024,Pescara
+65025,Pescara
+65026,Pescara
+65027,Pescara
+65028,Pescara
+65029,Pescara
+65121,Pescara
+65122,Pescara
+65123,Pescara
+65124,Pescara
+65125,Pescara
+65126,Pescara
+65127,Pescara
+65128,Pescara
+65129,Pescara
+66010,Chieti
+66011,Chieti
+66012,Chieti
+66014,Chieti
+66015,Chieti
+66016,Chieti
+66017,Chieti
+66018,Chieti
+66019,Chieti
+66020,Chieti
+66021,Chieti
+66022,Chieti
+66023,Chieti
+66026,Chieti
+66030,Chieti
+66031,Chieti
+66032,Chieti
+66033,Chieti
+66034,Chieti
+66036,Chieti
+66037,Chieti
+66038,Chieti
+66040,Chieti
+66041,Chieti
+66042,Chieti
+66043,Chieti
+66044,Chieti
+66045,Chieti
+66046,Chieti
+66047,Chieti
+66050,Chieti
+66051,Chieti
+66052,Chieti
+66054,Chieti
+66100,Chieti
+67010,L'Aquila
+67012,L'Aquila
+67013,L'Aquila
+67014,L'Aquila
+67015,L'Aquila
+67017,L'Aquila
+67019,L'Aquila
+67020,L'Aquila
+67021,L'Aquila
+67022,L'Aquila
+67023,L'Aquila
+67024,L'Aquila
+67025,L'Aquila
+67026,L'Aquila
+67027,L'Aquila
+67028,L'Aquila
+67029,L'Aquila
+67030,L'Aquila
+67031,L'Aquila
+67032,L'Aquila
+67033,L'Aquila
+67034,L'Aquila
+67035,L'Aquila
+67036,L'Aquila
+67037,L'Aquila
+67038,L'Aquila
+67039,L'Aquila
+67040,L'Aquila
+67041,L'Aquila
+67043,L'Aquila
+67044,L'Aquila
+67045,L'Aquila
+67046,L'Aquila
+67047,L'Aquila
+67048,L'Aquila
+67049,L'Aquila
+67050,L'Aquila
+67051,L'Aquila
+67052,L'Aquila
+67053,L'Aquila
+67054,L'Aquila
+67055,L'Aquila
+67056,L'Aquila
+67057,L'Aquila
+67058,L'Aquila
+67059,L'Aquila
+67060,L'Aquila
+67061,L'Aquila
+67062,L'Aquila
+67063,L'Aquila
+67064,L'Aquila
+67066,L'Aquila
+67067,L'Aquila
+67068,L'Aquila
+67069,L'Aquila
+67100,L'Aquila
+70010,Bari
+70011,Bari
+70013,Bari
+70014,Bari
+70015,Bari
+70016,Bari
+70017,Bari
+70018,Bari
+70019,Bari
+70020,Bari
+70021,Bari
+70022,Bari
+70023,Bari
+70024,Bari
+70025,Bari
+70026,Bari
+70027,Bari
+70028,Bari
+70029,Bari
+70032,Bari
+70033,Bari
+70037,Bari
+70038,Bari
+70042,Bari
+70043,Bari
+70044,Bari
+70054,Bari
+70056,Bari
+70121,Bari
+70122,Bari
+70123,Bari
+70124,Bari
+70125,Bari
+70126,Bari
+70127,Bari
+70128,Bari
+70129,Bari
+70131,Bari
+70132,Bari
+71010,Foggia
+71011,Foggia
+71012,Foggia
+71013,Foggia
+71014,Foggia
+71015,Foggia
+71016,Foggia
+71017,Foggia
+71018,Foggia
+71019,Foggia
+71020,Foggia
+71021,Foggia
+71022,Foggia
+71023,Foggia
+71024,Foggia
+71025,Foggia
+71026,Foggia
+71027,Foggia
+71028,Foggia
+71029,Foggia
+71030,Foggia
+71031,Foggia
+71032,Foggia
+71033,Foggia
+71034,Foggia
+71035,Foggia
+71036,Foggia
+71037,Foggia
+71038,Foggia
+71039,Foggia
+71040,Foggia
+71041,Foggia
+71042,Foggia
+71043,Foggia
+71045,Foggia
+71047,Foggia
+71048,Foggia
+71051,Foggia
+71121,Foggia
+71122,Foggia
+72012,Brindisi
+72013,Brindisi
+72014,Brindisi
+72015,Brindisi
+72017,Brindisi
+72018,Brindisi
+72019,Brindisi
+72020,Brindisi
+72021,Brindisi
+72022,Brindisi
+72023,Brindisi
+72024,Brindisi
+72025,Brindisi
+72026,Brindisi
+72027,Brindisi
+72028,Brindisi
+72029,Brindisi
+72100,Brindisi
+73010,Lecce
+73011,Lecce
+73012,Lecce
+73013,Lecce
+73014,Lecce
+73015,Lecce
+73016,Lecce
+73017,Lecce
+73018,Lecce
+73019,Lecce
+73020,Lecce
+73021,Lecce
+73022,Lecce
+73023,Lecce
+73024,Lecce
+73025,Lecce
+73026,Lecce
+73027,Lecce
+73028,Lecce
+73029,Lecce
+73030,Lecce
+73031,Lecce
+73032,Lecce
+73033,Lecce
+73034,Lecce
+73035,Lecce
+73036,Lecce
+73037,Lecce
+73038,Lecce
+73039,Lecce
+73040,Lecce
+73041,Lecce
+73042,Lecce
+73043,Lecce
+73044,Lecce
+73045,Lecce
+73046,Lecce
+73047,Lecce
+73048,Lecce
+73049,Lecce
+73050,Lecce
+73051,Lecce
+73052,Lecce
+73053,Lecce
+73054,Lecce
+73055,Lecce
+73056,Lecce
+73057,Lecce
+73058,Lecce
+73059,Lecce
+73100,Lecce
+74010,Taranto
+74011,Taranto
+74012,Taranto
+74013,Taranto
+74014,Taranto
+74015,Taranto
+74016,Taranto
+74017,Taranto
+74018,Taranto
+74019,Taranto
+74020,Taranto
+74021,Taranto
+74022,Taranto
+74023,Taranto
+74024,Taranto
+74025,Taranto
+74026,Taranto
+74027,Taranto
+74028,Taranto
+74121,Taranto
+74122,Taranto
+74123,Taranto
+75010,Matera
+75011,Matera
+75012,Matera
+75013,Matera
+75014,Matera
+75015,Matera
+75016,Matera
+75017,Matera
+75018,Matera
+75019,Matera
+75020,Matera
+75021,Matera
+75022,Matera
+75023,Matera
+75024,Matera
+75025,Matera
+75026,Matera
+75027,Matera
+75028,Matera
+75029,Matera
+75100,Matera
+76011,Barletta-Andria-Trani
+76012,Barletta-Andria-Trani
+76013,Barletta-Andria-Trani
+76014,Barletta-Andria-Trani
+76015,Barletta-Andria-Trani
+76016,Barletta-Andria-Trani
+76017,Barletta-Andria-Trani
+76121,Barletta-Andria-Trani
+76123,Barletta-Andria-Trani
+76125,Barletta-Andria-Trani
+80010,Napoli
+80011,Napoli
+80012,Napoli
+80013,Napoli
+80014,Napoli
+80016,Napoli
+80017,Napoli
+80018,Napoli
+80019,Napoli
+80020,Napoli
+80021,Napoli
+80022,Napoli
+80023,Napoli
+80024,Napoli
+80025,Napoli
+80026,Napoli
+80027,Napoli
+80028,Napoli
+80029,Napoli
+80030,Napoli
+80031,Napoli
+80032,Napoli
+80033,Napoli
+80034,Napoli
+80035,Napoli
+80036,Napoli
+80038,Napoli
+80039,Napoli
+80040,Napoli
+80041,Napoli
+80042,Napoli
+80044,Napoli
+80045,Napoli
+80046,Napoli
+80047,Napoli
+80048,Napoli
+80049,Napoli
+80050,Napoli
+80051,Napoli
+80053,Napoli
+80054,Napoli
+80055,Napoli
+80056,Napoli
+80057,Napoli
+80058,Napoli
+80059,Napoli
+80060,Napoli
+80061,Napoli
+80062,Napoli
+80063,Napoli
+80065,Napoli
+80066,Napoli
+80067,Napoli
+80069,Napoli
+80070,Napoli
+80071,Napoli
+80072,Napoli
+80073,Napoli
+80074,Napoli
+80075,Napoli
+80076,Napoli
+80077,Napoli
+80078,Napoli
+80079,Napoli
+80081,Napoli
+80121,Napoli
+80122,Napoli
+80123,Napoli
+80124,Napoli
+80125,Napoli
+80126,Napoli
+80127,Napoli
+80128,Napoli
+80129,Napoli
+80131,Napoli
+80132,Napoli
+80133,Napoli
+80134,Napoli
+80135,Napoli
+80136,Napoli
+80137,Napoli
+80138,Napoli
+80139,Napoli
+80141,Napoli
+80142,Napoli
+80143,Napoli
+80144,Napoli
+80145,Napoli
+80146,Napoli
+80147,Napoli
+81010,Caserta
+81011,Caserta
+81012,Caserta
+81013,Caserta
+81014,Caserta
+81016,Caserta
+81017,Caserta
+81020,Caserta
+81021,Caserta
+81022,Caserta
+81023,Caserta
+81024,Caserta
+81025,Caserta
+81027,Caserta
+81028,Caserta
+81030,Caserta
+81031,Caserta
+81032,Caserta
+81033,Caserta
+81034,Caserta
+81035,Caserta
+81036,Caserta
+81037,Caserta
+81038,Caserta
+81039,Caserta
+81040,Caserta
+81041,Caserta
+81042,Caserta
+81043,Caserta
+81044,Caserta
+81046,Caserta
+81047,Caserta
+81049,Caserta
+81050,Caserta
+81051,Caserta
+81052,Caserta
+81053,Caserta
+81054,Caserta
+81055,Caserta
+81056,Caserta
+81057,Caserta
+81058,Caserta
+81059,Caserta
+81100,Caserta
+82010,Benevento
+82011,Benevento
+82013,Benevento
+82014,Benevento
+82015,Benevento
+82016,Benevento
+82017,Benevento
+82018,Benevento
+82019,Benevento
+82020,Benevento
+82021,Benevento
+82022,Benevento
+82023,Benevento
+82024,Benevento
+82025,Benevento
+82026,Benevento
+82027,Benevento
+82028,Benevento
+82029,Benevento
+82030,Benevento
+82031,Benevento
+82032,Benevento
+82033,Benevento
+82034,Benevento
+82036,Benevento
+82037,Benevento
+82038,Benevento
+82100,Benevento
+83010,Avellino
+83011,Avellino
+83012,Avellino
+83013,Avellino
+83014,Avellino
+83015,Avellino
+83016,Avellino
+83017,Avellino
+83018,Avellino
+83020,Avellino
+83021,Avellino
+83022,Avellino
+83023,Avellino
+83024,Avellino
+83025,Avellino
+83027,Avellino
+83028,Avellino
+83029,Avellino
+83030,Avellino
+83031,Avellino
+83032,Avellino
+83034,Avellino
+83035,Avellino
+83036,Avellino
+83037,Avellino
+83038,Avellino
+83039,Avellino
+83040,Avellino
+83041,Avellino
+83042,Avellino
+83043,Avellino
+83044,Avellino
+83045,Avellino
+83046,Avellino
+83047,Avellino
+83048,Avellino
+83049,Avellino
+83050,Avellino
+83051,Avellino
+83052,Avellino
+83053,Avellino
+83054,Avellino
+83055,Avellino
+83056,Avellino
+83057,Avellino
+83058,Avellino
+83059,Avellino
+83100,Avellino
+84010,Salerno
+84011,Salerno
+84012,Salerno
+84013,Salerno
+84014,Salerno
+84015,Salerno
+84016,Salerno
+84017,Salerno
+84018,Salerno
+84019,Salerno
+84020,Salerno
+84021,Salerno
+84022,Salerno
+84023,Salerno
+84024,Salerno
+84025,Salerno
+84026,Salerno
+84027,Salerno
+84028,Salerno
+84029,Salerno
+84030,Salerno
+84031,Salerno
+84032,Salerno
+84033,Salerno
+84034,Salerno
+84035,Salerno
+84036,Salerno
+84037,Salerno
+84038,Salerno
+84039,Salerno
+84040,Salerno
+84042,Salerno
+84043,Salerno
+84044,Salerno
+84045,Salerno
+84046,Salerno
+84047,Salerno
+84048,Salerno
+84049,Salerno
+84050,Salerno
+84051,Salerno
+84052,Salerno
+84053,Salerno
+84055,Salerno
+84056,Salerno
+84057,Salerno
+84059,Salerno
+84060,Salerno
+84061,Salerno
+84062,Salerno
+84065,Salerno
+84066,Salerno
+84067,Salerno
+84068,Salerno
+84069,Salerno
+84070,Salerno
+84073,Salerno
+84074,Salerno
+84075,Salerno
+84076,Salerno
+84077,Salerno
+84078,Salerno
+84079,Salerno
+84080,Salerno
+84081,Salerno
+84082,Salerno
+84083,Salerno
+84084,Salerno
+84085,Salerno
+84086,Salerno
+84087,Salerno
+84088,Salerno
+84090,Salerno
+84091,Salerno
+84092,Salerno
+84095,Salerno
+84096,Salerno
+84098,Salerno
+84099,Salerno
+84121,Salerno
+84122,Salerno
+84123,Salerno
+84124,Salerno
+84125,Salerno
+84126,Salerno
+84127,Salerno
+84128,Salerno
+84129,Salerno
+84131,Salerno
+84132,Salerno
+84133,Salerno
+84134,Salerno
+84135,Salerno
+85010,Potenza
+85011,Potenza
+85012,Potenza
+85013,Potenza
+85014,Potenza
+85015,Potenza
+85016,Potenza
+85017,Potenza
+85018,Potenza
+85020,Potenza
+85021,Potenza
+85022,Potenza
+85023,Potenza
+85024,Potenza
+85025,Potenza
+85026,Potenza
+85027,Potenza
+85028,Potenza
+85029,Potenza
+85030,Potenza
+85031,Potenza
+85032,Potenza
+85033,Potenza
+85034,Potenza
+85035,Potenza
+85036,Potenza
+85037,Potenza
+85038,Potenza
+85039,Potenza
+85040,Potenza
+85042,Potenza
+85043,Potenza
+85044,Potenza
+85046,Potenza
+85047,Potenza
+85048,Potenza
+85049,Potenza
+85050,Potenza
+85051,Potenza
+85052,Potenza
+85053,Potenza
+85054,Potenza
+85055,Potenza
+85056,Potenza
+85057,Potenza
+85058,Potenza
+85059,Potenza
+85100,Potenza
+86010,Campobasso
+86011,Campobasso
+86012,Campobasso
+86013,Campobasso
+86014,Campobasso
+86015,Campobasso
+86016,Campobasso
+86017,Campobasso
+86018,Campobasso
+86019,Campobasso
+86020,Campobasso
+86021,Campobasso
+86022,Campobasso
+86023,Campobasso
+86024,Campobasso
+86025,Campobasso
+86026,Campobasso
+86027,Campobasso
+86028,Campobasso
+86029,Campobasso
+86030,Campobasso
+86031,Campobasso
+86032,Campobasso
+86033,Campobasso
+86034,Campobasso
+86035,Campobasso
+86036,Campobasso
+86037,Campobasso
+86038,Campobasso
+86039,Campobasso
+86040,Campobasso
+86041,Campobasso
+86042,Campobasso
+86043,Campobasso
+86044,Campobasso
+86045,Campobasso
+86046,Campobasso
+86047,Campobasso
+86048,Campobasso
+86049,Campobasso
+86070,Isernia
+86071,Isernia
+86072,Isernia
+86073,Isernia
+86074,Isernia
+86075,Isernia
+86077,Isernia
+86078,Isernia
+86079,Isernia
+86080,Isernia
+86081,Isernia
+86082,Isernia
+86083,Isernia
+86084,Isernia
+86085,Isernia
+86086,Isernia
+86087,Isernia
+86088,Isernia
+86089,Isernia
+86090,Isernia
+86091,Isernia
+86092,Isernia
+86093,Isernia
+86094,Isernia
+86095,Isernia
+86096,Isernia
+86097,Isernia
+86100,Campobasso
+86170,Isernia
+87010,Cosenza
+87011,Cosenza
+87012,Cosenza
+87013,Cosenza
+87014,Cosenza
+87015,Cosenza
+87016,Cosenza
+87017,Cosenza
+87018,Cosenza
+87019,Cosenza
+87020,Cosenza
+87021,Cosenza
+87022,Cosenza
+87023,Cosenza
+87024,Cosenza
+87026,Cosenza
+87027,Cosenza
+87028,Cosenza
+87029,Cosenza
+87030,Cosenza
+87031,Cosenza
+87032,Cosenza
+87033,Cosenza
+87034,Cosenza
+87035,Cosenza
+87036,Cosenza
+87037,Cosenza
+87038,Cosenza
+87040,Cosenza
+87041,Cosenza
+87042,Cosenza
+87043,Cosenza
+87044,Cosenza
+87045,Cosenza
+87046,Cosenza
+87047,Cosenza
+87048,Cosenza
+87050,Cosenza
+87051,Cosenza
+87052,Cosenza
+87053,Cosenza
+87054,Cosenza
+87055,Cosenza
+87056,Cosenza
+87057,Cosenza
+87058,Cosenza
+87059,Cosenza
+87060,Cosenza
+87061,Cosenza
+87062,Cosenza
+87064,Cosenza
+87066,Cosenza
+87069,Cosenza
+87070,Cosenza
+87071,Cosenza
+87072,Cosenza
+87073,Cosenza
+87074,Cosenza
+87075,Cosenza
+87076,Cosenza
+87100,Cosenza
+88020,Catanzaro
+88021,Catanzaro
+88022,Catanzaro
+88024,Catanzaro
+88025,Catanzaro
+88040,Catanzaro
+88041,Catanzaro
+88042,Catanzaro
+88044,Catanzaro
+88045,Catanzaro
+88046,Catanzaro
+88047,Catanzaro
+88049,Catanzaro
+88050,Catanzaro
+88051,Catanzaro
+88054,Catanzaro
+88055,Catanzaro
+88056,Catanzaro
+88060,Catanzaro
+88062,Catanzaro
+88064,Catanzaro
+88065,Catanzaro
+88067,Catanzaro
+88068,Catanzaro
+88069,Catanzaro
+88070,Catanzaro
+88100,Catanzaro
+88811,Crotone
+88812,Crotone
+88813,Crotone
+88814,Crotone
+88815,Crotone
+88816,Crotone
+88817,Crotone
+88818,Crotone
+88819,Crotone
+88821,Crotone
+88822,Crotone
+88823,Crotone
+88824,Crotone
+88825,Crotone
+88831,Crotone
+88832,Crotone
+88833,Crotone
+88834,Crotone
+88835,Crotone
+88836,Crotone
+88837,Crotone
+88838,Crotone
+88841,Crotone
+88842,Crotone
+88900,Crotone
+89010,Reggio Calabria
+89011,Reggio Calabria
+89012,Reggio Calabria
+89013,Reggio Calabria
+89014,Reggio Calabria
+89015,Reggio Calabria
+89016,Reggio Calabria
+89017,Reggio Calabria
+89018,Reggio Calabria
+89020,Reggio Calabria
+89021,Reggio Calabria
+89022,Reggio Calabria
+89023,Reggio Calabria
+89024,Reggio Calabria
+89025,Reggio Calabria
+89026,Reggio Calabria
+89027,Reggio Calabria
+89028,Reggio Calabria
+89029,Reggio Calabria
+89030,Reggio Calabria
+89031,Reggio Calabria
+89032,Reggio Calabria
+89033,Reggio Calabria
+89034,Reggio Calabria
+89035,Reggio Calabria
+89036,Reggio Calabria
+89037,Reggio Calabria
+89038,Reggio Calabria
+89039,Reggio Calabria
+89040,Reggio Calabria
+89041,Reggio Calabria
+89042,Reggio Calabria
+89043,Reggio Calabria
+89044,Reggio Calabria
+89045,Reggio Calabria
+89046,Reggio Calabria
+89047,Reggio Calabria
+89048,Reggio Calabria
+89049,Reggio Calabria
+89050,Reggio Calabria
+89052,Reggio Calabria
+89054,Reggio Calabria
+89056,Reggio Calabria
+89057,Reggio Calabria
+89058,Reggio Calabria
+89060,Reggio Calabria
+89062,Reggio Calabria
+89063,Reggio Calabria
+89064,Reggio Calabria
+89065,Reggio Calabria
+89069,Reggio Calabria
+89121,Reggio Calabria
+89122,Reggio Calabria
+89123,Reggio Calabria
+89124,Reggio Calabria
+89125,Reggio Calabria
+89126,Reggio Calabria
+89127,Reggio Calabria
+89128,Reggio Calabria
+89129,Reggio Calabria
+89131,Reggio Calabria
+89132,Reggio Calabria
+89133,Reggio Calabria
+89134,Reggio Calabria
+89135,Reggio Calabria
+89812,Vibo Valentia
+89813,Vibo Valentia
+89814,Vibo Valentia
+89815,Vibo Valentia
+89816,Vibo Valentia
+89817,Vibo Valentia
+89818,Vibo Valentia
+89819,Vibo Valentia
+89821,Vibo Valentia
+89822,Vibo Valentia
+89823,Vibo Valentia
+89824,Vibo Valentia
+89831,Vibo Valentia
+89832,Vibo Valentia
+89833,Vibo Valentia
+89834,Vibo Valentia
+89841,Vibo Valentia
+89842,Vibo Valentia
+89843,Vibo Valentia
+89844,Vibo Valentia
+89851,Vibo Valentia
+89852,Vibo Valentia
+89853,Vibo Valentia
+89861,Vibo Valentia
+89862,Vibo Valentia
+89863,Vibo Valentia
+89864,Vibo Valentia
+89866,Vibo Valentia
+89867,Vibo Valentia
+89868,Vibo Valentia
+89900,Vibo Valentia
+90010,Palermo
+90011,Palermo
+90012,Palermo
+90013,Palermo
+90014,Palermo
+90015,Palermo
+90016,Palermo
+90017,Palermo
+90018,Palermo
+90019,Palermo
+90020,Palermo
+90021,Palermo
+90022,Palermo
+90023,Palermo
+90024,Palermo
+90025,Palermo
+90026,Palermo
+90027,Palermo
+90028,Palermo
+90029,Palermo
+90030,Palermo
+90031,Palermo
+90032,Palermo
+90033,Palermo
+90034,Palermo
+90035,Palermo
+90036,Palermo
+90037,Palermo
+90038,Palermo
+90039,Palermo
+90040,Palermo
+90041,Palermo
+90042,Palermo
+90043,Palermo
+90044,Palermo
+90045,Palermo
+90046,Palermo
+90047,Palermo
+90048,Palermo
+90049,Palermo
+90051,Palermo
+90121,Palermo
+90123,Palermo
+90124,Palermo
+90125,Palermo
+90126,Palermo
+90127,Palermo
+90128,Palermo
+90129,Palermo
+90131,Palermo
+90133,Palermo
+90134,Palermo
+90135,Palermo
+90136,Palermo
+90138,Palermo
+90139,Palermo
+90141,Palermo
+90142,Palermo
+90143,Palermo
+90144,Palermo
+90145,Palermo
+90146,Palermo
+90147,Palermo
+90149,Palermo
+90151,Palermo
+91010,Trapani
+91011,Trapani
+91012,Trapani
+91013,Trapani
+91014,Trapani
+91015,Trapani
+91016,Trapani
+91017,Trapani
+91018,Trapani
+91019,Trapani
+91020,Trapani
+91021,Trapani
+91022,Trapani
+91023,Trapani
+91024,Trapani
+91025,Trapani
+91026,Trapani
+91027,Trapani
+91028,Trapani
+91029,Trapani
+91031,Trapani
+91100,Trapani
+92010,Agrigento
+92011,Agrigento
+92012,Agrigento
+92013,Agrigento
+92014,Agrigento
+92015,Agrigento
+92016,Agrigento
+92017,Agrigento
+92018,Agrigento
+92019,Agrigento
+92020,Agrigento
+92021,Agrigento
+92022,Agrigento
+92023,Agrigento
+92024,Agrigento
+92025,Agrigento
+92026,Agrigento
+92027,Agrigento
+92028,Agrigento
+92029,Agrigento
+92031,Agrigento
+92100,Agrigento
+93010,Caltanissetta
+93011,Caltanissetta
+93012,Caltanissetta
+93013,Caltanissetta
+93014,Caltanissetta
+93015,Caltanissetta
+93016,Caltanissetta
+93017,Caltanissetta
+93018,Caltanissetta
+93019,Caltanissetta
+93100,Caltanissetta
+94010,Enna
+94011,Enna
+94012,Enna
+94013,Enna
+94014,Enna
+94015,Enna
+94016,Enna
+94017,Enna
+94018,Enna
+94019,Enna
+94100,Enna
+95010,Catania
+95011,Catania
+95012,Catania
+95013,Catania
+95014,Catania
+95015,Catania
+95016,Catania
+95017,Catania
+95018,Catania
+95019,Catania
+95020,Catania
+95021,Catania
+95022,Catania
+95024,Catania
+95025,Catania
+95027,Catania
+95028,Catania
+95029,Catania
+95030,Catania
+95031,Catania
+95032,Catania
+95033,Catania
+95034,Catania
+95035,Catania
+95036,Catania
+95037,Catania
+95038,Catania
+95039,Catania
+95040,Catania
+95041,Catania
+95042,Catania
+95043,Catania
+95044,Catania
+95045,Catania
+95046,Catania
+95047,Catania
+95048,Catania
+95049,Catania
+95121,Catania
+95122,Catania
+95123,Catania
+95124,Catania
+95125,Catania
+95126,Catania
+95127,Catania
+95128,Catania
+95129,Catania
+95131,Catania
+96010,Siracusa
+96011,Siracusa
+96012,Siracusa
+96013,Siracusa
+96014,Siracusa
+96015,Siracusa
+96016,Siracusa
+96017,Siracusa
+96018,Siracusa
+96019,Siracusa
+96100,Siracusa
+97010,Ragusa
+97011,Ragusa
+97012,Ragusa
+97013,Ragusa
+97014,Ragusa
+97015,Ragusa
+97016,Ragusa
+97017,Ragusa
+97018,Ragusa
+97019,Ragusa
+97100,Ragusa
+98020,Messina
+98021,Messina
+98022,Messina
+98023,Messina
+98025,Messina
+98026,Messina
+98027,Messina
+98028,Messina
+98029,Messina
+98030,Messina
+98031,Messina
+98032,Messina
+98033,Messina
+98034,Messina
+98035,Messina
+98036,Messina
+98037,Messina
+98038,Messina
+98039,Messina
+98040,Messina
+98041,Messina
+98042,Messina
+98043,Messina
+98044,Messina
+98045,Messina
+98046,Messina
+98047,Messina
+98048,Messina
+98049,Messina
+98050,Messina
+98051,Messina
+98053,Messina
+98054,Messina
+98055,Messina
+98056,Messina
+98057,Messina
+98058,Messina
+98059,Messina
+98060,Messina
+98061,Messina
+98062,Messina
+98063,Messina
+98064,Messina
+98065,Messina
+98066,Messina
+98067,Messina
+98068,Messina
+98069,Messina
+98070,Messina
+98071,Messina
+98072,Messina
+98073,Messina
+98074,Messina
+98075,Messina
+98076,Messina
+98077,Messina
+98078,Messina
+98079,Messina
+98121,Messina
+98122,Messina
+98123,Messina
+98124,Messina
+98125,Messina
+98126,Messina
+98127,Messina
+98128,Messina
+98129,Messina
+98131,Messina
+98132,Messina
+98133,Messina
+98134,Messina
+98135,Messina
+98136,Messina
+98137,Messina
+98138,Messina
+98139,Messina
+98141,Messina
+98142,Messina
+98143,Messina
+98144,Messina
+98145,Messina
+98146,Messina
+98147,Messina
+98148,Messina
+98149,Messina
+98151,Messina
+98152,Messina
+98153,Messina
+98154,Messina
+98155,Messina
+98156,Messina
+98157,Messina
+98158,Messina
+98161,Messina
+98162,Messina
+98163,Messina
+98164,Messina
+98165,Messina
+98166,Messina
+98167,Messina
+98168,Messina
