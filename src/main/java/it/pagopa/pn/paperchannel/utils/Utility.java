@@ -69,14 +69,15 @@ public class Utility {
                     String[] range = item.trim().split("-");
                     int low = Integer.parseInt(range[0]);
                     int high = Integer.parseInt(range[1]);
-                    if (!isValidFromRegex(String.valueOf(low),regex) || !isValidFromRegex(String.valueOf(high),regex))
+                    if (!isValidCapFromRegex(range[0],regex) || !isValidCapFromRegex(range[1],regex)) {
+                        log.info("Il cap non è conforme agli standard previsti.");
                         return null;
+                    }
                     if (low < high) {
                         log.info("Trovato cap in questo range " + item);
-                        //TO DO
-                        //vedere caso cap che iniziano con 0
                         for (int i = low; i < high; i++){
-                            capsFinded.add(String.valueOf(i));
+                            String capFormatted = addZero(i);
+                            capsFinded.add(capFormatted);
                         }
                     } else {
                         log.info("Intervallo errato.");
@@ -84,7 +85,9 @@ public class Utility {
                     }
                 } else {
                     check = isValidCapFromRegex(item,regex);
-                    if (check) capsFinded.add(item);
+                    if (check){
+                        capsFinded.add(item);
+                    }
                     if (!check) return null;
                 }
             }
@@ -102,5 +105,10 @@ public class Utility {
             check = isValidCapFromRegex(capList,regex);
         }
         return capsFinded;
+    }
+
+    public static String addZero (int i){
+        String str = String.format("%05d", i);
+        return str;
     }
 }

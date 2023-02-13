@@ -16,11 +16,11 @@ class UtilityTest {
     @BeforeEach
     void setUp(){
         capListDuplicate = "20010-20900,20020,12934,98798,72648,17284";
-        capListOk = "12949,40294,92404,10404,27463,28485,10405-12000,28492,19495,47282";
+        capListOk = "00165-00170,12345,29593-29600,40593,67399";
     }
 
     @Test
-    @DisplayName("whenCallIsValidMethodIHaveDuplicates")
+    @DisplayName("whenCallingIsValidMethodIHaveDuplicates")
     void isValidCapErrorTest() {
         List<String> caps = Utility.isValidCap(capListDuplicate);
         Assertions.assertNull(caps);
@@ -29,6 +29,6 @@ class UtilityTest {
     void isValidCapOkTest(){
         List<String> caps = Utility.isValidCap(capListOk);
         Assertions.assertNotNull(caps);
-        Assertions.assertEquals(1604,caps.size());
+        Assertions.assertEquals(15,caps.size());
     }
 }
