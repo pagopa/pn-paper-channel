@@ -54,7 +54,7 @@ public class NationalRegistryClientImpl extends BaseClient implements NationalRe
         filterDto.setReferenceRequestDate(DateUtils.formatDate(new Date()));
         addressRequestBodyDto.setFilter(filterDto);
 
-        return addressApi.getAddresses(recipientType,addressRequestBodyDto)
+        return addressApi.getAddresses(recipientType,addressRequestBodyDto, pnPaperChannelConfig.getNationalRegistryCxId())
                 .retryWhen(
                         Retry.backoff(2, Duration.ofMillis(500))
                                 .filter(throwable -> throwable instanceof TimeoutException || throwable instanceof ConnectException)

@@ -87,6 +87,10 @@ Parameters:
     Type: String
     Description: 'SafeStorage cx-id'
 
+  NationalRegistryCxId:
+    Type: String
+    Description: 'National Registry cx-id'
+
   NetworkLoadBalancerLink:
     Type: String
     Description: 'network load balancer link for API-GW'
@@ -261,6 +265,7 @@ Resources:
         ContainerEnvEntry25: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUENATIONALREGISTRIES=${AttemptQueueNationalRegistries}'
         ContainerEnvEntry26: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUEEXTERNALCHANNEL=${AttemptQueueExternalChannel}'
         ContainerEnvEntry27: !Sub 'AWS_BUCKET_NAME=${PaperDeliveryDriversBucketName}'
+        ContainerEnvEntry28: !Sub 'PN_PAPERCHANNEL_NATIONALREGISTRYCHCXID=${NationalRegistryCxId}'
         MappedPaths: '/paper-channel-bo/*,/paper-channel-private/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds

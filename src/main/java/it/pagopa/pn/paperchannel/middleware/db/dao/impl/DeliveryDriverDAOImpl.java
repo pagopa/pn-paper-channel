@@ -33,7 +33,7 @@ public class DeliveryDriverDAOImpl extends BaseDAO<PnDeliveryDriver> implements 
     }
 
     @Override
-    public Mono<List<PnDeliveryDriver>> getDeliveryDriverFromTender(String tenderCode) {
+    public Mono<List<PnDeliveryDriver>> getDeliveryDriverFromTender(String tenderCode, Boolean onlyFSU) {
         Pair<Instant, Instant> startAndEndTimestamp = DateUtils.getStartAndEndTimestamp(null, null);
 
         QueryConditional conditional = CONDITION_BETWEEN.apply(
@@ -41,9 +41,14 @@ public class DeliveryDriverDAOImpl extends BaseDAO<PnDeliveryDriver> implements 
                         keyBuild(Const.PN_PAPER_CHANNEL, startAndEndTimestamp.getSecond().toString()) )
         );
 
-        String filter = "( " + PnDeliveryDriver.COL_TENDER_CODE + " = :tenderCode )";
+        String filter = PnDeliveryDriver.COL_TENDER_CODE + " = :tenderCode ";
         Map<String, AttributeValue> values = new HashMap<>();
         values.put(":tenderCode", AttributeValue.builder().s(tenderCode).build());
+
+        if (onlyFSU != null){
+            filter += "AND :isFSU = " + PnDeliveryDriver.COL_FSU;
+            values.put(":isFSU", AttributeValue.builder().bool(onlyFSU).build());
+        }
 
         return this.getByFilter(conditional, PnDeliveryDriver.AUTHOR_INDEX, values, filter)
                 .collectList();

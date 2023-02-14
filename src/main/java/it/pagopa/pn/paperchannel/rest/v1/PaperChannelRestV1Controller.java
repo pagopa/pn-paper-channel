@@ -21,8 +21,8 @@ public class PaperChannelRestV1Controller implements DeliveryDriverApi {
     }
 
     @Override
-    public Mono<ResponseEntity<PageableDeliveryDriverResponseDto>> takeDeliveriesDrivers(String tenderCode, Integer page, Integer size, ServerWebExchange exchange) {
-        return this.paperChannelService.getAllDeliveriesDrivers(tenderCode, page, size).map(ResponseEntity::ok) ;
+    public Mono<ResponseEntity<PageableDeliveryDriverResponseDto>> takeDeliveriesDrivers(String tenderCode, Integer page, Integer size, Boolean fsu,ServerWebExchange exchange) {
+        return this.paperChannelService.getAllDeliveriesDrivers(tenderCode, page, size, fsu).map(ResponseEntity::ok) ;
     }
 
     @Override
@@ -68,6 +68,11 @@ public class PaperChannelRestV1Controller implements DeliveryDriverApi {
                 .map(ResponseEntity::ok);
     }
 
+    @Override
+    public Mono<ResponseEntity<DeliveryDriverResponseDTO>> getDriverDetails(String tenderCode, String deliveryDriverId, ServerWebExchange exchange) {
+        return this.paperChannelService.getDriverDetails(tenderCode, deliveryDriverId)
+                .map(ResponseEntity::ok);
+    }
 
     @Override
     public Mono<ResponseEntity<FSUResponseDTO>> getDetailFSU(String tenderCode, ServerWebExchange exchange) {

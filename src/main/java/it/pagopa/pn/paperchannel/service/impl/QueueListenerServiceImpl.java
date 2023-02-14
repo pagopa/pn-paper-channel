@@ -74,10 +74,12 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                     log.info("Received message from National Registry queue with correlationId "+correlationId);
                     return requestDeliveryDAO.getByCorrelationId(correlationId)
                             .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage())));
-                })
-
-                .flatMap(addressAndEntity -> {
-                    pnLogAudit.addsSuccessResolveService(addressAndEntity.getT2().getIun(), String.format("prepare requestId = %s, relatedRequestId = %s, traceId = %s Response OK from National Registry service", addressAndEntity.getT2().getRequestId(), addressAndEntity.getT2().getRelatedRequestId(), addressAndEntity.getT2().getCorrelationId()));
+                }).flatMap(addressAndEntity -> {
+                    if (StringUtils.isEmpty(addressAndEntity.getT1().getError())) {
+                        pnLogAudit.addsSuccessResolveService(addressAndEntity.getT2().getIun(), String.format("prepare requestId = %s, relatedRequestId = %s, traceId = %s Response OK from National Registry service", addressAndEntity.getT2().getRequestId(), addressAndEntity.getT2().getRelatedRequestId(), addressAndEntity.getT2().getCorrelationId()));
+                    } else {
+                        pnLogAudit.addsFailResolveService(addressAndEntity.getT2().getIun(), String.format("prepare requestId = %s, relatedRequestId = %s, traceId = %s Response KO from National Registry service", addressAndEntity.getT2().getRequestId(), addressAndEntity.getT2().getRelatedRequestId(), addressAndEntity.getT2().getCorrelationId()));
+                    }
                     Address address = null;
 
                     if (addressAndEntity.getT1().getPhysicalAddress() != null) {
