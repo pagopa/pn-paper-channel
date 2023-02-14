@@ -111,6 +111,8 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                     if (Boolean.TRUE.equals(deliveryRequestAndAddress.getT2())){
                         log.info("National registry address");
                         deliveryRequestAndAddress.getT1().setAddressHash(addressFromNationalRegistry.convertToHash());
+                        //set flowType per TTL
+                        addressFromNationalRegistry.setFlowType("PREPARE");
                         return addressDAO.create(AddressMapper.toEntity(addressFromNationalRegistry, deliveryRequestAndAddress.getT1().getRequestId()))
                                 .map(item -> deliveryRequestAndAddress.getT1());
                     }
