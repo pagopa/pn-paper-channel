@@ -37,6 +37,9 @@ public class CostMapper {
         CostDTO dto = new CostDTO();
         dto.setUid(paperCost.getUuid());
         dto.setCap(paperCost.getCap());
+        if (StringUtils.isNotBlank(paperCost.getZone())){
+            dto.setZone(InternationalZoneEnum.fromValue(paperCost.getZone()));
+        }
         dto.setPrice(paperCost.getBasePrice());
         dto.setPriceAdditional(paperCost.getPagePrice());
         dto.setProductType(ProductTypeEnumDto.fromValue(paperCost.getProductType()));

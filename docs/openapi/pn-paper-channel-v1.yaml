@@ -139,6 +139,7 @@ paths:
         - $ref: '#/components/parameters/pathTenderCode'
         - $ref: '#/components/parameters/queryNumberPage'
         - $ref: '#/components/parameters/querySizePage'
+        - $ref: '#/components/parameters/queryFSU'
       responses:
         '200':
           description: OK
@@ -546,7 +547,6 @@ components:
         zone:
           $ref: '#/components/schemas/InternationalZoneEnum'
       required:
-        - uid
         - productType
         - price
         - priceAdditional
@@ -908,6 +908,14 @@ components:
         format: int32
         maximum: 999999999
         minimum: 0
+
+    queryFSU:
+      name: fsu
+      in: query
+      description: Risultati filtrati in base al valore di FSU
+      required: false
+      schema:
+        type: boolean
 
     pathTenderCode:
       name: tenderCode
