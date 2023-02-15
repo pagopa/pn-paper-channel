@@ -48,7 +48,7 @@ public class DataVaultEncryptionImpl extends BaseClient implements DataEncryptio
                                 .filter(throwable ->throwable instanceof TimeoutException || throwable instanceof ConnectException)
                 ).map(item -> {
                     return item;
-                }).onErrorResume(ex -> Mono.error(new PnGenericException(ExceptionTypeEnum.CRYPTO_ERROR, ExceptionTypeEnum.CRYPTO_ERROR.getMessage())))
+                }).onErrorResume(ex -> Mono.error(new PnGenericException(ExceptionTypeEnum.DATA_VAULT_ENCRYPTION_ERROR, ExceptionTypeEnum.DATA_VAULT_ENCRYPTION_ERROR.getMessage())))
                 .block();
     }
 
