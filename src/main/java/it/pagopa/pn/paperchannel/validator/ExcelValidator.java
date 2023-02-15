@@ -47,12 +47,9 @@ public class ExcelValidator {
         }
         //cap check
         ExcelEngine.ExcelCell cap = data.get("CAP");
-        if (StringUtils.isBlank(cap.getValue())){
-            errors.add(new PnExcelValidatorException.ErrorCell(cap.getRow(), cap.getCol(), "Problema nei cap inseriti."));
-        }
-        else {
+        if (StringUtils.isNotBlank(cap.getValue())){
             List<String> caps = Utility.isValidCap(cap.getValue());
-            if(caps == null){
+            if (caps == null) {
                 errors.add(new PnExcelValidatorException.ErrorCell(cap.getRow(), cap.getCol(), "Sono presenti duplicati nei cap inseriti."));
             }
             //deliveryAndCost.setCap(cap.getValue().substring(0, cap.getValue().indexOf(".")));
@@ -64,7 +61,7 @@ public class ExcelValidator {
         } else if (StringUtils.isNotEmpty(zone.getValue())) {
             deliveryAndCost.setZone(zone.getValue());
         }
-        if (!StringUtils.isBlank(zone.getValue()) && !zone.getValue().equals(Const.ZONA_1) && !zone.getValue().equals(Const.ZONA_2) && !zone.getValue().equals(Const.ZONA_3)){
+        if (!StringUtils.isBlank(zone.getValue()) && (!zone.getValue().equals(Const.ZONA_1) || !zone.getValue().equals(Const.ZONA_2) || !zone.getValue().equals(Const.ZONA_3))){
             errors.add(new PnExcelValidatorException.ErrorCell(zone.getRow(), zone.getCol(), "Il tipo di dato non è quello desiderato."));
         }
         if (StringUtils.isBlank(zone.getValue()) && StringUtils.isBlank(cap.getValue())){
@@ -77,7 +74,7 @@ public class ExcelValidator {
         if (StringUtils.isBlank(productType.getValue())){
             errors.add(new PnExcelValidatorException.ErrorCell(productType.getRow(), productType.getCol(), "Il campo product type deve essere valorizzato"));
         }
-        if (!productType.getValue().equals(Const.RACCOMANDATA_AR) && !productType.getValue().equals(Const.RACCOMANDATA_890) && !productType.getValue().equals(Const.RACCOMANDATA_SEMPLICE)){
+        if (!productType.getValue().equals(Const.RACCOMANDATA_AR) || !productType.getValue().equals(Const.RACCOMANDATA_890) || !productType.getValue().equals(Const.RACCOMANDATA_SEMPLICE)){
             errors.add(new PnExcelValidatorException.ErrorCell(productType.getRow(), productType.getCol(), "Il tipo di dato non è quello desiderato."));
         }
         //basePrice check
