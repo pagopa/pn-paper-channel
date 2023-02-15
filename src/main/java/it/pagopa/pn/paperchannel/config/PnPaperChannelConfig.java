@@ -19,6 +19,7 @@ public class PnPaperChannelConfig {
     private String clientSafeStorageBasepath;
     private String clientNationalRegistriesBasepath;
     private String clientExternalChannelBasepath;
+    private String clientDataVaultBasepath;
     private String safeStorageCxId;
     private String xPagopaExtchCxId;
     private String queueDeliveryPush;
@@ -29,6 +30,4 @@ public class PnPaperChannelConfig {
     private Integer attemptQueueSafeStorage;
     private Integer attemptQueueExternalChannel;
     private Integer attemptQueueNationalRegistries;
-
-
 }

@@ -30,7 +30,8 @@ public enum ExceptionTypeEnum{
     DELIVERY_DRIVER_NOT_EXISTED("DELIVERY_DRIVER_NOT_EXISTED", "Il recapitisca non è presente nel sistema"),
     COST_ALREADY_EXIST("COST_ALREADY_EXIST", "Il costo è già presente nel sistema associato ad un altro recapitista"),
     COST_BADLY_CONTENT("COST_BADLY_CONTENT", "Informazioni errate per il costo"),
-    FILE_REQUEST_ASYNC_NOT_FOUND("FILE_REQUEST_ASYNC_NOT_FOUND", "File non trovato, flusso asincrono");
+    FILE_REQUEST_ASYNC_NOT_FOUND("FILE_REQUEST_ASYNC_NOT_FOUND", "File non trovato, flusso asincrono"),
+    DATA_VAULT_ENCRYPTION_ERROR("DATA_VAULT_ENCRYPTION_ERROR", "Servizio irraggiungibile od errore in fase di criptazione");
 
     private final String title;
     private final String message;
