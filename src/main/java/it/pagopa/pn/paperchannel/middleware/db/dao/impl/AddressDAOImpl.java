@@ -6,6 +6,8 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.BaseDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
+import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
+import it.pagopa.pn.paperchannel.utils.Const;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
@@ -14,6 +16,7 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
@@ -36,7 +39,13 @@ public class AddressDAOImpl extends BaseDAO <PnAddress> implements AddressDAO {
 
     @Override
     public Mono<PnAddress> findByRequestId(String requestId) {
-        return Mono.fromFuture(this.get(requestId, null).thenApply(item -> item));
+        return Mono.fromFuture(this.get(requestId, AddressTypeEnum.RECEIVER_ADDRESS.toString()).thenApply(item -> item));
+    }
+
+    @Override
+    public Mono<List<PnAddress>> findAllByRequestId(String requestId) {
+        return null;
+        //TODO get all elements by partitinkey
     }
 
     private CompletableFuture<Integer> countOccurrencesEntity(String requestId) {

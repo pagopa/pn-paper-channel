@@ -1,10 +1,12 @@
 package it.pagopa.pn.paperchannel.mapper;
 
+import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.DiscoveredAddressDto;
 import it.pagopa.pn.paperchannel.msclient.generated.pnnationalregistries.v1.dto.AddressSQSMessagePhysicalAddressDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.AnalogAddress;
+import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -30,17 +32,17 @@ class AddressMapperTest {
     @Test
     void addressMapperToEntityTest() {
         String requestId= "12345abcde";
-        PnAddress addressValue=AddressMapper.toEntity(getAddress(),requestId);
+        PnAddress addressValue=AddressMapper.toEntity(getAddress(),requestId, AddressTypeEnum.AR_ADDRESS, new PnPaperChannelConfig());
         Assertions.assertNotNull(addressValue);
     }
     @Test
     void addressMapperFromAnalogToAddressTest() {
-        Address address=AddressMapper.fromAnalogToAddress(getAnalogAddress());
+        Address address=AddressMapper.fromAnalogToAddress(getAnalogAddress(), "AR", "PREPARE");
         Assertions.assertNotNull(address);
     }
     @Test
     void addressMapperFromAnalogToAddressNULLTest() {
-        Assertions.assertNull(AddressMapper.fromAnalogToAddress(null));
+        Assertions.assertNull(AddressMapper.fromAnalogToAddress(null, null,null));
     }
     @Test
     void addressMapperToDTOTest() {
