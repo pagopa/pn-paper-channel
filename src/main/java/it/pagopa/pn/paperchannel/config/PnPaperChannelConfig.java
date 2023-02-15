@@ -36,6 +36,6 @@ public class PnPaperChannelConfig {
     private Long ttlExecutionN_RS;
     private Long ttlExecutionI_AR;
     private Long ttlExecutionI_RS;
-
+    private String retryStatus;
 
 }

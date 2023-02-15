@@ -19,4 +19,8 @@ public class Const {
     public static final String phoneNumberRegex = "^[\\+]?[(]?[0-9]{1,3}[)]?[!@#$%&]{0,}[-\\s\\.]?[0-9]{3}[-\\s\\.]?[0-9]{3,7}$";
     public static final String fiscalCodeRegex = "^[a-zA-Z0-9-]+$";
     public static final Integer maxElements = 10;
+
+    public static final String EXECUTION = "EXECUTION";
+    public static final String PREPARE = "PREPARE";
+    public static final String RETRY = "_pcretry_";
 }

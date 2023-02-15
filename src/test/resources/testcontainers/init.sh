@@ -64,8 +64,10 @@ aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     --table-name AddressDynamoTable  \
     --attribute-definitions \
         AttributeName=requestId,AttributeType=S \
+        AttributeName=addressType,AttributeType=S \
     --key-schema \
         AttributeName=requestId,KeyType=HASH \
+        AttributeName=addressType,KeyType=RANGE \
     --provisioned-throughput \
         ReadCapacityUnits=10,WriteCapacityUnits=5
 
