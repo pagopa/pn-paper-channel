@@ -12,6 +12,7 @@ import it.pagopa.pn.paperchannel.rest.v1.dto.ProductTypeEnum;
 import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
 import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.time.LocalDateTime;
 
@@ -65,24 +66,24 @@ public class AddressMapper {
         pnAddress.setTypology(addressTypeEnum.toString());
 
         if (paperChannelConfig != null) {
-            if (address.getFlowType().equals(Const.PREPARE)){
+            if (StringUtils.equals(address.getFlowType(), Const.PREPARE)){
                 //caso PREPARE set diretto
                 pnAddress.setTtl(DateUtils.getTimeStampOfMills(LocalDateTime.now().plusDays(paperChannelConfig.getTtlPrepare())));
             }  else{
                 //caso EXECUTION set con productType
-                if (address.getProductType().equals(ProductTypeEnum.RN_890.getValue())){
+                if (StringUtils.equals(address.getProductType(), ProductTypeEnum.RN_890.getValue())) {
                     pnAddress.setTtl(DateUtils.getTimeStampOfMills(LocalDateTime.now().plusDays(paperChannelConfig.getTtlExecutionN_890())));
                 }
-                if (address.getProductType().equals(ProductTypeEnum.RN_RS.getValue())){
+                if (StringUtils.equals(address.getProductType(), ProductTypeEnum.RN_RS.getValue())) {
                     pnAddress.setTtl(DateUtils.getTimeStampOfMills(LocalDateTime.now().plusDays(paperChannelConfig.getTtlExecutionN_RS())));
                 }
-                if (address.getProductType().equals(ProductTypeEnum.RN_AR.getValue())){
+                if (StringUtils.equals(address.getProductType(), ProductTypeEnum.RN_AR.getValue())) {
                     pnAddress.setTtl(DateUtils.getTimeStampOfMills(LocalDateTime.now().plusDays(paperChannelConfig.getTtlExecutionN_AR())));
                 }
-                if (address.getProductType().equals(ProductTypeEnum.RI_AR.getValue())){
+                if (StringUtils.equals(address.getProductType(), ProductTypeEnum.RI_AR.getValue())) {
                     pnAddress.setTtl(DateUtils.getTimeStampOfMills(LocalDateTime.now().plusDays(paperChannelConfig.getTtlExecutionI_AR())));
                 }
-                if (address.getProductType().equals(ProductTypeEnum.RI_RS.getValue())){
+                if (StringUtils.equals(address.getProductType(), ProductTypeEnum.RI_RS.getValue())) {
                     pnAddress.setTtl(DateUtils.getTimeStampOfMills(LocalDateTime.now().plusDays(paperChannelConfig.getTtlExecutionI_RS())));
                 }
             }
