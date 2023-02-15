@@ -137,19 +137,20 @@ public abstract class BaseDAO<T> {
 
     protected <A> A encode(A data, Class<A> aClass) {
         if(aClass == PnAddress.class) {
-            ((PnAddress) data).setFullName(dataEncryption.encode(((PnAddress) data).getFullName()));
-            ((PnAddress) data).setNameRow2(dataEncryption.encode(((PnAddress) data).getNameRow2()));
-            ((PnAddress) data).setAddress(dataEncryption.encode(((PnAddress) data).getAddress()));
-            ((PnAddress) data).setAddressRow2(dataEncryption.encode(((PnAddress) data).getAddressRow2()));
-            ((PnAddress) data).setCap(dataEncryption.encode(((PnAddress) data).getCap()));
-            ((PnAddress) data).setCity(dataEncryption.encode(((PnAddress) data).getCity()));
-            ((PnAddress) data).setCity2(dataEncryption.encode(((PnAddress) data).getCity2()));
-            ((PnAddress) data).setPr(dataEncryption.encode(((PnAddress) data).getPr()));
-            ((PnAddress) data).setCountry(dataEncryption.encode(((PnAddress) data).getCountry()));
+            PnAddress pnAddress = ((PnAddress) data);
+            pnAddress.setFullName(dataEncryption.encode(pnAddress.getFullName()));
+            pnAddress.setNameRow2(dataEncryption.encode(pnAddress.getNameRow2()));
+            pnAddress.setAddress(dataEncryption.encode(pnAddress.getAddress()));
+            pnAddress.setAddressRow2(dataEncryption.encode(pnAddress.getAddressRow2()));
+            pnAddress.setCap(dataEncryption.encode(pnAddress.getCap()));
+            pnAddress.setCity(dataEncryption.encode(pnAddress.getCity()));
+            pnAddress.setCity2(dataEncryption.encode(pnAddress.getCity2()));
+            pnAddress.setPr(dataEncryption.encode(pnAddress.getPr()));
+            pnAddress.setCountry(dataEncryption.encode(pnAddress.getCountry()));
         }
         if(aClass == PnDeliveryRequest.class) {
-            PnDeliveryRequest entity = ((PnDeliveryRequest) data);
-            entity.setFiscalCode(dataEncryption.encode(entity.getFiscalCode(), entity.getReceiverType()));
+            PnDeliveryRequest pnDeliveryRequest = ((PnDeliveryRequest) data);
+            pnDeliveryRequest.setFiscalCode(dataEncryption.encode(pnDeliveryRequest.getFiscalCode(), pnDeliveryRequest.getReceiverType()));
         }
         return data;
     }
@@ -157,18 +158,20 @@ public abstract class BaseDAO<T> {
     protected CompletableFuture<T> decode(CompletableFuture<T> genericData) {
         return genericData.thenApply(data -> {
             if(data instanceof PnAddress) {
-                ((PnAddress) data).setFullName(dataEncryption.decode(((PnAddress) data).getFullName()));
-                ((PnAddress) data).setNameRow2(dataEncryption.decode(((PnAddress) data).getNameRow2()));
-                ((PnAddress) data).setAddress(dataEncryption.decode(((PnAddress) data).getAddress()));
-                ((PnAddress) data).setAddressRow2(dataEncryption.decode(((PnAddress) data).getAddressRow2()));
-                ((PnAddress) data).setCap(dataEncryption.decode(((PnAddress) data).getCap()));
-                ((PnAddress) data).setCity(dataEncryption.decode(((PnAddress) data).getCity()));
-                ((PnAddress) data).setCity2(dataEncryption.decode(((PnAddress) data).getCity2()));
-                ((PnAddress) data).setPr(dataEncryption.decode(((PnAddress) data).getPr()));
-                ((PnAddress) data).setCountry(dataEncryption.decode(((PnAddress) data).getCountry()));
+                PnAddress pnAddress = ((PnAddress) data);
+                pnAddress.setFullName(dataEncryption.decode(pnAddress.getFullName()));
+                pnAddress.setNameRow2(dataEncryption.decode(pnAddress.getNameRow2()));
+                pnAddress.setAddress(dataEncryption.decode(pnAddress.getAddress()));
+                pnAddress.setAddressRow2(dataEncryption.decode(pnAddress.getAddressRow2()));
+                pnAddress.setCap(dataEncryption.decode(pnAddress.getCap()));
+                pnAddress.setCity(dataEncryption.decode(pnAddress.getCity()));
+                pnAddress.setCity2(dataEncryption.decode(pnAddress.getCity2()));
+                pnAddress.setPr(dataEncryption.decode(pnAddress.getPr()));
+                pnAddress.setCountry(dataEncryption.decode(pnAddress.getCountry()));
             }
             if(data instanceof PnDeliveryRequest) {
-                ((PnDeliveryRequest) data).setFiscalCode(dataEncryption.decode(((PnDeliveryRequest) data).getFiscalCode()));
+                PnDeliveryRequest pnDeliveryRequest = ((PnDeliveryRequest) data);
+                pnDeliveryRequest.setFiscalCode(dataEncryption.decode(pnDeliveryRequest.getFiscalCode()));
             }
             return data;
         });
