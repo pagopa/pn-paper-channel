@@ -1,7 +1,7 @@
 package it.pagopa.pn.paperchannel.middleware.db.dao.impl;
 
 import it.pagopa.pn.paperchannel.config.AwsPropertiesConfig;
-import it.pagopa.pn.paperchannel.encryption.KmsEncryption;
+import it.pagopa.pn.paperchannel.encryption.DataEncryption;
 import it.pagopa.pn.paperchannel.middleware.db.dao.TenderDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.BaseDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.TransactWriterInitializer;
@@ -10,6 +10,8 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryDriver;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnTender;
 import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
@@ -28,16 +30,16 @@ import java.util.Map;
 @Repository
 public class TenderDAOImpl extends BaseDAO<PnTender> implements TenderDAO {
 
+
     private final DynamoDbAsyncTable<PnDeliveryDriver> deliveryDriverTable;
     private final DynamoDbAsyncTable<PnCost> costTable;
 
     private final TransactWriterInitializer transactWriterInitializer;
 
-    public TenderDAOImpl(KmsEncryption kmsEncryption,
-                                 DynamoDbEnhancedAsyncClient dynamoDbEnhancedAsyncClient,
-                                 DynamoDbAsyncClient dynamoDbAsyncClient,
-                                 AwsPropertiesConfig awsPropertiesConfig, TransactWriterInitializer transactWriterInitializer) {
-        super(kmsEncryption, dynamoDbEnhancedAsyncClient, dynamoDbAsyncClient,
+    public TenderDAOImpl(DynamoDbEnhancedAsyncClient dynamoDbEnhancedAsyncClient,
+                         DynamoDbAsyncClient dynamoDbAsyncClient,
+                         AwsPropertiesConfig awsPropertiesConfig, TransactWriterInitializer transactWriterInitializer) {
+        super(dynamoDbEnhancedAsyncClient, dynamoDbAsyncClient,
                 awsPropertiesConfig.getDynamodbTenderTable(), PnTender.class);
         this.transactWriterInitializer = transactWriterInitializer;
         this.deliveryDriverTable = dynamoDbEnhancedAsyncClient.table(awsPropertiesConfig.getDynamodbDeliveryDriverTable(), TableSchema.fromBean(PnDeliveryDriver.class));

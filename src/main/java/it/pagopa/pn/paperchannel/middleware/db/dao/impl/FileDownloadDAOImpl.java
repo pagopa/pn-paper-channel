@@ -1,10 +1,12 @@
 package it.pagopa.pn.paperchannel.middleware.db.dao.impl;
 
 import it.pagopa.pn.paperchannel.config.AwsPropertiesConfig;
-import it.pagopa.pn.paperchannel.encryption.KmsEncryption;
+import it.pagopa.pn.paperchannel.encryption.DataEncryption;
 import it.pagopa.pn.paperchannel.middleware.db.dao.FileDownloadDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.BaseDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryFile;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
@@ -13,11 +15,10 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 @Repository
 public class FileDownloadDAOImpl extends BaseDAO<PnDeliveryFile> implements FileDownloadDAO {
 
-    public FileDownloadDAOImpl(KmsEncryption kmsEncryption,
-                         DynamoDbEnhancedAsyncClient dynamoDbEnhancedAsyncClient,
-                         DynamoDbAsyncClient dynamoDbAsyncClient,
-                         AwsPropertiesConfig awsPropertiesConfig) {
-        super(kmsEncryption, dynamoDbEnhancedAsyncClient, dynamoDbAsyncClient,
+    public FileDownloadDAOImpl(DynamoDbEnhancedAsyncClient dynamoDbEnhancedAsyncClient,
+                               DynamoDbAsyncClient dynamoDbAsyncClient,
+                               AwsPropertiesConfig awsPropertiesConfig) {
+        super(dynamoDbEnhancedAsyncClient, dynamoDbAsyncClient,
                 awsPropertiesConfig.getDynamodbDeliveryFileTable(), PnDeliveryFile.class);
     }
 

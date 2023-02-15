@@ -4,8 +4,9 @@ import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.kms.AWSKMS;
 import com.amazonaws.services.kms.AWSKMSClient;
 import com.amazonaws.services.kms.AWSKMSClientBuilder;
-import it.pagopa.pn.paperchannel.encryption.KmsEncryption;
+import it.pagopa.pn.paperchannel.encryption.DataEncryption;
 import it.pagopa.pn.paperchannel.encryption.impl.KmsEncryptionImpl;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -35,8 +36,8 @@ public class KmsConfiguration {
     }
 
     @Bean
-    public KmsEncryption kmsEncryption(AWSKMS awskms){
+    @Qualifier("kmsEncryption")
+    public DataEncryption kmsEncryption(AWSKMS awskms){
         return new KmsEncryptionImpl(awskms, this.properties);
     }
-
 }
