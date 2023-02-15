@@ -708,13 +708,7 @@ components:
       additionalProperties: false
       required:
         - denomination
-        - businessName
-        - registeredOffice
-        - pec
-        - fiscalCode
         - taxId
-        - phoneNumber
-        - uniqueCode
         - fsu
 
     Pageable:
