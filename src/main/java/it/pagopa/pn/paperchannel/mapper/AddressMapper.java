@@ -64,25 +64,27 @@ public class AddressMapper {
         pnAddress.setRequestId(requestId);
         pnAddress.setTypology(addressTypeEnum.toString());
 
-        if (address.getFlowType().equals(Const.PREPARE)){
-            //caso PREPARE set diretto
-            pnAddress.setTtl(DateUtils.getTimeStampOfMills(LocalDateTime.now().plusDays(paperChannelConfig.getTtlPrepare())));
-        }  else{
-            //caso EXECUTION set con productType
-            if (address.getProductType().equals(ProductTypeEnum.RN_890.getValue())){
-                pnAddress.setTtl(DateUtils.getTimeStampOfMills(LocalDateTime.now().plusDays(paperChannelConfig.getTtlExecutionN_890())));
-            }
-            if (address.getProductType().equals(ProductTypeEnum.RN_RS.getValue())){
-                pnAddress.setTtl(DateUtils.getTimeStampOfMills(LocalDateTime.now().plusDays(paperChannelConfig.getTtlExecutionN_RS())));
-            }
-            if (address.getProductType().equals(ProductTypeEnum.RN_AR.getValue())){
-                pnAddress.setTtl(DateUtils.getTimeStampOfMills(LocalDateTime.now().plusDays(paperChannelConfig.getTtlExecutionN_AR())));
-            }
-            if (address.getProductType().equals(ProductTypeEnum.RI_AR.getValue())){
-                pnAddress.setTtl(DateUtils.getTimeStampOfMills(LocalDateTime.now().plusDays(paperChannelConfig.getTtlExecutionI_AR())));
-            }
-            if (address.getProductType().equals(ProductTypeEnum.RI_RS.getValue())){
-                pnAddress.setTtl(DateUtils.getTimeStampOfMills(LocalDateTime.now().plusDays(paperChannelConfig.getTtlExecutionI_RS())));
+        if (paperChannelConfig != null) {
+            if (address.getFlowType().equals(Const.PREPARE)){
+                //caso PREPARE set diretto
+                pnAddress.setTtl(DateUtils.getTimeStampOfMills(LocalDateTime.now().plusDays(paperChannelConfig.getTtlPrepare())));
+            }  else{
+                //caso EXECUTION set con productType
+                if (address.getProductType().equals(ProductTypeEnum.RN_890.getValue())){
+                    pnAddress.setTtl(DateUtils.getTimeStampOfMills(LocalDateTime.now().plusDays(paperChannelConfig.getTtlExecutionN_890())));
+                }
+                if (address.getProductType().equals(ProductTypeEnum.RN_RS.getValue())){
+                    pnAddress.setTtl(DateUtils.getTimeStampOfMills(LocalDateTime.now().plusDays(paperChannelConfig.getTtlExecutionN_RS())));
+                }
+                if (address.getProductType().equals(ProductTypeEnum.RN_AR.getValue())){
+                    pnAddress.setTtl(DateUtils.getTimeStampOfMills(LocalDateTime.now().plusDays(paperChannelConfig.getTtlExecutionN_AR())));
+                }
+                if (address.getProductType().equals(ProductTypeEnum.RI_AR.getValue())){
+                    pnAddress.setTtl(DateUtils.getTimeStampOfMills(LocalDateTime.now().plusDays(paperChannelConfig.getTtlExecutionI_AR())));
+                }
+                if (address.getProductType().equals(ProductTypeEnum.RI_RS.getValue())){
+                    pnAddress.setTtl(DateUtils.getTimeStampOfMills(LocalDateTime.now().plusDays(paperChannelConfig.getTtlExecutionI_RS())));
+                }
             }
         }
         return pnAddress;
