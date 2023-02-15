@@ -86,6 +86,12 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
 
                     List<AttachmentInfo> attachments = entity.getAttachments().stream().map(AttachmentMapper::fromEntity).toList();
                     Address address = AddressMapper.fromAnalogToAddress(sendRequest.getReceiverAddress());
+                    //set flowType per TTL
+                    address.setFlowType("EXECUTION");
+                    address.setProductType(sendRequest.getProductType().getValue());
+                    PnAddress addressEntity = AddressMapper.toEntity(address,requestId);
+                    //salvataggio a db di address
+                    addressDAO.create(addressEntity);
                     return super.calculator(attachments, address, sendRequest.getProductType()).map(value -> value);
                 })
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)))
@@ -197,6 +203,8 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
        if (address != null) {
            Address mapped = AddressMapper.fromAnalogToAddress(address);
            pnDeliveryRequest.setAddressHash(mapped.convertToHash());
+           //set flowType per TTL
+           mapped.setFlowType("PREPARE");
            addressEntity = AddressMapper.toEntity(mapped, prepareRequest.getRequestId());
            pnDeliveryRequest.setProductType(getProposalProductType(mapped, pnDeliveryRequest.getProposalProductType()));
        }

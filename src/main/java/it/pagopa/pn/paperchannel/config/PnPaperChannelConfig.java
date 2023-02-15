@@ -30,6 +30,12 @@ public class PnPaperChannelConfig {
     private Integer attemptQueueSafeStorage;
     private Integer attemptQueueExternalChannel;
     private Integer attemptQueueNationalRegistries;
+    private Long ttlPrepare;
+    private Long ttlExecutionN_890;
+    private Long ttlExecutionN_AR;
+    private Long ttlExecutionN_RS;
+    private Long ttlExecutionI_AR;
+    private Long ttlExecutionI_RS;
 
 
 }
