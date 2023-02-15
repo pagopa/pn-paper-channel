@@ -3,6 +3,10 @@
     "NotificationCheckAddress": "true",
     "SafeStorageCxId": "pn-cons-000",
     "XPagopaExtchCxId": "pn-cons-000",
+    "AttemptSafeStorage": "3",
+    "AttemptQueueExternalChannel": "3",
+    "AttemptQueueNationalRegistries": "3",
+    "AttemptQueueSafeStorage": "3",
     "SandboxSafeStorageBaseUrl": "https://eo6pdvms24.execute-api.eu-south-1.amazonaws.com/coll"
   }
 }

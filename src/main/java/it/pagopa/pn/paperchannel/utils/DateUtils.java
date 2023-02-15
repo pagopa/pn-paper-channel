@@ -1,16 +1,13 @@
 package it.pagopa.pn.paperchannel.utils;
 
+import io.swagger.v3.oas.models.security.SecurityScheme;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.util.Pair;
-import software.amazon.ion.Timestamp;
-
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.BADLY_FILTER_REQUEST;
@@ -36,19 +33,17 @@ public class DateUtils {
         LocalDateTime localDate = LocalDateTime.parse(date, formatter);
         ZonedDateTime time = localDate.atZone(italianZoneId);
         return Date.from(time.toInstant());
+    }
 
+    public static Instant parseStringTOInstant(String date) {
+        return Instant.parse(date);
     }
 
     public static Long getTimeStampOfMills(LocalDateTime time){
         return time.toInstant(ZoneOffset.UTC).getEpochSecond();
     }
 
-    public static OffsetDateTime getOffsetDateTime(String date){
-        return LocalDateTime.parse(date, DateTimeFormatter.ISO_LOCAL_DATE_TIME).atOffset(ZoneOffset.UTC);
-    }
-
     public static OffsetDateTime getOffsetDateTimeFromDate(Date date) {
-        //return OffsetDateTime.ofInstant(date.toInstant(), italianZoneId);
         return OffsetDateTime.ofInstant(date.toInstant(), ZoneOffset.UTC);
     }
 
@@ -56,17 +51,18 @@ public class DateUtils {
         return Date.from(offsetDateTime.toInstant());
     }
 
-    public static Pair<Instant, Instant> getStartAndEndTimestamp(String startDate, String endDate){
-        Instant start = parseDateString(START_DATE).toInstant();
+    public static Pair<Instant, Instant> getStartAndEndTimestamp(Date startDate, Date endDate){
+        Instant start = Instant.EPOCH;
         Instant end = Instant.now();
 
-        if (StringUtils.isNotBlank(startDate)){
-            start = parseDateString(startDate).toInstant();
+        if (startDate != null){
+            start = startDate.toInstant();
         }
 
-        if (StringUtils.isNotBlank(endDate)){
-            end = parseDateString(endDate).toInstant();
+        if (endDate != null){
+            end = endDate.toInstant();
         }
+
 
         if (start.isAfter(end)){
             throw new PnGenericException(BADLY_FILTER_REQUEST, BADLY_FILTER_REQUEST.getMessage());
@@ -75,50 +71,10 @@ public class DateUtils {
         return Pair.of(start, end);
     }
 
-    public static Long getAwsTimeStampOfMills(String date) throws ParseException {
-        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-        if(date == null) {
-            date = dateFormat.format(new Date());
-        }
-        Date inputDate = dateFormat.parse(date);
-        return Timestamp.forDateZ(inputDate).getMillis();
+    public static Instant addedTime(Integer first, Integer second){
+        Instant now = Instant.now();
+        int tot = first * second;
+        return now.plus(tot, ChronoUnit.MINUTES);
     }
 
-    /*
-
-    public static String formatTime(ZonedDateTime datetime) {
-        DateTimeFormatter formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
-        return datetime.format(formatter.withZone(italianZoneId));
-    }
-
-    public static LocalDate getLocalDate(String date) {
-        DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
-        return LocalDate.parse(date, formatter);
-    }
-
-    public static ZonedDateTime parseDate(String date) {
-        DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE;
-        LocalDate locdate = LocalDate.parse(date, formatter);
-
-        return locdate.atStartOfDay(italianZoneId);
-    }
-
-    public static ZonedDateTime atStartOfDay(Instant instant) {
-        LocalDate locdate = LocalDate.ofInstant(instant, italianZoneId);
-        return locdate.atStartOfDay(italianZoneId);
-    }
-
-    public static ZonedDateTime parseTime(String date) {
-        DateTimeFormatter formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
-        return formatter.parse(date, ZonedDateTime::from);
-    }
-
-    public static String formatDate(Instant instant) {
-        if (instant == null)
-            return null;
-
-        DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE;
-        return LocalDate.ofInstant(instant, italianZoneId).format(formatter);
-    }
-    */
 }

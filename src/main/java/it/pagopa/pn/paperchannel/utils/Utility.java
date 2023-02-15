@@ -4,6 +4,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang3.StringUtils;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Slf4j
 public class Utility {
@@ -31,4 +35,53 @@ public class Utility {
         }
     }
 
+    public static boolean isValidFromRegex(String value, String regex){
+        boolean check = false;
+        if (StringUtils.isEmpty(value)) {
+            check = false;
+        } else {
+            value = value.replace(".", "");
+            value = value.replace(",", "");
+            Pattern p = Pattern.compile(regex);
+            Matcher m = p.matcher(value);
+            check = (m.find() && m.group().equals(value));
+        }
+        return check;
+    }
+
+    private static boolean isValidCapFromRegex(String value, String regex){
+        if (StringUtils.isNotEmpty(value) && value.contains(".")) value = value.substring(0, value.indexOf("."));
+        return isValidFromRegex(value, regex);
+    }
+
+    public static Boolean isValidCap(String capList) {
+        String regex = Const.capRegex;
+
+        boolean check = false;
+        String[] cap = capList.split(",");
+        if (cap != null && cap.length > 0) {
+            for (String item : cap) {
+                if (item.contains("-")) {
+                    String[] range = item.trim().split("-");
+                    int low = Integer.parseInt(range[0]);
+                    int high = Integer.parseInt(range[1]);
+                    if (low < high) {
+                        log.info("Trovato cap in questo range " + item);
+                        if (!isValidCapFromRegex(item,regex)) {
+                            return false;
+                        }
+                    } else {
+                        return false;
+                    }
+                } else {
+                    check = isValidCapFromRegex(item,regex);
+                    if (!check) return false;
+                }
+            }
+        } else {
+            check = isValidCapFromRegex(capList,regex);
+        }
+
+        return check;
+    }
 }

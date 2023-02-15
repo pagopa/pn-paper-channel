@@ -1,9 +1,5 @@
 package it.pagopa.pn.paperchannel.middleware.db.dao.impl;
 
-import it.pagopa.pn.commons.exceptions.PnHttpResponseException;
-import it.pagopa.pn.commons.log.PnAuditLogBuilder;
-import it.pagopa.pn.commons.log.PnAuditLogEvent;
-import it.pagopa.pn.commons.log.PnAuditLogEventType;
 import it.pagopa.pn.paperchannel.config.AwsPropertiesConfig;
 import it.pagopa.pn.paperchannel.encryption.KmsEncryption;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
@@ -11,8 +7,6 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.common.BaseDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Import;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
@@ -25,60 +19,24 @@ import java.util.concurrent.CompletableFuture;
 
 @Repository
 @Slf4j
-@Import(PnAuditLogBuilder.class)
-
 public class AddressDAOImpl extends BaseDAO <PnAddress> implements AddressDAO {
 
-    public AddressDAOImpl(PnAuditLogBuilder auditLogBuilder,
-                                  KmsEncryption kmsEncryption,
+    public AddressDAOImpl(KmsEncryption kmsEncryption,
                                   DynamoDbEnhancedAsyncClient dynamoDbEnhancedAsyncClient,
                                   DynamoDbAsyncClient dynamoDbAsyncClient,
                                   AwsPropertiesConfig awsPropertiesConfig) {
-        super(auditLogBuilder, kmsEncryption, dynamoDbEnhancedAsyncClient, dynamoDbAsyncClient,
+        super(kmsEncryption, dynamoDbEnhancedAsyncClient, dynamoDbAsyncClient,
                 awsPropertiesConfig.getDynamodbAddressTable(), PnAddress.class);
     }
 
     @Override
     public Mono<PnAddress> create(PnAddress pnAddress) {
-        String logMessage = String.format("create request delivery = %s", pnAddress);
-        PnAuditLogEvent logEvent = auditLogBuilder
-                .before(PnAuditLogEventType.AUD_DL_CREATE, logMessage)
-                .build();
-        logEvent.log();
-
-        return Mono.fromFuture(
-                countOccurrencesEntity(pnAddress.getRequestId())
-                        .thenCompose( total -> {
-                            log.debug("Address with same RequestID : {}", total);
-                            if (total == 0){
-                                return put(pnAddress);
-                            } else {
-                                log.debug("Address already exist");
-                                throw new PnHttpResponseException("Data already existed", HttpStatus.BAD_REQUEST.value());
-                            }
-                        })
-                )
-                .onErrorResume(throwable -> {
-                    logEvent.generateFailure(throwable.getMessage()).log();
-                    return Mono.error(throwable);
-                })
-                .map(entityCreated -> {
-                    logEvent.generateSuccess(String.format("created request delivery = %s", entityCreated)).log();
-                    return entityCreated;
-                });
+        return Mono.fromFuture(this.decode(put(pnAddress)).thenApply(i-> i));
     }
 
     @Override
     public Mono<PnAddress> findByRequestId(String requestId) {
-        String logMessage = String.format("Find request delivery with %s", requestId);
-        PnAuditLogEvent logEvent = auditLogBuilder
-                .before(PnAuditLogEventType.AUD_DL_CREATE, logMessage)
-                .build();
-        logEvent.log();
-        return Mono.fromFuture(this.get(requestId, null).thenApply(item -> {
-            logEvent.generateSuccess(String.format("Address find = %s", item)).log();
-            return item;
-        }));
+        return Mono.fromFuture(this.get(requestId, null).thenApply(item -> item));
     }
 
     private CompletableFuture<Integer> countOccurrencesEntity(String requestId) {

@@ -1,5 +1,8 @@
 package it.pagopa.pn.paperchannel.service;
 
+import it.pagopa.pn.commons.log.PnAuditLogBuilder;
+import it.pagopa.pn.commons.log.PnAuditLogEvent;
+import it.pagopa.pn.commons.log.PnAuditLogEventType;
 import it.pagopa.pn.paperchannel.config.BaseTest;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.exception.PnPaperEventException;
@@ -35,6 +38,7 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -62,6 +66,9 @@ class PaperMessagesServiceTest extends BaseTest {
 
     @Mock
     private SqsSender sqsSender;
+
+    @Mock
+    PnAuditLogBuilder auditLogBuilder;
 
     private PnDeliveryRequest deliveryRequestInProcessing;
     private PnDeliveryRequest deliveryRequestTakingCharge;
@@ -117,6 +124,14 @@ class PaperMessagesServiceTest extends BaseTest {
         Mockito.when(addressDAO.findByRequestId(deliveryRequestTakingCharge.getRequestId())).thenReturn(Mono.just(address));
         Mockito.when(externalChannelClient.sendEngageRequest(Mockito.any())).thenReturn(Mono.just("").then());
         Mockito.when(requestDeliveryDAO.updateData(Mockito.any())).thenReturn(Mono.just(deliveryRequestTakingCharge));
+
+        Mockito.when(auditLogBuilder.build())
+                .thenReturn(new PnAuditLogEvent(PnAuditLogEventType.AUD_FD_SEND, new HashMap<>(), "", new Object()));
+        Mockito.when(auditLogBuilder.before(Mockito.any(), Mockito.any()))
+                .thenReturn(auditLogBuilder);
+        Mockito.when(auditLogBuilder.iun(Mockito.anyString()))
+                .thenReturn(auditLogBuilder);
+
         SendResponse response = paperMessagesService.executionPaper(deliveryRequestTakingCharge.getRequestId(),getRequest(deliveryRequestTakingCharge.getRequestId())).block();
         assertNotNull(response);
         assertNotNull(response.getAmount());
@@ -164,6 +179,13 @@ class PaperMessagesServiceTest extends BaseTest {
 
     @Test
     void paperAsyncEntityAndAddressSwitchIfEmptyTest() {
+        Mockito.when(auditLogBuilder.build())
+                .thenReturn(new PnAuditLogEvent(PnAuditLogEventType.AUD_FD_RESOLVE_LOGIC, new HashMap<>(), "", new Object()));
+        Mockito.when(auditLogBuilder.before(Mockito.any(), Mockito.any()))
+                .thenReturn(auditLogBuilder);
+        Mockito.when(auditLogBuilder.iun(Mockito.anyString()))
+                .thenReturn(auditLogBuilder);
+
         PnAddress address = getPnAddress(deliveryRequestTakingCharge.getRequestId());
         Mockito.when(requestDeliveryDAO.getByRequestId(deliveryRequestTakingCharge.getRequestId())).thenReturn(Mono.empty());
         Mockito.when(addressDAO.findByRequestId(deliveryRequestTakingCharge.getRequestId())).thenReturn(Mono.just(address));

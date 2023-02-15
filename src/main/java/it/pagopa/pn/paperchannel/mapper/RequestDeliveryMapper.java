@@ -7,14 +7,13 @@ import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareRequest;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 
 import java.util.Date;
-import java.util.stream.Collectors;
 
 public class RequestDeliveryMapper {
     private RequestDeliveryMapper() {
         throw new IllegalStateException();
     }
 
-    public static PnDeliveryRequest toEntity(PrepareRequest request, String correlationId){
+    public static PnDeliveryRequest toEntity(PrepareRequest request){
         PnDeliveryRequest entity = new PnDeliveryRequest();
         entity.setRequestId(request.getRequestId());
         entity.setProposalProductType(request.getProposalProductType().getValue());
@@ -22,22 +21,17 @@ public class RequestDeliveryMapper {
         entity.setStatusCode(StatusDeliveryEnum.IN_PROCESSING.getCode());
         entity.setStatusDetail(StatusDeliveryEnum.IN_PROCESSING.getDescription());
         entity.setIun(request.getIun());
-
-        if (correlationId != null){
-            entity.setStatusCode(StatusDeliveryEnum.NATIONAL_REGISTRY_WAITING.getCode());
-            entity.setStatusDetail(StatusDeliveryEnum.NATIONAL_REGISTRY_WAITING.getDescription());
-        }
+        entity.setRelatedRequestId(request.getRelatedRequestId());
 
         entity.setStatusDate(DateUtils.formatDate(new Date()));
         entity.setFiscalCode(request.getReceiverFiscalCode());
-        entity.setCorrelationId(correlationId);
         entity.setPrintType(request.getPrintType());
         entity.setReceiverType(request.getReceiverType());
         entity.setAttachments(request.getAttachmentUrls().stream().map(key -> {
             PnAttachmentInfo pnAttachmentInfo = new PnAttachmentInfo();
             pnAttachmentInfo.setFileKey(key);
             return pnAttachmentInfo;
-        }).collect(Collectors.toList()));
+        }).toList());
 
         return entity;
     }

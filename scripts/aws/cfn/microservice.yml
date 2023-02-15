@@ -63,6 +63,22 @@ Parameters:
     Type: String
     Description: 'Url to the SafeStorage microservice'
 
+  AttemptSafeStorage:
+    Type: Number
+    Description: 'Number of attempts for retrieve file on safe storage'
+
+  AttemptQueueExternalChannel:
+    Type: Number
+    Description: 'Number of attempts for called external channel'
+
+  AttemptQueueNationalRegistries:
+    Type: Number
+    Description: 'Number of attempts for called national registries'
+
+  AttemptQueueSafeStorage:
+    Type: Number
+    Description: 'Number of attempts for called prepare async for retry retrieve file'
+
   SafeStorageCxId:
     Type: String
     Description: 'SafeStorage cx-id'
@@ -87,6 +103,10 @@ Parameters:
     Type: String
     Description: 'Name of KMS Key for Dynamo encode/decode data'
 
+  PaperDeliveryDriversBucketName:
+    Type: String
+    Description: 'Name of S3 bucket'
+
   RequestDeliveryDynamoTableName:
     Type: String
     Description: 'Name of dynamodb table containing request'
@@ -94,6 +114,14 @@ Parameters:
   RequestDeliveryDynamoTableArn:
     Type: String
     Description: 'ARN of dynamodb table containing request'
+
+  DeliveryFileDynamoTableName:
+    Type: String
+    Description: 'Name of dynamodb table containing file request'
+
+  DeliveryFileDynamoTableArn:
+    Type: String
+    Description: 'ARN of dynamodb table containing file request'
 
   AddressDynamoTableName:
     Type: String
@@ -143,13 +171,29 @@ Parameters:
     Type: String
     Description: 'ARN of dynamodb table containing cap'
 
+  PaperRequestErrorTableName:
+    Type: String
+    Description: 'Name of dynamodb table containing request error'
+
+  PaperRequestErrorTableArn:
+    Type: String
+    Description: 'ARN of dynamodb table containing request error'
+
   ExternalChannelsOutputsQueueName:
     Type: String
-    Description: 'Push delivery-push essages to this Queue'
+    Description: 'Push delivery-push messages to this Queue'
 
   ExternalChannelsOutputsQueueARN:
     Type: String
-    Description: 'Push delivery-push essages to this Queue'
+    Description: 'Push delivery-push messages to this Queue'
+
+  NationalRegistries2PaperChannelQueueName:
+    Type: String
+    Description: 'Pull national-registry messages to this Queue'
+
+  NationalRegistries2PaperChannelQueueARN:
+    Type: String
+    Description: 'Pull national-registry messages to this Queue'
 
   ExternalChannels2PaperChannelQueueName:
     Type: String
@@ -167,6 +211,17 @@ Parameters:
     Type: String
     Description: 'Send and pull requests in this queue'
 
+  # OpenApi Bucket params
+  MicroserviceBucketName:
+    Type: String
+    Default: ''
+    Description: 'Name of the bucket where the microservice files are copied during deploy'
+
+  MicroserviceBucketBaseKey:
+    Type: String
+    Default: ''
+    Description: 'Base key of the microservice in the s3 bucket'
+
 Resources:
   # PN-Paper-Channel microservice
   PaperChannelMicroservice:
@@ -180,7 +235,7 @@ Resources:
         AlarmSNSTopicArn: !Ref AlarmSNSTopicArn
         ContainerImageURI: !Sub '${ContainerImageUri}'
         ContainerEnvEntry1: !Sub 'AWS_REGIONCODE=${AWS::Region}'
-        ContainerEnvEntry2: !Sub 'CORS_ALLOWED_DOMAINS=${CorsAllowedDomains}'
+        ContainerEnvEntry2: !Sub 'CORS_ALLOWED_DOMAINS=${CorsAllowedDomains}, http://localhost:3000'
         ContainerEnvEntry3: !Sub 'PN_PAPERCHANNEL_CLIENTSAFESTORAGEBASEPATH=${SandboxSafeStorageBaseUrl}'
         ContainerEnvEntry4: !Sub 'PN_PAPERCHANNEL_CLIENTNATIONALREGISTRIESBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
         ContainerEnvEntry5: !Sub 'PN_PAPERCHANNEL_CLIENTEXTERNALCHANNELBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
@@ -193,14 +248,20 @@ Resources:
         ContainerEnvEntry12: !Sub 'AWS_DYNAMODBCOSTTABLE=${CostDynamoTableName}'
         ContainerEnvEntry13: !Sub 'AWS_DYNAMODBZONETABLE=${ZoneDynamoTableName}'
         ContainerEnvEntry14: !Sub 'AWS_DYNAMODBCAPTABLE=${CapDynamoTableName}'
-        ContainerEnvEntry15: !Sub 'AWS_KMS_KEYID=${PCKmsEncDecDynamoDataKeyARN}'
-        ContainerEnvEntry16: !Sub 'AWS_KMS_REGION=${AWS::Region}'
-        ContainerEnvEntry17: !Sub 'PN_PAPERCHANNEL_QUEUEDELIVERYPUSH=${ExternalChannelsOutputsQueueName}'
-        ContainerEnvEntry18: !Sub 'PN_PAPERCHANNEL_QUEUEEXTERNALCHANNEL=${ExternalChannels2PaperChannelQueueName}'
-        ContainerEnvEntry19: !Sub 'PN_PAPERCHANNEL_QUEUENATIONALREGISTRIES=${ExternalChannels2PaperChannelQueueName}'
-        ContainerEnvEntry20: !Sub 'PN_PAPERCHANNEL_QUEUEINTERNAL=${ScheduledRequestsQueueName}'
-        ContainerEnvEntry21: !Sub 'SPRING_CLOUD_FUNCTIONROUTER_QUEUES_LIST=${ExternalChannelsOutputsQueueName},${ExternalChannels2PaperChannelQueueName},${ScheduledRequestsQueueName}'
-        MappedPaths: '/paper-channel/*,/paper-channel-private/*'
+        ContainerEnvEntry15: !Sub 'AWS_DYNAMODBDELIVERYFILETABLE=${DeliveryFileDynamoTableName}'
+        ContainerEnvEntry16: !Sub 'AWS_DYNAMODBPAPERREQUESTERRORTABLE=${PaperRequestErrorTableName}'
+        ContainerEnvEntry17: !Sub 'AWS_KMS_KEYID=${PCKmsEncDecDynamoDataKeyARN}'
+        ContainerEnvEntry18: !Sub 'AWS_KMS_REGION=${AWS::Region}'
+        ContainerEnvEntry19: !Sub 'PN_PAPERCHANNEL_QUEUEDELIVERYPUSH=${ExternalChannelsOutputsQueueName}'
+        ContainerEnvEntry20: !Sub 'PN_PAPERCHANNEL_QUEUEEXTERNALCHANNEL=${ExternalChannels2PaperChannelQueueName}'
+        ContainerEnvEntry21: !Sub 'PN_PAPERCHANNEL_QUEUENATIONALREGISTRIES=${NationalRegistries2PaperChannelQueueName}'
+        ContainerEnvEntry22: !Sub 'PN_PAPERCHANNEL_QUEUEINTERNAL=${ScheduledRequestsQueueName}'
+        ContainerEnvEntry23: !Sub 'PN_PAPERCHANNEL_ATTEMPTSAFESTORAGE=${AttemptSafeStorage}'
+        ContainerEnvEntry24: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUESAFESTORAGE=${AttemptQueueSafeStorage}'
+        ContainerEnvEntry25: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUENATIONALREGISTRIES=${AttemptQueueNationalRegistries}'
+        ContainerEnvEntry26: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUEEXTERNALCHANNEL=${AttemptQueueExternalChannel}'
+        ContainerEnvEntry27: !Sub 'AWS_BUCKET_NAME=${PaperDeliveryDriversBucketName}'
+        MappedPaths: '/paper-channel-bo/*,/paper-channel-private/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds
         VpcId: !Ref VpcId
@@ -221,6 +282,12 @@ Resources:
         Statement:
           - Effect: Allow
             Action:
+              - s3:*
+            Resource:
+              - !Sub arn:aws:s3:::${PaperDeliveryDriversBucketName}
+              - !Sub arn:aws:s3:::${PaperDeliveryDriversBucketName}/*
+          - Effect: Allow
+            Action:
               - sqs:ChangeMessageVisibility
               - sqs:ChangeMessageVisibilityBatch
               - sqs:DeleteMessage
@@ -234,6 +301,7 @@ Resources:
               - !Ref ExternalChannelsOutputsQueueARN
               - !Ref ExternalChannels2PaperChannelQueueARN
               - !Ref ScheduledRequestsQueueARN
+              - !Ref NationalRegistries2PaperChannelQueueARN
           - Effect: Allow
             Action:
               - kms:Encrypt
@@ -256,6 +324,8 @@ Resources:
             Resource:
               - !Sub "${RequestDeliveryDynamoTableArn}"
               - !Sub "${RequestDeliveryDynamoTableArn}/*"
+              - !Sub "${DeliveryFileDynamoTableArn}"
+              - !Sub "${DeliveryFileDynamoTableArn}/*"
               - !Sub "${AddressDynamoTableArn}"
               - !Sub "${AddressDynamoTableArn}/*"
               - !Sub "${TenderDynamoTableArn}"
@@ -268,6 +338,8 @@ Resources:
               - !Sub "${ZoneDynamoTableArn}/*"
               - !Sub "${CapDynamoTableArn}"
               - !Sub "${CapDynamoTableArn}/*"
+              - !Sub "${PaperRequestErrorTableArn}"
+              - !Sub "${PaperRequestErrorTableArn}/*"
 
 
   # Dashboard
@@ -280,3 +352,20 @@ Resources:
         AlarmArns: !Join
           - ','
           - - !GetAtt PaperChannelMicroservice.Outputs.FatalLogsMetricAlarmArn
+
+  PaperChannelGatewayDeliveryDriver:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/api-gw-expose-service.yaml"
+      Parameters:
+        MicroServiceUniqueName: !Sub '${ProjectName}-PaperChannel-bo'
+        IntendedUsage: BACKOFFICE
+        DnsName: !Ref WebApiDnsName
+        ProjectName: !Ref ProjectName
+        ServiceApiPath: 'paper-channel-bo'
+        NetworkLoadBalancerLink: !Ref NetworkLoadBalancerLink
+        ApplicationLoadBalancerDomain: !Ref ApplicationLoadBalancerDomain
+        AlarmSNSTopicArn: !Ref AlarmSNSTopicArn
+        CloudwatchLogKinesisStreamArn: !Ref LogsKinesisSourceStreamArn
+        OpenApiBucketName: !Ref MicroserviceBucketName
+        OpenApiBucketKey: !Sub ${MicroserviceBucketBaseKey}/docs/openapi/pn-paper-channel-v1.yaml

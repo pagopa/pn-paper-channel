@@ -1,38 +1,75 @@
 package it.pagopa.pn.paperchannel.rest.v1;
 
-import it.pagopa.pn.paperchannel.model.DeliveryDriverFilter;
 import it.pagopa.pn.paperchannel.rest.v1.api.DeliveryDriverApi;
-import it.pagopa.pn.paperchannel.rest.v1.dto.PageableDeliveryDriverResponseDto;
-import it.pagopa.pn.paperchannel.rest.v1.dto.BaseResponse;
-import it.pagopa.pn.paperchannel.rest.v1.dto.ContractInsertRequestDto;
+import it.pagopa.pn.paperchannel.rest.v1.dto.*;
 import it.pagopa.pn.paperchannel.service.PaperChannelService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-import org.springframework.web.server.ServerWebExchange;
-import reactor.core.publisher.Mono;
-
-import java.util.Date;
-
 
 @RestController
 public class PaperChannelRestV1Controller implements DeliveryDriverApi {
+    
     @Autowired
     private PaperChannelService paperChannelService;
 
     @Override
-    public Mono<ResponseEntity<BaseResponse>> addContract(Mono<ContractInsertRequestDto> contractInsertRequestDto, ServerWebExchange exchange) {
-        return contractInsertRequestDto.flatMap(request -> paperChannelService.createContract(request))
-                .map(ResponseEntity::ok);
-    }
-    @Override
-    public Mono<ResponseEntity<PageableDeliveryDriverResponseDto>> takeDeliveryDriver(Integer page, Integer size, Boolean status, Date startDate, Date endDate, ServerWebExchange exchange) {
-        return paperChannelService.takeDeliveryDriver(new DeliveryDriverFilter(page, size, status, startDate, endDate))
-                .map(item -> {
-                    return ResponseEntity.ok().body(item);
-                });
+    public Mono<ResponseEntity<PageableTenderResponseDto>> takeTender(Integer page, Integer size, ServerWebExchange exchange) {
+        return this.paperChannelService.getAllTender(page, size).map(ResponseEntity::ok);
     }
 
+    @Override
+    public Mono<ResponseEntity<PageableDeliveryDriverResponseDto>> takeDeliveriesDrivers(String tenderCode, Integer page, Integer size, ServerWebExchange exchange) {
+        return this.paperChannelService.getAllDeliveriesDrivers(tenderCode, page, size).map(ResponseEntity::ok) ;
+    }
+
+    @Override
+    public Mono<ResponseEntity<AllPricesContractorResponseDto>> takePrices(String tenderCode, String deliveryDriverId, ServerWebExchange exchange) {
+        return DeliveryDriverApi.super.takePrices(tenderCode, deliveryDriverId, exchange);
+    }
+
+    @Override
+    public Mono<ResponseEntity<PresignedUrlResponseDto>> addTenderFromFile(ServerWebExchange exchange) {
+        return this.paperChannelService.getPresignedUrl().map(ResponseEntity::ok);
+    }
+
+    @Override
+    public Mono<ResponseEntity<InfoDownloadDTO>> downloadTenderFile(String tenderCode, String uuid, ServerWebExchange exchange) {
+        return this.paperChannelService.downloadTenderFile(tenderCode, uuid).map(ResponseEntity::ok);
+    }
+
+    @Override
+    public Mono<ResponseEntity<NotifyResponseDto>> notifyUpload(Mono<TenderUploadRequestDto> tenderUploadRequestDto, ServerWebExchange exchange) {
+        return tenderUploadRequestDto.flatMap(request -> paperChannelService.notifyUpload(request))
+                .map(ResponseEntity::ok);
+    }
+
+    @Override
+    public Mono<ResponseEntity<TenderCreateResponseDTO>> createUpdateTender(Mono<TenderCreateRequestDTO> tenderCreateRequestDTO, ServerWebExchange exchange) {
+        return tenderCreateRequestDTO
+                .flatMap(request -> paperChannelService.createOrUpdateTender(request))
+                .map(ResponseEntity::ok);
+    }
+
+    @Override
+    public Mono<ResponseEntity<Void>> createUpdateDriver(String tenderCode, Mono<DeliveryDriverDTO> deliveryDriverDto, ServerWebExchange exchange) {
+        return deliveryDriverDto.flatMap(request -> this.paperChannelService.createOrUpdateDriver(tenderCode, request))
+                .map(ResponseEntity::ok);
+    }
+
+
+    @Override
+    public Mono<ResponseEntity<Void>> createUpdateCost(String deliveryDriverId, Mono<CostDTO> costDTO, ServerWebExchange exchange) {
+        return costDTO.flatMap(request -> this.paperChannelService.createOrUpdateCost(deliveryDriverId, request))
+                .map(ResponseEntity::ok);
+    }
+
+
+    @Override
+    public Mono<ResponseEntity<TenderDetailResponseDTO>> getTenderDetails(String tenderCode, ServerWebExchange exchange) {
+        return this.paperChannelService.getTenderDetails(tenderCode)
+                .map(ResponseEntity::ok);
+    }
 }

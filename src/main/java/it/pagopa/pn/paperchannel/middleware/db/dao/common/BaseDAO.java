@@ -1,6 +1,5 @@
 package it.pagopa.pn.paperchannel.middleware.db.dao.common;
 
-import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.paperchannel.encryption.KmsEncryption;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import lombok.AllArgsConstructor;
@@ -31,23 +30,22 @@ public abstract class BaseDAO<T> {
         Key to;
     }
 
-    protected final PnAuditLogBuilder auditLogBuilder;
     private final KmsEncryption kmsEncryption;
     protected final DynamoDbEnhancedAsyncClient dynamoDbEnhancedAsyncClient;
     protected final DynamoDbAsyncClient dynamoDbAsyncClient;
     protected final DynamoDbAsyncTable<T> dynamoTable;
     protected final String table;
     protected static final Function<Key, QueryConditional> CONDITION_EQUAL_TO = QueryConditional::keyEqualTo;
+    protected static final Function<Key, QueryConditional> CONDITION_BEGINS_WITH = QueryConditional::sortBeginsWith;
     protected static final Function<BaseDAO.Keys, QueryConditional> CONDITION_BETWEEN = keys -> QueryConditional.sortBetween(keys.getFrom(), keys.getTo());
 
     private final Class<T> tClass;
 
 
-    protected BaseDAO(PnAuditLogBuilder auditLogBuilder, KmsEncryption kmsEncryption, DynamoDbEnhancedAsyncClient dynamoDbEnhancedAsyncClient,
+    protected BaseDAO(KmsEncryption kmsEncryption, DynamoDbEnhancedAsyncClient dynamoDbEnhancedAsyncClient,
                       DynamoDbAsyncClient dynamoDbAsyncClient, String tableName, Class<T> tClass) {
         this.dynamoTable = dynamoDbEnhancedAsyncClient.table(tableName, TableSchema.fromBean(tClass));
         this.table = tableName;
-        this.auditLogBuilder = auditLogBuilder;
         this.kmsEncryption = kmsEncryption;
         this.dynamoDbEnhancedAsyncClient = dynamoDbEnhancedAsyncClient;
         this.dynamoDbAsyncClient = dynamoDbAsyncClient;
@@ -106,10 +104,13 @@ public abstract class BaseDAO<T> {
         return dynamoDbAsyncClient.query(qeRequest.build()).thenApply(QueryResponse::count);
     }
 
-    protected Flux<T> getByFilter(QueryConditional conditional, String index, Map<String, AttributeValue> values, String filterExpression){
+    protected Flux<T> getByFilter(QueryConditional conditional, String index, Map<String, AttributeValue> values, String filterExpression, Integer maxElements){
         QueryEnhancedRequest.Builder qeRequest = QueryEnhancedRequest
                 .builder()
                 .queryConditional(conditional);
+        if (maxElements != null) {
+            qeRequest.limit(maxElements);
+        }
         if (!StringUtils.isBlank(filterExpression)){
             qeRequest.filterExpression(Expression.builder().expression(filterExpression).expressionValues(values).build());
         }
@@ -118,6 +119,11 @@ public abstract class BaseDAO<T> {
         }
         return Flux.from(dynamoTable.query(qeRequest.build()).flatMapIterable(Page::items));
     }
+
+    protected Flux<T> getByFilter(QueryConditional conditional, String index, Map<String, AttributeValue> values, String filterExpression){
+        return getByFilter(conditional, index, values, filterExpression, null);
+    }
+
 
     protected <A> A encode(A data, Class<A> aClass) {
         if(aClass == PnAddress.class) {

@@ -18,14 +18,14 @@ class NationalRegistryClientTest extends BaseTest.WithMockServer {
 
     @Test
     void testOK(){
-        AddressOKDto addressOKDtoMono = nationalRegistryClient.finderAddress("CODICEFISCALE200","PF").block();
+        AddressOKDto addressOKDtoMono = nationalRegistryClient.finderAddress("CORR1", "CODICEFISCALE200","PF").block();
         Assertions.assertNotNull(addressOKDtoMono);
         Assertions.assertNotNull(addressOKDtoMono.getCorrelationId());
     }
 
     @Test
     void testErrorBadRequest(){
-        nationalRegistryClient.finderAddress("CODICEFISCALE400","PF")
+        nationalRegistryClient.finderAddress("CORR1", "CODICEFISCALE400","PF")
                 .onErrorResume(WebClientResponseException.class, ex -> {
                     Assertions.assertEquals(ex.getStatusCode(), HttpStatus.BAD_REQUEST);
                     return Mono.empty();
@@ -34,7 +34,7 @@ class NationalRegistryClientTest extends BaseTest.WithMockServer {
 
     @Test
     void testErrorNotFound(){
-        nationalRegistryClient.finderAddress("CODICEFISCALE404","PF")
+        nationalRegistryClient.finderAddress("CORR1", "CODICEFISCALE404","PF")
                 .onErrorResume(WebClientResponseException.class, ex -> {
                     Assertions.assertEquals(ex.getStatusCode(), HttpStatus.NOT_FOUND);
                     return Mono.empty();
@@ -43,7 +43,7 @@ class NationalRegistryClientTest extends BaseTest.WithMockServer {
 
     @Test
     void testInternalServerError(){
-        nationalRegistryClient.finderAddress("CODICEFISCALE500","PF")
+        nationalRegistryClient.finderAddress("CORR1", "CODICEFISCALE500","PF")
                 .onErrorResume(WebClientResponseException.class, ex -> {
                     Assertions.assertEquals(ex.getStatusCode(), HttpStatus.INTERNAL_SERVER_ERROR);
                     return Mono.empty();
