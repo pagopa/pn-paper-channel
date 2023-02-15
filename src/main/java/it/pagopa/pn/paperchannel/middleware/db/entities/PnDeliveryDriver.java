@@ -30,7 +30,10 @@ public class PnDeliveryDriver {
     public static final String TENDER_CODE_INDEX = "tender-index";
     public static final String COL_START_DATE = "startDate";
 
-    @Getter(onMethod = @__({@DynamoDbPartitionKey, @DynamoDbAttribute(COL_UNIQUE_CODE)}))
+    @Getter(onMethod = @__({@DynamoDbPartitionKey, @DynamoDbAttribute(COL_TAX_ID)}))
+    public String taxId;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_UNIQUE_CODE)}))
     public String uniqueCode;
 
     @Getter(onMethod = @__({@DynamoDbSortKey, @DynamoDbSecondaryPartitionKey(indexNames = TENDER_CODE_INDEX), @DynamoDbAttribute(COL_TENDER_CODE)}))
@@ -38,9 +41,6 @@ public class PnDeliveryDriver {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_DENOMINATION)}))
     public String denomination;
-
-    @Getter(onMethod = @__({@DynamoDbAttribute(COL_TAX_ID)}))
-    public String taxId;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_PHONE_NUMBER)}))
     public String phoneNumber;
