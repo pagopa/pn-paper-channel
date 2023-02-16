@@ -8,6 +8,18 @@ for qn in  $( echo $queues | tr " " "\n" ) ; do
         --queue-name $qn
 done
 
+echo "### CREATE BUCKETS ###"
+buckets="local-doc-bucket local-legal-bucket"
+for buck in  $( echo $buckets | tr " " "\n" ) ; do
+  echo creating bucket $buck ...
+  aws --profile default --region us-east-1 --endpoint-url http://localstack:4566 \
+      s3 mb s3://$buck
+  aws --profile default --region us-east-1 --endpoint-url http://localstack:4566 \
+      s3api put-bucket-versioning \
+      --bucket $buck \
+      --versioning-configuration Status=Enabled
+done
+
 echo " - Create pn-paper-channel TABLES"
 aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     dynamodb create-table \
@@ -52,8 +64,10 @@ aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     --table-name AddressDynamoTable  \
     --attribute-definitions \
         AttributeName=requestId,AttributeType=S \
+        AttributeName=addressType,AttributeType=S \
     --key-schema \
         AttributeName=requestId,KeyType=HASH \
+        AttributeName=addressType,KeyType=RANGE \
     --provisioned-throughput \
         ReadCapacityUnits=10,WriteCapacityUnits=5
 
@@ -134,12 +148,12 @@ aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     dynamodb create-table \
     --table-name DeliveryDriverDynamoTable \
     --attribute-definitions \
-        AttributeName=uniqueCode,AttributeType=S \
+        AttributeName=taxId,AttributeType=S \
         AttributeName=tenderCode,AttributeType=S \
 		    AttributeName=author,AttributeType=S \
 		    AttributeName=startDate,AttributeType=S \
     --key-schema \
-        AttributeName=uniqueCode,KeyType=HASH \
+        AttributeName=taxId,KeyType=HASH \
         AttributeName=tenderCode,KeyType=RANGE \
     --provisioned-throughput \
         ReadCapacityUnits=5,WriteCapacityUnits=5 \

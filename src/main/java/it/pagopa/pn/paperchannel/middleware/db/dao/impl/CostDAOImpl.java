@@ -1,7 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.db.dao.impl;
 
 import it.pagopa.pn.paperchannel.config.AwsPropertiesConfig;
-import it.pagopa.pn.paperchannel.encryption.KmsEncryption;
 import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.BaseDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnCost;
@@ -25,11 +24,10 @@ import java.util.Map;
 public class CostDAOImpl extends BaseDAO<PnCost> implements CostDAO {
 
 
-    public CostDAOImpl(KmsEncryption kmsEncryption,
-                       DynamoDbEnhancedAsyncClient dynamoDbEnhancedAsyncClient,
+    public CostDAOImpl(DynamoDbEnhancedAsyncClient dynamoDbEnhancedAsyncClient,
                        DynamoDbAsyncClient dynamoDbAsyncClient,
                        AwsPropertiesConfig awsPropertiesConfig) {
-        super(kmsEncryption, dynamoDbEnhancedAsyncClient, dynamoDbAsyncClient,
+        super(dynamoDbEnhancedAsyncClient, dynamoDbAsyncClient,
                 awsPropertiesConfig.getDynamodbCostTable(), PnCost.class);
     }
 

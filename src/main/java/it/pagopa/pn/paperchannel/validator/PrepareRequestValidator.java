@@ -4,6 +4,8 @@ import it.pagopa.pn.paperchannel.exception.PnInputValidatorException;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareRequest;
+import it.pagopa.pn.paperchannel.utils.Utility;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 
 import java.util.ArrayList;
@@ -19,37 +21,37 @@ public class PrepareRequestValidator {
         throw new IllegalCallerException("the constructor must not called");
     }
 
-    public static void compareRequestEntity(PrepareRequest prepareRequest, PnDeliveryRequest pnDeliveryEntity, boolean firstAttempt){
+    public static void compareRequestEntity(PrepareRequest prepareRequest, PnDeliveryRequest pnDeliveryEntity, boolean firstAttempt) {
         List<String> errors = new ArrayList<>();
 
-        if (!prepareRequest.getRequestId().equals(pnDeliveryEntity.getRequestId())) {
+        if (!StringUtils.equals(prepareRequest.getRequestId(), pnDeliveryEntity.getRequestId())) {
             errors.add("RequestId");
         }
 
-        if (!prepareRequest.getIun().equals(pnDeliveryEntity.getIun())) {
+        if (!StringUtils.equals(prepareRequest.getIun(), pnDeliveryEntity.getIun())) {
             errors.add("Iun");
         }
 
-        if (!prepareRequest.getReceiverFiscalCode().equals(pnDeliveryEntity.getFiscalCode())) {
+        if (!StringUtils.equals(Utility.convertToHash(prepareRequest.getReceiverFiscalCode()), pnDeliveryEntity.getHashedFiscalCode())) {
             errors.add("FiscalCode");
         }
 
-        if (!prepareRequest.getProposalProductType().getValue().equals(pnDeliveryEntity.getProposalProductType())) {
+        if (!StringUtils.equals(prepareRequest.getProposalProductType().getValue(), pnDeliveryEntity.getProposalProductType())) {
             errors.add("ProductType");
         }
 
-        if (!prepareRequest.getReceiverType().equals(pnDeliveryEntity.getReceiverType())){
+        if (!StringUtils.equals(prepareRequest.getReceiverType(), pnDeliveryEntity.getReceiverType())) {
             errors.add("ReceiverType");
         }
 
-        if (!prepareRequest.getPrintType().equals(pnDeliveryEntity.getPrintType())){
+        if (!StringUtils.equals(prepareRequest.getPrintType(), (pnDeliveryEntity.getPrintType()))) {
             errors.add("printType");
         }
 
-        if (pnDeliveryEntity.getAttachments() != null){
+        if (pnDeliveryEntity.getAttachments() != null) {
             List<String> fromDb = pnDeliveryEntity.getAttachments().stream()
                     .map(PnAttachmentInfo::getFileKey).collect(Collectors.toList());
-            if (!AttachmentValidator.checkBetweenLists(prepareRequest.getAttachmentUrls(), fromDb)){
+            if (!AttachmentValidator.checkBetweenLists(prepareRequest.getAttachmentUrls(), fromDb)) {
                 errors.add("Attachments");
             }
         }
@@ -57,8 +59,8 @@ public class PrepareRequestValidator {
 
 
         if (firstAttempt) {
-            if (prepareRequest.getReceiverAddress() != null){
-                if (!fromAnalogToAddress(prepareRequest.getReceiverAddress()).convertToHash().equals(pnDeliveryEntity.getAddressHash())){
+            if (prepareRequest.getReceiverAddress() != null) {
+                if (!StringUtils.equals(fromAnalogToAddress(prepareRequest.getReceiverAddress()).convertToHash(), (pnDeliveryEntity.getAddressHash()))) {
                     errors.add("Address");
                 }
 
@@ -67,7 +69,7 @@ public class PrepareRequestValidator {
             }
         }
 
-        if (!errors.isEmpty()){
+        if (!errors.isEmpty()) {
             throw new PnInputValidatorException(DIFFERENT_DATA_REQUEST, DIFFERENT_DATA_REQUEST.getMessage(), HttpStatus.CONFLICT, errors);
         }
     }

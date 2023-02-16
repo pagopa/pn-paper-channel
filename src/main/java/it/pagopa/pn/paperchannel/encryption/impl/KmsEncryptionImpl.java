@@ -5,19 +5,19 @@ import com.amazonaws.services.kms.model.DecryptRequest;
 import com.amazonaws.services.kms.model.EncryptRequest;
 import it.pagopa.pn.paperchannel.config.AwsKmsProperties;
 import it.pagopa.pn.paperchannel.encryption.EncryptedUtils;
-import it.pagopa.pn.paperchannel.encryption.KmsEncryption;
+import it.pagopa.pn.paperchannel.encryption.DataEncryption;
 import it.pagopa.pn.paperchannel.encryption.model.EncryptionModel;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.util.Assert;
-
+import org.springframework.beans.factory.annotation.Qualifier;
 import java.nio.ByteBuffer;
 import java.util.Base64;
 import java.util.Optional;
 
 
 @Slf4j
-public class KmsEncryptionImpl implements KmsEncryption {
+@Qualifier("kmsEncryption")
+public class KmsEncryptionImpl implements DataEncryption {
 
     private final AWSKMS kms;
     private final AwsKmsProperties awsKmsProperties;

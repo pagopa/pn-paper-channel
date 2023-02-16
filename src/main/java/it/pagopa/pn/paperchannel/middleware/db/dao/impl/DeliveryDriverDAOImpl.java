@@ -1,12 +1,14 @@
 package it.pagopa.pn.paperchannel.middleware.db.dao.impl;
 
 import it.pagopa.pn.paperchannel.config.AwsPropertiesConfig;
-import it.pagopa.pn.paperchannel.encryption.KmsEncryption;
+import it.pagopa.pn.paperchannel.encryption.DataEncryption;
 import it.pagopa.pn.paperchannel.middleware.db.dao.DeliveryDriverDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.BaseDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryDriver;
 import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
@@ -23,12 +25,10 @@ import java.util.Map;
 @Repository
 public class DeliveryDriverDAOImpl extends BaseDAO<PnDeliveryDriver> implements DeliveryDriverDAO {
 
-
-    public DeliveryDriverDAOImpl(KmsEncryption kmsEncryption,
-                                 DynamoDbEnhancedAsyncClient dynamoDbEnhancedAsyncClient,
+    public DeliveryDriverDAOImpl(DynamoDbEnhancedAsyncClient dynamoDbEnhancedAsyncClient,
                                  DynamoDbAsyncClient dynamoDbAsyncClient,
                                  AwsPropertiesConfig awsPropertiesConfig) {
-        super(kmsEncryption, dynamoDbEnhancedAsyncClient, dynamoDbAsyncClient,
+        super(dynamoDbEnhancedAsyncClient, dynamoDbAsyncClient,
                 awsPropertiesConfig.getDynamodbDeliveryDriverTable(), PnDeliveryDriver.class);
     }
 

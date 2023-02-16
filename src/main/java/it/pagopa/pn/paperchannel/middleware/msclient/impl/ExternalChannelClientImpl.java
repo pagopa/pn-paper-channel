@@ -19,6 +19,7 @@ import reactor.util.retry.Retry;
 import javax.annotation.PostConstruct;
 import java.net.ConnectException;
 import java.time.Duration;
+import java.time.OffsetDateTime;
 import java.util.concurrent.TimeoutException;
 
 @Component
@@ -43,7 +44,11 @@ public class ExternalChannelClientImpl extends BaseClient implements ExternalCha
         PaperEngageRequestDto dto = new PaperEngageRequestDto();
         dto.setRequestId(sendRequest.getRequestId());
         dto.setRequestPaId(sendRequest.getRequestPaId());
-        dto.setClientRequestTimeStamp(DateUtils.getOffsetDateTimeFromDate(sendRequest.getClientRequestTimeStamp()));
+        dto.setClientRequestTimeStamp(OffsetDateTime.now());
+        if (sendRequest.getClientRequestTimeStamp() != null){
+            dto.setClientRequestTimeStamp(DateUtils.getOffsetDateTimeFromDate(sendRequest.getClientRequestTimeStamp()));
+        }
+
         dto.setProductType(setProductType(sendRequest.getProductType().getValue()));
         dto.setReceiverFiscalCode(sendRequest.getReceiverFiscalCode());
         if (!sendRequest.getAttachmentUrls().isEmpty())

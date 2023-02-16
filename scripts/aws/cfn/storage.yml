@@ -484,12 +484,16 @@ Resources:
       AttributeDefinitions:
         - AttributeName: "requestId"
           AttributeType: "S"
+        - AttributeName: "addressType"
+          AttributeType: "S"
       TimeToLiveSpecification:
         AttributeName: "ttl"
         Enabled: true
       KeySchema:
         - AttributeName: "requestId"
           KeyType: "HASH"
+        - AttributeName: "addressType"
+          KeyType: "RANGE"
       ProvisionedThroughput:
         ReadCapacityUnits: "5"
         WriteCapacityUnits: "5"
@@ -537,7 +541,7 @@ Resources:
     Properties:
       TableName: !Sub '${ProjectName}-PaperDeliveryDriver'
       AttributeDefinitions:
-        - AttributeName: "uniqueCode"
+        - AttributeName: "taxId"
           AttributeType: "S"
         - AttributeName: "tenderCode"
           AttributeType: "S"
@@ -546,7 +550,7 @@ Resources:
         - AttributeName: "startDate"
           AttributeType: "S"
       KeySchema:
-        - AttributeName: "uniqueCode"
+        - AttributeName: "taxId"
           KeyType: "HASH"
         - AttributeName: "tenderCode"
           KeyType: "RANGE"

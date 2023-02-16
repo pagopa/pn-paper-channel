@@ -26,33 +26,6 @@ public class ExcelValidator {
         if (StringUtils.isBlank(denomination.getValue())){
             errors.add(new PnExcelValidatorException.ErrorCell(denomination.getRow(), denomination.getCol(), "Campo Denomination deve essere valorizzata"));
         }
-        //businessName check
-        ExcelEngine.ExcelCell businessName = data.get("BUSINESS_NAME");
-        deliveryAndCost.setBusinessName(businessName.getValue());
-        if (StringUtils.isBlank(businessName.getValue())){
-            errors.add(new PnExcelValidatorException.ErrorCell(businessName.getRow(), businessName.getCol(), "Campo Business name deve essere valorizzato"));
-        }
-        //registeredOffice check
-        ExcelEngine.ExcelCell registeredOffice = data.get("OFFICE_NAME");
-        deliveryAndCost.setRegisteredOffice(registeredOffice.getValue());
-        if (StringUtils.isBlank(registeredOffice.getValue())){
-            errors.add(new PnExcelValidatorException.ErrorCell(registeredOffice.getRow(), registeredOffice.getCol(), "Campo Office name deve essere valorizzato"));
-        }
-        //pec check
-        ExcelEngine.ExcelCell pec = data.get("PEC");
-        deliveryAndCost.setPec(pec.getValue());
-        if (StringUtils.isBlank(pec.getValue())){
-            errors.add(new PnExcelValidatorException.ErrorCell(pec.getRow(), pec.getCol(), "Campo Pec deve essere valorizzato"));
-        }
-        //fiscalCode check
-        ExcelEngine.ExcelCell fiscalCode = data.get("FISCAL_CODE");
-        deliveryAndCost.setFiscalCode(fiscalCode.getValue());
-        if (StringUtils.isBlank(fiscalCode.getValue())){
-            errors.add(new PnExcelValidatorException.ErrorCell(fiscalCode.getRow(), fiscalCode.getCol(), "Campo codice fiscale deve essere valorizzato"));
-        }
-        if (!Utility.isValidFromRegex(fiscalCode.getValue(),Const.fiscalCodeRegex)){
-            errors.add(new PnExcelValidatorException.ErrorCell(fiscalCode.getRow(), fiscalCode.getCol(), "Codice fiscale non corretto"));
-        }
         //taxId check
         ExcelEngine.ExcelCell taxId = data.get("TAX_ID");
         deliveryAndCost.setTaxId(taxId.getValue());
@@ -61,25 +34,6 @@ public class ExcelValidator {
         }
         if (!Utility.isValidFromRegex(taxId.getValue(),Const.taxIdRegex)){
             errors.add(new PnExcelValidatorException.ErrorCell(taxId.getRow(), taxId.getCol(), "Partita iva non corretto"));
-        }
-        //phoneNumber check
-        ExcelEngine.ExcelCell phoneNumber = data.get("PHONE_NUMBER");
-        deliveryAndCost.setPhoneNumber(phoneNumber.getValue());
-        if (StringUtils.isBlank(phoneNumber.getValue())){
-            errors.add(new PnExcelValidatorException.ErrorCell(phoneNumber.getRow(), phoneNumber.getCol(), "Campo numero di telefono deve essere valorizzato"));
-        }
-        if (!Utility.isValidFromRegex(phoneNumber.getValue(), Const.phoneNumberRegex)){
-            errors.add(new PnExcelValidatorException.ErrorCell(phoneNumber.getRow(), phoneNumber.getCol(), "Numero di telefono non corretto"));
-        }
-        //uniqueCode check
-        ExcelEngine.ExcelCell uniqueCode = data.get("UNIQUE_CODE");
-        deliveryAndCost.setUniqueCode(uniqueCode.getValue());
-        if (StringUtils.isBlank(uniqueCode.getValue())){
-            errors.add(new PnExcelValidatorException.ErrorCell(uniqueCode.getRow(), uniqueCode.getCol(), "Campo Unique code deve essere valorizzato"));
-        }
-        if (!Utility.isValidFromRegex(uniqueCode.getValue(),Const.uniqueCodeRegex)){
-            errors.add(new PnExcelValidatorException.ErrorCell(uniqueCode.getRow(), uniqueCode.getCol(), "Problema nello uniqueCode inserito."));
-
         }
         //fsu check
         ExcelEngine.ExcelCell fsu = data.get("FSU");
@@ -93,12 +47,9 @@ public class ExcelValidator {
         }
         //cap check
         ExcelEngine.ExcelCell cap = data.get("CAP");
-        if (!StringUtils.isBlank(cap.getValue())){
-            errors.add(new PnExcelValidatorException.ErrorCell(cap.getRow(), cap.getCol(), "Problema nei cap inseriti."));
-        }
-        else {
+        if (StringUtils.isNotBlank(cap.getValue())){
             List<String> caps = Utility.isValidCap(cap.getValue());
-            if(caps == null){
+            if (caps == null) {
                 errors.add(new PnExcelValidatorException.ErrorCell(cap.getRow(), cap.getCol(), "Sono presenti duplicati nei cap inseriti."));
             }
             //deliveryAndCost.setCap(cap.getValue().substring(0, cap.getValue().indexOf(".")));
@@ -110,7 +61,7 @@ public class ExcelValidator {
         } else if (StringUtils.isNotEmpty(zone.getValue())) {
             deliveryAndCost.setZone(zone.getValue());
         }
-        if (!StringUtils.isBlank(zone.getValue()) && !zone.getValue().equals(Const.ZONA_1) && !zone.getValue().equals(Const.ZONA_2) && !zone.getValue().equals(Const.ZONA_3)){
+        if (!StringUtils.isBlank(zone.getValue()) && (!zone.getValue().equals(Const.ZONA_1) || !zone.getValue().equals(Const.ZONA_2) || !zone.getValue().equals(Const.ZONA_3))){
             errors.add(new PnExcelValidatorException.ErrorCell(zone.getRow(), zone.getCol(), "Il tipo di dato non è quello desiderato."));
         }
         if (StringUtils.isBlank(zone.getValue()) && StringUtils.isBlank(cap.getValue())){
@@ -123,7 +74,7 @@ public class ExcelValidator {
         if (StringUtils.isBlank(productType.getValue())){
             errors.add(new PnExcelValidatorException.ErrorCell(productType.getRow(), productType.getCol(), "Il campo product type deve essere valorizzato"));
         }
-        if (!productType.getValue().equals(Const.RACCOMANDATA_AR) && !productType.getValue().equals(Const.RACCOMANDATA_890) && !productType.getValue().equals(Const.RACCOMANDATA_SEMPLICE)){
+        if (!productType.getValue().equals(Const.RACCOMANDATA_AR) || !productType.getValue().equals(Const.RACCOMANDATA_890) || !productType.getValue().equals(Const.RACCOMANDATA_SEMPLICE)){
             errors.add(new PnExcelValidatorException.ErrorCell(productType.getRow(), productType.getCol(), "Il tipo di dato non è quello desiderato."));
         }
         //basePrice check

@@ -19,6 +19,7 @@ public class PnPaperChannelConfig {
     private String clientSafeStorageBasepath;
     private String clientNationalRegistriesBasepath;
     private String clientExternalChannelBasepath;
+    private String clientDataVaultBasepath;
     private String safeStorageCxId;
     private String xPagopaExtchCxId;
     private String nationalRegistryCxId;
@@ -36,6 +37,6 @@ public class PnPaperChannelConfig {
     private Long ttlExecutionN_RS;
     private Long ttlExecutionI_AR;
     private Long ttlExecutionI_RS;
-
+    private String retryStatus;
 
 }
