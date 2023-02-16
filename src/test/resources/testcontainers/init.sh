@@ -148,12 +148,12 @@ aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     dynamodb create-table \
     --table-name DeliveryDriverDynamoTable \
     --attribute-definitions \
-        AttributeName=uniqueCode,AttributeType=S \
+        AttributeName=taxId,AttributeType=S \
         AttributeName=tenderCode,AttributeType=S \
 		    AttributeName=author,AttributeType=S \
 		    AttributeName=startDate,AttributeType=S \
     --key-schema \
-        AttributeName=uniqueCode,KeyType=HASH \
+        AttributeName=taxId,KeyType=HASH \
         AttributeName=tenderCode,KeyType=RANGE \
     --provisioned-throughput \
         ReadCapacityUnits=5,WriteCapacityUnits=5 \

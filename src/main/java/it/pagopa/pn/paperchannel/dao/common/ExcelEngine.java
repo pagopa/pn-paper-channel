@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -177,6 +178,9 @@ public class ExcelEngine {
                 field.setAccessible(true);
                 Cell cell = row.createCell(cellNum++);
                 Object value = field.get(element);
+                if (value instanceof List<?>) {
+                    cell.setCellValue(StringUtils.join(value, ','));
+                }
                 cell.setCellValue(value != null ? value.toString() : "");
                 cell.setCellStyle(getBodyCellStyle());
             } catch (IllegalAccessException e) {
