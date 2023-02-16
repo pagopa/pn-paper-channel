@@ -20,12 +20,13 @@ public class ExcelValidator {
     public static DeliveryAndCost validateExcel(List<PnExcelValidatorException.ErrorCell> errors, Map<String, ExcelEngine.ExcelCell> data) {
         DeliveryAndCost deliveryAndCost = new DeliveryAndCost();
 
-        //denomination check
-        ExcelEngine.ExcelCell denomination = data.get("DENOMINATION");
-        deliveryAndCost.setDenomination(denomination.getValue());
-        if (StringUtils.isBlank(denomination.getValue())){
-            errors.add(new PnExcelValidatorException.ErrorCell(denomination.getRow(), denomination.getCol(), "Campo Denomination deve essere valorizzata"));
+        //businessName check
+        ExcelEngine.ExcelCell businessName = data.get("BUSINESS_NAME");
+        deliveryAndCost.setBusinessName(businessName.getValue());
+        if (StringUtils.isBlank(businessName.getValue())){
+            errors.add(new PnExcelValidatorException.ErrorCell(businessName.getRow(), businessName.getCol(), "Campo Business name deve essere valorizzato"));
         }
+
         //taxId check
         ExcelEngine.ExcelCell taxId = data.get("TAX_ID");
         deliveryAndCost.setTaxId(taxId.getValue());
@@ -35,6 +36,7 @@ public class ExcelValidator {
         if (!Utility.isValidFromRegex(taxId.getValue(),Const.taxIdRegex)){
             errors.add(new PnExcelValidatorException.ErrorCell(taxId.getRow(), taxId.getCol(), "Partita iva non corretto"));
         }
+
         //fsu check
         ExcelEngine.ExcelCell fsu = data.get("FSU");
         if (StringUtils.isBlank(fsu.getValue())){
@@ -45,6 +47,7 @@ public class ExcelValidator {
         } else {
             deliveryAndCost.setFsu(Boolean.valueOf(fsu.getValue()));
         }
+
         //cap check
         ExcelEngine.ExcelCell cap = data.get("CAP");
         if (StringUtils.isNotBlank(cap.getValue())){
@@ -52,8 +55,8 @@ public class ExcelValidator {
             if (caps == null) {
                 errors.add(new PnExcelValidatorException.ErrorCell(cap.getRow(), cap.getCol(), "Sono presenti duplicati nei cap inseriti."));
             }
-            //deliveryAndCost.setCap(cap.getValue().substring(0, cap.getValue().indexOf(".")));
         }
+
         //zone check
         ExcelEngine.ExcelCell zone = data.get("ZONE");
         if (!StringUtils.isBlank(zone.getValue()) && !Utility.isValidFromRegex(zone.getValue(), Const.zoneRegex)){
@@ -61,8 +64,23 @@ public class ExcelValidator {
         } else if (StringUtils.isNotEmpty(zone.getValue())) {
             deliveryAndCost.setZone(zone.getValue());
         }
-        if (!StringUtils.isBlank(zone.getValue()) && (!zone.getValue().equals(Const.ZONA_1) || !zone.getValue().equals(Const.ZONA_2) || !zone.getValue().equals(Const.ZONA_3))){
-            errors.add(new PnExcelValidatorException.ErrorCell(zone.getRow(), zone.getCol(), "Il tipo di dato non è quello desiderato."));
+        if (!StringUtils.isBlank(zone.getValue())){
+            boolean zone_ok = false;
+            if (Utility.isValidFromRegex(zone.getValue(),Const.ZONE_1)) {
+                zone_ok = true;
+                log.info("Formato zone corretto.");
+            }
+            else if (Utility.isValidFromRegex(zone.getValue(),Const.ZONE_2)) {
+                zone_ok = true;
+                log.info("Formato zone corretto.");
+            }
+            else if (Utility.isValidFromRegex(zone.getValue(),Const.ZONE_3)){
+                zone_ok = true;
+                log.info("Formato zone corretto.");
+            }
+            else{
+                errors.add(new PnExcelValidatorException.ErrorCell(zone.getRow(), zone.getCol(), "Il tipo di dato non è quello desiderato."));
+            }
         }
         if (StringUtils.isBlank(zone.getValue()) && StringUtils.isBlank(cap.getValue())){
             errors.add(new PnExcelValidatorException.ErrorCell(zone.getRow(), zone.getCol(), "Cap o Zone deve essere valorizzato"));
@@ -74,9 +92,23 @@ public class ExcelValidator {
         if (StringUtils.isBlank(productType.getValue())){
             errors.add(new PnExcelValidatorException.ErrorCell(productType.getRow(), productType.getCol(), "Il campo product type deve essere valorizzato"));
         }
-        if (!productType.getValue().equals(Const.RACCOMANDATA_AR) || !productType.getValue().equals(Const.RACCOMANDATA_890) || !productType.getValue().equals(Const.RACCOMANDATA_SEMPLICE)){
+        boolean productType_ok = false;
+        if (Utility.isValidFromRegex(productType.getValue(), Const.RACCOMANDATA_AR)){
+            productType_ok = true;
+            log.info("Formato productType corretto.");
+        }
+        else if (Utility.isValidFromRegex(productType.getValue().replace(".0",""), Const.RACCOMANDATA_890)){
+            productType_ok = true;
+            log.info("Formato productType corretto.");
+        }
+        else if (Utility.isValidFromRegex(productType.getValue(), Const.RACCOMANDATA_SEMPLICE)) {
+            productType_ok = true;
+            log.info("Formato productType corretto.");
+        }
+        else {
             errors.add(new PnExcelValidatorException.ErrorCell(productType.getRow(), productType.getCol(), "Il tipo di dato non è quello desiderato."));
         }
+
         //basePrice check
         ExcelEngine.ExcelCell basePrice = data.get("BASE_PRICE");
         if (StringUtils.isBlank(basePrice.getValue())){
@@ -87,6 +119,7 @@ public class ExcelValidator {
                 errors.add(new PnExcelValidatorException.ErrorCell(basePrice.getRow(), basePrice.getCol(), "Formato non valido."));
             }
         }
+
         //pagePrice check
         ExcelEngine.ExcelCell pagePrice = data.get("PAGE_PRICE");
         deliveryAndCost.setPagePrice(pagePrice.getRow().floatValue());
@@ -116,5 +149,4 @@ public class ExcelValidator {
         }
         return f;
     }
-
 }
