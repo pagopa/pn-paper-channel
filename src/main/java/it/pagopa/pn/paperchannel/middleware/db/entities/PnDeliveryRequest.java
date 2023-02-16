@@ -21,6 +21,8 @@ public class PnDeliveryRequest {
     public static final String COL_REQUEST_ID = "requestId";
 
     public static final String COL_FISCAL_CODE = "fiscalCode";
+
+    public static final String COL_HASHED_FISCAL_CODE = "hashedFiscalCode";
     public static final String COL_RECEIVER_TYPE = "receiverType";
 
     public static final String COL_IUN = "iun";
@@ -56,6 +58,9 @@ public class PnDeliveryRequest {
 
     @Getter(onMethod = @__({@DynamoDbSecondaryPartitionKey(indexNames = FISCAL_CODE_INDEX),@DynamoDbAttribute(COL_FISCAL_CODE)}))
     private String fiscalCode;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_HASHED_FISCAL_CODE)}))
+    private String hashedFiscalCode;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_RECEIVER_TYPE)}))
     private String receiverType;

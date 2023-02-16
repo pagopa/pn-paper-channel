@@ -9,6 +9,7 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.common.BaseDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.TransactWriterInitializer;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
+import it.pagopa.pn.paperchannel.utils.Utility;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -61,6 +62,7 @@ public class RequestDeliveryDAOImpl extends BaseDAO<PnDeliveryRequest> implement
                                             if(pnAddress != null) {
                                                 addressDAO.createTransaction(this.transactWriterInitializer, pnAddress);
                                             }
+                                            request.setHashedFiscalCode(Utility.convertToHash(request.getFiscalCode()));
                                             request.setFiscalCode(encode(request, PnDeliveryRequest.class).getFiscalCode());
                                             transactWriterInitializer.addRequestTransaction(this.dynamoTable, request, PnDeliveryRequest.class);
                                             return putWithTransact(transactWriterInitializer.build()).thenApply(item-> request);
