@@ -10,8 +10,6 @@ import it.pagopa.pn.paperchannel.encryption.model.EncryptionModel;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Component;
-
 import java.nio.ByteBuffer;
 import java.util.Base64;
 import java.util.Optional;

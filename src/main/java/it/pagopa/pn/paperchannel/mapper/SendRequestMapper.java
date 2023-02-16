@@ -6,6 +6,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.AnalogAddress;
+import it.pagopa.pn.paperchannel.rest.v1.dto.ProductTypeEnum;
 import it.pagopa.pn.paperchannel.rest.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.rest.v1.dto.SendRequest;
 import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
@@ -26,6 +27,7 @@ public class SendRequestMapper {
         SendRequest sendRequest = new SendRequest();
         sendRequest.setRequestId(pnDeliveryRequest.getRequestId());
         sendRequest.setIun(pnDeliveryRequest.getIun());
+        sendRequest.setProductType(ProductTypeEnum.valueOf(pnDeliveryRequest.getProductType()));
         sendRequest.setAttachmentUrls(pnDeliveryRequest.getAttachments().stream().map(i -> i.getUrl()).collect(Collectors.toList()));
         addressList.forEach(address -> {
             if (address.getTypology().equals(AddressTypeEnum.RECEIVER_ADDRESS.toString()))  {

@@ -13,6 +13,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
+import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.DiscoveredAddressDto;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.rest.v1.dto.SendRequest;
@@ -22,7 +23,6 @@ import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.poi.ss.formula.functions.Single;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -65,15 +65,16 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
                 .flatMap(entity -> {
                     log.info("GETTED ENTITY: {}", entity.getRequestId());
                     SingleStatusUpdateDto logDto = singleStatusUpdateDto;
+                    DiscoveredAddressDto discoveredAddressDto = logDto.getAnalogMail().getDiscoveredAddress();
                     logDto.getAnalogMail().setDiscoveredAddress(null);
                     pnLogAudit.addsBeforeReceive(entity.getIun(), String.format("prepare requestId = %s Response from external-channel", entity.getRequestId()));
-                    pnLogAudit.addsSuccessReceive(entity.getIun(), String.format("prepare requestId = %s Response %s from external-channel status code %s",  entity.getRequestId(), logDto, entity.getStatusCode()));
-
+                    pnLogAudit.addsSuccessReceive(entity.getIun(), String.format("prepare requestId = %s Response %s from external-channel status code %s",  entity.getRequestId(), logDto.toString().replaceAll("\n", ""), entity.getStatusCode()));
+                    logDto.getAnalogMail().setDiscoveredAddress(discoveredAddressDto);
                     return updateEntityResult(singleStatusUpdateDto, entity)
                             .flatMap(updatedEntity -> {
                                 log.info("UPDATED ENTITY: {}", updatedEntity.getRequestId());
                                 if (isRetryStatusCode(singleStatusUpdateDto)) {
-                                    sendEngageRequest(updatedEntity, setRetryRequestId(updatedEntity.getRequestId()));
+                                    sendEngageRequest(updatedEntity, setRetryRequestId(singleStatusUpdateDto.getAnalogMail().getRequestId()));
                                 }
                                 sendPaperResponse(updatedEntity, singleStatusUpdateDto);
                                 return Mono.just(updatedEntity);
@@ -104,7 +105,7 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
     private String setRetryRequestId(String requestId) {
         String rertyReqId = getPrefixRequestId(requestId);
         if (requestId.contains(Const.RETRY)) {
-            String attempt = String.valueOf(Integer.parseInt(requestId.substring(requestId.indexOf(Const.RETRY), requestId.length()-1))+1);
+            String attempt = String.valueOf(Integer.parseInt(requestId.substring(requestId.lastIndexOf("_")+1))+1);
             rertyReqId = rertyReqId.concat(Const.RETRY).concat(attempt);
         }
         return rertyReqId;
@@ -113,23 +114,21 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
     private void sendEngageRequest(PnDeliveryRequest pnDeliveryRequest, String requestId) {
         Mono.delay(Duration.ofMillis(10)).publishOn(Schedulers.boundedElastic())
                 .flatMap(i ->  addressDAO.findAllByRequestId(pnDeliveryRequest.getRequestId()))
-                .map(pnAddresses -> {
+                .flatMap(pnAddresses -> {
                     SendRequest sendRequest = SendRequestMapper.toDto(pnAddresses, pnDeliveryRequest);
                     sendRequest.setRequestId(requestId);
-                    return this.externalChannelClient.sendEngageRequest(sendRequest)
+                    return this.externalChannelClient.sendEngageRequest(sendRequest).publishOn(Schedulers.boundedElastic())
                             .then(Mono.defer(() -> {
                                 pnLogAudit.addsSuccessSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDC_TRACE_ID_KEY)));
                                 return Mono.empty();
                             }))
                             .onErrorResume(ex -> {
                                 pnLogAudit.addsFailSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDC_TRACE_ID_KEY)));
-                                paperRequestErrorDAO.created(sendRequest.getRequestId(),
+                                return paperRequestErrorDAO.created(sendRequest.getRequestId(),
                                         EXTERNAL_CHANNEL_API_EXCEPTION.getMessage(),
-                                        EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name());
-                                return Mono.error(ex);
+                                        EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name()).flatMap(errorEntity -> Mono.error(ex));
                             });
                 })
-                .publishOn(Schedulers.boundedElastic())
                 .subscribeOn(Schedulers.boundedElastic()).subscribe();
     }
 

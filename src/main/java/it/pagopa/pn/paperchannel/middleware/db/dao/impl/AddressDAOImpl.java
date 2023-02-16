@@ -2,7 +2,6 @@ package it.pagopa.pn.paperchannel.middleware.db.dao.impl;
 
 import it.pagopa.pn.paperchannel.config.AwsPropertiesConfig;
 import it.pagopa.pn.paperchannel.encryption.DataEncryption;
-import it.pagopa.pn.paperchannel.encryption.impl.KmsEncryptionImpl;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.BaseDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.TransactWriterInitializer;
@@ -10,9 +9,13 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
+import software.amazon.awssdk.enhanced.dynamodb.Key;
+import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
@@ -25,8 +28,11 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 public class AddressDAOImpl extends BaseDAO <PnAddress> implements AddressDAO {
 
+    @Autowired
+    @Qualifier("kmsEncryption")
+    private DataEncryption kmsEncryption;
 
-    public AddressDAOImpl(KmsEncryptionImpl kmsEncryption,
+    public AddressDAOImpl(DataEncryption kmsEncryption,
                           DynamoDbEnhancedAsyncClient dynamoDbEnhancedAsyncClient,
                           DynamoDbAsyncClient dynamoDbAsyncClient,
                           AwsPropertiesConfig awsPropertiesConfig) {
@@ -51,8 +57,10 @@ public class AddressDAOImpl extends BaseDAO <PnAddress> implements AddressDAO {
 
     @Override
     public Mono<List<PnAddress>> findAllByRequestId(String requestId) {
-        return null;
-        //TODO get all elements by partitinkey
+        QueryConditional keyConditional = CONDITION_EQUAL_TO.apply(Key.builder().partitionValue(requestId).build());
+        return getByFilter(keyConditional, null, null, null)
+                .flatMap(address -> Mono.fromFuture(decode(CompletableFuture.completedFuture(address)).thenApply(item -> item)))
+                .collectList();
     }
 
     private CompletableFuture<Integer> countOccurrencesEntity(String requestId) {
