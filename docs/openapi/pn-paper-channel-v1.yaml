@@ -252,6 +252,40 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
+  /paper-channel-bo/v1/tender/{tenderCode}:
+    put:
+      tags:
+        - DeliveryDriver
+      operationId: updateStatusTender
+      summary: Aggiorna stato Gara.
+      description: API che consente di aggiornare lo stato della gara
+      parameters:
+        - $ref: '#/components/parameters/pathTenderCode'
+      requestBody:
+        content:
+          applicatin/json:
+            schema:
+              $ref: '#/components/schemas/Status'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenderCreateResponseDTO'
+        '400':
+          $ref: '#/components/responses/Invalid'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/NotAllowed'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
   /paper-channel-bo/v1/delivery-driver/{tenderCode}:
     post:
       tags:
@@ -857,6 +891,16 @@ components:
           type: string
       required:
         - cap
+
+    Status:
+      type: object
+      properties:
+        statusCode:
+          type: string
+          enum:
+          - BOZZA
+          - CONSOLIDATO
+
 
   responses:
     Forbidden:
