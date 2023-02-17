@@ -164,7 +164,7 @@ public class PaperChannelServiceImpl implements PaperChannelService {
     }
 
     @Override
-    public Mono<NotifyResponseDto> notifyUpload(TenderUploadRequestDto uploadRequestDto) {
+    public Mono<NotifyResponseDto> notifyUpload(String tenderCode, NotifyUploadRequestDto uploadRequestDto) {
         if (StringUtils.isEmpty(uploadRequestDto.getUuid())) {
             return Mono.error(new PnGenericException(ExceptionTypeEnum.BADLY_REQUEST, ExceptionTypeEnum.BADLY_REQUEST.getMessage(), HttpStatus.BAD_REQUEST));
         }
@@ -182,7 +182,7 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                         String fileName = S3Bucket.PREFIX_URL + uploadRequestDto.getUuid();
                         InputStream inputStream = s3Bucket.getFileInputStream(fileName);
                         if (inputStream != null) {
-                            notifyUploadAsync(item, inputStream, uploadRequestDto);
+                            notifyUploadAsync(item, inputStream, tenderCode);
                             return NotifyResponseMapper.toDto(item);
                         }
                     }
@@ -190,13 +190,12 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                 }).switchIfEmpty(Mono.error(new PnGenericException(ExceptionTypeEnum.FILE_REQUEST_ASYNC_NOT_FOUND, ExceptionTypeEnum.FILE_REQUEST_ASYNC_NOT_FOUND.getMessage(), HttpStatus.NOT_FOUND)));
     }
 
-    public void notifyUploadAsync(PnDeliveryFile item, InputStream inputStream, TenderUploadRequestDto tenderRequest){
+    public void notifyUploadAsync(PnDeliveryFile item, InputStream inputStream, String tenderCode){
         Mono.delay(Duration.ofMillis(10)).publishOn(Schedulers.boundedElastic())
                 .map(i -> this.excelDAO.readData(inputStream))
                 .zipWhen(deliveriesData -> {
-                    PnTender tender = TenderMapper.toTender(tenderRequest);
-                    Map<PnDeliveryDriver, List<PnCost>> map = DeliveryDriverMapper.toEntityFromExcel(deliveriesData, tender.getTenderCode());
-                    return this.tenderDAO.createNewContract(map,tender);
+                    Map<PnDeliveryDriver, List<PnCost>> map = DeliveryDriverMapper.toEntityFromExcel(deliveriesData, tenderCode);
+                    return Mono.just(new PnTender());
                 })
                 .map(i -> {
                     item.setStatus(FileStatusCodeEnum.COMPLETE.getCode());

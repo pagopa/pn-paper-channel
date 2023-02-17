@@ -407,19 +407,20 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /paper-channel-bo/v1/delivery-tender/notify-upload:
+  /paper-channel-bo/v1/delivery-tender/{tenderCode}/notify-upload:
     post:
       tags:
         - DeliveryDriver
       operationId: notifyUpload
       summary: Notifica di avvenuto caricamento file.
       description: API che consente di notificare l'avvenuto caricamento del file e avvio del flusso di salvataggio
+      parameters:
+        - $ref: '#/components/parameters/pathTenderCode'
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TenderUploadRequestDto'
-
+              $ref: '#/components/schemas/NotifyUploadRequestDto'
       responses:
         '200':
           description: OK
@@ -565,11 +566,9 @@ components:
       required:
         - driver
 
-    TenderUploadRequestDto:
+    NotifyUploadRequestDto:
       type: object
       properties:
-        tender:
-          $ref: "#/components/schemas/TenderDTO"
         uuid:
           type: string
 
