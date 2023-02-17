@@ -29,6 +29,8 @@ public class PnDeliveryDriver {
     public static final String AUTHOR_INDEX = "author-index";
     public static final String TENDER_CODE_INDEX = "tender-index";
     public static final String COL_START_DATE = "startDate";
+    public static final String COL_PRINT_TYPE = "printType";
+    public static final String COL_REQUEST_PA_ID = "requestPaId";
 
     @Getter(onMethod = @__({@DynamoDbPartitionKey, @DynamoDbAttribute(COL_TAX_ID)}))
     public String taxId;
@@ -62,6 +64,10 @@ public class PnDeliveryDriver {
     private String pec;
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_FISCAL_CODE)}))
     private String fiscalCode;
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_PRINT_TYPE)}))
+    private String printType;
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_REQUEST_PA_ID)}))
+    private String requestPaId;
 
     @Override
     public boolean equals(Object o) {

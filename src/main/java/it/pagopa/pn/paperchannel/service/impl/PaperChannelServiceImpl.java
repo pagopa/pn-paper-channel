@@ -138,7 +138,15 @@ public class PaperChannelServiceImpl implements PaperChannelService {
 
         if(StringUtils.isNotEmpty(uuid)) {
             return fileDownloadDAO.getUuid(uuid)
-                    .map(item -> FileMapper.toDownloadFile(item, s3Bucket.getObjectData(item.getFilename())))
+                    .map(item -> {
+                        byte[] result = null;
+                        try {
+                            result = s3Bucket.getObjectData(item.getFilename());
+                        } catch (Exception e) {
+                            log.warn("File is no ready");
+                        }
+                        return FileMapper.toDownloadFile(item, result);
+                    })
                     .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)));
         }
 
@@ -210,7 +218,7 @@ public class PaperChannelServiceImpl implements PaperChannelService {
     }
 
     private void createAndUploadFileAsync(String tenderCode,String uuid){
-        Mono.delay(Duration.ofMillis(10)).publishOn(Schedulers.boundedElastic())
+        Mono.delay(Duration.ofMillis(25000)).publishOn(Schedulers.boundedElastic())
                 .flatMap(i ->  {
                     if (StringUtils.isNotBlank(tenderCode)) {
                         return this.deliveryDriverDAO.getDeliveryDriverFromTender(tenderCode, false)

@@ -22,5 +22,5 @@ public class Const {
 
     public static final String EXECUTION = "EXECUTION";
     public static final String PREPARE = "PREPARE";
-    public static final String RETRY = "_pcretry_";
+    public static final String RETRY = ";PCRETRY_";
 }

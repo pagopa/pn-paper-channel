@@ -60,7 +60,7 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
 
     @Override
     public Mono<PrepareEvent> retrievePaperPrepareRequest(String requestId) {
-        log.info("Start retrieve prepare request");
+        log.info("Start retrieve prepare request {}", requestId);
         return requestDeliveryDAO.getByRequestId(requestId)
                 .zipWhen(entity -> addressDAO.findByRequestId(requestId).map(address -> address)
                             .switchIfEmpty(Mono.just(new PnAddress()))
