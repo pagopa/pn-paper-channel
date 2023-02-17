@@ -20,11 +20,12 @@ public class ExcelModelMapper {
         if (drivers != null && !drivers.isEmpty())  {
             data.setDeliveriesAndCosts(new ArrayList<>());
             drivers.forEach(driver -> {
-                List<PnCost> driverCosts = costs.stream().filter(cost -> cost.getDeliveryDriverCode().equals(driver.getUniqueCode()))
+                List<PnCost> driverCosts = costs.stream().filter(cost -> cost.getDeliveryDriverCode().equals(driver.getTaxId()))
                         .toList();
                 if (!driverCosts.isEmpty()){
                     data.getDeliveriesAndCosts().addAll(driverCosts.stream().map(cost -> {
                         DeliveryAndCost model = new DeliveryAndCost();
+                        model.setTaxId(driver.getTaxId());
                         model.setUniqueCode(driver.getUniqueCode());
                         model.setDenomination(driver.getDenomination());
                         model.setFsu(driver.getFsu());
@@ -34,7 +35,7 @@ public class ExcelModelMapper {
                         model.setRegisteredOffice(driver.getRegisteredOffice());
                         model.setPhoneNumber(driver.getPhoneNumber());
                         model.setProductType(cost.getProductType());
-                        //model.setCap(cost.getCap());
+                        model.setCaps(cost.getCap());
                         model.setZone(cost.getZone());
                         model.setBasePrice(cost.getBasePrice());
                         model.setPagePrice(cost.getPagePrice());

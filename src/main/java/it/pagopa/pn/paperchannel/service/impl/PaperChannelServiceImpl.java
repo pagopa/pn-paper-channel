@@ -221,7 +221,7 @@ public class PaperChannelServiceImpl implements PaperChannelService {
         Mono.delay(Duration.ofMillis(10)).publishOn(Schedulers.boundedElastic())
                 .flatMap(i ->  {
                     if (StringUtils.isNotBlank(tenderCode)) {
-                        return this.deliveryDriverDAO.getDeliveryDriverFromTender(tenderCode, false)
+                        return this.deliveryDriverDAO.getDeliveryDriverFromTender(tenderCode, null)
                                 .zipWhen(drivers -> this.costDAO.findAllFromTenderCode(tenderCode, null).collectList())
                                 .flatMap(driversAndCosts -> {
                                     ExcelEngine excelEngine = this.excelDAO.create(ExcelModelMapper.fromDeliveriesDrivers(driversAndCosts.getT1(),driversAndCosts.getT2()));
