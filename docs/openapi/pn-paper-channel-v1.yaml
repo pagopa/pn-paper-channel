@@ -316,6 +316,21 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
+  /paper-channel-bo/v1/{tenderCode}/delivery-driver/{deliveryDriverId}:
+    delete:
+      tags:
+        - DeliveryDriver
+      operationId: deleteDriver
+      summary: Eliminazione recapitista.
+      description: API che consente di eliminare i dettagli di un recapitista.
+      parameters:
+        - $ref: '#/components/parameters/pathTenderCode'
+        - $ref: '#/components/parameters/pathDeliveryDriverId'
+      responses:
+        '200':
+          description: Eliminazione recapitista effettuata
+
+
   /paper-channel-bo/v1/{tenderCode}/delivery-driver/{deliveryDriverId}/cost:
     post:
       tags:
@@ -346,6 +361,18 @@ paths:
           $ref: '#/components/responses/NotAllowed'
         '500':
           $ref: '#/components/responses/InternalError'
+    delete:
+      tags:
+        - DeliveryDriver
+      operationId: deleteCost
+      summary: Eliminazione di un costo legato al deliveryDriver.
+      description: API che consente di eliminare i dettagli di un costo legato al deliveryDriver.
+      parameters:
+        - $ref: '#/components/parameters/pathTenderCode'
+        - $ref: '#/components/parameters/pathDeliveryDriverId'
+      responses:
+        '200':
+          description: Eliminazione costo legato al deliveryDriver effettuata.
 
 
   /paper-channel-bo/v1/{tenderCode}/delivery-driver/{deliveryDriverId}/get-cost:
