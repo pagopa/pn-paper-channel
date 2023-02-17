@@ -741,7 +741,7 @@ components:
           type: boolean
       additionalProperties: false
       required:
-        - denomination
+        - businessName
         - taxId
         - fsu
 

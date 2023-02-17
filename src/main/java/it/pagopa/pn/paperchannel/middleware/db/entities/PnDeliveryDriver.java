@@ -32,13 +32,13 @@ public class PnDeliveryDriver {
     public static final String COL_PRINT_TYPE = "printType";
     public static final String COL_REQUEST_PA_ID = "requestPaId";
 
-    @Getter(onMethod = @__({@DynamoDbPartitionKey, @DynamoDbAttribute(COL_TAX_ID)}))
+    @Getter(onMethod = @__({@DynamoDbSortKey, @DynamoDbAttribute(COL_TAX_ID)}))
     public String taxId;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_UNIQUE_CODE)}))
     public String uniqueCode;
 
-    @Getter(onMethod = @__({@DynamoDbSortKey, @DynamoDbSecondaryPartitionKey(indexNames = TENDER_CODE_INDEX), @DynamoDbAttribute(COL_TENDER_CODE)}))
+    @Getter(onMethod = @__({@DynamoDbPartitionKey, @DynamoDbSecondaryPartitionKey(indexNames = TENDER_CODE_INDEX), @DynamoDbAttribute(COL_TENDER_CODE)}))
     public String tenderCode;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_DENOMINATION)}))

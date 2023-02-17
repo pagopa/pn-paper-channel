@@ -59,6 +59,7 @@ public class PaperChannelServiceImpl implements PaperChannelService {
     @Override
     public Mono<PageableTenderResponseDto> getAllTender(Integer page, Integer size) {
         Pageable pageable = PageRequest.of(page-1, size);
+
         return tenderDAO.getTenders()
                 .map(list -> TenderMapper.toPagination(pageable, list))
                 .map(TenderMapper::toPageableResponse);
@@ -272,24 +273,36 @@ public class PaperChannelServiceImpl implements PaperChannelService {
     public Mono<Void> createOrUpdateDriver(String tenderCode, DeliveryDriverDTO request) {
         return this.tenderDAO.getTender(tenderCode)
                 .switchIfEmpty(Mono.error(new PnGenericException(ExceptionTypeEnum.TENDER_NOT_EXISTED, ExceptionTypeEnum.TENDER_NOT_EXISTED.getMessage())))
+                .flatMap(tender -> this.deliveryDriverDAO.getDeliveryDriver(tenderCode, request.getTaxId())
+                            .switchIfEmpty(Mono.just(new PnDeliveryDriver()))
+                            .flatMap(driver -> {
+                                if (driver == null || StringUtils.isBlank(driver.getTaxId())) return Mono.just(tender);
+                                if (Boolean.compare(driver.fsu, request.getFsu())!=0) {
+                                    return Mono.error(new PnGenericException(DELIVERY_DRIVER_HAVE_DIFFERENT_ROLE, DELIVERY_DRIVER_HAVE_DIFFERENT_ROLE.getMessage()));
+                                }
+                                return Mono.just(tender);
+                            })
+                )
                 .map(tender -> {
+                    log.info("Gara recuperata");
                     PnDeliveryDriver driver = DeliveryDriverMapper.toEntity(request);
                     driver.setTenderCode(tenderCode);
                     return driver;
-                }).flatMap(entity -> this.deliveryDriverDAO.createOrUpdate(entity))
+                })
+                .flatMap(entity -> this.deliveryDriverDAO.createOrUpdate(entity))
                 .mapNotNull(entity -> null);
     }
 
     @Override
-    public Mono<Void> createOrUpdateCost(String tenderCode, String deliveryDriverCode, CostDTO request) {
+    public Mono<Void> createOrUpdateCost(String tenderCode, String taxId, CostDTO request) {
         if ((request.getCap() == null || request.getCap().isEmpty()) && request.getZone() == null){
             return Mono.error(new PnGenericException(COST_BADLY_CONTENT, COST_BADLY_CONTENT.getMessage()));
         }
 
-        return this.deliveryDriverDAO.getDeliveryDriver(tenderCode, deliveryDriverCode)
+        return this.deliveryDriverDAO.getDeliveryDriver(tenderCode, taxId)
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_DRIVER_NOT_EXISTED, DELIVERY_DRIVER_NOT_EXISTED.getMessage())))
                 .flatMap(driver -> {
-                    PnCost fromRequest = CostMapper.fromCostDTO(driver.getTenderCode(), driver.getUniqueCode(), request);
+                    PnCost fromRequest = CostMapper.fromCostDTO(driver.getTenderCode(), driver.getTaxId(), request);
                     String code = request.getUid();
                     return this.costDAO.findAllFromTenderAndProductTypeAndExcludedUUID(tenderCode, fromRequest.getProductType(), code)
                             .zipWhen(listFromDB -> Mono.just(fromRequest));

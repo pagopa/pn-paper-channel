@@ -15,10 +15,10 @@ public class CostMapper {
         throw new IllegalCallerException();
     }
 
-    public static PnCost fromCostDTO(String tenderCode, String driverCode, CostDTO dto){
+    public static PnCost fromCostDTO(String tenderCode, String taxId, CostDTO dto){
         PnCost cost = new PnCost();
         cost.setTenderCode(tenderCode);
-        cost.setDeliveryDriverCode(driverCode);
+        cost.setDeliveryDriverCode(taxId);
         cost.setUuid(dto.getUid());
         if (StringUtils.isBlank(cost.getUuid())){
             cost.setUuid(UUID.randomUUID().toString());

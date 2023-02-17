@@ -46,15 +46,13 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
 
     @Autowired
     private AddressDAO addressDAO;
-
     @Autowired
     private ExternalChannelClient externalChannelClient;
     @Autowired
     private PnPaperChannelConfig pnPaperChannelConfig;
 
-    public PaperMessagesServiceImpl(PnAuditLogBuilder auditLogBuilder, NationalRegistryClient nationalRegistryClient,
-                                    RequestDeliveryDAO requestDeliveryDAO, SqsSender sqsSender, CostDAO costDAO) {
-
+    public PaperMessagesServiceImpl(PnAuditLogBuilder auditLogBuilder, RequestDeliveryDAO requestDeliveryDAO, CostDAO costDAO,
+                                    NationalRegistryClient nationalRegistryClient, SqsSender sqsSender) {
         super(auditLogBuilder, requestDeliveryDAO, costDAO, nationalRegistryClient, sqsSender);
     }
 

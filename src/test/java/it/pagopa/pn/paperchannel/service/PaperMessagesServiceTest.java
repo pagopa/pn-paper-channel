@@ -4,6 +4,7 @@ import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.commons.log.PnAuditLogEvent;
 import it.pagopa.pn.commons.log.PnAuditLogEventType;
 import it.pagopa.pn.paperchannel.config.BaseTest;
+import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.exception.PnPaperEventException;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
@@ -26,13 +27,15 @@ import it.pagopa.pn.paperchannel.rest.v1.dto.SendResponse;
 import it.pagopa.pn.paperchannel.rest.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.service.impl.PaperMessagesServiceImpl;
 import it.pagopa.pn.paperchannel.service.impl.PrepareAsyncServiceImpl;
+import it.pagopa.pn.paperchannel.utils.Utility;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
+import org.mockito.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -47,30 +50,32 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 @Slf4j
 class PaperMessagesServiceTest extends BaseTest {
 
-
-    @InjectMocks
+    @Autowired
     private PaperMessagesServiceImpl paperMessagesService;
 
-    @Mock
+    @MockBean
     private RequestDeliveryDAO requestDeliveryDAO;
 
-    @Mock
+    @MockBean
     private AddressDAO addressDAO;
 
-    @Mock
+    @MockBean
     private NationalRegistryClient nationalRegistryClient;
 
-    @Mock
+    @MockBean
     private ExternalChannelClient externalChannelClient;
 
-    @Mock
+    @MockBean
     private PrepareAsyncServiceImpl prepareAsyncService;
 
-    @Mock
+    @MockBean
     private SqsSender sqsSender;
 
-    @Mock
+    @MockBean
     PnAuditLogBuilder auditLogBuilder;
+
+    @SpyBean
+    private PnPaperChannelConfig paperChannelConfig;
 
     private PnDeliveryRequest deliveryRequestInProcessing;
     private PnDeliveryRequest deliveryRequestTakingCharge;
@@ -78,7 +83,7 @@ class PaperMessagesServiceTest extends BaseTest {
     @BeforeEach
     void setUp(){
         this.deliveryRequestInProcessing = getDeliveryRequest("123-adb-567", StatusDeliveryEnum.IN_PROCESSING);
-        this.deliveryRequestTakingCharge = getDeliveryRequest("123-cba-572", StatusDeliveryEnum.TAKING_CHARGE);
+        this.deliveryRequestTakingCharge = getDeliveryRequest(getRequestOK().getRequestId(), StatusDeliveryEnum.TAKING_CHARGE);
     }
 
     @Test
@@ -205,6 +210,7 @@ class PaperMessagesServiceTest extends BaseTest {
         sendRequest.setPrintType("PT");
         sendRequest.setIun("iun");
         sendRequest.setAttachmentUrls(attachmentUrls);
+
         sendRequest.setReceiverAddress(analogAddress);
         return sendRequest;
     }
@@ -241,6 +247,7 @@ class PaperMessagesServiceTest extends BaseTest {
         deliveryRequest.setStatusDetail("");
         deliveryRequest.setStatusDate("");
         deliveryRequest.setProposalProductType("AR");
+        deliveryRequest.setHashedFiscalCode(Utility.convertToHash(deliveryRequest.getFiscalCode()));
         deliveryRequest.setPrintType("PT");
         deliveryRequest.setStartDate("");
         deliveryRequest.setProductType("RN_AR");
@@ -398,6 +405,7 @@ class PaperMessagesServiceTest extends BaseTest {
         deliveryRequest.setProposalProductType("AR");
         deliveryRequest.setPrintType("PT");
         deliveryRequest.setStartDate("");
+        deliveryRequest.setHashedFiscalCode(Utility.convertToHash(deliveryRequest.getFiscalCode()));
         deliveryRequest.setProductType("RN_AR");
         deliveryRequest.setAttachments(attachmentUrls);
         return deliveryRequest;

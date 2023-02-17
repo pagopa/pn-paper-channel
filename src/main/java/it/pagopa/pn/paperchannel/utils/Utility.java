@@ -46,6 +46,7 @@ public class Utility {
         } else {
             value = value.replace(".", "");
             value = value.replace(",", "");
+            value = value.replace("'", "");
             Pattern p = Pattern.compile(regex);
             Matcher m = p.matcher(value);
             check = (m.find() && m.group().equals(value));
@@ -53,7 +54,7 @@ public class Utility {
         return check;
     }
 
-    private static boolean isValidCapFromRegex(String value, String regex){
+    public static boolean isValidCapFromRegex(String value, String regex){
         if (StringUtils.isNotEmpty(value) && value.contains(".")) value = value.substring(0, value.indexOf("."));
         return isValidFromRegex(value, regex);
     }
@@ -84,9 +85,21 @@ public class Utility {
                         return null;
                     }
                 } else {
-                    check = isValidCapFromRegex(item,regex);
-                    if (check){
-                        capsFinded.add(item);
+                    String cap_formatted;
+                    cap_formatted = item.replace(".0", "");
+                    if (cap_formatted.length() < 5) {
+                        int n_cap = Integer.parseInt(cap_formatted);
+                        cap_formatted = addZero(n_cap);
+                        check = isValidCapFromRegex(cap_formatted,regex);
+                        if (check){
+                            capsFinded.add(cap_formatted);
+                        }
+                    }
+                    else {
+                        check = isValidCapFromRegex(cap_formatted, regex);
+                        if (check) {
+                            capsFinded.add(cap_formatted);
+                        }
                     }
                     if (!check) return null;
                 }

@@ -7,10 +7,10 @@ public class Const {
     public static final String RACCOMANDATA_SEMPLICE = "RS";
     public static final String RACCOMANDATA_890 = "890";
     public static final String RACCOMANDATA_AR = "AR";
-    public static final String ZONA_1 = "ZONA_1";
-    public static final String ZONA_2 = "ZONA_2";
-    public static final String ZONA_3 = "ZONA_3";
-    public static final String CAP_DEFALUT = "99999";
+    public static final String ZONE_1 = "ZONE_1";
+    public static final String ZONE_2 = "ZONE_2";
+    public static final String ZONE_3 = "ZONE_3";
+    public static final String CAP_DEFAULT = "99999";
     public static final String ZONE_DEFAULT = "zone_default";
     public static final String capRegex = "(\\d{5})(-\\d{5})?+";
     public static final String zoneRegex = "^ZONE_[1-9]$";
