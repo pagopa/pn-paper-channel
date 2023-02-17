@@ -28,6 +28,8 @@ public class SendRequestMapper {
         sendRequest.setRequestId(pnDeliveryRequest.getRequestId());
         sendRequest.setIun(pnDeliveryRequest.getIun());
         sendRequest.setProductType(ProductTypeEnum.valueOf(pnDeliveryRequest.getProductType()));
+        sendRequest.setRequestPaId(pnDeliveryRequest.getRequestPaId());
+        sendRequest.setPrintType(pnDeliveryRequest.getPrintType());
         sendRequest.setAttachmentUrls(pnDeliveryRequest.getAttachments().stream().map(i -> i.getUrl()).collect(Collectors.toList()));
         addressList.forEach(address -> {
             if (address.getTypology().equals(AddressTypeEnum.RECEIVER_ADDRESS.toString()))  {

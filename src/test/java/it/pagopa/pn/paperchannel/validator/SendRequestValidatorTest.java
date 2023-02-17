@@ -9,6 +9,7 @@ import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.PaperPro
 import it.pagopa.pn.paperchannel.rest.v1.dto.AnalogAddress;
 import it.pagopa.pn.paperchannel.rest.v1.dto.ProductTypeEnum;
 import it.pagopa.pn.paperchannel.rest.v1.dto.SendRequest;
+import it.pagopa.pn.paperchannel.utils.Utility;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -161,7 +162,7 @@ class SendRequestValidatorTest {
 
 
         deliveryRequest.setRequestId("12345abcde");
-        deliveryRequest.setFiscalCode("ABCD123AB501");
+        deliveryRequest.setHashedFiscalCode(Utility.convertToHash("ABCD123AB501"));
         deliveryRequest.setReceiverType("RT");
         deliveryRequest.setIun("");
         deliveryRequest.setCorrelationId("");
