@@ -7,8 +7,11 @@ import it.pagopa.pn.paperchannel.middleware.queue.producer.DeliveryPushMomProduc
 import it.pagopa.pn.paperchannel.middleware.queue.model.DeliveryPushEvent;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.InternalQueueMomProducer;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.test.context.ActiveProfiles;
 import software.amazon.awssdk.services.sqs.SqsClient;
 
@@ -17,11 +20,9 @@ import software.amazon.awssdk.services.sqs.SqsClient;
 @Slf4j
 public class PnPaperChannelMiddlewareConfigs {
 
-    private final PnPaperChannelConfig pnPaperChannelConfig;
-
-    public PnPaperChannelMiddlewareConfigs(PnPaperChannelConfig cfg) {
-        this.pnPaperChannelConfig = cfg;
-    }
+    @Qualifier("pnPaperChannelConfig")
+    @Autowired
+    private PnPaperChannelConfig pnPaperChannelConfig;
 
 
     @Bean

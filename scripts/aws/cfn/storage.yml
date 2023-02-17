@@ -550,9 +550,9 @@ Resources:
         - AttributeName: "startDate"
           AttributeType: "S"
       KeySchema:
-        - AttributeName: "taxId"
-          KeyType: "HASH"
         - AttributeName: "tenderCode"
+          KeyType: "HASH"
+        - AttributeName: "taxId"
           KeyType: "RANGE"
       GlobalSecondaryIndexes:
         - IndexName: "author-index"
