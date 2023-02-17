@@ -5,7 +5,6 @@ import it.pagopa.pn.paperchannel.model.PageModel;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PageableTenderResponseDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.TenderCreateRequestDTO;
 import it.pagopa.pn.paperchannel.rest.v1.dto.TenderDTO;
-import it.pagopa.pn.paperchannel.rest.v1.dto.TenderUploadRequestDto;
 import it.pagopa.pn.paperchannel.utils.Const;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Pageable;
@@ -33,18 +32,6 @@ public class TenderMapper {
         pageableTenderResponseDto.setEmpty(pagePnPaperTender.isEmpty());
         pageableTenderResponseDto.setContent(pagePnPaperTender.mapTo(TenderMapper::tenderToDto));
         return pageableTenderResponseDto;
-    }
-    public static PnTender toTender(TenderUploadRequestDto tenderUploadRequestDto){
-        PnTender tender = new PnTender();
-        String tenderCode = UUID.randomUUID().toString();
-        tender.setTenderCode(tenderCode);
-        tender.setStatus("CREATED");
-        tender.setDate(Instant.now());
-        tender.setEndDate(tenderUploadRequestDto.getTender().getEndDate().toInstant());
-        tender.setStartDate(tenderUploadRequestDto.getTender().getStartDate().toInstant());
-        tender.setAuthor(Const.PN_PAPER_CHANNEL);
-        tender.setDescription(tenderUploadRequestDto.getTender().getName());
-        return tender;
     }
 
     public static PnTender toTenderRequest(TenderCreateRequestDTO dto){
