@@ -53,6 +53,7 @@ public class PnDeliveryRequest {
     private static final String COL_PRODUCT_TYPE = "productType";
     private static final String COL_RELATED_REQUEST_ID = "relatedRequestId";
     private static final String COL_HASH_OLD_ADDRESS = "hashOldAddress";
+    public static final String COL_REQUEST_PA_ID = "requestPaId";
 
     @Getter(onMethod = @__({@DynamoDbPartitionKey,@DynamoDbAttribute(COL_REQUEST_ID)}))
     private String requestId;
@@ -104,5 +105,7 @@ public class PnDeliveryRequest {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_ATTACHMENTS)}))
     private List<PnAttachmentInfo> attachments;
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_REQUEST_PA_ID)}))
+    private String requestPaId;
 
 }

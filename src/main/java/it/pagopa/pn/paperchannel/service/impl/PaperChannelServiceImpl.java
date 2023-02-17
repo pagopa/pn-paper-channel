@@ -144,7 +144,7 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                         try {
                             result = s3Bucket.getObjectData(item.getFilename());
                         } catch (Exception e) {
-                            log.warn("File is no ready");
+                            log.warn("File is not ready");
                         }
                         return FileMapper.toDownloadFile(item, result);
                     })
@@ -219,7 +219,7 @@ public class PaperChannelServiceImpl implements PaperChannelService {
     }
 
     private void createAndUploadFileAsync(String tenderCode,String uuid){
-        Mono.delay(Duration.ofMillis(25000)).publishOn(Schedulers.boundedElastic())
+        Mono.delay(Duration.ofMillis(10)).publishOn(Schedulers.boundedElastic())
                 .flatMap(i ->  {
                     if (StringUtils.isNotBlank(tenderCode)) {
                         return this.deliveryDriverDAO.getDeliveryDriverFromTender(tenderCode, false)

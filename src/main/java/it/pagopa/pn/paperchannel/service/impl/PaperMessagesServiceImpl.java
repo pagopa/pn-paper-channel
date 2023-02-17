@@ -85,6 +85,8 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                         entity.setStatusCode(StatusDeliveryEnum.READY_TO_SEND.getCode());
                         entity.setStatusDetail(StatusDeliveryEnum.READY_TO_SEND.getDescription());
                         entity.setStatusDate(DateUtils.formatDate(new Date()));
+                        entity.setRequestPaId(sendRequest.getRequestPaId());
+                        entity.setPrintType(sendRequest.getPrintType());
                     }
 
                     List<AttachmentInfo> attachments = entity.getAttachments().stream().map(AttachmentMapper::fromEntity).toList();

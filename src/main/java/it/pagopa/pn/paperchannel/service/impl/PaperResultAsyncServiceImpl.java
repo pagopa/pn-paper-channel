@@ -74,7 +74,14 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
                             .flatMap(updatedEntity -> {
                                 log.info("UPDATED ENTITY: {}", updatedEntity.getRequestId());
                                 if (isRetryStatusCode(singleStatusUpdateDto)) {
-                                    sendEngageRequest(updatedEntity, setRetryRequestId(singleStatusUpdateDto.getAnalogMail().getRequestId()));
+                                    if (hasOtherAttempt(singleStatusUpdateDto.getAnalogMail().getRequestId())) {
+                                        sendEngageRequest(updatedEntity, setRetryRequestId(singleStatusUpdateDto.getAnalogMail().getRequestId()));
+                                    } else {
+                                        paperRequestErrorDAO.created(entity.getRequestId(),
+                                                EXTERNAL_CHANNEL_API_EXCEPTION.getMessage(),
+                                                EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name());
+                                    }
+
                                 }
                                 sendPaperResponse(updatedEntity, singleStatusUpdateDto);
                                 return Mono.just(updatedEntity);
@@ -102,13 +109,25 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
         return retryStatusCod;
     }
 
+    private boolean hasOtherAttempt(String requestId) {
+        return pnPaperChannelConfig.getAttemptQueueExternalChannel() != -1 || pnPaperChannelConfig.getAttemptQueueExternalChannel() < getRetryAttempt(requestId);
+    }
+
     private String setRetryRequestId(String requestId) {
         String rertyReqId = getPrefixRequestId(requestId);
         if (requestId.contains(Const.RETRY)) {
-            String attempt = String.valueOf(Integer.parseInt(requestId.substring(requestId.lastIndexOf("_")+1))+1);
+            String attempt = String.valueOf(getRetryAttempt(requestId)+1);
             rertyReqId = rertyReqId.concat(Const.RETRY).concat(attempt);
         }
         return rertyReqId;
+    }
+
+    private int getRetryAttempt(String requestId) {
+        int retry = 0;
+        if (requestId.contains(Const.RETRY)) {
+            retry = Integer.parseInt(requestId.substring(requestId.lastIndexOf("_")+1));
+        }
+        return retry;
     }
 
     private void sendEngageRequest(PnDeliveryRequest pnDeliveryRequest, String requestId) {
@@ -117,6 +136,8 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
                 .flatMap(pnAddresses -> {
                     SendRequest sendRequest = SendRequestMapper.toDto(pnAddresses, pnDeliveryRequest);
                     sendRequest.setRequestId(requestId);
+                    pnLogAudit.addsBeforeSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDC_TRACE_ID_KEY)));
+
                     return this.externalChannelClient.sendEngageRequest(sendRequest).publishOn(Schedulers.boundedElastic())
                             .then(Mono.defer(() -> {
                                 pnLogAudit.addsSuccessSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDC_TRACE_ID_KEY)));

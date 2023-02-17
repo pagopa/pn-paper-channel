@@ -7,7 +7,6 @@ import it.pagopa.pn.paperchannel.msclient.generated.pnnationalregistries.v1.dto.
 
 public interface QueueListenerService {
 
-
     void internalListener(PrepareAsyncRequest data, int attempt);
     void nationalRegistriesResponseListener(AddressSQSMessageDto body);
     void nationalRegistriesErrorListener(NationalRegistryError data, int attempt);
