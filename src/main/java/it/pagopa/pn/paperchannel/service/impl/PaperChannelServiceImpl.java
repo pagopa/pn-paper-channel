@@ -266,20 +266,22 @@ public class PaperChannelServiceImpl implements PaperChannelService {
         return this.tenderDAO.getTender(tenderCode)
                 .switchIfEmpty(Mono.error(new PnGenericException(ExceptionTypeEnum.TENDER_NOT_EXISTED, ExceptionTypeEnum.TENDER_NOT_EXISTED.getMessage())))
                 .flatMap(tender -> this.deliveryDriverDAO.getDeliveryDriver(tenderCode, request.getTaxId())
-                            .switchIfEmpty(Mono.empty())
+                            .switchIfEmpty(Mono.just(new PnDeliveryDriver()))
                             .flatMap(driver -> {
-                                if (driver == null) return Mono.just(tender);
-                                if (Boolean.TRUE.equals(driver.getFsu()) && !request.getFsu()) {
-                                    return Mono.error(new PnGenericException(DELIVERY_DRIVER_IS_FSU, DELIVERY_DRIVER_IS_FSU.getMessage()));
+                                if (driver == null || StringUtils.isBlank(driver.getTaxId())) return Mono.just(tender);
+                                if (Boolean.compare(driver.fsu, request.getFsu())!=0) {
+                                    return Mono.error(new PnGenericException(DELIVERY_DRIVER_HAVE_DIFFERENT_ROLE, DELIVERY_DRIVER_HAVE_DIFFERENT_ROLE.getMessage()));
                                 }
                                 return Mono.just(tender);
                             })
                 )
                 .map(tender -> {
+                    log.info("Gara recuperata");
                     PnDeliveryDriver driver = DeliveryDriverMapper.toEntity(request);
                     driver.setTenderCode(tenderCode);
                     return driver;
-                }).flatMap(entity -> this.deliveryDriverDAO.createOrUpdate(entity))
+                })
+                .flatMap(entity -> this.deliveryDriverDAO.createOrUpdate(entity))
                 .mapNotNull(entity -> null);
     }
 

@@ -51,7 +51,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 class PaperMessagesServiceTest extends BaseTest {
 
     @Autowired
-    @InjectMocks
     private PaperMessagesServiceImpl paperMessagesService;
 
     @MockBean
