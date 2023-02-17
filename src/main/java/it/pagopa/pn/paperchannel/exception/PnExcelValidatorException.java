@@ -15,6 +15,7 @@ public class PnExcelValidatorException extends RuntimeException{
 
 
     public PnExcelValidatorException(ExceptionTypeEnum errorType, List<ErrorCell> errors){
+        super(errorType.getMessage());
         this.errorType = errorType;
         this.errors = errors;
     }

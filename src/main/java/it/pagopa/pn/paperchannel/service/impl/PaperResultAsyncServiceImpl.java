@@ -71,15 +71,17 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
                     pnLogAudit.addsSuccessReceive(entity.getIun(), String.format("prepare requestId = %s Response %s from external-channel status code %s",  entity.getRequestId(), logDto.toString().replaceAll("\n", ""), entity.getStatusCode()));
                     logDto.getAnalogMail().setDiscoveredAddress(discoveredAddressDto);
                     return updateEntityResult(singleStatusUpdateDto, entity)
+                            .publishOn(Schedulers.boundedElastic())
                             .flatMap(updatedEntity -> {
                                 log.info("UPDATED ENTITY: {}", updatedEntity.getRequestId());
                                 if (isRetryStatusCode(singleStatusUpdateDto)) {
                                     if (hasOtherAttempt(singleStatusUpdateDto.getAnalogMail().getRequestId())) {
                                         sendEngageRequest(updatedEntity, setRetryRequestId(singleStatusUpdateDto.getAnalogMail().getRequestId()));
                                     } else {
-                                        paperRequestErrorDAO.created(entity.getRequestId(),
-                                                EXTERNAL_CHANNEL_API_EXCEPTION.getMessage(),
-                                                EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name());
+                                        Mono.delay(Duration.ofMillis(1)).publishOn(Schedulers.boundedElastic())
+                                                        .flatMap( i-> paperRequestErrorDAO.created(entity.getRequestId(),
+                                                                EXTERNAL_CHANNEL_API_EXCEPTION.getMessage(),
+                                                                EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name()).map(item -> item));
                                     }
 
                                 }
