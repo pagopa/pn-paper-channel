@@ -192,7 +192,6 @@ public class PaperChannelServiceImpl implements PaperChannelService {
 
     public void notifyUploadAsync(PnDeliveryFile item, InputStream inputStream, TenderUploadRequestDto tenderRequest){
         Mono.delay(Duration.ofMillis(10)).publishOn(Schedulers.boundedElastic())
-                .publishOn(Schedulers.boundedElastic())
                 .map(i -> this.excelDAO.readData(inputStream))
                 .zipWhen(deliveriesData -> {
                     PnTender tender = TenderMapper.toTender(tenderRequest);
