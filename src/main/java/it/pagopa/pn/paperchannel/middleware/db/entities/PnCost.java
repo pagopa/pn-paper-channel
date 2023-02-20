@@ -24,6 +24,7 @@ public class PnCost {
     public static final String COL_PRODUCT_TYPE = "productType";
     public static final String COL_BASE_PRICE = "basePrice";
     public static final String COL_PAGE_PRICE = "pagePrice";
+    public static final String COL_FSU = "fsu";
 
     @Getter(onMethod = @__({@DynamoDbPartitionKey,@DynamoDbAttribute(COL_DELIVERY_DRIVER_CODE)}))
     private String deliveryDriverCode;
@@ -48,6 +49,9 @@ public class PnCost {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_PAGE_PRICE)}))
     private Float pagePrice;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_FSU)}))
+    private Boolean fsu;
 
     @Override
     public boolean equals(Object o) {

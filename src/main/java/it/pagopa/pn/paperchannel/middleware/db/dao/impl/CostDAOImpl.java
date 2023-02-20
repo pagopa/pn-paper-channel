@@ -74,8 +74,9 @@ public class CostDAOImpl extends BaseDAO<PnCost> implements CostDAO {
         values.put(":productType", AttributeValue.builder().s(productType).build());
 
         if (StringUtils.isNotBlank(cap)){
-            filterExpression += " AND contains(" + PnCost.COL_CAP + ", :cap) ";
+            filterExpression += " AND (contains(" + PnCost.COL_CAP + ", :cap) OR contains("+ PnCost.COL_CAP + ", :defaultCap))";
             values.put(":cap", AttributeValue.builder().s(cap).build());
+            values.put(":defaultCap", AttributeValue.builder().s("99999").build());
         } else {
             filterExpression += " AND :zoneAttr = " + PnCost.COL_ZONE;
             values.put(":zoneAttr", AttributeValue.builder().s(zone).build());
@@ -87,6 +88,10 @@ public class CostDAOImpl extends BaseDAO<PnCost> implements CostDAO {
                 .flatMap(items -> {
                     if (items.isEmpty()) {
                         return Mono.empty();
+                    }
+                    List<PnCost> driverCost = items.stream().filter(cost -> !cost.getFsu()).toList();
+                    if (!driverCost.isEmpty()){
+                        return Mono.just(driverCost.get(0));
                     }
                     return Mono.just(items.get(0));
                 });
