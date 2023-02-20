@@ -9,8 +9,7 @@ Per caricare i dati in DEV:
 
 ```
 export PROFILE="dev"  
-export REGION="us-east-1"  
-export ENV="dev"  
+export REGION="eu-south-1"  
 export ENDPOINT="http://dynamodb.eu-south-1.amazonaws.com"  
 ./load-caps.sh  
 ./load-zones.sh
@@ -21,7 +20,6 @@ Per caricare i dati su localstack:
 ```
 export PROFILE="default"  
 export REGION="us-east-1"  
-export ENV="localstack"  
 export ENDPOINT="http://localstack:4566"  
 ./load-caps.sh  
 ./load-zones.sh

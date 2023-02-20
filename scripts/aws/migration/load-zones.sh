@@ -1,4 +1,4 @@
-tail -n +1 zones.csv | parallel --pipe -N25 'head -c -1 | jq --slurp --raw-input "{ \"pn-PaperZone\": split(\"\n\") | map(split(\",\")) |
+tail -n +2 zones.csv | parallel --pipe -N25 'head -c -1 | jq --slurp --raw-input "{ \"pn-PaperZone\": split(\"\n\") | map(split(\",\")) |
     map(
 		{
 			\"PutRequest\": {
