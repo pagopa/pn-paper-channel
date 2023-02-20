@@ -29,6 +29,8 @@ public class Address {
     private String pr;
 
     private String country;
+    private String flowType;
+    private String productType;
 
     private boolean fromNationalRegistry = false;
 

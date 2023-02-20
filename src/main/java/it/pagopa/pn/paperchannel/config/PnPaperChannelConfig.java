@@ -19,8 +19,10 @@ public class PnPaperChannelConfig {
     private String clientSafeStorageBasepath;
     private String clientNationalRegistriesBasepath;
     private String clientExternalChannelBasepath;
+    private String clientDataVaultBasepath;
     private String safeStorageCxId;
     private String xPagopaExtchCxId;
+    private String nationalRegistryCxId;
     private String queueDeliveryPush;
     private String queueNationalRegistries;
     private String queueExternalChannel;
@@ -29,6 +31,12 @@ public class PnPaperChannelConfig {
     private Integer attemptQueueSafeStorage;
     private Integer attemptQueueExternalChannel;
     private Integer attemptQueueNationalRegistries;
-
+    private Long ttlPrepare;
+    private Long ttlExecutionN_890;
+    private Long ttlExecutionN_AR;
+    private Long ttlExecutionN_RS;
+    private Long ttlExecutionI_AR;
+    private Long ttlExecutionI_RS;
+    private String retryStatus;
 
 }

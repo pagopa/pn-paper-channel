@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.validator;
 
+import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.exception.PnInputValidatorException;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
@@ -8,6 +9,7 @@ import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.rest.v1.dto.AnalogAddress;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareRequest;
 import it.pagopa.pn.paperchannel.rest.v1.dto.ProposalTypeEnum;
+import it.pagopa.pn.paperchannel.utils.Utility;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -52,13 +54,13 @@ class PrepareRequestValidatorTest {
         PnGenericException ex = Assertions.assertThrows(PnInputValidatorException.class,
                 () -> PrepareRequestValidator.compareRequestEntity(notValid, deliveryRequest, true));
         Assertions.assertNotNull(errors);
-        Assertions.assertEquals("Richiesta già preso in carico ma sono state inviate informazioni differenti (requestId già presente)", ex.getMessage());
+        Assertions.assertEquals(ExceptionTypeEnum.DIFFERENT_DATA_REQUEST.getMessage(), ex.getMessage());
     }
 
     private void setDeliveryRequest(){
         deliveryRequest = new PnDeliveryRequest();
         deliveryRequest.setRequestId("ABC-1234");
-        deliveryRequest.setFiscalCode("MDF1234JJJSSKK");
+        deliveryRequest.setHashedFiscalCode(Utility.convertToHash("MDF1234JJJSSKK"));
         deliveryRequest.setReceiverType("PF");
         deliveryRequest.setIun("LOKKF-343222");
         deliveryRequest.setAddressHash(getAddress().convertToHash());

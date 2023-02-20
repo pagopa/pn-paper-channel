@@ -6,6 +6,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -21,8 +25,7 @@ public class Utility {
             return null;
         }
 
-        String stringHash = DigestUtils.sha256Hex(string);
-        return stringHash;
+        return DigestUtils.sha256Hex(string);
     }
 
     public static <T> T jsonToObject(ObjectMapper objectMapper, String json, Class<T> tClass){
@@ -37,11 +40,10 @@ public class Utility {
 
     public static boolean isValidFromRegex(String value, String regex){
         boolean check = false;
-        if (StringUtils.isEmpty(value)) {
-            check = false;
-        } else {
+        if (!StringUtils.isEmpty(value)) {
             value = value.replace(".", "");
             value = value.replace(",", "");
+            value = value.replace("'", "");
             Pattern p = Pattern.compile(regex);
             Matcher m = p.matcher(value);
             check = (m.find() && m.group().equals(value));
@@ -49,39 +51,55 @@ public class Utility {
         return check;
     }
 
-    private static boolean isValidCapFromRegex(String value, String regex){
-        if (StringUtils.isNotEmpty(value) && value.contains(".")) value = value.substring(0, value.indexOf("."));
+    public static boolean isValidCapFromRegex(String value, String regex){
         return isValidFromRegex(value, regex);
     }
 
-    public static Boolean isValidCap(String capList) {
+    public static List<String> isValidCap(String capList) {
         String regex = Const.capRegex;
-
-        boolean check = false;
+        List<String> capsFinded = new ArrayList<>();
         String[] cap = capList.split(",");
         if (cap != null && cap.length > 0) {
             for (String item : cap) {
+                item = item.trim();
+                if (StringUtils.isNotEmpty(item) && item.contains(".")) item = item.substring(0, item.indexOf("."));
                 if (item.contains("-")) {
                     String[] range = item.trim().split("-");
+                    if (!isValidCapFromRegex(range[0],regex) || !isValidCapFromRegex(range[1],regex)) {
+                        log.info("Il cap non è conforme agli standard previsti.");
+                        return null;
+                    }
                     int low = Integer.parseInt(range[0]);
                     int high = Integer.parseInt(range[1]);
                     if (low < high) {
                         log.info("Trovato cap in questo range " + item);
-                        if (!isValidCapFromRegex(item,regex)) {
-                            return false;
+                        for (int i = low; i <= high; i++){
+                            String capFormatted = addZero(i);
+                            capsFinded.add(capFormatted);
                         }
                     } else {
-                        return false;
+                        log.info("Intervallo errato.");
+                        return null;
                     }
                 } else {
-                    check = isValidCapFromRegex(item,regex);
-                    if (!check) return false;
+                    if (!isValidCapFromRegex(item, regex)) return null;
+                    capsFinded.add(item);
                 }
             }
-        } else {
-            check = isValidCapFromRegex(capList,regex);
+            Set<String> findedEquals = new HashSet<>(capsFinded);
+            if (findedEquals.size() < capsFinded.size()) {
+                log.info("Trovato cap duplicato.");
+                return null;
+            }
+            log.info("Non è stato trovato alcun cap duplicato.");
+            return capsFinded;
+
         }
 
-        return check;
+        return (isValidCapFromRegex(capList, regex)) ? List.of(capList.trim()) : null ;
+    }
+
+    public static String addZero (int i){
+        return String.format("%05d", i);
     }
 }

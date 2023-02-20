@@ -9,13 +9,15 @@ public interface PaperChannelService {
 
     Mono<TenderDetailResponseDTO> getTenderDetails(String tenderCode);
 
+    Mono<DeliveryDriverResponseDTO> getDriverDetails(String tenderCode, String driverCode);
+
     Mono<FSUResponseDTO> getDetailsFSU(String tenderCode);
-    Mono<PageableDeliveryDriverResponseDto> getAllDeliveriesDrivers(String tenderCode, Integer page, Integer size);
+    Mono<PageableDeliveryDriverResponseDto> getAllDeliveriesDrivers(String tenderCode, Integer page, Integer size, Boolean fsu);
     Mono<PageableCostResponseDto> getAllCostFromTenderAndDriver(String tenderCode, String driverCode, Integer page, Integer size);
     Mono<PresignedUrlResponseDto> getPresignedUrl();
     Mono<InfoDownloadDTO> downloadTenderFile(String tenderCode, String uuid);
 
-    Mono<NotifyResponseDto> notifyUpload(TenderUploadRequestDto uploadRequestDto);
+    Mono<NotifyResponseDto> notifyUpload(String tenderCode, NotifyUploadRequestDto uploadRequestDto);
 
     Mono<TenderCreateResponseDTO> createOrUpdateTender(TenderCreateRequestDTO request);
     Mono<Void> createOrUpdateDriver(String tenderCode, DeliveryDriverDTO request);

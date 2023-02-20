@@ -23,6 +23,7 @@ import it.pagopa.pn.paperchannel.msclient.generated.pnsafestorage.v1.dto.FileDow
 import it.pagopa.pn.paperchannel.rest.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.service.PaperAsyncService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
+import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -111,7 +112,9 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                     if (Boolean.TRUE.equals(deliveryRequestAndAddress.getT2())){
                         log.info("National registry address");
                         deliveryRequestAndAddress.getT1().setAddressHash(addressFromNationalRegistry.convertToHash());
-                        return addressDAO.create(AddressMapper.toEntity(addressFromNationalRegistry, deliveryRequestAndAddress.getT1().getRequestId()))
+                        //set flowType per TTL
+                        addressFromNationalRegistry.setFlowType(Const.PREPARE);
+                        return addressDAO.create(AddressMapper.toEntity(addressFromNationalRegistry, deliveryRequestAndAddress.getT1().getRequestId(), paperChannelConfig))
                                 .map(item -> deliveryRequestAndAddress.getT1());
                     }
                     return Mono.just(deliveryRequestAndAddress.getT1());

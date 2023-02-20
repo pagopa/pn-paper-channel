@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.List;
 import java.util.Objects;
 
 @Getter
@@ -30,7 +31,7 @@ public class DeliveryAndCost {
     @ColumnExcel("FSU")
     private Boolean fsu;
     @ColumnExcel("CAP")
-    public String cap;
+    public List<String> caps;
     @ColumnExcel("ZONE")
     public String zone;
     @ColumnExcel("PRODUCT_TYPE")
@@ -46,8 +47,8 @@ public class DeliveryAndCost {
         if (o == null || getClass() != o.getClass()) return false;
         DeliveryAndCost that = (DeliveryAndCost) o;
         boolean controlValue = taxId.equals(that.taxId) && uniqueCode.equals(that.uniqueCode) && fsu.equals(that.fsu) && productType.equals(that.productType);
-        boolean thisNational = (this.cap != null);
-        boolean thatNational = (that.cap != null);
+        boolean thisNational = (this.caps != null);
+        boolean thatNational = (that.caps != null);
         if (!thisNational && !thatNational){
             return controlValue && StringUtils.equals(this.zone, that.zone);
         }
@@ -56,7 +57,7 @@ public class DeliveryAndCost {
 
     @Override
     public int hashCode() {
-        if (this.cap != null)
+        if (this.caps != null)
             return Objects.hash(taxId, uniqueCode, fsu, "NATIONAL", productType);
         return Objects.hash(taxId, uniqueCode, fsu, "INTERNATIONAL", productType);
     }

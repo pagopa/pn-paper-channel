@@ -10,13 +10,14 @@ public enum ExceptionTypeEnum{
     MAPPER_ERROR("MAPPER_ERROR", "Non è stato possibile mappare l'oggetto richiesto"),
     PREPARE_ASYNC_LISTENER_EXCEPTION("PREPARE_ASYNC_LISTENER_EXCEPTION", "Si è verificato un errore durante la prepare async"),
     EXTERNAL_CHANNEL_LISTENER_EXCEPTION("EXTERNAL_CHANNEL_LISTENER_EXCEPTION", "Si è verificato un errore durante la RESULT di external channel"),
+    EXTERNAL_CHANNEL_API_EXCEPTION("EXTERNAL_CHANNEL_API_EXCEPTION", "Si è verificato un errore durante l'invocazione a external channel"),
     NATIONAL_REGISTRY_ADDRESS_NOT_FOUND("NATIONAL_REGISTRY_ADDRESS_NOT_FOUND", "Non è stato trovato alcun indirizzo"),
     UNTRACEABLE_ADDRESS("UNTRACEABLE_ADDRESS", "Irreperibile totale"),
     CORRELATION_ID_NOT_FOUND("CORRELATION_ID_NOT_FOUND", "Non è stato possibile trovare il correlation id"),
     RETRY_AFTER_DOCUMENT("RETRY_AFTER_DOCUMENT", "Documento non disponibile al momento"),
     DOCUMENT_URL_NOT_FOUND("DOCUMENT_URL_NOT_FOUND", "Url allegato non disponibile"),
     DOCUMENT_NOT_DOWNLOADED("DOCUMENT_NOT_DOWNLOADED", "Non è stato possibile scaricare il documento"),
-    DIFFERENT_DATA_REQUEST("DIFFERENT_DATA_REQUEST", "Richiesta già preso in carico ma sono state inviate informazioni differenti (requestId già presente)"),
+    DIFFERENT_DATA_REQUEST("DIFFERENT_DATA_REQUEST", "Richiesta già preso in carico ma sono state inviate informazioni differenti "),
     COUNTRY_NOT_FOUND("COUNTRY NOT FOUND", "Il paese non è stato trovato"),
     COST_NOT_FOUND("COST NOT FOUND", "Il costo non è stato trovato"),
     DIFFERENT_DATA_RESULT("DIFFERENT_DATA_RESULT", "I dati restituiti dal servizio External Channel sono differenti rispetto a quelli memorizzati nel database (per uno stesso requestId)"),
@@ -30,9 +31,12 @@ public enum ExceptionTypeEnum{
     TENDER_NOT_EXISTED("TENDER_NOT_EXISTED", "La gara non è presente nel sistema"),
     ACTIVE_TENDER_NOT_FOUND("ACTIVE_TENDER_NOT_FOUND", "Errore, non esistono gare in corso"),
     DELIVERY_DRIVER_NOT_EXISTED("DELIVERY_DRIVER_NOT_EXISTED", "Il recapitisca non è presente nel sistema"),
-    COST_ALREADY_EXIST("COST_ALREADY_EXIST", "Il costo è già presente nel sistema associato ad un altro recapitista"),
+    DELIVERY_DRIVER_HAVE_DIFFERENT_ROLE("DELIVERY_DRIVER_HAVE_DIFFERENT_ROLE", "Il recapitisca con questa partita iva è già presente con ruolo differente"),
+    COST_ALREADY_EXIST("COST_ALREADY_EXIST", "Il costo è già presente tra i recapitisti."),
     COST_BADLY_CONTENT("COST_BADLY_CONTENT", "Informazioni errate per il costo"),
-    FILE_REQUEST_ASYNC_NOT_FOUND("FILE_REQUEST_ASYNC_NOT_FOUND", "File non trovato, flusso asincrono");
+    COST_DRIVER_OR_FSU_NOT_FOUND("COST_DRIVER_OR_FSU_NOT_FOUND", "Il costo per il seguente prodotto non è presente tra i recapitisti e nel FSU"),
+    FILE_REQUEST_ASYNC_NOT_FOUND("FILE_REQUEST_ASYNC_NOT_FOUND", "File non trovato, flusso asincrono"),
+    DATA_VAULT_ENCRYPTION_ERROR("DATA_VAULT_ENCRYPTION_ERROR", "Servizio irraggiungibile od errore in fase di criptazione");
 
     private final String title;
     private final String message;

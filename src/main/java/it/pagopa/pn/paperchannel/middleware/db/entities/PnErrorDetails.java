@@ -15,6 +15,7 @@ public class PnErrorDetails {
 
     private static final String COL_ROW = "row";
     private static final String COL_COL = "col";
+    private static final String COL_COL_NAME = "colName";
     private static final String COL_MESSAGE = "message";
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_ROW)}))
@@ -23,5 +24,8 @@ public class PnErrorDetails {
     private Integer col;
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_MESSAGE)}))
     private String message;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_COL_NAME)}))
+    private String colName;
 
 }

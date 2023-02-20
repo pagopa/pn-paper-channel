@@ -65,13 +65,13 @@ class DeliveryDriverMapperTest {
         d1.setUniqueCode("AAAAA");
         d1.setTaxId("ID-1");
         d1.setProductType("AR");
-        d1.setCap("81029, 23945");
+        d1.setCaps(List.of("81029, 23945"));
         d1.setFsu(false);
         DeliveryAndCost d2 = new DeliveryAndCost();
-        d2.setUniqueCode("AAAAA");
-        d2.setTaxId("ID-1");
+        d2.setUniqueCode("AA3AA");
+        d2.setTaxId("ID-3");
         d2.setProductType("AR");
-        d2.setCap("11029, 43945");
+        d2.setCaps(List.of("81029, 43945"));
         d2.setFsu(false);
         DeliveryAndCost d3 = new DeliveryAndCost();
         d3.setUniqueCode("AAAAA");
@@ -83,7 +83,7 @@ class DeliveryDriverMapperTest {
         d4.setUniqueCode("AAAAA");
         d4.setTaxId("ID-1");
         d4.setProductType("SEMPLICE");
-        d4.setCap("81029, 23945");
+        d4.setCaps(List.of("81029, 23945"));
         d4.setFsu(false);
         DeliveryAndCost d5 = new DeliveryAndCost();
         d5.setUniqueCode("AAAAA");

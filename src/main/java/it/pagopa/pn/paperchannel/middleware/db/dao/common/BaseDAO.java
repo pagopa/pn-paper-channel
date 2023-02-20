@@ -1,7 +1,8 @@
 package it.pagopa.pn.paperchannel.middleware.db.dao.common;
 
-import it.pagopa.pn.paperchannel.encryption.KmsEncryption;
+import it.pagopa.pn.paperchannel.encryption.DataEncryption;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -30,7 +31,7 @@ public abstract class BaseDAO<T> {
         Key to;
     }
 
-    private final KmsEncryption kmsEncryption;
+    private DataEncryption dataEncryption;
     protected final DynamoDbEnhancedAsyncClient dynamoDbEnhancedAsyncClient;
     protected final DynamoDbAsyncClient dynamoDbAsyncClient;
     protected final DynamoDbAsyncTable<T> dynamoTable;
@@ -42,11 +43,20 @@ public abstract class BaseDAO<T> {
     private final Class<T> tClass;
 
 
-    protected BaseDAO(KmsEncryption kmsEncryption, DynamoDbEnhancedAsyncClient dynamoDbEnhancedAsyncClient,
+    protected BaseDAO(DataEncryption dataEncryption, DynamoDbEnhancedAsyncClient dynamoDbEnhancedAsyncClient,
                       DynamoDbAsyncClient dynamoDbAsyncClient, String tableName, Class<T> tClass) {
         this.dynamoTable = dynamoDbEnhancedAsyncClient.table(tableName, TableSchema.fromBean(tClass));
         this.table = tableName;
-        this.kmsEncryption = kmsEncryption;
+        this.dataEncryption = dataEncryption;
+        this.dynamoDbEnhancedAsyncClient = dynamoDbEnhancedAsyncClient;
+        this.dynamoDbAsyncClient = dynamoDbAsyncClient;
+        this.tClass = tClass;
+    }
+
+    protected BaseDAO(DynamoDbEnhancedAsyncClient dynamoDbEnhancedAsyncClient,
+                      DynamoDbAsyncClient dynamoDbAsyncClient, String tableName, Class<T> tClass) {
+        this.dynamoTable = dynamoDbEnhancedAsyncClient.table(tableName, TableSchema.fromBean(tClass));
+        this.table = tableName;
         this.dynamoDbEnhancedAsyncClient = dynamoDbEnhancedAsyncClient;
         this.dynamoDbAsyncClient = dynamoDbAsyncClient;
         this.tClass = tClass;
@@ -127,15 +137,20 @@ public abstract class BaseDAO<T> {
 
     protected <A> A encode(A data, Class<A> aClass) {
         if(aClass == PnAddress.class) {
-            ((PnAddress) data).setFullName(kmsEncryption.encode(((PnAddress) data).getFullName()));
-            ((PnAddress) data).setNameRow2(kmsEncryption.encode(((PnAddress) data).getNameRow2()));
-            ((PnAddress) data).setAddress(kmsEncryption.encode(((PnAddress) data).getAddress()));
-            ((PnAddress) data).setAddressRow2(kmsEncryption.encode(((PnAddress) data).getAddressRow2()));
-            ((PnAddress) data).setCap(kmsEncryption.encode(((PnAddress) data).getCap()));
-            ((PnAddress) data).setCity(kmsEncryption.encode(((PnAddress) data).getCity()));
-            ((PnAddress) data).setCity2(kmsEncryption.encode(((PnAddress) data).getCity2()));
-            ((PnAddress) data).setPr(kmsEncryption.encode(((PnAddress) data).getPr()));
-            ((PnAddress) data).setCountry(kmsEncryption.encode(((PnAddress) data).getCountry()));
+            PnAddress pnAddress = ((PnAddress) data);
+            pnAddress.setFullName(dataEncryption.encode(pnAddress.getFullName()));
+            pnAddress.setNameRow2(dataEncryption.encode(pnAddress.getNameRow2()));
+            pnAddress.setAddress(dataEncryption.encode(pnAddress.getAddress()));
+            pnAddress.setAddressRow2(dataEncryption.encode(pnAddress.getAddressRow2()));
+            pnAddress.setCap(dataEncryption.encode(pnAddress.getCap()));
+            pnAddress.setCity(dataEncryption.encode(pnAddress.getCity()));
+            pnAddress.setCity2(dataEncryption.encode(pnAddress.getCity2()));
+            pnAddress.setPr(dataEncryption.encode(pnAddress.getPr()));
+            pnAddress.setCountry(dataEncryption.encode(pnAddress.getCountry()));
+        }
+        if(aClass == PnDeliveryRequest.class) {
+            PnDeliveryRequest pnDeliveryRequest = ((PnDeliveryRequest) data);
+            pnDeliveryRequest.setFiscalCode(dataEncryption.encode(pnDeliveryRequest.getFiscalCode(), pnDeliveryRequest.getReceiverType()));
         }
         return data;
     }
@@ -143,15 +158,20 @@ public abstract class BaseDAO<T> {
     protected CompletableFuture<T> decode(CompletableFuture<T> genericData) {
         return genericData.thenApply(data -> {
             if(data instanceof PnAddress) {
-                ((PnAddress) data).setFullName(kmsEncryption.decode(((PnAddress) data).getFullName()));
-                ((PnAddress) data).setNameRow2(kmsEncryption.decode(((PnAddress) data).getNameRow2()));
-                ((PnAddress) data).setAddress(kmsEncryption.decode(((PnAddress) data).getAddress()));
-                ((PnAddress) data).setAddressRow2(kmsEncryption.decode(((PnAddress) data).getAddressRow2()));
-                ((PnAddress) data).setCap(kmsEncryption.decode(((PnAddress) data).getCap()));
-                ((PnAddress) data).setCity(kmsEncryption.decode(((PnAddress) data).getCity()));
-                ((PnAddress) data).setCity2(kmsEncryption.decode(((PnAddress) data).getCity2()));
-                ((PnAddress) data).setPr(kmsEncryption.decode(((PnAddress) data).getPr()));
-                ((PnAddress) data).setCountry(kmsEncryption.decode(((PnAddress) data).getCountry()));
+                PnAddress pnAddress = ((PnAddress) data);
+                pnAddress.setFullName(dataEncryption.decode(pnAddress.getFullName()));
+                pnAddress.setNameRow2(dataEncryption.decode(pnAddress.getNameRow2()));
+                pnAddress.setAddress(dataEncryption.decode(pnAddress.getAddress()));
+                pnAddress.setAddressRow2(dataEncryption.decode(pnAddress.getAddressRow2()));
+                pnAddress.setCap(dataEncryption.decode(pnAddress.getCap()));
+                pnAddress.setCity(dataEncryption.decode(pnAddress.getCity()));
+                pnAddress.setCity2(dataEncryption.decode(pnAddress.getCity2()));
+                pnAddress.setPr(dataEncryption.decode(pnAddress.getPr()));
+                pnAddress.setCountry(dataEncryption.decode(pnAddress.getCountry()));
+            }
+            if(data instanceof PnDeliveryRequest) {
+                PnDeliveryRequest pnDeliveryRequest = ((PnDeliveryRequest) data);
+                pnDeliveryRequest.setFiscalCode(dataEncryption.decode(pnDeliveryRequest.getFiscalCode()));
             }
             return data;
         });

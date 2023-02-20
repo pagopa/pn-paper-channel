@@ -20,6 +20,6 @@ public class PaperListServiceImpl implements PaperListService {
     @Override
     public Mono<CapResponseDto> getAllCap(String value) {
         return capDAO.getAllCap(value)
-                .map(list -> CapMapper.toResponse(list));
+                .map(CapMapper::toResponse);
     }
 }

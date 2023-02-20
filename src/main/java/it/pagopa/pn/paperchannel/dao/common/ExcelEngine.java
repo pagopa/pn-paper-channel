@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -177,7 +178,18 @@ public class ExcelEngine {
                 field.setAccessible(true);
                 Cell cell = row.createCell(cellNum++);
                 Object value = field.get(element);
-                cell.setCellValue(value != null ? value.toString() : "");
+
+                if (value instanceof List<?>) {
+                    String cellValue = StringUtils.join(value, ',');
+                    log.info(cellValue);
+                    cellValue = cellValue.replace("[", "");
+                    cellValue = cellValue.replace("]", "");
+                    log.info(cellValue);
+                    cell.setCellValue(cellValue);
+                } else {
+                    cell.setCellValue(value != null ? value.toString() : "");
+                }
+                
                 cell.setCellStyle(getBodyCellStyle());
             } catch (IllegalAccessException e) {
                 throw new PnGenericException(ExceptionTypeEnum.DATA_NULL_OR_INVALID,"Invalid access to field in mapping excel column name");

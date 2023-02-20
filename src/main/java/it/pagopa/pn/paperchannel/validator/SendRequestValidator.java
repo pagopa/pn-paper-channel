@@ -6,6 +6,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.AttachmentDetailsDto;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.SendRequest;
+import it.pagopa.pn.paperchannel.utils.Utility;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 
@@ -29,7 +30,7 @@ public class SendRequestValidator {
             errors.add("RequestId");
         }
 
-        if (!sendRequest.getReceiverFiscalCode().equals(pnDeliveryEntity.getFiscalCode())) {
+        if (!Utility.convertToHash(sendRequest.getReceiverFiscalCode()).equals(pnDeliveryEntity.getHashedFiscalCode())) {
             errors.add("FiscalCode");
         }
 

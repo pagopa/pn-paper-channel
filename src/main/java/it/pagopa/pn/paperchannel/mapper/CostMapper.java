@@ -15,11 +15,11 @@ public class CostMapper {
         throw new IllegalCallerException();
     }
 
-    public static PnCost fromCostDTO(String tenderCode, String driverCode, CostDTO dto){
+    public static PnCost fromCostDTO(String tenderCode, String taxId, CostDTO dto){
         PnCost cost = new PnCost();
         cost.setTenderCode(tenderCode);
-        cost.setDeliveryDriverCode(driverCode);
-        cost.setUuid(dto.getCode());
+        cost.setDeliveryDriverCode(taxId);
+        cost.setUuid(dto.getUid());
         if (StringUtils.isBlank(cost.getUuid())){
             cost.setUuid(UUID.randomUUID().toString());
         }
@@ -35,7 +35,11 @@ public class CostMapper {
 
     public static CostDTO toCostDTO(PnCost paperCost){
         CostDTO dto = new CostDTO();
+        dto.setUid(paperCost.getUuid());
         dto.setCap(paperCost.getCap());
+        if (StringUtils.isNotBlank(paperCost.getZone())){
+            dto.setZone(InternationalZoneEnum.fromValue(paperCost.getZone()));
+        }
         dto.setPrice(paperCost.getBasePrice());
         dto.setPriceAdditional(paperCost.getPagePrice());
         dto.setProductType(ProductTypeEnumDto.fromValue(paperCost.getProductType()));

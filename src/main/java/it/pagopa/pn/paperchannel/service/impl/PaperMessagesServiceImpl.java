@@ -1,6 +1,7 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
+import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.exception.PnPaperEventException;
 import it.pagopa.pn.paperchannel.mapper.*;
@@ -17,7 +18,10 @@ import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.rest.v1.dto.*;
 import it.pagopa.pn.paperchannel.service.PaperMessagesService;
+import it.pagopa.pn.paperchannel.service.PaperTenderService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
+import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
+import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import it.pagopa.pn.paperchannel.validator.PrepareRequestValidator;
 import it.pagopa.pn.paperchannel.validator.SendRequestValidator;
@@ -43,19 +47,22 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
 
     @Autowired
     private AddressDAO addressDAO;
-
     @Autowired
     private ExternalChannelClient externalChannelClient;
+    @Autowired
+    private PnPaperChannelConfig pnPaperChannelConfig;
 
-    public PaperMessagesServiceImpl(PnAuditLogBuilder auditLogBuilder, NationalRegistryClient nationalRegistryClient,
-                                    RequestDeliveryDAO requestDeliveryDAO, SqsSender sqsSender, CostDAO costDAO) {
+    @Autowired
+    private PaperTenderService paperTenderService;
 
+    public PaperMessagesServiceImpl(PnAuditLogBuilder auditLogBuilder, RequestDeliveryDAO requestDeliveryDAO, CostDAO costDAO,
+                                    NationalRegistryClient nationalRegistryClient, SqsSender sqsSender) {
         super(auditLogBuilder, requestDeliveryDAO, costDAO, nationalRegistryClient, sqsSender);
     }
 
     @Override
     public Mono<PrepareEvent> retrievePaperPrepareRequest(String requestId) {
-        log.info("Start retrieve prepare request");
+        log.info("Start retrieve prepare request {}", requestId);
         return requestDeliveryDAO.getByRequestId(requestId)
                 .zipWhen(entity -> addressDAO.findByRequestId(requestId).map(address -> address)
                             .switchIfEmpty(Mono.just(new PnAddress()))
@@ -82,22 +89,25 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                         entity.setStatusCode(StatusDeliveryEnum.READY_TO_SEND.getCode());
                         entity.setStatusDetail(StatusDeliveryEnum.READY_TO_SEND.getDescription());
                         entity.setStatusDate(DateUtils.formatDate(new Date()));
+                        entity.setRequestPaId(sendRequest.getRequestPaId());
+                        entity.setPrintType(sendRequest.getPrintType());
                     }
 
                     List<AttachmentInfo> attachments = entity.getAttachments().stream().map(AttachmentMapper::fromEntity).toList();
-                    Address address = AddressMapper.fromAnalogToAddress(sendRequest.getReceiverAddress());
-                    return super.calculator(attachments, address, sendRequest.getProductType()).map(value -> value);
+                    Address address = saveAddresses(sendRequest);
+                    return this.calculator(attachments, address, sendRequest.getProductType()).map(value -> value);
                 })
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)))
                 .zipWhen(entityAndAmount ->{
-                    pnLogAudit.addsBeforeSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", requestId, MDC.get(MDC_TRACE_ID_KEY)));
+                    sendRequest.setRequestId(requestId.concat(Const.RETRY).concat("0"));
+                    pnLogAudit.addsBeforeSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDC_TRACE_ID_KEY)));
                     return this.externalChannelClient.sendEngageRequest(sendRequest)
                                     .then(Mono.defer(() -> {
-                                        pnLogAudit.addsSuccessSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", requestId, MDC.get(MDC_TRACE_ID_KEY)));
+                                        pnLogAudit.addsSuccessSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDC_TRACE_ID_KEY)));
                                         return this.requestDeliveryDAO.updateData(entityAndAmount.getT1()).map(item -> item);
                                     }))
                                     .onErrorResume(ex -> {
-                                        pnLogAudit.addsFailSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", requestId, MDC.get(MDC_TRACE_ID_KEY)));
+                                        pnLogAudit.addsFailSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDC_TRACE_ID_KEY)));
                                         return Mono.error(ex);
                                     });
                 }, (entityAndAmount, none) -> entityAndAmount.getT2())
@@ -107,6 +117,40 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                     sendResponse.setAmount(amount.intValue()*100);
                     return sendResponse;
                 });
+    }
+
+    private Mono<Double> calculator(List<AttachmentInfo> attachments, Address address, ProductTypeEnum productType){
+        if (StringUtils.isNotBlank(address.getCap())) {
+            return getAmount(attachments, address.getCap(), null, getProductType(address, productType))
+                    .map(item -> item);
+        }
+        return paperTenderService.getZoneFromCountry(address.getCountry())
+                .flatMap(zone -> getAmount(attachments,null, zone, super.getProductType(address, productType)).map(item -> item));
+
+    }
+
+    private Mono<Double> getAmount(List<AttachmentInfo> attachments, String cap, String zone, String productType){
+        return paperTenderService.getCostFrom(cap, zone, productType)
+                .flatMap(contract -> super.getPriceAttachments(attachments, contract.getPriceAdditional())
+                        .map(priceForPages -> Double.sum(contract.getPrice(), priceForPages))
+                );
+    }
+
+    private Address saveAddresses(SendRequest sendRequest) {
+        Address address = AddressMapper.fromAnalogToAddress(sendRequest.getReceiverAddress(), sendRequest.getProductType().getValue(),Const.EXECUTION);
+        PnAddress addressEntity = AddressMapper.toEntity(address,sendRequest.getRequestId(), pnPaperChannelConfig);
+        //save receiver address
+        addressDAO.create(addressEntity);
+        if (sendRequest.getSenderAddress() != null) {
+            Address senderAddress = AddressMapper.fromAnalogToAddress(sendRequest.getSenderAddress(), sendRequest.getProductType().getValue(),Const.EXECUTION);
+            addressDAO.create(AddressMapper.toEntity(senderAddress,sendRequest.getRequestId(), AddressTypeEnum.SENDER_ADDRES,pnPaperChannelConfig));
+        }
+        if (sendRequest.getArAddress() != null) {
+            Address arAddress = AddressMapper.fromAnalogToAddress(sendRequest.getArAddress(), sendRequest.getProductType().getValue(),Const.EXECUTION);
+            addressDAO.create(AddressMapper.toEntity(arAddress,sendRequest.getRequestId(), AddressTypeEnum.AR_ADDRESS, pnPaperChannelConfig));
+        }
+
+        return address;
     }
 
     @Override
@@ -123,6 +167,7 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                                 .map(address-> PreparePaperResponseMapper.fromResult(entity,address))
                                 .switchIfEmpty(Mono.just(PreparePaperResponseMapper.fromResult(entity,null)));
                     })
+                    //TODO aggiungere controllo del receiver address
                     .switchIfEmpty(Mono.defer(() -> saveRequestAndAddress(prepareRequest, null, prepareRequest.getReceiverAddress())
                             .flatMap(response -> {
                                 PrepareAsyncRequest request = new PrepareAsyncRequest(requestId, response.getIun(), false, 0);
@@ -195,9 +240,9 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
         PnAddress addressEntity = null;
 
        if (address != null) {
-           Address mapped = AddressMapper.fromAnalogToAddress(address);
+           Address mapped = AddressMapper.fromAnalogToAddress(address, null, Const.PREPARE);
            pnDeliveryRequest.setAddressHash(mapped.convertToHash());
-           addressEntity = AddressMapper.toEntity(mapped, prepareRequest.getRequestId());
+           addressEntity = AddressMapper.toEntity(mapped, prepareRequest.getRequestId(), pnPaperChannelConfig);
            pnDeliveryRequest.setProductType(getProposalProductType(mapped, pnDeliveryRequest.getProposalProductType()));
        }
 

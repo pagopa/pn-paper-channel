@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.mapper;
 
+import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.mapper.common.BaseMapper;
 import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
@@ -7,7 +8,11 @@ import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.DiscoveredAddressDto;
 import it.pagopa.pn.paperchannel.msclient.generated.pnnationalregistries.v1.dto.AddressSQSMessagePhysicalAddressDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.AnalogAddress;
+import it.pagopa.pn.paperchannel.rest.v1.dto.ProductTypeEnum;
+import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
+import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.time.LocalDateTime;
 
@@ -22,10 +27,20 @@ public class AddressMapper {
         throw new IllegalCallerException("the constructor must not called");
     }
 
+    public static Address fromAnalogToAddress(AnalogAddress analogAddress, String productType, String flow){
+        if (analogAddress == null) return null;
+        Address address = fromAnalogToAddress(analogAddress);
+        address.setFlowType(flow);
+        address.setProductType(productType);
+        return address;
+    }
+
     public static Address fromAnalogToAddress(AnalogAddress analogAddress){
         if (analogAddress == null) return null;
-        return mapperAnalog.toEntity(analogAddress);
+        Address address = mapperAnalog.toEntity(analogAddress);
+        return address;
     }
+
 
     public static Address fromNationalRegistry(AddressSQSMessagePhysicalAddressDto pysicalAddress){
         Address address = new Address();
@@ -41,10 +56,38 @@ public class AddressMapper {
         return address;
     }
 
-    public static PnAddress toEntity(Address address, String requestId){
+    public static PnAddress toEntity(Address address, String requestId, PnPaperChannelConfig paperChannelConfig){
+        return toEntity(address, requestId, AddressTypeEnum.RECEIVER_ADDRESS, paperChannelConfig);
+    }
+
+    public static PnAddress toEntity(Address address, String requestId, AddressTypeEnum addressTypeEnum, PnPaperChannelConfig paperChannelConfig){
         PnAddress pnAddress = mapperToAddressEntity.toEntity(address);
         pnAddress.setRequestId(requestId);
-        pnAddress.setTtl(DateUtils.getTimeStampOfMills(LocalDateTime.now().plusMinutes(30L)));
+        pnAddress.setTypology(addressTypeEnum.toString());
+
+        if (paperChannelConfig != null) {
+            if (StringUtils.equals(address.getFlowType(), Const.PREPARE)){
+                //caso PREPARE set diretto
+                pnAddress.setTtl(DateUtils.getTimeStampOfMills(LocalDateTime.now().plusDays(paperChannelConfig.getTtlPrepare())));
+            }  else{
+                //caso EXECUTION set con productType
+                if (StringUtils.equals(address.getProductType(), ProductTypeEnum.RN_890.getValue())) {
+                    pnAddress.setTtl(DateUtils.getTimeStampOfMills(LocalDateTime.now().plusDays(paperChannelConfig.getTtlExecutionN_890())));
+                }
+                if (StringUtils.equals(address.getProductType(), ProductTypeEnum.RN_RS.getValue())) {
+                    pnAddress.setTtl(DateUtils.getTimeStampOfMills(LocalDateTime.now().plusDays(paperChannelConfig.getTtlExecutionN_RS())));
+                }
+                if (StringUtils.equals(address.getProductType(), ProductTypeEnum.RN_AR.getValue())) {
+                    pnAddress.setTtl(DateUtils.getTimeStampOfMills(LocalDateTime.now().plusDays(paperChannelConfig.getTtlExecutionN_AR())));
+                }
+                if (StringUtils.equals(address.getProductType(), ProductTypeEnum.RI_AR.getValue())) {
+                    pnAddress.setTtl(DateUtils.getTimeStampOfMills(LocalDateTime.now().plusDays(paperChannelConfig.getTtlExecutionI_AR())));
+                }
+                if (StringUtils.equals(address.getProductType(), ProductTypeEnum.RI_RS.getValue())) {
+                    pnAddress.setTtl(DateUtils.getTimeStampOfMills(LocalDateTime.now().plusDays(paperChannelConfig.getTtlExecutionI_RS())));
+                }
+            }
+        }
         return pnAddress;
     }
 
@@ -63,6 +106,11 @@ public class AddressMapper {
     public static AnalogAddress toPojo(Address address){
         if (address == null) return null;
         return mapperAnalog.toDTO(address);
+    }
+
+    public static AnalogAddress fromEntity(PnAddress address){
+        if (address == null) return null;
+        return mapperAnalog.toDTO(toDTO(address));
     }
 
 

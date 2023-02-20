@@ -21,6 +21,8 @@ public class PnDeliveryRequest {
     public static final String COL_REQUEST_ID = "requestId";
 
     public static final String COL_FISCAL_CODE = "fiscalCode";
+
+    public static final String COL_HASHED_FISCAL_CODE = "hashedFiscalCode";
     public static final String COL_RECEIVER_TYPE = "receiverType";
 
     public static final String COL_IUN = "iun";
@@ -51,12 +53,16 @@ public class PnDeliveryRequest {
     private static final String COL_PRODUCT_TYPE = "productType";
     private static final String COL_RELATED_REQUEST_ID = "relatedRequestId";
     private static final String COL_HASH_OLD_ADDRESS = "hashOldAddress";
+    public static final String COL_REQUEST_PA_ID = "requestPaId";
 
     @Getter(onMethod = @__({@DynamoDbPartitionKey,@DynamoDbAttribute(COL_REQUEST_ID)}))
     private String requestId;
 
     @Getter(onMethod = @__({@DynamoDbSecondaryPartitionKey(indexNames = FISCAL_CODE_INDEX),@DynamoDbAttribute(COL_FISCAL_CODE)}))
     private String fiscalCode;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_HASHED_FISCAL_CODE)}))
+    private String hashedFiscalCode;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_RECEIVER_TYPE)}))
     private String receiverType;
@@ -99,5 +105,7 @@ public class PnDeliveryRequest {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_ATTACHMENTS)}))
     private List<PnAttachmentInfo> attachments;
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_REQUEST_PA_ID)}))
+    private String requestPaId;
 
 }

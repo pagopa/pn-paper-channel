@@ -23,7 +23,7 @@ public class ErrorDetailMapper {
     }
 
     public static PnExcelValidatorException.ErrorCell toDto(PnErrorDetails entity){
-        return new PnExcelValidatorException.ErrorCell(entity.getRow(), entity.getCol(), entity.getMessage());
+        return new PnExcelValidatorException.ErrorCell(entity.getRow(), entity.getCol(), entity.getColName(), entity.getMessage());
     }
 
     public static List<PnExcelValidatorException.ErrorCell> toDtos(List<PnErrorDetails> entity){

@@ -1,7 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.db.dao.impl;
 
 import it.pagopa.pn.paperchannel.config.AwsPropertiesConfig;
-import it.pagopa.pn.paperchannel.encryption.KmsEncryption;
 import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.BaseDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnCost;
@@ -25,11 +24,10 @@ import java.util.Map;
 public class CostDAOImpl extends BaseDAO<PnCost> implements CostDAO {
 
 
-    public CostDAOImpl(KmsEncryption kmsEncryption,
-                       DynamoDbEnhancedAsyncClient dynamoDbEnhancedAsyncClient,
+    public CostDAOImpl(DynamoDbEnhancedAsyncClient dynamoDbEnhancedAsyncClient,
                        DynamoDbAsyncClient dynamoDbAsyncClient,
                        AwsPropertiesConfig awsPropertiesConfig) {
-        super(kmsEncryption, dynamoDbEnhancedAsyncClient, dynamoDbAsyncClient,
+        super(dynamoDbEnhancedAsyncClient, dynamoDbAsyncClient,
                 awsPropertiesConfig.getDynamodbCostTable(), PnCost.class);
     }
 
@@ -76,8 +74,9 @@ public class CostDAOImpl extends BaseDAO<PnCost> implements CostDAO {
         values.put(":productType", AttributeValue.builder().s(productType).build());
 
         if (StringUtils.isNotBlank(cap)){
-            filterExpression += " AND contains(" + PnCost.COL_CAP + ", :cap) ";
+            filterExpression += " AND (contains(" + PnCost.COL_CAP + ", :cap) OR contains("+ PnCost.COL_CAP + ", :defaultCap))";
             values.put(":cap", AttributeValue.builder().s(cap).build());
+            values.put(":defaultCap", AttributeValue.builder().s("99999").build());
         } else {
             filterExpression += " AND :zoneAttr = " + PnCost.COL_ZONE;
             values.put(":zoneAttr", AttributeValue.builder().s(zone).build());
@@ -89,6 +88,10 @@ public class CostDAOImpl extends BaseDAO<PnCost> implements CostDAO {
                 .flatMap(items -> {
                     if (items.isEmpty()) {
                         return Mono.empty();
+                    }
+                    List<PnCost> driverCost = items.stream().filter(cost -> !cost.getFsu()).toList();
+                    if (!driverCost.isEmpty()){
+                        return Mono.just(driverCost.get(0));
                     }
                     return Mono.just(items.get(0));
                 });

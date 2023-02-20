@@ -59,6 +59,7 @@ public class PaperChannelServiceImpl implements PaperChannelService {
     @Override
     public Mono<PageableTenderResponseDto> getAllTender(Integer page, Integer size) {
         Pageable pageable = PageRequest.of(page-1, size);
+
         return tenderDAO.getTenders()
                 .map(list -> TenderMapper.toPagination(pageable, list))
                 .map(TenderMapper::toPageableResponse);
@@ -78,6 +79,19 @@ public class PaperChannelServiceImpl implements PaperChannelService {
     }
 
     @Override
+    public Mono<DeliveryDriverResponseDTO> getDriverDetails(String tenderCode, String driverCode) {
+        return this.deliveryDriverDAO.getDeliveryDriver(tenderCode, driverCode)
+                .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_DRIVER_NOT_EXISTED, DELIVERY_DRIVER_NOT_EXISTED.getMessage(), HttpStatus.NOT_FOUND)))
+                .map(driverEntity -> {
+                    DeliveryDriverResponseDTO response = new DeliveryDriverResponseDTO();
+                    response.setCode(DeliveryDriverResponseDTO.CodeEnum.NUMBER_0);
+                    response.setResult(true);
+                    response.setDriver(DeliveryDriverMapper.deliveryDriverToDto(driverEntity));
+                    return response;
+                });
+    }
+
+    @Override
     public Mono<FSUResponseDTO> getDetailsFSU(String tenderCode) {
         return this.deliveryDriverDAO.getDeliveryDriverFSU(tenderCode)
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_DRIVER_NOT_EXISTED, DELIVERY_DRIVER_NOT_EXISTED.getMessage(), HttpStatus.NOT_FOUND)))
@@ -91,9 +105,9 @@ public class PaperChannelServiceImpl implements PaperChannelService {
     }
 
     @Override
-    public Mono<PageableDeliveryDriverResponseDto> getAllDeliveriesDrivers(String tenderCode, Integer page, Integer size) {
+    public Mono<PageableDeliveryDriverResponseDto> getAllDeliveriesDrivers(String tenderCode, Integer page, Integer size, Boolean fsu) {
         Pageable pageable = PageRequest.of(page-1, size);
-        return deliveryDriverDAO.getDeliveryDriverFromTender(tenderCode)
+        return deliveryDriverDAO.getDeliveryDriverFromTender(tenderCode, fsu)
                 .map(list ->
                         DeliveryDriverMapper.toPagination(pageable, list)
                 )
@@ -125,7 +139,15 @@ public class PaperChannelServiceImpl implements PaperChannelService {
 
         if(StringUtils.isNotEmpty(uuid)) {
             return fileDownloadDAO.getUuid(uuid)
-                    .map(item -> FileMapper.toDownloadFile(item, s3Bucket.getObjectData(item.getFilename())))
+                    .map(item -> {
+                        byte[] result = null;
+                        try {
+                            result = s3Bucket.getObjectData(item.getFilename());
+                        } catch (Exception e) {
+                            log.warn("File is not ready");
+                        }
+                        return FileMapper.toDownloadFile(item, result);
+                    })
                     .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)));
         }
 
@@ -142,7 +164,7 @@ public class PaperChannelServiceImpl implements PaperChannelService {
     }
 
     @Override
-    public Mono<NotifyResponseDto> notifyUpload(TenderUploadRequestDto uploadRequestDto) {
+    public Mono<NotifyResponseDto> notifyUpload(String tenderCode, NotifyUploadRequestDto uploadRequestDto) {
         if (StringUtils.isEmpty(uploadRequestDto.getUuid())) {
             return Mono.error(new PnGenericException(ExceptionTypeEnum.BADLY_REQUEST, ExceptionTypeEnum.BADLY_REQUEST.getMessage(), HttpStatus.BAD_REQUEST));
         }
@@ -160,7 +182,7 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                         String fileName = S3Bucket.PREFIX_URL + uploadRequestDto.getUuid();
                         InputStream inputStream = s3Bucket.getFileInputStream(fileName);
                         if (inputStream != null) {
-                            notifyUploadAsync(item, inputStream, uploadRequestDto);
+                            notifyUploadAsync(item, inputStream, tenderCode);
                             return NotifyResponseMapper.toDto(item);
                         }
                     }
@@ -168,14 +190,12 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                 }).switchIfEmpty(Mono.error(new PnGenericException(ExceptionTypeEnum.FILE_REQUEST_ASYNC_NOT_FOUND, ExceptionTypeEnum.FILE_REQUEST_ASYNC_NOT_FOUND.getMessage(), HttpStatus.NOT_FOUND)));
     }
 
-    public void notifyUploadAsync(PnDeliveryFile item, InputStream inputStream, TenderUploadRequestDto tenderRequest){
+    public void notifyUploadAsync(PnDeliveryFile item, InputStream inputStream, String tenderCode){
         Mono.delay(Duration.ofMillis(10)).publishOn(Schedulers.boundedElastic())
-                .publishOn(Schedulers.boundedElastic())
                 .map(i -> this.excelDAO.readData(inputStream))
                 .zipWhen(deliveriesData -> {
-                    PnTender tender = TenderMapper.toTender(tenderRequest);
-                    Map<PnDeliveryDriver, List<PnCost>> map = DeliveryDriverMapper.toEntityFromExcel(deliveriesData, tender.getTenderCode());
-                    return this.tenderDAO.createNewContract(map,tender);
+                    Map<PnDeliveryDriver, List<PnCost>> map = DeliveryDriverMapper.toEntityFromExcel(deliveriesData, tenderCode);
+                    return Mono.just(new PnTender());
                 })
                 .map(i -> {
                     item.setStatus(FileStatusCodeEnum.COMPLETE.getCode());
@@ -200,7 +220,7 @@ public class PaperChannelServiceImpl implements PaperChannelService {
         Mono.delay(Duration.ofMillis(10)).publishOn(Schedulers.boundedElastic())
                 .flatMap(i ->  {
                     if (StringUtils.isNotBlank(tenderCode)) {
-                        return this.deliveryDriverDAO.getDeliveryDriverFromTender(tenderCode)
+                        return this.deliveryDriverDAO.getDeliveryDriverFromTender(tenderCode, null)
                                 .zipWhen(drivers -> this.costDAO.findAllFromTenderCode(tenderCode, null).collectList())
                                 .flatMap(driversAndCosts -> {
                                     ExcelEngine excelEngine = this.excelDAO.create(ExcelModelMapper.fromDeliveriesDrivers(driversAndCosts.getT1(),driversAndCosts.getT2()));
@@ -251,25 +271,38 @@ public class PaperChannelServiceImpl implements PaperChannelService {
     public Mono<Void> createOrUpdateDriver(String tenderCode, DeliveryDriverDTO request) {
         return this.tenderDAO.getTender(tenderCode)
                 .switchIfEmpty(Mono.error(new PnGenericException(ExceptionTypeEnum.TENDER_NOT_EXISTED, ExceptionTypeEnum.TENDER_NOT_EXISTED.getMessage())))
+                .flatMap(tender -> this.deliveryDriverDAO.getDeliveryDriver(tenderCode, request.getTaxId())
+                            .switchIfEmpty(Mono.just(new PnDeliveryDriver()))
+                            .flatMap(driver -> {
+                                if (driver == null || StringUtils.isBlank(driver.getTaxId())) return Mono.just(tender);
+                                if (Boolean.compare(driver.fsu, request.getFsu())!=0) {
+                                    return Mono.error(new PnGenericException(DELIVERY_DRIVER_HAVE_DIFFERENT_ROLE, DELIVERY_DRIVER_HAVE_DIFFERENT_ROLE.getMessage()));
+                                }
+                                return Mono.just(tender);
+                            })
+                )
                 .map(tender -> {
+                    log.info("Gara recuperata");
                     PnDeliveryDriver driver = DeliveryDriverMapper.toEntity(request);
                     driver.setTenderCode(tenderCode);
                     return driver;
-                }).flatMap(entity -> this.deliveryDriverDAO.createOrUpdate(entity))
+                })
+                .flatMap(entity -> this.deliveryDriverDAO.createOrUpdate(entity))
                 .mapNotNull(entity -> null);
     }
 
     @Override
-    public Mono<Void> createOrUpdateCost(String tenderCode, String deliveryDriverCode, CostDTO request) {
+    public Mono<Void> createOrUpdateCost(String tenderCode, String taxId, CostDTO request) {
         if ((request.getCap() == null || request.getCap().isEmpty()) && request.getZone() == null){
             return Mono.error(new PnGenericException(COST_BADLY_CONTENT, COST_BADLY_CONTENT.getMessage()));
         }
 
-        return this.deliveryDriverDAO.getDeliveryDriver(tenderCode, deliveryDriverCode)
+        return this.deliveryDriverDAO.getDeliveryDriver(tenderCode, taxId)
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_DRIVER_NOT_EXISTED, DELIVERY_DRIVER_NOT_EXISTED.getMessage())))
                 .flatMap(driver -> {
-                    PnCost fromRequest = CostMapper.fromCostDTO(driver.getTenderCode(), driver.getUniqueCode(), request);
-                    String code = request.getCode();
+                    PnCost fromRequest = CostMapper.fromCostDTO(driver.getTenderCode(), driver.getTaxId(), request);
+                    fromRequest.setFsu(driver.getFsu());
+                    String code = request.getUid();
                     return this.costDAO.findAllFromTenderAndProductTypeAndExcludedUUID(tenderCode, fromRequest.getProductType(), code)
                             .zipWhen(listFromDB -> Mono.just(fromRequest));
                 })
