@@ -90,6 +90,12 @@ components:
           description: Il productType effettivo che da usare per l'invio
       allOf:
       - $ref: '#/components/schemas/PaperEvent'
+
+    # Questo è l'evento che viene ricevuto nella coda da delivery-push da cui vengono estratte le informazioni da aggiungere in timeline
+    # I punti in delivery-push in cui c'è una copia dei valori su cui porre l'attenzione quando si deciderà che informazioni salvare in timeline sono:
+    # - PaperChannelResponseHandler -> map da SendEvent a SendEventInt
+    # - AnalogWorkflowPaperChannelResponseHandler -> gestione in paperChannelSendResponseHandler e relativi sottometodi
+    # - TimelineUtils -> buildAnalogProgressTimelineElement, buildAnalogSuccessAttemptTimelineElement, buildAnalogFailureAttemptTimelineElement producono l'oggetto che viene effettivamente salvato in dynamo.
     SendEvent:
       type: object
       properties:
