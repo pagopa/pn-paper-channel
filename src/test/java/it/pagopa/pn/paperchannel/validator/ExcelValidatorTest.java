@@ -119,7 +119,7 @@ class ExcelValidatorTest {
         dataExcelWithoutRequiredField.put("FISCAL_CODE", new ExcelEngine.ExcelCell(1,1, ""));
         dataExcelWithoutRequiredField.put("TAX_ID", new ExcelEngine.ExcelCell(1,1, ""));
         dataExcelWithoutRequiredField.put("PHONE_NUMBER", new ExcelEngine.ExcelCell(1,1, ""));
-        dataExcelWithoutRequiredField.put("UNIQUE_CODE", new ExcelEngine.ExcelCell(1,1, "abc-23111"));
+        dataExcelWithoutRequiredField.put("UNIQUE_CODE", new ExcelEngine.ExcelCell(1,1, ""));
         dataExcelWithoutRequiredField.put("FSU", new ExcelEngine.ExcelCell(1,1, "false"));
         dataExcelWithoutRequiredField.put("CAP", new ExcelEngine.ExcelCell(1,1, ""));
         dataExcelWithoutRequiredField.put("ZONE", new ExcelEngine.ExcelCell(1,1, ""));
