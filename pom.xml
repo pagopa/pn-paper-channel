@@ -208,12 +208,14 @@
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <configuration>
+                    <!--
                     <excludes>
                         <exclude>it/pagopa/pn/paperchannel/rest/v1/api/*</exclude>
                         <exclude>it/pagopa/pn/paperchannel/rest/v1/api/**</exclude>
                         <exclude>it/pagopa/pn/paperchannel/rest/v1/dto/*</exclude>
                         <exclude>it/pagopa/pn/paperchannel/rest/v1/dto/**</exclude>
                     </excludes>
+                    -->
                 </configuration>
             </plugin>
             <plugin>
