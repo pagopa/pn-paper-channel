@@ -1,4 +1,4 @@
-tail -n +1 caps.csv | parallel --pipe -N25 'head -c -1 | jq --slurp --raw-input "{ \"pn-PaperCap\": split(\"\n\") | map(split(\",\")) |
+tail -n +2 caps.csv | parallel --pipe -N25 'head -c -1 | jq --slurp --raw-input "{ \"pn-PaperCap\": split(\"\n\") | map(split(\",\")) |
     map(
 		{
 			\"PutRequest\": {
@@ -17,5 +17,9 @@ tail -n +1 caps.csv | parallel --pipe -N25 'head -c -1 | jq --slurp --raw-input 
 		}
 	)
 } 
-" >split_caps_{#}.json; aws dynamodb batch-write-item   --profile $PROFILE --region $REGION  --endpoint-url=$ENDPOINT --request-items file://split_caps_{#}.json'
-rm -f split_caps_*.json
+" >split_caps_{#}.json'
+for f in $(find . -maxdepth 1 -name "split_caps_*.json" -type f); do 
+	sleep 3
+	aws dynamodb batch-write-item   --profile $PROFILE --region $REGION  --endpoint-url=$ENDPOINT --request-items file://$f;
+done
+# rm -f split_caps_*.json
