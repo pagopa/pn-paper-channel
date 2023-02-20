@@ -26,6 +26,7 @@ public class PnExcelValidatorException extends RuntimeException{
     public static class ErrorCell {
         private Integer row;
         private Integer col;
+        private String colName;
         private String message;
     }
 

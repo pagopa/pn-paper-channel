@@ -73,7 +73,7 @@ public class Utility {
                     int high = Integer.parseInt(range[1]);
                     if (low < high) {
                         log.info("Trovato cap in questo range " + item);
-                        for (int i = low; i < high; i++){
+                        for (int i = low; i <= high; i++){
                             String capFormatted = addZero(i);
                             capsFinded.add(capFormatted);
                         }

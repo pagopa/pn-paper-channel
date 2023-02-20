@@ -15,9 +15,10 @@ public class Const {
     public static final String capRegex = "(\\d{5})?+";
     public static final String zoneRegex = "^ZONE_[1-9]$";
     public static final String taxIdRegex = "^[0-9]{11}$";
+    public static final String pecRegex = "^(?=.{1,64}@)[A-Za-z0-9_-]+(\\\\.[A-Za-z0-9_-]+)*@[^-][A-Za-z0-9-]+(\\\\.[A-Za-z0-9-]+)*(\\\\.[A-Za-z]{2,})$";
     public static final String uniqueCodeRegex = "^[A-Za-z0-9~\\-_]{7}$";
     public static final String phoneNumberRegex = "^[\\+]?[(]?[0-9]{1,3}[)]?[!@#$%&]{0,}[-\\s\\.]?[0-9]{3}[-\\s\\.]?[0-9]{3,7}$";
-    public static final String fiscalCodeRegex = "^[a-zA-Z0-9-]+$";
+    public static final String fiscalCodeRegex = "^([A-Z]{6}[0-9LMNPQRSTUV]{2}[ABCDEHLMPRST]{1}[0-9LMNPQRSTUV]{2}[A-Z]{1}[0-9LMNPQRSTUV]{3}[A-Z]{1})$";
     public static final Integer maxElements = 10;
 
     public static final String EXECUTION = "EXECUTION";
