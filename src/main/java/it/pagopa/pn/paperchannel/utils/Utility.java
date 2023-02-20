@@ -25,8 +25,7 @@ public class Utility {
             return null;
         }
 
-        String stringHash = DigestUtils.sha256Hex(string);
-        return stringHash;
+        return DigestUtils.sha256Hex(string);
     }
 
     public static <T> T jsonToObject(ObjectMapper objectMapper, String json, Class<T> tClass){
@@ -41,9 +40,7 @@ public class Utility {
 
     public static boolean isValidFromRegex(String value, String regex){
         boolean check = false;
-        if (StringUtils.isEmpty(value)) {
-            check = false;
-        } else {
+        if (!StringUtils.isEmpty(value)) {
             value = value.replace(".", "");
             value = value.replace(",", "");
             value = value.replace("'", "");
@@ -55,25 +52,25 @@ public class Utility {
     }
 
     public static boolean isValidCapFromRegex(String value, String regex){
-        if (StringUtils.isNotEmpty(value) && value.contains(".")) value = value.substring(0, value.indexOf("."));
         return isValidFromRegex(value, regex);
     }
 
     public static List<String> isValidCap(String capList) {
         String regex = Const.capRegex;
         List<String> capsFinded = new ArrayList<>();
-        boolean check = false;
         String[] cap = capList.split(",");
         if (cap != null && cap.length > 0) {
             for (String item : cap) {
+                item = item.trim();
+                if (StringUtils.isNotEmpty(item) && item.contains(".")) item = item.substring(0, item.indexOf("."));
                 if (item.contains("-")) {
                     String[] range = item.trim().split("-");
-                    int low = Integer.parseInt(range[0]);
-                    int high = Integer.parseInt(range[1]);
                     if (!isValidCapFromRegex(range[0],regex) || !isValidCapFromRegex(range[1],regex)) {
                         log.info("Il cap non è conforme agli standard previsti.");
                         return null;
                     }
+                    int low = Integer.parseInt(range[0]);
+                    int high = Integer.parseInt(range[1]);
                     if (low < high) {
                         log.info("Trovato cap in questo range " + item);
                         for (int i = low; i < high; i++){
@@ -85,43 +82,24 @@ public class Utility {
                         return null;
                     }
                 } else {
-                    String cap_formatted;
-                    cap_formatted = item.replace(".0", "");
-                    if (cap_formatted.length() < 5) {
-                        int n_cap = Integer.parseInt(cap_formatted);
-                        cap_formatted = addZero(n_cap);
-                        check = isValidCapFromRegex(cap_formatted,regex);
-                        if (check){
-                            capsFinded.add(cap_formatted);
-                        }
-                    }
-                    else {
-                        check = isValidCapFromRegex(cap_formatted, regex);
-                        if (check) {
-                            capsFinded.add(cap_formatted);
-                        }
-                    }
-                    if (!check) return null;
+                    if (!isValidCapFromRegex(item, regex)) return null;
+                    capsFinded.add(item);
                 }
             }
             Set<String> findedEquals = new HashSet<>(capsFinded);
-            findedEquals.addAll(capsFinded);
-            if (findedEquals.size() == capsFinded.size()){
-                log.info("Non è stato trovato alcun cap duplicato.");
-                return capsFinded;
-            }
-            else{
+            if (findedEquals.size() < capsFinded.size()) {
                 log.info("Trovato cap duplicato.");
                 return null;
             }
-        } else {
-            check = isValidCapFromRegex(capList,regex);
+            log.info("Non è stato trovato alcun cap duplicato.");
+            return capsFinded;
+
         }
-        return capsFinded;
+
+        return (isValidCapFromRegex(capList, regex)) ? List.of(capList.trim()) : null ;
     }
 
     public static String addZero (int i){
-        String str = String.format("%05d", i);
-        return str;
+        return String.format("%05d", i);
     }
 }

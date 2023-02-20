@@ -178,10 +178,18 @@ public class ExcelEngine {
                 field.setAccessible(true);
                 Cell cell = row.createCell(cellNum++);
                 Object value = field.get(element);
+
                 if (value instanceof List<?>) {
-                    cell.setCellValue(StringUtils.join(value, ','));
+                    String cellValue = StringUtils.join(value, ',');
+                    log.info(cellValue);
+                    cellValue = cellValue.replace("[", "");
+                    cellValue = cellValue.replace("]", "");
+                    log.info(cellValue);
+                    cell.setCellValue(cellValue);
+                } else {
+                    cell.setCellValue(value != null ? value.toString() : "");
                 }
-                cell.setCellValue(value != null ? value.toString() : "");
+                
                 cell.setCellStyle(getBodyCellStyle());
             } catch (IllegalAccessException e) {
                 throw new PnGenericException(ExceptionTypeEnum.DATA_NULL_OR_INVALID,"Invalid access to field in mapping excel column name");
