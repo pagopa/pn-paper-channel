@@ -44,6 +44,7 @@ public class ExcelModelMapper {
                     return ;
                 }
                 DeliveryAndCost model = new DeliveryAndCost();
+                model.setTaxId(driver.getTaxId());
                 model.setUniqueCode(driver.getUniqueCode());
                 model.setDenomination(driver.getDenomination());
                 model.setFsu(driver.getFsu());
