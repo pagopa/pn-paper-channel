@@ -2,6 +2,8 @@ package it.pagopa.pn.paperchannel.mapper;
 
 import it.pagopa.pn.paperchannel.dao.model.DeliveriesData;
 import it.pagopa.pn.paperchannel.dao.model.DeliveryAndCost;
+import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
+import it.pagopa.pn.paperchannel.exception.PnExcelValidatorException;
 import it.pagopa.pn.paperchannel.mapper.common.BaseMapper;
 import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnCost;
@@ -9,7 +11,9 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryDriver;
 import it.pagopa.pn.paperchannel.model.PageModel;
 import it.pagopa.pn.paperchannel.rest.v1.dto.DeliveryDriverDTO;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PageableDeliveryDriverResponseDto;
+import it.pagopa.pn.paperchannel.rest.v1.dto.ProductTypeEnum;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Pageable;
 
 import java.util.*;
@@ -30,60 +34,76 @@ public class DeliveryDriverMapper {
         return mapperDeliveryDriverToDto.toEntity(dto);
     }
 
-    public static Map<PnDeliveryDriver, List<PnCost>> toEntityFromExcel(DeliveriesData deliveriesData, String tenderCode){
-        Set<DeliveryAndCost> costSet = new HashSet<>(deliveriesData.getDeliveriesAndCosts());
-        log.info("COST SET SIZE : {}", costSet.size() );
-        Map<PnDeliveryDriver, List<PnCost>> map = new HashMap<>();
-        return map;
-        /*
-        Map<PnDeliveryDriver, Map<ProductTypeEnum, PnCost>> map = new HashMap<>();
+    public static Map<PnDeliveryDriver, List<PnCost>> toEntityFromExcel(DeliveriesData deliveriesData,
+                                                                        String tenderCode){
+        //Set<DeliveryAndCost> costSet = new HashSet<>(deliveriesData.getDeliveriesAndCosts());
+        //log.info("COST SET SIZE : {}", costSet.size() );
+
+        Map<PnDeliveryDriver, List<PnCost>> result = new  HashMap<PnDeliveryDriver, List<PnCost>>();
+
         deliveriesData.getDeliveriesAndCosts().forEach(deliveryAndCost -> {
+            //Create single pnDeliveryDriver
             PnDeliveryDriver driver = new PnDeliveryDriver();
             driver.setUniqueCode(deliveryAndCost.getUniqueCode());
-            if(!map.containsKey(driver)){
-                driver = mapperDeliveryCost.toEntity(deliveryAndCost);
-                driver.setUniqueCode(deliveryAndCost.getUniqueCode());
-                driver.setTenderCode(tenderCode);
-                map.put(driver, new HashMap<>());
-            }
-            Map<ProductTypeEnum, PnCost> costMap = map.get(driver);
-            ProductTypeEnum productType = getCorrectProductType(deliveryAndCost);
+            driver.setDenomination(deliveryAndCost.getDenomination());
+            driver.setBusinessName(deliveryAndCost.getBusinessName());
+            driver.setRegisteredOffice(deliveryAndCost.getRegisteredOffice());
+            driver.setPec(deliveryAndCost.getPec());
+            driver.setFiscalCode(deliveryAndCost.getFiscalCode());
+            driver.setTaxId(deliveryAndCost.getTaxId());
+            driver.setPhoneNumber(deliveryAndCost.getPhoneNumber());
+            driver.setUniqueCode(deliveryAndCost.getUniqueCode());
+            driver.setFsu(deliveryAndCost.getFsu());
 
-            if (costMap.containsKey(productType)){
+            //Create cost object
+            PnCost pnCost = new PnCost();
+            pnCost.setZone(deliveryAndCost.getZone());
+            pnCost.setProductType(deliveryAndCost.getProductType());
+            pnCost.setBasePrice(deliveryAndCost.getBasePrice());
+            pnCost.setPagePrice(deliveryAndCost.getPagePrice());
+            List <String> capList = deliveryAndCost.getCaps();
+            pnCost.setCap(capList);
 
-            }
-
-
-            if (StringUtils.isNotBlank(deliveryAndCost.getCap())){
-                if (deliveryAndCost.getCap().contains(",")) {
-                    List<String> capsWithRange = Arrays.stream(deliveryAndCost.getCap().split(",")).toList();
-                    for (String cap : caps) {
-                        if (cap.contains("-")) {
-                            List<String> capRange = Arrays.stream(cap.split("-")).toList();
-                            int first = Integer.parseInt(capRange.get(0));
-                            int last = Integer.parseInt(capRange.get(1));
-                            for (int i = first; i <= last; i++) {
-                                PnCost newCost = getCost(driver, tenderCode, i+ "", deliveryAndCost);
-                                costList.add(newCost);
-                            }
-                        } else {
-                            PnCost newCost = getCost(driver, tenderCode, cap, deliveryAndCost);
-                            costList.add(newCost);
-                        }
-                    }
-                } else{
-                    PnCost newCost = getCost(driver, tenderCode, deliveryAndCost.getCap(), deliveryAndCost);
-                    costList.add(newCost);
-                }
+            if( result.containsKey(driver)){
+                List <PnCost> costs = result.get(driver);
+                costs.add(pnCost);
+                //Check unique ProductType
+                checkUniqueProductType( costs);
+                result.put(driver, costs);
             }
             else{
-                PnCost singleCost = getCost(driver, tenderCode, null, deliveryAndCost);
-                costList.add(singleCost);
+                List <PnCost> costs = new ArrayList<PnCost>();
+                costs.add(pnCost);
+                //Check unique ProductType
+                checkUniqueProductType( costs);
+                result.put(driver, costs);
             }
+
         });
-        return map;
-         */
+
+        //Check unique taxId
+        Set<PnDeliveryDriver> driver = new HashSet<>(result.keySet());
+        checkUniqueTaxId(driver);
+
+        return result;
+
     }
+
+    public static void  checkUniqueTaxId(Set<PnDeliveryDriver> driver ) throws PnExcelValidatorException {
+       Set<String> taxIds = new HashSet<String>();
+        driver.forEach(elem ->{
+            taxIds.add(elem.getTaxId());
+        });
+        if (taxIds.size()!=driver.size()) throw new PnExcelValidatorException(ExceptionTypeEnum.DATA_NULL_OR_INVALID, null);
+    }
+    public static void   checkUniqueProductType(List<PnCost> cost ) throws PnExcelValidatorException {
+        Set<String> productType = new HashSet<String>();
+        cost.forEach(elem ->{
+            productType.add(elem.getProductType());
+        });
+        if (productType.size()!=cost.size()) throw new PnExcelValidatorException(ExceptionTypeEnum.DATA_NULL_OR_INVALID, null);
+    }
+
     public static PageableDeliveryDriverResponseDto toPageableResponse(PageModel<PnDeliveryDriver> pagePnPaperDeliveryDriver) {
         PageableDeliveryDriverResponseDto pageableDeliveryDriverResponseDto = new PageableDeliveryDriverResponseDto();
         pageableDeliveryDriverResponseDto.setPageable(pagePnPaperDeliveryDriver.getPageable());
