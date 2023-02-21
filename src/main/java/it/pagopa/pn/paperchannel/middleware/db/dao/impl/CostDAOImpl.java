@@ -45,7 +45,7 @@ public class CostDAOImpl extends BaseDAO<PnCost> implements CostDAO {
     }
 
     @Override
-    public Mono<List<PnCost>> findAllFromTenderAndProductTypeAndExcludedUUID(String tenderCode, String productType, String uuidExclude) {
+    public Flux<PnCost> findAllFromTenderAndProductTypeAndExcludedUUID(String tenderCode, String productType, String uuidExclude) {
         QueryConditional conditional = CONDITION_EQUAL_TO.apply(keyBuild(tenderCode, null));
         String filter = "";
         Map<String,AttributeValue> values = new HashMap<>();
@@ -59,7 +59,7 @@ public class CostDAOImpl extends BaseDAO<PnCost> implements CostDAO {
             values.put(":uuidCost", AttributeValue.builder().s(uuidExclude).build());
         }
         log.info(filter);
-        return this.getByFilter(conditional, PnCost.TENDER_INDEX, values, filter).collectList();
+        return this.getByFilter(conditional, PnCost.TENDER_INDEX, values, filter);
     }
 
     @Override

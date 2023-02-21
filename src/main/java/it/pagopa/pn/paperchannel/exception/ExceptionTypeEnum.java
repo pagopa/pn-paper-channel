@@ -36,6 +36,9 @@ public enum ExceptionTypeEnum{
     COST_BADLY_CONTENT("COST_BADLY_CONTENT", "Informazioni errate per il costo"),
     COST_DRIVER_OR_FSU_NOT_FOUND("COST_DRIVER_OR_FSU_NOT_FOUND", "Il costo per il seguente prodotto non è presente tra i recapitisti e nel FSU"),
     FILE_REQUEST_ASYNC_NOT_FOUND("FILE_REQUEST_ASYNC_NOT_FOUND", "File non trovato, flusso asincrono"),
+    TENDER_CANNOT_BE_DELETED("TENDER_CANNOT_BE_DELETED", "La gara non può essere eliminata."),
+    DRIVER_CANNOT_BE_DELETED("DRIVER_CANNOT_BE_DELETED", "Il recapitista non può essere eliminato, appartiene ad una gara convalidata."),
+    COST_CANNOT_BE_DELETED("COST_CANNOT_BE_DELETED", "Il costo non può essere eliminato, appartiene ad una gara convalidata."),
     DATA_VAULT_ENCRYPTION_ERROR("DATA_VAULT_ENCRYPTION_ERROR", "Servizio irraggiungibile od errore in fase di criptazione"),
     CONSOLIDATE_ERROR("CONSOLIDATE_ERROR", "La Gara è già in stato consolidato");
 

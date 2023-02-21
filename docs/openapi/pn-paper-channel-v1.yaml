@@ -651,7 +651,7 @@ components:
       enum:
         - "AR"
         - '890'
-        - "SEMPLICE"
+        - "RS"
 
     InternationalZoneEnum:
       type: string
@@ -733,7 +733,7 @@ components:
           format: date
         status:
           type: string
-          enum: [CREATED, IN_PROGRESS, ENDED]
+          enum: [CREATED, VALIDATED, IN_PROGRESS, ENDED]
       required:
         - code
         - name
@@ -940,7 +940,7 @@ components:
           type: string
           enum:
           - CREATED
-          - IN_PROGRESS
+          - VALIDATED
 
 
   responses:

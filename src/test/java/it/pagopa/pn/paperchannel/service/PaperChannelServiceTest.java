@@ -3,6 +3,7 @@ package it.pagopa.pn.paperchannel.service;
 import it.pagopa.pn.paperchannel.config.BaseTest;
 import it.pagopa.pn.paperchannel.dao.ExcelDAO;
 import it.pagopa.pn.paperchannel.dao.model.DeliveriesData;
+import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.DeliveryDriverDAO;
@@ -10,17 +11,17 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.FileDownloadDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.TenderDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnCost;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryDriver;
-import it.pagopa.pn.paperchannel.rest.v1.dto.CostDTO;
-import it.pagopa.pn.paperchannel.rest.v1.dto.InternationalZoneEnum;
-import it.pagopa.pn.paperchannel.rest.v1.dto.ProductTypeEnumDto;
+import it.pagopa.pn.paperchannel.rest.v1.dto.*;
 import it.pagopa.pn.paperchannel.s3.S3Bucket;
 import it.pagopa.pn.paperchannel.service.impl.PaperChannelServiceImpl;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -70,7 +71,11 @@ class PaperChannelServiceTest extends BaseTest {
                 this.paperChannelService.createOrUpdateCost(
                         "TENDER", "Delivery", costWithoutCapAndZone
                 )
-        ).expectError(PnGenericException.class).verify();
+        ).expectErrorMatches((ex) -> {
+            Assertions.assertTrue(ex instanceof PnGenericException);
+            Assertions.assertEquals(ExceptionTypeEnum.COST_BADLY_CONTENT, ((PnGenericException) ex).getExceptionType());
+            return false;
+        }).verify();
 
         //TEST CASE DRIVER NOT EXIST
         StepVerifier.create(
@@ -78,6 +83,15 @@ class PaperChannelServiceTest extends BaseTest {
                         TENDER_CODE_WITHOUT_DRIVER, DRIVER_CODE_WITHOUT_DRIVER, costNational
                 )
         ).expectError(PnGenericException.class).verify();
+
+        FSUResponseDTO result = new FSUResponseDTO();
+
+        FSUResponseDTO response = this.paperChannelService.getDetailsFSU(
+                TENDER_CODE_WITHOUT_DRIVER
+        ).block();
+
+        Assertions.assertNotNull(response);
+        Assertions.assertEquals(TENDER_CODE_WITHOUT_DRIVER, response.getFsu().getFiscalCode());
 
         //TEST CASE CREATE COST INTERNATIONAL
         PnCost firstCost = new PnCost();
@@ -162,13 +176,13 @@ class PaperChannelServiceTest extends BaseTest {
             this.costDAO.findAllFromTenderAndProductTypeAndExcludedUUID(
                     TENDER_CODE_WITH_DRIVER, ProductTypeEnumDto._890.getValue(), null
             )
-        ).thenReturn(Mono.empty());
+        ).thenReturn(Flux.empty());
 
         Mockito.when(
                 this.costDAO.findAllFromTenderAndProductTypeAndExcludedUUID(
                         TENDER_CODE_WITH_DRIVER, ProductTypeEnumDto.AR.getValue(), null
                 )
-        ).thenReturn(Mono.just(this.costs));
+        ).thenReturn( Flux.fromStream(this.costs.stream()));
     }
 
 }
