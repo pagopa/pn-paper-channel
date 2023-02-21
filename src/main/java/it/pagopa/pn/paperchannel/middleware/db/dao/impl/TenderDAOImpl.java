@@ -109,4 +109,7 @@ public class TenderDAOImpl extends BaseDAO<PnTender> implements TenderDAO {
 
         return Mono.fromFuture(putWithTransact(transactWriterInitializer.build()).thenApply(item -> tender));
     }
+    public Mono<PnTender> deleteTender(String tenderCode){
+        return Mono.fromFuture(this.delete(tenderCode, null).thenApply(item -> item));
+    }
 }

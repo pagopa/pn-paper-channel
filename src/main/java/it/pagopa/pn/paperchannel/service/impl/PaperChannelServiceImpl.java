@@ -324,5 +324,31 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                 });
     }
 
+    @Override
+    public Mono<Void> deleteTender(String tenderCode) {
+        return this.deliveryDriverDAO.getDeliveryDriverFromTender(tenderCode,null)
+                .delayElements(Duration.ofMillis(10))
+                .flatMap(driver -> this.deleteDriver(driver.getTenderCode(), driver.getTaxId()))
+                .collectList()
+                .flatMap(items -> this.tenderDAO.deleteTender(tenderCode))
+                .flatMap(item -> Mono.empty());
+    }
+
+    @Override
+    public Mono<Void> deleteDriver(String tenderCode, String deliveryDriverId) {
+        return this.costDAO.findAllFromTenderCode(tenderCode,deliveryDriverId)
+                .delayElements(Duration.ofMillis(10))
+                .flatMap(cost -> this.costDAO.deleteCost(cost.getDeliveryDriverCode(),cost.getUuid()))
+                .collectList()
+                .flatMap(costs -> this.deliveryDriverDAO.deleteDeliveryDriver(tenderCode,deliveryDriverId))
+                .flatMap(driver -> Mono.empty());
+    }
+
+    @Override
+    public Mono<Void> deleteCost(String tenderCode, String deliveryDriverId, String uuid) {
+        return this.costDAO.deleteCost(deliveryDriverId,uuid)
+                .flatMap(cost -> Mono.empty());
+    }
+
 
 }

@@ -4,6 +4,7 @@ import it.pagopa.pn.paperchannel.config.AwsPropertiesConfig;
 import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.BaseDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnCost;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryDriver;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Repository;
@@ -95,5 +96,9 @@ public class CostDAOImpl extends BaseDAO<PnCost> implements CostDAO {
                     }
                     return Mono.just(items.get(0));
                 });
+    }
+
+    public Mono<PnCost> deleteCost(String deliveryDriverCode, String uuid){
+        return Mono.fromFuture(this.delete(deliveryDriverCode, uuid).thenApply(item -> item));
     }
 }

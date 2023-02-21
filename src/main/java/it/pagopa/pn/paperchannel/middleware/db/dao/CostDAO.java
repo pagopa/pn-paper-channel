@@ -27,4 +27,5 @@ public interface CostDAO {
     Mono<List<PnCost>> findAllFromTenderAndProductTypeAndExcludedUUID(String tenderCode, String productType, String uuidExclude);
 
     Mono<PnCost> createOrUpdate(PnCost entities);
+    Mono<PnCost> deleteCost(String deliveryDriverCode, String uuid);
 }

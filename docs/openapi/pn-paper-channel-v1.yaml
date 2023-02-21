@@ -285,6 +285,18 @@ paths:
           $ref: '#/components/responses/NotAllowed'
         '500':
           $ref: '#/components/responses/InternalError'
+    delete:
+      tags:
+        - DeliveryDriver
+      operationId: deleteTender
+      summary: Eliminazione gara.
+      description: API che consente di eliminare i dettagli di una gara.
+      parameters:
+        - $ref: '#/components/parameters/pathTenderCode'
+      responses:
+        '200':
+          description: Eliminazione gara effettuata
+
 
   /paper-channel-bo/v1/delivery-driver/{tenderCode}:
     post:
@@ -361,6 +373,9 @@ paths:
           $ref: '#/components/responses/NotAllowed'
         '500':
           $ref: '#/components/responses/InternalError'
+
+
+  /paper-channel-bo/v1/{tenderCode}/delivery-driver/{deliveryDriverId}/cost/{uuid}:
     delete:
       tags:
         - DeliveryDriver
@@ -370,6 +385,8 @@ paths:
       parameters:
         - $ref: '#/components/parameters/pathTenderCode'
         - $ref: '#/components/parameters/pathDeliveryDriverId'
+        - $ref: '#/components/parameters/pathCostUuid'
+
       responses:
         '200':
           description: Eliminazione costo legato al deliveryDriver effettuata.
@@ -990,6 +1007,13 @@ components:
 
     pathDeliveryDriverId:
       name: deliveryDriverId
+      in: path
+      required: true
+      schema:
+        type: string
+
+    pathCostUuid:
+      name: uuid
       in: path
       required: true
       schema:

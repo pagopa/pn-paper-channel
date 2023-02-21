@@ -13,5 +13,6 @@ public interface DeliveryDriverDAO {
     Mono<PnDeliveryDriver> getDeliveryDriver(String tenderCode, String taxId);
 
     Mono<PnDeliveryDriver> createOrUpdate(PnDeliveryDriver data);
+    Mono<PnDeliveryDriver> deleteDeliveryDriver(String tenderCode, String taxId);
 
 }

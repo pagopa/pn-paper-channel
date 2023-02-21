@@ -78,4 +78,8 @@ public class DeliveryDriverDAOImpl extends BaseDAO<PnDeliveryDriver> implements 
         data.setStartDate(Instant.now());
         return Mono.fromFuture(this.put(data).thenApply(i -> data));
     }
+
+    public Mono<PnDeliveryDriver> deleteDeliveryDriver(String tenderCode, String taxId){
+        return Mono.fromFuture(this.delete(tenderCode, taxId).thenApply(item -> item));
+    }
 }

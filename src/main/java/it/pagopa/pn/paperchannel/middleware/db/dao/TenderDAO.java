@@ -3,6 +3,8 @@ package it.pagopa.pn.paperchannel.middleware.db.dao;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnCost;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryDriver;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnTender;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
@@ -18,4 +20,5 @@ public interface TenderDAO {
     Mono<PnTender> createOrUpdate(PnTender tender);
     Mono<PnTender> createNewContract(Map<PnDeliveryDriver, List<PnCost>> deliveriesAndCost, PnTender tender);
 
+    Mono<PnTender> deleteTender(String tenderCode);
 }
