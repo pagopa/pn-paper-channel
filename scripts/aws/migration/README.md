@@ -1,29 +1,29 @@
 
-Installare jq e parallel per l'esecuzione dello script:
+Installare jq per l'esecuzione dello script:
 
 ```
-sudo apt install jq parallel
+## Su Debian-like OS
+sudo apt install jq
 ```  
 
-Per caricare i dati in DEV:
+Per caricare i dati in un ambiente:
 
 ```
-export PROFILE="dev"  
-export REGION="eu-south-1"  
-export ENDPOINT="http://dynamodb.eu-south-1.amazonaws.com"  
-./load-caps.sh  
-./load-zones.sh
+./load-caps.sh [-p ${PROFILE}] -r ${REGION} -f ${FILE_PATH}
+./load-zones.sh [-p ${PROFILE}] -r ${REGION} -f ${FILE_PATH}
 ```  
 
-Per caricare i dati su localstack:
-
+Esempio DEV: 
 ```
-export PROFILE="default"  
-export REGION="us-east-1"  
-export ENDPOINT="http://localstack:4566"  
-./load-caps.sh  
-./load-zones.sh
-```  
+./load-caps.sh -p profilo_dev_core -r eu-south-1 -f ./caps.csv
+./load-zones.sh -p profilo_dev_core -r eu-south-1 -f ./zones.csv
+``` 
+
+Esempio Localstack: 
+```
+./load-caps.sh -r us-east-1 -f ./caps.csv
+./load-zones.sh -r us-east-1 -f ./zones.csv
+``` 
 
 Utilizzare il comando seguente per convertire il file dei CAP da una struttura flat (in cui più città possono avere lo stesso CAP) alla struttura per il caricamento (città raggruppate per CAP)
 
