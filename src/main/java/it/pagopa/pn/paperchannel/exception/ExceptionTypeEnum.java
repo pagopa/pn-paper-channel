@@ -34,8 +34,13 @@ public enum ExceptionTypeEnum{
     DELIVERY_DRIVER_HAVE_DIFFERENT_ROLE("DELIVERY_DRIVER_HAVE_DIFFERENT_ROLE", "Il recapitisca con questa partita iva è già presente con ruolo differente"),
     COST_ALREADY_EXIST("COST_ALREADY_EXIST", "Il costo è già presente tra i recapitisti."),
     COST_BADLY_CONTENT("COST_BADLY_CONTENT", "Informazioni errate per il costo"),
+    COST_DRIVER_OR_FSU_NOT_FOUND("COST_DRIVER_OR_FSU_NOT_FOUND", "Il costo per il seguente prodotto non è presente tra i recapitisti e nel FSU"),
     FILE_REQUEST_ASYNC_NOT_FOUND("FILE_REQUEST_ASYNC_NOT_FOUND", "File non trovato, flusso asincrono"),
-    DATA_VAULT_ENCRYPTION_ERROR("DATA_VAULT_ENCRYPTION_ERROR", "Servizio irraggiungibile od errore in fase di criptazione");
+    TENDER_CANNOT_BE_DELETED("TENDER_CANNOT_BE_DELETED", "La gara non può essere eliminata."),
+    DRIVER_CANNOT_BE_DELETED("DRIVER_CANNOT_BE_DELETED", "Il recapitista non può essere eliminato, appartiene ad una gara convalidata."),
+    COST_CANNOT_BE_DELETED("COST_CANNOT_BE_DELETED", "Il costo non può essere eliminato, appartiene ad una gara convalidata."),
+    DATA_VAULT_ENCRYPTION_ERROR("DATA_VAULT_ENCRYPTION_ERROR", "Servizio irraggiungibile od errore in fase di criptazione"),
+    CONSOLIDATE_ERROR("CONSOLIDATE_ERROR", "La Gara è già in stato consolidato");
 
     private final String title;
     private final String message;

@@ -8,6 +8,8 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.common.TransactWriterInitiali
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnCost;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryDriver;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnTender;
+import it.pagopa.pn.paperchannel.rest.v1.dto.Status;
+import it.pagopa.pn.paperchannel.rest.v1.dto.TenderDTO;
 import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +25,7 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 import java.time.Instant;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -108,5 +111,36 @@ public class TenderDAOImpl extends BaseDAO<PnTender> implements TenderDAO {
         });
 
         return Mono.fromFuture(putWithTransact(transactWriterInitializer.build()).thenApply(item -> tender));
+    }
+    public Mono<PnTender> deleteTender(String tenderCode){
+        return Mono.fromFuture(this.delete(tenderCode, null).thenApply(item -> item));
+    }
+
+    @Override
+    public Mono<PnTender> getConsolidate(Date startDate, Date endDate) {
+
+        Pair<Instant, Instant> startAndEndTimestamp = DateUtils.getStartAndEndTimestamp(startDate, endDate);
+
+        QueryConditional conditional = CONDITION_BETWEEN.apply(
+                new Keys(keyBuild(Const.PN_PAPER_CHANNEL, startAndEndTimestamp.getFirst().toString()),
+                        keyBuild(Const.PN_PAPER_CHANNEL, startAndEndTimestamp.getSecond().toString()) )
+        );
+
+        String filter = PnTender.COL_STATUS + " = :consolidateStatus AND "
+                + PnTender.COL_START_DATE + " <= :startDate AND " + PnTender.COL_END_DATE + " >= :endDate";
+
+        Map<String, AttributeValue> values = new HashMap<>();
+        values.put(":consolidateStatus", AttributeValue.builder().s(TenderDTO.StatusEnum.IN_PROGRESS.getValue()).build());
+        values.put(":startDate", AttributeValue.builder().s(startDate.toString()).build());
+        values.put(":endDate", AttributeValue.builder().s(endDate.toString()).build());
+
+        return this.getByFilter(conditional, PnTender.AUTHOR_INDEX, values, filter)
+                .collectList()
+                .flatMap(list -> {
+                    if (list == null || list.isEmpty()){
+                        return Mono.empty();
+                    }
+                    return Mono.just(list.get(0));
+                });
     }
 }

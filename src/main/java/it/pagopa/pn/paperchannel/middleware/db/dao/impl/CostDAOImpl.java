@@ -4,6 +4,7 @@ import it.pagopa.pn.paperchannel.config.AwsPropertiesConfig;
 import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.BaseDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnCost;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryDriver;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Repository;
@@ -44,7 +45,7 @@ public class CostDAOImpl extends BaseDAO<PnCost> implements CostDAO {
     }
 
     @Override
-    public Mono<List<PnCost>> findAllFromTenderAndProductTypeAndExcludedUUID(String tenderCode, String productType, String uuidExclude) {
+    public Flux<PnCost> findAllFromTenderAndProductTypeAndExcludedUUID(String tenderCode, String productType, String uuidExclude) {
         QueryConditional conditional = CONDITION_EQUAL_TO.apply(keyBuild(tenderCode, null));
         String filter = "";
         Map<String,AttributeValue> values = new HashMap<>();
@@ -58,7 +59,7 @@ public class CostDAOImpl extends BaseDAO<PnCost> implements CostDAO {
             values.put(":uuidCost", AttributeValue.builder().s(uuidExclude).build());
         }
         log.info(filter);
-        return this.getByFilter(conditional, PnCost.TENDER_INDEX, values, filter).collectList();
+        return this.getByFilter(conditional, PnCost.TENDER_INDEX, values, filter);
     }
 
     @Override
@@ -74,8 +75,9 @@ public class CostDAOImpl extends BaseDAO<PnCost> implements CostDAO {
         values.put(":productType", AttributeValue.builder().s(productType).build());
 
         if (StringUtils.isNotBlank(cap)){
-            filterExpression += " AND contains(" + PnCost.COL_CAP + ", :cap) ";
+            filterExpression += " AND (contains(" + PnCost.COL_CAP + ", :cap) OR contains("+ PnCost.COL_CAP + ", :defaultCap))";
             values.put(":cap", AttributeValue.builder().s(cap).build());
+            values.put(":defaultCap", AttributeValue.builder().s("99999").build());
         } else {
             filterExpression += " AND :zoneAttr = " + PnCost.COL_ZONE;
             values.put(":zoneAttr", AttributeValue.builder().s(zone).build());
@@ -88,7 +90,15 @@ public class CostDAOImpl extends BaseDAO<PnCost> implements CostDAO {
                     if (items.isEmpty()) {
                         return Mono.empty();
                     }
+                    List<PnCost> driverCost = items.stream().filter(cost -> !cost.getFsu()).toList();
+                    if (!driverCost.isEmpty()){
+                        return Mono.just(driverCost.get(0));
+                    }
                     return Mono.just(items.get(0));
                 });
+    }
+
+    public Mono<PnCost> deleteCost(String deliveryDriverCode, String uuid){
+        return Mono.fromFuture(this.delete(deliveryDriverCode, uuid).thenApply(item -> item));
     }
 }

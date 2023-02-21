@@ -69,6 +69,14 @@ public abstract class BaseDAO<T> {
         return dynamoTable.putItem(putRequest).thenApply(x -> entity);
     }
 
+    protected CompletableFuture<T> delete(String partitionKey, String sortKey){
+        Key.Builder keyBuilder = Key.builder().partitionValue(partitionKey);
+        if (!StringUtils.isBlank(sortKey)){
+            keyBuilder.sortValue(sortKey);
+        }
+        return dynamoTable.deleteItem(keyBuilder.build());
+    }
+
     protected CompletableFuture<Void> putWithTransact(TransactWriteItemsEnhancedRequest transactRequest){
         return dynamoDbEnhancedAsyncClient.transactWriteItems(transactRequest).thenApply(item -> null);
     }

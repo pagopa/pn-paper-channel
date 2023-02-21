@@ -18,6 +18,7 @@ import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.rest.v1.dto.*;
 import it.pagopa.pn.paperchannel.service.PaperMessagesService;
+import it.pagopa.pn.paperchannel.service.PaperTenderService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
 import it.pagopa.pn.paperchannel.utils.Const;
@@ -50,6 +51,9 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
     private ExternalChannelClient externalChannelClient;
     @Autowired
     private PnPaperChannelConfig pnPaperChannelConfig;
+
+    @Autowired
+    private PaperTenderService paperTenderService;
 
     public PaperMessagesServiceImpl(PnAuditLogBuilder auditLogBuilder, RequestDeliveryDAO requestDeliveryDAO, CostDAO costDAO,
                                     NationalRegistryClient nationalRegistryClient, SqsSender sqsSender) {
@@ -91,7 +95,7 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
 
                     List<AttachmentInfo> attachments = entity.getAttachments().stream().map(AttachmentMapper::fromEntity).toList();
                     Address address = saveAddresses(sendRequest);
-                    return super.calculator(attachments, address, sendRequest.getProductType()).map(value -> value);
+                    return this.calculator(attachments, address, sendRequest.getProductType()).map(value -> value);
                 })
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)))
                 .zipWhen(entityAndAmount ->{
@@ -113,6 +117,23 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                     sendResponse.setAmount(amount.intValue()*100);
                     return sendResponse;
                 });
+    }
+
+    private Mono<Double> calculator(List<AttachmentInfo> attachments, Address address, ProductTypeEnum productType){
+        if (StringUtils.isNotBlank(address.getCap())) {
+            return getAmount(attachments, address.getCap(), null, getProductType(address, productType))
+                    .map(item -> item);
+        }
+        return paperTenderService.getZoneFromCountry(address.getCountry())
+                .flatMap(zone -> getAmount(attachments,null, zone, super.getProductType(address, productType)).map(item -> item));
+
+    }
+
+    private Mono<Double> getAmount(List<AttachmentInfo> attachments, String cap, String zone, String productType){
+        return paperTenderService.getCostFrom(cap, zone, productType)
+                .flatMap(contract -> super.getPriceAttachments(attachments, contract.getPriceAdditional())
+                        .map(priceForPages -> Double.sum(contract.getPrice(), priceForPages))
+                );
     }
 
     private Address saveAddresses(SendRequest sendRequest) {

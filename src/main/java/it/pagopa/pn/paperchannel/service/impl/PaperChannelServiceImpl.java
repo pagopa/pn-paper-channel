@@ -32,6 +32,7 @@ import reactor.util.function.Tuples;
 import java.io.File;
 import java.io.InputStream;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
@@ -108,6 +109,7 @@ public class PaperChannelServiceImpl implements PaperChannelService {
     public Mono<PageableDeliveryDriverResponseDto> getAllDeliveriesDrivers(String tenderCode, Integer page, Integer size, Boolean fsu) {
         Pageable pageable = PageRequest.of(page-1, size);
         return deliveryDriverDAO.getDeliveryDriverFromTender(tenderCode, fsu)
+                .collectList()
                 .map(list ->
                         DeliveryDriverMapper.toPagination(pageable, list)
                 )
@@ -221,6 +223,7 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                 .flatMap(i ->  {
                     if (StringUtils.isNotBlank(tenderCode)) {
                         return this.deliveryDriverDAO.getDeliveryDriverFromTender(tenderCode, null)
+                                .collectList()
                                 .zipWhen(drivers -> this.costDAO.findAllFromTenderCode(tenderCode, null).collectList())
                                 .flatMap(driversAndCosts -> {
                                     ExcelEngine excelEngine = this.excelDAO.create(ExcelModelMapper.fromDeliveriesDrivers(driversAndCosts.getT1(),driversAndCosts.getT2()));
@@ -301,8 +304,10 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_DRIVER_NOT_EXISTED, DELIVERY_DRIVER_NOT_EXISTED.getMessage())))
                 .flatMap(driver -> {
                     PnCost fromRequest = CostMapper.fromCostDTO(driver.getTenderCode(), driver.getTaxId(), request);
+                    fromRequest.setFsu(driver.getFsu());
                     String code = request.getUid();
                     return this.costDAO.findAllFromTenderAndProductTypeAndExcludedUUID(tenderCode, fromRequest.getProductType(), code)
+                            .collectList()
                             .zipWhen(listFromDB -> Mono.just(fromRequest));
                 })
                 .flatMap(fromDbAndFromRequest -> {
@@ -321,5 +326,92 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                 });
     }
 
+    @Override
+    public Mono<Void> deleteTender(String tenderCode) {
+        return this.tenderWithCreatedStatus(tenderCode, TENDER_CANNOT_BE_DELETED)
+                .flatMap(tender -> this.deliveryDriverDAO.getDeliveryDriverFromTender(tender.getTenderCode(),null)
+                                        .delayElements(Duration.ofMillis(10))
+                                        .flatMap(driver -> this.deleteDriver(driver.getTenderCode(), driver.getTaxId()))
+                                        .collectList()
+                )
+                .flatMap(items -> this.tenderDAO.deleteTender(tenderCode))
+                .flatMap(item -> Mono.empty());
+    }
 
+    @Override
+    public Mono<Void> deleteDriver(String tenderCode, String deliveryDriverId) {
+        return this.tenderWithCreatedStatus(tenderCode, DRIVER_CANNOT_BE_DELETED)
+                        .flatMap(tender -> this.costDAO.findAllFromTenderCode(tenderCode,deliveryDriverId)
+                                        .delayElements(Duration.ofMillis(10))
+                                        .flatMap(cost -> this.costDAO.deleteCost(cost.getDeliveryDriverCode(),cost.getUuid()))
+                                        .collectList()
+                        )
+                        .flatMap(costs -> this.deliveryDriverDAO.deleteDeliveryDriver(tenderCode,deliveryDriverId))
+                        .flatMap(driver -> Mono.empty());
+    }
+
+    @Override
+    public Mono<Void> deleteCost(String tenderCode, String deliveryDriverId, String uuid) {
+        return this.tenderWithCreatedStatus(tenderCode, COST_CANNOT_BE_DELETED)
+                .flatMap(tender -> this.costDAO.deleteCost(deliveryDriverId,uuid))
+                .flatMap(cost -> Mono.empty());
+    }
+
+
+    private Mono<PnTender> tenderWithCreatedStatus(String tenderCode, ExceptionTypeEnum typeException){
+        return this.tenderDAO.getTender(tenderCode)
+                .flatMap(tender -> {
+                    if (!tender.status.equals(TenderDTO.StatusEnum.CREATED.toString())){
+                        return Mono.error(new PnGenericException(typeException, typeException.getMessage()));
+                    }
+                    return Mono.just(tender);
+                });
+    }
+
+
+    @Override
+    public Mono<TenderCreateResponseDTO> updateStatusTender(String tenderCode, Status status) {
+        return this.tenderDAO.getTender(tenderCode)
+                .switchIfEmpty(Mono.error(new PnGenericException(TENDER_NOT_EXISTED, TENDER_NOT_EXISTED.getMessage())))
+                .flatMap(entity -> {
+                    TenderCreateResponseDTO response = new TenderCreateResponseDTO();
+                    if (entity.getStatus().equalsIgnoreCase(TenderDTO.StatusEnum.ENDED.getValue())) {
+                        return Mono.error(new PnGenericException(TENDER_NOT_EXISTED, TENDER_NOT_EXISTED.getMessage()));
+                    }
+                    if (!entity.getStatus().equalsIgnoreCase(status.getStatusCode().getValue()) &&
+                            entity.getStatus().equalsIgnoreCase(TenderDTO.StatusEnum.CREATED.getValue())) {
+                        Date startDate = Date.from(entity.getStartDate());
+                        Date endDate = Date.from(entity.getEndDate());
+                        return this.tenderDAO.getConsolidate(startDate, endDate)
+                                .flatMap(newTender ->
+                                        Mono.error(new PnGenericException(ExceptionTypeEnum.CONSOLIDATE_ERROR, ExceptionTypeEnum.CONSOLIDATE_ERROR.getMessage()))
+                                )
+                                .switchIfEmpty(
+                                        Mono.defer(() -> {
+                                            entity.setStatus(status.getStatusCode().getValue());
+                                            return this.tenderDAO.createOrUpdate(entity)
+                                                    .map(modifyEntity -> {
+                                                        response.setTender(TenderMapper.tenderToDto(modifyEntity));
+                                                        response.setCode(TenderCreateResponseDTO.CodeEnum.NUMBER_0);
+                                                        response.setResult(true);
+                                                        return response;
+                                                    });
+                                        })
+                                );
+                    } else if (!entity.getStatus().equalsIgnoreCase(status.getStatusCode().getValue()) &&
+                            entity.getStatus().equalsIgnoreCase(TenderDTO.StatusEnum.IN_PROGRESS.getValue())) {
+                        entity.setStatus(status.getStatusCode().getValue());
+                        return this.tenderDAO.createOrUpdate(entity)
+                                .map(modifyEntity -> {
+                                    response.setTender(TenderMapper.tenderToDto(modifyEntity));
+                                    response.setCode(TenderCreateResponseDTO.CodeEnum.NUMBER_0);
+                                    response.setResult(true);
+                                    return response;
+                                });
+                    }
+                    response.setCode(TenderCreateResponseDTO.CodeEnum.NUMBER_0);
+                    response.setResult(true);
+                    return Mono.just(response);
+                }).mapNotNull(entity -> null);
+    }
 }

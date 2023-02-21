@@ -8,6 +8,7 @@ import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Repository;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
@@ -16,7 +17,6 @@ import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 import java.time.Instant;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @Repository
@@ -30,7 +30,7 @@ public class DeliveryDriverDAOImpl extends BaseDAO<PnDeliveryDriver> implements 
     }
 
     @Override
-    public Mono<List<PnDeliveryDriver>> getDeliveryDriverFromTender(String tenderCode, Boolean onlyFSU) {
+    public Flux<PnDeliveryDriver> getDeliveryDriverFromTender(String tenderCode, Boolean onlyFSU) {
         Pair<Instant, Instant> startAndEndTimestamp = DateUtils.getStartAndEndTimestamp(null, null);
 
         QueryConditional conditional = CONDITION_BETWEEN.apply(
@@ -47,8 +47,7 @@ public class DeliveryDriverDAOImpl extends BaseDAO<PnDeliveryDriver> implements 
             values.put(":isFSU", AttributeValue.builder().bool(onlyFSU).build());
         }
 
-        return this.getByFilter(conditional, PnDeliveryDriver.AUTHOR_INDEX, values, filter)
-                .collectList();
+        return this.getByFilter(conditional, PnDeliveryDriver.AUTHOR_INDEX, values, filter);
     }
 
     @Override
@@ -78,5 +77,9 @@ public class DeliveryDriverDAOImpl extends BaseDAO<PnDeliveryDriver> implements 
         data.setAuthor(Const.PN_PAPER_CHANNEL);
         data.setStartDate(Instant.now());
         return Mono.fromFuture(this.put(data).thenApply(i -> data));
+    }
+
+    public Mono<PnDeliveryDriver> deleteDeliveryDriver(String tenderCode, String taxId){
+        return Mono.fromFuture(this.delete(tenderCode, taxId).thenApply(item -> item));
     }
 }

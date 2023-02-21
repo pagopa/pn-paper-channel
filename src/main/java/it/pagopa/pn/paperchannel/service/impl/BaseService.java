@@ -46,16 +46,6 @@ public class BaseService {
         this.costDAO = costDAO;
     }
 
-    protected Mono<Double> calculator(List<AttachmentInfo> attachments, Address address, ProductTypeEnum productType){
-        if (StringUtils.isNotBlank(address.getCap())) {
-            return getAmount(attachments, address.getCap(), null, getProductType(address, productType))
-                    .map(item -> item);
-        }
-        return getZone(address.getCountry())
-                .flatMap(zone -> getAmount(attachments,null, zone, getProductType(address, productType)).map(item -> item));
-
-    }
-
 
     protected void finderAddressFromNationalRegistries(String correlationId, String requestId, String relatedRequestId, String fiscalCode, String personType, String iun, Integer attempt){
         Mono.delay(Duration.ofMillis(20)).publishOn(Schedulers.boundedElastic())
@@ -130,7 +120,7 @@ public class BaseService {
     }
 
 
-    private Mono<Double> getPriceAttachments(List<AttachmentInfo> attachmentInfos, Double priceForAAr){
+    protected Mono<Double> getPriceAttachments(List<AttachmentInfo> attachmentInfos, Float priceForAAr){
         return Flux.fromStream(attachmentInfos.stream())
                 .map(attachmentInfo -> {
                     if (StringUtils.equals(attachmentInfo.getDocumentType(), PN_AAR)) {
@@ -142,30 +132,9 @@ public class BaseService {
     }
 
 
-    private Mono<Contract> getContract(String cap, String zone, String productType) {
-        // TODO decommentare quando la tabella sarà popolata
-        Contract c = new Contract();
-        c.setPrice(10.0);
-        c.setPricePerPage(1.2);
-        return Mono.just(c);
-//        return costDAO.getByCapOrZoneAndProductType(cap, zone, productType).map(ContractMapper::toContract)
-//                .onErrorResume(PnGenericException.class, ex -> {
-//                    log.info("Cost not found try with default");
-//                    return costDAO.getByCapOrZoneAndProductType(StringUtils.isNotEmpty(cap)? Const.CAP_DEFALUT : null, StringUtils.isNotEmpty(zone)? Const.ZONE_DEFAULT : null, productType)
-//                            .map(ContractMapper::toContract);
-//                });
-    }
 
 
-    private Mono<Double> getAmount(List<AttachmentInfo> attachments, String cap, String zone, String productType){
-        return getContract(cap, zone, productType)
-                .flatMap(contract -> getPriceAttachments(attachments, contract.getPricePerPage())
-                        .map(priceForPages -> Double.sum(contract.getPrice(), priceForPages))
-                );
-
-    }
-
-    private String getProductType(Address address, ProductTypeEnum productTypeEnum){
+    protected String getProductType(Address address, ProductTypeEnum productTypeEnum){
         String productType = "";
 
         if(StringUtils.isNotBlank(address.getCap())){
