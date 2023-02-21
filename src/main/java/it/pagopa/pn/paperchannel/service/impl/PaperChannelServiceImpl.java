@@ -32,6 +32,7 @@ import reactor.util.function.Tuples;
 import java.io.File;
 import java.io.InputStream;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
@@ -350,5 +351,49 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                 .flatMap(cost -> Mono.empty());
     }
 
-
+    @Override
+    public Mono<TenderCreateResponseDTO> updateStatusTender(String tenderCode, Status status) {
+        return this.tenderDAO.getTender(tenderCode)
+                .switchIfEmpty(Mono.error(new PnGenericException(TENDER_NOT_EXISTED, TENDER_NOT_EXISTED.getMessage())))
+                .flatMap(entity -> {
+                    TenderCreateResponseDTO response = new TenderCreateResponseDTO();
+                    if (entity.getStatus().equalsIgnoreCase(TenderDTO.StatusEnum.ENDED.getValue())) {
+                        return Mono.error(new PnGenericException(TENDER_NOT_EXISTED, TENDER_NOT_EXISTED.getMessage()));
+                    }
+                    if (!entity.getStatus().equalsIgnoreCase(status.getStatusCode().getValue()) &&
+                            entity.getStatus().equalsIgnoreCase(TenderDTO.StatusEnum.CREATED.getValue())) {
+                        Date startDate = Date.from(entity.getStartDate());
+                        Date endDate = Date.from(entity.getEndDate());
+                        return this.tenderDAO.getConsolidate(startDate, endDate)
+                                .flatMap(newTender ->
+                                        Mono.error(new PnGenericException(ExceptionTypeEnum.CONSOLIDATE_ERROR, ExceptionTypeEnum.CONSOLIDATE_ERROR.getMessage()))
+                                )
+                                .switchIfEmpty(
+                                        Mono.defer(() -> {
+                                            entity.setStatus(status.getStatusCode().getValue());
+                                            return this.tenderDAO.createOrUpdate(entity)
+                                                    .map(modifyEntity -> {
+                                                        response.setTender(TenderMapper.tenderToDto(modifyEntity));
+                                                        response.setCode(TenderCreateResponseDTO.CodeEnum.NUMBER_0);
+                                                        response.setResult(true);
+                                                        return response;
+                                                    });
+                                        })
+                                );
+                    } else if (!entity.getStatus().equalsIgnoreCase(status.getStatusCode().getValue()) &&
+                            entity.getStatus().equalsIgnoreCase(TenderDTO.StatusEnum.IN_PROGRESS.getValue())) {
+                        entity.setStatus(status.getStatusCode().getValue());
+                        return this.tenderDAO.createOrUpdate(entity)
+                                .map(modifyEntity -> {
+                                    response.setTender(TenderMapper.tenderToDto(modifyEntity));
+                                    response.setCode(TenderCreateResponseDTO.CodeEnum.NUMBER_0);
+                                    response.setResult(true);
+                                    return response;
+                                });
+                    }
+                    response.setCode(TenderCreateResponseDTO.CodeEnum.NUMBER_0);
+                    response.setResult(true);
+                    return Mono.just(response);
+                }).mapNotNull(entity -> null);
+    }
 }

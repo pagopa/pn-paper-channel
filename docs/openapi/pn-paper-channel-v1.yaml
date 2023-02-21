@@ -263,7 +263,7 @@ paths:
         - $ref: '#/components/parameters/pathTenderCode'
       requestBody:
         content:
-          applicatin/json:
+          application/json:
             schema:
               $ref: '#/components/schemas/Status'
       responses:
@@ -939,8 +939,8 @@ components:
         statusCode:
           type: string
           enum:
-          - BOZZA
-          - CONSOLIDATO
+          - CREATED
+          - IN_PROGRESS
 
 
   responses:

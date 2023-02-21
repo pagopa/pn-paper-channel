@@ -29,6 +29,6 @@ public interface PaperChannelService {
     Mono<Void> deleteTender(String tenderCode);
     Mono<Void> deleteDriver(String tenderCode, String deliveryDriverId);
     Mono<Void> deleteCost(String tenderCode, String deliveryDriverId, String uuid);
+    Mono<TenderCreateResponseDTO> updateStatusTender(String tenderCode, Status status);
 
-
-}
+    }
