@@ -24,7 +24,7 @@ public interface CostDAO {
      * @param uuidExclude CAN BE NULL
      * @return List of cost from tender and product type without cost with uuid
      */
-    Mono<List<PnCost>> findAllFromTenderAndProductTypeAndExcludedUUID(String tenderCode, String productType, String uuidExclude);
+    Flux<PnCost> findAllFromTenderAndProductTypeAndExcludedUUID(String tenderCode, String productType, String uuidExclude);
 
     Mono<PnCost> createOrUpdate(PnCost entities);
     Mono<PnCost> deleteCost(String deliveryDriverCode, String uuid);

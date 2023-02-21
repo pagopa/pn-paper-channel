@@ -46,7 +46,7 @@ class CostDAOTest extends BaseTest {
                         costNational.getTenderCode(),
                         costNational.getProductType(),
                         null
-                ).block();
+                ).collectList().block();
         assertNotNull(costs);
         assertEquals(5, costs.size());
         costs = this.costDAO
@@ -54,7 +54,7 @@ class CostDAOTest extends BaseTest {
                         costNational.getTenderCode(),
                         costNational.getProductType(),
                         costNational.getUuid()
-                ).block();
+                ).collectList().block();
         assertNotNull(costs);
         assertEquals(4, costs.size());
     }
