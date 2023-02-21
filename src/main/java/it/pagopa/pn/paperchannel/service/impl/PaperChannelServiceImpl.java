@@ -108,6 +108,7 @@ public class PaperChannelServiceImpl implements PaperChannelService {
     public Mono<PageableDeliveryDriverResponseDto> getAllDeliveriesDrivers(String tenderCode, Integer page, Integer size, Boolean fsu) {
         Pageable pageable = PageRequest.of(page-1, size);
         return deliveryDriverDAO.getDeliveryDriverFromTender(tenderCode, fsu)
+                .collectList()
                 .map(list ->
                         DeliveryDriverMapper.toPagination(pageable, list)
                 )
@@ -221,6 +222,7 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                 .flatMap(i ->  {
                     if (StringUtils.isNotBlank(tenderCode)) {
                         return this.deliveryDriverDAO.getDeliveryDriverFromTender(tenderCode, null)
+                                .collectList()
                                 .zipWhen(drivers -> this.costDAO.findAllFromTenderCode(tenderCode, null).collectList())
                                 .flatMap(driversAndCosts -> {
                                     ExcelEngine excelEngine = this.excelDAO.create(ExcelModelMapper.fromDeliveriesDrivers(driversAndCosts.getT1(),driversAndCosts.getT2()));

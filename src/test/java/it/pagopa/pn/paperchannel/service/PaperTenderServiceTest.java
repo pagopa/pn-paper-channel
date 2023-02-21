@@ -95,7 +95,6 @@ class PaperTenderServiceTest extends BaseTest {
         assertEquals(cost.getBasePrice(), costDTO.getPrice());
         assertEquals(cost.getPagePrice(), costDTO.getPriceAdditional());
         assertEquals(cost.getProductType(), costDTO.getProductType().getValue());
-
     }
 
     @Test
