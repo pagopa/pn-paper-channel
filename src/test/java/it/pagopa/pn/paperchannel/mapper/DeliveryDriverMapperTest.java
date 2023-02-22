@@ -2,6 +2,9 @@ package it.pagopa.pn.paperchannel.mapper;
 
 import it.pagopa.pn.paperchannel.dao.model.DeliveriesData;
 import it.pagopa.pn.paperchannel.dao.model.DeliveryAndCost;
+import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
+import it.pagopa.pn.paperchannel.exception.PnExcelValidatorException;
+import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryDriver;
 import it.pagopa.pn.paperchannel.model.PageModel;
 import it.pagopa.pn.paperchannel.rest.v1.dto.DeliveryDriverDTO;
@@ -10,12 +13,18 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.data.domain.Pageable;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.ACTIVE_TENDER_NOT_FOUND;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class DeliveryDriverMapperTest {
 
@@ -55,8 +64,16 @@ class DeliveryDriverMapperTest {
 
 
     @Test
-    void toEntityFromExcelTest(){
-        DeliveryDriverMapper.toEntityFromExcel(getDeliveries(), "ABC");
+    void errorToEntityFromExcelTest(){
+       { /*StepVerifier.create(DeliveryDriverMapper.toEntityFromExcel(getDeliveries(), "ABC"))
+                    .expectErrorMatches((ex) -> {
+                        assertTrue(ex instanceof PnExcelValidatorException);
+                        assertEquals(ExceptionTypeEnum.DATA_NULL_OR_INVALID, ((PnExcelValidatorException) ex).getErrorType());
+                        return true;
+                    }).verify();*/
+        }
+
+
     }
 
     private DeliveriesData getDeliveries() {

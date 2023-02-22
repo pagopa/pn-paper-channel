@@ -93,15 +93,17 @@ public class DeliveryDriverMapper {
             //Get List of costs
             List<PnCost> singleCostList = result.get(k);
             singleCostList.forEach(elem ->{
-                CapProductType capProductType = new CapProductType();
-                capProductType.setProductType(elem.getProductType());
                 //Get List of caps
                 List <String> caps = elem.getCap() ;
-                caps.forEach(singleCap ->{
-                    //Add into cost list every single couple cap - product type
-                    capProductType.setCap(singleCap);
-                    costList.add(capProductType);
-                });
+                if (caps!=null) {
+                    CapProductType capProductType = new CapProductType();
+                    capProductType.setProductType(elem.getProductType());
+                    caps.forEach(singleCap -> {
+                        //Add into cost list every single couple cap - product type
+                        capProductType.setCap(singleCap);
+                        costList.add(capProductType);
+                    });
+                }
 
             });
         });
@@ -116,23 +118,26 @@ public class DeliveryDriverMapper {
             //Get List of costs
             List<PnCost> singleCostList = result.get(k);
             singleCostList.forEach(elem ->{
-                //key
-                ZoneProductType zoneProductType = new ZoneProductType();
-                zoneProductType.setProductType(elem.getProductType());
-                zoneProductType.setZone(elem.getZone()) ;
-                //value
-                Boolean fsu = elem.getFsu();
+                if (elem.getZone()!=null){
+                        //key
+                        ZoneProductType zoneProductType = new ZoneProductType();
+                        zoneProductType.setProductType(elem.getProductType());
+                        zoneProductType.setZone(elem.getZone()) ;
+                        //value
+                        Boolean fsu = elem.getFsu();
 
-                //insert
-                if (costList.containsKey(zoneProductType)){
-                    List<Boolean> values= costList.get(zoneProductType);
-                    values.add(elem.getFsu());
-                    costList.put(zoneProductType, values);
-                }
-                else{
-                    List<Boolean> values= new ArrayList<Boolean>();
-                    values.add(elem.getFsu());
-                    costList.put(zoneProductType, values);
+                        //insert
+                        if (costList.containsKey(zoneProductType)){
+                            List<Boolean> values= costList.get(zoneProductType);
+                            values.add(elem.getFsu());
+                            costList.put(zoneProductType, values);
+                        }
+                        else{
+                            List<Boolean> values= new ArrayList<Boolean>();
+                            values.add(elem.getFsu());
+                            costList.put(zoneProductType, values);
+                        }
+
                 }
             });
         });
