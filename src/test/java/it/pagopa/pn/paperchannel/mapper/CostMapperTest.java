@@ -21,7 +21,7 @@ class CostMapperTest {
 
     @Test
     void costMappertoInternationalContractTest() {
-        CostDTO response=CostMapper.toCostDTO(getPnPaperCost(ProductTypeEnumDto.SEMPLICE.getValue()));
+        CostDTO response=CostMapper.toCostDTO(getPnPaperCost(ProductTypeEnumDto.RS.getValue()));
         Assertions.assertNotNull(response);
     }
     @Test
