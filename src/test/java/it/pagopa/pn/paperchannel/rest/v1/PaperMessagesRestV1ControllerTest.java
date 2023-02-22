@@ -18,9 +18,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @WebFluxTest(controllers = {PaperMessagesRestV1Controller.class})
 class PaperMessagesRestV1ControllerTest {
@@ -93,7 +91,7 @@ class PaperMessagesRestV1ControllerTest {
         sendRequest.setClientRequestTimeStamp(new Date());
         sendRequest.setSenderAddress(analogAddress);
         sendRequest.setArAddress(analogAddress);
-        sendRequest.setProductType(ProductTypeEnum.RN_AR);
+        sendRequest.setProductType(ProductTypeEnum.RIR);
         sendRequest.setIun("iun");
         sendRequest.setRequestId("12345abcd");
         sendRequest.setReceiverFiscalCode("FDR3764GBC501A");

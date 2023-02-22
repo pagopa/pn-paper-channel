@@ -31,7 +31,7 @@ class ExternalChannelClientTest  extends BaseTest.WithMockServer {
     public void setUp() {
         this.sendRequest = getRequest("abcd12345");
         sendRequest.setClientRequestTimeStamp(new Date());
-        sendRequest.setProductType(ProductTypeEnum.RI_AR);
+        sendRequest.setProductType(ProductTypeEnum.RIR);
     }
 
     @Test
@@ -79,7 +79,7 @@ class ExternalChannelClientTest  extends BaseTest.WithMockServer {
 
         sendRequest.setRequestId(requestId);
         sendRequest.setReceiverFiscalCode("ABCD123AB501");
-        sendRequest.setProductType(ProductTypeEnum.RN_AR);
+        sendRequest.setProductType(ProductTypeEnum.RIR);
         sendRequest.setReceiverType("PF");
         sendRequest.setPrintType("PT");
         sendRequest.setIun("iun");

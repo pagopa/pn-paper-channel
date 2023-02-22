@@ -24,9 +24,9 @@ public class ErrorMessageMapper {
         PnErrorMessage entity = new PnErrorMessage();
         entity.setMessage(dto.getErrorType().getMessage());
         List<PnErrorDetails> detailsList = new ArrayList<>();
-        dto.getErrors().forEach(errorCell -> {
-            detailsList.add(ErrorDetailMapper.toEntity(errorCell));
-        });
+        if (dto.getErrors() != null){
+            dto.getErrors().forEach(errorCell -> detailsList.add(ErrorDetailMapper.toEntity(errorCell)));
+        }
         entity.setErrorDetails(detailsList);
         return entity;
     }

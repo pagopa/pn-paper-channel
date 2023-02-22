@@ -119,15 +119,17 @@ public class TenderDAOImpl extends BaseDAO<PnTender> implements TenderDAO {
     @Override
     public Mono<PnTender> getConsolidate(Date startDate, Date endDate) {
 
-        Pair<Instant, Instant> startAndEndTimestamp = DateUtils.getStartAndEndTimestamp(startDate, endDate);
+        Pair<Instant, Instant> startAndEndTimestamp = DateUtils.getStartAndEndTimestamp(null, null);
 
         QueryConditional conditional = CONDITION_BETWEEN.apply(
                 new Keys(keyBuild(Const.PN_PAPER_CHANNEL, startAndEndTimestamp.getFirst().toString()),
                         keyBuild(Const.PN_PAPER_CHANNEL, startAndEndTimestamp.getSecond().toString()) )
         );
 
-        String filter = PnTender.COL_STATUS + " = :consolidateStatus AND "
-                + PnTender.COL_START_DATE + " <= :startDate AND " + PnTender.COL_END_DATE + " >= :endDate";
+        String filter = PnTender.COL_STATUS + " = :consolidateStatus AND (("
+                + PnTender.COL_START_DATE + " <= :startDate AND " + PnTender.COL_END_DATE + " <= :startDate ) OR ("
+                + PnTender.COL_START_DATE + " <= :endDate AND " + PnTender.COL_END_DATE + " <= :endDate ))";
+
 
         Map<String, AttributeValue> values = new HashMap<>();
         values.put(":consolidateStatus", AttributeValue.builder().s(TenderDTO.StatusEnum.IN_PROGRESS.getValue()).build());

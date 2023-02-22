@@ -1,7 +1,6 @@
 package it.pagopa.pn.paperchannel.mapper;
 
 import it.pagopa.pn.paperchannel.dao.model.DeliveriesData;
-import it.pagopa.pn.paperchannel.dao.model.DeliveryAndCost;
 import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnExcelValidatorException;
 import it.pagopa.pn.paperchannel.mapper.common.BaseMapper;
@@ -11,9 +10,10 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryDriver;
 import it.pagopa.pn.paperchannel.model.PageModel;
 import it.pagopa.pn.paperchannel.rest.v1.dto.DeliveryDriverDTO;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PageableDeliveryDriverResponseDto;
-import it.pagopa.pn.paperchannel.rest.v1.dto.ProductTypeEnum;
+import it.pagopa.pn.paperchannel.utils.costutils.CapProductType;
+import it.pagopa.pn.paperchannel.utils.costutils.ZoneProductType;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.data.domain.Pageable;
 
 import java.util.*;
@@ -26,8 +26,6 @@ public class DeliveryDriverMapper {
     }
 
     private static final BaseMapper<PnDeliveryDriver, DeliveryDriverDTO> mapperDeliveryDriverToDto = new BaseMapperImpl<>(PnDeliveryDriver.class, DeliveryDriverDTO.class);
-    private static final BaseMapper<PnDeliveryDriver, DeliveryAndCost> mapperDeliveryCost = new BaseMapperImpl<>(PnDeliveryDriver.class, DeliveryAndCost.class);
-    private static final BaseMapper<PnCost, DeliveryAndCost> mapperCost = new BaseMapperImpl<>(PnCost.class, DeliveryAndCost.class);
 
 
     public static PnDeliveryDriver toEntity(DeliveryDriverDTO dto){
@@ -63,45 +61,96 @@ public class DeliveryDriverMapper {
             pnCost.setPagePrice(deliveryAndCost.getPagePrice());
             List <String> capList = deliveryAndCost.getCaps();
             pnCost.setCap(capList);
+            pnCost.setFsu(deliveryAndCost.getFsu());
 
             if( result.containsKey(driver)){
                 List <PnCost> costs = result.get(driver);
                 costs.add(pnCost);
-                //Check unique ProductType
-                checkUniqueProductType( costs);
                 result.put(driver, costs);
             }
             else{
                 List <PnCost> costs = new ArrayList<PnCost>();
                 costs.add(pnCost);
-                //Check unique ProductType
-                checkUniqueProductType( costs);
                 result.put(driver, costs);
             }
 
         });
 
-        //Check unique taxId
-        Set<PnDeliveryDriver> driver = new HashSet<>(result.keySet());
-        checkUniqueTaxId(driver);
+        //Check Unique Product Type
+        checkUniqueCapProductType(result);
 
+        //Check Unique Zone Product Type
+        checkUniqueZoneProductType(result);
         return result;
 
     }
 
-    public static void  checkUniqueTaxId(Set<PnDeliveryDriver> driver ) throws PnExcelValidatorException {
-       Set<String> taxIds = new HashSet<String>();
-        driver.forEach(elem ->{
-            taxIds.add(elem.getTaxId());
+
+    public static void   checkUniqueCapProductType(Map<PnDeliveryDriver,List<PnCost> > result ) throws PnExcelValidatorException {
+        //Create list with single element cap - product type
+        List<CapProductType> costList = new ArrayList<CapProductType>();
+        result.forEach( (k,v) ->{
+            //Get List of costs
+            List<PnCost> singleCostList = result.get(k);
+            singleCostList.forEach(elem ->{
+                //Get List of caps
+                List <String> caps = elem.getCap() ;
+                if (caps!=null) {
+                    CapProductType capProductType = new CapProductType();
+                    capProductType.setProductType(elem.getProductType());
+                    caps.forEach(singleCap -> {
+                        //Add into cost list every single couple cap - product type
+                        capProductType.setCap(singleCap);
+                        costList.add(capProductType);
+                    });
+                }
+
+            });
         });
-        if (taxIds.size()!=driver.size()) throw new PnExcelValidatorException(ExceptionTypeEnum.DATA_NULL_OR_INVALID, null);
+        Set setCostList = new HashSet(costList);
+        if ( !(costList.size()== setCostList.size())) throw new PnExcelValidatorException(ExceptionTypeEnum.INVALID_CAP_PRODUCT_TYPE, null );
     }
-    public static void   checkUniqueProductType(List<PnCost> cost ) throws PnExcelValidatorException {
-        Set<String> productType = new HashSet<String>();
-        cost.forEach(elem ->{
-            productType.add(elem.getProductType());
+
+    public static void   checkUniqueZoneProductType(Map<PnDeliveryDriver,List<PnCost> > result ) throws PnExcelValidatorException {
+        //Create list with single element cap - product type
+        Map<ZoneProductType, List<Boolean> > costList = new HashMap<ZoneProductType, List<Boolean>>();
+        result.forEach( (k,v) ->{
+            //Get List of costs
+            List<PnCost> singleCostList = result.get(k);
+            singleCostList.forEach(elem ->{
+                if (elem.getZone()!=null){
+                        //key
+                        ZoneProductType zoneProductType = new ZoneProductType();
+                        zoneProductType.setProductType(elem.getProductType());
+                        zoneProductType.setZone(elem.getZone()) ;
+                        //value
+                        Boolean fsu = elem.getFsu();
+
+                        //insert
+                        if (costList.containsKey(zoneProductType)){
+                            List<Boolean> values= costList.get(zoneProductType);
+                            values.add(elem.getFsu());
+                            costList.put(zoneProductType, values);
+                        }
+                        else{
+                            List<Boolean> values= new ArrayList<Boolean>();
+                            values.add(elem.getFsu());
+                            costList.put(zoneProductType, values);
+                        }
+
+                }
+            });
         });
-        if (productType.size()!=cost.size()) throw new PnExcelValidatorException(ExceptionTypeEnum.DATA_NULL_OR_INVALID, null);
+        costList.forEach((k,v) ->{
+            if ( v.size()>2
+                    || (v.size()==1 &&v.get(0)==false)
+                    || (v.size()==2 && (v.get(0)==true && v.get(1)==true))
+                    || (v.size()==2 &&(v.get(0)==false && v.get(1)==false))
+            )
+                    throw new PnExcelValidatorException(ExceptionTypeEnum.INVALID_ZONE_PRODUCT_TYPE, null);
+
+
+        });
     }
 
     public static PageableDeliveryDriverResponseDto toPageableResponse(PageModel<PnDeliveryDriver> pagePnPaperDeliveryDriver) {
@@ -125,14 +174,5 @@ public class DeliveryDriverMapper {
 
     public static PageModel<PnDeliveryDriver> toPagination(Pageable pageable, List<PnDeliveryDriver> list){
         return PageModel.builder(list, pageable);
-    }
-
-    private static PnCost getCost(PnDeliveryDriver deliveryDriver, String tenderCode, String cap, DeliveryAndCost rowExcel){
-        PnCost cost = mapperCost.toEntity(rowExcel);
-        cost.setDeliveryDriverCode(deliveryDriver.getUniqueCode());
-        cost.setUuid(UUID.randomUUID().toString());
-        cost.setTenderCode(tenderCode);
-        //cost.setCap(cap);
-        return cost;
     }
 }

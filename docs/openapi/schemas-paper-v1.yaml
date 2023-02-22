@@ -19,15 +19,14 @@ components:
         valorizzare solo uno dei tipi di eventi possibili
     ProductTypeEnum:
       type: string
-      enum: [ RN_AR, RN_890, RN_RS, RI_AR, RI_RS ]
+      enum: [ AR, 890, RS, RIR, RIS ]
       description: "Tipo prodotto di cui viene chiesto il recapito: <br/> \
-                \  - __RN_AR__: Raccomandata Andata e Ritorno, <br/> \
-                \  - __RN_890__: Recapito a norma della legge 890/1982, <br/> \
-                \  - __RN_RS__: Raccomandata Semplice (per Avviso di mancato Recapito). <br/> \
-                \  - __RI_AR__: Recapito a norma della legge 890/1982, <br/> \
-                \  - __RI_RS__: Recapito a norma della legge 890/1982, <br/> \
-                \  - ... ulteriori prodotti"
-      example: RN_AR
+                \  - __AR__: Raccomandata nazionale Andata e Ritorno, <br/> \
+                \  - __890__: Recapito a norma della legge 890/1982, <br/> \
+                \  - __RS__: Raccomandata nazionale Semplice (per Avviso di mancato Recapito). <br/> \
+                \  - __RIS__: Raccomandata internazionale Semplice, <br/> \
+                \  - __RIR__: Raccomandata internazionale Andata e Ritorno"
+      example: AR
     SendRequest:
       required:
       - attachmentUrls
@@ -73,11 +72,11 @@ components:
     StatusCodeEnum:
       type: string
       enum: [ PROGRESS, OK, KOUNREACHABLE ]
-      description: "Codici di stato:
-                                \ - PROGRESS :  stato iniziale che indica che\
-                                \ la richiesta è in fase di elaborazione
-                                \ - OK : nel caso di indirizzo valido e allegati recuperati correttamente. Prevede la presenza del receiverAddress \
+      description: "Codici di stato: <br />
+                                \ - PROGRESS :  stato iniziale che indica che la richiesta è in fase di elaborazione <br />
+                                \ - OK : nel caso di indirizzo valido e allegati recuperati correttamente. Prevede la presenza del receiverAddress <br /> \
                                 \ - KOUNREACHABLE : nel caso in cui non sia disponibile un indirizzo per l'utente in base alle informazioni passate."
+      example: OK
     PrepareEvent:
       type: object
       properties:
@@ -105,36 +104,66 @@ components:
             tracciata.
           example: 123456789abc
         statusCode:
+          $ref: '#/components/schemas/StatusCodeEnum'
+        statusDetail:
           type: string
-          description: "Vengono ribattuti gli esiti di ext-channel, più eventuali eventi interni a paper-channel \
-            \ (codici PCXXX) _Codifica sintetica dello stato dell'esito._  <br/> \
-            \ - __001__ Stampato  <br/> \
-            \ - __002__ Disponibile al recapitista  <br/> \
-            \ - __003__ Preso in carico dal recapitista  <br/> \
-            \ - __004__ Consegnata  <br/> \
-            \ - __005__ Mancata consegna  <br/> \
-            \ - __006__ Furto/Smarrimanto/deterioramento  <br/> \
-            \ - __007__ Consegnato Ufficio Postale  <br/> \
-            \ - __008__ Mancata consegna Ufficio Postale  <br/> \
-            \ - __009__ Compiuta giacenza  <br/> \
-            \ - __PC001__ Paper channel nuova richiesta invio cartaceo, a valle di un fallimento temporaneo  <br/>"
+          description: "Vengono ribattuti gli esiti di ext-channel, più eventuali eventi interni a paper-channel codici PNXXX) 
+            formato: - __statuDetail__- [prodotto] - [statusCode] - statusDescription <br/>
+            - __CON080__- [ALL] - [PROGRESS] - Stampato ed Imbustato <br/>
+            - __RECRS001C__- [RS] - [OK] - Consegnato - Fascicolo Chiuso <br/>
+            - __RECRS002C__- [RS] - [KO] - Mancata consegna - Fascicolo Chiuso <br/>
+            - __RECRS002F__- [RS] - [KO] - Irreperibilità Assoluta - Fascicolo Chiuso <br/>
+            - __RECRS003C__- [RS] - [OK] - Consegnato presso Punti di Giacenza - Fascicolo Chiuso <br/>
+            - __RECRS004C__- [RS] - [OK] - Mancata consegna presso Punti di Giacenza - Fascicolo Chiuso <br/>
+            - __RECRS005C__- [RS] - [OK] - Compiuta giacenza - Fascicolo Chiuso <br/>
+            - __RECRS006__- [RS] - [PROGRESS] - Furto/Smarrimanto/deterioramento <br/>
+            - __RECRN001C__- [AR] - [OK] - Consegnato - Fascicolo Chiuso <br/>
+            - __RECRN002C__- [AR] - [KO] - Mancata consegna - Fascicolo Chiuso <br/>
+            - __RECRN002F__- [AR] - [KO] - Irreperibilità Assoluta - Fascicolo Chiuso <br/>
+            - __RECRN003C__- [AR] - [OK] - Consegnato presso Punti di Giacenza - Fascicolo Chiuso <br/>
+            - __RECRN004C__- [AR] - [KO] - Mancata consegna presso Punti di Giacenza - Fascicolo Chiuso <br/>
+            - __RECRN005C__- [AR] - [OK] - Compiuta giacenza - Fascicolo Chiuso <br/>
+            - __RECRN006__- [AR] - [PROGRESS] - Furto/Smarrimanto/deterioramento <br/>
+            - __RECAG001C__- [890] - [OK] - Consegnato - Fascicolo Chiuso <br/>
+            - __RECAG002C__- [890] - [OK] - Consegnato a persona abilitata - Fascicolo Chiuso <br/>
+            - __RECAG003C__- [890] - [KO] - Mancata consegna - Fascicolo Chiuso <br/>
+            - __RECAG003F__- [890] - [KO] - Irreperibilità Assoluta - Fascicolo Chiuso <br/>
+            - __RECAG004__- [890] - [PROGRESS] - Furto/Smarrimanto/deterioramento <br/>
+            - __RECAG005C__- [890] - [OK | PROGRESS] - Consegnato presso Punti di Giacenza - Fascicolo Chiuso <br/>
+            - __RECAG006C__- [890] - [OK | PROGRESS] - Consegna a persona abilitata presso Punti di Giacenza - Fascicolo Chiuso <br/>
+            - __RECAG007C__- [890] - [KO | PROGRESS] - Mancata consegna presso Punti di Giacenza - Fascicolo Chiuso <br/>
+            - __RECAG008C__- [890] - [PROGRESS] - Compiuta giacenza - Fascicolo Chiuso <br/>
+            - __PNAG012__- [890] - [KO] - Distacco d'ufficio 23L - Fascicolo Chiuso <br/>
+            - __RECRI003C__- [RIR] - [OK] - Consegnato - Fascicolo Chiuso <br/>
+            - __RECRI004C__- [RIR] - [KO] - Non Consegnato - fascicolo Chiuso <br/>
+            - __RECRI005__- [RIR] - [PROGRESS] - Furto/Smarrimanto/deterioramento <br/>
+            - __RECRSI003C__- [RIS] - [OK] - Consegnato - Fascicolo Chiuso <br/>
+            - __RECRSI004C__- [RIS] - [KO] - Non Consegnato - fascicolo Chiuso <br/>
+            - __RECRSI005__- [RIS] - [PROGRESS] - Furto/Smarrimanto/deterioramento"
+          example: PNAG012
         statusDescription:
           type: string
           description: Descrizione dello stato del delivery cartaceo che viene notificato.
-          example: Stampato
+          example: Distacco d'ufficio 23L - Fascicolo Chiuso
         statusDateTime:
           type: string
-          description: Data stato con timezone
+          description: Data di validità dello stato
           format: date-time
         deliveryFailureCause:
           type: string
-          description: _Motivazione di mancata consegna_ obbligtorie negli stati di
-            mancata consegna  <br/> - __01__ destinatario irreperibile <br/> - __02__
-            destinatario deceduto <br/> - __03__ destinatario sconosciuto <br/> -
-            __04__ destinatario trasferito <br/> - __05__ invio rifiutato <br/> -
-            __06__ indirizzo inesatto <br/> - __07__ indirizzo inesistente <br/> -
-            __08__ indirizzo insufficiente <br/> - ... Motivazioni aggiuntive concordate
-            con il consolidatore
+          description: >-
+            _Motivazione di mancata consegna_ obbligtorie negli stati di mancata consegna  <br/>
+            - __M01__ destinatario irreperibile <br/>
+            - __M02__ destinatario deceduto <br/>
+            - __M03__ destinatario sconosciuto <br/>
+            - __M04__ destinatario trasferito <br/>
+            - __M05__ invio rifiutato <br/>
+            - __M06__ indirizzo inesatto <br/>
+            - __M07__ indirizzo inesistente <br/>
+            - __M08__ indirizzo insufficiente <br/>
+            - __F01__ - in caso di furto  <br/>
+            - __F02__ - in caso di smarrimento  <br/>
+            - __F03__ - in caso di deterioramento  <br/>
         attachments:
           type: array
           description: elenco dei documenti prodotti che attestano quanto accaduto

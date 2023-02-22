@@ -8,6 +8,13 @@
     "AttemptQueueExternalChannel": "3",
     "AttemptQueueNationalRegistries": "3",
     "AttemptQueueSafeStorage": "3",
-    "SandboxSafeStorageBaseUrl": "https://ewlg4idc89.execute-api.eu-south-1.amazonaws.com/dev"
+    "SandboxSafeStorageBaseUrl": "https://ewlg4idc89.execute-api.eu-south-1.amazonaws.com/dev",
+    "TtlPrepare": "14",
+    "TtlExecutionRNAR": "12",
+    "TtlExecutionRN890" : "11" ,
+    "TtlExecutionRNRS": "11",
+    "TtlExecutionRIAR" : "13" ,
+    "TtlExecutionRIRS": "14",
+    "RetryStatus" : "006"
   }
 }
