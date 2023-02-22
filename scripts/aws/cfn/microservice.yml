@@ -90,6 +90,27 @@ Parameters:
   NationalRegistryCxId:
     Type: String
     Description: 'National Registry cx-id'
+  TtlPrepare:
+      Type: String
+      Description: 'Time to live prepare'
+  TtlExecutionRNAR:
+      Type: String
+      Description: 'Time to live execution RN AR'
+  TtlExecutionRN890:
+      Type: String
+      Description: 'Time to live execution RN 890'
+  TtlExecutionRNRS:
+      Type: String
+      Description: 'Time to live execution RN RS'
+  TtlExecutionRIAR:
+    Type: String
+    Description: 'Time to live execution Ri AR'
+  TtlExecutionRIRS:
+    Type: String
+    Description: 'Time to live execution RI RS'
+  RetryStatus:
+    Type: String
+    Description: 'Retry status code'
 
   NetworkLoadBalancerLink:
     Type: String
@@ -353,6 +374,13 @@ Resources:
         ContainerEnvEntry26: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUEEXTERNALCHANNEL=${AttemptQueueExternalChannel}'
         ContainerEnvEntry27: !Sub 'AWS_BUCKET_NAME=${PaperDeliveryDriversBucketName}'
         ContainerEnvEntry28: !Sub 'PN_PAPERCHANNEL_NATIONALREGISTRYCHCXID=${NationalRegistryCxId}'
+        ContainerEnvEntry29: !Sub 'PN_PAPERCHANNEL_TTLPREPARE=${TtlPrepare}'
+        ContainerEnvEntry30: !Sub 'PN_PAPERCHANNEL_TTLEXECUTIONNAR=${TtlExecutionRNAR}'
+        ContainerEnvEntry31: !Sub 'PN_PAPERCHANNEL_TTLEXECUTIONN890=${TtlExecutionRN890}'
+        ContainerEnvEntry32: !Sub 'PN_PAPERCHANNEL_TTLEXECUTIONNRS=${TtlExecutionRNRS}'
+        ContainerEnvEntry33: !Sub 'PN_PAPERCHANNEL_TTLEXECUTIONIAR=${TtlExecutionRIAR}'
+        ContainerEnvEntry34: !Sub 'PN_PAPERCHANNEL_TTLEXECUTIONIRS=${TtlExecutionRIRS}'
+        ContainerEnvEntry35: !Sub 'PN_PAPERCHANNEL_RETRYSTATUS=${RetryStatus}'
         MappedPaths: '/paper-channel-bo/*,/paper-channel-private/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds

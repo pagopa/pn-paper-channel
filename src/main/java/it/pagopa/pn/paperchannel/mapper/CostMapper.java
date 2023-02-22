@@ -36,6 +36,8 @@ public class CostMapper {
     public static CostDTO toCostDTO(PnCost paperCost){
         CostDTO dto = new CostDTO();
         dto.setUid(paperCost.getUuid());
+        dto.setTenderCode(paperCost.getTenderCode());
+        dto.setDriverCode(paperCost.getDeliveryDriverCode());
         dto.setCap(paperCost.getCap());
         if (StringUtils.isNotBlank(paperCost.getZone())){
             dto.setZone(InternationalZoneEnum.fromValue(paperCost.getZone()));

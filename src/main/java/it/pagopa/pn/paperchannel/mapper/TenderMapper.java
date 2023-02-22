@@ -5,6 +5,7 @@ import it.pagopa.pn.paperchannel.model.PageModel;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PageableTenderResponseDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.TenderCreateRequestDTO;
 import it.pagopa.pn.paperchannel.rest.v1.dto.TenderDTO;
+import it.pagopa.pn.paperchannel.rest.v1.dto.*;
 import it.pagopa.pn.paperchannel.utils.Const;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Pageable;

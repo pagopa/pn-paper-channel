@@ -4,7 +4,7 @@ public class Const {
 
     public static final String PN_PAPER_CHANNEL = "PN-PAPER-CHANNEL";
     public static final String PN_AAR = "PN_AAR";
-    public static final String RACCOMANDATA_SEMPLICE = "SEMPLICE";
+    public static final String RACCOMANDATA_SEMPLICE = "RS";
     public static final String RACCOMANDATA_890 = "890";
     public static final String RACCOMANDATA_AR = "AR";
     public static final String ZONE_1 = "ZONE_1";

@@ -68,11 +68,11 @@ public class PnDeliveryDriver {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         PnDeliveryDriver that = (PnDeliveryDriver) o;
-        return uniqueCode.equals(that.uniqueCode);
+        return taxId.equals(that.taxId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(uniqueCode);
+        return Objects.hash(taxId);
     }
 }

@@ -138,17 +138,17 @@ public class BaseService {
         String productType = "";
 
         if(StringUtils.isNotBlank(address.getCap())){
-            if (productTypeEnum.equals(ProductTypeEnum.RN_AR)) {
+            if (productTypeEnum.equals(ProductTypeEnum.AR)) {
                 productType = RACCOMANDATA_AR;
-            } else if (productTypeEnum.equals(ProductTypeEnum.RN_RS)){
+            } else if (productTypeEnum.equals(ProductTypeEnum.RS)){
                 productType = RACCOMANDATA_SEMPLICE;
-            } else if (productTypeEnum.equals(ProductTypeEnum.RN_890)){
+            } else if (productTypeEnum.equals(ProductTypeEnum._890)){
                 productType = RACCOMANDATA_890;
             }
         } else {
-            if (productTypeEnum.equals(ProductTypeEnum.RI_AR)) {
+            if (productTypeEnum.equals(ProductTypeEnum.AR) || productTypeEnum.equals(ProductTypeEnum._890)) {
                 productType = RACCOMANDATA_AR;
-            } else if (productTypeEnum.equals(ProductTypeEnum.RI_RS)){
+            } else if (productTypeEnum.equals(ProductTypeEnum.RS)){
                 productType = RACCOMANDATA_SEMPLICE;
             }
         }
@@ -160,22 +160,22 @@ public class BaseService {
         //nazionale
         if(StringUtils.isNotBlank(address.getCap())){
             if(productType.equals(RACCOMANDATA_SEMPLICE)){
-                proposalProductType = ProductTypeEnum.RN_RS.getValue();
+                proposalProductType = ProductTypeEnum.RS.getValue();
             }
             if(productType.equals(RACCOMANDATA_890)){
-                proposalProductType = ProductTypeEnum.RN_890.getValue();
+                proposalProductType = ProductTypeEnum._890.getValue();
             }
             if(productType.equals(RACCOMANDATA_AR)){
-                proposalProductType = ProductTypeEnum.RN_AR.getValue();
+                proposalProductType = ProductTypeEnum.AR.getValue();
             }
         }
         //internazionale
-        else{
+        else {
             if(productType.equals(RACCOMANDATA_SEMPLICE)){
-                proposalProductType = ProductTypeEnum.RI_RS.getValue();
+                proposalProductType = ProductTypeEnum.RIS.getValue();
             }
             if(productType.equals(RACCOMANDATA_AR) || productType.equals(RACCOMANDATA_890)){
-                proposalProductType = ProductTypeEnum.RI_AR.getValue();
+                proposalProductType = ProductTypeEnum.RIR.getValue();
             }
         }
         return proposalProductType;

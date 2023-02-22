@@ -71,19 +71,19 @@ public class AddressMapper {
                 pnAddress.setTtl(DateUtils.getTimeStampOfMills(LocalDateTime.now().plusDays(paperChannelConfig.getTtlPrepare())));
             }  else{
                 //caso EXECUTION set con productType
-                if (StringUtils.equals(address.getProductType(), ProductTypeEnum.RN_890.getValue())) {
+                if (StringUtils.equals(address.getProductType(), ProductTypeEnum._890.getValue())) {
                     pnAddress.setTtl(DateUtils.getTimeStampOfMills(LocalDateTime.now().plusDays(paperChannelConfig.getTtlExecutionN_890())));
                 }
-                if (StringUtils.equals(address.getProductType(), ProductTypeEnum.RN_RS.getValue())) {
+                if (StringUtils.equals(address.getProductType(), ProductTypeEnum.RS.getValue())) {
                     pnAddress.setTtl(DateUtils.getTimeStampOfMills(LocalDateTime.now().plusDays(paperChannelConfig.getTtlExecutionN_RS())));
                 }
-                if (StringUtils.equals(address.getProductType(), ProductTypeEnum.RN_AR.getValue())) {
+                if (StringUtils.equals(address.getProductType(), ProductTypeEnum.AR.getValue())) {
                     pnAddress.setTtl(DateUtils.getTimeStampOfMills(LocalDateTime.now().plusDays(paperChannelConfig.getTtlExecutionN_AR())));
                 }
-                if (StringUtils.equals(address.getProductType(), ProductTypeEnum.RI_AR.getValue())) {
+                if (StringUtils.equals(address.getProductType(), ProductTypeEnum.RIR.getValue())) {
                     pnAddress.setTtl(DateUtils.getTimeStampOfMills(LocalDateTime.now().plusDays(paperChannelConfig.getTtlExecutionI_AR())));
                 }
-                if (StringUtils.equals(address.getProductType(), ProductTypeEnum.RI_RS.getValue())) {
+                if (StringUtils.equals(address.getProductType(), ProductTypeEnum.RIS.getValue())) {
                     pnAddress.setTtl(DateUtils.getTimeStampOfMills(LocalDateTime.now().plusDays(paperChannelConfig.getTtlExecutionI_RS())));
                 }
             }

@@ -76,6 +76,7 @@ components:
                                 \ - PROGRESS :  stato iniziale che indica che la richiesta è in fase di elaborazione <br />
                                 \ - OK : nel caso di indirizzo valido e allegati recuperati correttamente. Prevede la presenza del receiverAddress <br /> \
                                 \ - KOUNREACHABLE : nel caso in cui non sia disponibile un indirizzo per l'utente in base alle informazioni passate."
+      example: OK
     PrepareEvent:
       type: object
       properties:
@@ -103,13 +104,7 @@ components:
             tracciata.
           example: 123456789abc
         statusCode:
-          type: string
-          enum: [ PROGRESS, OK, KO ]
-          description: "Codici di stato che indicano lo stato di avanzamento del recapito: <br/>
-                     \ - PROGRESS :  stato che di lavorazione del recapito <br />
-                     \ - OK :  il recapito è stato consegnato con successo <br />
-                     \ - KO :  il recapito NON è stato consegnato con successo"
-          example: KO
+          $ref: '#/components/schemas/StatusCodeEnum'
         statusDetail:
           type: string
           description: "Vengono ribattuti gli esiti di ext-channel, più eventuali eventi interni a paper-channel codici PNXXX) 

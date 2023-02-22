@@ -85,4 +85,28 @@ public class PaperChannelRestV1Controller implements DeliveryDriverApi {
         return this.paperChannelService.getAllCostFromTenderAndDriver(tenderCode, deliveryDriverId, page, size)
                 .map(ResponseEntity::ok);
     }
+
+    @Override
+    public Mono<ResponseEntity<Void>> deleteTender(String tenderCode, ServerWebExchange exchange) {
+        return this.paperChannelService.deleteTender(tenderCode)
+                .map(ResponseEntity::ok);
+    }
+
+    @Override
+    public Mono<ResponseEntity<Void>> deleteDriver(String tenderCode, String deliveryDriverId, ServerWebExchange exchange) {
+        return this.paperChannelService.deleteDriver(tenderCode,deliveryDriverId)
+                .map(ResponseEntity::ok);
+    }
+
+    @Override
+    public Mono<ResponseEntity<Void>> deleteCost(String tenderCode, String deliveryDriverId, String uuid, ServerWebExchange exchange) {
+        return this.paperChannelService.deleteCost(tenderCode,deliveryDriverId,uuid)
+                .map(ResponseEntity::ok);
+    }
+
+    @Override
+    public Mono<ResponseEntity<TenderCreateResponseDTO>> updateStatusTender(String tenderCode, Mono<Status> status, ServerWebExchange exchange) {
+        return status.flatMap(request -> paperChannelService.updateStatusTender(tenderCode, request))
+                .map(ResponseEntity::ok);
+    }
 }
