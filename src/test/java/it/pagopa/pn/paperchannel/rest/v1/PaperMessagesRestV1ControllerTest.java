@@ -93,7 +93,7 @@ class PaperMessagesRestV1ControllerTest {
         sendRequest.setClientRequestTimeStamp(new Date());
         sendRequest.setSenderAddress(analogAddress);
         sendRequest.setArAddress(analogAddress);
-        sendRequest.setProductType(ProductTypeEnum.RN_AR);
+        sendRequest.setProductType(ProductTypeEnum.RIR);
         sendRequest.setIun("iun");
         sendRequest.setRequestId("12345abcd");
         sendRequest.setReceiverFiscalCode("FDR3764GBC501A");

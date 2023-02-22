@@ -17,6 +17,7 @@ import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.Discover
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.rest.v1.dto.SendRequest;
+import it.pagopa.pn.paperchannel.rest.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.service.PaperResultAsyncService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.Const;
@@ -165,7 +166,7 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
     private void sendPaperResponse(PnDeliveryRequest entity, SingleStatusUpdateDto request) {
         SendEvent sendEvent = new SendEvent();
 
-        sendEvent.setStatusCode(entity.getStatusCode());
+        sendEvent.setStatusCode(StatusCodeEnum.valueOf(entity.getStatusCode()));
         sendEvent.setStatusDetail(entity.getStatusDetail());
         sendEvent.setStatusDescription(entity.getStatusDetail());
 

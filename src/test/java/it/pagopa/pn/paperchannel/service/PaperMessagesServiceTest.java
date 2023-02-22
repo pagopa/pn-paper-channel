@@ -205,7 +205,7 @@ class PaperMessagesServiceTest extends BaseTest {
 
         sendRequest.setRequestId(reqeustId);
         sendRequest.setReceiverFiscalCode("ABCD123AB501");
-        sendRequest.setProductType(ProductTypeEnum.RN_AR);
+        sendRequest.setProductType(ProductTypeEnum.RIR);
         sendRequest.setReceiverType("PF");
         sendRequest.setPrintType("PT");
         sendRequest.setIun("iun");

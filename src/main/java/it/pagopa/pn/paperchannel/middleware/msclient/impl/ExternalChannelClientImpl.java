@@ -49,7 +49,7 @@ public class ExternalChannelClientImpl extends BaseClient implements ExternalCha
             dto.setClientRequestTimeStamp(DateUtils.getOffsetDateTimeFromDate(sendRequest.getClientRequestTimeStamp()));
         }
 
-        dto.setProductType(setProductType(sendRequest.getProductType().getValue()));
+        dto.setProductType(sendRequest.getProductType().getValue());
         dto.setReceiverFiscalCode(sendRequest.getReceiverFiscalCode());
         if (!sendRequest.getAttachmentUrls().isEmpty())
             dto.setAttachmentUri(sendRequest.getAttachmentUrls().get(0));
@@ -82,23 +82,6 @@ public class ExternalChannelClientImpl extends BaseClient implements ExternalCha
                         Retry.backoff(2, Duration.ofMillis(500))
                                 .filter(throwable -> throwable instanceof TimeoutException || throwable instanceof ConnectException)
                 );
-    }
-
-    private String setProductType(String productType){
-        String type = null;
-        if (StringUtils.equals(productType, ProductTypeEnum.RN_AR.getValue())
-                || StringUtils.equals(productType, ProductTypeEnum.RI_AR.getValue())) {
-            type = Const.RACCOMANDATA_AR;
-
-        } else if (StringUtils.equals(productType, ProductTypeEnum.RN_RS.getValue())
-                || StringUtils.equals(productType, ProductTypeEnum.RI_RS.getValue())) {
-            type = Const.RACCOMANDATA_SEMPLICE;
-
-        } else if (StringUtils.equals(productType, ProductTypeEnum.RN_890.getValue())) {
-            type = Const.RACCOMANDATA_890;
-        }
-
-        return type;
     }
 
 }
