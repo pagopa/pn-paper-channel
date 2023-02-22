@@ -9,12 +9,12 @@
     "AttemptQueueNationalRegistries": "3",
     "AttemptQueueSafeStorage": "3",
     "SandboxSafeStorageBaseUrl": "https://14ej9p2krd.execute-api.eu-south-1.amazonaws.com/dev",
-    "TtlPrepare": 14,
-    "TtlExecutionRNAR": 12,
-    "TtlExecutionRN890" : 11 ,
-    "TtlExecutionRNRS": 11,
-    "TtlExecutionRIAR" : 13 ,
-    "TtlExecutionRIRS": 14,
+    "TtlPrepare": "14",
+    "TtlExecutionRNAR": "12",
+    "TtlExecutionRN890" : "11" ,
+    "TtlExecutionRNRS": "11",
+    "TtlExecutionRIAR" : "13" ,
+    "TtlExecutionRIRS": "14",
     "RetryStatus" : "006"
   }
 }
