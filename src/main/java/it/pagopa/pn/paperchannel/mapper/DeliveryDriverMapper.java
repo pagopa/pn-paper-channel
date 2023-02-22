@@ -1,7 +1,6 @@
 package it.pagopa.pn.paperchannel.mapper;
 
 import it.pagopa.pn.paperchannel.dao.model.DeliveriesData;
-import it.pagopa.pn.paperchannel.dao.model.DeliveryAndCost;
 import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnExcelValidatorException;
 import it.pagopa.pn.paperchannel.mapper.common.BaseMapper;
@@ -11,9 +10,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryDriver;
 import it.pagopa.pn.paperchannel.model.PageModel;
 import it.pagopa.pn.paperchannel.rest.v1.dto.DeliveryDriverDTO;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PageableDeliveryDriverResponseDto;
-import it.pagopa.pn.paperchannel.rest.v1.dto.ProductTypeEnum;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Pageable;
 
 import java.util.*;
@@ -26,8 +23,6 @@ public class DeliveryDriverMapper {
     }
 
     private static final BaseMapper<PnDeliveryDriver, DeliveryDriverDTO> mapperDeliveryDriverToDto = new BaseMapperImpl<>(PnDeliveryDriver.class, DeliveryDriverDTO.class);
-    private static final BaseMapper<PnDeliveryDriver, DeliveryAndCost> mapperDeliveryCost = new BaseMapperImpl<>(PnDeliveryDriver.class, DeliveryAndCost.class);
-    private static final BaseMapper<PnCost, DeliveryAndCost> mapperCost = new BaseMapperImpl<>(PnCost.class, DeliveryAndCost.class);
 
 
     public static PnDeliveryDriver toEntity(DeliveryDriverDTO dto){
@@ -125,14 +120,5 @@ public class DeliveryDriverMapper {
 
     public static PageModel<PnDeliveryDriver> toPagination(Pageable pageable, List<PnDeliveryDriver> list){
         return PageModel.builder(list, pageable);
-    }
-
-    private static PnCost getCost(PnDeliveryDriver deliveryDriver, String tenderCode, String cap, DeliveryAndCost rowExcel){
-        PnCost cost = mapperCost.toEntity(rowExcel);
-        cost.setDeliveryDriverCode(deliveryDriver.getUniqueCode());
-        cost.setUuid(UUID.randomUUID().toString());
-        cost.setTenderCode(tenderCode);
-        //cost.setCap(cap);
-        return cost;
     }
 }

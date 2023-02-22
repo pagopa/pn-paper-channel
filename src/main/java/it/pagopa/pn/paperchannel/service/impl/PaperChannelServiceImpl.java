@@ -16,6 +16,7 @@ import it.pagopa.pn.paperchannel.model.FileStatusCodeEnum;
 import it.pagopa.pn.paperchannel.rest.v1.dto.*;
 import it.pagopa.pn.paperchannel.s3.S3Bucket;
 import it.pagopa.pn.paperchannel.service.PaperChannelService;
+import it.pagopa.pn.paperchannel.utils.Utility;
 import it.pagopa.pn.paperchannel.validator.CostValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -172,23 +173,24 @@ public class PaperChannelServiceImpl implements PaperChannelService {
         }
 
         return fileDownloadDAO.getUuid(uploadRequestDto.getUuid())
-                .map(item -> {
+                .flatMap(item -> {
                     if (StringUtils.equals(item.getStatus(), FileStatusCodeEnum.ERROR.getCode())) {
                         if (CollectionUtils.isEmpty(item.getErrorMessage().getErrorDetails())) {
                             throw new PnGenericException(ExceptionTypeEnum.EXCEL_BADLY_CONTENT, item.getErrorMessage().getMessage());
                         }
                         throw new PnExcelValidatorException(ExceptionTypeEnum.BADLY_REQUEST, ErrorDetailMapper.toDtos(item.getErrorMessage().getErrorDetails()));
-                    } else if (!StringUtils.equals(item.getStatus(), FileStatusCodeEnum.UPLOADING.getCode())) {
-                        return NotifyResponseMapper.toDto(item);
-                    } else {
+
+                    } else if (StringUtils.equals(item.getStatus(), FileStatusCodeEnum.UPLOADING.getCode())) {
                         String fileName = S3Bucket.PREFIX_URL + uploadRequestDto.getUuid();
                         InputStream inputStream = s3Bucket.getFileInputStream(fileName);
                         if (inputStream != null) {
                             notifyUploadAsync(item, inputStream, tenderCode);
-                            return NotifyResponseMapper.toDto(item);
+                            item.setStatus(FileStatusCodeEnum.IN_PROGRESS.getCode());
+                            return this.fileDownloadDAO.create(item).map(NotifyResponseMapper::toDto);
                         }
+                        return Mono.just(NotifyResponseMapper.toDto(item));
                     }
-                    return null;
+                    return Mono.just(NotifyResponseMapper.toDto(item));
                 }).switchIfEmpty(Mono.error(new PnGenericException(ExceptionTypeEnum.FILE_REQUEST_ASYNC_NOT_FOUND, ExceptionTypeEnum.FILE_REQUEST_ASYNC_NOT_FOUND.getMessage(), HttpStatus.NOT_FOUND)));
     }
 
@@ -388,14 +390,21 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                                 )
                                 .switchIfEmpty(
                                         Mono.defer(() -> {
-                                            entity.setStatus(status.getStatusCode().getValue());
-                                            return this.tenderDAO.createOrUpdate(entity)
-                                                    .map(modifyEntity -> {
-                                                        response.setTender(TenderMapper.tenderToDto(modifyEntity));
-                                                        response.setCode(TenderCreateResponseDTO.CodeEnum.NUMBER_0);
-                                                        response.setResult(true);
-                                                        return response;
-                                                    });
+                                            return this.isValidFSUCost(tenderCode)
+                                                            .map(isValid -> {
+                                                                if (Boolean.FALSE.equals(isValid)){
+                                                                    throw new PnGenericException(ExceptionTypeEnum.CONSOLIDATE_ERROR, ExceptionTypeEnum.CONSOLIDATE_ERROR.getMessage());
+                                                                }
+                                                                entity.setStatus(status.getStatusCode().getValue());
+                                                                return this.tenderDAO.createOrUpdate(entity)
+                                                                        .map(modifyEntity -> {
+                                                                            response.setTender(TenderMapper.tenderToDto(modifyEntity));
+                                                                            response.setCode(TenderCreateResponseDTO.CodeEnum.NUMBER_0);
+                                                                            response.setResult(true);
+                                                                            return response;
+                                                                        });
+                                                            });
+
                                         })
                                 );
                     } else if (!entity.getStatus().equalsIgnoreCase(status.getStatusCode().getValue()) &&
@@ -414,4 +423,31 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                     return Mono.just(response);
                 }).mapNotNull(entity -> null);
     }
+
+
+    private Mono<Boolean> isValidFSUCost(String tenderCode){
+        return this.deliveryDriverDAO.getDeliveryDriverFSU(tenderCode)
+                .switchIfEmpty(Mono.error(new PnGenericException(COST_DRIVER_OR_FSU_NOT_FOUND, COST_DRIVER_OR_FSU_NOT_FOUND.getMessage())))
+                .flatMap(fsu -> this.costDAO.findAllFromTenderCode(tenderCode, fsu.getTaxId()).collectList())
+                .map(costs-> {
+                    if (costs.isEmpty()) {
+                        throw new PnGenericException(COST_DRIVER_OR_FSU_NOT_FOUND, COST_DRIVER_OR_FSU_NOT_FOUND.getMessage());
+                    }
+                    Map<String, Boolean> mapValidationCost = Utility.requiredCostFSU();
+                    costs.forEach(cost -> {
+                        String key = "";
+                        if (cost.getZone() != null){
+                            key = cost.getZone()+"-"+cost.getProductType();
+                            mapValidationCost.put(key, true);
+
+                        } else if (cost.getCap() != null && !cost.getCap().isEmpty() && cost.getCap().contains("99999")){
+                            key = "99999-"+cost.getProductType();
+                            mapValidationCost.put(key, true);
+                        }
+                    });
+                    return mapValidationCost;
+                })
+                .map(mapValidation ->  mapValidation.values().stream().filter(Boolean.FALSE::equals).toList().isEmpty());
+    }
+
 }
