@@ -108,7 +108,7 @@ public class DeliveryDriverMapper {
             });
         });
         Set setCostList = new HashSet(costList);
-        if ( !(costList.size()== setCostList.size())) throw new PnExcelValidatorException(ExceptionTypeEnum.DATA_NULL_OR_INVALID, null);
+        if ( !(costList.size()== setCostList.size())) throw new PnExcelValidatorException(ExceptionTypeEnum.INVALID_CAP_PRODUCT_TYPE, null );
     }
 
     public static void   checkUniqueZoneProductType(Map<PnDeliveryDriver,List<PnCost> > result ) throws PnExcelValidatorException {
@@ -147,7 +147,7 @@ public class DeliveryDriverMapper {
                     || (v.size()==2 && (v.get(0)==true && v.get(1)==true))
                     || (v.size()==2 &&(v.get(0)==false && v.get(1)==false))
             )
-                    throw new PnExcelValidatorException(ExceptionTypeEnum.DATA_NULL_OR_INVALID, null);
+                    throw new PnExcelValidatorException(ExceptionTypeEnum.INVALID_ZONE_PRODUCT_TYPE, null);
 
 
         });
