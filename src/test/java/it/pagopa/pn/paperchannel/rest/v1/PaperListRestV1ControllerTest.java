@@ -24,24 +24,18 @@ class PaperListRestV1ControllerTest {
     private PaperListService paperListService;
 
     @Test
-    void testGetAllCap(){
+    void testGetAllCap() {
         CapResponseDto response = new CapResponseDto();
         String path = "/paper-channel-bo/v1/cap";
         Mockito.when(paperListService.getAllCap(Mockito.anyString()))
                 .thenReturn(Mono.just(response));
 
         webTestClient.get()
-                .uri(uriBuilder -> uriBuilder.path(path).build())
+                .uri(uriBuilder -> uriBuilder.path(path)
+                        .queryParam("value", "00100")
+                        .build())
                 .exchange()
                 .expectStatus().isOk();
     }
 
-    /*private CapResponseDto getCapResponse(){
-        CapResponseDto response = new CapResponseDto();
-        List<CapDto> caps = new ArrayList<CapDto>();
-        CapDto cap = new CapDto();
-        cap.setCap("00166");
-        caps.add(cap);
-        return response;
-    }*/
 }

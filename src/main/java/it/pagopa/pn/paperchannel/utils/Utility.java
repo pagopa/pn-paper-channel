@@ -2,14 +2,13 @@ package it.pagopa.pn.paperchannel.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnCost;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
+import reactor.core.publisher.Flux;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -102,4 +101,22 @@ public class Utility {
     public static String addZero (int i){
         return String.format("%05d", i);
     }
+
+    public static Map<String, Boolean> requiredCostFSU(){
+        Map<String, Boolean> map = new HashMap<>();
+
+        map.put("ZONE_1-AR", false);
+        map.put("ZONE_1-RS", false);
+        map.put("ZONE_2-AR", false);
+        map.put("ZONE_2-RS", false);
+        map.put("ZONE_3-AR", false);
+        map.put("ZONE_3-RS", false);
+        map.put("99999-AR", false);
+        map.put("99999-890", false);
+        map.put("99999-RS", false);
+
+
+        return map;
+    }
+
 }

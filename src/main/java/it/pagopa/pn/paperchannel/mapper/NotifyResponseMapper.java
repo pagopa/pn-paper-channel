@@ -25,7 +25,8 @@ public class NotifyResponseMapper {
         } else if (StringUtils.equalsIgnoreCase(pnDeliveryFile.getStatus(), FileStatusCodeEnum.ERROR.getCode())) {
             dto.setStatus(NotifyResponseDto.StatusEnum.ERROR);
         }
-        dto.setRetryAfter((pnDeliveryFile.getStatus().equals(FileStatusCodeEnum.UPLOADING.getCode()))?BigDecimal.valueOf(10L):null);
+        dto.setRetryAfter((pnDeliveryFile.getStatus().equals(FileStatusCodeEnum.UPLOADING.getCode()) ||
+                pnDeliveryFile.getStatus().equals(FileStatusCodeEnum.IN_PROGRESS.getCode()))?BigDecimal.valueOf(100L):null);
         return dto;
     }
 }
