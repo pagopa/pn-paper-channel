@@ -7,6 +7,7 @@ import it.pagopa.pn.paperchannel.rest.v1.dto.TenderCreateRequestDTO;
 import it.pagopa.pn.paperchannel.rest.v1.dto.TenderDTO;
 import it.pagopa.pn.paperchannel.rest.v1.dto.*;
 import it.pagopa.pn.paperchannel.utils.Const;
+import it.pagopa.pn.paperchannel.utils.DateUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Pageable;
 
@@ -54,7 +55,18 @@ public class TenderMapper {
         TenderDTO tender = new TenderDTO();
         tender.setCode(pnTender.getTenderCode());
         tender.setName(pnTender.getDescription());
-        if (StringUtils.isNotEmpty(pnTender.getStatus())) tender.setStatus(TenderDTO.StatusEnum.valueOf(pnTender.getStatus()));
+        if (StringUtils.isNotEmpty(pnTender.getStatus())) {
+            Date today = new Date();
+            if(pnTender.getStatus().equals(TenderDTO.StatusEnum.VALIDATED.getValue())
+                && today.after(Date.from(pnTender.getStartDate())) && today.before(Date.from(pnTender.getEndDate()))) {
+                tender.setStatus(TenderDTO.StatusEnum.VALIDATED);
+            } else if(pnTender.getStatus().equals(TenderDTO.StatusEnum.ENDED.getValue())
+                && today.after(Date.from(pnTender.getEndDate()))) {
+                tender.setStatus(TenderDTO.StatusEnum.ENDED);
+            } else {
+                tender.setStatus(TenderDTO.StatusEnum.valueOf(pnTender.getStatus()));
+            }
+        }
         if (pnTender.getStartDate() != null) tender.setStartDate(Date.from(pnTender.getStartDate()));
         if (pnTender.getEndDate() != null) tender.setEndDate(Date.from(pnTender.getEndDate()));
         return tender;
