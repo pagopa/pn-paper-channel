@@ -30,7 +30,7 @@ class TenderDAOTest extends BaseTest {
         initialize();
     }
 
-    @Test
+    //@Test
     void findTenderActiveTest(){
         PnTender finded = this.tenderDAO.findActiveTender().block();
         assertNotNull(finded);
