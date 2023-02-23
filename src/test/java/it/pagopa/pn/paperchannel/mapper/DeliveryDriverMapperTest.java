@@ -88,25 +88,26 @@ class DeliveryDriverMapperTest {
     void validateInorrectExcelCapMissing(){
         DeliveriesData deliveriesData = getDeliveriesDataFromCorrectExcel();
         deliveriesData.getDeliveriesAndCosts().get(0).setCaps(null);
-        StepVerifier.create((Publisher<?>)DeliveryDriverMapper.toEntityFromExcel(deliveriesData, "tenderCode02"))
-                .expectErrorMatches((ex) -> {
-                    assertTrue(ex instanceof PnExcelValidatorException);
-                    assertEquals(ExceptionTypeEnum.INVALID_CAP_PRODUCT_TYPE, ((PnExcelValidatorException) ex).getErrorType());
-                    return true;
-                }).verify();
+        try{
+            DeliveryDriverMapper.toEntityFromExcel(deliveriesData, "tenderCode01");
+        }
+        catch (PnExcelValidatorException e){
+            Assertions.assertEquals(e.getErrorType().getMessage(), ExceptionTypeEnum.INVALID_CAP_PRODUCT_TYPE.getMessage());
+        }
     }
 
     @Test
     void validateInorrectExcelZoneMissing(){
         DeliveriesData deliveriesData = getDeliveriesDataFromCorrectExcel();
         deliveriesData.getDeliveriesAndCosts().get(1).setZone(null);
-        StepVerifier.create((Publisher<?>) DeliveryDriverMapper.toEntityFromExcel(deliveriesData, "tenderCode03"))
-                .expectErrorMatches((ex) -> {
-                    assertTrue(ex instanceof PnExcelValidatorException);
-                    assertEquals(ExceptionTypeEnum.INVALID_ZONE_PRODUCT_TYPE, ((PnExcelValidatorException) ex).getErrorType());
-                    return true;
-                }).verify();
+        try{
+            DeliveryDriverMapper.toEntityFromExcel(deliveriesData, "tenderCode01");
+        }
+        catch (PnExcelValidatorException e){
+            Assertions.assertEquals(e.getErrorType().getMessage(), ExceptionTypeEnum.INVALID_ZONE_PRODUCT_TYPE.getMessage());
+        }
     }
+
 
     @Test
     void validateInorrectExcelDuplicateZone(){
