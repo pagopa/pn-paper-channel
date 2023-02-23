@@ -23,6 +23,8 @@ import java.util.Date;
 import java.util.List;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.ACTIVE_TENDER_NOT_FOUND;
+import static it.pagopa.pn.paperchannel.utils.Const.ZONE_2;
+import static it.pagopa.pn.paperchannel.utils.Const.ZONE_3;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -76,6 +78,33 @@ class DeliveryDriverMapperTest {
 
     }
 
+
+    @Test
+    void validateCorrectExcel(){
+        DeliveriesData deliveriesData = getDeliveriesDataFromCorrectExcel();
+        DeliveryDriverMapper.toEntityFromExcel(deliveriesData, "tenderCode01");
+    }
+
+    @Test
+    void validateInorrectExcelCapMissing(){
+        DeliveriesData deliveriesData = getDeliveriesDataFromCorrectExcel();
+        deliveriesData.getDeliveriesAndCosts().get(0).setCaps(null);
+        DeliveryDriverMapper.toEntityFromExcel(deliveriesData, "tenderCode02");
+    }
+
+    @Test
+    void validateInorrectExcelZoneMissing(){
+        DeliveriesData deliveriesData = getDeliveriesDataFromCorrectExcel();
+        deliveriesData.getDeliveriesAndCosts().get(1).setZone(null);
+        DeliveryDriverMapper.toEntityFromExcel(deliveriesData, "tenderCode03");
+    }
+
+    @Test
+    void validateInorrectExcelDuplicateZone(){
+        DeliveriesData deliveriesData = getDeliveriesDataFromCorrectExcel();
+        DeliveryDriverMapper.toEntityFromExcel(deliveriesData, "tenderCode01");
+    }
+
     private DeliveriesData getDeliveries() {
         DeliveriesData deliveriesData = new DeliveriesData();
         DeliveryAndCost d1 = new DeliveryAndCost();
@@ -109,6 +138,70 @@ class DeliveryDriverMapperTest {
         d5.setZone("ZONE_1");
         d5.setFsu(false);
         deliveriesData.setDeliveriesAndCosts(List.of(d1, d2,d3,d4,d5));
+        return deliveriesData;
+    }
+
+    private DeliveriesData getDeliveriesDataFromCorrectExcel() {
+        DeliveriesData deliveriesData = new DeliveriesData();
+
+        //r2
+        DeliveryAndCost d1 = new DeliveryAndCost();
+        d1.setDenomination("GLS");
+        d1.setBusinessName("GLS");
+        d1.setTaxId("12344454332");
+        d1.setProductType("AR");
+        d1.setCaps(List.of("21048, 11111,"));
+        float basePrice= (float) 12.45;
+        d1.basePrice= basePrice ;
+        d1.setFsu(true);
+
+        //r1
+        DeliveryAndCost d2 = new DeliveryAndCost();
+        d2.setDenomination("GLS");
+        d2.setBusinessName("GLS");
+        d2.setTaxId("12344454332");
+        d2.setProductType("AR");
+        d2.setZone(ZONE_2);
+        d2.setFsu(true);
+
+        //r3
+        DeliveryAndCost d3 = new DeliveryAndCost();
+        d3.setDenomination("BRT");
+        d3.setBusinessName("BRT");
+        d3.setTaxId("12345678901");
+        d3.setProductType("RS");
+        d3.setZone(ZONE_3);
+        d3.setFsu(false);
+
+        //r4
+        DeliveryAndCost d4 = new DeliveryAndCost();
+        d4.setDenomination("BRT");
+        d4.setBusinessName("BRT");
+        d4.setTaxId("12345678901");
+        d4.setProductType("890");
+        d4.setCaps(List.of("22233, 21048,"));
+        d4.setFsu(false);
+
+        //r5
+        DeliveryAndCost d5 = new DeliveryAndCost();
+        d5.setDenomination("sdadasd");
+        d5.setBusinessName("IIIII");
+        d5.setTaxId("12345643221");
+        d5.setProductType("RS");
+        d5.setCaps((List.of("22233")));
+        d5.setFsu(false);
+
+
+        //r6
+        DeliveryAndCost d6 = new DeliveryAndCost();
+        d6.setDenomination("BRT");
+        d6.setBusinessName("BRT");
+        d6.setTaxId("12345678901");
+        d6.setProductType("RS");
+        d6.setZone(ZONE_3);
+        d6.setFsu(true);
+
+        deliveriesData.setDeliveriesAndCosts(List.of(d1, d2,d3,d4,d5,d6));
         return deliveriesData;
     }
 

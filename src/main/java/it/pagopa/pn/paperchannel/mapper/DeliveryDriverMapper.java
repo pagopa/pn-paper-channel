@@ -13,10 +13,10 @@ import it.pagopa.pn.paperchannel.rest.v1.dto.PageableDeliveryDriverResponseDto;
 import it.pagopa.pn.paperchannel.utils.costutils.CapProductType;
 import it.pagopa.pn.paperchannel.utils.costutils.ZoneProductType;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.data.domain.Pageable;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class DeliveryDriverMapper {
@@ -59,7 +59,10 @@ public class DeliveryDriverMapper {
             pnCost.setProductType(deliveryAndCost.getProductType());
             pnCost.setBasePrice(deliveryAndCost.getBasePrice());
             pnCost.setPagePrice(deliveryAndCost.getPagePrice());
-            List <String> capList = deliveryAndCost.getCaps();
+            List <String>  capList =null;
+            if (deliveryAndCost.getCaps()!=null)
+                capList = Arrays.stream(deliveryAndCost.getCaps().get(0).split(","))
+                    .collect(Collectors.toList());
             pnCost.setCap(capList);
             pnCost.setFsu(deliveryAndCost.getFsu());
 
@@ -94,11 +97,11 @@ public class DeliveryDriverMapper {
             List<PnCost> singleCostList = result.get(k);
             singleCostList.forEach(elem ->{
                 //Get List of caps
-                List <String> caps = elem.getCap() ;
+                List <String> caps =elem.getCap();
                 if (caps!=null) {
-                    CapProductType capProductType = new CapProductType();
-                    capProductType.setProductType(elem.getProductType());
                     caps.forEach(singleCap -> {
+                        CapProductType capProductType = new CapProductType();
+                        capProductType.setProductType(elem.getProductType());
                         //Add into cost list every single couple cap - product type
                         capProductType.setCap(singleCap);
                         costList.add(capProductType);
