@@ -250,7 +250,7 @@ class PaperMessagesServiceTest extends BaseTest {
         deliveryRequest.setHashedFiscalCode(Utility.convertToHash(deliveryRequest.getFiscalCode()));
         deliveryRequest.setPrintType("PT");
         deliveryRequest.setStartDate("");
-        deliveryRequest.setProductType("RN_AR");
+        deliveryRequest.setProductType("AR");
         deliveryRequest.setAttachments(attachmentUrls);
         return deliveryRequest;
     }
@@ -290,7 +290,7 @@ class PaperMessagesServiceTest extends BaseTest {
         deliveryRequest.setProposalProductType("");
         deliveryRequest.setPrintType("PT");
         deliveryRequest.setStartDate("");
-        deliveryRequest.setProductType("RN_AR");
+        deliveryRequest.setProductType("AR");
         deliveryRequest.setAttachments(attachmentUrls);
         return deliveryRequest;
     }
@@ -406,7 +406,7 @@ class PaperMessagesServiceTest extends BaseTest {
         deliveryRequest.setPrintType("PT");
         deliveryRequest.setStartDate("");
         deliveryRequest.setHashedFiscalCode(Utility.convertToHash(deliveryRequest.getFiscalCode()));
-        deliveryRequest.setProductType("RN_AR");
+        deliveryRequest.setProductType("AR");
         deliveryRequest.setAttachments(attachmentUrls);
         return deliveryRequest;
     }

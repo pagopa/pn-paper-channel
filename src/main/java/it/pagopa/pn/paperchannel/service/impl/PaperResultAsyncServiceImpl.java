@@ -22,6 +22,7 @@ import it.pagopa.pn.paperchannel.service.PaperResultAsyncService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
+import it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.MDC;
@@ -34,7 +35,8 @@ import java.time.Duration;
 import java.util.Date;
 
 import static it.pagopa.pn.commons.log.MDCWebFilter.MDC_TRACE_ID_KEY;
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DATA_NULL_OR_INVALID;
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.EXTERNAL_CHANNEL_API_EXCEPTION;
 
 @Slf4j
 @Service
@@ -85,13 +87,18 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
                                                                 EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name()).map(item -> item));
                                     }
 
+                                } else if (isTechnicalErrorStatusCode(singleStatusUpdateDto)) {
+                                    return Mono.delay(Duration.ofMillis(1)).publishOn(Schedulers.boundedElastic())
+                                            .flatMap( i-> paperRequestErrorDAO.created(entity.getRequestId(),
+                                                    entity.getStatusCode(),
+                                                    entity.getStatusDetail()).map(item -> item))
+                                            .flatMap(item -> Mono.just(updatedEntity));
                                 }
-                                sendPaperResponse(updatedEntity, singleStatusUpdateDto);
+                                if (!isTechnicalErrorStatusCode(singleStatusUpdateDto)) sendPaperResponse(updatedEntity, singleStatusUpdateDto);
                                 return Mono.just(updatedEntity);
                             })
                             .onErrorResume(ex -> {
-                                //TODO case of retry event from external-channel queue
-                                ex.printStackTrace();
+                                log.error("Error in retrieve EC from queue {}", ex.getMessage());
                                 return Mono.error(ex);
                             });
                 });
@@ -106,7 +113,15 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
 
     private boolean isRetryStatusCode(SingleStatusUpdateDto singleStatusUpdateDto) {
         boolean retryStatusCod = false;
-        if (singleStatusUpdateDto.getAnalogMail() != null && StringUtils.equals(singleStatusUpdateDto.getAnalogMail().getStatusCode(), this.pnPaperChannelConfig.getRetryStatus())) {
+        if (singleStatusUpdateDto.getAnalogMail() != null && ExternalChannelCodeEnum.isRetryStatusCode(singleStatusUpdateDto.getAnalogMail().getStatusCode())) {
+            retryStatusCod = true;
+        }
+        return retryStatusCod;
+    }
+
+    private boolean isTechnicalErrorStatusCode(SingleStatusUpdateDto singleStatusUpdateDto) {
+        boolean retryStatusCod = false;
+        if (singleStatusUpdateDto.getAnalogMail() != null && ExternalChannelCodeEnum.isErrorStatusCode(singleStatusUpdateDto.getAnalogMail().getStatusCode())) {
             retryStatusCod = true;
         }
         return retryStatusCod;
@@ -157,8 +172,9 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
     }
 
     private Mono<PnDeliveryRequest> updateEntityResult(SingleStatusUpdateDto singleStatusUpdateDto, PnDeliveryRequest pnDeliveryRequestMono) {
-        pnDeliveryRequestMono.setStatusCode(singleStatusUpdateDto.getAnalogMail().getStatusCode());
-        pnDeliveryRequestMono.setStatusDetail(singleStatusUpdateDto.getAnalogMail().getStatusDescription());
+        pnDeliveryRequestMono.setStatusCode(ExternalChannelCodeEnum.getStatusCode(singleStatusUpdateDto.getAnalogMail().getStatusCode()));
+        pnDeliveryRequestMono.setStatusDetail(singleStatusUpdateDto.getAnalogMail().getProductType()
+                .concat(" - ").concat(pnDeliveryRequestMono.getStatusCode()).concat(" - ").concat(singleStatusUpdateDto.getAnalogMail().getStatusDescription()));
         pnDeliveryRequestMono.setStatusDate(DateUtils.formatDate(Date.from(singleStatusUpdateDto.getAnalogMail().getStatusDateTime().toInstant())));
         return requestDeliveryDAO.updateData(pnDeliveryRequestMono);
     }
