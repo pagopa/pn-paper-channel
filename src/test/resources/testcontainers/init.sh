@@ -236,7 +236,7 @@ aws  --profile default --region us-east-1 --endpoint-url=http://localstack:4566 
 aws  --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     dynamodb put-item \
     --table-name DeliveryDriverDynamoTable  \
-    --item '{"uniqueCode": {"S": "CXJ564" }, "tenderCode": {"S": "GARA-2022"},  "denomination": {"S": "GLS"}, "taxId": {"S": "1234957483"}, "phoneNumber": {"S": "351543654"}, "fsu": {"BOOL": false}, "author":{"S": "PN-PAPER-CHANNEL"}, "startDate": {"S": "2023-01-22T10:15:30Z"}}'
+    --item '{"uniqueCode": {"S": "CXJ564" }, "tenderCode": {"S": "GARA-2022"},  "denomination": {"S": "GLS"}, "taxId": {"S": "12349574832"}, "phoneNumber": {"S": "351543654"}, "fsu": {"BOOL": false}, "author":{"S": "PN-PAPER-CHANNEL"}, "startDate": {"S": "2023-01-22T10:15:30Z"}}'
 
 
 aws  --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
@@ -254,5 +254,11 @@ aws  --profile default --region us-east-1 --endpoint-url=http://localstack:4566 
     dynamodb put-item \
     --table-name ZoneDynamoTable  \
     --item '{"countryIt": {"S": "countryIt" }, "countryEn": {"S": "countryEn"}, "zone": {"S": "zone_1"}}'
+
+
+aws  --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
+    dynamodb put-item \
+    --table-name DeliveryDriverDynamoTable  \
+    --item '{"uniqueCode": {"S": "KAS1901" }, "tenderCode": {"S": "GARA-2023"},  "denomination": {"S": "UPS"}, "taxId": {"S": "0123456789"}, "phoneNumber": {"S": "369451287238"}, "fsu": {"BOOL": true}, "author":{"S": "PN-PAPER-CHANNEL"}, "startDate": {"S": "2023-01-22T10:15:30Z"}}'
 
 echo "Initialization terminated"
