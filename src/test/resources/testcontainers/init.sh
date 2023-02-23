@@ -250,4 +250,9 @@ aws  --profile default --region us-east-1 --endpoint-url=http://localstack:4566 
     --table-name DeliveryDriverDynamoTable  \
     --item '{"uniqueCode": {"S": "LOP3222" }, "tenderCode": {"S": "GARA-2022"},  "denomination": {"S": "BRT"}, "taxId": {"S": "21432432342"}, "phoneNumber": {"S": "32423455322"}, "fsu": {"BOOL": false}, "author":{"S": "PN-PAPER-CHANNEL"}, "startDate": {"S": "2023-01-22T10:15:30Z"}}'
 
+aws  --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
+    dynamodb put-item \
+    --table-name ZoneDynamoTable  \
+    --item '{"countryIt": {"S": "countryIt" }, "countryEn": {"S": "countryEn"}, "zone": {"S": "zone_1"}}'
+
 echo "Initialization terminated"
