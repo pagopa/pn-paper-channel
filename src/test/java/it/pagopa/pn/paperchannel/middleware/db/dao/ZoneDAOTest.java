@@ -36,13 +36,18 @@ class ZoneDAOTest extends BaseTest {
     void getByCountryTest(){
         PnZone zone = this.zoneDAO.getByCountry(zoneCountryIt.getCountryIt()).block();
         assertNotNull(zone);
+        assertEquals("countryIt",zone.getCountryIt());
+        assertEquals("countryEn",zone.getCountryEn());
+        assertEquals("zone_1",zone.getZone());
+    }
 
+    @Test
+    void getByCountryErrorTest(){
+        //StepVerifier.create(this.zoneDAO.getByCountry("test-zone-error")).expectError(PnGenericException.class).verify();
         this.zoneDAO.getByCountry("test-zone-error").onErrorResume(ex -> {
             assertEquals(ex.getMessage(),COUNTRY_NOT_FOUND.getMessage());
             return Mono.empty();
         }).block();
-
-        //StepVerifier.create(this.zoneDAO.getByCountry("test-zone-error")).expectError(PnGenericException.class).verify();
     }
 
     private void initialValue() {
