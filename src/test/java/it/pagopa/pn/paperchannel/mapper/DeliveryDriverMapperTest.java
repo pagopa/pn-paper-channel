@@ -4,7 +4,6 @@ import it.pagopa.pn.paperchannel.dao.model.DeliveriesData;
 import it.pagopa.pn.paperchannel.dao.model.DeliveryAndCost;
 import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnExcelValidatorException;
-import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryDriver;
 import it.pagopa.pn.paperchannel.model.PageModel;
 import it.pagopa.pn.paperchannel.rest.v1.dto.DeliveryDriverDTO;
@@ -12,8 +11,9 @@ import it.pagopa.pn.paperchannel.rest.v1.dto.PageableDeliveryDriverResponseDto;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.modelmapper.internal.util.Assert;
+import org.reactivestreams.Publisher;
 import org.springframework.data.domain.Pageable;
-import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.lang.reflect.Constructor;
@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.ACTIVE_TENDER_NOT_FOUND;
 import static it.pagopa.pn.paperchannel.utils.Const.ZONE_2;
 import static it.pagopa.pn.paperchannel.utils.Const.ZONE_3;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -33,10 +32,10 @@ class DeliveryDriverMapperTest {
     @Test
     void exceptionConstructorTest() throws  NoSuchMethodException {
         Constructor<DeliveryDriverMapper> constructor = DeliveryDriverMapper.class.getDeclaredConstructor();
-        Assertions.assertTrue(Modifier.isPrivate(constructor.getModifiers()));
+        assertTrue(Modifier.isPrivate(constructor.getModifiers()));
         constructor.setAccessible(true);
         Exception exception = Assertions.assertThrows(Exception.class, () -> constructor.newInstance());
-        Assertions.assertEquals(null, exception.getMessage());
+        assertEquals(null, exception.getMessage());
     }
 
     @Test
@@ -65,7 +64,7 @@ class DeliveryDriverMapperTest {
 
 
 
-    @Test
+    //@Test
     void errorToEntityFromExcelTest(){
        { /*StepVerifier.create(DeliveryDriverMapper.toEntityFromExcel(getDeliveries(), "ABC"))
                     .expectErrorMatches((ex) -> {
@@ -82,21 +81,31 @@ class DeliveryDriverMapperTest {
     @Test
     void validateCorrectExcel(){
         DeliveriesData deliveriesData = getDeliveriesDataFromCorrectExcel();
-        DeliveryDriverMapper.toEntityFromExcel(deliveriesData, "tenderCode01");
+        Assert.notNull(DeliveryDriverMapper.toEntityFromExcel(deliveriesData, "tenderCode01"));
     }
 
     @Test
     void validateInorrectExcelCapMissing(){
         DeliveriesData deliveriesData = getDeliveriesDataFromCorrectExcel();
         deliveriesData.getDeliveriesAndCosts().get(0).setCaps(null);
-        DeliveryDriverMapper.toEntityFromExcel(deliveriesData, "tenderCode02");
+        StepVerifier.create((Publisher<?>)DeliveryDriverMapper.toEntityFromExcel(deliveriesData, "tenderCode02"))
+                .expectErrorMatches((ex) -> {
+                    assertTrue(ex instanceof PnExcelValidatorException);
+                    assertEquals(ExceptionTypeEnum.INVALID_CAP_PRODUCT_TYPE, ((PnExcelValidatorException) ex).getErrorType());
+                    return true;
+                }).verify();
     }
 
     @Test
     void validateInorrectExcelZoneMissing(){
         DeliveriesData deliveriesData = getDeliveriesDataFromCorrectExcel();
         deliveriesData.getDeliveriesAndCosts().get(1).setZone(null);
-        DeliveryDriverMapper.toEntityFromExcel(deliveriesData, "tenderCode03");
+        StepVerifier.create((Publisher<?>) DeliveryDriverMapper.toEntityFromExcel(deliveriesData, "tenderCode03"))
+                .expectErrorMatches((ex) -> {
+                    assertTrue(ex instanceof PnExcelValidatorException);
+                    assertEquals(ExceptionTypeEnum.INVALID_ZONE_PRODUCT_TYPE, ((PnExcelValidatorException) ex).getErrorType());
+                    return true;
+                }).verify();
     }
 
     @Test
