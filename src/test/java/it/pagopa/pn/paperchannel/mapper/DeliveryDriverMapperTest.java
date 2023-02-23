@@ -97,7 +97,7 @@ class DeliveryDriverMapperTest {
     }
 
     @Test
-    void validateInorrectExcelZoneMissing(){
+    void validateIncorrectExcelZoneMissing(){
         DeliveriesData deliveriesData = getDeliveriesDataFromCorrectExcel();
         deliveriesData.getDeliveriesAndCosts().get(1).setZone(null);
         try{
@@ -110,7 +110,7 @@ class DeliveryDriverMapperTest {
 
 
     @Test
-    void validateInorrectExcelDuplicateZone(){
+    void validateIncorrectExcelDuplicateZone(){
         DeliveriesData deliveriesData = getDeliveriesDataFromCorrectExcel();
         DeliveryDriverMapper.toEntityFromExcel(deliveriesData, "tenderCode01");
     }
