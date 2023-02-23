@@ -38,7 +38,7 @@ public class PrepareEventMapper {
         }
 
         entityEvent.setStatusDetail(request.getStatusDetail());
-        entityEvent.setProductType(request.getProposalProductType());
+        entityEvent.setProductType(request.getProductType());
         entityEvent.setStatusDateTime((DateUtils.parseDateString(request.getStatusDate())));
         return entityEvent;
     }
