@@ -94,14 +94,6 @@ public class BaseService {
     }
 
 
-    private Mono<String> getZone(String country) {
-        //TODO decommentare quando la tabella sarà popolata
-//        return zoneDAO.getByCountry(country)
-//                .map(item -> item.getZone());
-        return Mono.just("ZONA_1");
-    }
-
-
     private Mono<PnDeliveryRequest> changeStatusDeliveryRequest(PnDeliveryRequest pnDeliveryRequeste, StatusDeliveryEnum status){
         pnDeliveryRequeste.setStatusCode(status.getCode());
         pnDeliveryRequeste.setStatusDetail(status.getDescription());

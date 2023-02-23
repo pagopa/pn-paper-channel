@@ -88,16 +88,17 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
                                     }
 
                                 } else if (isTechnicalErrorStatusCode(singleStatusUpdateDto)) {
-                                    Mono.delay(Duration.ofMillis(1)).publishOn(Schedulers.boundedElastic())
+                                    return Mono.delay(Duration.ofMillis(1)).publishOn(Schedulers.boundedElastic())
                                             .flatMap( i-> paperRequestErrorDAO.created(entity.getRequestId(),
-                                                    EXTERNAL_CHANNEL_API_EXCEPTION.getMessage(),
-                                                    EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name()).map(item -> item));
+                                                    entity.getStatusCode(),
+                                                    entity.getStatusDetail()).map(item -> item))
+                                            .flatMap(item -> Mono.just(updatedEntity));
                                 }
                                 if (!isTechnicalErrorStatusCode(singleStatusUpdateDto)) sendPaperResponse(updatedEntity, singleStatusUpdateDto);
                                 return Mono.just(updatedEntity);
                             })
                             .onErrorResume(ex -> {
-                                log.error("Error in retrieve EC from queue", ex.getMessage());
+                                log.error("Error in retrieve EC from queue {}", ex.getMessage());
                                 return Mono.error(ex);
                             });
                 });
