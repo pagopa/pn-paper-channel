@@ -94,14 +94,6 @@ public class BaseService {
     }
 
 
-    private Mono<String> getZone(String country) {
-        //TODO decommentare quando la tabella sarà popolata
-//        return zoneDAO.getByCountry(country)
-//                .map(item -> item.getZone());
-        return Mono.just("ZONA_1");
-    }
-
-
     private Mono<PnDeliveryRequest> changeStatusDeliveryRequest(PnDeliveryRequest pnDeliveryRequeste, StatusDeliveryEnum status){
         pnDeliveryRequeste.setStatusCode(status.getCode());
         pnDeliveryRequeste.setStatusDetail(status.getDescription());
@@ -146,9 +138,9 @@ public class BaseService {
                 productType = RACCOMANDATA_890;
             }
         } else {
-            if (productTypeEnum.equals(ProductTypeEnum.AR) || productTypeEnum.equals(ProductTypeEnum._890)) {
+            if (productTypeEnum.equals(ProductTypeEnum.RIS) || productTypeEnum.equals(ProductTypeEnum._890)) {
                 productType = RACCOMANDATA_AR;
-            } else if (productTypeEnum.equals(ProductTypeEnum.RS)){
+            } else if (productTypeEnum.equals(ProductTypeEnum.RIS)){
                 productType = RACCOMANDATA_SEMPLICE;
             }
         }

@@ -80,7 +80,7 @@ public class TenderDAOImpl extends BaseDAO<PnTender> implements TenderDAO {
                 + PnTender.COL_START_DATE + " <= :dateNow AND " + PnTender.COL_END_DATE + " >= :dateNow";
 
         Map<String, AttributeValue> values = new HashMap<>();
-        values.put(":activeStatus", AttributeValue.builder().s("IN_PROGRESS").build());
+        values.put(":activeStatus", AttributeValue.builder().s(TenderDTO.StatusEnum.VALIDATED.getValue()).build());
         values.put(":dateNow", AttributeValue.builder().s(Instant.now().toString()).build());
 
         return this.getByFilter(conditional, PnTender.AUTHOR_INDEX, values, filter)
