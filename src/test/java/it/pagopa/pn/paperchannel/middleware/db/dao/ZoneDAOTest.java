@@ -1,21 +1,12 @@
 package it.pagopa.pn.paperchannel.middleware.db.dao;
 
 import it.pagopa.pn.paperchannel.config.BaseTest;
-import it.pagopa.pn.paperchannel.exception.PnGenericException;
-import it.pagopa.pn.paperchannel.middleware.db.dao.ZoneDAO;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnCost;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnZone;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import reactor.core.publisher.Mono;
-import reactor.test.StepVerifier;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.COUNTRY_NOT_FOUND;
 import static org.junit.jupiter.api.Assertions.*;
@@ -25,7 +16,7 @@ class ZoneDAOTest extends BaseTest {
     @Autowired
     private ZoneDAO zoneDAO;
 
-    private final PnZone zoneCountryIt = new PnZone();
+    private final PnZone zoneCountry = new PnZone();
 
     @BeforeEach
     public void setUp(){
@@ -34,7 +25,7 @@ class ZoneDAOTest extends BaseTest {
 
     @Test
     void getByCountryTest(){
-        PnZone zone = this.zoneDAO.getByCountry(zoneCountryIt.getCountryIt()).block();
+        PnZone zone = this.zoneDAO.getByCountry(zoneCountry.getCountryEn()).block();
         assertNotNull(zone);
         assertEquals("countryIt",zone.getCountryIt());
         assertEquals("countryEn",zone.getCountryEn());
@@ -51,9 +42,9 @@ class ZoneDAOTest extends BaseTest {
     }
 
     private void initialValue() {
-        zoneCountryIt.setZone("zone");
-        zoneCountryIt.setCountryIt("countryIt");
-        zoneCountryIt.setCountryEn("countryEn");
+        zoneCountry.setZone("zone");
+        zoneCountry.setCountryIt("countryIt");
+        zoneCountry.setCountryEn("countryEn");
     }
 
 }
