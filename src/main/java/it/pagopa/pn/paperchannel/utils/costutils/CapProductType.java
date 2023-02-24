@@ -1,6 +1,5 @@
 package it.pagopa.pn.paperchannel.utils.costutils;
 
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryDriver;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,6 +14,7 @@ import java.util.Objects;
 public class CapProductType {
     private String cap;
     private String productType;
+    private boolean fsu;
 
     @Override
     public boolean equals(Object o) {

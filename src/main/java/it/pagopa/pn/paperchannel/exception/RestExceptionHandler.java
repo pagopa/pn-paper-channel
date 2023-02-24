@@ -31,7 +31,7 @@ public class RestExceptionHandler {
         final Problem problem = new Problem();
         settingTraceId(problem);
         problem.setTitle(exception.getExceptionType().getTitle());
-        problem.setDetail(exception.getExceptionType().getMessage());
+        problem.setDetail(exception.getMessage());
         problem.setStatus(exception.getHttpStatus().value());
         problem.setTimestamp(new Date());
         return Mono.just(ResponseEntity.status(exception.getHttpStatus()).body(problem));

@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import javax.swing.text.StyledEditorKit;
 import java.util.Objects;
 
 @Getter
@@ -14,6 +15,7 @@ import java.util.Objects;
 public class ZoneProductType {
     private String zone;
     private String productType;
+    private boolean fsu;
 
 
     @Override
@@ -21,7 +23,7 @@ public class ZoneProductType {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         ZoneProductType that = (ZoneProductType) o;
-        return zone.equals(that.zone) && productType.equals(that.productType) ;
+        return zone.equals(that.zone) && productType.equals(that.productType) && Boolean.compare(fsu, that.fsu) == 0;
     }
 
     @Override

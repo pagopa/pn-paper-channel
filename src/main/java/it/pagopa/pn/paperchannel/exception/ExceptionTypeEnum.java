@@ -40,11 +40,14 @@ public enum ExceptionTypeEnum{
     DRIVER_CANNOT_BE_DELETED("DRIVER_CANNOT_BE_DELETED", "Il recapitista non può essere eliminato, appartiene ad una gara convalidata."),
     COST_CANNOT_BE_DELETED("COST_CANNOT_BE_DELETED", "Il costo non può essere eliminato, appartiene ad una gara convalidata."),
     DATA_VAULT_ENCRYPTION_ERROR("DATA_VAULT_ENCRYPTION_ERROR", "Servizio irraggiungibile od errore in fase di criptazione"),
+    DATA_VAULT_DECRYPTION_ERROR("DATA_VAULT_DECRYPTION_ERROR", "Servizio irraggiungibile od errore in fase di decriptazione"),
+
     CONSOLIDATE_ERROR("CONSOLIDATE_ERROR", "La Gara è già in stato consolidato"),
 
     INVALID_CAP_PRODUCT_TYPE("INVALID_CAP_PRODUCT_TYPE", "Sono presenti duplicati tra CAP e Product Type"),
-
-    INVALID_ZONE_PRODUCT_TYPE("INVALID_ZONE_PRODUCT_TYPE", "Il campo FSU, ZONE oppure Product Type non sono inseriti correttamente");
+    INVALID_CAP_FSU("INVALID_CAP_FSU", "Per FSU non sono stati inseriti i cap di default"),
+    INVALID_ZONE_FSU("INVALID_ZONE_FSU", "Non sono stati inseriti i costi internazionali obbligatori per FSU"),
+    INVALID_ZONE_PRODUCT_TYPE("INVALID_ZONE_PRODUCT_TYPE", "Ci sono Costi internazionali duplicati.");
 
     private final String title;
     private final String message;
