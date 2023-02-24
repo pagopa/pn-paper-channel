@@ -17,9 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
-import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.TransactionCanceledException;
@@ -64,8 +62,11 @@ public class RequestDeliveryDAOImpl extends BaseDAO<PnDeliveryRequest> implement
                                                 addressDAO.createTransaction(this.transactWriterInitializer, pnAddress);
                                             }
                                             request.setHashedFiscalCode(Utility.convertToHash(request.getFiscalCode()));
-                                            request.setFiscalCode(encode(request, PnDeliveryRequest.class).getFiscalCode());
-                                            transactWriterInitializer.addRequestTransaction(this.dynamoTable, request, PnDeliveryRequest.class);
+                                            transactWriterInitializer.addRequestTransaction(
+                                                    this.dynamoTable,
+                                                    encode(request, PnDeliveryRequest.class),
+                                                    PnDeliveryRequest.class
+                                            );
                                             return putWithTransact(transactWriterInitializer.build()).thenApply(item-> request);
                                         } catch (TransactionCanceledException tce) {
                                             log.error("Transaction Canceled" + tce.getMessage());
@@ -80,12 +81,12 @@ public class RequestDeliveryDAOImpl extends BaseDAO<PnDeliveryRequest> implement
                     throwable.printStackTrace();
                     return Mono.error(throwable);
                 })
-                .map(entityCreated -> entityCreated);
+                .map(this::decode);
     }
 
     @Override
     public Mono<PnDeliveryRequest> updateData(PnDeliveryRequest pnDeliveryRequest) {
-        return Mono.fromFuture(this.update(pnDeliveryRequest).thenApply(item -> item));
+        return Mono.fromFuture(this.update(encode(pnDeliveryRequest, PnDeliveryRequest.class)).thenApply(this::decode));
     }
 
     @Override

@@ -16,6 +16,7 @@ import it.pagopa.pn.paperchannel.model.FileStatusCodeEnum;
 import it.pagopa.pn.paperchannel.rest.v1.dto.*;
 import it.pagopa.pn.paperchannel.s3.S3Bucket;
 import it.pagopa.pn.paperchannel.service.PaperChannelService;
+import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.Utility;
 import it.pagopa.pn.paperchannel.validator.CostValidator;
 import lombok.extern.slf4j.Slf4j;
@@ -387,8 +388,9 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                 .switchIfEmpty(Mono.error(new PnGenericException(TENDER_NOT_EXISTED, TENDER_NOT_EXISTED.getMessage())))
                 .flatMap(entity -> {
                     TenderCreateResponseDTO response = new TenderCreateResponseDTO();
-                    if (entity.getStatus().equalsIgnoreCase(TenderDTO.StatusEnum.ENDED.getValue())) {
-                        return Mono.error(new PnGenericException(TENDER_NOT_EXISTED, TENDER_NOT_EXISTED.getMessage()));
+                    if (entity.getActualStatus().equals(TenderDTO.StatusEnum.IN_PROGRESS.getValue()) ||
+                            entity.getActualStatus().equals(TenderDTO.StatusEnum.ENDED.getValue())) {
+                        return Mono.error(new PnGenericException(STATUS_NOT_VARIABLE, STATUS_NOT_VARIABLE.getMessage()));
                     }
                     if (!entity.getStatus().equalsIgnoreCase(status.getStatusCode().getValue()) &&
                             entity.getStatus().equalsIgnoreCase(TenderDTO.StatusEnum.CREATED.getValue())) {
@@ -396,14 +398,14 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                         Date endDate = Date.from(entity.getEndDate());
                         return this.tenderDAO.getConsolidate(startDate, endDate)
                                 .flatMap(newTender ->
-                                        Mono.error(new PnGenericException(ExceptionTypeEnum.CONSOLIDATE_ERROR, ExceptionTypeEnum.CONSOLIDATE_ERROR.getMessage()))
+                                        Mono.error(new PnGenericException(CONSOLIDATE_ERROR, CONSOLIDATE_ERROR.getMessage()))
                                 )
                                 .switchIfEmpty(
                                         Mono.defer(() -> {
                                             return this.isValidFSUCost(tenderCode)
                                                             .map(isValid -> {
                                                                 if (Boolean.FALSE.equals(isValid)){
-                                                                    throw new PnGenericException(ExceptionTypeEnum.CONSOLIDATE_ERROR, ExceptionTypeEnum.CONSOLIDATE_ERROR.getMessage());
+                                                                    throw new PnGenericException(FSUCOST_VALIDATOR_NOTVALID, FSUCOST_VALIDATOR_NOTVALID.getMessage());
                                                                 }
                                                                 entity.setStatus(status.getStatusCode().getValue());
                                                                 return this.tenderDAO.createOrUpdate(entity)
@@ -418,7 +420,7 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                                         })
                                 );
                     } else if (!entity.getStatus().equalsIgnoreCase(status.getStatusCode().getValue()) &&
-                            entity.getStatus().equalsIgnoreCase(TenderDTO.StatusEnum.IN_PROGRESS.getValue())) {
+                            entity.getStatus().equalsIgnoreCase(TenderDTO.StatusEnum.VALIDATED.getValue())) {
                         entity.setStatus(status.getStatusCode().getValue());
                         return this.tenderDAO.createOrUpdate(entity)
                                 .map(modifyEntity -> {
@@ -446,12 +448,12 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                     Map<String, Boolean> mapValidationCost = Utility.requiredCostFSU();
                     costs.forEach(cost -> {
                         String key = "";
-                        if (cost.getZone() != null){
+                        if (StringUtils.isNotBlank(cost.getZone())){
                             key = cost.getZone()+"-"+cost.getProductType();
                             mapValidationCost.put(key, true);
 
-                        } else if (cost.getCap() != null && !cost.getCap().isEmpty() && cost.getCap().contains("99999")){
-                            key = "99999-"+cost.getProductType();
+                        } else if (cost.getCap() != null && !cost.getCap().isEmpty() && cost.getCap().contains(Const.CAP_DEFAULT)){
+                            key = Const.CAP_DEFAULT+"-"+cost.getProductType();
                             mapValidationCost.put(key, true);
                         }
                     });

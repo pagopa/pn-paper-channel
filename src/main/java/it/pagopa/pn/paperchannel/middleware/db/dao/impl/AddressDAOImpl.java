@@ -6,7 +6,6 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.BaseDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.TransactWriterInitializer;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,12 +16,7 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 
 @Repository
 @Slf4j
@@ -42,7 +36,7 @@ public class AddressDAOImpl extends BaseDAO <PnAddress> implements AddressDAO {
 
     @Override
     public Mono<PnAddress> create(PnAddress pnAddress) {
-        return Mono.fromFuture(this.decode(put(pnAddress)).thenApply(i-> i));
+        return Mono.fromFuture(put(pnAddress).thenApply(this::decode));
     }
 
     @Override
@@ -59,15 +53,8 @@ public class AddressDAOImpl extends BaseDAO <PnAddress> implements AddressDAO {
     public Mono<List<PnAddress>> findAllByRequestId(String requestId) {
         QueryConditional keyConditional = CONDITION_EQUAL_TO.apply(Key.builder().partitionValue(requestId).build());
         return getByFilter(keyConditional, null, null, null)
-                .flatMap(address -> Mono.fromFuture(decode(CompletableFuture.completedFuture(address)).thenApply(item -> item)))
+                .map(this::decode)
                 .collectList();
-    }
-
-    private CompletableFuture<Integer> countOccurrencesEntity(String requestId) {
-        String keyConditionExpression = PnDeliveryRequest.COL_REQUEST_ID + " = :requestId";
-        Map<String, AttributeValue> expressionValues = new HashMap<>();
-        expressionValues.put(":requestId",  AttributeValue.builder().s(requestId).build());
-        return this.getCounterQuery(expressionValues, "", keyConditionExpression);
     }
 
 }
