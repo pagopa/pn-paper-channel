@@ -45,7 +45,7 @@ public class DataVaultEncryptionImpl extends BaseClient implements DataEncryptio
     @Override
     public String encode(String fiscalCode, String type) {
         return this.recipientsApi.ensureRecipientByExternalId(
-                        (StringUtils.equalsIgnoreCase(type, RecipientTypeDto.PF.getValue()) ? RecipientTypeDto.PF: RecipientTypeDto.PG), fiscalCode)
+                (StringUtils.equalsIgnoreCase(type, RecipientTypeDto.PF.getValue()) ? RecipientTypeDto.PF: RecipientTypeDto.PG), fiscalCode)
                 .retryWhen(
                         Retry.backoff(2, Duration.ofMillis(25))
                                 .filter(throwable ->throwable instanceof TimeoutException || throwable instanceof ConnectException)
@@ -71,9 +71,9 @@ public class DataVaultEncryptionImpl extends BaseClient implements DataEncryptio
                 )
                 .map(BaseRecipientDtoDto::getTaxId)
                 .onErrorResume(ex -> {
-                    log.info("Data Vault Exception error: " + ex);
-                    Mono.error(new PnGenericException(ExceptionTypeEnum.DATA_VAULT_DECRYPTION_ERROR, ExceptionTypeEnum.DATA_VAULT_DECRYPTION_ERROR.getMessage()));
-                    return Mono.empty();
+                    log.error("Error ", ex.getMessage());
+                    ex.printStackTrace();
+                    return Mono.error(new PnGenericException(ExceptionTypeEnum.DATA_VAULT_DECRYPTION_ERROR, ExceptionTypeEnum.DATA_VAULT_DECRYPTION_ERROR.getMessage()));
                 })
                 .blockFirst();
     }
