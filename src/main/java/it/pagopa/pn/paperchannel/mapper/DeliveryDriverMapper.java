@@ -10,13 +10,16 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryDriver;
 import it.pagopa.pn.paperchannel.model.PageModel;
 import it.pagopa.pn.paperchannel.rest.v1.dto.DeliveryDriverDTO;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PageableDeliveryDriverResponseDto;
+import it.pagopa.pn.paperchannel.rest.v1.dto.ProductTypeEnumDto;
+import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.costutils.CapProductType;
 import it.pagopa.pn.paperchannel.utils.costutils.ZoneProductType;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Pageable;
 
 import java.util.*;
-import java.util.stream.Collectors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 public class DeliveryDriverMapper {
@@ -34,126 +37,112 @@ public class DeliveryDriverMapper {
 
     public static Map<PnDeliveryDriver, List<PnCost>> toEntityFromExcel(DeliveriesData deliveriesData,
                                                                         String tenderCode){
-        //Set<DeliveryAndCost> costSet = new HashSet<>(deliveriesData.getDeliveriesAndCosts());
-        //log.info("COST SET SIZE : {}", costSet.size() );
 
-        Map<PnDeliveryDriver, List<PnCost>> result = new  HashMap<PnDeliveryDriver, List<PnCost>>();
+        Map<PnDeliveryDriver, List<PnCost>> result = new  HashMap<>();
+        List<CapProductType> nationalCosts = new ArrayList<>();
+        List<ZoneProductType> internationalCosts = new ArrayList<>();
+
 
         deliveriesData.getDeliveriesAndCosts().forEach(deliveryAndCost -> {
             //Create single pnDeliveryDriver
+            List<PnCost> costs = new ArrayList<>();
             PnDeliveryDriver driver = new PnDeliveryDriver();
-            driver.setUniqueCode(deliveryAndCost.getUniqueCode());
-            driver.setDenomination(deliveryAndCost.getDenomination());
-            driver.setBusinessName(deliveryAndCost.getBusinessName());
-            driver.setRegisteredOffice(deliveryAndCost.getRegisteredOffice());
-            driver.setPec(deliveryAndCost.getPec());
-            driver.setFiscalCode(deliveryAndCost.getFiscalCode());
             driver.setTaxId(deliveryAndCost.getTaxId());
-            driver.setPhoneNumber(deliveryAndCost.getPhoneNumber());
-            driver.setUniqueCode(deliveryAndCost.getUniqueCode());
-            driver.setFsu(deliveryAndCost.getFsu());
+
+            if (!result.containsKey(driver)){
+                driver.setTenderCode(tenderCode);
+                driver.setUniqueCode(deliveryAndCost.getUniqueCode());
+                driver.setDenomination(deliveryAndCost.getDenomination());
+                driver.setBusinessName(deliveryAndCost.getBusinessName());
+                driver.setRegisteredOffice(deliveryAndCost.getRegisteredOffice());
+                driver.setPec(deliveryAndCost.getPec());
+                driver.setFiscalCode(deliveryAndCost.getFiscalCode());
+                driver.setPhoneNumber(deliveryAndCost.getPhoneNumber());
+                driver.setUniqueCode(deliveryAndCost.getUniqueCode());
+                driver.setFsu(deliveryAndCost.getFsu());
+                result.put(driver, costs);
+            } else {
+                costs = result.get(driver);
+            }
+
 
             //Create cost object
             PnCost pnCost = new PnCost();
+            pnCost.setDeliveryDriverCode(driver.getTaxId());
             pnCost.setZone(deliveryAndCost.getZone());
+            pnCost.setUuid(UUID.randomUUID().toString());
             pnCost.setProductType(deliveryAndCost.getProductType());
             pnCost.setBasePrice(deliveryAndCost.getBasePrice());
             pnCost.setPagePrice(deliveryAndCost.getPagePrice());
-            List <String>  capList =null;
-            if (deliveryAndCost.getCaps()!=null)
-                capList = Arrays.stream(deliveryAndCost.getCaps().get(0).split(","))
-                    .collect(Collectors.toList());
-            pnCost.setCap(capList);
+            pnCost.setCap(deliveryAndCost.getCaps());
             pnCost.setFsu(deliveryAndCost.getFsu());
+            pnCost.setTenderCode(tenderCode);
 
-            if( result.containsKey(driver)){
-                List <PnCost> costs = result.get(driver);
-                costs.add(pnCost);
-                result.put(driver, costs);
+            if (StringUtils.isNotBlank(pnCost.getZone())){
+                internationalCosts.add(new ZoneProductType(pnCost.getZone(), pnCost.getProductType(), pnCost.getFsu()));
+            } else {
+                pnCost.getCap().forEach(cap -> nationalCosts.add(new CapProductType(cap, pnCost.getProductType(), pnCost.getFsu())));
             }
-            else{
-                List <PnCost> costs = new ArrayList<PnCost>();
-                costs.add(pnCost);
-                result.put(driver, costs);
-            }
+
+            costs.add(pnCost);
 
         });
 
-        //Check Unique Product Type
-        checkUniqueCapProductType(result);
+
+        validInternationalCosts(internationalCosts);
+
+        if (!validNationalCosts(nationalCosts))
+            throw new PnExcelValidatorException(ExceptionTypeEnum.INVALID_CAP_PRODUCT_TYPE, null);
+
+        if (!validNationalCostsFSU(nationalCosts))
+            throw new PnExcelValidatorException(ExceptionTypeEnum.INVALID_CAP_FSU, null);
 
         //Check Unique Zone Product Type
-        checkUniqueZoneProductType(result);
+
         return result;
+    }
+
+    public static boolean validNationalCosts(List<CapProductType> nationalCosts) throws PnExcelValidatorException {
+        Set<CapProductType> setCosts = new HashSet<>(nationalCosts);
+        return setCosts.size() == nationalCosts.size();
+    }
+
+    public static boolean validNationalCostsFSU(List<CapProductType> nationalCosts) {
+        List<CapProductType> costsFSU = nationalCosts.parallelStream().filter(cost -> cost.isFsu() && cost.getCap().equals(Const.CAP_DEFAULT)).toList();
+        AtomicBoolean hasAR = new AtomicBoolean(false);
+        AtomicBoolean has890 = new AtomicBoolean(false);
+        AtomicBoolean hasRS = new AtomicBoolean(false);
+        costsFSU.forEach(cost -> {
+            if (cost.getProductType().equalsIgnoreCase(ProductTypeEnumDto.AR.getValue())){
+                hasAR.set(true);
+            }
+            if (cost.getProductType().equalsIgnoreCase(ProductTypeEnumDto._890.getValue())){
+                has890.set(true);
+            }
+            if (cost.getProductType().equalsIgnoreCase(ProductTypeEnumDto.RS.getValue())){
+                hasRS.set(true);
+            }
+        });
+        return hasAR.get() && has890.get() && hasRS.get();
 
     }
 
-
-    public static void   checkUniqueCapProductType(Map<PnDeliveryDriver,List<PnCost> > result ) throws PnExcelValidatorException {
-        //Create list with single element cap - product type
-        List<CapProductType> costList = new ArrayList<CapProductType>();
-        result.forEach( (k,v) ->{
-            //Get List of costs
-            List<PnCost> singleCostList = result.get(k);
-            singleCostList.forEach(elem ->{
-                //Get List of caps
-                List <String> caps =elem.getCap();
-                if (caps!=null) {
-                    caps.forEach(singleCap -> {
-                        CapProductType capProductType = new CapProductType();
-                        capProductType.setProductType(elem.getProductType());
-                        //Add into cost list every single couple cap - product type
-                        capProductType.setCap(singleCap);
-                        costList.add(capProductType);
-                    });
-                }
-
-            });
-        });
-        Set setCostList = new HashSet(costList);
-        if ( !(costList.size()== setCostList.size())) throw new PnExcelValidatorException(ExceptionTypeEnum.INVALID_CAP_PRODUCT_TYPE, null );
-    }
-
-    public static void   checkUniqueZoneProductType(Map<PnDeliveryDriver,List<PnCost> > result ) throws PnExcelValidatorException {
-        //Create list with single element cap - product type
-        Map<ZoneProductType, List<Boolean> > costList = new HashMap<ZoneProductType, List<Boolean>>();
-        result.forEach( (k,v) ->{
-            //Get List of costs
-            List<PnCost> singleCostList = result.get(k);
-            singleCostList.forEach(elem ->{
-                if (elem.getZone()!=null){
-                        //key
-                        ZoneProductType zoneProductType = new ZoneProductType();
-                        zoneProductType.setProductType(elem.getProductType());
-                        zoneProductType.setZone(elem.getZone()) ;
-                        //value
-                        Boolean fsu = elem.getFsu();
-
-                        //insert
-                        if (costList.containsKey(zoneProductType)){
-                            List<Boolean> values= costList.get(zoneProductType);
-                            values.add(elem.getFsu());
-                            costList.put(zoneProductType, values);
-                        }
-                        else{
-                            List<Boolean> values= new ArrayList<Boolean>();
-                            values.add(elem.getFsu());
-                            costList.put(zoneProductType, values);
-                        }
-
-                }
-            });
-        });
-        costList.forEach((k,v) ->{
-            if ( v.size()>2
-                    || (v.size()==1 &&v.get(0)==false)
-                    || (v.size()==2 && (v.get(0)==true && v.get(1)==true))
-                    || (v.size()==2 &&(v.get(0)==false && v.get(1)==false))
-            )
-                    throw new PnExcelValidatorException(ExceptionTypeEnum.INVALID_ZONE_PRODUCT_TYPE, null);
-
-
-        });
+    public static void validInternationalCosts(List<ZoneProductType> internationalCosts) throws PnExcelValidatorException {
+        Set<ZoneProductType> setCosts = new HashSet<>(internationalCosts);
+        if (setCosts.size() < internationalCosts.size()){
+            throw new PnExcelValidatorException(ExceptionTypeEnum.INVALID_ZONE_PRODUCT_TYPE, null);
+        }
+        Map<String, Integer> occurance = new HashMap<>();
+        internationalCosts.stream().filter(ZoneProductType::isFsu)
+                .forEach(cost-> {
+                    String key = cost.getZone() + cost.getProductType();
+                    if (!occurance.containsKey(key)){
+                        occurance.put(key, 1);
+                    }
+                });
+        if (occurance.keySet().size() != 6) {
+            throw new PnExcelValidatorException(ExceptionTypeEnum.INVALID_ZONE_FSU, null);
+        }
     }
 
     public static PageableDeliveryDriverResponseDto toPageableResponse(PageModel<PnDeliveryDriver> pagePnPaperDeliveryDriver) {

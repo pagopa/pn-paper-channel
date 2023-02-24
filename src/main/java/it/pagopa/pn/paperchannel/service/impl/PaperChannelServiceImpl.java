@@ -26,6 +26,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import reactor.util.function.Tuples;
@@ -33,7 +34,6 @@ import reactor.util.function.Tuples;
 import java.io.File;
 import java.io.InputStream;
 import java.time.Duration;
-import java.time.Instant;
 import java.util.*;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
@@ -197,11 +197,21 @@ public class PaperChannelServiceImpl implements PaperChannelService {
     public void notifyUploadAsync(PnDeliveryFile item, InputStream inputStream, String tenderCode){
         Mono.delay(Duration.ofMillis(10)).publishOn(Schedulers.boundedElastic())
                 .map(i -> this.excelDAO.readData(inputStream))
-                .zipWhen(deliveriesData -> {
+                .flatMap(deliveriesData -> {
                     Map<PnDeliveryDriver, List<PnCost>> map = DeliveryDriverMapper.toEntityFromExcel(deliveriesData, tenderCode);
-                    return Mono.just(new PnTender());
+
+                    return Flux.fromStream(map.keySet().stream())
+                            .flatMap(driver ->
+                                    this.deliveryDriverDAO.createOrUpdate(driver)
+                                        .flatMap(driverEntity -> Flux.fromStream(map.get(driver).stream())
+                                                .flatMap(cost -> this.costDAO.createOrUpdate(cost))
+                                                .collectList())
+                                        .map(costDrivers -> driver)
+
+                            )
+                            .collectList();
                 })
-                .map(i -> {
+                .flatMap(i -> {
                     item.setStatus(FileStatusCodeEnum.COMPLETE.getCode());
                     return fileDownloadDAO.create(item);
                 })
@@ -214,8 +224,8 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                         pnErrorMessage.setMessage(ex.getMessage());
                         item.setErrorMessage(pnErrorMessage);
                     }
-                    fileDownloadDAO.create(item);
-                    return Mono.error(ex);
+
+                    return  fileDownloadDAO.create(item).flatMap(entity -> Mono.error(ex));
                 })
                 .subscribeOn(Schedulers.boundedElastic()).subscribe();
     }
