@@ -45,7 +45,7 @@ public class DataVaultEncryptionImpl extends BaseClient implements DataEncryptio
     @Override
     public String encode(String fiscalCode, String type) {
         return this.recipientsApi.ensureRecipientByExternalId(
-                        (StringUtils.equalsIgnoreCase(type, RecipientTypeDto.PF.getValue()) ? RecipientTypeDto.PF: RecipientTypeDto.PG), fiscalCode)
+                (StringUtils.equalsIgnoreCase(type, RecipientTypeDto.PF.getValue()) ? RecipientTypeDto.PF: RecipientTypeDto.PG), fiscalCode)
                 .retryWhen(
                         Retry.backoff(2, Duration.ofMillis(25))
                                 .filter(throwable ->throwable instanceof TimeoutException || throwable instanceof ConnectException)
@@ -57,6 +57,11 @@ public class DataVaultEncryptionImpl extends BaseClient implements DataEncryptio
 
     @Override
     public String decode(String data) {
+        return null;
+    }
+
+    @Override
+    public String decodes(String data) {
         List<String> toDecode = new ArrayList<>();
         toDecode.add(data);
         return this.recipientsApi.getRecipientDenominationByInternalId(toDecode)
@@ -65,7 +70,11 @@ public class DataVaultEncryptionImpl extends BaseClient implements DataEncryptio
                                 .filter(throwable ->throwable instanceof TimeoutException || throwable instanceof ConnectException)
                 )
                 .map(BaseRecipientDtoDto::getTaxId)
-                .onErrorResume(ex -> Mono.error(new PnGenericException(ExceptionTypeEnum.DATA_VAULT_DECRYPTION_ERROR, ExceptionTypeEnum.DATA_VAULT_DECRYPTION_ERROR.getMessage())))
+                .onErrorResume(ex -> {
+                    log.error("Error ", ex.getMessage());
+                    ex.printStackTrace();
+                    return Mono.error(new PnGenericException(ExceptionTypeEnum.DATA_VAULT_DECRYPTION_ERROR, ExceptionTypeEnum.DATA_VAULT_DECRYPTION_ERROR.getMessage()));
+                })
                 .blockFirst();
     }
 }

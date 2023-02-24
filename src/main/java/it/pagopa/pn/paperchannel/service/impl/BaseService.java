@@ -59,7 +59,7 @@ public class BaseService {
                 .flatMap(i -> {
                     log.info("Start call national registries for find address");
                     pnLogAudit.addsBeforeResolveService(iun, String.format("prepare requestId = %s, relatedRequestId= %s, trace_id = %s Request to National Registry service", requestId, relatedRequestId, correlationId));
-                    String decodedFiscalCode = dataEncryption.decode(fiscalCode);
+                    String decodedFiscalCode = dataEncryption.decodes(fiscalCode);
                     return this.nationalRegistryClient.finderAddress(correlationId, decodedFiscalCode, personType)
                             .onErrorResume(e -> {
                                 NationalRegistryError error = new NationalRegistryError();
