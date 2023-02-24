@@ -195,7 +195,8 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                                         .map(address-> PreparePaperResponseMapper.fromResult(newEntity,address))
                                         .switchIfEmpty(Mono.just(PreparePaperResponseMapper.fromResult(newEntity,null)));
                             })
-                            .switchIfEmpty(Mono.defer(()-> saveRequestAndAddress(prepareRequest, oldEntity.getAddressHash(), prepareRequest.getDiscoveredAddress())
+                            .switchIfEmpty(Mono.defer(() ->
+                                    saveRequestAndAddress(prepareRequest, oldEntity.getAddressHash(), prepareRequest.getDiscoveredAddress())
                                     .flatMap(response -> {
 
                                         log.info("Start call national");
