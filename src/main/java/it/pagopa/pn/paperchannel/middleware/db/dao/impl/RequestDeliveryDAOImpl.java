@@ -3,7 +3,6 @@ package it.pagopa.pn.paperchannel.middleware.db.dao.impl;
 import it.pagopa.pn.commons.exceptions.PnHttpResponseException;
 import it.pagopa.pn.paperchannel.config.AwsPropertiesConfig;
 import it.pagopa.pn.paperchannel.encryption.DataEncryption;
-import it.pagopa.pn.paperchannel.encryption.impl.DataVaultEncryptionImpl;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.BaseDAO;

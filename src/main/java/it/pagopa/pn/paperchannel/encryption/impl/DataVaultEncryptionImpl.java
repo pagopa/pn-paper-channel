@@ -57,6 +57,11 @@ public class DataVaultEncryptionImpl extends BaseClient implements DataEncryptio
 
     @Override
     public String decode(String data) {
+        return null;
+    }
+
+    @Override
+    public String decodes(String data) {
         List<String> toDecode = new ArrayList<>();
         toDecode.add(data);
         return this.recipientsApi.getRecipientDenominationByInternalId(toDecode)
