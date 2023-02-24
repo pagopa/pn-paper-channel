@@ -387,7 +387,8 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                 .switchIfEmpty(Mono.error(new PnGenericException(TENDER_NOT_EXISTED, TENDER_NOT_EXISTED.getMessage())))
                 .flatMap(entity -> {
                     TenderCreateResponseDTO response = new TenderCreateResponseDTO();
-                    if (entity.getStatus().equalsIgnoreCase(TenderDTO.StatusEnum.ENDED.getValue())) {
+                    if (entity.getActualStatus().equals(TenderDTO.StatusEnum.IN_PROGRESS.getValue()) ||
+                            entity.getActualStatus().equals(TenderDTO.StatusEnum.ENDED.getValue())) {
                         return Mono.error(new PnGenericException(TENDER_NOT_EXISTED, TENDER_NOT_EXISTED.getMessage()));
                     }
                     if (!entity.getStatus().equalsIgnoreCase(status.getStatusCode().getValue()) &&
@@ -418,7 +419,7 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                                         })
                                 );
                     } else if (!entity.getStatus().equalsIgnoreCase(status.getStatusCode().getValue()) &&
-                            entity.getStatus().equalsIgnoreCase(TenderDTO.StatusEnum.IN_PROGRESS.getValue())) {
+                            entity.getStatus().equalsIgnoreCase(TenderDTO.StatusEnum.VALIDATED.getValue())) {
                         entity.setStatus(status.getStatusCode().getValue());
                         return this.tenderDAO.createOrUpdate(entity)
                                 .map(modifyEntity -> {
