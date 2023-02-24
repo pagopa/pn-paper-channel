@@ -182,29 +182,35 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
     private void sendPaperResponse(PnDeliveryRequest entity, SingleStatusUpdateDto request) {
         SendEvent sendEvent = new SendEvent();
 
-        sendEvent.setStatusCode(StatusCodeEnum.valueOf(entity.getStatusCode()));
-        sendEvent.setStatusDetail(entity.getStatusDetail());
-        sendEvent.setStatusDescription(entity.getStatusDetail());
+        try {
+            sendEvent.setStatusCode(StatusCodeEnum.valueOf(entity.getStatusCode()));
+            sendEvent.setStatusDetail(entity.getStatusDetail());
+            sendEvent.setStatusDescription(entity.getStatusDetail());
 
-        if (request.getAnalogMail() != null) {
-            sendEvent.setRequestId(request.getAnalogMail().getRequestId());
-            sendEvent.setStatusDateTime(DateUtils.getDatefromOffsetDateTime(request.getAnalogMail().getStatusDateTime()));
-            sendEvent.setRegisteredLetterCode(request.getAnalogMail().getRegisteredLetterCode());
-            sendEvent.setClientRequestTimeStamp(Date.from(request.getAnalogMail().getClientRequestTimeStamp().toInstant()));
-            sendEvent.setDeliveryFailureCause(request.getAnalogMail().getDeliveryFailureCause());
-            sendEvent.setDiscoveredAddress(AddressMapper.toPojo(request.getAnalogMail().getDiscoveredAddress()));
+            if (request.getAnalogMail() != null) {
+                sendEvent.setRequestId(request.getAnalogMail().getRequestId());
+                sendEvent.setStatusDateTime(DateUtils.getDatefromOffsetDateTime(request.getAnalogMail().getStatusDateTime()));
+                sendEvent.setRegisteredLetterCode(request.getAnalogMail().getRegisteredLetterCode());
+                sendEvent.setClientRequestTimeStamp(Date.from(request.getAnalogMail().getClientRequestTimeStamp().toInstant()));
+                sendEvent.setDeliveryFailureCause(request.getAnalogMail().getDeliveryFailureCause());
+                sendEvent.setDiscoveredAddress(AddressMapper.toPojo(request.getAnalogMail().getDiscoveredAddress()));
 
-            if (request.getAnalogMail().getAttachments() != null && !request.getAnalogMail().getAttachments().isEmpty()) {
-                sendEvent.setAttachments(
-                        request.getAnalogMail().getAttachments()
-                                .stream()
-                                .map(AttachmentMapper::fromAttachmentDetailsDto)
-                                .toList()
-                );
+                if (request.getAnalogMail().getAttachments() != null && !request.getAnalogMail().getAttachments().isEmpty()) {
+                    sendEvent.setAttachments(
+                            request.getAnalogMail().getAttachments()
+                                    .stream()
+                                    .map(AttachmentMapper::fromAttachmentDetailsDto)
+                                    .toList()
+                    );
+                }
             }
+
+            sqsSender.pushSendEvent(sendEvent);
+        } catch (IllegalArgumentException ex){
+            log.error(ex.getMessage());
         }
 
-        sqsSender.pushSendEvent(sendEvent);
+
     }
 
 }

@@ -8,11 +8,9 @@ import it.pagopa.pn.paperchannel.dao.model.DeliveriesData;
 import it.pagopa.pn.paperchannel.dao.model.DeliveryAndCost;
 import it.pagopa.pn.paperchannel.exception.PnExcelValidatorException;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
-import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.StringUtil;
 import it.pagopa.pn.paperchannel.validator.ExcelValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -49,10 +47,9 @@ public class DeliveriesExcelDAO implements ExcelDAO<DeliveriesData> {
         DeliveriesData response = null;
         try {
             ExcelEngine engine = new ExcelEngine(inputStream);
-            List<DeliveryAndCost> data = engine.extractDataLikeTable(map -> {
-                log.info(map.toString());
-                return ExcelValidator.validateExcel(errors, map);
-            }, DeliveryAndCost.class);
+            List<DeliveryAndCost> data = engine.extractDataLikeTable(
+                    map -> ExcelValidator.validateExcel(errors, map),
+                    DeliveryAndCost.class);
             response =  new DeliveriesData();
             response.setDeliveriesAndCosts(data);
 
@@ -62,6 +59,7 @@ public class DeliveriesExcelDAO implements ExcelDAO<DeliveriesData> {
         } catch (DAOException e){
             throw new PnGenericException(EXCEL_BADLY_FORMAT, e.getMessage());
         } catch (Exception e) {
+            log.error(e.getMessage());
             throw new PnGenericException(EXCEL_BADLY_CONTENT, e.getMessage());
         }
 

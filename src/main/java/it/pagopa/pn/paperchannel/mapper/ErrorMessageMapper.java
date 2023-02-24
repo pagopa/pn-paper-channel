@@ -3,7 +3,6 @@ package it.pagopa.pn.paperchannel.mapper;
 import it.pagopa.pn.paperchannel.exception.PnExcelValidatorException;
 import it.pagopa.pn.paperchannel.mapper.common.BaseMapper;
 import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnErrorDetails;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnErrorMessage;
 import lombok.extern.slf4j.Slf4j;

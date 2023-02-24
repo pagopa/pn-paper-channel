@@ -8,9 +8,11 @@ import it.pagopa.pn.paperchannel.rest.v1.dto.AnalogAddress;
 import it.pagopa.pn.paperchannel.rest.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.rest.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.stream.Collectors;
 
+@Slf4j
 public class SendEventMapper {
 
     private SendEventMapper(){
@@ -22,7 +24,11 @@ public class SendEventMapper {
     public static SendEvent fromResult(PnDeliveryRequest request, PnAddress address){
         SendEvent entityEvent = new SendEvent();
         entityEvent.setRequestId(request.getRequestId());
-        entityEvent.setStatusCode(StatusCodeEnum.valueOf(request.getStatusCode()));
+        try {
+            entityEvent.setStatusCode(StatusCodeEnum.valueOf(request.getStatusCode()));
+        } catch (IllegalArgumentException ex) {
+            log.error("status code not found"+request.getStatusCode());
+        }
         entityEvent.setStatusDetail(request.getStatusDetail());
         entityEvent.setRegisteredLetterCode(request.getProductType());
         entityEvent.setStatusDateTime((DateUtils.parseDateString(request.getStatusDate())));
