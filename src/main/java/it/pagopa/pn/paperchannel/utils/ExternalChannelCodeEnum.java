@@ -58,7 +58,7 @@ public enum ExternalChannelCodeEnum {
     }
 
     public static String getStatusCode(String statusCode) {
-        String code = null;
+        String code = statusCode;
         try {
             code = ExternalChannelCodeEnum.valueOf(statusCode).getMessage();
         } catch (Exception e) {
