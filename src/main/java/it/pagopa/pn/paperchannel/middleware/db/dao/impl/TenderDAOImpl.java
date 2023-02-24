@@ -132,7 +132,7 @@ public class TenderDAOImpl extends BaseDAO<PnTender> implements TenderDAO {
 
 
         Map<String, AttributeValue> values = new HashMap<>();
-        values.put(":consolidateStatus", AttributeValue.builder().s(TenderDTO.StatusEnum.IN_PROGRESS.getValue()).build());
+        values.put(":consolidateStatus", AttributeValue.builder().s(TenderDTO.StatusEnum.VALIDATED.getValue()).build());
         values.put(":startDate", AttributeValue.builder().s(startDate.toString()).build());
         values.put(":endDate", AttributeValue.builder().s(endDate.toString()).build());
 

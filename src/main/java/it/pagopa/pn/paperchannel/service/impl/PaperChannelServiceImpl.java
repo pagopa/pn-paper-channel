@@ -387,8 +387,9 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                 .switchIfEmpty(Mono.error(new PnGenericException(TENDER_NOT_EXISTED, TENDER_NOT_EXISTED.getMessage())))
                 .flatMap(entity -> {
                     TenderCreateResponseDTO response = new TenderCreateResponseDTO();
-                    if (entity.getStatus().equalsIgnoreCase(TenderDTO.StatusEnum.ENDED.getValue())) {
-                        return Mono.error(new PnGenericException(TENDER_NOT_EXISTED, TENDER_NOT_EXISTED.getMessage()));
+                    if (entity.getActualStatus().equals(TenderDTO.StatusEnum.IN_PROGRESS.getValue()) ||
+                            entity.getActualStatus().equals(TenderDTO.StatusEnum.ENDED.getValue())) {
+                        return Mono.error(new PnGenericException(STATUS_NOT_VARIABLE, STATUS_NOT_VARIABLE.getMessage()));
                     }
                     if (!entity.getStatus().equalsIgnoreCase(status.getStatusCode().getValue()) &&
                             entity.getStatus().equalsIgnoreCase(TenderDTO.StatusEnum.CREATED.getValue())) {
@@ -396,14 +397,14 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                         Date endDate = Date.from(entity.getEndDate());
                         return this.tenderDAO.getConsolidate(startDate, endDate)
                                 .flatMap(newTender ->
-                                        Mono.error(new PnGenericException(ExceptionTypeEnum.CONSOLIDATE_ERROR, ExceptionTypeEnum.CONSOLIDATE_ERROR.getMessage()))
+                                        Mono.error(new PnGenericException(CONSOLIDATE_ERROR, CONSOLIDATE_ERROR.getMessage()))
                                 )
                                 .switchIfEmpty(
                                         Mono.defer(() -> {
                                             return this.isValidFSUCost(tenderCode)
                                                             .map(isValid -> {
                                                                 if (Boolean.FALSE.equals(isValid)){
-                                                                    throw new PnGenericException(ExceptionTypeEnum.CONSOLIDATE_ERROR, ExceptionTypeEnum.CONSOLIDATE_ERROR.getMessage());
+                                                                    throw new PnGenericException(FSUCOST_VALIDATOR_NOTVALID, FSUCOST_VALIDATOR_NOTVALID.getMessage());
                                                                 }
                                                                 entity.setStatus(status.getStatusCode().getValue());
                                                                 return this.tenderDAO.createOrUpdate(entity)
@@ -418,7 +419,7 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                                         })
                                 );
                     } else if (!entity.getStatus().equalsIgnoreCase(status.getStatusCode().getValue()) &&
-                            entity.getStatus().equalsIgnoreCase(TenderDTO.StatusEnum.IN_PROGRESS.getValue())) {
+                            entity.getStatus().equalsIgnoreCase(TenderDTO.StatusEnum.VALIDATED.getValue())) {
                         entity.setStatus(status.getStatusCode().getValue());
                         return this.tenderDAO.createOrUpdate(entity)
                                 .map(modifyEntity -> {

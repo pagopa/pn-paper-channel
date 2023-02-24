@@ -42,8 +42,9 @@ public enum ExceptionTypeEnum{
     DATA_VAULT_ENCRYPTION_ERROR("DATA_VAULT_ENCRYPTION_ERROR", "Servizio irraggiungibile od errore in fase di criptazione"),
     DATA_VAULT_DECRYPTION_ERROR("DATA_VAULT_DECRYPTION_ERROR", "Servizio irraggiungibile od errore in fase di decriptazione"),
 
-    CONSOLIDATE_ERROR("CONSOLIDATE_ERROR", "La Gara è già in stato consolidato"),
-
+    CONSOLIDATE_ERROR("CONSOLIDATE_ERROR", "non è possibile consolidare la Gara perchè ne esiste già una consolidata in questo range di date"),
+    STATUS_NOT_VARIABLE("STATUS_NOT_VARIABLE", "Lo stato della Gara non può essere aggiornato"),
+    FSUCOST_VALIDATOR_NOTVALID("FSUCOST_VALIDATOR_NOTVALID", "La gara non può essere consolidata, non sono stati definiti i costi di default per fsu"),
     INVALID_CAP_PRODUCT_TYPE("INVALID_CAP_PRODUCT_TYPE", "Sono presenti duplicati tra CAP e Product Type"),
     INVALID_CAP_FSU("INVALID_CAP_FSU", "Per FSU non sono stati inseriti i cap di default"),
     INVALID_ZONE_FSU("INVALID_ZONE_FSU", "Non sono stati inseriti i costi internazionali obbligatori per FSU"),
