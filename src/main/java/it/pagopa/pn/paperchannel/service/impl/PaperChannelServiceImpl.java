@@ -399,9 +399,7 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                     }
                     if (!entity.getStatus().equalsIgnoreCase(status.getStatusCode().getValue()) &&
                             entity.getStatus().equalsIgnoreCase(TenderDTO.StatusEnum.CREATED.getValue())) {
-                        Date startDate = Date.from(entity.getStartDate());
-                        Date endDate = Date.from(entity.getEndDate());
-                        return this.tenderDAO.getConsolidate(startDate, endDate)
+                        return this.tenderDAO.getConsolidate(entity.getStartDate(), entity.getEndDate())
                                 .flatMap(newTender ->
                                         Mono.error(new PnGenericException(CONSOLIDATE_ERROR, CONSOLIDATE_ERROR.getMessage()))
                                 )
