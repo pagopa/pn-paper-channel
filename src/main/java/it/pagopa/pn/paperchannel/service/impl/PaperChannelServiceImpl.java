@@ -16,6 +16,7 @@ import it.pagopa.pn.paperchannel.model.FileStatusCodeEnum;
 import it.pagopa.pn.paperchannel.rest.v1.dto.*;
 import it.pagopa.pn.paperchannel.s3.S3Bucket;
 import it.pagopa.pn.paperchannel.service.PaperChannelService;
+import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.Utility;
 import it.pagopa.pn.paperchannel.validator.CostValidator;
 import lombok.extern.slf4j.Slf4j;
@@ -447,12 +448,12 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                     Map<String, Boolean> mapValidationCost = Utility.requiredCostFSU();
                     costs.forEach(cost -> {
                         String key = "";
-                        if (cost.getZone() != null){
+                        if (StringUtils.isNotBlank(cost.getZone())){
                             key = cost.getZone()+"-"+cost.getProductType();
                             mapValidationCost.put(key, true);
 
-                        } else if (cost.getCap() != null && !cost.getCap().isEmpty() && cost.getCap().contains("99999")){
-                            key = "99999-"+cost.getProductType();
+                        } else if (cost.getCap() != null && !cost.getCap().isEmpty() && cost.getCap().contains(Const.CAP_DEFAULT)){
+                            key = Const.CAP_DEFAULT+"-"+cost.getProductType();
                             mapValidationCost.put(key, true);
                         }
                     });

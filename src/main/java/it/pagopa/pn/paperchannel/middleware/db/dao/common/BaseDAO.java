@@ -93,7 +93,7 @@ public abstract class BaseDAO<T> {
             keyBuilder.sortValue(sortKey);
         }
 
-        return decode(dynamoTable.getItem(keyBuilder.build()));
+        return dynamoTable.getItem(keyBuilder.build()).thenApply(this::decode);
     }
 
     protected Flux<T> getBySecondaryIndex(String index, String partitionKey, String sortKey){
@@ -163,26 +163,24 @@ public abstract class BaseDAO<T> {
         return data;
     }
 
-    protected CompletableFuture<T> decode(CompletableFuture<T> genericData) {
-        return genericData.thenApply(data -> {
-            if(data instanceof PnAddress) {
-                PnAddress pnAddress = ((PnAddress) data);
-                pnAddress.setFullName(dataEncryption.decode(pnAddress.getFullName()));
-                pnAddress.setNameRow2(dataEncryption.decode(pnAddress.getNameRow2()));
-                pnAddress.setAddress(dataEncryption.decode(pnAddress.getAddress()));
-                pnAddress.setAddressRow2(dataEncryption.decode(pnAddress.getAddressRow2()));
-                pnAddress.setCap(dataEncryption.decode(pnAddress.getCap()));
-                pnAddress.setCity(dataEncryption.decode(pnAddress.getCity()));
-                pnAddress.setCity2(dataEncryption.decode(pnAddress.getCity2()));
-                pnAddress.setPr(dataEncryption.decode(pnAddress.getPr()));
-                pnAddress.setCountry(dataEncryption.decode(pnAddress.getCountry()));
-            }
-            if(data instanceof PnDeliveryRequest) {
-                PnDeliveryRequest pnDeliveryRequest = ((PnDeliveryRequest) data);
-                pnDeliveryRequest.setFiscalCode(dataEncryption.decode(pnDeliveryRequest.getFiscalCode()));
-            }
-            return data;
-        });
+    protected T decode(T data){
+        if(data instanceof PnAddress) {
+            PnAddress pnAddress = ((PnAddress) data);
+            pnAddress.setFullName(dataEncryption.decode(pnAddress.getFullName()));
+            pnAddress.setNameRow2(dataEncryption.decode(pnAddress.getNameRow2()));
+            pnAddress.setAddress(dataEncryption.decode(pnAddress.getAddress()));
+            pnAddress.setAddressRow2(dataEncryption.decode(pnAddress.getAddressRow2()));
+            pnAddress.setCap(dataEncryption.decode(pnAddress.getCap()));
+            pnAddress.setCity(dataEncryption.decode(pnAddress.getCity()));
+            pnAddress.setCity2(dataEncryption.decode(pnAddress.getCity2()));
+            pnAddress.setPr(dataEncryption.decode(pnAddress.getPr()));
+            pnAddress.setCountry(dataEncryption.decode(pnAddress.getCountry()));
+        }
+        if(data instanceof PnDeliveryRequest) {
+            PnDeliveryRequest pnDeliveryRequest = ((PnDeliveryRequest) data);
+            pnDeliveryRequest.setFiscalCode(dataEncryption.decode(pnDeliveryRequest.getFiscalCode()));
+        }
+        return data;
     }
 
     protected Key keyBuild(String partitionKey, String sortKey){

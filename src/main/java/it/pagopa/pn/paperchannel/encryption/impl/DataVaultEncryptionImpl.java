@@ -49,19 +49,13 @@ public class DataVaultEncryptionImpl extends BaseClient implements DataEncryptio
                 .retryWhen(
                         Retry.backoff(2, Duration.ofMillis(25))
                                 .filter(throwable ->throwable instanceof TimeoutException || throwable instanceof ConnectException)
-                ).map(item -> {
-                    return item;
-                }).onErrorResume(ex -> Mono.error(new PnGenericException(ExceptionTypeEnum.DATA_VAULT_ENCRYPTION_ERROR, ExceptionTypeEnum.DATA_VAULT_ENCRYPTION_ERROR.getMessage())))
+                ).map(item -> item)
+                .onErrorResume(ex -> Mono.error(new PnGenericException(ExceptionTypeEnum.DATA_VAULT_ENCRYPTION_ERROR, ExceptionTypeEnum.DATA_VAULT_ENCRYPTION_ERROR.getMessage())))
                 .block();
     }
 
     @Override
     public String decode(String data) {
-        return null;
-    }
-
-    @Override
-    public String decodes(String data) {
         List<String> toDecode = new ArrayList<>();
         toDecode.add(data);
         return this.recipientsApi.getRecipientDenominationByInternalId(toDecode)
