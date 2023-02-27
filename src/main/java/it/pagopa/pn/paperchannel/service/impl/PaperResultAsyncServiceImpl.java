@@ -90,13 +90,13 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
 
                                 } else if (isTechnicalErrorStatusCode(singleStatusUpdateDto)) {
                                     PnLogAudit pnLogAudit = new PnLogAudit(auditLogBuilder);
-                                    pnLogAudit.addsBeforeDiscard(entity.getIun(), String.format("requestId = %s finish retry to National Registry", entity.getRequestId()));
+                                    pnLogAudit.addsBeforeDiscard(entity.getIun(), String.format("requestId = %s finish retry to External Channel", entity.getRequestId()));
                                     return Mono.delay(Duration.ofMillis(1)).publishOn(Schedulers.boundedElastic())
                                             .flatMap( i-> paperRequestErrorDAO.created(entity.getRequestId(),
                                                     entity.getStatusCode(),
                                                     entity.getStatusDetail()).map(item -> item))
                                             .flatMap(item -> {
-                                                pnLogAudit.addsSuccessDiscard(entity.getIun(), String.format("requestId = %s finish retry to National Registry", entity.getRequestId()));
+                                                pnLogAudit.addsSuccessDiscard(entity.getIun(), String.format("requestId = %s finish retry to External Channel", entity.getRequestId()));
                                                 return Mono.just(updatedEntity);
                                             });
                                 }
