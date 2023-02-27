@@ -66,7 +66,6 @@ public class DataVaultEncryptionImpl extends BaseClient implements DataEncryptio
                 .map(BaseRecipientDtoDto::getTaxId)
                 .onErrorResume(ex -> {
                     log.error("Error ", ex.getMessage());
-                    ex.printStackTrace();
                     return Mono.error(new PnGenericException(ExceptionTypeEnum.DATA_VAULT_DECRYPTION_ERROR, ExceptionTypeEnum.DATA_VAULT_DECRYPTION_ERROR.getMessage()));
                 })
                 .blockFirst();
