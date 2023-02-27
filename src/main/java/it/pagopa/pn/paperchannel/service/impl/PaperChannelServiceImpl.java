@@ -198,20 +198,25 @@ public class PaperChannelServiceImpl implements PaperChannelService {
     public void notifyUploadAsync(PnDeliveryFile item, InputStream inputStream, String tenderCode){
         Mono.delay(Duration.ofMillis(10)).publishOn(Schedulers.boundedElastic())
                 .map(i -> this.excelDAO.readData(inputStream))
-                .flatMap(deliveriesData -> {
-                    Map<PnDeliveryDriver, List<PnCost>> map = DeliveryDriverMapper.toEntityFromExcel(deliveriesData, tenderCode);
-
-                    return Flux.fromStream(map.keySet().stream())
+                .map(deliveriesData -> DeliveryDriverMapper.toEntityFromExcel(deliveriesData, tenderCode))
+                .flatMap(driversAndCost ->
+                    this.deliveryDriverDAO.getDeliveryDriverFromTender(tenderCode, null)
+                            .flatMap(driver -> this.deleteDriver(tenderCode, driver.getTaxId()))
+                            .collectList()
+                            .map(none -> driversAndCost)
+                )
+                .flatMap(driversAndCost ->
+                    Flux.fromStream(driversAndCost.keySet().stream())
                             .flatMap(driver ->
                                     this.deliveryDriverDAO.createOrUpdate(driver)
-                                        .flatMap(driverEntity -> Flux.fromStream(map.get(driver).stream())
-                                                .flatMap(cost -> this.costDAO.createOrUpdate(cost))
-                                                .collectList())
-                                        .map(costDrivers -> driver)
+                                            .flatMap(driverEntity -> Flux.fromStream(driversAndCost.get(driver).stream())
+                                                    .flatMap(cost -> this.costDAO.createOrUpdate(cost))
+                                                    .collectList())
+                                            .map(costDrivers -> driver)
 
                             )
-                            .collectList();
-                })
+                            .collectList()
+                )
                 .flatMap(i -> {
                     item.setStatus(FileStatusCodeEnum.COMPLETE.getCode());
                     return fileDownloadDAO.create(item);

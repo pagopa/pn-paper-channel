@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.apache.commons.lang3.StringUtils;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
 
 import java.time.Instant;
@@ -48,8 +49,9 @@ public class PnTender {
 
     public String getActualStatus(){
         Instant now = Instant.now();
-        if (startDate.isBefore(now) && endDate.isAfter(now)) return TenderDTO.StatusEnum.IN_PROGRESS.getValue();
-        if (endDate.isBefore(now)) return TenderDTO.StatusEnum.ENDED.getValue();
+        if (StringUtils.equals(this.status, TenderDTO.StatusEnum.VALIDATED.getValue()) &&
+                startDate.isBefore(now) && endDate.isAfter(now)) return TenderDTO.StatusEnum.IN_PROGRESS.getValue();
+        if (StringUtils.equals(this.status, TenderDTO.StatusEnum.VALIDATED.getValue()) && endDate.isBefore(now)) return TenderDTO.StatusEnum.ENDED.getValue();
         return this.status;
     }
 

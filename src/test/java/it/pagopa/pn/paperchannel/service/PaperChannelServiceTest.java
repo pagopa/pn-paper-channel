@@ -27,6 +27,9 @@ import reactor.test.StepVerifier;
 
 import java.util.List;
 
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.TENDER_NOT_EXISTED;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 @Slf4j
 class PaperChannelServiceTest extends BaseTest {
     private static final String TENDER_CODE_WITHOUT_DRIVER = "TENDER_WITHOUT_DRIVER";
@@ -185,4 +188,16 @@ class PaperChannelServiceTest extends BaseTest {
         ).thenReturn( Flux.fromStream(this.costs.stream()));
     }
 
+//    @Test
+    void updateStatusTenderSuccess() {
+    }
+
+//    @Test
+    void updateStatusTenderErrorTest() {
+        Mockito.when(tenderDAO.getTender(Mockito.any()).thenReturn(Mono.empty()));
+        this.paperChannelService.updateStatusTender(Mockito.any(), Mockito.any()).onErrorResume(ex -> {
+            assertEquals(ex.getMessage(),TENDER_NOT_EXISTED.getMessage());
+            return Mono.empty();
+        }).block();
+    }
 }
