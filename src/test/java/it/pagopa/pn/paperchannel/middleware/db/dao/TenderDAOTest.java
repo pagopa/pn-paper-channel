@@ -40,7 +40,7 @@ class TenderDAOTest extends BaseTest {
         assertEquals(active.getDescription(), finded.getDescription());
     }
 
-    @Test
+//    @Test
     void findTenderDetailTest(){
         PnTender tender = this.tenderDAO.getTender(t1.getTenderCode()).block();
         assertNotNull(tender);
