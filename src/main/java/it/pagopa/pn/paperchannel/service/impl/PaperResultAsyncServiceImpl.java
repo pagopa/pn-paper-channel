@@ -23,6 +23,7 @@ import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum;
+import it.pagopa.pn.paperchannel.utils.PnLogAudit;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.MDC;
@@ -88,11 +89,16 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
                                     }
 
                                 } else if (isTechnicalErrorStatusCode(singleStatusUpdateDto)) {
+                                    PnLogAudit pnLogAudit = new PnLogAudit(auditLogBuilder);
+                                    pnLogAudit.addsBeforeDiscard(entity.getIun(), String.format("requestId = %s finish retry to External Channel", entity.getRequestId()));
                                     return Mono.delay(Duration.ofMillis(1)).publishOn(Schedulers.boundedElastic())
                                             .flatMap( i-> paperRequestErrorDAO.created(entity.getRequestId(),
                                                     entity.getStatusCode(),
                                                     entity.getStatusDetail()).map(item -> item))
-                                            .flatMap(item -> Mono.just(updatedEntity));
+                                            .flatMap(item -> {
+                                                pnLogAudit.addsSuccessDiscard(entity.getIun(), String.format("requestId = %s finish retry to External Channel", entity.getRequestId()));
+                                                return Mono.just(updatedEntity);
+                                            });
                                 }
                                 if (!isTechnicalErrorStatusCode(singleStatusUpdateDto)) sendPaperResponse(updatedEntity, singleStatusUpdateDto);
                                 return Mono.just(updatedEntity);
