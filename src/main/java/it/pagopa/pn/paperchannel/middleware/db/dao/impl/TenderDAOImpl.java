@@ -25,10 +25,7 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 import java.time.Instant;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Repository
 public class TenderDAOImpl extends BaseDAO<PnTender> implements TenderDAO {
@@ -127,8 +124,10 @@ public class TenderDAOImpl extends BaseDAO<PnTender> implements TenderDAO {
         );
 
         String filter = PnTender.COL_STATUS + " = :consolidateStatus AND (("
-                + PnTender.COL_START_DATE + " <= :startDate AND " + PnTender.COL_END_DATE + " <= :startDate ) OR ("
-                + PnTender.COL_START_DATE + " <= :endDate AND " + PnTender.COL_END_DATE + " <= :endDate ))";
+                + PnTender.COL_START_DATE + " <= :startDate AND " + PnTender.COL_END_DATE + " >= :endDate ) OR ("
+                + PnTender.COL_START_DATE + " <= :startDate AND " + PnTender.COL_END_DATE + " >= :startDate ) OR("
+                + PnTender.COL_START_DATE + " >= :startDate AND " + PnTender.COL_END_DATE + " <= :startDate ) OR("
+                + PnTender.COL_START_DATE + " >= :startDate AND " + PnTender.COL_END_DATE + " <= :endDate ))";
 
 
         Map<String, AttributeValue> values = new HashMap<>();
