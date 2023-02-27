@@ -145,7 +145,7 @@ public class BaseService {
                 productType = RACCOMANDATA_890;
             }
         } else {
-            if (productTypeEnum.equals(ProductTypeEnum.RIS) || productTypeEnum.equals(ProductTypeEnum._890)) {
+            if (productTypeEnum.equals(ProductTypeEnum.RIR) || productTypeEnum.equals(ProductTypeEnum._890)) {
                 productType = RACCOMANDATA_AR;
             } else if (productTypeEnum.equals(ProductTypeEnum.RIS)){
                 productType = RACCOMANDATA_SEMPLICE;
