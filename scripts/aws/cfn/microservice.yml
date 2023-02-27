@@ -63,6 +63,10 @@ Parameters:
     Type: String
     Description: 'Url to the SafeStorage microservice'
 
+  ExternalChannelBaseUrl:
+    Type: String
+    Description: 'Url to the External Channel microservice'
+
   AttemptSafeStorage:
     Type: Number
     Description: 'Number of attempts for retrieve file on safe storage'
@@ -321,7 +325,10 @@ Parameters:
   MaxTasksNumber:
     Default: 6
     Type: Number
-    Description: maximum autoscaling number of tasks 
+    Description: maximum autoscaling number of tasks
+
+Conditions:
+  UseExternalChannelMock: !Equals [ !Ref ExternalChannelBaseUrl, "Mock" ]
 
 Resources:
   # PN-Paper-Channel microservice
@@ -350,7 +357,11 @@ Resources:
         ContainerEnvEntry2: !Sub 'CORS_ALLOWED_DOMAINS=${CorsAllowedDomains}, http://localhost:3000'
         ContainerEnvEntry3: !Sub 'PN_PAPERCHANNEL_CLIENTSAFESTORAGEBASEPATH=${SandboxSafeStorageBaseUrl}'
         ContainerEnvEntry4: !Sub 'PN_PAPERCHANNEL_CLIENTNATIONALREGISTRIESBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
-        ContainerEnvEntry5: !Sub 'PN_PAPERCHANNEL_CLIENTEXTERNALCHANNELBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
+        ContainerEnvEntry5:
+          Fn::If:
+            - UseExternalChannelMock
+            - !Sub 'PN_PAPERCHANNEL_CLIENTEXTERNALCHANNELBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
+            - !Sub 'PN_PAPERCHANNEL_CLIENTEXTERNALCHANNELBASEPATH=${ExternalChannelBaseUrl}'
         ContainerEnvEntry6: !Sub 'PN_PAPERCHANNEL_SAFESTORAGECXID=${SafeStorageCxId}'
         ContainerEnvEntry7: !Sub 'PN_PAPERCHANNEL_XPAGOPAEXTCHCXID=${XPagopaExtchCxId}'
         ContainerEnvEntry8: !Sub 'AWS_DYNAMODBREQUESTDELIVERYTABLE=${RequestDeliveryDynamoTableName}'
