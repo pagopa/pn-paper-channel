@@ -64,7 +64,7 @@ public class RequestDeliveryDAOImpl extends BaseDAO<PnDeliveryRequest> implement
                                             request.setHashedFiscalCode(Utility.convertToHash(request.getFiscalCode()));
                                             transactWriterInitializer.addRequestTransaction(
                                                     this.dynamoTable,
-                                                    encode(request, PnDeliveryRequest.class),
+                                                    encode(request),
                                                     PnDeliveryRequest.class
                                             );
                                             return putWithTransact(transactWriterInitializer.build()).thenApply(item-> request);

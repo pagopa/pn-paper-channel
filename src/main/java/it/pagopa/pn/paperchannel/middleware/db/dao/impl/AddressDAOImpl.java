@@ -41,7 +41,7 @@ public class AddressDAOImpl extends BaseDAO <PnAddress> implements AddressDAO {
 
     @Override
     public void createTransaction(TransactWriterInitializer transactWriterInitializer, PnAddress pnAddress) {
-        transactWriterInitializer.addRequestTransaction(this.dynamoTable, encode(pnAddress, PnAddress.class), PnAddress.class);
+        transactWriterInitializer.addRequestTransaction(this.dynamoTable, encode(pnAddress), PnAddress.class);
     }
 
     @Override
