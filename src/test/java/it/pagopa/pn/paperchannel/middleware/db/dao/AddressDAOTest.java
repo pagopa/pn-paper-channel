@@ -4,8 +4,11 @@ import it.pagopa.pn.paperchannel.config.BaseTest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -16,6 +19,14 @@ class AddressDAOTest extends BaseTest {
     @Autowired
     private AddressDAO addressDAO;
 
+    private final PnAddress address = new PnAddress();
+    private final PnAddress address1 = new PnAddress();
+    private final PnAddress address2 = new PnAddress();
+
+    @BeforeEach
+    public void setUp(){
+        initialize();
+    }
 
     @Test
     void testAddress(){
@@ -51,4 +62,46 @@ class AddressDAOTest extends BaseTest {
         assertNotNull(address2);
         assertNotNull(pnAddressFromDb);
     }
+
+    @Test
+    void findByRequestIdTest(){
+        PnAddress pnAddress = this.addressDAO.findByRequestId(address.getRequestId()).block();
+        assertNotNull(pnAddress);
+        assertEquals(pnAddress.getAddress(), address.getAddress());
+        assertEquals(pnAddress.getCap(), address.getCap());
+        assertEquals(pnAddress.getRequestId(), address.getRequestId());
+        assertEquals(pnAddress.getTypology(), address.getTypology());
+    }
+
+    @Test
+    void findAllByRequestIdTest(){
+        List<PnAddress> addressList = this.addressDAO.findAllByRequestId(address1.getRequestId()).block();
+        assertNotNull(addressList);
+        assertEquals(2, addressList.size());
+
+    }
+
+    private void initialize(){
+
+        address.setAddress("Via Aldo Moro");
+        address.setCap("21004");
+        address.setRequestId("LOP-DF3-412");
+        address.setTypology(AddressTypeEnum.RECEIVER_ADDRESS.name());
+        this.addressDAO.create(address).block();
+
+        address1.setAddress("San Cristoforo");
+        address1.setCap("21023");
+        address1.setRequestId("PLG-DR5-455");
+        address1.setTypology(AddressTypeEnum.RECEIVER_ADDRESS.name());
+        this.addressDAO.create(address1).block();
+
+        address2.setAddress("Via dalle Palle");
+        address2.setCap("21023");
+        address2.setRequestId("PLG-DR5-455");
+        address2.setTypology(AddressTypeEnum.AR_ADDRESS.name());
+        this.addressDAO.create(address2).block();
+
+
+    }
+
 }
