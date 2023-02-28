@@ -1,6 +1,7 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
+import it.pagopa.pn.paperchannel.encryption.DataEncryption;
 import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
@@ -13,6 +14,8 @@ import it.pagopa.pn.paperchannel.utils.PnLogAudit;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -34,6 +37,10 @@ public class BaseService {
     protected final SqsSender sqsSender;
     protected RequestDeliveryDAO requestDeliveryDAO;
     protected CostDAO costDAO;
+
+    @Autowired
+    @Qualifier("dataVaultEncryption")
+    protected DataEncryption dataEncryption;
     protected PnLogAudit pnLogAudit;
 
     public BaseService(PnAuditLogBuilder auditLogBuilder, RequestDeliveryDAO requestDeliveryDAO, CostDAO costDAO,
@@ -138,7 +145,7 @@ public class BaseService {
                 productType = RACCOMANDATA_890;
             }
         } else {
-            if (productTypeEnum.equals(ProductTypeEnum.RIS) || productTypeEnum.equals(ProductTypeEnum._890)) {
+            if (productTypeEnum.equals(ProductTypeEnum.RIR) || productTypeEnum.equals(ProductTypeEnum._890)) {
                 productType = RACCOMANDATA_AR;
             } else if (productTypeEnum.equals(ProductTypeEnum.RIS)){
                 productType = RACCOMANDATA_SEMPLICE;

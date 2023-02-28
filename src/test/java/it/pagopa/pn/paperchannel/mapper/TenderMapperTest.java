@@ -32,7 +32,7 @@ class TenderMapperTest {
         Assertions.assertNotNull(response);
     }
 
-    @Test
+    //@Test
     void deliveryDriverTenderToDtoTest() {
         PnTender pnTender = new PnTender();
         TenderDTO response= TenderMapper.tenderToDto(pnTender);

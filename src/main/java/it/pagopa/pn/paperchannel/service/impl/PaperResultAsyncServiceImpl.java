@@ -23,6 +23,7 @@ import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum;
+import it.pagopa.pn.paperchannel.utils.PnLogAudit;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.MDC;
@@ -88,11 +89,16 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
                                     }
 
                                 } else if (isTechnicalErrorStatusCode(singleStatusUpdateDto)) {
+                                    PnLogAudit pnLogAudit = new PnLogAudit(auditLogBuilder);
+                                    pnLogAudit.addsBeforeDiscard(entity.getIun(), String.format("requestId = %s finish retry to External Channel", entity.getRequestId()));
                                     return Mono.delay(Duration.ofMillis(1)).publishOn(Schedulers.boundedElastic())
                                             .flatMap( i-> paperRequestErrorDAO.created(entity.getRequestId(),
                                                     entity.getStatusCode(),
                                                     entity.getStatusDetail()).map(item -> item))
-                                            .flatMap(item -> Mono.just(updatedEntity));
+                                            .flatMap(item -> {
+                                                pnLogAudit.addsSuccessDiscard(entity.getIun(), String.format("requestId = %s finish retry to External Channel", entity.getRequestId()));
+                                                return Mono.just(updatedEntity);
+                                            });
                                 }
                                 if (!isTechnicalErrorStatusCode(singleStatusUpdateDto)) sendPaperResponse(updatedEntity, singleStatusUpdateDto);
                                 return Mono.just(updatedEntity);
@@ -182,29 +188,35 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
     private void sendPaperResponse(PnDeliveryRequest entity, SingleStatusUpdateDto request) {
         SendEvent sendEvent = new SendEvent();
 
-        sendEvent.setStatusCode(StatusCodeEnum.valueOf(entity.getStatusCode()));
-        sendEvent.setStatusDetail(entity.getStatusDetail());
-        sendEvent.setStatusDescription(entity.getStatusDetail());
+        try {
+            sendEvent.setStatusCode(StatusCodeEnum.valueOf(entity.getStatusCode()));
+            sendEvent.setStatusDetail(entity.getStatusDetail());
+            sendEvent.setStatusDescription(entity.getStatusDetail());
 
-        if (request.getAnalogMail() != null) {
-            sendEvent.setRequestId(request.getAnalogMail().getRequestId());
-            sendEvent.setStatusDateTime(DateUtils.getDatefromOffsetDateTime(request.getAnalogMail().getStatusDateTime()));
-            sendEvent.setRegisteredLetterCode(request.getAnalogMail().getRegisteredLetterCode());
-            sendEvent.setClientRequestTimeStamp(Date.from(request.getAnalogMail().getClientRequestTimeStamp().toInstant()));
-            sendEvent.setDeliveryFailureCause(request.getAnalogMail().getDeliveryFailureCause());
-            sendEvent.setDiscoveredAddress(AddressMapper.toPojo(request.getAnalogMail().getDiscoveredAddress()));
+            if (request.getAnalogMail() != null) {
+                sendEvent.setRequestId(entity.getRequestId());
+                sendEvent.setStatusDateTime(DateUtils.getDatefromOffsetDateTime(request.getAnalogMail().getStatusDateTime()));
+                sendEvent.setRegisteredLetterCode(request.getAnalogMail().getRegisteredLetterCode());
+                sendEvent.setClientRequestTimeStamp(Date.from(request.getAnalogMail().getClientRequestTimeStamp().toInstant()));
+                sendEvent.setDeliveryFailureCause(request.getAnalogMail().getDeliveryFailureCause());
+                sendEvent.setDiscoveredAddress(AddressMapper.toPojo(request.getAnalogMail().getDiscoveredAddress()));
 
-            if (request.getAnalogMail().getAttachments() != null && !request.getAnalogMail().getAttachments().isEmpty()) {
-                sendEvent.setAttachments(
-                        request.getAnalogMail().getAttachments()
-                                .stream()
-                                .map(AttachmentMapper::fromAttachmentDetailsDto)
-                                .toList()
-                );
+                if (request.getAnalogMail().getAttachments() != null && !request.getAnalogMail().getAttachments().isEmpty()) {
+                    sendEvent.setAttachments(
+                            request.getAnalogMail().getAttachments()
+                                    .stream()
+                                    .map(AttachmentMapper::fromAttachmentDetailsDto)
+                                    .toList()
+                    );
+                }
             }
+
+            sqsSender.pushSendEvent(sendEvent);
+        } catch (IllegalArgumentException ex){
+            log.error(ex.getMessage());
         }
 
-        sqsSender.pushSendEvent(sendEvent);
+
     }
 
 }

@@ -2,11 +2,9 @@ package it.pagopa.pn.paperchannel.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnCost;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
-import reactor.core.publisher.Flux;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -90,7 +88,6 @@ public class Utility {
                 log.info("Trovato cap duplicato.");
                 return null;
             }
-            log.info("Non è stato trovato alcun cap duplicato.");
             return capsFinded;
 
         }

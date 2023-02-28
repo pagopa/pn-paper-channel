@@ -71,7 +71,7 @@ components:
 
     StatusCodeEnum:
       type: string
-      enum: [ PROGRESS, OK, KOUNREACHABLE ]
+      enum: [ PROGRESS, OK, KOUNREACHABLE, KO ]
       description: "Codici di stato: <br />
                                 \ - PROGRESS :  stato iniziale che indica che la richiesta è in fase di elaborazione <br />
                                 \ - OK : nel caso di indirizzo valido e allegati recuperati correttamente. Prevede la presenza del receiverAddress <br /> \

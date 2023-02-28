@@ -1,19 +1,15 @@
 package it.pagopa.pn.paperchannel.middleware.db.dao.impl;
 
 import it.pagopa.pn.paperchannel.config.AwsPropertiesConfig;
-import it.pagopa.pn.paperchannel.encryption.DataEncryption;
 import it.pagopa.pn.paperchannel.middleware.db.dao.TenderDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.BaseDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.TransactWriterInitializer;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnCost;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryDriver;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnTender;
-import it.pagopa.pn.paperchannel.rest.v1.dto.Status;
 import it.pagopa.pn.paperchannel.rest.v1.dto.TenderDTO;
 import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
@@ -25,10 +21,7 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 import java.time.Instant;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Repository
 public class TenderDAOImpl extends BaseDAO<PnTender> implements TenderDAO {
@@ -117,7 +110,7 @@ public class TenderDAOImpl extends BaseDAO<PnTender> implements TenderDAO {
     }
 
     @Override
-    public Mono<PnTender> getConsolidate(Date startDate, Date endDate) {
+    public Mono<PnTender> getConsolidate(Instant startDate, Instant endDate) {
 
         Pair<Instant, Instant> startAndEndTimestamp = DateUtils.getStartAndEndTimestamp(null, null);
 
@@ -127,12 +120,14 @@ public class TenderDAOImpl extends BaseDAO<PnTender> implements TenderDAO {
         );
 
         String filter = PnTender.COL_STATUS + " = :consolidateStatus AND (("
-                + PnTender.COL_START_DATE + " <= :startDate AND " + PnTender.COL_END_DATE + " <= :startDate ) OR ("
-                + PnTender.COL_START_DATE + " <= :endDate AND " + PnTender.COL_END_DATE + " <= :endDate ))";
+                + PnTender.COL_START_DATE + " <= :startDate AND " + PnTender.COL_END_DATE + " >= :endDate ) OR ("
+                + PnTender.COL_START_DATE + " <= :startDate AND " + PnTender.COL_END_DATE + " >= :startDate ) OR("
+                + PnTender.COL_START_DATE + " >= :startDate AND " + PnTender.COL_END_DATE + " <= :startDate ) OR("
+                + PnTender.COL_START_DATE + " >= :startDate AND " + PnTender.COL_END_DATE + " <= :endDate ))";
 
 
         Map<String, AttributeValue> values = new HashMap<>();
-        values.put(":consolidateStatus", AttributeValue.builder().s(TenderDTO.StatusEnum.IN_PROGRESS.getValue()).build());
+        values.put(":consolidateStatus", AttributeValue.builder().s(TenderDTO.StatusEnum.VALIDATED.getValue()).build());
         values.put(":startDate", AttributeValue.builder().s(startDate.toString()).build());
         values.put(":endDate", AttributeValue.builder().s(endDate.toString()).build());
 

@@ -1,9 +1,11 @@
 package it.pagopa.pn.paperchannel.middleware.db.entities;
 
+import it.pagopa.pn.paperchannel.rest.v1.dto.TenderDTO;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.apache.commons.lang3.StringUtils;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
 
 import java.time.Instant;
@@ -44,5 +46,13 @@ public class PnTender {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_END_DATE)}))
     public Instant endDate;
+
+    public String getActualStatus(){
+        Instant now = Instant.now();
+        if (StringUtils.equals(this.status, TenderDTO.StatusEnum.VALIDATED.getValue()) &&
+                startDate.isBefore(now) && endDate.isAfter(now)) return TenderDTO.StatusEnum.IN_PROGRESS.getValue();
+        if (StringUtils.equals(this.status, TenderDTO.StatusEnum.VALIDATED.getValue()) && endDate.isBefore(now)) return TenderDTO.StatusEnum.ENDED.getValue();
+        return this.status;
+    }
 
 }

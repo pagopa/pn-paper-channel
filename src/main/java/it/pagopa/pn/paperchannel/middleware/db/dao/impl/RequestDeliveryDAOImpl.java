@@ -3,7 +3,6 @@ package it.pagopa.pn.paperchannel.middleware.db.dao.impl;
 import it.pagopa.pn.commons.exceptions.PnHttpResponseException;
 import it.pagopa.pn.paperchannel.config.AwsPropertiesConfig;
 import it.pagopa.pn.paperchannel.encryption.DataEncryption;
-import it.pagopa.pn.paperchannel.encryption.impl.DataVaultEncryptionImpl;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.BaseDAO;
@@ -18,9 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
-import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.TransactionCanceledException;
@@ -65,8 +62,11 @@ public class RequestDeliveryDAOImpl extends BaseDAO<PnDeliveryRequest> implement
                                                 addressDAO.createTransaction(this.transactWriterInitializer, pnAddress);
                                             }
                                             request.setHashedFiscalCode(Utility.convertToHash(request.getFiscalCode()));
-                                            request.setFiscalCode(encode(request, PnDeliveryRequest.class).getFiscalCode());
-                                            transactWriterInitializer.addRequestTransaction(this.dynamoTable, request, PnDeliveryRequest.class);
+                                            transactWriterInitializer.addRequestTransaction(
+                                                    this.dynamoTable,
+                                                    encode(request),
+                                                    PnDeliveryRequest.class
+                                            );
                                             return putWithTransact(transactWriterInitializer.build()).thenApply(item-> request);
                                         } catch (TransactionCanceledException tce) {
                                             log.error("Transaction Canceled" + tce.getMessage());
@@ -81,12 +81,16 @@ public class RequestDeliveryDAOImpl extends BaseDAO<PnDeliveryRequest> implement
                     throwable.printStackTrace();
                     return Mono.error(throwable);
                 })
-                .map(entityCreated -> entityCreated);
+                .map(this::decode);
     }
 
     @Override
     public Mono<PnDeliveryRequest> updateData(PnDeliveryRequest pnDeliveryRequest) {
-        return Mono.fromFuture(this.update(pnDeliveryRequest).thenApply(item -> item));
+        return Mono.fromFuture(this.dynamoTable.getItem(pnDeliveryRequest).thenApply(item -> item))
+                .flatMap(entityDB -> {
+                    pnDeliveryRequest.setFiscalCode(entityDB.getFiscalCode());
+                    return Mono.fromFuture(this.update(pnDeliveryRequest).thenApply(saved -> pnDeliveryRequest));
+                });
     }
 
     @Override

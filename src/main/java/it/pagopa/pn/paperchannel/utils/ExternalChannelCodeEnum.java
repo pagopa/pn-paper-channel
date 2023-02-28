@@ -14,12 +14,19 @@ public enum ExternalChannelCodeEnum {
     RECRS003C("OK"),
     RECRS004C("OK"),
     RECRS005C("OK"),
+    RECRN006("PROGRESS"), // furto o smarrimento
     RECRS006("PROGRESS"), // furto o smarrimento
+    RECAG001C("OK"),
     RECRN001C("OK"),
+    RECRN002C("KO"),
+    RECRN002F("KO"),
+    RECRN003C("OK"),
+    RECRN004C("KO"),
+    RECRN005C("OK"),
     RECAG002C("OK"),
     RECAG003C("KO"),
     RECAG003F("KO"),
-    RECAG004("PROGRESS"),
+    RECAG004("PROGRESS"), // furto o smarrimento
     RECAG005C("PROGRESS"), // KO or Progress
     RECAG006C("PROGRESS"), // KO or Progress
     RECAG007C("PROGRESS"), // KO or Progress
@@ -27,10 +34,10 @@ public enum ExternalChannelCodeEnum {
     PNAG012("KO"),
     RECRI003C("OK"),
     RECRI004C("KO"),
-    RECRI005("PROGRESS"),
     RECRSI003C("OK"),
     RECRSI004C("KO"),
-    RECRSI005("PROGRESS"),
+    RECRSI005("PROGRESS"), // furto o smarrimento
+    RECRI005("PROGRESS"), // furto o smarrimento
     CON998("KO"),
     CON997("KO"),
     CON996("KO"),
@@ -44,7 +51,12 @@ public enum ExternalChannelCodeEnum {
     }
 
     public static boolean isRetryStatusCode(String code) {
-        if (StringUtils.equalsIgnoreCase(code, RECRS006.name())) return true;
+        if (StringUtils.equalsIgnoreCase(code, RECRS006.name())
+            || StringUtils.equalsIgnoreCase(code, RECRN006.name())
+            || StringUtils.equalsIgnoreCase(code, RECAG004.name())
+            || StringUtils.equalsIgnoreCase(code, RECRI005.name())
+            || StringUtils.equalsIgnoreCase(code, RECRSI005.name())
+        ) return true;
         return false;
     }
 
@@ -58,7 +70,7 @@ public enum ExternalChannelCodeEnum {
     }
 
     public static String getStatusCode(String statusCode) {
-        String code = null;
+        String code = statusCode;
         try {
             code = ExternalChannelCodeEnum.valueOf(statusCode).getMessage();
         } catch (Exception e) {
