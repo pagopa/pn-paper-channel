@@ -14,7 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Repository;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactPutItemEnhancedRequest;
@@ -50,6 +49,7 @@ public class RequestDeliveryDAOImpl extends BaseDAO<PnDeliveryRequest> implement
 
     @Override
     public Mono<PnDeliveryRequest> createWithAddress(PnDeliveryRequest request, PnAddress pnAddress) {
+        String fiscalCode = request.getFiscalCode();
         return Mono.fromFuture(countOccurrencesEntity(request.getRequestId())
             .thenCompose( total -> {
                 log.debug("Delivery request with same request id : {}", total);
@@ -69,7 +69,10 @@ public class RequestDeliveryDAOImpl extends BaseDAO<PnDeliveryRequest> implement
                                         .build();
 
                         builder.addPutItem(this.dynamoTable, requestEntity);
-                        return putWithTransact(builder.build()).thenApply(item-> request);
+                        return putWithTransact(builder.build()).thenApply(item-> {
+                            request.setFiscalCode(fiscalCode);
+                            return request;
+                        });
                     } catch (TransactionCanceledException tce) {
                         log.error("Transaction Canceled {}", tce.getMessage());
                         return null;
@@ -82,7 +85,7 @@ public class RequestDeliveryDAOImpl extends BaseDAO<PnDeliveryRequest> implement
             .onErrorResume(throwable -> {
                 throwable.printStackTrace();
                 return Mono.error(throwable);
-            }).map(this::decode);
+            });
     }
 
     @Override
@@ -96,7 +99,7 @@ public class RequestDeliveryDAOImpl extends BaseDAO<PnDeliveryRequest> implement
 
     @Override
     public Mono<PnDeliveryRequest> getByRequestId(String requestId) {
-        return Mono.fromFuture(this.get(requestId, null).thenApply(item -> item));
+        return Mono.fromFuture(this.dynamoTable.getItem(keyBuild(requestId, null)).thenApply(item -> item));
     }
 
     @Override
@@ -107,11 +110,6 @@ public class RequestDeliveryDAOImpl extends BaseDAO<PnDeliveryRequest> implement
                     if (item.isEmpty()) return Mono.empty();
                     return Mono.just(item.get(0));
                 });
-    }
-
-    @Override
-    public Flux<PnDeliveryRequest> getByFiscalCode(String fiscalCode) {
-        return this.getBySecondaryIndex(PnDeliveryRequest.FISCAL_CODE_INDEX, fiscalCode, null);
     }
 
     private CompletableFuture<Integer> countOccurrencesEntity(String requestId){
