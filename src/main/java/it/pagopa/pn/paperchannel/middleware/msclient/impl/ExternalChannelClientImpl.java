@@ -3,10 +3,11 @@ package it.pagopa.pn.paperchannel.middleware.msclient.impl;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.common.BaseClient;
+import it.pagopa.pn.paperchannel.model.AttachmentInfo;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.ApiClient;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.api.PaperMessagesApi;
+import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.PaperEngageRequestAttachmentsDto;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.PaperEngageRequestDto;
-import it.pagopa.pn.paperchannel.rest.v1.dto.ProductTypeEnum;
 import it.pagopa.pn.paperchannel.rest.v1.dto.SendRequest;
 import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
@@ -17,10 +18,15 @@ import reactor.util.retry.Retry;
 
 
 import javax.annotation.PostConstruct;
+import java.math.BigDecimal;
 import java.net.ConnectException;
 import java.time.Duration;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static it.pagopa.pn.paperchannel.utils.Const.PN_AAR;
 
 @Component
 public class ExternalChannelClientImpl extends BaseClient implements ExternalChannelClient {
@@ -39,7 +45,7 @@ public class ExternalChannelClientImpl extends BaseClient implements ExternalCha
         this.paperMessagesApi = new PaperMessagesApi(newApiClient);
     }
 
-    public Mono<Void> sendEngageRequest(SendRequest sendRequest){
+    public Mono<Void> sendEngageRequest(SendRequest sendRequest, List<AttachmentInfo> attachments){
         String requestIdx = sendRequest.getRequestId();
         PaperEngageRequestDto dto = new PaperEngageRequestDto();
         dto.setRequestId(sendRequest.getRequestId());
@@ -51,8 +57,15 @@ public class ExternalChannelClientImpl extends BaseClient implements ExternalCha
 
         dto.setProductType(sendRequest.getProductType().getValue());
         dto.setReceiverFiscalCode(sendRequest.getReceiverFiscalCode());
-        if (!sendRequest.getAttachmentUrls().isEmpty())
-            dto.setAttachmentUri(sendRequest.getAttachmentUrls().get(0));
+        AtomicInteger i = new AtomicInteger();
+        attachments.forEach(a -> {
+            PaperEngageRequestAttachmentsDto attachmentsDto = new PaperEngageRequestAttachmentsDto();
+            attachmentsDto.setDocumentType(StringUtils.equals(a.getDocumentType(), PN_AAR) ? Const.AAR : a.getDocumentType());
+            attachmentsDto.setSha256(a.getSha256());
+            attachmentsDto.setOrder(new BigDecimal(i.getAndIncrement()));
+            attachmentsDto.setUri(a.getFileKey());
+            dto.getAttachments().add(attachmentsDto);
+        });
 
         dto.setPrintType(sendRequest.getPrintType());
         dto.setReceiverNameRow2(sendRequest.getReceiverAddress().getNameRow2());

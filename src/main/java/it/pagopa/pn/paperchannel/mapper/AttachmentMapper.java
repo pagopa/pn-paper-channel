@@ -25,16 +25,21 @@ public class AttachmentMapper {
         if (response.getDownload() != null && response.getDownload().getUrl() != null){
             info.setUrl(response.getDownload().getUrl());
         }
+        info.setSha256(response.getChecksum());
         info.setDocumentType(response.getDocumentType());
         return info;
     }
 
     public static AttachmentInfo fromEntity(PnAttachmentInfo entity){
-        return mapper.toDTO(entity);
+        AttachmentInfo attachmentInfo = mapper.toDTO(entity);
+        attachmentInfo.setSha256(entity.getChecksum());
+        return attachmentInfo;
     }
 
     public static PnAttachmentInfo toEntity(AttachmentInfo dto){
-        return mapper.toEntity(dto);
+        PnAttachmentInfo pnAttachmentInfo = mapper.toEntity(dto);
+        pnAttachmentInfo.setChecksum(dto.getSha256());
+        return pnAttachmentInfo;
     }
 
     public static AttachmentDetails toAttachmentDetails(PnAttachmentInfo attachments){

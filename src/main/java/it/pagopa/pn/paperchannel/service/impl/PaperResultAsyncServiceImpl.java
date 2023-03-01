@@ -162,7 +162,7 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
                     sendRequest.setRequestId(requestId);
                     pnLogAudit.addsBeforeSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDC_TRACE_ID_KEY)));
 
-                    return this.externalChannelClient.sendEngageRequest(sendRequest).publishOn(Schedulers.boundedElastic())
+                    return this.externalChannelClient.sendEngageRequest(sendRequest, pnDeliveryRequest.getAttachments().stream().map(AttachmentMapper::fromEntity).toList()).publishOn(Schedulers.boundedElastic())
                             .then(Mono.defer(() -> {
                                 pnLogAudit.addsSuccessSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDC_TRACE_ID_KEY)));
                                 return Mono.empty();

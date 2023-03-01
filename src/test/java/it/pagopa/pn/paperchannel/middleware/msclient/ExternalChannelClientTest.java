@@ -37,13 +37,13 @@ class ExternalChannelClientTest  extends BaseTest.WithMockServer {
     @Test
     void testOK() {
         this.sendRequest.getRequestId();
-        externalChannelClient.sendEngageRequest(sendRequest).block();
+        externalChannelClient.sendEngageRequest(sendRequest, new ArrayList<>()).block();
     }
 
     @Test
     void testBadRequest() {
         this.sendRequest.getRequestId();
-        externalChannelClient.sendEngageRequest(sendRequest)
+        externalChannelClient.sendEngageRequest(sendRequest, new ArrayList<>())
                 .onErrorResume(WebClientResponseException.class, ex -> {
                     Assertions.assertEquals(ex.getStatusCode(), HttpStatus.BAD_REQUEST);
                     return Mono.empty();
@@ -53,7 +53,7 @@ class ExternalChannelClientTest  extends BaseTest.WithMockServer {
     @Test
     void testConflict() {
         this.sendRequest.getRequestId();
-        externalChannelClient.sendEngageRequest(sendRequest)
+        externalChannelClient.sendEngageRequest(sendRequest, new ArrayList<>())
                 .onErrorResume(WebClientResponseException.class, ex -> {
                     Assertions.assertEquals(ex.getStatusCode(), HttpStatus.CONFLICT);
                     return Mono.empty();

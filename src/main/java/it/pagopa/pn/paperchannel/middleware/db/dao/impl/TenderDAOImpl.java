@@ -1,19 +1,15 @@
 package it.pagopa.pn.paperchannel.middleware.db.dao.impl;
 
 import it.pagopa.pn.paperchannel.config.AwsPropertiesConfig;
-import it.pagopa.pn.paperchannel.encryption.DataEncryption;
 import it.pagopa.pn.paperchannel.middleware.db.dao.TenderDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.BaseDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.TransactWriterInitializer;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnCost;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryDriver;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnTender;
-import it.pagopa.pn.paperchannel.rest.v1.dto.Status;
 import it.pagopa.pn.paperchannel.rest.v1.dto.TenderDTO;
 import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
@@ -114,7 +110,7 @@ public class TenderDAOImpl extends BaseDAO<PnTender> implements TenderDAO {
     }
 
     @Override
-    public Mono<PnTender> getConsolidate(Date startDate, Date endDate) {
+    public Mono<PnTender> getConsolidate(Instant startDate, Instant endDate) {
 
         Pair<Instant, Instant> startAndEndTimestamp = DateUtils.getStartAndEndTimestamp(null, null);
 

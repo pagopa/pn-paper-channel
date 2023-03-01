@@ -15,6 +15,8 @@ import reactor.core.publisher.Mono;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
+import software.amazon.awssdk.enhanced.dynamodb.model.TransactPutItemEnhancedRequest;
+import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import java.util.List;
 
@@ -41,7 +43,16 @@ public class AddressDAOImpl extends BaseDAO <PnAddress> implements AddressDAO {
 
     @Override
     public void createTransaction(TransactWriterInitializer transactWriterInitializer, PnAddress pnAddress) {
-        transactWriterInitializer.addRequestTransaction(this.dynamoTable, encode(pnAddress, PnAddress.class), PnAddress.class);
+        transactWriterInitializer.addRequestTransaction(this.dynamoTable, encode(pnAddress), PnAddress.class);
+    }
+
+    @Override
+    public void createTransaction(TransactWriteItemsEnhancedRequest.Builder builder, PnAddress address) {
+        TransactPutItemEnhancedRequest<PnAddress> addressRequest =
+                TransactPutItemEnhancedRequest.builder(PnAddress.class)
+                        .item(encode(address))
+                        .build();
+        builder.addPutItem(this.dynamoTable, addressRequest );
     }
 
     @Override

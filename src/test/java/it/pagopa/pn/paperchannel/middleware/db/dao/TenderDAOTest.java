@@ -2,6 +2,7 @@ package it.pagopa.pn.paperchannel.middleware.db.dao;
 
 import it.pagopa.pn.paperchannel.config.BaseTest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnTender;
+import it.pagopa.pn.paperchannel.rest.v1.dto.TenderDTO;
 import it.pagopa.pn.paperchannel.utils.Const;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
@@ -9,10 +10,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.Instant;
-import java.util.List;
+import java.util.*;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 @Slf4j
 class TenderDAOTest extends BaseTest {
@@ -22,7 +22,8 @@ class TenderDAOTest extends BaseTest {
     private final PnTender t1 = new PnTender();
     private final PnTender t2 = new PnTender();
     private final PnTender active = new PnTender();
-    private final PnTender draft = new PnTender();
+    private final PnTender validate = new PnTender();
+    private final PnTender validate1 = new PnTender();
 
 
     @BeforeEach
@@ -55,9 +56,50 @@ class TenderDAOTest extends BaseTest {
     void findAllTenders(){
         List<PnTender> alls = this.tenderDAO.getTenders().block();
         assertNotNull(alls);
-        assertEquals(4, alls.size());
+        assertEquals(5, alls.size());
     }
 
+    @Test
+    void deleteTenderTest(){
+        PnTender tender = this.tenderDAO.deleteTender(t1.getTenderCode()).block();
+        assertNotNull(tender);
+    }
+
+    @Test
+    void getTenderStatusValidateConsolidateTest(){
+        Instant startDate = Instant.parse("2023-03-10T00:20:56.630714800Z");
+        Instant endDate = Instant.parse("2023-03-28T00:20:56.630714800Z");
+        PnTender tender = this.tenderDAO.getConsolidate(startDate, endDate).block();
+        assertNotNull(tender);
+    }
+    @Test
+    void getTenderStatusValidateConsolidateTest2(){
+        Instant startDate = Instant.parse("2023-01-14T00:20:56.630714800Z");
+        Instant endDate = Instant.parse("2023-01-21T00:20:56.630714800Z");
+        PnTender tender = this.tenderDAO.getConsolidate(startDate, endDate).block();
+        assertNotNull(tender);
+    }
+    @Test
+    void getTenderStatusValidateConsolidateTest3(){
+        Instant startDate = Instant.parse("2023-01-08T00:20:56.630714800Z");
+        Instant endDate = Instant.parse("2023-01-17T00:20:56.630714800Z");
+        PnTender tender = this.tenderDAO.getConsolidate(startDate, endDate).block();
+        assertNotNull(tender);
+    }
+    @Test
+    void getTenderStatusValidateConsolidateTest4(){
+        Instant startDate = Instant.parse("2023-01-08T00:20:56.630714800Z");
+        Instant endDate = Instant.parse("2023-01-21T00:20:56.630714800Z");
+        PnTender tender = this.tenderDAO.getConsolidate(startDate, endDate).block();
+        assertNotNull(tender);
+    }
+    @Test
+    void getTenderStatusValidateNotConsolidateTest(){
+        Instant startDate = Instant.parse("2024-01-10T00:20:56.630714800Z");
+        Instant endDate = Instant.parse("2024-01-28T00:20:56.630714800Z");
+        PnTender tender = this.tenderDAO.getConsolidate(startDate, endDate).block();
+        assertNull(tender);
+    }
 
 
     private void initialize(){
@@ -67,7 +109,7 @@ class TenderDAOTest extends BaseTest {
         t1.setEndDate(Instant.parse("2021-12-31T23:20:56.630714800Z"));
         t1.setAuthor(Const.PN_PAPER_CHANNEL);
         t1.setDescription("Gara 2021");
-        t1.setStatus("ENDED");
+        t1.setStatus(TenderDTO.StatusEnum.ENDED.getValue());
         this.tenderDAO.createOrUpdate(t1).block();
 
         t2.setTenderCode("GARA-2022");
@@ -76,26 +118,36 @@ class TenderDAOTest extends BaseTest {
         t2.setEndDate(Instant.parse("2022-12-31T23:20:56.630714800Z"));
         t2.setAuthor(Const.PN_PAPER_CHANNEL);
         t2.setDescription("Gara 2022");
-        t2.setStatus("ENDED");
+        t2.setStatus(TenderDTO.StatusEnum.ENDED.getValue());
         this.tenderDAO.createOrUpdate(t2).block();
 
         active.setTenderCode("GARA-2023");
         active.setDate(Instant.parse("2023-01-01T00:20:56.630714800Z"));
-        active.setStartDate(Instant.parse("2023-01-01T00:20:56.630714800Z"));
-        active.setEndDate(Instant.parse("2023-12-31T23:20:56.630714800Z"));
+        active.setStartDate(Instant.parse("2023-02-01T00:20:56.630714800Z"));
+        active.setEndDate(Instant.parse("2023-03-29T23:20:56.630714800Z"));
         active.setAuthor(Const.PN_PAPER_CHANNEL);
         active.setDescription("Gara 2023");
-        active.setStatus("IN_PROGRESS");
+        active.setStatus(TenderDTO.StatusEnum.VALIDATED.getValue());
         this.tenderDAO.createOrUpdate(active).block();
 
-        draft.setTenderCode("GARA-2023-draft");
-        draft.setDate(Instant.parse("2023-01-01T00:20:56.630714800Z"));
-        draft.setStartDate(Instant.parse("2023-01-01T00:20:56.630714800Z"));
-        draft.setEndDate(Instant.parse("2023-12-31T23:20:56.630714800Z"));
-        draft.setAuthor(Const.PN_PAPER_CHANNEL);
-        draft.setDescription("Gara 2023");
-        draft.setStatus("CREATED");
-        this.tenderDAO.createOrUpdate(draft).block();
+        validate.setTenderCode("GARA-2023-validated");
+        validate.setDate(Instant.parse("2023-01-01T00:20:56.630714800Z"));
+        validate.setStartDate(Instant.parse("2023-01-10T00:20:56.630714800Z"));
+        validate.setEndDate(Instant.parse("2023-01-15T23:20:56.630714800Z"));
+        validate.setAuthor(Const.PN_PAPER_CHANNEL);
+        validate.setDescription("Gara validated 2023");
+        validate.setStatus(TenderDTO.StatusEnum.VALIDATED.getValue());
+        this.tenderDAO.createOrUpdate(validate).block();
+
+        validate1.setTenderCode("GARA-2023-febbraio");
+        validate1.setDate(Instant.parse("2023-02-15T00:20:56.630714800Z"));
+        validate1.setStartDate(Instant.parse("2023-01-16T00:20:56.630714800Z"));
+        validate1.setEndDate(Instant.parse("2023-01-20T23:20:56.630714800Z"));
+        validate1.setAuthor(Const.PN_PAPER_CHANNEL);
+        validate1.setDescription("Gara gennaio 2023");
+        validate1.setStatus(TenderDTO.StatusEnum.VALIDATED.getValue());
+        this.tenderDAO.createOrUpdate(validate1).block();
+
     }
 
 
