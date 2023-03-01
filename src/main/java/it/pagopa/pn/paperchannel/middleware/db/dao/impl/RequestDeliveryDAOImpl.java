@@ -6,7 +6,6 @@ import it.pagopa.pn.paperchannel.encryption.DataEncryption;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.BaseDAO;
-import it.pagopa.pn.paperchannel.middleware.db.dao.common.TransactWriterInitializer;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.utils.Utility;
@@ -18,6 +17,8 @@ import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
+import software.amazon.awssdk.enhanced.dynamodb.model.TransactPutItemEnhancedRequest;
+import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.TransactionCanceledException;
@@ -36,52 +37,52 @@ public class RequestDeliveryDAOImpl extends BaseDAO<PnDeliveryRequest> implement
     private DataEncryption dataVaultEncryption;
     @Autowired
     private AddressDAO addressDAO;
-    private final TransactWriterInitializer transactWriterInitializer;
 
 
     public RequestDeliveryDAOImpl(DataEncryption dataVaultEncryption,
                                   DynamoDbEnhancedAsyncClient dynamoDbEnhancedAsyncClient,
                                   DynamoDbAsyncClient dynamoDbAsyncClient,
-                                  AwsPropertiesConfig awsPropertiesConfig, TransactWriterInitializer transactWriterInitializer) {
+                                  AwsPropertiesConfig awsPropertiesConfig) {
         super(dataVaultEncryption, dynamoDbEnhancedAsyncClient, dynamoDbAsyncClient,
                 awsPropertiesConfig.getDynamodbRequestDeliveryTable(), PnDeliveryRequest.class);
-        this.transactWriterInitializer = transactWriterInitializer;
     }
 
 
     @Override
     public Mono<PnDeliveryRequest> createWithAddress(PnDeliveryRequest request, PnAddress pnAddress) {
-            return Mono.fromFuture(
-                        countOccurrencesEntity(request.getRequestId())
-                                .thenCompose( total -> {
-                                    log.debug("Delivery request with same request id : {}", total);
-                                    if (total == 0){
-                                        try {
-                                            this.transactWriterInitializer.init();
-                                            if(pnAddress != null) {
-                                                addressDAO.createTransaction(this.transactWriterInitializer, pnAddress);
-                                            }
-                                            request.setHashedFiscalCode(Utility.convertToHash(request.getFiscalCode()));
-                                            transactWriterInitializer.addRequestTransaction(
-                                                    this.dynamoTable,
-                                                    encode(request),
-                                                    PnDeliveryRequest.class
-                                            );
-                                            return putWithTransact(transactWriterInitializer.build()).thenApply(item-> request);
-                                        } catch (TransactionCanceledException tce) {
-                                            log.error("Transaction Canceled" + tce.getMessage());
-                                            return null;
-                                        }
-                                    } else {
-                                        throw new PnHttpResponseException("Data already existed", HttpStatus.BAD_REQUEST.value());
-                                    }
-                                })
-                )
-                .onErrorResume(throwable -> {
-                    throwable.printStackTrace();
-                    return Mono.error(throwable);
-                })
-                .map(this::decode);
+        return Mono.fromFuture(countOccurrencesEntity(request.getRequestId())
+            .thenCompose( total -> {
+                log.debug("Delivery request with same request id : {}", total);
+                if (total == 0){
+                    try {
+                        TransactWriteItemsEnhancedRequest.Builder builder =
+                                TransactWriteItemsEnhancedRequest.builder();
+
+                        if(pnAddress != null) {
+                            addressDAO.createTransaction(builder, pnAddress);
+                        }
+
+                        request.setHashedFiscalCode(Utility.convertToHash(request.getFiscalCode()));
+                        TransactPutItemEnhancedRequest<PnDeliveryRequest> requestEntity =
+                                TransactPutItemEnhancedRequest.builder(PnDeliveryRequest.class)
+                                        .item(encode(request))
+                                        .build();
+
+                        builder.addPutItem(this.dynamoTable, requestEntity);
+                        return putWithTransact(builder.build()).thenApply(item-> request);
+                    } catch (TransactionCanceledException tce) {
+                        log.error("Transaction Canceled {}", tce.getMessage());
+                        return null;
+                    }
+                } else {
+                    throw new PnHttpResponseException("Data already existed", HttpStatus.BAD_REQUEST.value());
+                }
+            })
+            )
+            .onErrorResume(throwable -> {
+                throwable.printStackTrace();
+                return Mono.error(throwable);
+            }).map(this::decode);
     }
 
     @Override
