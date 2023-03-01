@@ -69,7 +69,7 @@ public class RequestDeliveryDAOImpl extends BaseDAO<PnDeliveryRequest> implement
                                             );
                                             return putWithTransact(transactWriterInitializer.build()).thenApply(item-> request);
                                         } catch (TransactionCanceledException tce) {
-                                            log.error("Transaction Canceled" + tce.getMessage());
+                                            log.error("Transaction Canceled ", tce.getMessage());
                                             return null;
                                         }
                                     } else {
