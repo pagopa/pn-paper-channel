@@ -25,6 +25,8 @@ public class PnAttachmentInfo {
 
     private static final String COL_PAGE_NUMBER = "numberOfPage";
 
+    private static final String COL_CHECKSUM = "checksum";
+
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_ID)}))
     private String id;
 
@@ -42,4 +44,7 @@ public class PnAttachmentInfo {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_PAGE_NUMBER)}))
     private Integer numberOfPage;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_CHECKSUM)}))
+    private String checksum;
 }

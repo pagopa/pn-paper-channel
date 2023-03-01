@@ -33,6 +33,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
+import reactor.util.function.Tuples;
 
 import java.util.Date;
 import java.util.List;
@@ -96,13 +97,13 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
 
                     List<AttachmentInfo> attachments = entity.getAttachments().stream().map(AttachmentMapper::fromEntity).toList();
                     Address address = saveAddresses(sendRequest);
-                    return this.calculator(attachments, address, sendRequest.getProductType()).map(value -> value);
+                    return this.calculator(attachments, address, sendRequest.getProductType()).map(value -> Tuples.of(value, attachments));
                 })
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)))
                 .zipWhen(entityAndAmount ->{
                     sendRequest.setRequestId(requestId.concat(Const.RETRY).concat("0"));
                     pnLogAudit.addsBeforeSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDC_TRACE_ID_KEY)));
-                    return this.externalChannelClient.sendEngageRequest(sendRequest)
+                    return this.externalChannelClient.sendEngageRequest(sendRequest, entityAndAmount.getT2().getT2())
                                     .then(Mono.defer(() -> {
                                         pnLogAudit.addsSuccessSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDC_TRACE_ID_KEY)));
                                         return this.requestDeliveryDAO.updateData(entityAndAmount.getT1()).map(item -> item);
@@ -111,7 +112,7 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                                         pnLogAudit.addsFailSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDC_TRACE_ID_KEY)));
                                         return Mono.error(ex);
                                     });
-                }, (entityAndAmount, none) -> entityAndAmount.getT2())
+                }, (entityAndAmount, none) -> entityAndAmount.getT2().getT1())
                 .map(amount -> {
                     log.info("Amount: {} for requestId {}", amount, requestId);
                     SendResponse sendResponse = new SendResponse();
