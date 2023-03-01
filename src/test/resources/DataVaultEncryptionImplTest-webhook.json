@@ -1,0 +1,105 @@
+[
+  {
+    "httpRequest": {
+      "path": "/datavault-private/v1/recipients/external/PF",
+      "method": "POST",
+      "body": "FRMTTR76M06B715E"
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "content-type": [
+          "application/json"
+        ]
+      },
+      "body": "123e4567-e89b-12d3-a456-426655440000"
+    }
+  },
+  {
+    "httpRequest": {
+      "path": "/datavault-private/v1/recipients/external/PF",
+      "method": "POST",
+      "body": "FRMTTR76M06B715E"
+    },
+    "httpResponse": {
+      "statusCode": 400,
+      "headers": {
+        "content-type": [
+          "application/json"
+        ]
+      },
+      "body": {
+        "status": 0,
+        "title": "string",
+        "detail": "string",
+        "traceId": "string",
+        "timestamp": 0,
+        "errors": [
+          {
+            "code": "string",
+            "element": "string",
+            "detail": "string"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "path": "/datavault-private/v1/recipients/internal",
+      "method": "GET",
+      "queryStringParameters": {
+          "internalId": [
+            "123e4567-e89b-12d3-a456-426655440000"
+          ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "content-type": [
+          "application/json"
+        ]
+      },
+      "body": {
+          "internalId": "123e4567-e89b-12d3-a456-426655440000",
+          "taxId": "CGNNMO01T10A944Q",
+          "recipientType": "PF",
+          "denomination": "PagoP.A. S.p.A."
+        }
+    }
+  },
+  {
+    "httpRequest": {
+      "path": "/datavault-private/v1/recipients/internal",
+      "method": "GET",
+      "queryStringParameters": {
+        "internalId": [
+          "123e4567-e89b-12d3-a456-426655440000"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 400,
+      "headers": {
+        "content-type": [
+          "application/json"
+        ]
+      },
+      "body": {
+        "status": 0,
+        "title": "string",
+        "detail": "string",
+        "traceId": "string",
+        "timestamp": 0,
+        "errors": [
+          {
+            "code": "string",
+            "element": "string",
+            "detail": "string"
+          }
+        ]
+      }
+    }
+  }
+]
