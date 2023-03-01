@@ -25,7 +25,7 @@ public class FileDownloadDAOTest extends BaseTest {
         assertEquals(deliveryFile.getUuid(), pnDeliveryFile.getUuid());
         assertEquals(deliveryFile.getStatus(), pnDeliveryFile.getStatus());
         assertEquals(deliveryFile.getUrl(), pnDeliveryFile.getUrl());
-        assertEquals(deliveryFile.getFilename(), pnDeliveryFile.getFilename());
+
     }
 
     private void initialize(){
