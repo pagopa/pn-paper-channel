@@ -2,21 +2,27 @@ package it.pagopa.pn.paperchannel.middleware.db.dao;
 
 import it.pagopa.pn.paperchannel.config.BaseTest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryDriver;
+import it.pagopa.pn.paperchannel.utils.Const;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import java.time.Instant;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class DeliveryDriverDAOTest extends BaseTest {
     @Autowired
     private DeliveryDriverDAO deliveryDriverDAO;
+    private final PnDeliveryDriver entity = new PnDeliveryDriver();
+    private final PnDeliveryDriver updateEntity = new PnDeliveryDriver();
 
+    @BeforeEach
+    public void setUp(){
+        initialize();
+    }
 
     @Test
     void getDeliveryDriverFromTenderSuccess() {
@@ -91,5 +97,47 @@ public class DeliveryDriverDAOTest extends BaseTest {
         pnDeliveryDriver = deliveryDriverDAO.getDeliveryDriverFSU(tenderCode).block();
         assertNull(pnDeliveryDriver);
 
+    }
+
+    @Test
+    void getDeliveryDriverTest(){
+        String tenderCode = entity.getTenderCode();
+        String taxId = entity.getTaxId();
+        PnDeliveryDriver pnDeliveryDriver = deliveryDriverDAO.getDeliveryDriver(tenderCode, taxId).block();
+        assertNotNull(pnDeliveryDriver);
+    }
+
+    @Test
+    void createOrUpdateTest(){
+        PnDeliveryDriver deliveryDriver = this.deliveryDriverDAO.createOrUpdate(updateEntity).block();
+        assertNotNull(deliveryDriver);
+    }
+
+    @Test
+    void deleteDeliveryDriver(){
+        String tenderCode = entity.getTenderCode();
+        String taxId = entity.getTaxId();
+        PnDeliveryDriver pnDeliveryDriver = deliveryDriverDAO.deleteDeliveryDriver(tenderCode, taxId).block();
+        assertNotNull(pnDeliveryDriver);
+    }
+
+    private void initialize(){
+
+        entity.setTenderCode("GARA-2023");
+        entity.setTaxId("0123456789");
+        entity.setStartDate(Instant.parse("2023-01-01T00:20:56.630714800Z"));
+        entity.setFsu(true);
+        entity.setAuthor(Const.PN_PAPER_CHANNEL);
+        entity.setDenomination("UPS");
+        entity.setBusinessName("gara-2023");
+        this.deliveryDriverDAO.createOrUpdate(entity).block();
+
+        updateEntity.setTenderCode("GARA-2023");
+        updateEntity.setTaxId("0123456789");
+        updateEntity.setStartDate(Instant.parse("2023-01-01T00:20:56.630714800Z"));
+        updateEntity.setFsu(true);
+        updateEntity.setAuthor(Const.PN_PAPER_CHANNEL);
+        updateEntity.setDenomination("UPS");
+        updateEntity.setBusinessName("gara-2023");
     }
 }
