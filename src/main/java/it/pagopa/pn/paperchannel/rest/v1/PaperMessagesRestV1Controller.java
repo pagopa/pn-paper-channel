@@ -36,3 +36,4 @@ public class PaperMessagesRestV1Controller implements PaperMessagesApi {
         return paperMessagesService.retrievePaperSendRequest(requestId).map(ResponseEntity::ok);
     }
 }
+
