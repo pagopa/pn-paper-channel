@@ -53,7 +53,8 @@ public class QueueListener {
     @Autowired
     private PaperRequestErrorDAO paperRequestErrorDAO;
 
-    private PnAuditLogBuilder pnAuditLogBuilder = new PnAuditLogBuilder();
+    @Autowired
+    private PnAuditLogBuilder pnAuditLogBuilder;
 
     @SqsListener(value = "${pn.paper-channel.queue-internal}", deletionPolicy = SqsMessageDeletionPolicy.ALWAYS)
     public void pullFromInternalQueue(@Payload String node, @Headers Map<String, Object> headers){

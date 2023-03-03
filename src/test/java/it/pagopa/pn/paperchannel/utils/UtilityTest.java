@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.utils;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -14,6 +15,30 @@ class UtilityTest {
     private String capListDuplicate;
     private String capListErrorRange;
     private String capListOk;
+
+
+    @Test
+    void convertToHashTest(){
+        String testString = "Via MONTE rosA";
+        String testString1 = " via monte rosa ";
+        String hashString = DigestUtils.sha256Hex(testString);
+        String hashString1 = DigestUtils.sha256Hex(testString1);
+
+        String hashResult = Utility.convertToHash(testString);
+        String hashResult1 = Utility.convertToHash(testString1);
+
+        Assertions.assertNotNull(hashResult);
+        Assertions.assertNotNull(hashResult1);
+
+        // check removed white space and string is lowercase
+        Assertions.assertEquals(hashResult1, hashResult);
+
+        // check removed white space and string is lowercase
+        Assertions.assertNotEquals(hashResult, hashString);
+        Assertions.assertNotEquals(hashResult1, hashString1);
+
+    }
+
 
     @BeforeEach
     void setUp(){

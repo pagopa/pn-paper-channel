@@ -16,6 +16,7 @@ public class AttachmentInfo implements Comparable<AttachmentInfo> {
     private String date;
     private String fileKey;
     private int numberOfPage;
+    private String sha256;
 
     @Override
     public int compareTo(@NotNull AttachmentInfo attachmentInfo) {

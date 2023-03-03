@@ -21,7 +21,7 @@ public class Utility {
         if(string==null){
             return null;
         }
-
+        string = string.toLowerCase().replaceAll("\\s", "");
         return DigestUtils.sha256Hex(string);
     }
 
