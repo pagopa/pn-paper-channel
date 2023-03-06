@@ -74,7 +74,7 @@ public enum ExternalChannelCodeEnum {
         try {
             code = ExternalChannelCodeEnum.valueOf(statusCode).getMessage();
         } catch (Exception e) {
-            log.error("no code found"+statusCode);
+            log.info("no code found "+statusCode);
         }
         return code;
     }

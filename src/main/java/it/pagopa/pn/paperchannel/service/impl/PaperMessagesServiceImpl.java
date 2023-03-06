@@ -32,7 +32,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 import reactor.util.function.Tuples;
 
 import java.util.Date;
@@ -193,22 +192,27 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                                 }
                                 log.info("Attempt already exist");
                                 PrepareRequestValidator.compareRequestEntity(prepareRequest, newEntity, false);
-                                return addressDAO.findByRequestId(requestId)
+                                return addressDAO.findByRequestId(newEntity.getRequestId())
                                         .map(address-> PreparePaperResponseMapper.fromResult(newEntity,address))
                                         .switchIfEmpty(Mono.just(PreparePaperResponseMapper.fromResult(newEntity,null)));
                             })
                             .switchIfEmpty(Mono.defer(() ->
                                     saveRequestAndAddress(prepareRequest, oldEntity.getAddressHash(), prepareRequest.getDiscoveredAddress())
                                     .flatMap(response -> {
+                                        if (prepareRequest.getDiscoveredAddress() != null) {
+                                            PrepareAsyncRequest request = new PrepareAsyncRequest(response.getRequestId(), response.getIun(), false, 0);
+                                            this.sqsSender.pushToInternalQueue(request);
+                                        } else {
+                                            log.info("Start call national");
+                                            this.finderAddressFromNationalRegistries(
+                                                    (MDC.get(MDC_TRACE_ID_KEY) == null ? UUID.randomUUID().toString() : MDC.get(MDC_TRACE_ID_KEY)),
+                                                    response.getRequestId(),
+                                                    response.getRelatedRequestId(),
+                                                    response.getFiscalCode(),
+                                                    response.getReceiverType(),
+                                                    response.getIun(), 0);
+                                        }
 
-                                        log.info("Start call national");
-                                        this.finderAddressFromNationalRegistries(
-                                                (MDC.get(MDC_TRACE_ID_KEY) == null ? UUID.randomUUID().toString() : MDC.get(MDC_TRACE_ID_KEY)),
-                                                response.getRequestId(),
-                                                response.getRelatedRequestId(),
-                                                response.getFiscalCode(),
-                                                response.getReceiverType(),
-                                                response.getIun(), 0);
                                         throw new PnPaperEventException(PreparePaperResponseMapper.fromEvent(prepareRequest.getRequestId()));
                                     })
                             ));

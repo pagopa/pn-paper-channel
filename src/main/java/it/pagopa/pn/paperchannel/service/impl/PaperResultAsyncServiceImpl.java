@@ -213,7 +213,7 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
 
             sqsSender.pushSendEvent(sendEvent);
         } catch (IllegalArgumentException ex){
-            log.error(ex.getMessage());
+            log.info(ex.getMessage());
         }
 
 

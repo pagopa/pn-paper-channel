@@ -4,7 +4,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import java.util.List;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 
 public class PageModel<T> extends PageImpl<T> {
@@ -12,14 +11,15 @@ public class PageModel<T> extends PageImpl<T> {
     public static <A> PageModel<A> builder(List<A> content, Pageable pageable){
         int first = (int) Math.min(pageable.getOffset(), content.size());
         int last = Math.min(first + pageable.getPageSize(), content.size());
-        return new PageModel<>(content.subList(first, last), pageable);
+        int size = content.size();
+        return new PageModel<>(content.subList(first, last), pageable, size);
     }
 
-    private PageModel(List<T> content, Pageable pageable) {
-        super(content, pageable, content.size());
+    private PageModel(List<T> content, Pageable pageable, long size) {
+        super(content, pageable, size);
     }
 
     public <A> List<A> mapTo(Function<T, A> converter){
-        return this.getContent().stream().map(converter).collect(Collectors.toList());
+        return this.getContent().stream().map(converter).toList();
     }
 }
