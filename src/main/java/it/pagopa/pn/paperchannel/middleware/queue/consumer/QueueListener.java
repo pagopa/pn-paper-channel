@@ -18,7 +18,6 @@ import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.PnLogAudit;
 import it.pagopa.pn.paperchannel.utils.Utility;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
 import org.springframework.messaging.handler.annotation.Headers;
@@ -34,7 +33,6 @@ import java.util.Map;
 import java.util.function.Function;
 
 import static it.pagopa.pn.api.dto.events.GenericEventHeader.PN_EVENT_HEADER_EVENT_TYPE;
-import static it.pagopa.pn.commons.log.MDCWebFilter.MDC_TRACE_ID_KEY;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 import static it.pagopa.pn.paperchannel.middleware.queue.model.InternalEventHeader.PN_EVENT_HEADER_ATTEMPT;
 import static it.pagopa.pn.paperchannel.middleware.queue.model.InternalEventHeader.PN_EVENT_HEADER_EXPIRED;
@@ -53,7 +51,8 @@ public class QueueListener {
     @Autowired
     private PaperRequestErrorDAO paperRequestErrorDAO;
 
-    private PnAuditLogBuilder pnAuditLogBuilder = new PnAuditLogBuilder();
+    @Autowired
+    private PnAuditLogBuilder pnAuditLogBuilder;
 
     @SqsListener(value = "${pn.paper-channel.queue-internal}", deletionPolicy = SqsMessageDeletionPolicy.ALWAYS)
     public void pullFromInternalQueue(@Payload String node, @Headers Map<String, Object> headers){
@@ -63,7 +62,7 @@ public class QueueListener {
 
         if (internalEventHeader.getEventType().equals(EventTypeEnum.NATIONAL_REGISTRIES_ERROR.name())){
 
-            boolean noAttempt = paperChannelConfig.getAttemptQueueNationalRegistries() != -1 || paperChannelConfig.getAttemptQueueNationalRegistries() < internalEventHeader.getAttempt();
+            boolean noAttempt = paperChannelConfig.getAttemptQueueNationalRegistries() < internalEventHeader.getAttempt();
             NationalRegistryError error = convertToObject(node, NationalRegistryError.class);
             execution(error, noAttempt, internalEventHeader.getAttempt(), internalEventHeader.getExpired(), NationalRegistryError.class,
                     entity -> {
@@ -81,7 +80,7 @@ public class QueueListener {
 
         } else if (internalEventHeader.getEventType().equals(EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name())){
 
-            boolean noAttempt = paperChannelConfig.getAttemptQueueExternalChannel() != -1 || paperChannelConfig.getAttemptQueueExternalChannel() < internalEventHeader.getAttempt();
+            boolean noAttempt = paperChannelConfig.getAttemptQueueExternalChannel() < internalEventHeader.getAttempt();
             ExternalChannelError error = convertToObject(node, ExternalChannelError.class);
             execution(error, noAttempt, internalEventHeader.getAttempt(), internalEventHeader.getExpired(), ExternalChannelError.class,
                     entity -> {
@@ -105,7 +104,7 @@ public class QueueListener {
 
         } else if (internalEventHeader.getEventType().equals(EventTypeEnum.SAFE_STORAGE_ERROR.name())){
 
-            boolean noAttempt = paperChannelConfig.getAttemptQueueSafeStorage() != -1 || paperChannelConfig.getAttemptQueueSafeStorage() < internalEventHeader.getAttempt();
+            boolean noAttempt = paperChannelConfig.getAttemptQueueSafeStorage() < internalEventHeader.getAttempt();
             PrepareAsyncRequest error = convertToObject(node, PrepareAsyncRequest.class);
             execution(error, noAttempt, internalEventHeader.getAttempt(), internalEventHeader.getExpired(), PrepareAsyncRequest.class,
                     entity -> {
