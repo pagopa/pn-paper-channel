@@ -1,5 +1,8 @@
 package it.pagopa.pn.paperchannel.utils;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnCap;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,6 +14,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Slf4j
 class UtilityTest {
     private String capListDuplicate;
     private String capListErrorRange;
@@ -61,5 +65,13 @@ class UtilityTest {
         List<String> caps = Utility.isValidCap(capListOk);
         Assertions.assertNotNull(caps);
         Assertions.assertEquals(17,caps.size());
+    }
+
+    @Test
+    void objectToJsonTest(){
+        PnCap cap = new PnCap();
+        cap.setCap("00166");
+        String json = Utility.objectToJson(cap);
+        log.info(json);
     }
 }
