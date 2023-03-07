@@ -25,12 +25,23 @@ public class Utility {
         return DigestUtils.sha256Hex(string);
     }
 
+    public static <T> String objectToJson (T data){
+       try{
+           ObjectMapper objectMapper = new ObjectMapper();
+           return objectMapper.writeValueAsString(data);
+       }
+       catch (JsonProcessingException ex){
+           log.error("Error with mapping : {}", ex.getMessage(), ex);
+           return null;
+       }
+    }
+
     public static <T> T jsonToObject(ObjectMapper objectMapper, String json, Class<T> tClass){
         try {
 
             return objectMapper.readValue(json, tClass);
         } catch (JsonProcessingException e) {
-            log.error("Error with mapping : {}", e.getMessage());
+            log.error("Error with mapping : {}", e.getMessage(), e);
             return null;
         }
     }
