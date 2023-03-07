@@ -33,6 +33,8 @@ paths:
       tags:
         - HealthCheck
       operationId: takeHealth
+      x-api-permissions:
+        - 'tender-read'
       summary: Info health.
       description: Ritorna lo status di salute dell'API.
       responses:
@@ -44,6 +46,8 @@ paths:
       tags:
         - DeliveryDriver
       operationId: takeTender
+      x-api-permissions:
+        - 'tender-read'
       summary: Elenco gare d'appalto.
       description: API che consente il recupero di tutte le gare
       parameters:
@@ -74,6 +78,8 @@ paths:
       tags:
         - DeliveryDriver
       operationId: getTenderDetails
+      x-api-permissions:
+        - 'tender-read'
       summary: Recupero della gara.
       description: API che consente il recupero dei dettagli di una gara
       parameters:
@@ -103,6 +109,8 @@ paths:
       tags:
         - DeliveryDriver
       operationId: getDriverDetails
+      x-api-permissions:
+        - 'tender-read'
       summary: Recupero di un recapitista.
       description: API che consente il recupero dei dettagli di uno specifico recapitista
       parameters:
@@ -133,6 +141,8 @@ paths:
       tags:
         - DeliveryDriver
       operationId: takeDeliveriesDrivers
+      x-api-permissions:
+        - 'tender-read'
       summary: Elenco dei recapitisti di una gara
       description: API che consente il recupero di tutti i recapitisti di una gara
       parameters:
@@ -165,6 +175,8 @@ paths:
       tags:
         - DeliveryDriver
       operationId: getDetailFSU
+      x-api-permissions:
+        - 'tender-read'
       summary: Recupero del FSU di una gara
       description: API che consente il recupero dei dettagli di un FSU
       parameters:
@@ -194,6 +206,8 @@ paths:
       tags:
         - DeliveryDriver
       operationId: downloadTenderFile
+      x-api-permissions:
+        - 'tender-read'
       summary: Download Gare
       description: API che consente il download dell'elenco delle gare d'appalto.
       parameters:
@@ -224,6 +238,8 @@ paths:
       tags:
         - DeliveryDriver
       operationId: createUpdateTender
+      x-api-permissions:
+        - 'tender-write'
       summary: Inserimento o modifica Gara.
       description: API che consente di aggiungere o modificare i dettagli di una gara
       requestBody:
@@ -257,6 +273,8 @@ paths:
       tags:
         - DeliveryDriver
       operationId: updateStatusTender
+      x-api-permissions:
+        - 'tender-write'
       summary: Aggiorna stato Gara.
       description: API che consente di aggiornare lo stato della gara
       parameters:
@@ -289,6 +307,8 @@ paths:
       tags:
         - DeliveryDriver
       operationId: deleteTender
+      x-api-permissions:
+        - 'tender-write'
       summary: Eliminazione gara.
       description: API che consente di eliminare i dettagli di una gara.
       parameters:
@@ -303,6 +323,8 @@ paths:
       tags:
         - DeliveryDriver
       operationId: createUpdateDriver
+      x-api-permissions:
+        - 'tender-write'
       summary: Inserimento o modifica Recapitista.
       description: API che consente di aggiungere o modificare i dettagli di un recapitista
       parameters:
@@ -333,6 +355,8 @@ paths:
       tags:
         - DeliveryDriver
       operationId: deleteDriver
+      x-api-permissions:
+        - 'tender-write'
       summary: Eliminazione recapitista.
       description: API che consente di eliminare i dettagli di un recapitista.
       parameters:
@@ -348,6 +372,8 @@ paths:
       tags:
         - DeliveryDriver
       operationId: createUpdateCost
+      x-api-permissions:
+        - 'tender-write'
       summary: Inserimento o modifica di un costo legato al deliveryDriver.
       description: API che consente di aggiungere o modificare i dettagli di un costo legato al deliveryDriver
       parameters:
@@ -380,6 +406,8 @@ paths:
       tags:
         - DeliveryDriver
       operationId: deleteCost
+      x-api-permissions:
+        - 'tender-write'
       summary: Eliminazione di un costo legato al deliveryDriver.
       description: API che consente di eliminare i dettagli di un costo legato al deliveryDriver.
       parameters:
@@ -397,6 +425,8 @@ paths:
       tags:
         - DeliveryDriver
       operationId: getAllCostOfDriverAndTender
+      x-api-permissions:
+        - 'tender-read'
       summary: Recupero dei costi di una recapitista e di una specifica gara
       description: API che consente di recuperare e paginare tutti i costi di un recapitista che partecipa ad una specifica gara
       parameters:
@@ -429,6 +459,8 @@ paths:
       tags:
         - DeliveryDriver
       operationId: notifyUpload
+      x-api-permissions:
+        - 'tender-write'
       summary: Notifica di avvenuto caricamento file.
       description: API che consente di notificare l'avvenuto caricamento del file e avvio del flusso di salvataggio
       parameters:
@@ -463,6 +495,8 @@ paths:
       tags:
         - DeliveryDriver
       operationId: addTenderFromFile
+      x-api-permissions:
+        - 'tender-read'
       summary: Genera la preseigned url
       description: API che consente di ottenere la presigned url necessaria al caricamento del file
 
@@ -491,6 +525,8 @@ paths:
       tags:
         - SelectList
       operationId: getAllCap
+      x-api-permissions:
+        - 'tender-read'
       summary: Elenco di tutti i cap.
       description: API che consente il recupero di tutti i cap
       parameters:
