@@ -339,6 +339,31 @@ Resources:
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: true
 
+  PaperEventsDynamoTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${ProjectName}-PaperEvents'
+      AttributeDefinitions:
+        - AttributeName: "requestId"
+          AttributeType: "S"
+        - AttributeName: "statusCode"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "requestId"
+          KeyType: "HASH"
+        - AttributeName: "statusCode"
+          KeyType: "RANGE"
+      KinesisStreamSpecification:
+        StreamArn: !Ref CdcKinesisSourceStreamArn
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+      BillingMode: "PAY_PER_REQUEST"
+      TimeToLiveSpecification:
+        AttributeName: "ttl"
+        Enabled: true
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
 Outputs:
   PaperDeliveryDriversBucketName:
     Description: Name of s3 bucket
@@ -374,6 +399,14 @@ Outputs:
   PaperRequestErrorTableArn:
     Description: ARN of dynamodb table containing request error
     Value: !Sub '${PaperRequestErrorDynamoTable.Arn}'
+
+  PaperEventsTableName:
+    Description: Name of dynamodb table containing events
+    Value: !Ref PaperEventsDynamoTable
+
+  PaperEventsTableArn:
+    Description: ARN of dynamodb table containing events
+    Value: !Sub '${PaperEventsDynamoTable.Arn}'
 
   DeliveryFileDynamoTableName:
     Description: Name of dynamodb table containing file request
