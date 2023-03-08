@@ -99,18 +99,21 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                     return this.calculator(attachments, address, sendRequest.getProductType()).map(value -> Tuples.of(value, attachments));
                 })
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)))
-                .zipWhen(entityAndAmount ->{
-                    sendRequest.setRequestId(requestId.concat(Const.RETRY).concat("0"));
-                    pnLogAudit.addsBeforeSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDC_TRACE_ID_KEY)));
-                    return this.externalChannelClient.sendEngageRequest(sendRequest, entityAndAmount.getT2().getT2())
-                                    .then(Mono.defer(() -> {
-                                        pnLogAudit.addsSuccessSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDC_TRACE_ID_KEY)));
-                                        return this.requestDeliveryDAO.updateData(entityAndAmount.getT1()).map(item -> item);
-                                    }))
-                                    .onErrorResume(ex -> {
-                                        pnLogAudit.addsFailSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDC_TRACE_ID_KEY)));
-                                        return Mono.error(ex);
-                                    });
+                .zipWhen(entityAndAmount -> {
+                    if (StringUtils.equals(entityAndAmount.getT1().getStatusCode(), StatusDeliveryEnum.TAKING_CHARGE.getCode())) {
+                        sendRequest.setRequestId(requestId.concat(Const.RETRY).concat("0"));
+                        pnLogAudit.addsBeforeSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDC_TRACE_ID_KEY)));
+                        return this.externalChannelClient.sendEngageRequest(sendRequest, entityAndAmount.getT2().getT2())
+                                .then(Mono.defer(() -> {
+                                    pnLogAudit.addsSuccessSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDC_TRACE_ID_KEY)));
+                                    return this.requestDeliveryDAO.updateData(entityAndAmount.getT1()).map(item -> item);
+                                }))
+                                .onErrorResume(ex -> {
+                                    pnLogAudit.addsFailSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDC_TRACE_ID_KEY)));
+                                    return Mono.error(ex);
+                                });
+                    }
+                    return Mono.empty();
                 }, (entityAndAmount, none) -> entityAndAmount.getT2().getT1())
                 .map(amount -> {
                     log.info("Amount: {} for requestId {}", amount, requestId);
