@@ -48,7 +48,9 @@ public enum ExceptionTypeEnum{
     INVALID_CAP_PRODUCT_TYPE("INVALID_CAP_PRODUCT_TYPE", "Sono presenti duplicati tra CAP e Product Type"),
     INVALID_CAP_FSU("INVALID_CAP_FSU", "Per FSU non sono stati inseriti i cap di default"),
     INVALID_ZONE_FSU("INVALID_ZONE_FSU", "Non sono stati inseriti i costi internazionali obbligatori per FSU"),
-    INVALID_ZONE_PRODUCT_TYPE("INVALID_ZONE_PRODUCT_TYPE", "Ci sono Costi internazionali duplicati.");
+    INVALID_ZONE_PRODUCT_TYPE("INVALID_ZONE_PRODUCT_TYPE", "Ci sono Costi internazionali duplicati."),
+
+    INVALID_SAFE_STORAGE("INVALID_SAFE_STORAGE", "Il Safe Storage selezionato è inesistente.");
 
     private final String title;
     private final String message;

@@ -239,7 +239,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
 
                     AttachmentInfo info = AttachmentMapper.fromSafeStorage(fileResponse);
                     if (info.getUrl() == null)
-                        return Flux.error(new PnGenericException(DOCUMENT_URL_NOT_FOUND, DOCUMENT_URL_NOT_FOUND.getMessage()));
+                        return Flux.error(new PnGenericException(INVALID_SAFE_STORAGE, INVALID_SAFE_STORAGE.getMessage()));
                     return HttpConnector.downloadFile(info.getUrl())
                             .map(pdDocument -> {
                                 try {
@@ -249,7 +249,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                                     info.setNumberOfPage(pdDocument.getNumberOfPages());
                                     pdDocument.close();
                                 } catch (IOException e) {
-                                    throw new PnGenericException(DOCUMENT_NOT_DOWNLOADED, DOCUMENT_NOT_DOWNLOADED.getMessage());
+                                    throw new PnGenericException(INVALID_SAFE_STORAGE, INVALID_SAFE_STORAGE.getMessage());
                                 }
                                 return info;
                             });
