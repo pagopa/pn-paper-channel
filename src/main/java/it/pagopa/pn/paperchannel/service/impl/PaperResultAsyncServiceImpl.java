@@ -12,6 +12,8 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
+import it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.HandlersFactory;
+import it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.MessageHandler;
 import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.DiscoveredAddressDto;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.SingleStatusUpdateDto;
@@ -48,6 +50,9 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
     private final PnPaperChannelConfig pnPaperChannelConfig;
     private final AddressDAO addressDAO;
     private final PaperRequestErrorDAO paperRequestErrorDAO;
+
+    @Autowired
+    private HandlersFactory handlersFactory;
 
     public PaperResultAsyncServiceImpl(PnAuditLogBuilder auditLogBuilder, RequestDeliveryDAO requestDeliveryDAO,
                                        NationalRegistryClient nationalRegistryClient, SqsSender sqsSender, PnPaperChannelConfig pnPaperChannelConfig, AddressDAO addressDAO, PaperRequestErrorDAO paperRequestErrorDAO) {
@@ -108,6 +113,32 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
                                 return Mono.error(ex);
                             });
                 });
+    }
+
+    public Mono<PnDeliveryRequest> resultAsyncBackgroundNew(SingleStatusUpdateDto singleStatusUpdateDto, Integer attempt) {
+        if (singleStatusUpdateDto == null || singleStatusUpdateDto.getAnalogMail() == null || StringUtils.isBlank(singleStatusUpdateDto.getAnalogMail().getRequestId())) {
+            log.error("the message sent from external channel, includes errors. It cannot be processing");
+            return Mono.error(new PnGenericException(DATA_NULL_OR_INVALID, DATA_NULL_OR_INVALID.getMessage()));
+        }
+
+        MessageHandler handler = handlersFactory.getHandler(singleStatusUpdateDto.getAnalogMail().getStatusCode());
+
+        String requestId = getPrefixRequestId(singleStatusUpdateDto.getAnalogMail().getRequestId());
+        return requestDeliveryDAO.getByRequestId(requestId)
+                .doOnNext(entity -> logEntity(entity, singleStatusUpdateDto))
+                .flatMap(entity -> updateEntityResult(singleStatusUpdateDto, entity))
+                .doOnNext(entity -> handler.handleMessage(entity, singleStatusUpdateDto.getAnalogMail()));
+
+    }
+
+    private void logEntity(PnDeliveryRequest entity, SingleStatusUpdateDto singleStatusUpdateDto) {
+        log.info("GETTED ENTITY: {}", entity.getRequestId());
+        SingleStatusUpdateDto logDto = singleStatusUpdateDto;
+        DiscoveredAddressDto discoveredAddressDto = logDto.getAnalogMail().getDiscoveredAddress();
+        logDto.getAnalogMail().setDiscoveredAddress(null);
+        pnLogAudit.addsBeforeReceive(entity.getIun(), String.format("prepare requestId = %s Response from external-channel", entity.getRequestId()));
+        pnLogAudit.addsSuccessReceive(entity.getIun(), String.format("prepare requestId = %s Response %s from external-channel status code %s", entity.getRequestId(), logDto.toString().replaceAll("\n", ""), entity.getStatusCode()));
+        logDto.getAnalogMail().setDiscoveredAddress(discoveredAddressDto);
     }
 
     private String getPrefixRequestId(String requestId) {
@@ -183,6 +214,17 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
                 .concat(" - ").concat(pnDeliveryRequestMono.getStatusCode()).concat(" - ").concat(singleStatusUpdateDto.getAnalogMail().getStatusDescription()));
         pnDeliveryRequestMono.setStatusDate(DateUtils.formatDate(Date.from(singleStatusUpdateDto.getAnalogMail().getStatusDateTime().toInstant())));
         return requestDeliveryDAO.updateData(pnDeliveryRequestMono);
+    }
+
+    private Mono<PnDeliveryRequest> updateEntityResultNew(SingleStatusUpdateDto singleStatusUpdateDto, Mono<PnDeliveryRequest> pnDeliveryRequestMono) {
+        return pnDeliveryRequestMono
+                .doOnNext(pnDeliveryRequest -> {
+                    pnDeliveryRequest.setStatusCode(ExternalChannelCodeEnum.getStatusCode(singleStatusUpdateDto.getAnalogMail().getStatusCode()));
+                    pnDeliveryRequest.setStatusDetail(singleStatusUpdateDto.getAnalogMail().getProductType()
+                            .concat(" - ").concat(pnDeliveryRequest.getStatusCode()).concat(" - ").concat(singleStatusUpdateDto.getAnalogMail().getStatusDescription()));
+                    pnDeliveryRequest.setStatusDate(DateUtils.formatDate(Date.from(singleStatusUpdateDto.getAnalogMail().getStatusDateTime().toInstant())));
+                })
+                .flatMap(pnDeliveryRequest -> requestDeliveryDAO.updateData(pnDeliveryRequest));
     }
 
     private void sendPaperResponse(PnDeliveryRequest entity, SingleStatusUpdateDto request) {
