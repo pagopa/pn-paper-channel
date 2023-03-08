@@ -113,7 +113,7 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                                     return Mono.error(ex);
                                 });
                     }
-                    return Mono.empty();
+                    return Mono.just(entityAndAmount.getT2().getT1());
                 }, (entityAndAmount, none) -> entityAndAmount.getT2().getT1())
                 .map(amount -> {
                     log.info("Amount: {} for requestId {}", amount, requestId);
