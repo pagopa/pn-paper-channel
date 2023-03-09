@@ -37,7 +37,7 @@ public class HandlersFactory {
         var saveDematMessageHandler = new SaveDematMessageHandler(sqsSender);
         var retryableDeliveryPushExtChannelsMessageHandler = new RetryableMessageHandler(sqsSender, externalChannelClient, addressDAO, paperRequestErrorDAO, pnPaperChannelConfig);
         var notRetryableMessageHandler = new NotRetryableMessageHandler(paperRequestErrorDAO);
-        var finalEventMessageHandler = new FinalEventMessageHandler(sqsSender);
+        var aggregatorMessageHandler = new AggregatorMessageHandler(sqsSender);
 
         map = new ConcurrentHashMap<>();
 
@@ -45,7 +45,7 @@ public class HandlersFactory {
         addNotRetryableStatusCodes(map, notRetryableMessageHandler);
         addSaveMetadataStatusCodes(map, saveMetadataMessageHandler);
         addSaveDematStatusCodes(map, saveDematMessageHandler);
-        addFinalEventStatusCodes(map, finalEventMessageHandler);
+        addAggregatorStatusCodes(map, aggregatorMessageHandler);
     }
 
     private void addRetryableStatusCodes(ConcurrentHashMap<String, MessageHandler> map, RetryableMessageHandler handler) {
@@ -143,7 +143,7 @@ public class HandlersFactory {
 
     }
 
-    private void addFinalEventStatusCodes(ConcurrentHashMap<String, MessageHandler> map, FinalEventMessageHandler handler) {
+    private void addAggregatorStatusCodes(ConcurrentHashMap<String, MessageHandler> map, AggregatorMessageHandler handler) {
 
         map.put("RECRS001C", handler);
         map.put("RECRS002C", handler);

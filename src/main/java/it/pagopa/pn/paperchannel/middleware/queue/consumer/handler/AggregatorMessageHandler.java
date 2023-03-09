@@ -13,10 +13,10 @@ import lombok.extern.slf4j.Slf4j;
 // cancellate le righe in tabella per legate al requestId per le entità META e DEMAT
 
 @Slf4j
-public class FinalEventMessageHandler extends SendToDeliveryPushHandler {
+public class AggregatorMessageHandler extends SendToDeliveryPushHandler {
 
 
-    public FinalEventMessageHandler(SqsSender sqsSender) {
+    public AggregatorMessageHandler(SqsSender sqsSender) {
         super(sqsSender);
     }
 
