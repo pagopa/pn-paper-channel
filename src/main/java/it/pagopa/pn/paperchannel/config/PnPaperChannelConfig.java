@@ -8,6 +8,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
+import javax.annotation.PostConstruct;
+
 @Getter
 @Setter
 @ToString
@@ -37,6 +39,7 @@ public class PnPaperChannelConfig {
     private Long ttlExecutionN_RS;
     private Long ttlExecutionI_AR;
     private Long ttlExecutionI_RS;
+    private Long ttlExecutionDaysMeta;
+    private Long ttlExecutionDaysDemat;
     private String retryStatus;
-
 }

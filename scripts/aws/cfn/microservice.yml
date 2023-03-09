@@ -400,8 +400,10 @@ Resources:
         ContainerEnvEntry33: !Sub 'PN_PAPERCHANNEL_TTLEXECUTIONNRS=${TtlExecutionRNRS}'
         ContainerEnvEntry34: !Sub 'PN_PAPERCHANNEL_TTLEXECUTIONIAR=${TtlExecutionRIAR}'
         ContainerEnvEntry35: !Sub 'PN_PAPERCHANNEL_TTLEXECUTIONIRS=${TtlExecutionRIRS}'
-        ContainerEnvEntry36: !Sub 'PN_PAPERCHANNEL_RETRYSTATUS=${RetryStatus}'
-        ContainerEnvEntry37: !Sub 'PN_PAPERCHANNEL_CLIENTDATAVAULTBASEPATH=http://alb.confidential.pn.internal:8080'
+        ContainerEnvEntry36: !Sub 'PN_PAPERCHANNEL_TTLEXECUTIONDAYSDEMAT=${TtlExecutionDaysDemat}'
+        ContainerEnvEntry37: !Sub 'PN_PAPERCHANNEL_TTLEXECUTIONDAYMETA=${TtlExecutionDaysMeta}'
+        ContainerEnvEntry38: !Sub 'PN_PAPERCHANNEL_RETRYSTATUS=${RetryStatus}'
+        ContainerEnvEntry39: !Sub 'PN_PAPERCHANNEL_CLIENTDATAVAULTBASEPATH=http://alb.confidential.pn.internal:8080'
         MappedPaths: '/paper-channel-bo/*,/paper-channel-private/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds

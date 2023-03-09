@@ -23,7 +23,6 @@ public class PnEventMeta {
 
     private static final String COL_DELIVERY_FAILURE_CASE = "deliveryFailureCause";
     private static final String COL_DISCOVERED_ADDRESS = "discoveredAddress";
-    private static final String COL_DOCUMENT_DATE = "documentDate";
     private static final String COL_STATUS_DATETIME = "statusDateTime";
 
     @Getter(onMethod = @__({@DynamoDbPartitionKey,@DynamoDbAttribute(COL_PK)}))
