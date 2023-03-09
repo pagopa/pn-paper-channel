@@ -42,7 +42,7 @@ public class PnEventDemat {
     private String documentType;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_DOCUMENT_DATE)}))
-    private String documentDate;
+    private Instant documentDate;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_STATUS_DATETIME)}))
     private Instant statusDateTime;
