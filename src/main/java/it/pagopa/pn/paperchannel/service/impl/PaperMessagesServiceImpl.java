@@ -78,43 +78,49 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
         sendRequest.setRequestId(requestId);
 
         return this.requestDeliveryDAO.getByRequestId(sendRequest.getRequestId())
-                .zipWhen(entity -> {
+                .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)))
+                .map(entity -> {
                     SendRequestValidator.compareRequestEntity(sendRequest,entity);
 
                     if (StringUtils.equals(entity.getStatusCode(), StatusDeliveryEnum.IN_PROCESSING.getCode())) {
-                        return Mono.error(new PnGenericException(DELIVERY_REQUEST_IN_PROCESSING, DELIVERY_REQUEST_IN_PROCESSING.getMessage(), HttpStatus.CONFLICT));
+                       throw new PnGenericException(DELIVERY_REQUEST_IN_PROCESSING, DELIVERY_REQUEST_IN_PROCESSING.getMessage(), HttpStatus.CONFLICT);
                     }
 
-                    // verifico se è la prima volta che viene invocata
-                    if (StringUtils.equals(entity.getStatusCode(), StatusDeliveryEnum.TAKING_CHARGE.getCode())) {
-                        entity.setStatusCode(StatusDeliveryEnum.READY_TO_SEND.getCode());
-                        entity.setStatusDetail(StatusDeliveryEnum.READY_TO_SEND.getDescription());
-                        entity.setStatusDate(DateUtils.formatDate(new Date()));
-                        entity.setRequestPaId(sendRequest.getRequestPaId());
-                        entity.setPrintType(sendRequest.getPrintType());
-                    }
-
-                    List<AttachmentInfo> attachments = entity.getAttachments().stream().map(AttachmentMapper::fromEntity).toList();
-                    Address address = saveAddresses(sendRequest);
-                    return this.calculator(attachments, address, sendRequest.getProductType()).map(value -> Tuples.of(value, attachments));
+                    return entity;
                 })
-                .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)))
-                .zipWhen(entityAndAmount -> {
-                    if (StringUtils.equals(entityAndAmount.getT1().getStatusCode(), StatusDeliveryEnum.TAKING_CHARGE.getCode())) {
+                .flatMap(pnDeliveryRequest -> {
+                    List<AttachmentInfo> attachments = pnDeliveryRequest.getAttachments().stream().map(AttachmentMapper::fromEntity).toList();
+                    Address address = saveAddresses(sendRequest);
+
+
+                    if (StringUtils.equals(pnDeliveryRequest.getStatusCode(), StatusDeliveryEnum.TAKING_CHARGE.getCode())) {
+                        pnDeliveryRequest.setStatusCode(StatusDeliveryEnum.READY_TO_SEND.getCode());
+                        pnDeliveryRequest.setStatusDetail(StatusDeliveryEnum.READY_TO_SEND.getDescription());
+                        pnDeliveryRequest.setStatusDate(DateUtils.formatDate(new Date()));
+                        pnDeliveryRequest.setRequestPaId(sendRequest.getRequestPaId());
+                        pnDeliveryRequest.setPrintType(sendRequest.getPrintType());
+
                         sendRequest.setRequestId(requestId.concat(Const.RETRY).concat("0"));
                         pnLogAudit.addsBeforeSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDC_TRACE_ID_KEY)));
-                        return this.externalChannelClient.sendEngageRequest(sendRequest, entityAndAmount.getT2().getT2())
+
+                        return this.externalChannelClient.sendEngageRequest(sendRequest, attachments)
                                 .then(Mono.defer(() -> {
                                     pnLogAudit.addsSuccessSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDC_TRACE_ID_KEY)));
-                                    return this.requestDeliveryDAO.updateData(entityAndAmount.getT1()).map(item -> item);
+                                    return this.requestDeliveryDAO.updateData(pnDeliveryRequest);
                                 }))
+                                .map(updated -> Tuples.of(address, attachments))
                                 .onErrorResume(ex -> {
                                     pnLogAudit.addsFailSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDC_TRACE_ID_KEY)));
                                     return Mono.error(ex);
                                 });
+
                     }
-                    return Mono.just(entityAndAmount.getT2().getT1());
-                }, (entityAndAmount, none) -> entityAndAmount.getT2().getT1())
+                    return Mono.just(Tuples.of(address, attachments));
+                })
+
+                .flatMap(addressAndAttachments ->
+                        this.calculator(addressAndAttachments.getT2(), addressAndAttachments.getT1(), sendRequest.getProductType())
+                )
                 .map(amount -> {
                     log.info("Amount: {} for requestId {}", amount, requestId);
                     SendResponse sendResponse = new SendResponse();
