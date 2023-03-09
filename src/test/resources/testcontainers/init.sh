@@ -223,6 +223,18 @@ aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     --provisioned-throughput \
         ReadCapacityUnits=10,WriteCapacityUnits=5
 
+aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
+    dynamodb create-table \
+    --table-name PaperEventsDynamoTable  \
+    --attribute-definitions \
+        AttributeName=pk,AttributeType=S \
+        AttributeName=sk,AttributeType=S \
+    --key-schema \
+        AttributeName=pk,KeyType=HASH \
+        AttributeName=sk,KeyType=RANGE \
+    --provisioned-throughput \
+        ReadCapacityUnits=10,WriteCapacityUnits=5
+
 aws  --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     dynamodb put-item \
     --table-name CapDynamoTable  \

@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.db.entities;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
@@ -8,9 +9,11 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbParti
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey;
 
 import java.time.Instant;
+import java.util.Objects;
 
 @Getter
 @Setter
+@EqualsAndHashCode
 @DynamoDbBean
 public class PnEventDemat {
     private static final String COL_PK = "pk";
