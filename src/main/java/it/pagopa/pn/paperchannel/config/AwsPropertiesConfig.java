@@ -21,5 +21,5 @@ public class AwsPropertiesConfig extends AwsConfigs {
     private String dynamodbCapTable;
     private String dynamodbDeliveryFileTable;
     private String dynamodbPaperRequestErrorTable;
-
+    private String dynamodbPaperEventsTable;
 }

@@ -5,11 +5,11 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public interface EventDematDAO {
-    Mono<PnEventDemat> create(PnEventDemat pnEventDemat);
+    Mono<PnEventDemat> createOrUpdate(PnEventDemat pnEventDemat);
 
-    Mono<PnEventDemat> getDeliveryEventDemat(String requestId, String statusCode);
+    Mono<PnEventDemat> getDeliveryEventDemat(String dematRequestId, String documentTypeStatusCode);
 
-    Flux<PnEventDemat> findAllByRequestId(String requestId);
+    Flux<PnEventDemat> findAllByRequestId(String dematRequestId);
 
-    Mono<PnEventDemat> deleteEventDemat(String requestId, String statusCode);
+    Mono<PnEventDemat> deleteEventDemat(String dematRequestId, String documentTypeStatusCode);
 }

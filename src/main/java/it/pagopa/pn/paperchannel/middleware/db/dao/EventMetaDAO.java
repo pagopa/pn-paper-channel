@@ -5,11 +5,11 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public interface EventMetaDAO {
-    Mono<PnEventMeta> create(PnEventMeta pnEventMeta);
+    Mono<PnEventMeta> createOrUpdate(PnEventMeta pnEventMeta);
 
-    Mono<PnEventMeta> getDeliveryEventMeta(String requestId, String statusCode);
+    Mono<PnEventMeta> getDeliveryEventMeta(String metaRequestId, String metaStatusCode);
 
-    Flux<PnEventMeta> findAllByRequestId(String requestId);
+    Flux<PnEventMeta> findAllByRequestId(String metaRequestId);
 
-    Mono<PnEventMeta> deleteEventMeta(String requestId, String statusCode);
+    Mono<PnEventMeta> deleteEventMeta(String metaRequestId, String metaStatusCode);
 }
