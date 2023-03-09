@@ -27,7 +27,7 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.EXTERNAL_CHA
 // handler per stati gialli: Retry su ExtCh con suffisso +1, invio dello stato in progress verso DP
 @Slf4j
 //@RequiredArgsConstructor
-public class RetryableMessageHandler extends SendToDeliveryPushHandler {
+public class RetryableErrorMessageHandler extends SendToDeliveryPushHandler {
 
     private final ExternalChannelClient externalChannelClient;
 
@@ -37,9 +37,9 @@ public class RetryableMessageHandler extends SendToDeliveryPushHandler {
 
     private final PnPaperChannelConfig pnPaperChannelConfig;
 
-    public RetryableMessageHandler(SqsSender sqsSender, ExternalChannelClient externalChannelClient,
-                                   AddressDAO addressDAO, PaperRequestErrorDAO paperRequestErrorDAO,
-                                   PnPaperChannelConfig pnPaperChannelConfig) {
+    public RetryableErrorMessageHandler(SqsSender sqsSender, ExternalChannelClient externalChannelClient,
+                                        AddressDAO addressDAO, PaperRequestErrorDAO paperRequestErrorDAO,
+                                        PnPaperChannelConfig pnPaperChannelConfig) {
         super(sqsSender);
         this.externalChannelClient = externalChannelClient;
         this.addressDAO = addressDAO;

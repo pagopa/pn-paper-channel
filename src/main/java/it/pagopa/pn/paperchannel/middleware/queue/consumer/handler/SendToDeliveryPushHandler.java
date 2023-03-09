@@ -23,7 +23,7 @@ public abstract class SendToDeliveryPushHandler implements MessageHandler {
         sqsSender.pushSendEvent(sendEvent);
     }
 
-    private SendEvent createSendEventMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
+    protected SendEvent createSendEventMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
         SendEvent sendEvent = new SendEvent();
         sendEvent.setStatusCode(StatusCodeEnum.valueOf(entity.getStatusCode()));
         sendEvent.setStatusDetail(entity.getStatusDetail());
@@ -49,4 +49,5 @@ public abstract class SendToDeliveryPushHandler implements MessageHandler {
         return sendEvent;
 
     }
+
 }

@@ -10,6 +10,6 @@ public class RECAG012MessageHandler implements MessageHandler {
 
     @Override
     public void handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
-
+        //TODO da completare
     }
 }

@@ -23,6 +23,7 @@ public class AggregatorMessageHandler extends SendToDeliveryPushHandler {
 
     @Override
     public void handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
+        //TODO da completare
         //recuperare evento pre-esito da db
         //...
         //arricchire l'evento ricevuto con quello recuperato (deliveryFailureCause/discoveredAddress)
@@ -34,7 +35,7 @@ public class AggregatorMessageHandler extends SendToDeliveryPushHandler {
     }
 
     private void enrichEvent(PaperProgressStatusEventDto paperRequest) {
-        //TODO enrich dell'evento
+
     }
 
 

@@ -2,6 +2,8 @@ package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
 import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
 import it.pagopa.pn.paperchannel.service.SqsSender;
@@ -27,28 +29,32 @@ public class HandlersFactory {
 
     private final SqsSender sqsSender;
 
+    private final EventMetaDAO eventMetaDAO;
+
+    private final EventDematDAO eventDematDAO;
+
     private ConcurrentHashMap<String, MessageHandler> map;
 
     private final LogMessageHandler logExtChannelsMessageHandler = new LogMessageHandler();
 
     @PostConstruct
     public void initializeHandlers() {
-        var saveMetadataMessageHandler = new SaveMetadataMessageHandler();
-        var saveDematMessageHandler = new SaveDematMessageHandler(sqsSender);
-        var retryableDeliveryPushExtChannelsMessageHandler = new RetryableMessageHandler(sqsSender, externalChannelClient, addressDAO, paperRequestErrorDAO, pnPaperChannelConfig);
-        var notRetryableMessageHandler = new NotRetryableMessageHandler(paperRequestErrorDAO);
+        var saveMetadataMessageHandler = new SaveMetadataMessageHandler(eventMetaDAO, pnPaperChannelConfig.getTtlExecutionDaysMeta());
+        var saveDematMessageHandler = new SaveDematMessageHandler(sqsSender, eventDematDAO, pnPaperChannelConfig.getTtlExecutionDaysDemat());
+        var retryableErrorExtChannelsMessageHandler = new RetryableErrorMessageHandler(sqsSender, externalChannelClient, addressDAO, paperRequestErrorDAO, pnPaperChannelConfig);
+        var notRetryableErrorMessageHandler = new NotRetryableErrorMessageHandler(paperRequestErrorDAO);
         var aggregatorMessageHandler = new AggregatorMessageHandler(sqsSender);
 
         map = new ConcurrentHashMap<>();
 
-        addRetryableStatusCodes(map, retryableDeliveryPushExtChannelsMessageHandler);
-        addNotRetryableStatusCodes(map, notRetryableMessageHandler);
+        addRetryableErrorStatusCodes(map, retryableErrorExtChannelsMessageHandler);
+        addNotRetryableErrorStatusCodes(map, notRetryableErrorMessageHandler);
         addSaveMetadataStatusCodes(map, saveMetadataMessageHandler);
         addSaveDematStatusCodes(map, saveDematMessageHandler);
         addAggregatorStatusCodes(map, aggregatorMessageHandler);
     }
 
-    private void addRetryableStatusCodes(ConcurrentHashMap<String, MessageHandler> map, RetryableMessageHandler handler) {
+    private void addRetryableErrorStatusCodes(ConcurrentHashMap<String, MessageHandler> map, RetryableErrorMessageHandler handler) {
         map.put(ExternalChannelCodeEnum.RECRS006.name(), handler);
         map.put(ExternalChannelCodeEnum.RECRN006.name(), handler);
         map.put(ExternalChannelCodeEnum.RECAG004.name(), handler);
@@ -56,7 +62,7 @@ public class HandlersFactory {
         map.put(ExternalChannelCodeEnum.RECRSI005.name(), handler);
     }
 
-    private void addNotRetryableStatusCodes(ConcurrentHashMap<String, MessageHandler> map, NotRetryableMessageHandler handler) {
+    private void addNotRetryableErrorStatusCodes(ConcurrentHashMap<String, MessageHandler> map, NotRetryableErrorMessageHandler handler) {
         map.put(ExternalChannelCodeEnum.CON998.name(), handler);
         map.put(ExternalChannelCodeEnum.CON997.name(), handler);
         map.put(ExternalChannelCodeEnum.CON996.name(), handler);
@@ -95,8 +101,7 @@ public class HandlersFactory {
 //
 //    }
 
-    //Federico: uno stesso evento può avere più attachmentType?
-    //Federico: si possono avere eventi demat che non hanno allegati?
+
 //    private void addDematDeliveryPushStatusCodes(ConcurrentHashMap<DematKey, MessageHandler> map, SaveDematMessageHandler handler) {
 //        map.put(new DematKey("RECRS002B", "Plico"), handler);
 //        map.put(new DematKey("RECRS002E", "Plico"), handler);

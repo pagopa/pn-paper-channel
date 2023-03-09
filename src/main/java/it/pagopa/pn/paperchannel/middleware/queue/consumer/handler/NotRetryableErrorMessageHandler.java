@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 
 
 @RequiredArgsConstructor
-public class NotRetryableMessageHandler implements MessageHandler {
+public class NotRetryableErrorMessageHandler implements MessageHandler {
 
     private final PaperRequestErrorDAO paperRequestErrorDAO;
 
