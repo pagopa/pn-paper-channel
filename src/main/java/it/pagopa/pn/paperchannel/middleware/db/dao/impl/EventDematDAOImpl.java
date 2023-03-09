@@ -4,6 +4,7 @@ import it.pagopa.pn.paperchannel.config.AwsPropertiesConfig;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.BaseDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventDemat;
+import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
@@ -11,6 +12,7 @@ import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 
+@Repository
 public class EventDematDAOImpl extends BaseDAO<PnEventDemat> implements EventDematDAO {
     public EventDematDAOImpl(DynamoDbEnhancedAsyncClient dynamoDbEnhancedAsyncClient,
                             DynamoDbAsyncClient dynamoDbAsyncClient,
