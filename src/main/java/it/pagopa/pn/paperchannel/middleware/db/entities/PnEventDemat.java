@@ -13,30 +13,42 @@ import java.time.Instant;
 @Setter
 @DynamoDbBean
 public class PnEventDemat {
+    private static final String COL_PK = "pk";
+    private static final String COL_SK = "sk";
+
     private static final String COL_REQUEST_ID = "requestId";
     private static final String COL_STATUS_CODE = "statusCode";
 
     private static final String COL_TTL = "ttl";
 
-    private static final String COL_DELIVERY_FAILURE_CASE = "deliveryFailureCause";
-    private static final String COL_DISCOVERED_ADDRESS = "discoveredAddress";
+    private static final String COL_DOCUMENT_TYPE = "documentType";
     private static final String COL_DOCUMENT_DATE = "documentDate";
     private static final String COL_STATUS_DATETIME = "statusDateTime";
 
-    @Getter(onMethod = @__({@DynamoDbPartitionKey,@DynamoDbAttribute(COL_REQUEST_ID)}))
+    private static final String COL_URI = "uri";
+    @Getter(onMethod = @__({@DynamoDbPartitionKey,@DynamoDbAttribute(COL_PK)}))
+    private String dematRequestId;
+
+    @Getter(onMethod = @__({@DynamoDbSortKey, @DynamoDbAttribute(COL_SK)}))
+    private String documentTypeStatusCode;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_REQUEST_ID)}))
     private String requestId;
 
-    @Getter(onMethod = @__({@DynamoDbSortKey, @DynamoDbAttribute(COL_STATUS_CODE)}))
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_STATUS_CODE)}))
     private String statusCode;
 
-    @Getter(onMethod = @__({@DynamoDbAttribute(COL_DELIVERY_FAILURE_CASE)}))
-    private String deliveryFailureCause;
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_DOCUMENT_TYPE)}))
+    private String documentType;
 
-    @Getter(onMethod = @__({@DynamoDbAttribute(COL_DISCOVERED_ADDRESS)}))
-    private String discoveredAddress;
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_DOCUMENT_DATE)}))
+    private String documentDate;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_STATUS_DATETIME)}))
     private Instant statusDateTime;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_URI)}))
+    private String uri;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_TTL)}))
     private Long ttl;
