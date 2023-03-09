@@ -344,14 +344,14 @@ Resources:
     Properties:
       TableName: !Sub '${ProjectName}-PaperEvents'
       AttributeDefinitions:
-        - AttributeName: "requestId"
+        - AttributeName: "pk"
           AttributeType: "S"
-        - AttributeName: "statusCode"
+        - AttributeName: "sk"
           AttributeType: "S"
       KeySchema:
-        - AttributeName: "requestId"
+        - AttributeName: "pk"
           KeyType: "HASH"
-        - AttributeName: "statusCode"
+        - AttributeName: "sk"
           KeyType: "RANGE"
       KinesisStreamSpecification:
         StreamArn: !Ref CdcKinesisSourceStreamArn
