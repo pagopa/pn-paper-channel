@@ -27,7 +27,7 @@ public class SendEventMapper {
         try {
             entityEvent.setStatusCode(StatusCodeEnum.valueOf(request.getStatusCode()));
         } catch (IllegalArgumentException ex) {
-            log.error("status code not found"+request.getStatusCode());
+            log.info("status code not found"+request.getStatusCode());
         }
         entityEvent.setStatusDetail(request.getStatusDetail());
         entityEvent.setRegisteredLetterCode(request.getProductType());

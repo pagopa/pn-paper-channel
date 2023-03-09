@@ -59,7 +59,6 @@ public class DeliveriesExcelDAO implements ExcelDAO<DeliveriesData> {
         } catch (DAOException e){
             throw new PnGenericException(EXCEL_BADLY_FORMAT, e.getMessage());
         } catch (Exception e) {
-            log.error(e.getMessage());
             throw new PnGenericException(EXCEL_BADLY_CONTENT, e.getMessage());
         }
 
