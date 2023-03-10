@@ -208,6 +208,14 @@ Parameters:
     Type: String
     Description: 'ARN of dynamodb table containing request error'
 
+  PaperEventsTableName:
+    Type: String
+    Description: 'Name of dynamodb table containing events'
+
+  PaperEventsTableArn:
+    Type: String
+    Description: 'ARN of dynamodb table containing events'
+
   ExternalChannelsOutputsQueueName:
     Type: String
     Description: 'Push delivery-push messages to this Queue'
@@ -373,26 +381,29 @@ Resources:
         ContainerEnvEntry14: !Sub 'AWS_DYNAMODBCAPTABLE=${CapDynamoTableName}'
         ContainerEnvEntry15: !Sub 'AWS_DYNAMODBDELIVERYFILETABLE=${DeliveryFileDynamoTableName}'
         ContainerEnvEntry16: !Sub 'AWS_DYNAMODBPAPERREQUESTERRORTABLE=${PaperRequestErrorTableName}'
-        ContainerEnvEntry17: !Sub 'AWS_KMS_KEYID=${PCKmsEncDecDynamoDataKeyARN}'
-        ContainerEnvEntry18: !Sub 'AWS_KMS_REGION=${AWS::Region}'
-        ContainerEnvEntry19: !Sub 'PN_PAPERCHANNEL_QUEUEDELIVERYPUSH=${ExternalChannelsOutputsQueueName}'
-        ContainerEnvEntry20: !Sub 'PN_PAPERCHANNEL_QUEUEEXTERNALCHANNEL=${ExternalChannels2PaperChannelQueueName}'
-        ContainerEnvEntry21: !Sub 'PN_PAPERCHANNEL_QUEUENATIONALREGISTRIES=${NationalRegistries2PaperChannelQueueName}'
-        ContainerEnvEntry22: !Sub 'PN_PAPERCHANNEL_QUEUEINTERNAL=${ScheduledRequestsQueueName}'
-        ContainerEnvEntry23: !Sub 'PN_PAPERCHANNEL_ATTEMPTSAFESTORAGE=${AttemptSafeStorage}'
-        ContainerEnvEntry24: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUESAFESTORAGE=${AttemptQueueSafeStorage}'
-        ContainerEnvEntry25: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUENATIONALREGISTRIES=${AttemptQueueNationalRegistries}'
-        ContainerEnvEntry26: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUEEXTERNALCHANNEL=${AttemptQueueExternalChannel}'
-        ContainerEnvEntry27: !Sub 'AWS_BUCKET_NAME=${PaperDeliveryDriversBucketName}'
-        ContainerEnvEntry28: !Sub 'PN_PAPERCHANNEL_NATIONALREGISTRYCHCXID=${NationalRegistryCxId}'
-        ContainerEnvEntry29: !Sub 'PN_PAPERCHANNEL_TTLPREPARE=${TtlPrepare}'
-        ContainerEnvEntry30: !Sub 'PN_PAPERCHANNEL_TTLEXECUTIONNAR=${TtlExecutionRNAR}'
-        ContainerEnvEntry31: !Sub 'PN_PAPERCHANNEL_TTLEXECUTIONN890=${TtlExecutionRN890}'
-        ContainerEnvEntry32: !Sub 'PN_PAPERCHANNEL_TTLEXECUTIONNRS=${TtlExecutionRNRS}'
-        ContainerEnvEntry33: !Sub 'PN_PAPERCHANNEL_TTLEXECUTIONIAR=${TtlExecutionRIAR}'
-        ContainerEnvEntry34: !Sub 'PN_PAPERCHANNEL_TTLEXECUTIONIRS=${TtlExecutionRIRS}'
-        ContainerEnvEntry35: !Sub 'PN_PAPERCHANNEL_RETRYSTATUS=${RetryStatus}'
-        ContainerEnvEntry36: !Sub 'PN_PAPERCHANNEL_CLIENTDATAVAULTBASEPATH=http://alb.confidential.pn.internal:8080'
+        ContainerEnvEntry17: !Sub 'AWS_DYNAMODBPAPEREVENTSTABLE=${PaperEventsTableName}'
+        ContainerEnvEntry18: !Sub 'AWS_KMS_KEYID=${PCKmsEncDecDynamoDataKeyARN}'
+        ContainerEnvEntry19: !Sub 'AWS_KMS_REGION=${AWS::Region}'
+        ContainerEnvEntry20: !Sub 'PN_PAPERCHANNEL_QUEUEDELIVERYPUSH=${ExternalChannelsOutputsQueueName}'
+        ContainerEnvEntry21: !Sub 'PN_PAPERCHANNEL_QUEUEEXTERNALCHANNEL=${ExternalChannels2PaperChannelQueueName}'
+        ContainerEnvEntry22: !Sub 'PN_PAPERCHANNEL_QUEUENATIONALREGISTRIES=${NationalRegistries2PaperChannelQueueName}'
+        ContainerEnvEntry23: !Sub 'PN_PAPERCHANNEL_QUEUEINTERNAL=${ScheduledRequestsQueueName}'
+        ContainerEnvEntry24: !Sub 'PN_PAPERCHANNEL_ATTEMPTSAFESTORAGE=${AttemptSafeStorage}'
+        ContainerEnvEntry25: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUESAFESTORAGE=${AttemptQueueSafeStorage}'
+        ContainerEnvEntry26: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUENATIONALREGISTRIES=${AttemptQueueNationalRegistries}'
+        ContainerEnvEntry27: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUEEXTERNALCHANNEL=${AttemptQueueExternalChannel}'
+        ContainerEnvEntry28: !Sub 'AWS_BUCKET_NAME=${PaperDeliveryDriversBucketName}'
+        ContainerEnvEntry29: !Sub 'PN_PAPERCHANNEL_NATIONALREGISTRYCHCXID=${NationalRegistryCxId}'
+        ContainerEnvEntry30: !Sub 'PN_PAPERCHANNEL_TTLPREPARE=${TtlPrepare}'
+        ContainerEnvEntry31: !Sub 'PN_PAPERCHANNEL_TTLEXECUTIONNAR=${TtlExecutionRNAR}'
+        ContainerEnvEntry32: !Sub 'PN_PAPERCHANNEL_TTLEXECUTIONN890=${TtlExecutionRN890}'
+        ContainerEnvEntry33: !Sub 'PN_PAPERCHANNEL_TTLEXECUTIONNRS=${TtlExecutionRNRS}'
+        ContainerEnvEntry34: !Sub 'PN_PAPERCHANNEL_TTLEXECUTIONIAR=${TtlExecutionRIAR}'
+        ContainerEnvEntry35: !Sub 'PN_PAPERCHANNEL_TTLEXECUTIONIRS=${TtlExecutionRIRS}'
+        ContainerEnvEntry36: !Sub 'PN_PAPERCHANNEL_TTLEXECUTIONDAYSDEMAT=${TtlExecutionDaysDemat}'
+        ContainerEnvEntry37: !Sub 'PN_PAPERCHANNEL_TTLEXECUTIONDAYMETA=${TtlExecutionDaysMeta}'
+        ContainerEnvEntry38: !Sub 'PN_PAPERCHANNEL_RETRYSTATUS=${RetryStatus}'
+        ContainerEnvEntry39: !Sub 'PN_PAPERCHANNEL_CLIENTDATAVAULTBASEPATH=http://alb.confidential.pn.internal:8080'
         MappedPaths: '/paper-channel-bo/*,/paper-channel-private/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds
@@ -472,6 +483,8 @@ Resources:
               - !Sub "${CapDynamoTableArn}/*"
               - !Sub "${PaperRequestErrorTableArn}"
               - !Sub "${PaperRequestErrorTableArn}/*"
+              - !Sub "${PaperEventsTableArn}"
+              - !Sub "${PaperEventsTableArn}/*"
 
 
   # Dashboard

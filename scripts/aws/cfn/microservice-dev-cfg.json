@@ -16,6 +16,8 @@
     "TtlExecutionRNRS": "11",
     "TtlExecutionRIAR" : "13" ,
     "TtlExecutionRIRS": "14",
+    "TtlExecutionDaysDemat": "365",
+    "TtlExecutionDaysMeta": "365",
     "RetryStatus" : "006"
   }
 }
