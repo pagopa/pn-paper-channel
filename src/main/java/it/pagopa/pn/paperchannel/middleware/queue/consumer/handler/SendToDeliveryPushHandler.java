@@ -24,7 +24,7 @@ public abstract class SendToDeliveryPushHandler implements MessageHandler {
         log.debug("[{}] Sending to delivery-push", paperRequest.getRequestId());
         SendEvent sendEvent = createSendEventMessage(entity, paperRequest);
         sqsSender.pushSendEvent(sendEvent);
-        log.debug("[{}] Sent to delivery-push: {}", paperRequest.getRequestId(), sendEvent);
+        log.info("[{}] Sent to delivery-push: {}", paperRequest.getRequestId(), sendEvent);
     }
 
     protected SendEvent createSendEventMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
