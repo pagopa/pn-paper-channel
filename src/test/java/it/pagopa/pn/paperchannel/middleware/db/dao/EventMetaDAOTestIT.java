@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 class EventMetaDAOTestIT extends BaseTest {
 
     @Autowired
-    private EventMetaDAO eventMetaDAO;
+    EventMetaDAO eventMetaDAO;
 
     private final PnEventMeta eventMeta1 = new PnEventMeta();
     private final PnEventMeta eventMeta2 = new PnEventMeta();
@@ -30,7 +30,10 @@ class EventMetaDAOTestIT extends BaseTest {
     @Test
     void createPutGetUpdateDelete() {
         // put
-        eventMetaDAO.createOrUpdate(eventMeta1).block();
+        PnEventMeta insertedEventMeta = eventMetaDAO.createOrUpdate(eventMeta1).block();
+
+        assertNotNull(insertedEventMeta);
+        assertEquals(eventMeta1, insertedEventMeta);
 
         // get check
         PnEventMeta eventMetaFromDb = eventMetaDAO.getDeliveryEventMeta(eventMeta1.getMetaRequestId(), eventMeta1.getMetaStatusCode()).block();
@@ -56,6 +59,10 @@ class EventMetaDAOTestIT extends BaseTest {
 
         eventMetaFromDb = eventMetaDAO.getDeliveryEventMeta(eventMeta1.getMetaRequestId(), eventMeta1.getMetaStatusCode()).block();
         assertNull(eventMetaFromDb);
+
+        // delete missing
+        deletedEventMeta = eventMetaDAO.deleteEventMeta("missing1", "missing2").block();
+        assertNull(deletedEventMeta);
     }
 
     @Test
@@ -89,9 +96,9 @@ class EventMetaDAOTestIT extends BaseTest {
         final Instant now1 = Instant.now();
         final Instant now2 = Instant.now().plusSeconds(10);
 
-        final String sameRequestId = "META##" + requestId;
+        final String sameMetaRequestId = "META##" + requestId;
 
-        eventMeta1.setMetaRequestId(sameRequestId);
+        eventMeta1.setMetaRequestId(sameMetaRequestId);
         eventMeta1.setMetaStatusCode("META##" + statusCode1);
         eventMeta1.setRequestId(requestId);
         eventMeta1.setStatusCode(statusCode1);
@@ -100,7 +107,7 @@ class EventMetaDAOTestIT extends BaseTest {
         eventMeta1.setStatusDateTime(now1);
         eventMeta1.setTtl(now1.plus(ttlOffsetDays, ChronoUnit.DAYS).toEpochMilli());
 
-        eventMeta2.setMetaRequestId(sameRequestId);
+        eventMeta2.setMetaRequestId(sameMetaRequestId);
         eventMeta2.setMetaStatusCode("META##" + statusCode2);
         eventMeta2.setRequestId(requestId);
         eventMeta2.setStatusCode(statusCode1);
