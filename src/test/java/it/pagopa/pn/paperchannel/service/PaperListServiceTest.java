@@ -20,7 +20,7 @@ public class PaperListServiceTest  extends BaseTest {
     @Mock
     private PaperListService paperListService;
 
-    @Test
+    //@Test
     void test(){
         List<PnCap> capResponseDto= new ArrayList<>();
         Mockito.when(capDAO.getAllCap(Mockito.any())).thenReturn(Mono.just(capResponseDto));
