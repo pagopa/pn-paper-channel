@@ -29,7 +29,6 @@ import it.pagopa.pn.paperchannel.utils.PnLogAudit;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.MDC;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -45,25 +44,28 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.EXTERNAL_CHA
 @Service
 public class PaperResultAsyncServiceImpl extends BaseService implements PaperResultAsyncService {
 
-    @Autowired
-    private ExternalChannelClient externalChannelClient;
+    private final ExternalChannelClient externalChannelClient;
     private final PnPaperChannelConfig pnPaperChannelConfig;
     private final AddressDAO addressDAO;
     private final PaperRequestErrorDAO paperRequestErrorDAO;
 
-    @Autowired
-    private HandlersFactory handlersFactory;
+    private final HandlersFactory handlersFactory;
 
     public PaperResultAsyncServiceImpl(PnAuditLogBuilder auditLogBuilder, RequestDeliveryDAO requestDeliveryDAO,
-                                       NationalRegistryClient nationalRegistryClient, SqsSender sqsSender, PnPaperChannelConfig pnPaperChannelConfig, AddressDAO addressDAO, PaperRequestErrorDAO paperRequestErrorDAO) {
+                                       NationalRegistryClient nationalRegistryClient, SqsSender sqsSender,
+                                       PnPaperChannelConfig pnPaperChannelConfig, AddressDAO addressDAO,
+                                       PaperRequestErrorDAO paperRequestErrorDAO, HandlersFactory handlersFactory,
+                                       ExternalChannelClient externalChannelClient) {
         super(auditLogBuilder, requestDeliveryDAO, null, nationalRegistryClient, sqsSender);
         this.pnPaperChannelConfig = pnPaperChannelConfig;
         this.addressDAO = addressDAO;
         this.paperRequestErrorDAO = paperRequestErrorDAO;
+        this.handlersFactory = handlersFactory;
+        this.externalChannelClient = externalChannelClient;
     }
 
-    @Override
-    public Mono<PnDeliveryRequest> resultAsyncBackground(SingleStatusUpdateDto singleStatusUpdateDto, Integer attempt) {
+//    @Override
+    public Mono<PnDeliveryRequest> resultAsyncBackgroundOld(SingleStatusUpdateDto singleStatusUpdateDto, Integer attempt) {
         if (singleStatusUpdateDto == null || singleStatusUpdateDto.getAnalogMail() == null || StringUtils.isBlank(singleStatusUpdateDto.getAnalogMail().getRequestId())){
             log.error("the message sent from external channel, includes errors. It cannot be processing");
             return Mono.error(new PnGenericException(DATA_NULL_OR_INVALID, DATA_NULL_OR_INVALID.getMessage()));
@@ -115,7 +117,8 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
                 });
     }
 
-    public Mono<PnDeliveryRequest> resultAsyncBackgroundNew(SingleStatusUpdateDto singleStatusUpdateDto, Integer attempt) {
+    @Override
+    public Mono<PnDeliveryRequest> resultAsyncBackground(SingleStatusUpdateDto singleStatusUpdateDto, Integer attempt) {
         if (singleStatusUpdateDto == null || singleStatusUpdateDto.getAnalogMail() == null || StringUtils.isBlank(singleStatusUpdateDto.getAnalogMail().getRequestId())) {
             log.error("the message sent from external channel, includes errors. It cannot be processing");
             return Mono.error(new PnGenericException(DATA_NULL_OR_INVALID, DATA_NULL_OR_INVALID.getMessage()));
@@ -127,7 +130,8 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
         return requestDeliveryDAO.getByRequestId(requestId)
                 .doOnNext(entity -> logEntity(entity, singleStatusUpdateDto))
                 .flatMap(entity -> updateEntityResult(singleStatusUpdateDto, entity))
-                .doOnNext(entity -> handler.handleMessage(entity, singleStatusUpdateDto.getAnalogMail()));
+                .doOnNext(entity -> handler.handleMessage(entity, singleStatusUpdateDto.getAnalogMail()))
+                .doOnError(ex ->  log.error("Error in retrieve EC from queue", ex));
 
     }
 
@@ -214,17 +218,6 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
                 .concat(" - ").concat(pnDeliveryRequestMono.getStatusCode()).concat(" - ").concat(singleStatusUpdateDto.getAnalogMail().getStatusDescription()));
         pnDeliveryRequestMono.setStatusDate(DateUtils.formatDate(Date.from(singleStatusUpdateDto.getAnalogMail().getStatusDateTime().toInstant())));
         return requestDeliveryDAO.updateData(pnDeliveryRequestMono);
-    }
-
-    private Mono<PnDeliveryRequest> updateEntityResultNew(SingleStatusUpdateDto singleStatusUpdateDto, Mono<PnDeliveryRequest> pnDeliveryRequestMono) {
-        return pnDeliveryRequestMono
-                .doOnNext(pnDeliveryRequest -> {
-                    pnDeliveryRequest.setStatusCode(ExternalChannelCodeEnum.getStatusCode(singleStatusUpdateDto.getAnalogMail().getStatusCode()));
-                    pnDeliveryRequest.setStatusDetail(singleStatusUpdateDto.getAnalogMail().getProductType()
-                            .concat(" - ").concat(pnDeliveryRequest.getStatusCode()).concat(" - ").concat(singleStatusUpdateDto.getAnalogMail().getStatusDescription()));
-                    pnDeliveryRequest.setStatusDate(DateUtils.formatDate(Date.from(singleStatusUpdateDto.getAnalogMail().getStatusDateTime().toInstant())));
-                })
-                .flatMap(pnDeliveryRequest -> requestDeliveryDAO.updateData(pnDeliveryRequest));
     }
 
     private void sendPaperResponse(PnDeliveryRequest entity, SingleStatusUpdateDto request) {

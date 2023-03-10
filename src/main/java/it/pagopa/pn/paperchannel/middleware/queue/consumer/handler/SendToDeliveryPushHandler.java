@@ -9,18 +9,22 @@ import it.pagopa.pn.paperchannel.rest.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;
 
 @RequiredArgsConstructor
+@Slf4j
 public abstract class SendToDeliveryPushHandler implements MessageHandler {
 
     private final SqsSender sqsSender;
 
     @Override
     public void handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
+        log.debug("[{}] Sending to delivery-push", paperRequest.getRequestId());
         SendEvent sendEvent = createSendEventMessage(entity, paperRequest);
         sqsSender.pushSendEvent(sendEvent);
+        log.debug("[{}] Sent to delivery-push: {}", paperRequest.getRequestId(), sendEvent);
     }
 
     protected SendEvent createSendEventMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {

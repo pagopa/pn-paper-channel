@@ -133,7 +133,6 @@ public class HandlersFactory {
         map.put("RECRN001B", handler);
         map.put("RECRN002B", handler);
         map.put("RECRN002E", handler);
-//        map.put("RECRN002E", handler);
         map.put("RECRN003B", handler);
         map.put("RECRN004B", handler);
         map.put("RECRN005B", handler);
@@ -141,7 +140,6 @@ public class HandlersFactory {
         map.put("RECAG002B", handler);
         map.put("RECAG003B", handler);
         map.put("RECAG003E", handler);
-//        map.put("RECAG003E", handler);
         map.put("RECRI003B", handler);
         map.put("RECRI004B", handler);
         map.put("RECRSI004B", handler);
@@ -166,7 +164,6 @@ public class HandlersFactory {
         map.put("RECAG002C", handler);
         map.put("RECAG003C", handler);
         map.put("RECAG003F", handler);
-        map.put("RECAG008C", handler);
         map.put("RECRI003C", handler);
         map.put("RECRI004C", handler);
         map.put("RECRSI003C", handler); //L’evento potrebbe non essere mai generato in quanto non garantito su tutte i diversi paesi internazionali
