@@ -3,6 +3,7 @@ package it.pagopa.pn.paperchannel.middleware.db.entities;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
@@ -13,6 +14,7 @@ import java.time.Instant;
 @Getter
 @Setter
 @EqualsAndHashCode
+@ToString
 @DynamoDbBean
 public class PnEventDemat {
     private static final String COL_PK = "pk";
