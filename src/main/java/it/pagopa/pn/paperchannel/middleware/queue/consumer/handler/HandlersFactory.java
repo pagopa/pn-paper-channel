@@ -44,6 +44,7 @@ public class HandlersFactory {
         var retryableErrorExtChannelsMessageHandler = new RetryableErrorMessageHandler(sqsSender, externalChannelClient, addressDAO, paperRequestErrorDAO, pnPaperChannelConfig);
         var notRetryableErrorMessageHandler = new NotRetryableErrorMessageHandler(paperRequestErrorDAO);
         var aggregatorMessageHandler = new AggregatorMessageHandler(sqsSender);
+        var recag012MessageHandler = new RECAG012MessageHandler(eventMetaDAO, pnPaperChannelConfig.getTtlExecutionDaysMeta());
 
         map = new ConcurrentHashMap<>();
 
@@ -52,6 +53,9 @@ public class HandlersFactory {
         addSaveMetadataStatusCodes(map, saveMetadataMessageHandler);
         addSaveDematStatusCodes(map, saveDematMessageHandler);
         addAggregatorStatusCodes(map, aggregatorMessageHandler);
+
+        //casi 890
+        map.put("RECAG012", recag012MessageHandler);
     }
 
     private void addRetryableErrorStatusCodes(ConcurrentHashMap<String, MessageHandler> map, RetryableErrorMessageHandler handler) {

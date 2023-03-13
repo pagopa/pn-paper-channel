@@ -12,4 +12,6 @@ public interface EventDematDAO {
     Flux<PnEventDemat> findAllByRequestId(String dematRequestId);
 
     Mono<PnEventDemat> deleteEventDemat(String dematRequestId, String documentTypeStatusCode);
+
+    Flux<PnEventDemat> findAllByKeys(String dematRequestId, String... documentTypeStatusCode);
 }

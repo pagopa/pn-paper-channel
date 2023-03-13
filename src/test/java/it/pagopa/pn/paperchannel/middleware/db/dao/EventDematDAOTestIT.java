@@ -10,6 +10,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -83,6 +84,58 @@ class EventDematDAOTestIT extends BaseTest {
 
         assertNotNull(eventsFromDb);
         assertEquals(0, eventsFromDb.size());
+    }
+
+    @Test
+    void findAllByKeysTest() {
+        final String requestId = "LVRK-202302-G-1;RECINDEX_0;SENTATTEMPTMADE_0;PCRETRY_0";
+        eventDemat1.setDematRequestId("DEMAT##" + requestId);
+        eventDemat1.setDocumentTypeStatusCode("23L##RECAG011B");
+        eventDemat1.setRequestId(requestId);
+        eventDemat1.setDocumentType("23L");
+
+        eventDemat2.setDematRequestId("DEMAT##" + requestId);
+        eventDemat2.setDocumentTypeStatusCode("ARCAD##RECAG011B");
+        eventDemat2.setRequestId(requestId);
+        eventDemat2.setDocumentType("ARCAD");
+
+        PnEventDemat eventDemat3 = new PnEventDemat();
+        eventDemat3.setDematRequestId("DEMAT##" + requestId);
+        eventDemat3.setDocumentTypeStatusCode("CAD##RECAG011B");
+        eventDemat3.setRequestId(requestId);
+        eventDemat3.setDocumentType("CAD");
+        eventDemat3.setTtl(Instant.now().plus(1, ChronoUnit.DAYS).getEpochSecond());
+
+
+        //viene filtrato per sortKey diversa
+        PnEventDemat eventDemat4 = new PnEventDemat();
+        eventDemat4.setDematRequestId("DEMAT##" + requestId);
+        eventDemat4.setDocumentTypeStatusCode("UNKNOW##RECAG011B");
+        eventDemat4.setRequestId(requestId);
+        eventDemat4.setDocumentType("UNKNOW");
+        eventDemat4.setTtl(Instant.now().plus(1, ChronoUnit.DAYS).getEpochSecond());
+
+        //viene filtrato per partitionKey diversa
+        PnEventDemat eventDemat5 = new PnEventDemat();
+        eventDemat5.setDematRequestId("DEMAT##AAAA-202302-G-1;RECINDEX_0;SENTATTEMPTMADE_0;PCRETRY_0");
+        eventDemat5.setDocumentTypeStatusCode("CAD##RECAG011B");
+        eventDemat5.setRequestId("AAAA-202302-G-1;RECINDEX_0;SENTATTEMPTMADE_0;PCRETRY_0");
+        eventDemat5.setDocumentType("CAD");
+        eventDemat5.setTtl(Instant.now().plus(1, ChronoUnit.DAYS).getEpochSecond());
+
+        eventDematDAO.createOrUpdate(eventDemat1).block();
+        eventDematDAO.createOrUpdate(eventDemat2).block();
+        eventDematDAO.createOrUpdate(eventDemat3).block();
+        eventDematDAO.createOrUpdate(eventDemat4).block();
+        eventDematDAO.createOrUpdate(eventDemat5).block();
+
+
+        List<PnEventDemat> result = eventDematDAO.findAllByKeys("DEMAT##" + requestId, "23L##RECAG011B",
+                "ARCAD##RECAG011B", "CAD##RECAG011B").collectList().block();
+
+        assertThat(result)
+                .hasSize(3)
+                .containsExactlyInAnyOrderElementsOf(List.of(eventDemat1, eventDemat2, eventDemat3));
     }
 
     private void initialize() {

@@ -19,9 +19,9 @@ import java.util.List;
 @Slf4j
 public class SaveDematMessageHandler extends SendToDeliveryPushHandler {
 
-    private static final String DEMAT_PREFIX = "DEMAT";
+    protected static final String DEMAT_PREFIX = "DEMAT";
 
-    private static final String DEMAT_DELIMITER = "##";
+    protected static final String DEMAT_DELIMITER = "##";
 
     private static final List<String> ATTACHMENT_TYPES_SEND_TO_DELIVERY_PUSH = List.of(
             "Plico",
@@ -30,7 +30,7 @@ public class SaveDematMessageHandler extends SendToDeliveryPushHandler {
             "23L"
     );
 
-    private final EventDematDAO eventDematDAO;
+    protected final EventDematDAO eventDematDAO;
 
     private final Long ttlDays;
 
@@ -80,6 +80,10 @@ public class SaveDematMessageHandler extends SendToDeliveryPushHandler {
         pnEventDemat.setStatusDateTime(paperRequest.getStatusDateTime().toInstant());
         pnEventDemat.setUri(attachmentDetailsDto.getUrl());
         return pnEventDemat;
+    }
+
+    protected Mono<Void> sendToDeliveryPush(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
+        return super.handleMessage(entity, paperRequest);
     }
 
 

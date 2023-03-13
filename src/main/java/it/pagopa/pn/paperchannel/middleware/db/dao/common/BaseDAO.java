@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import software.amazon.awssdk.enhanced.dynamodb.*;
 import software.amazon.awssdk.enhanced.dynamodb.model.*;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
@@ -186,4 +187,22 @@ public abstract class BaseDAO<T> {
         }
         return builder.build();
     }
+
+    protected Flux<T> findAllByKeys(String partitionKey, String... sortKeys) {
+        ReadBatch.Builder<T> builder = ReadBatch.builder(tClass)
+                .mappedTableResource(this.dynamoTable);
+
+        for(String sortKey: sortKeys ) {
+            Key key = Key.builder().partitionValue(partitionKey).sortValue(sortKey).build();
+            builder.addGetItem(key);
+        }
+
+        BatchGetResultPagePublisher batchGetResultPagePublisher = dynamoDbEnhancedAsyncClient.batchGetItem(BatchGetItemEnhancedRequest.builder()
+                .readBatches(builder.build())
+                .build());
+
+        return Mono.from(batchGetResultPagePublisher.map(batchGetResultPage -> batchGetResultPage.resultsForTable(this.dynamoTable)))
+                .flatMapMany(Flux::fromIterable);
+    }
+
 }
