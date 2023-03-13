@@ -5,6 +5,7 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnDiscoveredAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventDemat;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.AttachmentDetailsDto;
@@ -20,11 +21,12 @@ import org.springframework.test.annotation.DirtiesContext;
 import reactor.core.publisher.Mono;
 
 import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
@@ -35,7 +37,7 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
     private PaperResultAsyncService paperResultAsyncService;
 
     @Autowired
-    private EventMetaDAO eventMetaDAO;;
+    private EventMetaDAO eventMetaDAO;
 
     @Autowired
     private EventDematDAO eventDematDAO;
@@ -167,12 +169,36 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
         when(requestDeliveryDAO.getByRequestId(anyString())).thenReturn(Mono.just(pnDeliveryRequest));
         when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
 
+        // inserimento 1 meta
+        PnEventMeta eventMeta = new PnEventMeta();
+        PnDiscoveredAddress address1 = new PnDiscoveredAddress();
+        address1.setAddress("discoveredAddress1");
+        int ttlOffsetDays = 365;
+        eventMeta.setMetaRequestId("META##" + analogMail.getRequestId());
+        eventMeta.setMetaStatusCode("META##" + analogMail.getStatusCode());
+        eventMeta.setRequestId(analogMail.getRequestId());
+        eventMeta.setStatusCode(analogMail.getStatusCode());
+        eventMeta.setDiscoveredAddress(address1);
+        eventMeta.setDeliveryFailureCause("failureCause1");
+        eventMeta.setStatusDateTime(analogMail.getStatusDateTime().toInstant());
+        eventMeta.setTtl(analogMail.getStatusDateTime().toInstant().plus(ttlOffsetDays, ChronoUnit.DAYS).toEpochMilli());
+        eventMetaDAO.createOrUpdate(eventMeta).block();
+
+        PnEventMeta eventMetaFromDb = eventMetaDAO.getDeliveryEventMeta(eventMeta.getMetaRequestId(), eventMeta.getMetaStatusCode()).block();
+        assertNotNull(eventMetaFromDb);
+
+        // inserimento 1 demat
+        //eventDematDAO.createOrUpdate();
+
         // verifico che il flusso è stato completato con successo
         assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());
 
         // verifico che è stato inviato un evento a delivery-push
         verify(sqsSender, timeout(2000).times(1)).pushSendEvent(any(SendEvent.class));
 
+        // verifica cancellazione evento meta
+        eventMetaFromDb = eventMetaDAO.getDeliveryEventMeta(eventMeta.getMetaRequestId(), eventMeta.getMetaStatusCode()).block();
+        assertNull(eventMetaFromDb);
     }
 
 
