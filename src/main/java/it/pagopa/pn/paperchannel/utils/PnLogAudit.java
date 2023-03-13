@@ -76,6 +76,10 @@ public class PnLogAudit {
         addsFailLog(PnAuditLogEventType.AUD_FD_RESOLVE_SERVICE, iun, msg);
     }
 
+    public void addsWarningResolveService(String iun, String msg) {
+        addsWarningLog(PnAuditLogEventType.AUD_FD_RESOLVE_SERVICE, iun, msg);
+    }
+
     public void addsBeforeReceive(String iun, String msg) {
         addsBeforeLog(PnAuditLogEventType.AUD_FD_RECEIVE, iun, msg);
     }

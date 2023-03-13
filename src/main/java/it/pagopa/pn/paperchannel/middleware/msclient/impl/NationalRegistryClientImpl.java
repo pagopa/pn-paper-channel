@@ -61,9 +61,6 @@ public class NationalRegistryClientImpl extends BaseClient implements NationalRe
                 )
                 .onErrorResume(WebClientResponseException.class, ex -> {
                     log.error(ex.getResponseBodyAsString());
-                //  if(ex.getStatusCode()== HttpStatus.NOT_FOUND){
-                  //      return Mono.error(new PnGenericException(UNTRACEABLE_ADDRESS, UNTRACEABLE_ADDRESS.getMessage()));
-                   // }
                     return Mono.error(ex);
 
                 });
