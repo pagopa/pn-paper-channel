@@ -44,19 +44,19 @@ public class AggregatorMessageHandler extends SendToDeliveryPushHandler {
         eventMetaDAO.getDeliveryEventMeta(METADATA_PREFIX + DELIMITER + paperRequest.getRequestId(),
                         METADATA_PREFIX + DELIMITER + paperRequest.getStatusCode())
                         .doOnNext(relatedMeta -> enrichEvent(paperRequest, relatedMeta))
+                        .doOnNext(ignoredRelatedMeta -> super.handleMessage(entity, paperRequest)) // invio dato su delivery-push
+                        .flatMap(ignoredRelatedMeta ->
+                            eventMetaDAO.deleteEventMeta(METADATA_PREFIX + DELIMITER + paperRequest.getRequestId(),
+                                            METADATA_PREFIX + DELIMITER + paperRequest.getStatusCode())
+                                    .doOnNext(deletedEntity -> log.info("Deleted EventMeta: {}", deletedEntity))
+                        )
                         .block();
-        // invio dato su delivery-push
-        super.handleMessage(entity, paperRequest);
 
         // cancellare righe per entità META e DEMAT
-       eventMetaDAO.deleteEventMeta(METADATA_PREFIX + DELIMITER + paperRequest.getRequestId(), METADATA_PREFIX + DELIMITER + paperRequest.getStatusCode())
-               .doOnNext(deletedEntity -> log.info("Deleted EventMeta: {}", deletedEntity))
-               .block();
-       return eventDematDAO.findAllByRequestId(DEMAT_PREFIX + DELIMITER + paperRequest.getRequestId())
-               .doOnNext(foundItem ->
+        return eventDematDAO.findAllByRequestId(DEMAT_PREFIX + DELIMITER + paperRequest.getRequestId())
+               .flatMap(foundItem ->
                    eventDematDAO.deleteEventDemat(foundItem.getDematRequestId(), foundItem.getDocumentTypeStatusCode())
                            .doOnNext(deletedEntity -> log.info("Deleted EventDemat: {}", deletedEntity))
-                           .block()
                )
                .then();
     }
