@@ -120,6 +120,14 @@ Parameters:
     Type: String
     Description: 'Time to live execution days Event Meta'
 
+  PaperWeight:
+    Type: String
+    Description: 'Weight single paper'
+
+  LetterWeight:
+    Type: String
+    Description: 'Weight letter'
+
   RetryStatus:
     Type: String
     Description: 'Retry status code'
@@ -412,6 +420,8 @@ Resources:
         ContainerEnvEntry37: !Sub 'PN_PAPERCHANNEL_TTLEXECUTIONDAYMETA=${TtlExecutionDaysMeta}'
         ContainerEnvEntry38: !Sub 'PN_PAPERCHANNEL_RETRYSTATUS=${RetryStatus}'
         ContainerEnvEntry39: !Sub 'PN_PAPERCHANNEL_CLIENTDATAVAULTBASEPATH=http://alb.confidential.pn.internal:8080'
+        ContainerEnvEntry40: !Sub 'PN_PAPERCHANNEL_PAPERWEIGHT=${PaperWeight}'
+        ContainerEnvEntry41: !Sub 'PN_PAPERCHANNEL_LETTERWEIGHT=${LetterWeight}'
         MappedPaths: '/paper-channel-bo/*,/paper-channel-private/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds

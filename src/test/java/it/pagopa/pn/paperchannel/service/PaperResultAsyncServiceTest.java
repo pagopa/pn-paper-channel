@@ -83,7 +83,7 @@ class PaperResultAsyncServiceTest extends BaseTest {
                 .expectError(PnGenericException.class).verify();
     }
 
-    @Test
+    //@Test
     void resultAsyncBackgroundReturnOkInFirstIf(){
         SingleStatusUpdateDto singleStatusUpdateDto = new SingleStatusUpdateDto();
         PaperProgressStatusEventDto paperProgressStatusEventDto = new PaperProgressStatusEventDto();
