@@ -112,6 +112,14 @@ Parameters:
   TtlExecutionRIRS:
     Type: String
     Description: 'Time to live execution RI RS'
+
+  TtlExecutionDaysDemat:
+    Type: String
+    Description: 'Time to live execution days Event Demat'
+  TtlExecutionDaysMeta:
+    Type: String
+    Description: 'Time to live execution days Event Meta'
+
   RetryStatus:
     Type: String
     Description: 'Retry status code'
