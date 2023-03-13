@@ -7,6 +7,8 @@ import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.Attachme
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import lombok.extern.slf4j.Slf4j;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,27 +42,29 @@ public class SaveDematMessageHandler extends SendToDeliveryPushHandler {
 
 
     @Override
-    public void handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
+    public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
         //negli eventi DEMAT è presente sempre almeno un attachment
         var attachments = new ArrayList<>(paperRequest.getAttachments());
-        attachments.forEach(attachmentDetailsDto -> {
-            //salvo in DB
-            PnEventDemat pnEventDemat = buildPnEventDemat(paperRequest, attachmentDetailsDto);
-            eventDematDAO.createOrUpdate(pnEventDemat)
-                    .doOnNext(savedEntity -> log.info("[{}] Saved PaperRequest from ExcChannel: {}", paperRequest.getRequestId(), savedEntity))
-                    .doOnNext(savedEntity -> checkAndSendToDeliveryPush(entity, paperRequest, attachmentDetailsDto))
-                    .block();
-        });
+
+        return Flux.fromIterable(attachments)
+                .flatMap(attachmentDetailsDto -> {
+                    PnEventDemat pnEventDemat = buildPnEventDemat(paperRequest, attachmentDetailsDto);
+                    return eventDematDAO.createOrUpdate(pnEventDemat)
+                            .doOnNext(savedEntity -> log.info("[{}] Saved PaperRequest from ExcChannel: {}", paperRequest.getRequestId(), savedEntity))
+                            .flatMap(savedEntity -> checkAndSendToDeliveryPush(entity, paperRequest, attachmentDetailsDto));
+                })
+                .then();
 
     }
 
-    private void checkAndSendToDeliveryPush(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest, AttachmentDetailsDto attachmentDetailsDto) {
+    private Mono<Void> checkAndSendToDeliveryPush(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest, AttachmentDetailsDto attachmentDetailsDto) {
         if(sendToDeliveryPush(attachmentDetailsDto.getDocumentType())) {
             //invio a delivery push lo stesso evento quanti sono gli attachment
             //ogni evento inviato avrà l'attachment diverso
             paperRequest.setAttachments(List.of(attachmentDetailsDto));
-            super.handleMessage(entity, paperRequest);
+            return super.handleMessage(entity, paperRequest);
         }
+        return Mono.empty();
     }
 
     protected PnEventDemat buildPnEventDemat(PaperProgressStatusEventDto paperRequest, AttachmentDetailsDto attachmentDetailsDto) {

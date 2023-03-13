@@ -20,7 +20,7 @@ class LogMessageHandlerTest {
 
     @Test
     void handleMessage() {
-        assertDoesNotThrow(() -> handler.handleMessage(new PnDeliveryRequest(), new PaperProgressStatusEventDto()));
+        assertDoesNotThrow(() -> handler.handleMessage(new PnDeliveryRequest(), new PaperProgressStatusEventDto()).block());
     }
 
 }

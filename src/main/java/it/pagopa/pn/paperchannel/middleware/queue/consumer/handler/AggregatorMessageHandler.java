@@ -4,6 +4,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import lombok.extern.slf4j.Slf4j;
+import reactor.core.publisher.Mono;
 
 // Alla ricezione di questi tipi di eventi, che sono finali per lo specifico prodotto, paper-channel dovrà:
 // recuperare l’evento di pre-esito correlato (mediante accesso puntuale su hashkey META##RequestID e sortKey META##statusCode)
@@ -22,7 +23,7 @@ public class AggregatorMessageHandler extends SendToDeliveryPushHandler {
 
 
     @Override
-    public void handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
+    public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
         //TODO da completare
         //recuperare evento pre-esito da db
         //...
@@ -32,6 +33,7 @@ public class AggregatorMessageHandler extends SendToDeliveryPushHandler {
         super.handleMessage(entity, paperRequest);
         //cancellare righe per entità META e DEMAT
         //...
+        return Mono.empty();
     }
 
     private void enrichEvent(PaperProgressStatusEventDto paperRequest) {

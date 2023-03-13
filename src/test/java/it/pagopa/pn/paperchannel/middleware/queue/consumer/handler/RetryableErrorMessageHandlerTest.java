@@ -75,7 +75,7 @@ class RetryableErrorMessageHandlerTest {
         when(mockConfig.getAttemptQueueExternalChannel()).thenReturn(1);
         when(mockAddressDAO.findAllByRequestId("request")).thenReturn(Mono.just(List.of(pnAddress)));
         when(mockExtChannel.sendEngageRequest(any(SendRequest.class), anyList())).thenReturn(Mono.empty());
-        assertDoesNotThrow(() -> handler.handleMessage(pnDeliveryRequest, paperRequest));
+        assertDoesNotThrow(() -> handler.handleMessage(pnDeliveryRequest, paperRequest).block());
 
         //verifico che viene invocato ext-channels
         verify(mockExtChannel, timeout(2000).times(1)).sendEngageRequest(any(SendRequest.class), anyList());
@@ -102,7 +102,7 @@ class RetryableErrorMessageHandlerTest {
         when(mockRequestError.created("request", EXTERNAL_CHANNEL_API_EXCEPTION.getMessage(),
                 EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name() )).thenReturn(Mono.just(new PnRequestError()));
 
-        assertDoesNotThrow(() -> handler.handleMessage(pnDeliveryRequest, paperRequest));
+        assertDoesNotThrow(() -> handler.handleMessage(pnDeliveryRequest, paperRequest).block());
 
         //verifico che viene NON invocato ext-channels
         verify(mockExtChannel, timeout(2000).times(0)).sendEngageRequest(any(SendRequest.class), anyList());

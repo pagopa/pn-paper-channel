@@ -34,7 +34,7 @@ class NotRetryableErrorMessageHandlerTest {
         when(paperRequestErrorDAOMock.created("requestId", "statusCode", "statusDetails"))
                 .thenReturn(Mono.just(new PnRequestError()));
 
-        assertDoesNotThrow(() -> handler.handleMessage(entity, new PaperProgressStatusEventDto()));
+        assertDoesNotThrow(() -> handler.handleMessage(entity, new PaperProgressStatusEventDto()).block());
 
         verify(paperRequestErrorDAOMock, timeout(1000).times(1))
                 .created("requestId", "statusCode", "statusDetails");

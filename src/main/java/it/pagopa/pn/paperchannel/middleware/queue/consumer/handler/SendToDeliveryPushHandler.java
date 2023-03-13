@@ -10,6 +10,7 @@ import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import reactor.core.publisher.Mono;
 
 import java.util.Date;
 
@@ -20,11 +21,12 @@ public abstract class SendToDeliveryPushHandler implements MessageHandler {
     private final SqsSender sqsSender;
 
     @Override
-    public void handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
+    public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
         log.debug("[{}] Sending to delivery-push", paperRequest.getRequestId());
         SendEvent sendEvent = createSendEventMessage(entity, paperRequest);
         sqsSender.pushSendEvent(sendEvent);
         log.info("[{}] Sent to delivery-push: {}", paperRequest.getRequestId(), sendEvent);
+        return Mono.empty();
     }
 
     protected SendEvent createSendEventMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {

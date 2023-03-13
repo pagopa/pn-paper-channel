@@ -59,7 +59,7 @@ class SaveDematMessageHandlerTest {
 
         when(mockDao.createOrUpdate(pnEventDemat)).thenReturn(Mono.just(pnEventDemat));
 
-        assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest));
+        assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
 
         //mi aspetto che salvi l'evento
         verify(mockDao, times(1)).createOrUpdate(pnEventDemat);
@@ -92,7 +92,7 @@ class SaveDematMessageHandlerTest {
 
         when(mockDao.createOrUpdate(pnEventDemat)).thenReturn(Mono.just(pnEventDemat));
 
-        assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest));
+        assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
 
         //mi aspetto che salvi l'evento
         verify(mockDao, times(1)).createOrUpdate(pnEventDemat);
@@ -135,7 +135,7 @@ class SaveDematMessageHandlerTest {
         when(mockDao.createOrUpdate(pnEventDematCAD)).thenReturn(Mono.just(pnEventDematCAD));
         when(mockDao.createOrUpdate(pnEventDemat23L)).thenReturn(Mono.just(pnEventDemat23L));
 
-        assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest));
+        assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
 
         //mi aspetto che salvi l'evento CAD
         verify(mockDao, times(1)).createOrUpdate(pnEventDematCAD);

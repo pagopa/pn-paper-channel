@@ -15,7 +15,6 @@ import it.pagopa.pn.paperchannel.utils.DateUtils;
 import it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.annotation.DirtiesContext;
 import reactor.core.publisher.Mono;
@@ -25,11 +24,11 @@ import java.util.Date;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
-@SpringBootTest
 class PaperResultAsyncServiceTestIT extends BaseTest {
 
     @Autowired
@@ -76,10 +75,8 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
         when(requestDeliveryDAO.getByRequestId(anyString())).thenReturn(Mono.just(pnDeliveryRequest));
         when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
 
-        PnDeliveryRequest pnDeliveryRequestUpdated = paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block();
-
         // verifico che il flusso è stato completato con successo
-        assertThat(pnDeliveryRequestUpdated).isEqualTo(afterSetForUpdate);
+        assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());
 
         // verifico che è stato inserito il record in DB
         entity = eventMetaDAO.getDeliveryEventMeta(metadataRequestExpected, metadataStatusCodeExpected).block();
@@ -129,9 +126,8 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
         when(requestDeliveryDAO.getByRequestId(anyString())).thenReturn(Mono.just(pnDeliveryRequest));
         when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
 
-        PnDeliveryRequest pnDeliveryRequestUpdated = paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block();
         // verifico che il flusso è stato completato con successo
-        assertThat(pnDeliveryRequestUpdated).isEqualTo(afterSetForUpdate);
+        assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());
 
         // verifico che è stato inserito il record CAD in DB
         entityCAD = eventDematDAO.getDeliveryEventDemat(metadataRequestExpected, metadataStatusCodeCADExpected).block();
@@ -171,10 +167,8 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
         when(requestDeliveryDAO.getByRequestId(anyString())).thenReturn(Mono.just(pnDeliveryRequest));
         when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
 
-        PnDeliveryRequest pnDeliveryRequestUpdated = paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block();
-
         // verifico che il flusso è stato completato con successo
-        assertThat(pnDeliveryRequestUpdated).isEqualTo(afterSetForUpdate);
+        assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());
 
         // verifico che è stato inviato un evento a delivery-push
         verify(sqsSender, timeout(2000).times(1)).pushSendEvent(any(SendEvent.class));

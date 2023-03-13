@@ -143,5 +143,9 @@ public class PnLogAudit {
         addsSuccessLog(PnAuditLogEventType.AUD_FD_DISCARD, iun, msg);
     }
 
+    public void addsFailDiscard(String iun, String msg) {
+        addsFailLog(PnAuditLogEventType.AUD_FD_DISCARD, iun, msg);
+    }
+
 
 }

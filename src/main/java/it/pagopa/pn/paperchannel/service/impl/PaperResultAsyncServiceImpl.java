@@ -118,7 +118,7 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
     }
 
     @Override
-    public Mono<PnDeliveryRequest> resultAsyncBackground(SingleStatusUpdateDto singleStatusUpdateDto, Integer attempt) {
+    public Mono<Void> resultAsyncBackground(SingleStatusUpdateDto singleStatusUpdateDto, Integer attempt) {
         if (singleStatusUpdateDto == null || singleStatusUpdateDto.getAnalogMail() == null || StringUtils.isBlank(singleStatusUpdateDto.getAnalogMail().getRequestId())) {
             log.error("the message sent from external channel, includes errors. It cannot be processing");
             return Mono.error(new PnGenericException(DATA_NULL_OR_INVALID, DATA_NULL_OR_INVALID.getMessage()));
@@ -130,7 +130,7 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
         return requestDeliveryDAO.getByRequestId(requestId)
                 .doOnNext(entity -> logEntity(entity, singleStatusUpdateDto))
                 .flatMap(entity -> updateEntityResult(singleStatusUpdateDto, entity))
-                .doOnNext(entity -> handler.handleMessage(entity, singleStatusUpdateDto.getAnalogMail()))
+                .flatMap(entity -> handler.handleMessage(entity, singleStatusUpdateDto.getAnalogMail()))
                 .doOnError(ex ->  log.error("Error in retrieve EC from queue", ex));
 
     }

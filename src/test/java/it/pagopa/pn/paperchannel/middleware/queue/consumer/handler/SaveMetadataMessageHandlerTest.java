@@ -47,7 +47,7 @@ class SaveMetadataMessageHandlerTest {
 
         when(mockDao.createOrUpdate(pnEventMeta)).thenReturn(Mono.just(pnEventMeta));
 
-        assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest));
+        assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
 
         //mi aspetto che salvi l'evento
         verify(mockDao, times(1)).createOrUpdate(pnEventMeta);
