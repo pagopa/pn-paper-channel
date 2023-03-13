@@ -61,6 +61,8 @@ components:
     SendResponse:
       required:
       - amount
+      - envelopeWeight
+      - numberOfPages
       type: object
       properties:
         amount:
@@ -68,6 +70,23 @@ components:
           format: int32
           description: ammontare in eurocent del costo per l'invio della notifica
             in forma cartacea
+        numberOfPages:
+          type: integer
+          format: int32
+          description: numero delle pagina che compongono la spedizione cartacea
+        envelopeWeight:
+          type: integer
+          format: int32
+          description: peso in grammi della busta
+        zip:
+          type: string
+          description: Cap del destinatario in caso di invio nazionale; in caso di invio estero diventa facoltativo.
+        foreignState:
+          type: string
+          description:  "In caso di destinatario estero, diventa obbligatoria l’indicazione\
+          \ della nazione di destinazione,  in standard UPU o altro standard condiviso."
+
+
 
     StatusCodeEnum:
       type: string
