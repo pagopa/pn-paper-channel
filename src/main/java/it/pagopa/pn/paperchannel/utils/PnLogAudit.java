@@ -32,6 +32,10 @@ public class PnLogAudit {
         pnAuditLogBuilder.before(type, successMsg).iun(iun).build().generateFailure(successMsg).log();
     }
 
+    public void addsWarningLog(PnAuditLogEventType type, String iun, String successMsg) {
+        pnAuditLogBuilder.before(type, successMsg).iun(iun).build().generateWarning(successMsg).log();
+    }
+
     public void addsBeforeLogWithoutIun(PnAuditLogEventType type, String msg) {
         pnAuditLogBuilder.before(type, msg)
                 .build().log();
@@ -98,14 +102,12 @@ public class PnLogAudit {
         addsBeforeLogWithoutIun(PnAuditLogEventType.AUD_DT_UPDATE, msg);
     }
 
-    public Void addsSuccessUpdate(String msg) {
+    public void addsSuccessUpdate(String msg) {
         addsSuccessLogWithoutIun(PnAuditLogEventType.AUD_DT_UPDATE, msg);
-        return null;
     }
 
-    public Void addsFailUpdate(String msg) {
+    public void addsFailUpdate(String msg) {
         addsFailLogWithoutIun(PnAuditLogEventType.AUD_DT_UPDATE, msg);
-        return null;
     }
 
 
@@ -121,14 +123,16 @@ public class PnLogAudit {
         addsFailLogWithoutIun(PnAuditLogEventType.AUD_DT_DELETE, msg);
     }
 
-
-
     public void addsBeforeSend(String iun, String msg) {
         addsBeforeLog(PnAuditLogEventType.AUD_FD_SEND, iun, msg);
     }
 
     public void addsSuccessSend(String iun, String msg) {
         addsSuccessLog(PnAuditLogEventType.AUD_FD_SEND, iun, msg);
+    }
+
+    public void addsWarningSend(String iun, String msg) {
+        addsWarningLog(PnAuditLogEventType.AUD_FD_SEND, iun, msg);
     }
 
     public void addsFailSend(String iun, String msg) {
@@ -142,6 +146,5 @@ public class PnLogAudit {
     public void addsSuccessDiscard(String iun, String msg) {
         addsSuccessLog(PnAuditLogEventType.AUD_FD_DISCARD, iun, msg);
     }
-
 
 }
