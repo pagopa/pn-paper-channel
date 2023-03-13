@@ -1,6 +1,7 @@
 package it.pagopa.pn.paperchannel.middleware.db.dao;
 
 import it.pagopa.pn.paperchannel.config.BaseTest;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnDiscoveredAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,7 +43,9 @@ class EventMetaDAOTestIT extends BaseTest {
         assertEquals(eventMeta1, eventMetaFromDb);
 
         // update
-        final String otherDiscoveredAddress = "other discovered address";
+        final PnDiscoveredAddress otherDiscoveredAddress = new PnDiscoveredAddress();
+        otherDiscoveredAddress.setAddress("other discovered address");
+
         eventMeta1.setDiscoveredAddress(otherDiscoveredAddress);
         eventMetaDAO.createOrUpdate(eventMeta1).block();
         eventMetaFromDb = eventMetaDAO.getDeliveryEventMeta(eventMeta1.getMetaRequestId(), eventMeta1.getMetaStatusCode()).block();
@@ -96,13 +99,18 @@ class EventMetaDAOTestIT extends BaseTest {
         final Instant now1 = Instant.now();
         final Instant now2 = Instant.now().plusSeconds(10);
 
+        final PnDiscoveredAddress address1 = new PnDiscoveredAddress();
+        address1.setAddress("discoveredAddress1");
+        final PnDiscoveredAddress address2 = new PnDiscoveredAddress();
+        address2.setAddress("discoveredAddress2");
+
         final String sameMetaRequestId = "META##" + requestId;
 
         eventMeta1.setMetaRequestId(sameMetaRequestId);
         eventMeta1.setMetaStatusCode("META##" + statusCode1);
         eventMeta1.setRequestId(requestId);
         eventMeta1.setStatusCode(statusCode1);
-        eventMeta1.setDiscoveredAddress("discoveredAddress1");
+        eventMeta1.setDiscoveredAddress(address1);
         eventMeta1.setDeliveryFailureCause("failureCause1");
         eventMeta1.setStatusDateTime(now1);
         eventMeta1.setTtl(now1.plus(ttlOffsetDays, ChronoUnit.DAYS).toEpochMilli());
@@ -111,7 +119,7 @@ class EventMetaDAOTestIT extends BaseTest {
         eventMeta2.setMetaStatusCode("META##" + statusCode2);
         eventMeta2.setRequestId(requestId);
         eventMeta2.setStatusCode(statusCode1);
-        eventMeta2.setDiscoveredAddress("discoveredAddress2");
+        eventMeta2.setDiscoveredAddress(address2);
         eventMeta2.setDeliveryFailureCause("failureCause2");
         eventMeta2.setStatusDateTime(now2);
         eventMeta2.setTtl(now2.plus(ttlOffsetDays, ChronoUnit.DAYS).toEpochMilli());

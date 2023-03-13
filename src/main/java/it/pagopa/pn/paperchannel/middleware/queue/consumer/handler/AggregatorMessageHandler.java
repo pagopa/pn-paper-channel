@@ -1,6 +1,12 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
+import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
+import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnDiscoveredAddress;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
+import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.DiscoveredAddressDto;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import lombok.extern.slf4j.Slf4j;
@@ -16,29 +22,51 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class AggregatorMessageHandler extends SendToDeliveryPushHandler {
 
+    private static final String METADATA_PREFIX = "META";
+    private static final String DEMAT_PREFIX = "DEMAT";
 
-    public AggregatorMessageHandler(SqsSender sqsSender) {
+    private static final String DELIMITER = "##";
+
+    private final EventMetaDAO eventMetaDAO;
+    private final EventDematDAO eventDematDAO;
+
+    public AggregatorMessageHandler(SqsSender sqsSender, EventMetaDAO eventMetaDAO, EventDematDAO eventDematDAO) {
         super(sqsSender);
-    }
 
+        this.eventMetaDAO = eventMetaDAO;
+        this.eventDematDAO = eventDematDAO;
+    }
 
     @Override
     public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
-        //TODO da completare
-        //recuperare evento pre-esito da db
-        //...
-        //arricchire l'evento ricevuto con quello recuperato (deliveryFailureCause/discoveredAddress)
-        enrichEvent(paperRequest);
-        //invio dato su delivery-push
+
+        // recuperare evento pre-esito da db e arricchire l'evento ricevuto con quello recuperato (deliveryFailureCause/discoveredAddress)
+        eventMetaDAO.getDeliveryEventMeta(METADATA_PREFIX + DELIMITER + paperRequest.getRequestId(),
+                        METADATA_PREFIX + DELIMITER + paperRequest.getStatusCode())
+                        .doOnNext(relatedMeta -> enrichEvent(paperRequest, relatedMeta))
+                        .block();
+        // invio dato su delivery-push
         super.handleMessage(entity, paperRequest);
-        //cancellare righe per entità META e DEMAT
-        //...
-        return Mono.empty();
+
+        // cancellare righe per entità META e DEMAT
+       eventMetaDAO.deleteEventMeta(METADATA_PREFIX + DELIMITER + paperRequest.getRequestId(), METADATA_PREFIX + DELIMITER + paperRequest.getStatusCode())
+               .doOnNext(deletedEntity -> log.info("Deleted EventMeta: {}", deletedEntity))
+               .block();
+       return eventDematDAO.findAllByRequestId(DEMAT_PREFIX + DELIMITER + paperRequest.getRequestId())
+               .doOnNext(foundItem ->
+                   eventDematDAO.deleteEventDemat(foundItem.getDematRequestId(), foundItem.getDocumentTypeStatusCode())
+                           .doOnNext(deletedEntity -> log.info("Deleted EventDemat: {}", deletedEntity))
+                           .block()
+               )
+               .then();
     }
 
-    private void enrichEvent(PaperProgressStatusEventDto paperRequest) {
+    private void enrichEvent(PaperProgressStatusEventDto paperRequest, PnEventMeta pnEventMeta) {
+        paperRequest.setDeliveryFailureCause(pnEventMeta.getDeliveryFailureCause());
 
+        DiscoveredAddressDto discoveredAddressDto =
+                new BaseMapperImpl<>(PnDiscoveredAddress.class, DiscoveredAddressDto.class)
+                    .toDTO(pnEventMeta.getDiscoveredAddress());
+        paperRequest.setDiscoveredAddress(discoveredAddressDto);
     }
-
-
 }

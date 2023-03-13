@@ -43,7 +43,7 @@ public class HandlersFactory {
         var saveDematMessageHandler = new SaveDematMessageHandler(sqsSender, eventDematDAO, pnPaperChannelConfig.getTtlExecutionDaysDemat());
         var retryableErrorExtChannelsMessageHandler = new RetryableErrorMessageHandler(sqsSender, externalChannelClient, addressDAO, paperRequestErrorDAO, pnPaperChannelConfig);
         var notRetryableErrorMessageHandler = new NotRetryableErrorMessageHandler(paperRequestErrorDAO);
-        var aggregatorMessageHandler = new AggregatorMessageHandler(sqsSender);
+        var aggregatorMessageHandler = new AggregatorMessageHandler(sqsSender, eventMetaDAO, eventDematDAO);
 
         map = new ConcurrentHashMap<>();
 
