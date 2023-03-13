@@ -64,6 +64,7 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
         this.externalChannelClient = externalChannelClient;
     }
 
+    //TODO cancellare questo metodo inutilizzato
 //    @Override
     public Mono<PnDeliveryRequest> resultAsyncBackgroundOld(SingleStatusUpdateDto singleStatusUpdateDto, Integer attempt) {
         if (singleStatusUpdateDto == null || singleStatusUpdateDto.getAnalogMail() == null || StringUtils.isBlank(singleStatusUpdateDto.getAnalogMail().getRequestId())){

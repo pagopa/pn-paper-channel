@@ -109,6 +109,7 @@ public class RetryableErrorMessageHandler extends SendToDeliveryPushHandler {
 
     }
 
+    //TODO cancellare questo metodo inutilizzato
     private void sendEngageRequestOld(PnDeliveryRequest pnDeliveryRequest, String requestId) {
         PnAuditLogBuilder auditLogBuilder = new PnAuditLogBuilder();
         PnLogAudit pnLogAudit = new PnLogAudit(auditLogBuilder);
