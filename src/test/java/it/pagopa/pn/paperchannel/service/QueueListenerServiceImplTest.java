@@ -159,7 +159,7 @@ class QueueListenerServiceImplTest extends BaseTest {
 
     @Test
     void externalChannelListenerOkTest(){
-        Mockito.when(this.paperResultAsyncService.resultAsyncBackground(Mockito.any(), Mockito.any())).thenReturn(Mono.just(new PnDeliveryRequest()));
+        Mockito.when(this.paperResultAsyncService.resultAsyncBackground(Mockito.any(), Mockito.any())).thenReturn(Mono.empty());
         this.queueListenerService.externalChannelListener(new SingleStatusUpdateDto(),10);
     }
 
