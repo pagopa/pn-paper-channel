@@ -170,25 +170,18 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
         when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
 
         // inserimento 1 meta
-        PnEventMeta eventMeta = new PnEventMeta();
-        PnDiscoveredAddress address1 = new PnDiscoveredAddress();
-        address1.setAddress("discoveredAddress1");
-        int ttlOffsetDays = 365;
-        eventMeta.setMetaRequestId("META##" + analogMail.getRequestId());
-        eventMeta.setMetaStatusCode("META##" + analogMail.getStatusCode());
-        eventMeta.setRequestId(analogMail.getRequestId());
-        eventMeta.setStatusCode(analogMail.getStatusCode());
-        eventMeta.setDiscoveredAddress(address1);
-        eventMeta.setDeliveryFailureCause("failureCause1");
-        eventMeta.setStatusDateTime(analogMail.getStatusDateTime().toInstant());
-        eventMeta.setTtl(analogMail.getStatusDateTime().toInstant().plus(ttlOffsetDays, ChronoUnit.DAYS).toEpochMilli());
+        PnEventMeta eventMeta = createPnEventMeta(analogMail);
         eventMetaDAO.createOrUpdate(eventMeta).block();
 
         PnEventMeta eventMetaFromDb = eventMetaDAO.getDeliveryEventMeta(eventMeta.getMetaRequestId(), eventMeta.getMetaStatusCode()).block();
         assertNotNull(eventMetaFromDb);
 
         // inserimento 1 demat
-        //eventDematDAO.createOrUpdate();
+        PnEventDemat eventDemat = createPnEventDemat(analogMail);
+        eventDematDAO.createOrUpdate(eventDemat).block();
+
+        PnEventDemat eventDematFromDB = eventDematDAO.getDeliveryEventDemat(eventDemat.getDematRequestId(), eventDemat.getDocumentTypeStatusCode()).block();
+        assertNotNull(eventDematFromDB);
 
         // verifico che il flusso è stato completato con successo
         assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());
@@ -199,6 +192,10 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
         // verifica cancellazione evento meta
         eventMetaFromDb = eventMetaDAO.getDeliveryEventMeta(eventMeta.getMetaRequestId(), eventMeta.getMetaStatusCode()).block();
         assertNull(eventMetaFromDb);
+
+        // verifica cancellazione evento demat
+        eventDematFromDB = eventDematDAO.getDeliveryEventDemat(eventDemat.getDematRequestId(), eventDemat.getDocumentTypeStatusCode()).block();
+        assertNull(eventDematFromDB);
     }
 
 
@@ -221,6 +218,40 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
         pnDeliveryRequest.setStatusDetail("In attesa di indirizzo da National Registry");
 
         return pnDeliveryRequest;
+    }
 
+    private PnEventMeta createPnEventMeta(PaperProgressStatusEventDto analogMail) {
+        int ttlOffsetDays = 365;
+
+        PnEventMeta eventMeta = new PnEventMeta();
+        PnDiscoveredAddress address1 = new PnDiscoveredAddress();
+        address1.setAddress("discoveredAddress1");
+        eventMeta.setMetaRequestId("META##" + analogMail.getRequestId());
+        eventMeta.setMetaStatusCode("META##" + analogMail.getStatusCode());
+        eventMeta.setRequestId(analogMail.getRequestId());
+        eventMeta.setStatusCode(analogMail.getStatusCode());
+        eventMeta.setDiscoveredAddress(address1);
+        eventMeta.setDeliveryFailureCause("failureCause1");
+        eventMeta.setStatusDateTime(analogMail.getStatusDateTime().toInstant());
+        eventMeta.setTtl(analogMail.getStatusDateTime().toInstant().plus(ttlOffsetDays, ChronoUnit.DAYS).toEpochMilli());
+
+        return eventMeta;
+    }
+
+    private PnEventDemat createPnEventDemat(PaperProgressStatusEventDto analogMail) {
+        int ttlOffsetDays = 365;
+
+        PnEventDemat eventDemat = new PnEventDemat();
+        eventDemat.setDematRequestId("DEMAT##" + analogMail.getRequestId());
+        eventDemat.setDocumentTypeStatusCode(analogMail.getProductType() + "##" + analogMail.getStatusCode());
+        eventDemat.setRequestId(analogMail.getRequestId());
+        eventDemat.setDocumentType(analogMail.getProductType());
+        eventDemat.setStatusCode(analogMail.getStatusCode());
+        eventDemat.setDocumentDate(analogMail.getStatusDateTime().toInstant().plusSeconds(-5));
+        eventDemat.setStatusDateTime(analogMail.getStatusDateTime().toInstant());
+        eventDemat.setUri("uri1");
+        eventDemat.setTtl(analogMail.getStatusDateTime().toInstant().plus(ttlOffsetDays, ChronoUnit.DAYS).toEpochMilli());
+
+        return eventDemat;
     }
 }
