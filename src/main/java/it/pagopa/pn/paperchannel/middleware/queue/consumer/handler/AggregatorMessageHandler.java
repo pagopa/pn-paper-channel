@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
+import it.pagopa.pn.paperchannel.exception.PnSendToDeliveryException;
 import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
@@ -39,34 +40,40 @@ public class AggregatorMessageHandler extends SendToDeliveryPushHandler {
 
     @Override
     public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
-        AtomicBoolean missingMeta = new AtomicBoolean(true);
 
         // recuperare evento pre-esito da db e arricchire l'evento ricevuto con quello recuperato (deliveryFailureCause/discoveredAddress)
-        eventMetaDAO.getDeliveryEventMeta(METADATA_PREFIX + DELIMITER + paperRequest.getRequestId(),
+        return eventMetaDAO.getDeliveryEventMeta(METADATA_PREFIX + DELIMITER + paperRequest.getRequestId(),
                         METADATA_PREFIX + DELIMITER + paperRequest.getStatusCode())
-                .doOnNext(ignoredRelatedMeta -> missingMeta.set(false))
+                .switchIfEmpty(Mono.defer(() -> {
+                            log.warn("Missing EventMeta for: {}", paperRequest);
+                            return Mono.just(new PnEventMeta());
+                }))
                 .doOnNext(relatedMeta -> enrichEvent(paperRequest, relatedMeta))
-                .flatMap(ignoredRelatedMeta ->
-                    eventMetaDAO.deleteEventMeta(METADATA_PREFIX + DELIMITER + paperRequest.getRequestId(),
-                                    METADATA_PREFIX + DELIMITER + paperRequest.getStatusCode())
-                            .doOnNext(deletedEntity -> log.info("Deleted EventMeta: {}", deletedEntity))
-                )
-                .block();
 
-        if (missingMeta.get()) {
-            // logghiamo il mancato ottenimento dell'eventMeta relativo
-            log.warn("Missing EventMeta for: {}", paperRequest);
-        }
+                // invio dato su delivery-push, che ci sia stato arricchimento o meno)
+                .then(super.handleMessage(entity, paperRequest))
+                .onErrorResume(throwable -> {
+                    log.warn("", throwable);
+                    return Mono.error(new PnSendToDeliveryException(throwable));
+                })
 
-        super.handleMessage(entity, paperRequest); // invio dato su delivery-push, che ci sia stato arricchimento o meno
-
-        // cancellare righe per entità META e DEMAT
-        return eventDematDAO.findAllByRequestId(DEMAT_PREFIX + DELIMITER + paperRequest.getRequestId())
-               .flatMap(foundItem ->
-                   eventDematDAO.deleteEventDemat(foundItem.getDematRequestId(), foundItem.getDocumentTypeStatusCode())
-                           .doOnNext(deletedEntity -> log.info("Deleted EventDemat: {}", deletedEntity))
-               )
-               .then();
+                .then(eventMetaDAO.deleteEventMeta(METADATA_PREFIX + DELIMITER + paperRequest.getRequestId(),
+                                METADATA_PREFIX + DELIMITER + paperRequest.getStatusCode())
+                        .doOnNext(deletedEntity -> log.info("Deleted EventMeta: {}", deletedEntity))
+                ).then(eventDematDAO.findAllByRequestId(DEMAT_PREFIX + DELIMITER + paperRequest.getRequestId())
+                        .flatMap(foundItem ->
+                                eventDematDAO.deleteEventDemat(foundItem.getDematRequestId(), foundItem.getDocumentTypeStatusCode())
+                                        .doOnNext(deletedEntity -> log.info("Deleted EventDemat: {}", deletedEntity))
+                        ).collectList())
+                .onErrorResume(throwable ->  {
+                    if (throwable instanceof PnSendToDeliveryException)
+                        return Mono.error(throwable);
+                    else {
+                        log.warn("Cannot delete MAT or DEMAT", throwable);
+                        return Mono.empty();
+                    }
+                })
+                .then();
     }
 
     private void enrichEvent(PaperProgressStatusEventDto paperRequest, PnEventMeta pnEventMeta) {
