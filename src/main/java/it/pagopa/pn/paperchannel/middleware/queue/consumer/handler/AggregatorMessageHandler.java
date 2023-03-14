@@ -12,6 +12,8 @@ import it.pagopa.pn.paperchannel.service.SqsSender;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 // Alla ricezione di questi tipi di eventi, che sono finali per lo specifico prodotto, paper-channel dovrà:
 // recuperare l’evento di pre-esito correlato (mediante accesso puntuale su hashkey META##RequestID e sortKey META##statusCode)
 // arricchire l’evento finale ricevuto con le eventuali informazioni aggiuntive reperite in tabella (in particolare,
@@ -39,16 +41,24 @@ public class AggregatorMessageHandler extends SendToDeliveryPushHandler {
 
     @Override
     public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
+        AtomicBoolean missingMeta = new AtomicBoolean(true);
+
         // recuperare evento pre-esito da db e arricchire l'evento ricevuto con quello recuperato (deliveryFailureCause/discoveredAddress)
         eventMetaDAO.getDeliveryEventMeta(METADATA_PREFIX + DELIMITER + paperRequest.getRequestId(),
                         METADATA_PREFIX + DELIMITER + paperRequest.getStatusCode())
-                        .doOnNext(relatedMeta -> enrichEvent(paperRequest, relatedMeta))
-                        .flatMap(ignoredRelatedMeta ->
-                            eventMetaDAO.deleteEventMeta(METADATA_PREFIX + DELIMITER + paperRequest.getRequestId(),
-                                            METADATA_PREFIX + DELIMITER + paperRequest.getStatusCode())
-                                    .doOnNext(deletedEntity -> log.info("Deleted EventMeta: {}", deletedEntity))
-                        )
-                        .block();
+                .doOnNext(ignoredRelatedMeta -> missingMeta.set(false))
+                .doOnNext(relatedMeta -> enrichEvent(paperRequest, relatedMeta))
+                .flatMap(ignoredRelatedMeta ->
+                    eventMetaDAO.deleteEventMeta(METADATA_PREFIX + DELIMITER + paperRequest.getRequestId(),
+                                    METADATA_PREFIX + DELIMITER + paperRequest.getStatusCode())
+                            .doOnNext(deletedEntity -> log.info("Deleted EventMeta: {}", deletedEntity))
+                )
+                .block();
+
+        if (missingMeta.get()) {
+            // logghiamo il mancato ottenimento dell'eventMeta relativo
+            log.warn("Missing EventMeta for: {}", paperRequest);
+        }
 
         super.handleMessage(entity, paperRequest); // invio dato su delivery-push, che ci sia stato arricchimento o meno
 
