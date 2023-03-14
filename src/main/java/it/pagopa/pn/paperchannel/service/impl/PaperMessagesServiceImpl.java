@@ -93,10 +93,6 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
 
                     return this.requestDeliveryDAO.getByRequestId(prepareRequest.getRequestId())
                             .flatMap(newEntity -> {
-                                if (newEntity == null) {
-                                    log.info("New attempt");
-                                    return Mono.empty();
-                                }
                                 log.info("Attempt already exist");
                                 PrepareRequestValidator.compareRequestEntity(prepareRequest, newEntity, false);
                                 return addressDAO.findByRequestId(newEntity.getRequestId())

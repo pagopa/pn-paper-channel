@@ -17,8 +17,6 @@ import reactor.core.publisher.Mono;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
-
 class ExternalChannelClientTest  extends BaseTest.WithMockServer {
 
     @Autowired
