@@ -12,8 +12,6 @@ import it.pagopa.pn.paperchannel.service.SqsSender;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
 // Alla ricezione di questi tipi di eventi, che sono finali per lo specifico prodotto, paper-channel dovrà:
 // recuperare l’evento di pre-esito correlato (mediante accesso puntuale su hashkey META##RequestID e sortKey META##statusCode)
 // arricchire l’evento finale ricevuto con le eventuali informazioni aggiuntive reperite in tabella (in particolare,
@@ -74,9 +72,12 @@ public class AggregatorMessageHandler extends SendToDeliveryPushHandler {
     private void enrichEvent(PaperProgressStatusEventDto paperRequest, PnEventMeta pnEventMeta) {
         paperRequest.setDeliveryFailureCause(pnEventMeta.getDeliveryFailureCause());
 
-        DiscoveredAddressDto discoveredAddressDto =
-                new BaseMapperImpl<>(PnDiscoveredAddress.class, DiscoveredAddressDto.class)
-                    .toDTO(pnEventMeta.getDiscoveredAddress());
-        paperRequest.setDiscoveredAddress(discoveredAddressDto);
+        if (pnEventMeta.getDiscoveredAddress() != null )
+        {
+            DiscoveredAddressDto discoveredAddressDto =
+                    new BaseMapperImpl<>(PnDiscoveredAddress.class, DiscoveredAddressDto.class)
+                            .toDTO(pnEventMeta.getDiscoveredAddress());
+            paperRequest.setDiscoveredAddress(discoveredAddressDto);
+        }
     }
 }
