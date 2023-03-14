@@ -39,18 +39,18 @@ public class AggregatorMessageHandler extends SendToDeliveryPushHandler {
 
     @Override
     public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
-
         // recuperare evento pre-esito da db e arricchire l'evento ricevuto con quello recuperato (deliveryFailureCause/discoveredAddress)
         eventMetaDAO.getDeliveryEventMeta(METADATA_PREFIX + DELIMITER + paperRequest.getRequestId(),
                         METADATA_PREFIX + DELIMITER + paperRequest.getStatusCode())
                         .doOnNext(relatedMeta -> enrichEvent(paperRequest, relatedMeta))
-                        .doOnNext(ignoredRelatedMeta -> super.handleMessage(entity, paperRequest)) // invio dato su delivery-push
                         .flatMap(ignoredRelatedMeta ->
                             eventMetaDAO.deleteEventMeta(METADATA_PREFIX + DELIMITER + paperRequest.getRequestId(),
                                             METADATA_PREFIX + DELIMITER + paperRequest.getStatusCode())
                                     .doOnNext(deletedEntity -> log.info("Deleted EventMeta: {}", deletedEntity))
                         )
                         .block();
+
+        super.handleMessage(entity, paperRequest); // invio dato su delivery-push, che ci sia stato arricchimento o meno
 
         // cancellare righe per entità META e DEMAT
         return eventDematDAO.findAllByRequestId(DEMAT_PREFIX + DELIMITER + paperRequest.getRequestId())
