@@ -270,13 +270,15 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
     private PnEventMeta createPnEventMeta(PaperProgressStatusEventDto analogMail) {
         int ttlOffsetDays = 365;
 
+        final String statusCodeToFind = "RECRS002A";
+
         PnEventMeta eventMeta = new PnEventMeta();
         PnDiscoveredAddress address1 = new PnDiscoveredAddress();
         address1.setAddress("discoveredAddress1");
         eventMeta.setMetaRequestId("META##" + analogMail.getRequestId());
-        eventMeta.setMetaStatusCode("META##" + analogMail.getStatusCode());
+        eventMeta.setMetaStatusCode("META##" + statusCodeToFind);
         eventMeta.setRequestId(analogMail.getRequestId());
-        eventMeta.setStatusCode(analogMail.getStatusCode());
+        eventMeta.setStatusCode(statusCodeToFind);
         eventMeta.setDiscoveredAddress(address1);
         eventMeta.setDeliveryFailureCause("failureCause1");
         eventMeta.setStatusDateTime(analogMail.getStatusDateTime().toInstant());
