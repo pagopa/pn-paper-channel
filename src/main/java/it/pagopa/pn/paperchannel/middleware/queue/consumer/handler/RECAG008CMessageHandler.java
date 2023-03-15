@@ -36,7 +36,8 @@ public class RECAG008CMessageHandler extends SendToDeliveryPushHandler {
                 .filter(this::correctPreviousEventMeta)
                 .doOnNext(pnEventMetas -> log.info("Found correct previous states for request {}", paperRequest.getRequestId()))
                 .doOnNext(pnEventMetas -> super.handleMessage(entity, paperRequest))
-                .flatMap(pnEventMetas -> eventMetaDAO.deleteEventMeta(buildMetaRequestId(paperRequest.getRequestId()), buildMetaStatusCode(paperRequest.getStatusCode())))
+                .doOnNext(pnEventMetas -> eventMetaDAO.deleteEventMeta(buildMetaRequestId(paperRequest.getRequestId()), META_RECAG012_STATUS_CODE))
+                .doOnNext(pnEventMetas -> eventMetaDAO.deleteEventMeta(buildMetaRequestId(paperRequest.getRequestId()), META_PNAG012_STATUS_CODE))
                 .then();
     }
 
