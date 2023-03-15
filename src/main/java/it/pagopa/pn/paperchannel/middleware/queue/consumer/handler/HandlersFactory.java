@@ -43,7 +43,8 @@ public class HandlersFactory {
         var saveDematMessageHandler = new SaveDematMessageHandler(sqsSender, eventDematDAO, pnPaperChannelConfig.getTtlExecutionDaysDemat());
         var retryableErrorExtChannelsMessageHandler = new RetryableErrorMessageHandler(sqsSender, externalChannelClient, addressDAO, paperRequestErrorDAO, pnPaperChannelConfig);
         var notRetryableErrorMessageHandler = new NotRetryableErrorMessageHandler(paperRequestErrorDAO);
-        var aggregatorMessageHandler = new AggregatorMessageHandler(sqsSender);
+        var aggregatorMessageHandler = new AggregatorMessageHandler(sqsSender, eventMetaDAO, eventDematDAO);
+        var directlySendMessageHandler = new DirectlySendMessageHandler(sqsSender);
 
         map = new ConcurrentHashMap<>();
 
@@ -52,6 +53,7 @@ public class HandlersFactory {
         addSaveMetadataStatusCodes(map, saveMetadataMessageHandler);
         addSaveDematStatusCodes(map, saveDematMessageHandler);
         addAggregatorStatusCodes(map, aggregatorMessageHandler);
+        addDirectlySendStatusCodes(map, directlySendMessageHandler);
     }
 
     private void addRetryableErrorStatusCodes(ConcurrentHashMap<String, MessageHandler> map, RetryableErrorMessageHandler handler) {
@@ -146,12 +148,15 @@ public class HandlersFactory {
 
     }
 
-    private void addAggregatorStatusCodes(ConcurrentHashMap<String, MessageHandler> map, AggregatorMessageHandler handler) {
+    private void addDirectlySendStatusCodes(ConcurrentHashMap<String, MessageHandler> map, DirectlySendMessageHandler handler) {
+        // casi particolari di addAggregatorStatusCodes, in cui non c'è un meta precedente e vanno direttamente inviati
+        map.put("RECRS001C", handler); // iniziale e finale, no meta e demat prima
+        map.put("RECRS003C", handler); // iniziale e finale, no meta e demat prima
+    }
 
-        map.put("RECRS001C", handler);
+    private void addAggregatorStatusCodes(ConcurrentHashMap<String, MessageHandler> map, AggregatorMessageHandler handler) {
         map.put("RECRS002C", handler);
         map.put("RECRS002F", handler);
-        map.put("RECRS003C", handler);
         map.put("RECRS004C", handler);
         map.put("RECRS005C", handler);
         map.put("RECRN001C", handler);
