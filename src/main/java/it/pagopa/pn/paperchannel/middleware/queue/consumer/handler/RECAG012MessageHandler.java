@@ -11,9 +11,9 @@ import java.util.Optional;
 
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
 
-// effettuare PUT di una nuova riga in accordo con le specifiche
 // Il RECAG012 è considerato come entità logica un metadata
-// Se l’evento è già presente per lo specifico RequestID, riportare il problema
+// Viene cercato sulla tabella META se esiste già l'evento, se non esiste in tabella, viene salvato a DB,
+// altrimenti l'evento arrivato viene ignorato
 @Slf4j
 public class RECAG012MessageHandler extends SaveMetadataMessageHandler {
 

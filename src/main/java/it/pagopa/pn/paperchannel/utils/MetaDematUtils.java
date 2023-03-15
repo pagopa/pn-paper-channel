@@ -8,6 +8,12 @@ public class MetaDematUtils {
 
     public static final String DELIMITER = "##";
 
+    public static final String RECAG011B_STATUS_CODE = "RECAG011B";
+
+    public static final String PNAG012_STATUS_CODE = "PNAG012";
+
+    public static final String RECAG012_STATUS_CODE = "RECAG012";
+
     private MetaDematUtils() {}
 
     public static String buildMetaRequestId(String requestId) {
