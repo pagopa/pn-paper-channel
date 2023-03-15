@@ -41,9 +41,11 @@ public class AggregatorMessageHandler extends SendToDeliveryPushHandler {
     @Override
     public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
 
+        final String preClosingMetaStatus = preCloseMetaStatusCode(METADATA_PREFIX + DELIMITER + paperRequest.getStatusCode());
+
         // recuperare evento pre-esito da db e arricchire l'evento ricevuto con quello recuperato (deliveryFailureCause/discoveredAddress)
         return eventMetaDAO.getDeliveryEventMeta(METADATA_PREFIX + DELIMITER + paperRequest.getRequestId(),
-                        METADATA_PREFIX + DELIMITER + paperRequest.getStatusCode())
+                        preClosingMetaStatus)
                 .switchIfEmpty(Mono.defer(() -> {
                             log.warn("Missing EventMeta for: {}", paperRequest);
                             return Mono.just(new PnEventMeta());
@@ -58,7 +60,7 @@ public class AggregatorMessageHandler extends SendToDeliveryPushHandler {
                 })
 
                 .then(eventMetaDAO.deleteEventMeta(METADATA_PREFIX + DELIMITER + paperRequest.getRequestId(),
-                                METADATA_PREFIX + DELIMITER + paperRequest.getStatusCode())
+                                preClosingMetaStatus)
                         .doOnNext(deletedEntity -> log.info("Deleted EventMeta: {}", deletedEntity))
                 )
                 .onErrorResume(throwable ->  {
@@ -98,5 +100,18 @@ public class AggregatorMessageHandler extends SendToDeliveryPushHandler {
         paperRequest.setDeliveryFailureCause(pnEventMeta.getDeliveryFailureCause());
 
         return paperRequest;
+    }
+
+    private String preCloseMetaStatusCode(String closingEventStatus) {
+        String lastLetter = closingEventStatus.substring(closingEventStatus.length() - 1);
+
+        if (lastLetter.equals("C")) {
+            closingEventStatus = closingEventStatus.substring(0, closingEventStatus.length() - 1) + "A";
+        } else if (lastLetter.equals("F")) {
+            closingEventStatus = closingEventStatus.substring(0, closingEventStatus.length() - 1) + "D";
+        }
+        // lascia l'originale altrimenti
+
+        return closingEventStatus;
     }
 }

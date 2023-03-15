@@ -52,7 +52,7 @@ class AggregatorMessageHandlerTest {
         OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
         PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
                 .requestId("PREPARE_ANALOG_DOMICILE.IUN_MUMR-VQMP-LDNZ-202303-H-1.RECINDEX_0.SENTATTEMPTMADE_0")
-                .statusCode("RECRS002A")
+                .statusCode("RECRS002C")
                 .statusDateTime(instant)
                 .clientRequestTimeStamp(instant)
                 .deliveryFailureCause("M02");
@@ -98,7 +98,7 @@ class AggregatorMessageHandlerTest {
         OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
         PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
                 .requestId("PREPARE_ANALOG_DOMICILE.IUN_MUMR-VQMP-LDNZ-202303-H-1.RECINDEX_0.SENTATTEMPTMADE_0")
-                .statusCode("RECRS002A")
+                .statusCode("RECRS002C")
                 .statusDateTime(instant)
                 .clientRequestTimeStamp(instant)
                 .deliveryFailureCause("M02");
@@ -143,7 +143,7 @@ class AggregatorMessageHandlerTest {
         OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
         PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
                 .requestId("PREPARE_ANALOG_DOMICILE.IUN_MUMR-VQMP-LDNZ-202303-H-1.RECINDEX_0.SENTATTEMPTMADE_0")
-                .statusCode("RECRS002A")
+                .statusCode("RECRS002C")
                 .statusDateTime(instant)
                 .clientRequestTimeStamp(instant)
                 .deliveryFailureCause("M02");
@@ -185,7 +185,7 @@ class AggregatorMessageHandlerTest {
         OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
         PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
                 .requestId("PREPARE_ANALOG_DOMICILE.IUN_MUMR-VQMP-LDNZ-202303-H-1.RECINDEX_0.SENTATTEMPTMADE_0")
-                .statusCode("RECRS002A")
+                .statusCode("RECRS002C")
                 .statusDateTime(instant)
                 .clientRequestTimeStamp(instant)
                 .deliveryFailureCause("M02");
@@ -229,7 +229,7 @@ class AggregatorMessageHandlerTest {
         OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
         PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
                 .requestId("PREPARE_ANALOG_DOMICILE.IUN_MUMR-VQMP-LDNZ-202303-H-1.RECINDEX_0.SENTATTEMPTMADE_0")
-                .statusCode("RECRS002A")
+                .statusCode("RECRS002C")
                 .statusDateTime(instant)
                 .clientRequestTimeStamp(instant)
                 .deliveryFailureCause("M02");
