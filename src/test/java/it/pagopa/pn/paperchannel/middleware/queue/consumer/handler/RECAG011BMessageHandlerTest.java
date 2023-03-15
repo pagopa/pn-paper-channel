@@ -192,9 +192,9 @@ class RECAG011BMessageHandlerTest {
         PnEventMeta pnEventMeta = handler.createMETAForPNAG012Event(paperRequest, eventMetaRECAG012Expected);
 
         PnEventDemat pnEventDemat23L = new PnEventDemat();
-        pnEventDemat23L.setDocumentType("23L##RECAG011B");
+        pnEventDemat23L.setDocumentTypeStatusCode("23L##RECAG011B");
         PnEventDemat pnEventDematARCAD = new PnEventDemat();
-        pnEventDematARCAD.setDocumentType("ARCAD##RECAG011B");
+        pnEventDematARCAD.setDocumentTypeStatusCode("ARCAD##RECAG011B");
 
         when(eventDematDAO.findAllByKeys("DEMAT##requestId", DEMAT_SORT_KEYS_FILTER)).thenReturn(
                 Flux.fromIterable(List.of(pnEventDemat23L, pnEventDematARCAD)));

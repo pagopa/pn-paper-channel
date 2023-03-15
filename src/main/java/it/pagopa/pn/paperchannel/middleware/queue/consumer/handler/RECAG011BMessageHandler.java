@@ -42,6 +42,8 @@ public class RECAG011BMessageHandler extends SaveDematMessageHandler {
 
     @Override
     public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
+        log.debug("[{}] RECAG011B handler start", paperRequest.getRequestId());
+
         String metadataRequestIdFilter = META_PREFIX + META_DELIMITER + paperRequest.getRequestId();
         String dematRequestId = DEMAT_PREFIX + DEMAT_DELIMITER + paperRequest.getRequestId();
 
@@ -50,12 +52,15 @@ public class RECAG011BMessageHandler extends SaveDematMessageHandler {
         return super.handleMessage(entity, paperRequest)
                 .then(super.eventDematDAO.findAllByKeys(dematRequestId, DEMAT_SORT_KEYS_FILTER).collectList())
                 .filter(this::canCreatePNAG012Event)
+                .doOnNext(pnEventDemats -> log.info("[{}] CanCreatePNAG012Event Filter success", paperRequest.getRequestId()))
                 .flatMap(pnEventDemats ->  eventMetaDAO.getDeliveryEventMeta(metadataRequestIdFilter, META_SORT_KEY_FILTER ))
+                .doOnNext(pnEventMeta -> log.info("[{}] PnEventMeta found: {}", paperRequest.getRequestId(), pnEventMeta))
                 .map(pnEventMetaRECAG012 -> createMETAForPNAG012Event(paperRequest, pnEventMetaRECAG012))
                 .doOnNext(pnEventMeta -> pnLogAudit.addsBeforeReceive(entity.getIun(), String.format("prepare requestId = %s Response from external-channel", entity.getRequestId())))
                 .flatMap(eventMetaDAO::createOrUpdate)
                 .doOnNext(pnEventMeta -> logSuccessAuditLog(paperRequest, entity, pnLogAudit))
                 .doOnNext(pnEventMeta -> editPnDeliveryRequestForPNAG012(entity))
+                .doOnNext(pnEventMeta -> log.info("[{}] Sending PNAG012 to delivery push", paperRequest.getRequestId()))
                 .flatMap(pnEventMeta -> super.sendToDeliveryPush(entity, paperRequest));
     }
 
