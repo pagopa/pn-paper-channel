@@ -1,8 +1,14 @@
 package it.pagopa.pn.paperchannel.utils;
 
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
+import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
+import java.time.OffsetDateTime;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 
 class MetaDematUtilsTest {
 
@@ -34,6 +40,22 @@ class MetaDematUtilsTest {
         String statusCode = "statusCode";
         String metaStatusCode = MetaDematUtils.buildMetaStatusCode(statusCode);
         assertThat(metaStatusCode).isEqualTo("META##" + statusCode);
+    }
+
+    @Test
+    void createMETAForPNAG012EventTest() {
+        PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
+                .requestId("requestId")
+                .statusDateTime(OffsetDateTime.now());
+
+        PnEventMeta pnEventMeta = new PnEventMeta();
+        pnEventMeta.setStatusDateTime(Instant.now());
+
+        PnEventMeta metaPNAG012 = MetaDematUtils.createMETAForPNAG012Event(paperRequest,pnEventMeta, 365L);
+        assertThat(metaPNAG012)
+                .isNotNull()
+                .hasFieldOrPropertyWithValue("statusCode", MetaDematUtils.PNAG012_STATUS_CODE)
+                .hasFieldOrPropertyWithValue("statusDateTime", pnEventMeta.getStatusDateTime());
     }
 
 }

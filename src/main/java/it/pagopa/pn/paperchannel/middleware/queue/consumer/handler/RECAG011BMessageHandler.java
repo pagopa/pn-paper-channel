@@ -5,10 +5,8 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventDemat;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.SingleStatusUpdateDto;
-import it.pagopa.pn.paperchannel.rest.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.PnLogAudit;
 import lombok.extern.slf4j.Slf4j;
@@ -73,7 +71,7 @@ public class RECAG011BMessageHandler extends SaveDematMessageHandler {
                 .doOnNext(pnEventDemats -> log.info("[{}] CanCreatePNAG012Event Filter success", paperRequest.getRequestId()))
                 .flatMap(pnEventDemats ->  eventMetaDAO.getDeliveryEventMeta(metadataRequestIdFilter, META_SORT_KEY_FILTER ))
                 .doOnNext(pnEventMeta -> log.info("[{}] PnEventMeta found: {}", paperRequest.getRequestId(), pnEventMeta))
-                .map(pnEventMetaRECAG012 -> createMETAForPNAG012Event(paperRequest, pnEventMetaRECAG012))
+                .map(pnEventMetaRECAG012 -> createMETAForPNAG012Event(paperRequest, pnEventMetaRECAG012, ttlDaysMeta))
                 .doOnNext(pnEventMeta -> pnLogAudit.addsBeforeReceive(entity.getIun(), String.format("prepare requestId = %s Response from external-channel", entity.getRequestId())))
                 .flatMap(eventMetaDAO::createOrUpdate)
                 .doOnNext(pnEventMeta -> logSuccessAuditLog(paperRequest, entity, pnLogAudit))
@@ -95,18 +93,6 @@ public class RECAG011BMessageHandler extends SaveDematMessageHandler {
         return twentyThreeLElement.isPresent() && arcadOrCadElement.isPresent();
     }
 
-    protected PnEventMeta createMETAForPNAG012Event(PaperProgressStatusEventDto paperRequest, PnEventMeta pnEventMetaRECAG012) {
-        PnEventMeta pnEventMeta = new PnEventMeta();
-        pnEventMeta.setMetaRequestId(buildMetaRequestId(paperRequest.getRequestId()));
-        pnEventMeta.setMetaStatusCode(buildMetaStatusCode(PNAG012_STATUS_CODE));
-        pnEventMeta.setTtl(paperRequest.getStatusDateTime().plusDays(ttlDaysMeta).toEpochSecond());
-
-        pnEventMeta.setRequestId(paperRequest.getRequestId());
-        pnEventMeta.setStatusCode(PNAG012_STATUS_CODE);
-        pnEventMeta.setStatusDateTime(pnEventMetaRECAG012.getStatusDateTime());
-        return pnEventMeta;
-    }
-
     // simulo lo stesso log di evento ricevuto da ext-channels
     private void logSuccessAuditLog(PaperProgressStatusEventDto paperRequest, PnDeliveryRequest entity, PnLogAudit pnLogAudit) {
         paperRequest.setStatusCode(PNAG012_STATUS_CODE);
@@ -114,11 +100,6 @@ public class RECAG011BMessageHandler extends SaveDematMessageHandler {
         pnLogAudit.addsSuccessReceive(entity.getIun(),
                 String.format("prepare requestId = %s Response %s from external-channel status code %s",
                         entity.getRequestId(), singleStatusUpdateDto.toString().replaceAll("\n", ""), entity.getStatusCode()));
-    }
-
-    protected void editPnDeliveryRequestForPNAG012(PnDeliveryRequest entity) {
-        entity.setStatusCode(StatusCodeEnum.OK.getValue());
-        entity.setStatusDetail("Distacco d'ufficio 23L fascicolo chiuso");
     }
 
 }
