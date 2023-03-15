@@ -86,5 +86,6 @@ public class AggregatorMessageHandler extends SendToDeliveryPushHandler {
                             .toDTO(pnEventMeta.getDiscoveredAddress());
             paperRequest.setDiscoveredAddress(discoveredAddressDto);
         }
+        paperRequest.setDeliveryFailureCause(pnEventMeta.getDeliveryFailureCause());
     }
 }
