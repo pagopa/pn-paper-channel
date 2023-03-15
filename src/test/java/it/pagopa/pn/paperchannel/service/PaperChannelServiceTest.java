@@ -8,10 +8,8 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.DeliveryDriverDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.FileDownloadDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.TenderDAO;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnCost;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryDriver;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryFile;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnTender;
+import it.pagopa.pn.paperchannel.middleware.db.entities.*;
+import it.pagopa.pn.paperchannel.model.FileStatusCodeEnum;
 import it.pagopa.pn.paperchannel.rest.v1.dto.*;
 import it.pagopa.pn.paperchannel.s3.S3Bucket;
 import it.pagopa.pn.paperchannel.service.impl.PaperChannelServiceImpl;
@@ -305,6 +303,78 @@ class PaperChannelServiceTest extends BaseTest {
     }
 
     @Test
+    @DisplayName("whenCalledNotifyUploadWithoutUuidThenThrowException")
+    void notifyUploadWithoutUUID(){
+        StepVerifier.create(this.paperChannelService.notifyUpload("1234", new NotifyUploadRequestDto()))
+                .expectErrorMatches((e) -> {
+                    assertTrue(e instanceof PnGenericException);
+                    assertEquals(BADLY_REQUEST, ((PnGenericException) e).getExceptionType());
+                    return true;
+                }).verify();
+    }
+
+    @Test
+    @DisplayName("whenCalledNotifyUploadButFileRequestNotExistedThenThrowException")
+    void notifyUploadButFileNotExisted(){
+        NotifyUploadRequestDto request = new NotifyUploadRequestDto();
+        request.setUuid("UUID_REQUEST");
+
+        Mockito.when(this.fileDownloadDAO.getUuid(Mockito.any()))
+                .thenReturn(Mono.empty());
+
+        StepVerifier.create(this.paperChannelService.notifyUpload("1234", request))
+                .expectErrorMatches((e) -> {
+                    assertTrue(e instanceof PnGenericException);
+                    assertEquals(FILE_REQUEST_ASYNC_NOT_FOUND, ((PnGenericException) e).getExceptionType());
+                    return true;
+                }).verify();
+    }
+
+    @Test
+    @DisplayName("whenCalledNotifyUploadWithFileStatusInErrorThrowException")
+    void notifyUploadWithFileStatusInError(){
+        NotifyUploadRequestDto request = new NotifyUploadRequestDto();
+        request.setUuid("UUID_REQUEST");
+        PnErrorMessage errorMessage = new PnErrorMessage();
+        errorMessage.setMessage("Error With file");
+        PnDeliveryFile file = new PnDeliveryFile();
+        file.setStatus(FileStatusCodeEnum.ERROR.getCode());
+        file.setErrorMessage(errorMessage);
+
+        Mockito.when(this.fileDownloadDAO.getUuid(Mockito.any()))
+                        .thenReturn(Mono.just(file));
+
+        StepVerifier.create(this.paperChannelService.notifyUpload("1234", request))
+                .expectErrorMatches((e) -> {
+                    assertTrue(e instanceof PnGenericException);
+                    assertEquals(EXCEL_BADLY_CONTENT, ((PnGenericException) e).getExceptionType());
+                    assertEquals(errorMessage.getMessage(), e.getMessage());
+                    return true;
+                }).verify();
+    }
+
+    @Test
+    @DisplayName("whenCalledNotifyUploadWithFileStatusIsUploadedThenResponse")
+    void notifyUploadWithFileStatusInUploaded(){
+        NotifyUploadRequestDto request = new NotifyUploadRequestDto();
+        request.setUuid("UUID_REQUEST");
+        PnDeliveryFile file = new PnDeliveryFile();
+        file.setStatus(FileStatusCodeEnum.UPLOADED.getCode());
+        file.setFilename("FILENAME");
+        file.setUrl("URL");
+        file.setUuid("UUID_REQUEST");
+
+
+        Mockito.when(this.fileDownloadDAO.getUuid(Mockito.any()))
+                .thenReturn(Mono.just(file));
+
+        NotifyResponseDto dto = this.paperChannelService.notifyUpload("1234", request).block();
+        assertNotNull(dto);
+        assertNull(dto.getRetryAfter());
+        assertEquals(NotifyResponseDto.StatusEnum.COMPLETE, dto.getStatus());
+    }
+
+    @Test
     @DisplayName("whenTryDeleteTenderWithTenderStatusDifferentToCreatedThenThrowException")
     void deleteTenderWithTenderStatusInProgress(){
         PnTender tender = this.getListTender(1).get(0);
@@ -588,6 +658,7 @@ class PaperChannelServiceTest extends BaseTest {
 
         PnTender tenderUpdated = this.getListTender(1).get(0);
         tenderUpdated.setStatus(TenderDTO.StatusEnum.VALIDATED.toString());
+
         Mockito.when(this.tenderDAO.createOrUpdate(Mockito.any())).thenReturn(Mono.just(tenderUpdated));
 
         TenderCreateResponseDTO response = this.paperChannelService.updateStatusTender("123", status).block();
@@ -631,6 +702,7 @@ class PaperChannelServiceTest extends BaseTest {
         TenderCreateResponseDTO response = this.paperChannelService.updateStatusTender("123", status).block();
         assertNull(response);
     }
+
 
     private List<PnCost> getAllCosts(String tenderCode, String driverCode, boolean fsu){
         List<PnCost> costs = new ArrayList<>();
