@@ -60,7 +60,8 @@ public class AggregatorMessageHandler extends SendToDeliveryPushHandler {
                 .then(eventMetaDAO.deleteEventMeta(METADATA_PREFIX + DELIMITER + paperRequest.getRequestId(),
                                 METADATA_PREFIX + DELIMITER + paperRequest.getStatusCode())
                         .doOnNext(deletedEntity -> log.info("Deleted EventMeta: {}", deletedEntity))
-                ).then(eventDematDAO.findAllByRequestId(DEMAT_PREFIX + DELIMITER + paperRequest.getRequestId())
+                )
+                .then(eventDematDAO.findAllByRequestId(DEMAT_PREFIX + DELIMITER + paperRequest.getRequestId())
                         .flatMap(foundItem ->
                                 eventDematDAO.deleteEventDemat(foundItem.getDematRequestId(), foundItem.getDocumentTypeStatusCode())
                                         .doOnNext(deletedEntity -> log.info("Deleted EventDemat: {}", deletedEntity))

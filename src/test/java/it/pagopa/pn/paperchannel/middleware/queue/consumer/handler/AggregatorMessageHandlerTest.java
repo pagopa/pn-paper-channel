@@ -82,6 +82,94 @@ class AggregatorMessageHandlerTest {
         verify(mockSqsSender, timeout(2000).times(1)).pushSendEvent(any(SendEvent.class));
     }
 
+    @Test
+    void handleAggregatorMessageDeleteMetaFailTest() {
+        // inserimento 1 meta
+        PnEventMeta eventMeta = createPnEventMeta();
+        // inserimento 1 demat
+        PnEventDemat eventDemat = createPnEventDemat();
+
+        // entity and paperRequest
+        OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
+        PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
+                .requestId("PREPARE_ANALOG_DOMICILE.IUN_MUMR-VQMP-LDNZ-202303-H-1.RECINDEX_0.SENTATTEMPTMADE_0")
+                .statusCode("RECRS002A")
+                .statusDateTime(instant)
+                .clientRequestTimeStamp(instant)
+                .deliveryFailureCause("M02");
+
+        PnDeliveryRequest entity = new PnDeliveryRequest();
+        entity.setRequestId("PREPARE_ANALOG_DOMICILE.IUN_MUMR-VQMP-LDNZ-202303-H-1.RECINDEX_0.SENTATTEMPTMADE_0");
+        entity.setStatusDetail("statusDetail");
+        entity.setStatusCode(StatusCodeEnum.OK.getValue());
+
+        // mock: when
+        // getDeliveryEventMeta
+        when(mockMetaDao.getDeliveryEventMeta(any(String.class), any(String.class))).thenReturn(Mono.just(eventMeta));
+        // findAllByRequestId
+        when(mockDematDao.findAllByRequestId(any(String.class))).thenReturn(Flux.just(eventDemat));
+        // the two deletes
+        when(mockMetaDao.deleteEventMeta(any(String.class), any(String.class))).thenThrow(new RuntimeException());
+        when(mockDematDao.deleteEventDemat(any(String.class), any(String.class))).thenReturn(Mono.just(eventDemat));
+
+        // assertDoNotThrow with call
+        assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
+
+        // check invocations: verify
+        // getDeliveryEventMeta call
+        verify(mockMetaDao, timeout(2000).times(1)).getDeliveryEventMeta(any(String.class), any(String.class));
+        // deleteEventMeta call
+        verify(mockMetaDao, timeout(2000).times(1)).deleteEventMeta(any(String.class), any(String.class));
+        // deleteEventDemat call
+        verify(mockDematDao, timeout(2000).times(1)).deleteEventDemat(any(String.class), any(String.class));
+        // DeliveryPush send via SQS verification
+        verify(mockSqsSender, timeout(2000).times(1)).pushSendEvent(any(SendEvent.class));
+    }
+
+    @Test
+    void handleAggregatorMessageDeleteDematFailTest() {
+        // inserimento 1 meta
+        PnEventMeta eventMeta = createPnEventMeta();
+        // inserimento 1 demat
+        PnEventDemat eventDemat = createPnEventDemat();
+
+        // entity and paperRequest
+        OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
+        PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
+                .requestId("PREPARE_ANALOG_DOMICILE.IUN_MUMR-VQMP-LDNZ-202303-H-1.RECINDEX_0.SENTATTEMPTMADE_0")
+                .statusCode("RECRS002A")
+                .statusDateTime(instant)
+                .clientRequestTimeStamp(instant)
+                .deliveryFailureCause("M02");
+
+        PnDeliveryRequest entity = new PnDeliveryRequest();
+        entity.setRequestId("PREPARE_ANALOG_DOMICILE.IUN_MUMR-VQMP-LDNZ-202303-H-1.RECINDEX_0.SENTATTEMPTMADE_0");
+        entity.setStatusDetail("statusDetail");
+        entity.setStatusCode(StatusCodeEnum.OK.getValue());
+
+        // mock: when
+        // getDeliveryEventMeta
+        when(mockMetaDao.getDeliveryEventMeta(any(String.class), any(String.class))).thenReturn(Mono.just(eventMeta));
+        // findAllByRequestId
+        when(mockDematDao.findAllByRequestId(any(String.class))).thenReturn(Flux.just(eventDemat));
+        // the two deletes
+        when(mockMetaDao.deleteEventMeta(any(String.class), any(String.class))).thenReturn(Mono.just(eventMeta));
+        when(mockDematDao.deleteEventDemat(any(String.class), any(String.class))).thenThrow(new RuntimeException());
+
+        // assertDoNotThrow with call
+        assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
+
+        // check invocations: verify
+        // getDeliveryEventMeta call
+        verify(mockMetaDao, timeout(2000).times(1)).getDeliveryEventMeta(any(String.class), any(String.class));
+        // deleteEventMeta call
+        verify(mockMetaDao, timeout(2000).times(1)).deleteEventMeta(any(String.class), any(String.class));
+        // deleteEventDemat call
+        verify(mockDematDao, timeout(2000).times(1)).deleteEventDemat(any(String.class), any(String.class));
+        // DeliveryPush send via SQS verification
+        verify(mockSqsSender, timeout(2000).times(1)).pushSendEvent(any(SendEvent.class));
+    }
+
     private PnEventMeta createPnEventMeta() {
         int ttlOffsetDays = 365;
         String requestId = "PREPARE_ANALOG_DOMICILE.IUN_MUMR-VQMP-LDNZ-202303-H-1.RECINDEX_0.SENTATTEMPTMADE_0";
