@@ -24,6 +24,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -201,7 +203,7 @@ class PaperChannelServiceTest extends BaseTest {
         assertNotNull(response);
         assertEquals(true, response.getFirst());
         assertEquals(true, response.getLast());
-        assertEquals(6, response.getNumberOfElements());
+        assertEquals(9, response.getNumberOfElements());
         assertEquals(0, response.getNumber());
         assertEquals(1, response.getTotalPages());
     }
@@ -224,9 +226,9 @@ class PaperChannelServiceTest extends BaseTest {
         assertEquals(true, response.getFirst());
         assertEquals(false, response.getLast());
         assertEquals(10, response.getNumberOfElements());
-        assertEquals(24, response.getTotalElements());
+        assertEquals(36, response.getTotalElements());
         assertEquals(0, response.getNumber());
-        assertEquals(3, response.getTotalPages());
+        assertEquals(4, response.getTotalPages());
     }
 
     @Test
@@ -503,7 +505,7 @@ class PaperChannelServiceTest extends BaseTest {
     }
 
     @Test
-    @DisplayName("whenChangeStatusTenderWithFSUAndWithoutThrowException")
+    @DisplayName("whenChangeStatusTenderWithFSUAndWithoutCostThrowException")
     void updateStatusTenderWithFSUAndWithoutCost(){
         Status status = new Status();
         status.setStatusCode(Status.StatusCodeEnum.VALIDATED);
@@ -532,6 +534,104 @@ class PaperChannelServiceTest extends BaseTest {
                 }).verify();
     }
 
+    @Test
+    @DisplayName("whenChangeStatusTenderInvalidCostThrowException")
+    void updateStatusTenderWithInvalidCost(){
+        Status status = new Status();
+        status.setStatusCode(Status.StatusCodeEnum.VALIDATED);
+
+        PnTender tender = this.getListTender(1).get(0);
+        tender.setStatus(TenderDTO.StatusEnum.CREATED.toString());
+
+        PnDeliveryDriver fsu = this.getListDrivers(1, true).get(0);
+
+        Mockito.when(tenderDAO.getTender(Mockito.any())).thenReturn(Mono.just(tender));
+
+        Mockito.when(tenderDAO.getConsolidate(Mockito.any(), Mockito.any()))
+                .thenReturn(Mono.empty());
+
+        Mockito.when(this.deliveryDriverDAO.getDeliveryDriverFSU(Mockito.any()))
+                .thenReturn(Mono.just(fsu));
+
+        Mockito.when(this.costDAO.findAllFromTenderCode(Mockito.any(), Mockito.any()))
+                .thenReturn(Flux.fromStream(getAllCosts("123", fsu.getTaxId(), false).stream()));
+
+        StepVerifier.create(this.paperChannelService.updateStatusTender("123", status))
+                .expectErrorMatches((e) -> {
+                    assertTrue(e instanceof PnGenericException);
+                    assertEquals(FSUCOST_VALIDATOR_NOTVALID, ((PnGenericException) e).getExceptionType());
+                    return true;
+                }).verify();
+    }
+
+    @Test
+    @DisplayName("whenChangeStatusTenderWithValidCostThenResponseOK")
+    void updateStatusTenderWithValidCost(){
+        Status status = new Status();
+        status.setStatusCode(Status.StatusCodeEnum.VALIDATED);
+
+        PnTender tender = this.getListTender(1).get(0);
+        tender.setStatus(TenderDTO.StatusEnum.CREATED.toString());
+
+        PnDeliveryDriver fsu = this.getListDrivers(1, true).get(0);
+
+        Mockito.when(tenderDAO.getTender(Mockito.any())).thenReturn(Mono.just(tender));
+
+        Mockito.when(tenderDAO.getConsolidate(Mockito.any(), Mockito.any()))
+                .thenReturn(Mono.empty());
+
+        Mockito.when(this.deliveryDriverDAO.getDeliveryDriverFSU(Mockito.any()))
+                .thenReturn(Mono.just(fsu));
+
+        Mockito.when(this.costDAO.findAllFromTenderCode(Mockito.any(), Mockito.any()))
+                .thenReturn(Flux.fromStream(getAllCosts("123", fsu.getTaxId(), true).stream()));
+
+        PnTender tenderUpdated = this.getListTender(1).get(0);
+        tenderUpdated.setStatus(TenderDTO.StatusEnum.VALIDATED.toString());
+        Mockito.when(this.tenderDAO.createOrUpdate(Mockito.any())).thenReturn(Mono.just(tenderUpdated));
+
+        TenderCreateResponseDTO response = this.paperChannelService.updateStatusTender("123", status).block();
+        assertNull(response);
+    }
+
+    @Test
+    @DisplayName("whenChangeStatusTenderWithCreatedStatus")
+    void updateStatusTenderWithCreatedStatus(){
+        Status status = new Status();
+        status.setStatusCode(Status.StatusCodeEnum.CREATED);
+
+        PnTender tender = this.getListTender(1).get(0);
+        tender.setStatus(TenderDTO.StatusEnum.VALIDATED.toString());
+        tender.setStartDate(Instant.now().plus(10, ChronoUnit.DAYS));
+        tender.setEndDate(Instant.now().plus(15, ChronoUnit.DAYS));
+        Mockito.when(tenderDAO.getTender(Mockito.any())).thenReturn(Mono.just(tender));
+
+        PnTender tenderUpdated = this.getListTender(1).get(0);
+        tenderUpdated.setStatus(TenderDTO.StatusEnum.CREATED.toString());
+        Mockito.when(this.tenderDAO.createOrUpdate(Mockito.any())).thenReturn(Mono.just(tenderUpdated));
+
+        TenderCreateResponseDTO response = this.paperChannelService.updateStatusTender("123", status).block();
+        assertNull(response);
+    }
+
+    @Test
+    @DisplayName("whenChangeStatusTenderWithSameStatus")
+    void updateStatusTenderWithSameStatus(){
+        Status status = new Status();
+        status.setStatusCode(Status.StatusCodeEnum.VALIDATED);
+
+        PnTender tender = this.getListTender(1).get(0);
+        tender.setStatus(TenderDTO.StatusEnum.VALIDATED.toString());
+        tender.setStartDate(Instant.now().plus(10, ChronoUnit.DAYS));
+        tender.setEndDate(Instant.now().plus(15, ChronoUnit.DAYS));
+
+        Mockito.when(tenderDAO.getTender(Mockito.any())).thenReturn(Mono.just(tender));
+
+
+        TenderCreateResponseDTO response = this.paperChannelService.updateStatusTender("123", status).block();
+        assertNull(response);
+    }
+
     private List<PnCost> getAllCosts(String tenderCode, String driverCode, boolean fsu){
         List<PnCost> costs = new ArrayList<>();
         List<ProductTypeEnum> products = List.of(ProductTypeEnum.AR, ProductTypeEnum._890, ProductTypeEnum.RS);
@@ -554,6 +654,15 @@ class PaperChannelServiceTest extends BaseTest {
             cost.setFsu(fsu);
             costs.add(cost);
         }
+        for (String zone : zones){
+            PnCost cost = getCost(zone, null, "RS");
+            cost.setTenderCode(tenderCode);
+            cost.setDeliveryDriverCode(driverCode);
+            cost.setUuid(UUID.randomUUID().toString());
+            cost.setFsu(fsu);
+            costs.add(cost);
+        }
+
         return costs;
     }
 
