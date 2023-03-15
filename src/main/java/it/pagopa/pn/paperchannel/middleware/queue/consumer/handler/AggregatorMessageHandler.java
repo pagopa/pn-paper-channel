@@ -53,7 +53,7 @@ public class AggregatorMessageHandler extends SendToDeliveryPushHandler {
                 // invio dato su delivery-push, che ci sia stato arricchimento o meno)
                 .then(super.handleMessage(entity, paperRequest))
                 .onErrorResume(throwable -> {
-                    log.warn("", throwable);
+                    log.warn("error on handleMessage", throwable);
                     return Mono.error(new PnSendToDeliveryException(throwable));
                 })
 
@@ -61,6 +61,14 @@ public class AggregatorMessageHandler extends SendToDeliveryPushHandler {
                                 METADATA_PREFIX + DELIMITER + paperRequest.getStatusCode())
                         .doOnNext(deletedEntity -> log.info("Deleted EventMeta: {}", deletedEntity))
                 )
+                .onErrorResume(throwable ->  {
+                    if (throwable instanceof PnSendToDeliveryException)
+                        return Mono.error(throwable);
+                    else {
+                        log.warn("Cannot delete MAT", throwable);
+                        return Mono.empty();
+                    }
+                })
                 .then(eventDematDAO.findAllByRequestId(DEMAT_PREFIX + DELIMITER + paperRequest.getRequestId())
                         .flatMap(foundItem ->
                                 eventDematDAO.deleteEventDemat(foundItem.getDematRequestId(), foundItem.getDocumentTypeStatusCode())
@@ -70,7 +78,7 @@ public class AggregatorMessageHandler extends SendToDeliveryPushHandler {
                     if (throwable instanceof PnSendToDeliveryException)
                         return Mono.error(throwable);
                     else {
-                        log.warn("Cannot delete MAT or DEMAT", throwable);
+                        log.warn("Cannot delete DEMAT", throwable);
                         return Mono.empty();
                     }
                 })

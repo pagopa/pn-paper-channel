@@ -12,6 +12,7 @@ import it.pagopa.pn.paperchannel.rest.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -109,7 +110,7 @@ class AggregatorMessageHandlerTest {
         // findAllByRequestId
         when(mockDematDao.findAllByRequestId(any(String.class))).thenReturn(Flux.just(eventDemat));
         // the two deletes
-        when(mockMetaDao.deleteEventMeta(any(String.class), any(String.class))).thenThrow(new RuntimeException());
+        when(mockMetaDao.deleteEventMeta(any(String.class), any(String.class))).thenReturn(Mono.error(new RuntimeException()));
         when(mockDematDao.deleteEventDemat(any(String.class), any(String.class))).thenReturn(Mono.just(eventDemat));
 
         // assertDoNotThrow with call
