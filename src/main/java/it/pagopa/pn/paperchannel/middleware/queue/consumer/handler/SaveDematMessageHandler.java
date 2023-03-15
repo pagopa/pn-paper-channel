@@ -13,15 +13,14 @@ import reactor.core.publisher.Mono;
 import java.util.ArrayList;
 import java.util.List;
 
+import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
+
 //Tutti gli eventi, fatta eccezione di quelli evidenziati (*), dovranno essere memorizzati nella tabella come entità DEMAT.
 // Tutti gli eventi che contengono dematerializzazioni del tipo (Plico, 23L, Indagine, AR) dovranno essere inviati come
 // eventi PROGRESS verso delivery-push (oltre che salvati a db)
 @Slf4j
 public class SaveDematMessageHandler extends SendToDeliveryPushHandler {
 
-    protected static final String DEMAT_PREFIX = "DEMAT";
-
-    protected static final String DEMAT_DELIMITER = "##";
 
     private static final List<String> ATTACHMENT_TYPES_SEND_TO_DELIVERY_PUSH = List.of(
             "Plico",
@@ -69,8 +68,8 @@ public class SaveDematMessageHandler extends SendToDeliveryPushHandler {
 
     protected PnEventDemat buildPnEventDemat(PaperProgressStatusEventDto paperRequest, AttachmentDetailsDto attachmentDetailsDto) {
         PnEventDemat pnEventDemat = new PnEventDemat();
-        pnEventDemat.setDematRequestId(DEMAT_PREFIX + DEMAT_DELIMITER + paperRequest.getRequestId());
-        pnEventDemat.setDocumentTypeStatusCode(attachmentDetailsDto.getDocumentType() + DEMAT_DELIMITER + paperRequest.getStatusCode());
+        pnEventDemat.setDematRequestId(buildDematRequestId(paperRequest.getRequestId()));
+        pnEventDemat.setDocumentTypeStatusCode(buildDocumentTypeStatusCode(attachmentDetailsDto.getDocumentType(), paperRequest.getStatusCode()));
         pnEventDemat.setTtl(paperRequest.getStatusDateTime().plusDays(ttlDays).toEpochSecond());
 
         pnEventDemat.setRequestId(paperRequest.getRequestId());

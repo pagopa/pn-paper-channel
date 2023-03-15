@@ -17,12 +17,11 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 import java.util.Optional;
 
+import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
+
 @Slf4j
 public class RECAG011BMessageHandler extends SaveDematMessageHandler {
 
-    private static final String META_PREFIX = "META";
-
-    private static final String META_DELIMITER = "##";
 
     private static final String PNAG012_STATUS_CODE = "PNAG012";
 
@@ -44,8 +43,8 @@ public class RECAG011BMessageHandler extends SaveDematMessageHandler {
     public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
         log.debug("[{}] RECAG011B handler start", paperRequest.getRequestId());
 
-        String metadataRequestIdFilter = META_PREFIX + META_DELIMITER + paperRequest.getRequestId();
-        String dematRequestId = DEMAT_PREFIX + DEMAT_DELIMITER + paperRequest.getRequestId();
+        String metadataRequestIdFilter = buildMetaRequestId(paperRequest.getRequestId());
+        String dematRequestId = buildDematRequestId(paperRequest.getRequestId());
 
         PnAuditLogBuilder auditLogBuilder = new PnAuditLogBuilder();
         PnLogAudit pnLogAudit = new PnLogAudit(auditLogBuilder);
@@ -78,8 +77,8 @@ public class RECAG011BMessageHandler extends SaveDematMessageHandler {
 
     protected PnEventMeta createMETAForPNAG012Event(PaperProgressStatusEventDto paperRequest, PnEventMeta pnEventMetaRECAG012) {
         PnEventMeta pnEventMeta = new PnEventMeta();
-        pnEventMeta.setMetaRequestId(META_PREFIX + META_DELIMITER + paperRequest.getRequestId());
-        pnEventMeta.setMetaStatusCode(META_PREFIX + META_DELIMITER + PNAG012_STATUS_CODE);
+        pnEventMeta.setMetaRequestId(buildMetaRequestId(paperRequest.getRequestId()));
+        pnEventMeta.setMetaStatusCode(buildMetaStatusCode(PNAG012_STATUS_CODE));
         pnEventMeta.setTtl(paperRequest.getStatusDateTime().plusDays(ttlDaysMeta).toEpochSecond());
 
         pnEventMeta.setRequestId(paperRequest.getRequestId());
@@ -90,7 +89,7 @@ public class RECAG011BMessageHandler extends SaveDematMessageHandler {
 
     // simulo lo stesso log di evento ricevuto da ext-channels
     private void logSuccessAuditLog(PaperProgressStatusEventDto paperRequest, PnDeliveryRequest entity, PnLogAudit pnLogAudit) {
-        paperRequest.setStatusCode("RECAG012");
+        paperRequest.setStatusCode(PNAG012_STATUS_CODE);
         SingleStatusUpdateDto singleStatusUpdateDto = new SingleStatusUpdateDto().analogMail(paperRequest);
         pnLogAudit.addsSuccessReceive(entity.getIun(),
                 String.format("prepare requestId = %s Response %s from external-channel status code %s",
@@ -98,7 +97,7 @@ public class RECAG011BMessageHandler extends SaveDematMessageHandler {
     }
 
     protected void editPnDeliveryRequestForPNAG012(PnDeliveryRequest entity) {
-        entity.setStatusCode(StatusCodeEnum.OK.getValue()); //TODO in attesa di chiarimento, se è OK o KO
+        entity.setStatusCode(StatusCodeEnum.OK.getValue());
         entity.setStatusDetail("Distacco d'ufficio 23L fascicolo chiuso");
     }
 

@@ -8,14 +8,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
+import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
+
 // handler salva metadati (vedere Gestione eventi di pre-esito)
 @RequiredArgsConstructor
 @Slf4j
 public class SaveMetadataMessageHandler implements MessageHandler {
-
-    protected static final String METADATA_PREFIX = "META";
-
-    protected static final String METADATA_DELIMITER = "##";
 
     protected final EventMetaDAO eventMetaDAO;
 
@@ -33,8 +31,8 @@ public class SaveMetadataMessageHandler implements MessageHandler {
 
     protected PnEventMeta buildPnEventMeta(PaperProgressStatusEventDto paperRequest) {
         PnEventMeta pnEventMeta = new PnEventMeta();
-        pnEventMeta.setMetaRequestId(METADATA_PREFIX + METADATA_DELIMITER + paperRequest.getRequestId());
-        pnEventMeta.setMetaStatusCode(METADATA_PREFIX + METADATA_DELIMITER + paperRequest.getStatusCode());
+        pnEventMeta.setMetaRequestId(buildMetaRequestId(paperRequest.getRequestId()));
+        pnEventMeta.setMetaStatusCode(buildMetaStatusCode(paperRequest.getStatusCode()));
         pnEventMeta.setTtl(paperRequest.getStatusDateTime().plusDays(ttlDays).toEpochSecond());
 
         pnEventMeta.setRequestId(paperRequest.getRequestId());

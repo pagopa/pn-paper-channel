@@ -9,6 +9,8 @@ import reactor.core.publisher.Mono;
 
 import java.util.Optional;
 
+import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
+
 // effettuare PUT di una nuova riga in accordo con le specifiche
 // Il RECAG012 è considerato come entità logica un metadata
 // Se l’evento è già presente per lo specifico RequestID, riportare il problema
@@ -23,8 +25,8 @@ public class RECAG012MessageHandler extends SaveMetadataMessageHandler {
     @Override
     public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
         log.debug("[{}] RECAG012 handler start", paperRequest.getRequestId());
-        String partitionKey = METADATA_PREFIX + METADATA_DELIMITER + paperRequest.getRequestId();
-        String sortKey = METADATA_PREFIX + METADATA_DELIMITER + paperRequest.getStatusCode();
+        String partitionKey =  buildMetaRequestId(paperRequest.getRequestId());
+        String sortKey = buildMetaStatusCode(paperRequest.getStatusCode());
         return super.eventMetaDAO.getDeliveryEventMeta(partitionKey, sortKey)
                 .map(Optional::of)
                 .defaultIfEmpty(Optional.empty())
