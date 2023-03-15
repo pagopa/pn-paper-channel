@@ -48,10 +48,10 @@ public class AggregatorMessageHandler extends SendToDeliveryPushHandler {
                             log.warn("Missing EventMeta for: {}", paperRequest);
                             return Mono.just(new PnEventMeta());
                 }))
-                .doOnNext(relatedMeta -> enrichEvent(paperRequest, relatedMeta))
+                .map(relatedMeta -> enrichEvent(paperRequest, relatedMeta))
 
                 // invio dato su delivery-push, che ci sia stato arricchimento o meno)
-                .then(super.handleMessage(entity, paperRequest))
+                .flatMap(enrichedRequest -> super.handleMessage(entity, enrichedRequest))
                 .onErrorResume(throwable -> {
                     log.warn("error on handleMessage", throwable);
                     return Mono.error(new PnSendToDeliveryException(throwable));
@@ -85,7 +85,7 @@ public class AggregatorMessageHandler extends SendToDeliveryPushHandler {
                 .then();
     }
 
-    private void enrichEvent(PaperProgressStatusEventDto paperRequest, PnEventMeta pnEventMeta) {
+    private PaperProgressStatusEventDto enrichEvent(PaperProgressStatusEventDto paperRequest, PnEventMeta pnEventMeta) {
         paperRequest.setDeliveryFailureCause(pnEventMeta.getDeliveryFailureCause());
 
         if (pnEventMeta.getDiscoveredAddress() != null )
@@ -96,5 +96,7 @@ public class AggregatorMessageHandler extends SendToDeliveryPushHandler {
             paperRequest.setDiscoveredAddress(discoveredAddressDto);
         }
         paperRequest.setDeliveryFailureCause(pnEventMeta.getDeliveryFailureCause());
+
+        return paperRequest;
     }
 }

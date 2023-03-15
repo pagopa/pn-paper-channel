@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
+import it.pagopa.pn.paperchannel.exception.PnSendToDeliveryException;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
@@ -12,6 +13,7 @@ import it.pagopa.pn.paperchannel.rest.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -60,6 +62,8 @@ class AggregatorMessageHandlerTest {
         entity.setStatusDetail("statusDetail");
         entity.setStatusCode(StatusCodeEnum.OK.getValue());
 
+        ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
+
         // mock: when
         // getDeliveryEventMeta
         when(mockMetaDao.getDeliveryEventMeta(any(String.class), any(String.class))).thenReturn(Mono.just(eventMeta));
@@ -80,7 +84,52 @@ class AggregatorMessageHandlerTest {
         // deleteEventDemat call
         verify(mockDematDao, timeout(2000).times(1)).deleteEventDemat(any(String.class), any(String.class));
         // DeliveryPush send via SQS verification
-        verify(mockSqsSender, timeout(2000).times(1)).pushSendEvent(any(SendEvent.class));
+        verify(mockSqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
+
+        assertEquals("failureCause1", caturedSendEvent.getValue().getDeliveryFailureCause());
+        assertNotNull(caturedSendEvent.getValue().getDiscoveredAddress());
+        assertEquals("discoveredAddress1", caturedSendEvent.getValue().getDiscoveredAddress().getAddress());
+    }
+
+    @Test
+    void handleAggregatorMessageMissingMetaTest() {
+
+        // entity and paperRequest
+        OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
+        PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
+                .requestId("PREPARE_ANALOG_DOMICILE.IUN_MUMR-VQMP-LDNZ-202303-H-1.RECINDEX_0.SENTATTEMPTMADE_0")
+                .statusCode("RECRS002A")
+                .statusDateTime(instant)
+                .clientRequestTimeStamp(instant)
+                .deliveryFailureCause("M02");
+
+        PnDeliveryRequest entity = new PnDeliveryRequest();
+        entity.setRequestId("PREPARE_ANALOG_DOMICILE.IUN_MUMR-VQMP-LDNZ-202303-H-1.RECINDEX_0.SENTATTEMPTMADE_0");
+        entity.setStatusDetail("statusDetail");
+        entity.setStatusCode(StatusCodeEnum.OK.getValue());
+
+        ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
+
+        // mock: when
+        // getDeliveryEventMeta
+        when(mockMetaDao.getDeliveryEventMeta(any(String.class), any(String.class))).thenReturn(Mono.empty());
+        // findAllByRequestId
+        when(mockDematDao.findAllByRequestId(any(String.class))).thenReturn(Flux.empty());
+        // deleteEventMeta
+        when(mockMetaDao.deleteEventMeta(any(String.class), any(String.class))).thenReturn(Mono.empty());
+
+        // assertDoNotThrow with call
+        assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
+
+        // check invocations: verify
+        // getDeliveryEventMeta call
+        verify(mockMetaDao, timeout(2000).times(1)).getDeliveryEventMeta(any(String.class), any(String.class));
+        // DeliveryPush send via SQS verification
+        verify(mockSqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
+
+        //assertEquals("failureCause1", caturedSendEvent.getValue().getDeliveryFailureCause());
+        System.out.println(caturedSendEvent.getValue().getDeliveryFailureCause());
+        assertNull(caturedSendEvent.getValue().getDiscoveredAddress());
     }
 
     @Test
@@ -116,7 +165,7 @@ class AggregatorMessageHandlerTest {
         doThrow(new RuntimeException()).when(mockSqsSender).pushSendEvent(Mockito.any());
 
         // assertDoNotThrow with call
-        assertThrowsExactly(RuntimeException.class, () -> handler.handleMessage(entity, paperRequest).block());
+        assertThrowsExactly(PnSendToDeliveryException.class, () -> handler.handleMessage(entity, paperRequest).block());
 
         // check invocations: verify
         // getDeliveryEventMeta call
@@ -197,7 +246,7 @@ class AggregatorMessageHandlerTest {
         when(mockDematDao.findAllByRequestId(any(String.class))).thenReturn(Flux.just(eventDemat));
         // the two deletes
         when(mockMetaDao.deleteEventMeta(any(String.class), any(String.class))).thenReturn(Mono.just(eventMeta));
-        when(mockDematDao.deleteEventDemat(any(String.class), any(String.class))).thenThrow(new RuntimeException());
+        when(mockDematDao.deleteEventDemat(any(String.class), any(String.class))).thenReturn(Mono.error(new RuntimeException()));
 
         // assertDoNotThrow with call
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
