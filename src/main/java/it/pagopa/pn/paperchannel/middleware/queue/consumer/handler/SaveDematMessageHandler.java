@@ -62,7 +62,7 @@ public class SaveDematMessageHandler extends SendToDeliveryPushHandler {
             //invio a delivery push lo stesso evento quanti sono gli attachment
             //ogni evento inviato avrà l'attachment diverso
             paperRequest.setAttachments(List.of(attachmentDetailsDto));
-            return super.handleMessage(entity, paperRequest);
+            return sendToDeliveryPush(entity, paperRequest);
         }
         return Mono.empty();
     }

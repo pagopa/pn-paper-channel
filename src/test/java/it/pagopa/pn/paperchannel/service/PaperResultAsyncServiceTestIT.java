@@ -19,7 +19,9 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.annotation.DirtiesContext;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
 
@@ -172,6 +174,122 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
 
         // verifico che è stato inviato un evento a delivery-push
         verify(sqsSender, timeout(2000).times(1)).pushSendEvent(any(SendEvent.class));
+
+    }
+
+    @DirtiesContext
+    @Test
+    void testRECAG012Event() {
+        final String metadataRequestExpected = "META##PREPARE_ANALOG_DOMICILE.IUN_MUMR-VQMP-LDNZ-202303-H-1.RECINDEX_0.SENTATTEMPTMADE_0";
+        final String metadataStatusCodeExpected = "META##RECAG012";
+        PnEventMeta entity = eventMetaDAO.getDeliveryEventMeta(metadataRequestExpected, metadataStatusCodeExpected).block();
+        assertThat(entity).isNull();
+        PnDeliveryRequest pnDeliveryRequest = createPnDeliveryRequest();
+
+        PaperProgressStatusEventDto analogMail = new PaperProgressStatusEventDto();
+        analogMail.requestId("PREPARE_ANALOG_DOMICILE.IUN_MUMR-VQMP-LDNZ-202303-H-1.RECINDEX_0.SENTATTEMPTMADE_0");
+        analogMail.setClientRequestTimeStamp(OffsetDateTime.now());
+        analogMail.setStatusDateTime(OffsetDateTime.now());
+        analogMail.setStatusCode("RECAG012");
+        analogMail.setProductType("RS");
+        analogMail.setStatusDescription("In progress");
+
+        SingleStatusUpdateDto extChannelMessage = new SingleStatusUpdateDto();
+        extChannelMessage.setAnalogMail(analogMail);
+
+        PnDeliveryRequest afterSetForUpdate = createPnDeliveryRequest();
+        afterSetForUpdate.setStatusCode(ExternalChannelCodeEnum.getStatusCode(extChannelMessage.getAnalogMail().getStatusCode()));
+        afterSetForUpdate.setStatusDetail(extChannelMessage.getAnalogMail().getProductType()
+                .concat(" - ").concat(pnDeliveryRequest.getStatusCode()).concat(" - ").concat(extChannelMessage.getAnalogMail().getStatusDescription()));
+        afterSetForUpdate.setStatusDate(DateUtils.formatDate(Date.from(extChannelMessage.getAnalogMail().getStatusDateTime().toInstant())));
+
+        when(requestDeliveryDAO.getByRequestId(anyString())).thenReturn(Mono.just(pnDeliveryRequest));
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
+
+        // verifico che il flusso è stato completato con successo
+        assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());
+
+        // verifico che è stato inserito il record in DB
+        entity = eventMetaDAO.getDeliveryEventMeta(metadataRequestExpected, metadataStatusCodeExpected).block();
+        assertThat(entity).isNotNull();
+
+    }
+
+    @DirtiesContext
+    @Test
+    void testRECAG011BEvent() {
+        final String requestId = "PREPARE_ANALOG_DOMICILE.IUN_MUMR-VQMP-LDNZ-202303-H-1.RECINDEX_0.SENTATTEMPTMADE_0";
+        final String RECAG011BRequestExpected = "DEMAT##" + requestId;
+        final String RECAG011BStatusCodePlicoExpected = "Plico##RECAG011B";
+        PnEventDemat entityPlico = eventDematDAO.getDeliveryEventDemat(RECAG011BRequestExpected, RECAG011BStatusCodePlicoExpected).block();
+        assertThat(entityPlico).isNull();
+        PnDeliveryRequest pnDeliveryRequest = createPnDeliveryRequest();
+
+        PnEventDemat pnEventDemat23L = new PnEventDemat();
+        pnEventDemat23L.setDematRequestId("DEMAT##" + requestId);
+        pnEventDemat23L.setRequestId(requestId);
+        pnEventDemat23L.setDocumentTypeStatusCode("23L##RECAG011B");
+        pnEventDemat23L.setStatusCode("RECAG011B");
+        pnEventDemat23L.setDocumentType("23L");
+        pnEventDemat23L.setTtl(Instant.now().plus(10, ChronoUnit.DAYS).getEpochSecond());
+
+        PnEventDemat pnEventDematACAD = new PnEventDemat();
+        pnEventDematACAD.setDematRequestId("DEMAT##" + requestId);
+        pnEventDematACAD.setRequestId(requestId);
+        pnEventDematACAD.setDocumentTypeStatusCode("ARCAD##RECAG011B");
+        pnEventDematACAD.setStatusCode("RECAG011B");
+        pnEventDematACAD.setDocumentType("ARCAD");
+        pnEventDematACAD.setTtl(Instant.now().plus(10, ChronoUnit.DAYS).getEpochSecond());
+        eventDematDAO.createOrUpdate(pnEventDemat23L).block();
+        eventDematDAO.createOrUpdate(pnEventDematACAD).block();
+
+        PnEventMeta pnEventMetaRECAG012 = new PnEventMeta();
+        pnEventMetaRECAG012.setMetaRequestId("META##" + requestId);
+        pnEventMetaRECAG012.setRequestId(requestId);
+        pnEventMetaRECAG012.setMetaStatusCode("META##RECAG012");
+        pnEventMetaRECAG012.setStatusCode("RECAG012");
+        pnEventMetaRECAG012.setTtl(Instant.now().plus(10, ChronoUnit.DAYS).getEpochSecond());
+        eventMetaDAO.createOrUpdate(pnEventMetaRECAG012).block();
+
+        PaperProgressStatusEventDto analogMail = new PaperProgressStatusEventDto();
+        analogMail.requestId(requestId);
+        analogMail.setClientRequestTimeStamp(OffsetDateTime.now());
+        analogMail.setStatusDateTime(OffsetDateTime.now());
+        analogMail.setStatusCode("RECAG011B");
+        analogMail.setProductType("RS");
+        analogMail.setStatusDescription("In progress");
+        analogMail.setAttachments(List.of(
+                new AttachmentDetailsDto()
+                        .documentType("Plico")
+                        .date(OffsetDateTime.now())
+                        .url("https://safestorage.it"))
+        );
+
+        SingleStatusUpdateDto extChannelMessage = new SingleStatusUpdateDto();
+        extChannelMessage.setAnalogMail(analogMail);
+
+        PnDeliveryRequest afterSetForUpdate = createPnDeliveryRequest();
+        afterSetForUpdate.setStatusCode(ExternalChannelCodeEnum.getStatusCode(extChannelMessage.getAnalogMail().getStatusCode()));
+        afterSetForUpdate.setStatusDetail(extChannelMessage.getAnalogMail().getProductType()
+                .concat(" - ").concat(pnDeliveryRequest.getStatusCode()).concat(" - ").concat(extChannelMessage.getAnalogMail().getStatusDescription()));
+        afterSetForUpdate.setStatusDate(DateUtils.formatDate(Date.from(extChannelMessage.getAnalogMail().getStatusDateTime().toInstant())));
+
+        when(requestDeliveryDAO.getByRequestId(anyString())).thenReturn(Mono.just(pnDeliveryRequest));
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
+
+        // verifico che il flusso è stato completato con successo
+        assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());
+
+        // verifico che è stato inserito il record RECAG011B in DB
+        entityPlico = eventDematDAO.getDeliveryEventDemat(RECAG011BRequestExpected, RECAG011BStatusCodePlicoExpected).block();
+        assertThat(entityPlico).isNotNull();
+
+        // verifico che è stato inserito il record PNAG012 in DB
+        PnEventMeta pnEventMetaPNAG012 = eventMetaDAO.getDeliveryEventMeta("META##" + requestId, "META##" + "PNAG012").block();
+        assertThat(pnEventMetaPNAG012).isNotNull();
+
+        // verifico che sono stati inviati 2 eventi a delivery push, un PROGRESS (RECAG011B) e un OK (PNAG012)
+        verify(sqsSender, timeout(4000).times(2)).pushSendEvent(any(SendEvent.class));
 
     }
 

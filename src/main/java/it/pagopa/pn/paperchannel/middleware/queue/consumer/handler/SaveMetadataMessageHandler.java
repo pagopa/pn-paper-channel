@@ -13,11 +13,11 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class SaveMetadataMessageHandler implements MessageHandler {
 
-    private static final String METADATA_PREFIX = "META";
+    protected static final String METADATA_PREFIX = "META";
 
-    private static final String METADATA_DELIMITER = "##";
+    protected static final String METADATA_DELIMITER = "##";
 
-    private final EventMetaDAO eventMetaDAO;
+    protected final EventMetaDAO eventMetaDAO;
 
     private final Long ttlDays;
 

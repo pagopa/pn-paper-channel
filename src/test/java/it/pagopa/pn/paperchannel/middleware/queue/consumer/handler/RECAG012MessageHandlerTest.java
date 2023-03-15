@@ -25,11 +25,11 @@ class RECAG012MessageHandlerTest {
     public void init() {
         mockDao = mock(EventMetaDAO.class);
         long ttlDays = 365;
-        handler = new SaveMetadataMessageHandler(mockDao, ttlDays);
+        handler = new RECAG012MessageHandler(mockDao, ttlDays);
     }
 
     @Test
-    void handleMessageTest() {
+    void handleMessageOKTest() {
         OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
         PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
                 .requestId("requestId")
@@ -45,12 +45,38 @@ class RECAG012MessageHandlerTest {
 
         PnEventMeta pnEventMeta = handler.buildPnEventMeta(paperRequest);
 
+        when(mockDao.getDeliveryEventMeta("META##requestId", "META##RECAG012")).thenReturn(Mono.empty());
         when(mockDao.createOrUpdate(pnEventMeta)).thenReturn(Mono.just(pnEventMeta));
 
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
 
         //mi aspetto che salvi l'evento
         verify(mockDao, times(1)).createOrUpdate(pnEventMeta);
+
+    }
+
+    @Test
+    void handleMessageKOTest() {
+        OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
+        PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
+                .requestId("requestId")
+                .statusCode("RECAG012")
+                .statusDateTime(instant)
+                .clientRequestTimeStamp(instant)
+                .deliveryFailureCause("M02");
+
+        PnDeliveryRequest entity = new PnDeliveryRequest();
+        entity.setRequestId("requestId");
+        entity.setStatusDetail("statusDetail");
+        entity.setStatusCode(StatusCodeEnum.PROGRESS.getValue());
+
+        PnEventMeta pnEventMeta = handler.buildPnEventMeta(paperRequest);
+
+        when(mockDao.getDeliveryEventMeta("META##requestId", "META##RECAG012")).thenReturn(Mono.just(pnEventMeta));
+        assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
+
+        //mi aspetto che salvi l'evento
+        verify(mockDao, times(0)).createOrUpdate(pnEventMeta);
 
     }
 
