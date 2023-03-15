@@ -76,7 +76,7 @@ public class RECAG011BMessageHandler extends SaveDematMessageHandler {
                 .flatMap(eventMetaDAO::createOrUpdate)
                 .doOnNext(pnEventMeta -> logSuccessAuditLog(paperRequest, entity, pnLogAudit))
                 .doOnNext(pnEventMeta -> editPnDeliveryRequestForPNAG012(entity))
-                .doOnNext(pnEventMeta -> log.info("[{}] Sending PNAG012 to delivery push", paperRequest.getRequestId()))
+                .doOnNext(pnEventMeta -> log.info("[{}] Sending PNAG012 to delivery push: {}", paperRequest.getRequestId(), entity))
                 .flatMap(pnEventMeta -> super.sendToDeliveryPush(entity, paperRequest));
     }
 
