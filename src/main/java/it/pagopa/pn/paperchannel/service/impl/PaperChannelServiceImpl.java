@@ -300,9 +300,9 @@ public class PaperChannelServiceImpl implements PaperChannelService {
 
 
         //set 00:00
-        request.getStartDate().setTime(formatDateWithSpecificHour(request.getStartDate(), 0,0,0).getTime());
+        request.getStartDate().setTime(DateUtils.formatDateWithSpecificHour(request.getStartDate(), 0,0,0).getTime());
         //set 23:59
-        request.getEndDate().setTime(formatDateWithSpecificHour(request.getEndDate(), 23,59,0).getTime());
+        request.getEndDate().setTime(DateUtils.formatDateWithSpecificHour(request.getEndDate(), 23,59,0).getTime());
         return Mono.just(TenderMapper.toTenderRequest(request))
                 .flatMap(entity -> this.tenderDAO.createOrUpdate(entity))
                 .map(entity -> {
@@ -363,17 +363,7 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                 });
     }
 
-    private Date formatDateWithSpecificHour(Date date, int hour, int min, int sec){
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(date);
-        cal.set(Calendar.HOUR_OF_DAY, hour);
-        cal.set(Calendar.MINUTE, min);
-        cal.set(Calendar.SECOND, sec);
-        cal.set(Calendar.MILLISECOND, 0);
-        Date dateTime = cal.getTime();
 
-        return dateTime;
-    }
 
     @Override
     public Mono<Void> createOrUpdateCost(String tenderCode, String taxId, CostDTO request) {
