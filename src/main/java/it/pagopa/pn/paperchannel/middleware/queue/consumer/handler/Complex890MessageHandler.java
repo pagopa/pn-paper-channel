@@ -1,10 +1,9 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
-import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventDemat;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
+import it.pagopa.pn.paperchannel.middleware.queue.consumer.MetaDemtaCleaner;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.service.SqsSender;
@@ -48,30 +47,25 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
 
     private final EventMetaDAO eventMetaDAO;
 
-    private final EventDematDAO eventDematDAO;
-
     private final Long ttlDaysMeta;
 
-    public Complex890MessageHandler(SqsSender sqsSender, EventMetaDAO eventMetaDAO, EventDematDAO eventDematDAO, Long ttlDaysMeta) {
+    private final MetaDemtaCleaner metaDemtaCleaner;
+
+    public Complex890MessageHandler(SqsSender sqsSender, EventMetaDAO eventMetaDAO, Long ttlDaysMeta, MetaDemtaCleaner metaDemtaCleaner) {
         super(sqsSender);
         this.eventMetaDAO = eventMetaDAO;
-        this.eventDematDAO = eventDematDAO;
         this.ttlDaysMeta = ttlDaysMeta;
+        this.metaDemtaCleaner = metaDemtaCleaner;
     }
 
     @Override
     public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
         String pkMetaFilter = buildMetaRequestId(paperRequest.getRequestId());
-        String pkDematFilter = buildDematRequestId(paperRequest.getRequestId());
         return eventMetaDAO.findAllByRequestId(pkMetaFilter)
                 .collectList()
                 .doOnNext(pnEventMetas -> log.info("[{}] Result of findAllByRequestId: {}", paperRequest.getRequestId(), pnEventMetas))
                 .flatMap(pnEventMetas -> handleMetasResult(pnEventMetas, entity, paperRequest))
-                .map(this::mapMetasToSortKeys)
-                .flatMap(sortKeysMeta-> eventMetaDAO.deleteBatch(pkMetaFilter, sortKeysMeta))
-                .then(eventDematDAO.findAllByRequestId(pkDematFilter).collectList())
-                .map(this::mapDematsToSortKeys)
-                .flatMap(sortKeysDemat -> eventDematDAO.deleteBatch(pkDematFilter, sortKeysDemat));
+                .then(metaDemtaCleaner.clean(paperRequest.getRequestId()));
     }
 
     private Mono<List<PnEventMeta>> handleMetasResult(List<PnEventMeta> pnEventMetas, PnDeliveryRequest entity,
@@ -118,14 +112,6 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
         }
 
         return Mono.just(pnEventMetas);
-    }
-
-    private String[] mapMetasToSortKeys(List<PnEventMeta> pnEventMetas) {
-        return pnEventMetas.stream().map(PnEventMeta::getMetaStatusCode).toArray(String[]::new);
-    }
-
-    private String[] mapDematsToSortKeys(List<PnEventDemat> pnEventDemats) {
-        return pnEventDemats.stream().map(PnEventDemat::getDocumentTypeStatusCode).toArray(String[]::new);
     }
 
 }
