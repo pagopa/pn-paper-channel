@@ -17,7 +17,7 @@ import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.buildMetaRequestId;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class MetaDemtaCleaner {
+public class MetaDematCleaner {
 
     private final EventDematDAO eventDematDAO;
 
