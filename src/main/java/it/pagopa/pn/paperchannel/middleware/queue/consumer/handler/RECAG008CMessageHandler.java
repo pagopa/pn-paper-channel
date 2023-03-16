@@ -41,7 +41,7 @@ public class RECAG008CMessageHandler extends SendToDeliveryPushHandler {
                 // send to DeliveryPush
                 .doOnNext(pnEventMetas -> super.handleMessage(entity, paperRequest))
                     .onErrorResume(throwable -> {
-                        log.warn("error on handleMessage", throwable);
+                        log.warn("Error on handleMessage", throwable);
                         return Mono.error(new PnSendToDeliveryException(throwable));
                     })
 
@@ -52,7 +52,7 @@ public class RECAG008CMessageHandler extends SendToDeliveryPushHandler {
                         if (throwable instanceof PnSendToDeliveryException)
                             return Mono.error(throwable);
                         else {
-                            log.warn("Cannot delete MAT", throwable);
+                            log.warn("Cannot delete EventMetas", throwable);
                             return Mono.empty();
                         }
                     })
@@ -67,7 +67,7 @@ public class RECAG008CMessageHandler extends SendToDeliveryPushHandler {
                         if (throwable instanceof PnSendToDeliveryException)
                             return Mono.error(throwable);
                         else {
-                            log.warn("Cannot delete MAT", throwable);
+                            log.warn("Cannot delete EventDemats", throwable);
                             return Mono.empty();
                         }
                     })
@@ -83,6 +83,8 @@ public class RECAG008CMessageHandler extends SendToDeliveryPushHandler {
         Optional<PnEventMeta> elPNAG012 = pnEventMetas.stream()
                 .filter(pnEventMeta -> META_PNAG012_STATUS_CODE.equals(pnEventMeta.getStatusCode()))
                 .findFirst();
+
+        log.info("RECAG012 presence {}, PNAG012 presence {}", elRECAG012.isPresent(), elPNAG012.isPresent());
 
         return elRECAG012.isPresent() && elPNAG012.isPresent();
     }

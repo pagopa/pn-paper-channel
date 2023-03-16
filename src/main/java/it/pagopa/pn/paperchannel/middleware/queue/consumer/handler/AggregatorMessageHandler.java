@@ -13,6 +13,8 @@ import it.pagopa.pn.paperchannel.service.SqsSender;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
+import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
+
 // Alla ricezione di questi tipi di eventi, che sono finali per lo specifico prodotto, paper-channel dovrà:
 // recuperare l’evento di pre-esito correlato (mediante accesso puntuale su hashkey META##RequestID e sortKey META##statusCode)
 // arricchire l’evento finale ricevuto con le eventuali informazioni aggiuntive reperite in tabella (in particolare,
@@ -22,12 +24,6 @@ import reactor.core.publisher.Mono;
 
 @Slf4j
 public class AggregatorMessageHandler extends SendToDeliveryPushHandler {
-
-    private static final String METADATA_PREFIX = "META";
-    private static final String DEMAT_PREFIX = "DEMAT";
-
-    private static final String DELIMITER = "##";
-
     private final EventMetaDAO eventMetaDAO;
     private final EventDematDAO eventDematDAO;
 
@@ -41,10 +37,10 @@ public class AggregatorMessageHandler extends SendToDeliveryPushHandler {
     @Override
     public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
 
-        final String preClosingMetaStatus = preCloseMetaStatusCode(METADATA_PREFIX + DELIMITER + paperRequest.getStatusCode());
+        final String preClosingMetaStatus = preCloseMetaStatusCode(buildMetaStatusCode(paperRequest.getStatusCode()));
 
         // recuperare evento pre-esito da db e arricchire l'evento ricevuto con quello recuperato (deliveryFailureCause/discoveredAddress)
-        return eventMetaDAO.getDeliveryEventMeta(METADATA_PREFIX + DELIMITER + paperRequest.getRequestId(),
+        return eventMetaDAO.getDeliveryEventMeta(buildMetaRequestId(paperRequest.getRequestId()),
                         preClosingMetaStatus)
                 .switchIfEmpty(Mono.defer(() -> {
                             log.warn("Missing EventMeta for: {}", paperRequest);
@@ -55,11 +51,11 @@ public class AggregatorMessageHandler extends SendToDeliveryPushHandler {
                 // invio dato su delivery-push, che ci sia stato arricchimento o meno)
                 .flatMap(enrichedRequest -> super.handleMessage(entity, enrichedRequest))
                 .onErrorResume(throwable -> {
-                    log.warn("error on handleMessage", throwable);
+                    log.warn("Error on handleMessage", throwable);
                     return Mono.error(new PnSendToDeliveryException(throwable));
                 })
 
-                .then(eventMetaDAO.deleteEventMeta(METADATA_PREFIX + DELIMITER + paperRequest.getRequestId(),
+                .then(eventMetaDAO.deleteEventMeta(buildMetaRequestId(paperRequest.getRequestId()),
                                 preClosingMetaStatus)
                         .doOnNext(deletedEntity -> log.info("Deleted EventMeta: {}", deletedEntity))
                 )
@@ -67,11 +63,11 @@ public class AggregatorMessageHandler extends SendToDeliveryPushHandler {
                     if (throwable instanceof PnSendToDeliveryException)
                         return Mono.error(throwable);
                     else {
-                        log.warn("Cannot delete MAT", throwable);
+                        log.warn("Cannot delete EventMeta", throwable);
                         return Mono.empty();
                     }
                 })
-                .then(eventDematDAO.findAllByRequestId(DEMAT_PREFIX + DELIMITER + paperRequest.getRequestId())
+                .then(eventDematDAO.findAllByRequestId(buildDematRequestId(paperRequest.getRequestId()))
                         .flatMap(foundItem ->
                                 eventDematDAO.deleteEventDemat(foundItem.getDematRequestId(), foundItem.getDocumentTypeStatusCode())
                                         .doOnNext(deletedEntity -> log.info("Deleted EventDemat: {}", deletedEntity))
@@ -80,7 +76,7 @@ public class AggregatorMessageHandler extends SendToDeliveryPushHandler {
                     if (throwable instanceof PnSendToDeliveryException)
                         return Mono.error(throwable);
                     else {
-                        log.warn("Cannot delete DEMAT", throwable);
+                        log.warn("Cannot delete EventDemat", throwable);
                         return Mono.empty();
                     }
                 })
