@@ -45,7 +45,7 @@ public class PnEventMeta {
     private String deliveryFailureCause;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_DISCOVERED_ADDRESS)}))
-    private String discoveredAddress;
+    private PnDiscoveredAddress discoveredAddress;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_STATUS_DATETIME)}))
     private Instant statusDateTime;
