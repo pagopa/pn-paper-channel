@@ -6,7 +6,7 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
 import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
-import it.pagopa.pn.paperchannel.middleware.queue.consumer.MetaDemtaCleaner;
+import it.pagopa.pn.paperchannel.middleware.queue.consumer.MetaDematCleaner;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum;
 import lombok.RequiredArgsConstructor;
@@ -34,7 +34,7 @@ public class HandlersFactory {
 
     private final EventDematDAO eventDematDAO;
 
-    private final MetaDemtaCleaner metaDemtaCleaner;
+    private final MetaDematCleaner metaDematCleaner;
 
     private ConcurrentHashMap<String, MessageHandler> map;
 
