@@ -5,6 +5,7 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnDiscoveredAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventDemat;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.AttachmentDetailsDto;
@@ -26,7 +27,7 @@ import java.util.Date;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
@@ -37,7 +38,7 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
     private PaperResultAsyncService paperResultAsyncService;
 
     @Autowired
-    private EventMetaDAO eventMetaDAO;;
+    private EventMetaDAO eventMetaDAO;
 
     @Autowired
     private EventDematDAO eventDematDAO;
@@ -149,13 +150,55 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
     void testEsitoFinalEvent() {
         PnDeliveryRequest pnDeliveryRequest = createPnDeliveryRequest();
 
-        PaperProgressStatusEventDto analogMail = new PaperProgressStatusEventDto();
-        analogMail.requestId("PREPARE_ANALOG_DOMICILE.IUN_MUMR-VQMP-LDNZ-202303-H-1.RECINDEX_0.SENTATTEMPTMADE_0");
-        analogMail.setClientRequestTimeStamp(OffsetDateTime.now());
-        analogMail.setStatusDateTime(OffsetDateTime.now());
-        analogMail.setStatusCode("RECRS001C");
-        analogMail.setProductType("RS");
-        analogMail.setStatusDescription("OK");
+        PaperProgressStatusEventDto analogMail = createSimpleAnalogMail();
+
+        SingleStatusUpdateDto extChannelMessage = new SingleStatusUpdateDto();
+        extChannelMessage.setAnalogMail(analogMail);
+
+        PnDeliveryRequest afterSetForUpdate = createPnDeliveryRequest();
+        afterSetForUpdate.setStatusCode(ExternalChannelCodeEnum.getStatusCode(extChannelMessage.getAnalogMail().getStatusCode()));
+        afterSetForUpdate.setStatusDetail(extChannelMessage.getAnalogMail().getProductType()
+                .concat(" - ").concat(pnDeliveryRequest.getStatusCode()).concat(" - ").concat(extChannelMessage.getAnalogMail().getStatusDescription()));
+        afterSetForUpdate.setStatusDate(DateUtils.formatDate(Date.from(extChannelMessage.getAnalogMail().getStatusDateTime().toInstant())));
+
+        when(requestDeliveryDAO.getByRequestId(anyString())).thenReturn(Mono.just(pnDeliveryRequest));
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
+
+        // inserimento 1 meta
+        PnEventMeta eventMeta = createPnEventMeta(analogMail);
+        eventMetaDAO.createOrUpdate(eventMeta).block();
+
+        PnEventMeta eventMetaFromDb = eventMetaDAO.getDeliveryEventMeta(eventMeta.getMetaRequestId(), eventMeta.getMetaStatusCode()).block();
+        assertNotNull(eventMetaFromDb);
+
+        // inserimento 1 demat
+        PnEventDemat eventDemat = createPnEventDemat(analogMail);
+        eventDematDAO.createOrUpdate(eventDemat).block();
+
+        PnEventDemat eventDematFromDB = eventDematDAO.getDeliveryEventDemat(eventDemat.getDematRequestId(), eventDemat.getDocumentTypeStatusCode()).block();
+        assertNotNull(eventDematFromDB);
+
+        // verifico che il flusso è stato completato con successo
+        assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());
+
+        // verifico che è stato inviato un evento a delivery-push
+        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(any(SendEvent.class));
+
+        // verifica cancellazione evento meta
+        eventMetaFromDb = eventMetaDAO.getDeliveryEventMeta(eventMeta.getMetaRequestId(), eventMeta.getMetaStatusCode()).block();
+        assertNull(eventMetaFromDb);
+
+        // verifica cancellazione evento demat
+        eventDematFromDB = eventDematDAO.getDeliveryEventDemat(eventDemat.getDematRequestId(), eventDemat.getDocumentTypeStatusCode()).block();
+        assertNull(eventDematFromDB);
+    }
+
+    @DirtiesContext
+    @Test
+    void testEsitoFinalEventSendWithoutFindingPreviousEvents() {
+        PnDeliveryRequest pnDeliveryRequest = createPnDeliveryRequest();
+
+        PaperProgressStatusEventDto analogMail = createSimpleAnalogMail();
 
         SingleStatusUpdateDto extChannelMessage = new SingleStatusUpdateDto();
         extChannelMessage.setAnalogMail(analogMail);
@@ -174,7 +217,33 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
 
         // verifico che è stato inviato un evento a delivery-push
         verify(sqsSender, timeout(2000).times(1)).pushSendEvent(any(SendEvent.class));
+    }
 
+    @DirtiesContext
+    @Test
+    void testEsitoFinalEvent_RECRS001C_RECRS003C() {
+        PnDeliveryRequest pnDeliveryRequest = createPnDeliveryRequest();
+
+        PaperProgressStatusEventDto analogMail = createSimpleAnalogMail();
+        analogMail.setStatusCode("RECRS001C");
+
+        SingleStatusUpdateDto extChannelMessage = new SingleStatusUpdateDto();
+        extChannelMessage.setAnalogMail(analogMail);
+
+        PnDeliveryRequest afterSetForUpdate = createPnDeliveryRequest();
+        afterSetForUpdate.setStatusCode(ExternalChannelCodeEnum.getStatusCode(extChannelMessage.getAnalogMail().getStatusCode()));
+        afterSetForUpdate.setStatusDetail(extChannelMessage.getAnalogMail().getProductType()
+                .concat(" - ").concat(pnDeliveryRequest.getStatusCode()).concat(" - ").concat(extChannelMessage.getAnalogMail().getStatusDescription()));
+        afterSetForUpdate.setStatusDate(DateUtils.formatDate(Date.from(extChannelMessage.getAnalogMail().getStatusDateTime().toInstant())));
+
+        when(requestDeliveryDAO.getByRequestId(anyString())).thenReturn(Mono.just(pnDeliveryRequest));
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
+
+        // verifico che il flusso è stato completato con successo
+        assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());
+
+        // verifico che è stato inviato un evento a delivery-push
+        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(any(SendEvent.class));
     }
 
     @DirtiesContext
@@ -313,6 +382,54 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
         pnDeliveryRequest.setStatusDetail("In attesa di indirizzo da National Registry");
 
         return pnDeliveryRequest;
+    }
 
+    private PnEventMeta createPnEventMeta(PaperProgressStatusEventDto analogMail) {
+        int ttlOffsetDays = 365;
+
+        final String statusCodeToFind = "RECRS002A";
+
+        PnEventMeta eventMeta = new PnEventMeta();
+        PnDiscoveredAddress address1 = new PnDiscoveredAddress();
+        address1.setAddress("discoveredAddress1");
+        eventMeta.setMetaRequestId("META##" + analogMail.getRequestId());
+        eventMeta.setMetaStatusCode("META##" + statusCodeToFind);
+        eventMeta.setRequestId(analogMail.getRequestId());
+        eventMeta.setStatusCode(statusCodeToFind);
+        eventMeta.setDiscoveredAddress(address1);
+        eventMeta.setDeliveryFailureCause("failureCause1");
+        eventMeta.setStatusDateTime(analogMail.getStatusDateTime().toInstant());
+        eventMeta.setTtl(analogMail.getStatusDateTime().toInstant().plus(ttlOffsetDays, ChronoUnit.DAYS).toEpochMilli());
+
+        return eventMeta;
+    }
+
+    private PnEventDemat createPnEventDemat(PaperProgressStatusEventDto analogMail) {
+        int ttlOffsetDays = 365;
+
+        PnEventDemat eventDemat = new PnEventDemat();
+        eventDemat.setDematRequestId("DEMAT##" + analogMail.getRequestId());
+        eventDemat.setDocumentTypeStatusCode(analogMail.getProductType() + "##" + analogMail.getStatusCode());
+        eventDemat.setRequestId(analogMail.getRequestId());
+        eventDemat.setDocumentType(analogMail.getProductType());
+        eventDemat.setStatusCode(analogMail.getStatusCode());
+        eventDemat.setDocumentDate(analogMail.getStatusDateTime().toInstant().plusSeconds(-5));
+        eventDemat.setStatusDateTime(analogMail.getStatusDateTime().toInstant());
+        eventDemat.setUri("uri1");
+        eventDemat.setTtl(analogMail.getStatusDateTime().toInstant().plus(ttlOffsetDays, ChronoUnit.DAYS).toEpochMilli());
+
+        return eventDemat;
+    }
+
+    private PaperProgressStatusEventDto createSimpleAnalogMail() {
+        PaperProgressStatusEventDto analogMail = new PaperProgressStatusEventDto();
+        analogMail.requestId("PREPARE_ANALOG_DOMICILE.IUN_MUMR-VQMP-LDNZ-202303-H-1.RECINDEX_0.SENTATTEMPTMADE_0");
+        analogMail.setClientRequestTimeStamp(OffsetDateTime.now());
+        analogMail.setStatusDateTime(OffsetDateTime.now());
+        analogMail.setStatusCode("RECRS002C");
+        analogMail.setProductType("RS");
+        analogMail.setStatusDescription("OK");
+
+        return analogMail;
     }
 }
