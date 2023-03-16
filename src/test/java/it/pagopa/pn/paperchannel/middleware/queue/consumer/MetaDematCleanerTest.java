@@ -13,9 +13,9 @@ import reactor.core.publisher.Mono;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.*;
 
-class MetaDemtaCleanerTest {
+class MetaDematCleanerTest {
 
-    private MetaDemtaCleaner metaDemtaCleaner;
+    private MetaDematCleaner metaDematCleaner;
 
     private EventDematDAO eventDematDAO;
 
@@ -25,7 +25,7 @@ class MetaDemtaCleanerTest {
     public void init() {
         eventDematDAO = mock(EventDematDAO.class);
         eventMetaDAO = mock(EventMetaDAO.class);
-        metaDemtaCleaner = new MetaDemtaCleaner(eventDematDAO, eventMetaDAO);
+        metaDematCleaner = new MetaDematCleaner(eventDematDAO, eventMetaDAO);
 
     }
 
@@ -59,7 +59,7 @@ class MetaDemtaCleanerTest {
         when(eventDematDAO.findAllByRequestId(dematRequestId)).thenReturn(Flux.just(eventDemat));
         when(eventDematDAO.deleteBatch(dematRequestId, documentTypeStatusCode)).thenReturn(Mono.empty());
 
-        assertDoesNotThrow(() -> metaDemtaCleaner.clean(requestId).block());
+        assertDoesNotThrow(() -> metaDematCleaner.clean(requestId).block());
 
         verify(eventMetaDAO, times(1)).findAllByRequestId(metaRequestId);
         verify(eventMetaDAO, times(1)).deleteBatch(metaRequestId, metaStatusCode);
@@ -98,7 +98,7 @@ class MetaDemtaCleanerTest {
         when(eventDematDAO.findAllByRequestId(dematRequestId)).thenReturn(Flux.just(eventDemat));
         when(eventDematDAO.deleteBatch(dematRequestId, documentTypeStatusCode)).thenReturn(Mono.empty());
 
-        assertDoesNotThrow(() -> metaDemtaCleaner.clean(requestId).block());
+        assertDoesNotThrow(() -> metaDematCleaner.clean(requestId).block());
 
         verify(eventMetaDAO, times(1)).findAllByRequestId(metaRequestId);
         verify(eventMetaDAO, times(1)).deleteBatch(metaRequestId, metaStatusCode);
@@ -137,7 +137,7 @@ class MetaDemtaCleanerTest {
         when(eventDematDAO.findAllByRequestId(dematRequestId)).thenReturn(Flux.just(eventDemat));
         when(eventDematDAO.deleteBatch(dematRequestId, documentTypeStatusCode)).thenReturn(Mono.error(new RuntimeException()));
 
-        assertDoesNotThrow(() -> metaDemtaCleaner.clean(requestId).block());
+        assertDoesNotThrow(() -> metaDematCleaner.clean(requestId).block());
 
         verify(eventMetaDAO, times(1)).findAllByRequestId(metaRequestId);
         verify(eventMetaDAO, times(1)).deleteBatch(metaRequestId, metaStatusCode);
