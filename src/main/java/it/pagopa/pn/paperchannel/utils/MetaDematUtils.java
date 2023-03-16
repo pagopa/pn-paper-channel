@@ -5,6 +5,10 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.StatusCodeEnum;
 
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+
 public class MetaDematUtils {
 
     public static final String DEMAT_PREFIX = "DEMAT";
@@ -50,9 +54,11 @@ public class MetaDematUtils {
     }
 
 
-    public static void editPnDeliveryRequestForPNAG012(PnDeliveryRequest entity) {
+    public static void editPnDeliveryRequestAndPaperRequestForPNAG012(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest, Instant statusDateTimeRECAG012) {
         entity.setStatusCode(StatusCodeEnum.OK.getValue());
         entity.setStatusDetail("Distacco d'ufficio 23L fascicolo chiuso");
+
+        paperRequest.setStatusDateTime(OffsetDateTime.ofInstant(statusDateTimeRECAG012, ZoneOffset.UTC));
     }
 
 

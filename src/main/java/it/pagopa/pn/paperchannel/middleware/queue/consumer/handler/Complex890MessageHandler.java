@@ -1,12 +1,14 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
+import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
-import it.pagopa.pn.paperchannel.middleware.queue.consumer.MetaDemtaCleaner;
+import it.pagopa.pn.paperchannel.middleware.queue.consumer.MetaDematCleaner;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.service.SqsSender;
+import it.pagopa.pn.paperchannel.utils.PnLogAudit;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Mono;
@@ -29,7 +31,6 @@ RECAG005C RECAG006C o RECAG007C
 3. Nel caso in cui il risultato della query produca il risultato META##RECAG012  senza il META##PNAG012 allora dovrà
         essere effettuata la transizione in "Distacco d'ufficio 23L fascicolo chiuso":
    - Recuperare l’evento con SK META##RECAG012 e recuperare la statusDateTime
-     effettuare PUT di una nuova riga correlata all’evento PNAG012 in tabella impostando come statusDateTime quella recuperata al punto precedente
    - generazione dell’evento finale PNAG012 verso delivery_push (vedi dettaglio in paragrafo Evento PNAG012)
    - inoltro dell’evento orginale (RECAG005C RECAG006C o RECAG007C) con statusCode PROGRESS verso delivery_push
 
@@ -47,15 +48,12 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
 
     private final EventMetaDAO eventMetaDAO;
 
-    private final Long ttlDaysMeta;
+    private final MetaDematCleaner metaDematCleaner;
 
-    private final MetaDemtaCleaner metaDemtaCleaner;
-
-    public Complex890MessageHandler(SqsSender sqsSender, EventMetaDAO eventMetaDAO, Long ttlDaysMeta, MetaDemtaCleaner metaDemtaCleaner) {
+    public Complex890MessageHandler(SqsSender sqsSender, EventMetaDAO eventMetaDAO, MetaDematCleaner metaDematCleaner) {
         super(sqsSender);
         this.eventMetaDAO = eventMetaDAO;
-        this.ttlDaysMeta = ttlDaysMeta;
-        this.metaDemtaCleaner = metaDemtaCleaner;
+        this.metaDematCleaner = metaDematCleaner;
     }
 
     @Override
@@ -65,7 +63,7 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
                 .collectList()
                 .doOnNext(pnEventMetas -> log.info("[{}] Result of findAllByRequestId: {}", paperRequest.getRequestId(), pnEventMetas))
                 .flatMap(pnEventMetas -> handleMetasResult(pnEventMetas, entity, paperRequest))
-                .then(metaDemtaCleaner.clean(paperRequest.getRequestId()));
+                .then(metaDematCleaner.clean(paperRequest.getRequestId()));
     }
 
     private Mono<List<PnEventMeta>> handleMetasResult(List<PnEventMeta> pnEventMetas, PnDeliveryRequest entity,
@@ -76,6 +74,7 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
 
         if(CollectionUtils.isEmpty(pnEventMetas)) {
 //            CASO 4
+            log.info("[{}] Result of query is empty", paperRequest.getRequestId());
             entity.setStatusCode(StatusCodeEnum.OK.getValue());
             return super.handleMessage(entity, paperRequest)
                     .then(Mono.just(pnEventMetas));
@@ -94,21 +93,25 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
 
         if (containsPNAG012 && (!containsRECAG012)) {  // presente META##PNAG012 ma NON META##RECAG012
 //            CASO 1.ii
-            throw new RuntimeException();
+            log.error("[{}] META##PNAG012 is present but META##RECAG012 is not present", paperRequest.getRequestId());
+            return Mono.empty();
         }
         else if (containsPNAG012 && containsRECAG012) { // presenti META##RECAG012  e META##PNAG012
 //            CASO 2
+            log.info("[{}] Result of query is: META##RECAG012 present, META##PNAG012 present", paperRequest.getRequestId());
             entity.setStatusCode(StatusCodeEnum.PROGRESS.getValue());
             return super.handleMessage(entity, paperRequest)
                     .then(Mono.just(pnEventMetas));
         }
         else if ( (!containsPNAG012) && containsRECAG012) { // presente META##RECAG012  e non META##PNAG012
 //            CASO 3
-            PnEventMeta metaForPNAG012Event = createMETAForPNAG012Event(paperRequest, pnEventMetaRECAG012, ttlDaysMeta);
-            return eventMetaDAO.createOrUpdate(metaForPNAG012Event)
-                    .doOnNext(pnEventMeta -> editPnDeliveryRequestForPNAG012(entity))
-                    .flatMap(pnEventMeta -> super.handleMessage(entity, paperRequest))
-                    .then(Mono.just(pnEventMetas));
+            log.info("[{}] Result of query is: META##RECAG012 present, META##PNAG012 not present", paperRequest.getRequestId());
+            PnAuditLogBuilder auditLogBuilder = new PnAuditLogBuilder();
+            PnLogAudit pnLogAudit = new PnLogAudit(auditLogBuilder);
+            editPnDeliveryRequestAndPaperRequestForPNAG012(entity, paperRequest, pnEventMetaRECAG012.getStatusDateTime());
+            pnLogAudit.addsBeforeReceive(entity.getIun(), String.format("prepare requestId = %s Response from external-channel", entity.getRequestId()));
+            pnLogAudit.addsSuccessReceive(entity.getIun(), String.format("prepare requestId = %s Response %s from external-channel status code %s",  entity.getRequestId(), paperRequest.toString().replaceAll("\n", ""), entity.getStatusCode()));
+            return super.handleMessage(entity, paperRequest).then(Mono.just(pnEventMetas));
         }
 
         return Mono.just(pnEventMetas);

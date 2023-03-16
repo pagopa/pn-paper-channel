@@ -29,16 +29,22 @@ public class MetaDematCleaner {
 
         return eventMetaDAO.findAllByRequestId(pkMetaFilter).collectList()
                 .map(this::mapMetasToSortKeys)
-                .flatMap(sortKeysMeta -> eventMetaDAO.deleteBatch(pkMetaFilter, sortKeysMeta))
+                .flatMap(sortKeysMeta -> {
+                    if(sortKeysMeta.length > 0) return eventMetaDAO.deleteBatch(pkMetaFilter, sortKeysMeta);
+                    return Mono.empty();
+                })
                 .onErrorResume(throwable -> {
-                    log.warn("Error in clean Metadata");
+                    log.warn("Error in clean Metadata", throwable);
                     return Mono.empty();
                 })
                 .then(eventDematDAO.findAllByRequestId(pkDematFilter).collectList())
                 .map(this::mapDematsToSortKeys)
-                .flatMap(sortKeysDemat -> eventDematDAO.deleteBatch(pkDematFilter, sortKeysDemat))
+                .flatMap(sortKeysDemat -> {
+                    if(sortKeysDemat.length > 0) return eventDematDAO.deleteBatch(pkDematFilter, sortKeysDemat);
+                    return Mono.empty();
+                })
                 .onErrorResume(throwable -> {
-                    log.warn("Error in clean Demat");
+                    log.warn("Error in clean Demat", throwable);
                     return Mono.empty();
                 });
 
