@@ -138,6 +138,43 @@ class EventDematDAOTestIT extends BaseTest {
                 .containsExactlyInAnyOrderElementsOf(List.of(eventDemat1, eventDemat2, eventDemat3));
     }
 
+    @Test
+    void deleteBatchTest() {
+        final String requestId = "LVRK-202302-G-1;RECINDEX_0;SENTATTEMPTMADE_0;PCRETRY_0";
+        final String anotherRequestId = "AVRK-202302-G-1;RECINDEX_0;SENTATTEMPTMADE_0;PCRETRY_0";
+        eventDemat1.setDematRequestId("DEMAT##" + requestId);
+        eventDemat1.setDocumentTypeStatusCode("23L##RECAG011B");
+        eventDemat1.setRequestId(requestId);
+        eventDemat1.setDocumentType("23L");
+
+        eventDemat2.setDematRequestId("DEMAT##" + requestId);
+        eventDemat2.setDocumentTypeStatusCode("ARCAD##RECAG011B");
+        eventDemat2.setRequestId(requestId);
+        eventDemat2.setDocumentType("ARCAD");
+
+        PnEventDemat eventDemat3 = new PnEventDemat();
+        eventDemat3.setDematRequestId("DEMAT##" + anotherRequestId);
+        eventDemat3.setDocumentTypeStatusCode("CAD##RECAG011B");
+        eventDemat3.setRequestId(requestId);
+        eventDemat3.setDocumentType("CAD");
+        eventDemat3.setTtl(Instant.now().plus(1, ChronoUnit.DAYS).getEpochSecond());
+
+
+
+        eventDematDAO.createOrUpdate(eventDemat1).block();
+        eventDematDAO.createOrUpdate(eventDemat2).block();
+        eventDematDAO.createOrUpdate(eventDemat3).block();
+
+        List<PnEventDemat> result = eventDematDAO.findAllByRequestId("DEMAT##" + requestId).collectList().block();
+        assertThat(result).hasSize(2);
+        eventDematDAO.deleteBatch("DEMAT##" + requestId, result.stream().map(PnEventDemat::getDocumentTypeStatusCode).toArray(String[]::new)).block();
+
+        result = eventDematDAO.findAllByRequestId("DEMAT##" + requestId).collectList().block();
+
+        assertThat(result).isEmpty();
+
+    }
+
     private void initialize() {
         final String requestId = "requestId";
         final String statusCode1 = "statusCode1";

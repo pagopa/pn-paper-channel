@@ -41,4 +41,10 @@ public class EventMetaDAOImpl extends BaseDAO<PnEventMeta> implements EventMetaD
     public Mono<PnEventMeta> deleteEventMeta(String metaRequestId, String metaStatusCode) {
         return Mono.fromFuture(this.delete(metaRequestId, metaStatusCode).thenApply(item -> item));
     }
+
+    @Override
+    public Mono<Void> deleteBatch(String metaRequestId, String... metaStatusCodes) {
+        return super.deleteBatch(metaRequestId, metaStatusCodes);
+    }
+
 }
