@@ -34,13 +34,13 @@ class AggregatorMessageHandlerTest {
     private EventDematDAO mockDematDao;
     private EventMetaDAO mockMetaDao;
 
-    private MetaDematCleaner metaDematCleaner;
-
     @BeforeEach
     public void init() {
         mockSqsSender = mock(SqsSender.class);
         mockMetaDao = mock(EventMetaDAO.class);
         mockDematDao = mock(EventDematDAO.class);
+
+        MetaDematCleaner  metaDematCleaner = new MetaDematCleaner(mockDematDao, mockMetaDao);
 
         handler = new AggregatorMessageHandler(mockSqsSender, mockMetaDao, metaDematCleaner);
     }
@@ -72,10 +72,11 @@ class AggregatorMessageHandlerTest {
         // getDeliveryEventMeta
         when(mockMetaDao.getDeliveryEventMeta(any(String.class), any(String.class))).thenReturn(Mono.just(eventMeta));
         // findAllByRequestId
+        when(mockMetaDao.findAllByRequestId(any(String.class))).thenReturn(Flux.just(eventMeta));
         when(mockDematDao.findAllByRequestId(any(String.class))).thenReturn(Flux.just(eventDemat));
-        // the two deletes
-        when(mockMetaDao.deleteEventMeta(any(String.class), any(String.class))).thenReturn(Mono.just(eventMeta));
-        when(mockDematDao.deleteEventDemat(any(String.class), any(String.class))).thenReturn(Mono.just(eventDemat));
+        // the batch deletes
+        when(mockMetaDao.deleteBatch(any(String.class), any(String.class))).thenReturn(Mono.empty());
+        when(mockDematDao.deleteBatch(any(String.class), any(String.class))).thenReturn(Mono.empty());
 
         // assertDoNotThrow with call
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
@@ -84,9 +85,9 @@ class AggregatorMessageHandlerTest {
         // getDeliveryEventMeta call
         verify(mockMetaDao, timeout(2000).times(1)).getDeliveryEventMeta(any(String.class), any(String.class));
         // deleteEventMeta call
-        verify(mockMetaDao, timeout(2000).times(1)).deleteEventMeta(any(String.class), any(String.class));
+        verify(mockMetaDao, timeout(2000).times(1)).deleteBatch(any(String.class), any(String.class));
         // deleteEventDemat call
-        verify(mockDematDao, timeout(2000).times(1)).deleteEventDemat(any(String.class), any(String.class));
+        verify(mockDematDao, timeout(2000).times(1)).deleteBatch(any(String.class), any(String.class));
         // DeliveryPush send via SQS verification
         verify(mockSqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
 
@@ -97,6 +98,8 @@ class AggregatorMessageHandlerTest {
 
     @Test
     void handleAggregatorMessageMissingMetaTest() {
+        // inserimento 1 demat
+        PnEventDemat eventDemat = createPnEventDemat();
 
         // entity and paperRequest
         OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
@@ -118,7 +121,9 @@ class AggregatorMessageHandlerTest {
         // getDeliveryEventMeta
         when(mockMetaDao.getDeliveryEventMeta(any(String.class), any(String.class))).thenReturn(Mono.empty());
         // findAllByRequestId
-        when(mockDematDao.findAllByRequestId(any(String.class))).thenReturn(Flux.empty());
+        when(mockMetaDao.findAllByRequestId(any(String.class))).thenReturn(Flux.empty());
+        when(mockDematDao.findAllByRequestId(any(String.class))).thenReturn(Flux.just(eventDemat));
+
         // deleteEventMeta
         when(mockMetaDao.deleteEventMeta(any(String.class), any(String.class))).thenReturn(Mono.empty());
 
@@ -161,10 +166,11 @@ class AggregatorMessageHandlerTest {
         // getDeliveryEventMeta
         when(mockMetaDao.getDeliveryEventMeta(any(String.class), any(String.class))).thenReturn(Mono.just(eventMeta));
         // findAllByRequestId
+        when(mockMetaDao.findAllByRequestId(any(String.class))).thenReturn(Flux.just(eventMeta));
         when(mockDematDao.findAllByRequestId(any(String.class))).thenReturn(Flux.just(eventDemat));
-        // the two deletes
-        when(mockMetaDao.deleteEventMeta(any(String.class), any(String.class))).thenReturn(Mono.just(eventMeta));
-        when(mockDematDao.deleteEventDemat(any(String.class), any(String.class))).thenReturn(Mono.just(eventDemat));
+        // the batch deletes
+        when(mockMetaDao.deleteBatch(any(String.class), any(String.class))).thenReturn(Mono.empty());
+        when(mockDematDao.deleteBatch(any(String.class), any(String.class))).thenReturn(Mono.empty());
         // the SQS queue
         doThrow(new RuntimeException()).when(mockSqsSender).pushSendEvent(Mockito.any());
 
@@ -203,10 +209,11 @@ class AggregatorMessageHandlerTest {
         // getDeliveryEventMeta
         when(mockMetaDao.getDeliveryEventMeta(any(String.class), any(String.class))).thenReturn(Mono.just(eventMeta));
         // findAllByRequestId
+        when(mockMetaDao.findAllByRequestId(any(String.class))).thenReturn(Flux.just(eventMeta));
         when(mockDematDao.findAllByRequestId(any(String.class))).thenReturn(Flux.just(eventDemat));
-        // the two deletes
-        when(mockMetaDao.deleteEventMeta(any(String.class), any(String.class))).thenReturn(Mono.error(new RuntimeException()));
-        when(mockDematDao.deleteEventDemat(any(String.class), any(String.class))).thenReturn(Mono.just(eventDemat));
+        // the batch deletes
+        when(mockMetaDao.deleteBatch(any(String.class), any(String.class))).thenReturn(Mono.error(new RuntimeException()));
+        when(mockDematDao.deleteBatch(any(String.class), any(String.class))).thenReturn(Mono.empty());
 
         // assertDoNotThrow with call
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
@@ -215,9 +222,9 @@ class AggregatorMessageHandlerTest {
         // getDeliveryEventMeta call
         verify(mockMetaDao, timeout(2000).times(1)).getDeliveryEventMeta(any(String.class), any(String.class));
         // deleteEventMeta call
-        verify(mockMetaDao, timeout(2000).times(1)).deleteEventMeta(any(String.class), any(String.class));
+        verify(mockMetaDao, timeout(2000).times(1)).deleteBatch(any(String.class), any(String.class));
         // deleteEventDemat call
-        verify(mockDematDao, timeout(2000).times(1)).deleteEventDemat(any(String.class), any(String.class));
+        verify(mockDematDao, timeout(2000).times(1)).deleteBatch(any(String.class), any(String.class));
         // DeliveryPush send via SQS verification
         verify(mockSqsSender, timeout(2000).times(1)).pushSendEvent(any(SendEvent.class));
     }
@@ -247,10 +254,11 @@ class AggregatorMessageHandlerTest {
         // getDeliveryEventMeta
         when(mockMetaDao.getDeliveryEventMeta(any(String.class), any(String.class))).thenReturn(Mono.just(eventMeta));
         // findAllByRequestId
+        when(mockMetaDao.findAllByRequestId(any(String.class))).thenReturn(Flux.just(eventMeta));
         when(mockDematDao.findAllByRequestId(any(String.class))).thenReturn(Flux.just(eventDemat));
-        // the two deletes
-        when(mockMetaDao.deleteEventMeta(any(String.class), any(String.class))).thenReturn(Mono.just(eventMeta));
-        when(mockDematDao.deleteEventDemat(any(String.class), any(String.class))).thenReturn(Mono.error(new RuntimeException()));
+        // the batch deletes
+        when(mockMetaDao.deleteBatch(any(String.class), any(String.class))).thenReturn(Mono.empty());
+        when(mockDematDao.deleteBatch(any(String.class), any(String.class))).thenReturn(Mono.error(new RuntimeException()));
 
         // assertDoNotThrow with call
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
@@ -259,9 +267,9 @@ class AggregatorMessageHandlerTest {
         // getDeliveryEventMeta call
         verify(mockMetaDao, timeout(2000).times(1)).getDeliveryEventMeta(any(String.class), any(String.class));
         // deleteEventMeta call
-        verify(mockMetaDao, timeout(2000).times(1)).deleteEventMeta(any(String.class), any(String.class));
+        verify(mockMetaDao, timeout(2000).times(1)).deleteBatch(any(String.class), any(String.class));
         // deleteEventDemat call
-        verify(mockDematDao, timeout(2000).times(1)).deleteEventDemat(any(String.class), any(String.class));
+        verify(mockDematDao, timeout(2000).times(1)).deleteBatch(any(String.class), any(String.class));
         // DeliveryPush send via SQS verification
         verify(mockSqsSender, timeout(2000).times(1)).pushSendEvent(any(SendEvent.class));
     }
