@@ -7,6 +7,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDiscoveredAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventDemat;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
+import it.pagopa.pn.paperchannel.middleware.queue.consumer.MetaDematCleaner;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.rest.v1.dto.StatusCodeEnum;
@@ -32,13 +33,16 @@ class AggregatorMessageHandlerTest {
     private SqsSender mockSqsSender;
     private EventDematDAO mockDematDao;
     private EventMetaDAO mockMetaDao;
+
+    private MetaDematCleaner metaDematCleaner;
+
     @BeforeEach
     public void init() {
         mockSqsSender = mock(SqsSender.class);
         mockMetaDao = mock(EventMetaDAO.class);
         mockDematDao = mock(EventDematDAO.class);
 
-        handler = new AggregatorMessageHandler(mockSqsSender, mockMetaDao, mockDematDao);
+        handler = new AggregatorMessageHandler(mockSqsSender, mockMetaDao, metaDematCleaner);
     }
 
     @Test

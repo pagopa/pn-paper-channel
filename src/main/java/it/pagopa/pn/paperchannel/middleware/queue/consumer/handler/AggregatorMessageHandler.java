@@ -2,11 +2,11 @@ package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
 import it.pagopa.pn.paperchannel.exception.PnSendToDeliveryException;
 import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
-import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDiscoveredAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
+import it.pagopa.pn.paperchannel.middleware.queue.consumer.MetaDematCleaner;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.DiscoveredAddressDto;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.service.SqsSender;
@@ -25,13 +25,14 @@ import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
 @Slf4j
 public class AggregatorMessageHandler extends SendToDeliveryPushHandler {
     private final EventMetaDAO eventMetaDAO;
-    private final EventDematDAO eventDematDAO;
+    private final MetaDematCleaner metaDematCleaner;
 
-    public AggregatorMessageHandler(SqsSender sqsSender, EventMetaDAO eventMetaDAO, EventDematDAO eventDematDAO) {
+
+    public AggregatorMessageHandler(SqsSender sqsSender, EventMetaDAO eventMetaDAO, MetaDematCleaner metaDematCleaner) {
         super(sqsSender);
 
         this.eventMetaDAO = eventMetaDAO;
-        this.eventDematDAO = eventDematDAO;
+        this.metaDematCleaner = metaDematCleaner;
     }
 
     @Override
@@ -55,7 +56,7 @@ public class AggregatorMessageHandler extends SendToDeliveryPushHandler {
                     return Mono.error(new PnSendToDeliveryException(throwable));
                 })
 
-                .then(eventMetaDAO.deleteEventMeta(buildMetaRequestId(paperRequest.getRequestId()),
+                /*.then(eventMetaDAO.deleteEventMeta(buildMetaRequestId(paperRequest.getRequestId()),
                                 preClosingMetaStatus)
                         .doOnNext(deletedEntity -> log.info("Deleted EventMeta: {}", deletedEntity))
                 )
@@ -79,7 +80,10 @@ public class AggregatorMessageHandler extends SendToDeliveryPushHandler {
                         log.warn("Cannot delete EventDemat", throwable);
                         return Mono.empty();
                     }
-                })
+                })*/
+
+                // clean all related metas and demats
+                .then(metaDematCleaner.clean(paperRequest.getRequestId()))
                 .then();
     }
 
