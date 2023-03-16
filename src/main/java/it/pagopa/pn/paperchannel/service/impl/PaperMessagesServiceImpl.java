@@ -232,7 +232,12 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
     }
 
     private Mono<Double> calculator(List<AttachmentInfo> attachments, Address address, ProductTypeEnum productType){
-        if (StringUtils.isNotBlank(address.getCap())) {
+        boolean isNational =
+                StringUtils.equalsIgnoreCase(address.getCountry(), "it") ||
+                StringUtils.equalsIgnoreCase(address.getCountry(), "italia") ||
+                StringUtils.equalsIgnoreCase(address.getCountry(), "italy");
+
+        if (StringUtils.isNotBlank(address.getCap()) && isNational) {
             return getAmount(attachments, address.getCap(), null, getProductType(address, productType))
                     .map(item -> item);
         }

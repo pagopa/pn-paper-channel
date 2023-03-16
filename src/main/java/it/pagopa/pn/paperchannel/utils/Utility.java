@@ -31,7 +31,7 @@ public class Utility {
            return objectMapper.writeValueAsString(data);
        }
        catch (JsonProcessingException ex){
-           log.error("Error with mapping : {}", ex.getMessage(), ex);
+           log.warn("Error with mapping : {}", ex.getMessage(), ex);
            return null;
        }
     }

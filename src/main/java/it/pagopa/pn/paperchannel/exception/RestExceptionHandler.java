@@ -27,7 +27,7 @@ public class RestExceptionHandler {
 
     @ExceptionHandler(PnGenericException.class)
     public Mono<ResponseEntity<Problem>> handleResponseEntityException(final PnGenericException exception){
-        log.error(exception.toString());
+        log.warn(exception.toString());
         final Problem problem = new Problem();
         settingTraceId(problem);
         problem.setTitle(exception.getExceptionType().getTitle());
@@ -44,7 +44,7 @@ public class RestExceptionHandler {
 
     @ExceptionHandler(PnInputValidatorException.class)
     public Mono<ResponseEntity<Problem>> handlePnInputValidatorException(final PnInputValidatorException exception){
-        log.error(exception.toString());
+        log.warn(exception.toString());
         final Problem problem = new Problem();
         problem.setTitle(exception.getExceptionType().getTitle());
         problem.setDetail(exception.getExceptionType().getMessage());
@@ -64,7 +64,7 @@ public class RestExceptionHandler {
 
     @ExceptionHandler(PnExcelValidatorException.class)
     public Mono<ResponseEntity<Problem>> handlePnInputValidatorException(final PnExcelValidatorException exception){
-        log.error(exception.toString());
+        log.warn(exception.toString());
         final Problem problem = new Problem();
         problem.setType(exception.getErrorType().getTitle());
         problem.setTitle(exception.getErrorType().getTitle());
