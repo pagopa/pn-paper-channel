@@ -12,10 +12,7 @@ import reactor.core.publisher.Mono;
 import software.amazon.awssdk.enhanced.dynamodb.*;
 import software.amazon.awssdk.enhanced.dynamodb.model.*;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.QueryRequest;
-import software.amazon.awssdk.services.dynamodb.model.QueryResponse;
-import software.amazon.awssdk.services.dynamodb.model.Select;
+import software.amazon.awssdk.services.dynamodb.model.*;
 
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -203,6 +200,23 @@ public abstract class BaseDAO<T> {
 
         return Mono.from(batchGetResultPagePublisher.map(batchGetResultPage -> batchGetResultPage.resultsForTable(this.dynamoTable)))
                 .flatMapMany(Flux::fromIterable);
+    }
+
+    protected Mono<Void> deleteBatch(String partitionKey, String... sortKeys) {
+        WriteBatch.Builder<T> builder = WriteBatch.builder(tClass)
+                .mappedTableResource(this.dynamoTable);
+
+        for (String sortKey : sortKeys) {
+            Key key = Key.builder().partitionValue(partitionKey).sortValue(sortKey).build();
+            builder.addDeleteItem(key);
+        }
+
+        CompletableFuture<BatchWriteResult> batchWriteResultCompletableFuture = dynamoDbEnhancedAsyncClient.batchWriteItem(BatchWriteItemEnhancedRequest.builder()
+                .addWriteBatch(builder.build())
+                .build());
+
+
+        return Mono.fromFuture(batchWriteResultCompletableFuture).then();
     }
 
 }
