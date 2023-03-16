@@ -249,6 +249,116 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
 
     @DirtiesContext
     @Test
+    void testEsitoFinal_890_RECAG008C() {
+        PnDeliveryRequest pnDeliveryRequest = createPnDeliveryRequest();
+
+        PaperProgressStatusEventDto analogMail = createSimpleAnalogMail();
+        analogMail.setStatusCode("RECAG008C");
+
+        SingleStatusUpdateDto extChannelMessage = new SingleStatusUpdateDto();
+        extChannelMessage.setAnalogMail(analogMail);
+
+        PnDeliveryRequest afterSetForUpdate = createPnDeliveryRequest();
+        afterSetForUpdate.setStatusCode(ExternalChannelCodeEnum.getStatusCode(extChannelMessage.getAnalogMail().getStatusCode()));
+        afterSetForUpdate.setStatusDetail(extChannelMessage.getAnalogMail().getProductType()
+                .concat(" - ").concat(pnDeliveryRequest.getStatusCode()).concat(" - ").concat(extChannelMessage.getAnalogMail().getStatusDescription()));
+        afterSetForUpdate.setStatusDate(DateUtils.formatDate(Date.from(extChannelMessage.getAnalogMail().getStatusDateTime().toInstant())));
+
+        when(requestDeliveryDAO.getByRequestId(anyString())).thenReturn(Mono.just(pnDeliveryRequest));
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
+
+        // inserimento 2 meta RECAG012 e PNAG012
+        PnEventMeta eventMetaRECAG012 = createPnEventMeta(analogMail);
+        eventMetaRECAG012.setStatusCode("RECAG012");
+        eventMetaRECAG012.setMetaStatusCode("META##RECAG012");
+        eventMetaDAO.createOrUpdate(eventMetaRECAG012).block();
+        PnEventMeta eventMetaPNAG012 = createPnEventMeta(analogMail);
+        eventMetaPNAG012.setStatusCode("PNAG012");
+        eventMetaPNAG012.setMetaStatusCode("META##PNAG012");
+        eventMetaDAO.createOrUpdate(eventMetaPNAG012).block();
+
+        PnEventMeta eventMetaFromDb1 = eventMetaDAO.getDeliveryEventMeta(eventMetaRECAG012.getMetaRequestId(), eventMetaRECAG012.getMetaStatusCode()).block();
+        assertNotNull(eventMetaFromDb1);
+        PnEventMeta eventMetaFromDb2 = eventMetaDAO.getDeliveryEventMeta(eventMetaPNAG012.getMetaRequestId(), eventMetaPNAG012.getMetaStatusCode()).block();
+        assertNotNull(eventMetaFromDb2);
+
+        // inserimento 1 demat
+        PnEventDemat eventDemat = createPnEventDemat(analogMail);
+        eventDematDAO.createOrUpdate(eventDemat).block();
+
+        PnEventDemat eventDematFromDB = eventDematDAO.getDeliveryEventDemat(eventDemat.getDematRequestId(), eventDemat.getDocumentTypeStatusCode()).block();
+        assertNotNull(eventDematFromDB);
+
+        // verifico che il flusso è stato completato con successo
+        assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());
+
+        // verifico che è stato inviato un evento a delivery-push
+        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(any(SendEvent.class));
+
+        // verifica cancellazione eventi meta
+        eventMetaFromDb1 = eventMetaDAO.getDeliveryEventMeta(eventMetaRECAG012.getMetaRequestId(), eventMetaRECAG012.getMetaStatusCode()).block();
+        assertNull(eventMetaFromDb1);
+        eventMetaFromDb2 = eventMetaDAO.getDeliveryEventMeta(eventMetaPNAG012.getMetaRequestId(), eventMetaPNAG012.getMetaStatusCode()).block();
+        assertNull(eventMetaFromDb2);
+
+        // verifica cancellazione evento demat
+        eventDematFromDB = eventDematDAO.getDeliveryEventDemat(eventDemat.getDematRequestId(), eventDemat.getDocumentTypeStatusCode()).block();
+        assertNull(eventDematFromDB);
+    }
+
+    @DirtiesContext
+    @Test
+    void testEsitoFinal_890_RECAG008C_1MetaMissing() {
+        PnDeliveryRequest pnDeliveryRequest = createPnDeliveryRequest();
+
+        PaperProgressStatusEventDto analogMail = createSimpleAnalogMail();
+        analogMail.setStatusCode("RECAG008C");
+
+        SingleStatusUpdateDto extChannelMessage = new SingleStatusUpdateDto();
+        extChannelMessage.setAnalogMail(analogMail);
+
+        PnDeliveryRequest afterSetForUpdate = createPnDeliveryRequest();
+        afterSetForUpdate.setStatusCode(ExternalChannelCodeEnum.getStatusCode(extChannelMessage.getAnalogMail().getStatusCode()));
+        afterSetForUpdate.setStatusDetail(extChannelMessage.getAnalogMail().getProductType()
+                .concat(" - ").concat(pnDeliveryRequest.getStatusCode()).concat(" - ").concat(extChannelMessage.getAnalogMail().getStatusDescription()));
+        afterSetForUpdate.setStatusDate(DateUtils.formatDate(Date.from(extChannelMessage.getAnalogMail().getStatusDateTime().toInstant())));
+
+        when(requestDeliveryDAO.getByRequestId(anyString())).thenReturn(Mono.just(pnDeliveryRequest));
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
+
+        // inserimento 1 meta RECAG012
+        PnEventMeta eventMetaRECAG012 = createPnEventMeta(analogMail);
+        eventMetaRECAG012.setStatusCode("RECAG012");
+        eventMetaRECAG012.setMetaStatusCode("META##RECAG012");
+        eventMetaDAO.createOrUpdate(eventMetaRECAG012).block();
+
+        PnEventMeta eventMetaFromDb1 = eventMetaDAO.getDeliveryEventMeta(eventMetaRECAG012.getMetaRequestId(), eventMetaRECAG012.getMetaStatusCode()).block();
+        assertNotNull(eventMetaFromDb1);
+
+        // inserimento 1 demat
+        PnEventDemat eventDemat = createPnEventDemat(analogMail);
+        eventDematDAO.createOrUpdate(eventDemat).block();
+
+        PnEventDemat eventDematFromDB = eventDematDAO.getDeliveryEventDemat(eventDemat.getDematRequestId(), eventDemat.getDocumentTypeStatusCode()).block();
+        assertNotNull(eventDematFromDB);
+
+        // verifico che il flusso è stato completato con successo
+        assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());
+
+        // verifico che non è stato inviato un evento a delivery-push
+        verify(sqsSender, timeout(2000).times(0)).pushSendEvent(any(SendEvent.class));
+
+        // verifica non cancellazione eventi meta
+        eventMetaFromDb1 = eventMetaDAO.getDeliveryEventMeta(eventMetaRECAG012.getMetaRequestId(), eventMetaRECAG012.getMetaStatusCode()).block();
+        assertNotNull(eventMetaFromDb1);
+
+        // verifica non cancellazione evento demat
+        eventDematFromDB = eventDematDAO.getDeliveryEventDemat(eventDemat.getDematRequestId(), eventDemat.getDocumentTypeStatusCode()).block();
+        assertNotNull(eventDematFromDB);
+    }
+
+    @DirtiesContext
+    @Test
     void testRECAG012Event() {
         final String metadataRequestExpected = "META##PREPARE_ANALOG_DOMICILE.IUN_MUMR-VQMP-LDNZ-202303-H-1.RECINDEX_0.SENTATTEMPTMADE_0";
         final String metadataStatusCodeExpected = "META##RECAG012";

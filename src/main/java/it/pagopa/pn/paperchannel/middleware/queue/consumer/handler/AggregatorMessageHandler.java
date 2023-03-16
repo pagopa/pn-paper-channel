@@ -1,6 +1,5 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
-import it.pagopa.pn.paperchannel.exception.PnSendToDeliveryException;
 import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
@@ -51,12 +50,8 @@ public class AggregatorMessageHandler extends SendToDeliveryPushHandler {
 
                 // invio dato su delivery-push, che ci sia stato arricchimento o meno)
                 .flatMap(enrichedRequest -> super.handleMessage(entity, enrichedRequest))
-                .onErrorResume(throwable -> {
-                    log.warn("Error on handleMessage", throwable);
-                    return Mono.error(new PnSendToDeliveryException(throwable));
-                })
 
-                // clean all related metas and demats
+                // clean all related metas and demats (che sia stato trovato il meta o meno)
                 .then(metaDematCleaner.clean(paperRequest.getRequestId()));
     }
 

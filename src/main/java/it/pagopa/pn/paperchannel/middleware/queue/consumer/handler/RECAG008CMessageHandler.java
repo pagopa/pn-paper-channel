@@ -1,6 +1,5 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
-import it.pagopa.pn.paperchannel.exception.PnSendToDeliveryException;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
@@ -35,27 +34,23 @@ public class RECAG008CMessageHandler extends SendToDeliveryPushHandler {
         return eventMetaDAO.findAllByRequestId(buildMetaRequestId(paperRequest.getRequestId()))
                 .collectList()
                 .filter(this::correctPreviousEventMeta)
-                    .doOnNext(pnEventMetas -> log.info("Found correct previous states for request {}", paperRequest.getRequestId()))
+                .doOnNext(pnEventMetas -> log.info("Found correct previous states for request {}", paperRequest.getRequestId()))
 
-                // send to DeliveryPush
+                // send to DeliveryPush (only if the needed metas are found)
                 .doOnNext(pnEventMetas -> super.handleMessage(entity, paperRequest))
-                    .onErrorResume(throwable -> {
-                        log.warn("Error on handleMessage", throwable);
-                        return Mono.error(new PnSendToDeliveryException(throwable));
-                    })
 
-                // clean all related metas and demats
-                .then(metaDematCleaner.clean(paperRequest.getRequestId()));
+                // clean all related metas and demats (only if the needed metas are found)
+                .flatMap(ignored -> metaDematCleaner.clean(paperRequest.getRequestId()));
     }
 
     private Boolean correctPreviousEventMeta(List<PnEventMeta> pnEventMetas)
     {
         Optional<PnEventMeta> elRECAG012 = pnEventMetas.stream()
-                .filter(pnEventMeta -> META_RECAG012_STATUS_CODE.equals(pnEventMeta.getStatusCode()))
+                .filter(pnEventMeta -> META_RECAG012_STATUS_CODE.equals(pnEventMeta.getMetaStatusCode()))
                 .findFirst();
 
         Optional<PnEventMeta> elPNAG012 = pnEventMetas.stream()
-                .filter(pnEventMeta -> META_PNAG012_STATUS_CODE.equals(pnEventMeta.getStatusCode()))
+                .filter(pnEventMeta -> META_PNAG012_STATUS_CODE.equals(pnEventMeta.getMetaStatusCode()))
                 .findFirst();
 
         log.info("RECAG012 presence {}, PNAG012 presence {}", elRECAG012.isPresent(), elPNAG012.isPresent());

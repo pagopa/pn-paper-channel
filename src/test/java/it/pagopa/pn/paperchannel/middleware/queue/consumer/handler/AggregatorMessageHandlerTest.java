@@ -1,6 +1,5 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
-import it.pagopa.pn.paperchannel.exception.PnSendToDeliveryException;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
@@ -175,7 +174,7 @@ class AggregatorMessageHandlerTest {
         doThrow(new RuntimeException()).when(mockSqsSender).pushSendEvent(Mockito.any());
 
         // assertDoNotThrow with call
-        assertThrowsExactly(PnSendToDeliveryException.class, () -> handler.handleMessage(entity, paperRequest).block());
+        assertThrowsExactly(RuntimeException.class, () -> handler.handleMessage(entity, paperRequest).block());
 
         // check invocations: verify
         // getDeliveryEventMeta call
