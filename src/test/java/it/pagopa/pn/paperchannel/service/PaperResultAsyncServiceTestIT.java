@@ -26,6 +26,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
 
+import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -392,8 +393,8 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
         PnEventMeta eventMeta = new PnEventMeta();
         PnDiscoveredAddress address1 = new PnDiscoveredAddress();
         address1.setAddress("discoveredAddress1");
-        eventMeta.setMetaRequestId("META##" + analogMail.getRequestId());
-        eventMeta.setMetaStatusCode("META##" + statusCodeToFind);
+        eventMeta.setMetaRequestId(buildMetaRequestId(analogMail.getRequestId()));
+        eventMeta.setMetaStatusCode(buildMetaStatusCode(statusCodeToFind));
         eventMeta.setRequestId(analogMail.getRequestId());
         eventMeta.setStatusCode(statusCodeToFind);
         eventMeta.setDiscoveredAddress(address1);
@@ -408,8 +409,8 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
         int ttlOffsetDays = 365;
 
         PnEventDemat eventDemat = new PnEventDemat();
-        eventDemat.setDematRequestId("DEMAT##" + analogMail.getRequestId());
-        eventDemat.setDocumentTypeStatusCode(analogMail.getProductType() + "##" + analogMail.getStatusCode());
+        eventDemat.setDematRequestId(buildDematRequestId(analogMail.getRequestId()));
+        eventDemat.setDocumentTypeStatusCode(buildDocumentTypeStatusCode(analogMail.getProductType(), analogMail.getStatusCode()));
         eventDemat.setRequestId(analogMail.getRequestId());
         eventDemat.setDocumentType(analogMail.getProductType());
         eventDemat.setStatusCode(analogMail.getStatusCode());
