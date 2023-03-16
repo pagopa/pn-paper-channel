@@ -18,6 +18,7 @@ import it.pagopa.pn.paperchannel.rest.v1.dto.*;
 import it.pagopa.pn.paperchannel.s3.S3Bucket;
 import it.pagopa.pn.paperchannel.service.PaperChannelService;
 import it.pagopa.pn.paperchannel.utils.Const;
+import it.pagopa.pn.paperchannel.utils.DateUtils;
 import it.pagopa.pn.paperchannel.utils.PnLogAudit;
 import it.pagopa.pn.paperchannel.utils.Utility;
 import it.pagopa.pn.paperchannel.validator.CostValidator;
@@ -27,6 +28,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -296,6 +298,11 @@ public class PaperChannelServiceImpl implements PaperChannelService {
             pnLogAudit.addsBeforeUpdate("Update Tender");
         }
 
+
+        //set 00:00
+        request.getStartDate().setTime(formatDateWithSpecificHour(request.getStartDate(), 0,0,0).getTime());
+        //set 23:59
+        request.getEndDate().setTime(formatDateWithSpecificHour(request.getEndDate(), 23,59,0).getTime());
         return Mono.just(TenderMapper.toTenderRequest(request))
                 .flatMap(entity -> this.tenderDAO.createOrUpdate(entity))
                 .map(entity -> {
@@ -354,6 +361,18 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                     if (isUpdated.get()) pnLogAudit.addsSuccessUpdate("Update DeliveryDriver OK:"+ Utility.objectToJson(entity));
                     return null;
                 });
+    }
+
+    private Date formatDateWithSpecificHour(Date date, int hour, int min, int sec){
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(date);
+        cal.set(Calendar.HOUR_OF_DAY, hour);
+        cal.set(Calendar.MINUTE, min);
+        cal.set(Calendar.SECOND, sec);
+        cal.set(Calendar.MILLISECOND, 0);
+        Date dateTime = cal.getTime();
+
+        return dateTime;
     }
 
     @Override
