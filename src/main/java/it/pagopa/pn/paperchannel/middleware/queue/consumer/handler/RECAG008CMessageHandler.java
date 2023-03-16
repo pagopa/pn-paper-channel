@@ -1,8 +1,10 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
+import it.pagopa.pn.paperchannel.exception.PnSendToDeliveryException;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventDemat;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.service.SqsSender;
@@ -38,19 +40,37 @@ public class RECAG008CMessageHandler extends SendToDeliveryPushHandler {
 
                 // send to DeliveryPush
                 .doOnNext(pnEventMetas -> super.handleMessage(entity, paperRequest))
+                    .onErrorResume(throwable -> {
+                        log.warn("error on handleMessage", throwable);
+                        return Mono.error(new PnSendToDeliveryException(throwable));
+                    })
 
-                // deleted related Metas
-                .then(eventMetaDAO.deleteEventMeta(buildMetaRequestId(paperRequest.getRequestId()), META_RECAG012_STATUS_CODE))
-                    .doOnNext(deletedEntity -> log.info("Deleted EventMeta: {}", deletedEntity))
-                .then(eventMetaDAO.deleteEventMeta(buildMetaRequestId(paperRequest.getRequestId()), META_PNAG012_STATUS_CODE))
-                    .doOnNext(deletedEntity -> log.info("Deleted EventMeta: {}", deletedEntity))
+                // delete related Metas
+                .then(eventMetaDAO.deleteBatch(buildMetaRequestId(paperRequest.getRequestId()), META_RECAG012_STATUS_CODE, META_PNAG012_STATUS_CODE))
+                    .doOnNext(deletedEntity -> log.info("Deleted EventMetas request {}", paperRequest.getRequestId()))
+                    .onErrorResume(throwable ->  {
+                        if (throwable instanceof PnSendToDeliveryException)
+                            return Mono.error(throwable);
+                        else {
+                            log.warn("Cannot delete MAT", throwable);
+                            return Mono.empty();
+                        }
+                    })
 
                 // delete related Demats
-                .then(eventDematDAO.findAllByRequestId(buildMetaRequestId(paperRequest.getRequestId()))
-                        .flatMap(foundItem ->
-                                eventDematDAO.deleteEventDemat(foundItem.getDematRequestId(), foundItem.getDocumentTypeStatusCode())
-                                        .doOnNext(deletedEntity -> log.info("Deleted EventDemat: {}", deletedEntity))
-                        ).collectList())
+                .then(eventDematDAO.findAllByRequestId(buildDematRequestId(paperRequest.getRequestId())).collectList()
+                        .flatMap(items ->
+                                eventDematDAO.deleteBatch(buildDematRequestId(paperRequest.getRequestId()), items.stream().map(PnEventDemat::getDocumentTypeStatusCode).toArray(String[]::new)))
+                                    .doOnNext(deletedEntity -> log.info("Deleted EventDemat: {}", deletedEntity))
+                        )
+                    .onErrorResume(throwable ->  {
+                        if (throwable instanceof PnSendToDeliveryException)
+                            return Mono.error(throwable);
+                        else {
+                            log.warn("Cannot delete MAT", throwable);
+                            return Mono.empty();
+                        }
+                    })
                 .then();
     }
 
