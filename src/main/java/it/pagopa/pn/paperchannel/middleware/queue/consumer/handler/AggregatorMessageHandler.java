@@ -56,35 +56,8 @@ public class AggregatorMessageHandler extends SendToDeliveryPushHandler {
                     return Mono.error(new PnSendToDeliveryException(throwable));
                 })
 
-                /*.then(eventMetaDAO.deleteEventMeta(buildMetaRequestId(paperRequest.getRequestId()),
-                                preClosingMetaStatus)
-                        .doOnNext(deletedEntity -> log.info("Deleted EventMeta: {}", deletedEntity))
-                )
-                .onErrorResume(throwable ->  {
-                    if (throwable instanceof PnSendToDeliveryException)
-                        return Mono.error(throwable);
-                    else {
-                        log.warn("Cannot delete EventMeta", throwable);
-                        return Mono.empty();
-                    }
-                })
-                .then(eventDematDAO.findAllByRequestId(buildDematRequestId(paperRequest.getRequestId()))
-                        .flatMap(foundItem ->
-                                eventDematDAO.deleteEventDemat(foundItem.getDematRequestId(), foundItem.getDocumentTypeStatusCode())
-                                        .doOnNext(deletedEntity -> log.info("Deleted EventDemat: {}", deletedEntity))
-                        ).collectList())
-                .onErrorResume(throwable ->  {
-                    if (throwable instanceof PnSendToDeliveryException)
-                        return Mono.error(throwable);
-                    else {
-                        log.warn("Cannot delete EventDemat", throwable);
-                        return Mono.empty();
-                    }
-                })*/
-
                 // clean all related metas and demats
-                .then(metaDematCleaner.clean(paperRequest.getRequestId()))
-                .then();
+                .then(metaDematCleaner.clean(paperRequest.getRequestId()));
     }
 
     private PaperProgressStatusEventDto enrichEvent(PaperProgressStatusEventDto paperRequest, PnEventMeta pnEventMeta) {

@@ -50,7 +50,7 @@ public class HandlersFactory {
         var directlySendMessageHandler = new DirectlySendMessageHandler(sqsSender);
         var recag012MessageHandler = new RECAG012MessageHandler(eventMetaDAO, pnPaperChannelConfig.getTtlExecutionDaysMeta());
         var recag011BMessageHandler = new RECAG011BMessageHandler(sqsSender, eventDematDAO, pnPaperChannelConfig.getTtlExecutionDaysDemat(), eventMetaDAO, pnPaperChannelConfig.getTtlExecutionDaysMeta());
-        var recag008CMessageHandler = new RECAG008CMessageHandler(sqsSender, eventMetaDAO, eventDematDAO);
+        var recag008CMessageHandler = new RECAG008CMessageHandler(sqsSender, eventMetaDAO, metaDematCleaner);
 
         map = new ConcurrentHashMap<>();
 
