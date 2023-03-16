@@ -34,10 +34,23 @@ public class RECAG008CMessageHandler extends SendToDeliveryPushHandler {
         return eventMetaDAO.findAllByRequestId(buildMetaRequestId(paperRequest.getRequestId()))
                 .collectList()
                 .filter(this::correctPreviousEventMeta)
-                .doOnNext(pnEventMetas -> log.info("Found correct previous states for request {}", paperRequest.getRequestId()))
+                    .doOnNext(pnEventMetas -> log.info("Found correct previous states for request {}", paperRequest.getRequestId()))
+
+                // send to DeliveryPush
                 .doOnNext(pnEventMetas -> super.handleMessage(entity, paperRequest))
-                .doOnNext(pnEventMetas -> eventMetaDAO.deleteEventMeta(buildMetaRequestId(paperRequest.getRequestId()), META_RECAG012_STATUS_CODE))
-                .doOnNext(pnEventMetas -> eventMetaDAO.deleteEventMeta(buildMetaRequestId(paperRequest.getRequestId()), META_PNAG012_STATUS_CODE))
+
+                // deleted related Metas
+                .then(eventMetaDAO.deleteEventMeta(buildMetaRequestId(paperRequest.getRequestId()), META_RECAG012_STATUS_CODE))
+                    .doOnNext(deletedEntity -> log.info("Deleted EventMeta: {}", deletedEntity))
+                .then(eventMetaDAO.deleteEventMeta(buildMetaRequestId(paperRequest.getRequestId()), META_PNAG012_STATUS_CODE))
+                    .doOnNext(deletedEntity -> log.info("Deleted EventMeta: {}", deletedEntity))
+
+                // delete related Demats
+                .then(eventDematDAO.findAllByRequestId(buildMetaRequestId(paperRequest.getRequestId()))
+                        .flatMap(foundItem ->
+                                eventDematDAO.deleteEventDemat(foundItem.getDematRequestId(), foundItem.getDocumentTypeStatusCode())
+                                        .doOnNext(deletedEntity -> log.info("Deleted EventDemat: {}", deletedEntity))
+                        ).collectList())
                 .then();
     }
 
