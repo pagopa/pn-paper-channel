@@ -18,6 +18,7 @@
     "TtlExecutionRIRS": "14",
     "TtlExecutionDaysDemat": "365",
     "TtlExecutionDaysMeta": "365",
-    "RetryStatus" : "006"
+    "RetryStatus" : "006",
+    "MaxTasksNumber": "1"
   }
 }
