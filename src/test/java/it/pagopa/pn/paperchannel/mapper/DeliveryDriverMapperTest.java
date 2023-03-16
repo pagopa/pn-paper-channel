@@ -51,6 +51,21 @@ class DeliveryDriverMapperTest {
     }
 
     @Test
+    void toEntity(){
+        DeliveryDriverDTO driverDTO = new DeliveryDriverDTO();
+        driverDTO.setFiscalCode("fiscalCode");
+        driverDTO.setTaxId("taxId");
+        driverDTO.setFsu(true);
+        driverDTO.setPec("pec");
+        driverDTO.setBusinessName("businessName");
+        driverDTO.setDenomination("denomination");
+        driverDTO.setPhoneNumber("phoneNumber");
+        driverDTO.setUniqueCode("uniqueCode");
+        PnDeliveryDriver deliveryDriver = DeliveryDriverMapper.toEntity(driverDTO);
+        Assertions.assertNotNull(deliveryDriver);
+    }
+
+    @Test
     void deliveryDriverMapperTest() {
         DeliveryDriverDTO response= DeliveryDriverMapper.deliveryDriverToDto(getPnPaperDeliveryDriver() );
         Assertions.assertNotNull(response);
