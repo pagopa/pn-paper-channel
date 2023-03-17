@@ -72,13 +72,6 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
         boolean containsRECAG012 = false;
         PnEventMeta pnEventMetaRECAG012 = null;
 
-        if(CollectionUtils.isEmpty(pnEventMetas)) {
-//            CASO 4
-            log.info("[{}] Result of query is empty", paperRequest.getRequestId());
-            entity.setStatusCode(StatusCodeEnum.OK.getValue());
-            return super.handleMessage(entity, paperRequest)
-                    .then(Mono.just(pnEventMetas));
-        }
 
         for (PnEventMeta pnEventMeta: pnEventMetas) {
             if(META_PNAG012_STATUS_CODE.equals(pnEventMeta.getMetaStatusCode())) {
@@ -88,6 +81,10 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
                 containsRECAG012 = true;
                 pnEventMetaRECAG012 = pnEventMeta;
             }
+        }
+
+        if(CollectionUtils.isEmpty(pnEventMetas)) {
+
         }
 
 
@@ -114,7 +111,15 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
             return super.handleMessage(entity, paperRequest).then(Mono.just(pnEventMetas));
         }
 
-        return Mono.just(pnEventMetas);
+        else { // entrambi non presenti
+//            CASO 4
+            log.info("[{}] Result of query has no PNAG012 and no RECAG012", paperRequest.getRequestId());
+            entity.setStatusCode(StatusCodeEnum.OK.getValue());
+            return super.handleMessage(entity, paperRequest)
+                    .then(Mono.just(pnEventMetas));
+        }
+
+//        return Mono.just(pnEventMetas);
     }
 
 }
