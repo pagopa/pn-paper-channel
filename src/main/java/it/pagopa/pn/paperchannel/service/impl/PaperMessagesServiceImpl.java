@@ -210,8 +210,6 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                 .map(amout -> {
                    SendResponse response = new SendResponse();
                    response.setAmount((int) (amout*100));
-                   if (StringUtils.isNotBlank(address.getCap())) response.setZip(address.getCap());
-                   else response.setForeignState(address.getCountry());
                    int totalPages = attachments.stream()
                            .reduce(
                                    0,
