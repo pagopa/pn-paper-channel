@@ -174,7 +174,7 @@ class AggregatorMessageHandlerTest {
         // the SQS queue
         doThrow(new RuntimeException()).when(mockSqsSender).pushSendEvent(Mockito.any());
 
-        // assertDoNotThrow with call
+        // assertThrows with call
         assertThrowsExactly(RuntimeException.class, () -> handler.handleMessage(entity, paperRequest).block());
 
         // check invocations: verify
