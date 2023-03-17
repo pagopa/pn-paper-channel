@@ -182,6 +182,10 @@ class AggregatorMessageHandlerTest {
         verify(mockMetaDao, timeout(2000).times(1)).getDeliveryEventMeta(any(String.class), any(String.class));
         // DeliveryPush send via SQS verification
         verify(mockSqsSender, timeout(2000).times(1)).pushSendEvent(any(SendEvent.class));
+        // deleteEventMeta call
+        verify(mockMetaDao, timeout(2000).times(0)).deleteBatch(any(String.class), any(String.class));
+        // deleteEventDemat call
+        verify(mockDematDao, timeout(2000).times(0)).deleteBatch(any(String.class), any(String.class));
     }
 
     @Test
