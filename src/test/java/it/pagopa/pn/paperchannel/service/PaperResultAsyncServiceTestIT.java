@@ -196,7 +196,7 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
 
     @DirtiesContext
     @Test
-    void testEsitoFinalEventSendWithoutFindingPreviousEvents() {
+    void testEsitoFinalEventSendWithoutFindingPreviousMetasDeletingDemats() {
         PnDeliveryRequest pnDeliveryRequest = createPnDeliveryRequest();
 
         PaperProgressStatusEventDto analogMail = createSimpleAnalogMail();
@@ -213,11 +213,22 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
         when(requestDeliveryDAO.getByRequestId(anyString())).thenReturn(Mono.just(pnDeliveryRequest));
         when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
 
+        // inserimento 1 demat
+        PnEventDemat eventDemat = createPnEventDemat(analogMail);
+        eventDematDAO.createOrUpdate(eventDemat).block();
+
+        PnEventDemat eventDematFromDB = eventDematDAO.getDeliveryEventDemat(eventDemat.getDematRequestId(), eventDemat.getDocumentTypeStatusCode()).block();
+        assertNotNull(eventDematFromDB);
+
         // verifico che il flusso è stato completato con successo
         assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());
 
         // verifico che è stato inviato un evento a delivery-push
         verify(sqsSender, timeout(2000).times(1)).pushSendEvent(any(SendEvent.class));
+
+        // verifica cancellazione evento demat
+        eventDematFromDB = eventDematDAO.getDeliveryEventDemat(eventDemat.getDematRequestId(), eventDemat.getDocumentTypeStatusCode()).block();
+        assertNull(eventDematFromDB);
     }
 
     @DirtiesContext
