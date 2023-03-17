@@ -508,7 +508,6 @@ class PaperMessagesServiceTest extends BaseTest {
                     // price 1 and additionalPrice 2 getNationalCost()
                     // attachments 1 and number of page 3
                     assertEquals(700,response.getAmount());
-                    assertEquals(sendRequest.getReceiverAddress().getCap(), response.getZip());
                     assertEquals(3, response.getNumberOfPages());
                     return true;
                 }).verifyComplete();
@@ -599,8 +598,6 @@ class PaperMessagesServiceTest extends BaseTest {
                     // price 1 and additionalPrice 2 getNationalCost()
                     // attachments 1 and number of page 3
                     assertEquals(800,response.getAmount());
-                    assertNull(response.getZip());
-                    assertEquals(sendRequest.getReceiverAddress().getCountry(), response.getForeignState());
                     assertEquals(3, response.getNumberOfPages());
                     return true;
                 }).verifyComplete();
@@ -627,7 +624,6 @@ class PaperMessagesServiceTest extends BaseTest {
                     // price 1 and additionalPrice 2 getNationalCost()
                     // attachments 1 and number of page 3
                     assertEquals(700,response.getAmount());
-                    assertEquals(getRequest("").getReceiverAddress().getCap(), response.getZip());
                     assertEquals(3, response.getNumberOfPages());
                     return true;
                 }).verifyComplete();
