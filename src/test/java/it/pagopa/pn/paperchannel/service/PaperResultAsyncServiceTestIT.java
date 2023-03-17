@@ -12,9 +12,11 @@ import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.Attachme
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.SendEvent;
+import it.pagopa.pn.paperchannel.rest.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.annotation.DirtiesContext;
@@ -278,6 +280,8 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
         when(requestDeliveryDAO.getByRequestId(anyString())).thenReturn(Mono.just(pnDeliveryRequest));
         when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
 
+        ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
+
         // inserimento 2 meta RECAG012 e PNAG012
         PnEventMeta eventMetaRECAG012 = createPnEventMeta(analogMail);
         eventMetaRECAG012.setStatusCode("RECAG012");
@@ -304,7 +308,7 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
         assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());
 
         // verifico che è stato inviato un evento a delivery-push
-        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(any(SendEvent.class));
+        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
 
         // verifica cancellazione eventi meta
         eventMetaFromDb1 = eventMetaDAO.getDeliveryEventMeta(eventMetaRECAG012.getMetaRequestId(), eventMetaRECAG012.getMetaStatusCode()).block();
@@ -315,6 +319,9 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
         // verifica cancellazione evento demat
         eventDematFromDB = eventDematDAO.getDeliveryEventDemat(eventDemat.getDematRequestId(), eventDemat.getDocumentTypeStatusCode()).block();
         assertNull(eventDematFromDB);
+
+        // verifica evento PROGRESS
+        assertEquals(StatusCodeEnum.PROGRESS, caturedSendEvent.getValue().getStatusCode());
     }
 
     @DirtiesContext

@@ -90,6 +90,7 @@ class AggregatorMessageHandlerTest {
         // DeliveryPush send via SQS verification
         verify(mockSqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
 
+        // arricchimento
         assertEquals("failureCause1", caturedSendEvent.getValue().getDeliveryFailureCause());
         assertNotNull(caturedSendEvent.getValue().getDiscoveredAddress());
         assertEquals("discoveredAddress1", caturedSendEvent.getValue().getDiscoveredAddress().getAddress());
@@ -135,8 +136,8 @@ class AggregatorMessageHandlerTest {
         // DeliveryPush send via SQS verification
         verify(mockSqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
 
-        //assertEquals("failureCause1", caturedSendEvent.getValue().getDeliveryFailureCause());
-        System.out.println(caturedSendEvent.getValue().getDeliveryFailureCause());
+        // non arricchimento
+        assertNull(caturedSendEvent.getValue().getDeliveryFailureCause());
         assertNull(caturedSendEvent.getValue().getDiscoveredAddress());
     }
 
