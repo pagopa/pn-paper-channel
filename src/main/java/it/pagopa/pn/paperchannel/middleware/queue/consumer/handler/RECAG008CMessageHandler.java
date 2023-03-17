@@ -55,6 +55,12 @@ public class RECAG008CMessageHandler extends SendToDeliveryPushHandler {
 
         log.info("RECAG012 presence {}, PNAG012 presence {}", elRECAG012.isPresent(), elPNAG012.isPresent());
 
-        return elRECAG012.isPresent() && elPNAG012.isPresent();
+        // presence check and error log
+        final boolean ok = elRECAG012.isPresent() && elPNAG012.isPresent();
+        if (!ok) {
+            log.error("Problem with RECAG012 or PNAG012 presence!");
+        }
+
+        return ok;
     }
 }
