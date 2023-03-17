@@ -447,6 +447,7 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
         pnEventMetaRECAG012.setMetaStatusCode("META##RECAG012");
         pnEventMetaRECAG012.setStatusCode("RECAG012");
         pnEventMetaRECAG012.setTtl(Instant.now().plus(10, ChronoUnit.DAYS).getEpochSecond());
+        pnEventMetaRECAG012.setStatusDateTime(Instant.parse("2023-03-16T18:00:00.000Z"));
         eventMetaDAO.createOrUpdate(pnEventMetaRECAG012).block();
 
         PaperProgressStatusEventDto analogMail = new PaperProgressStatusEventDto();
@@ -488,6 +489,168 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
 
         // verifico che sono stati inviati 2 eventi a delivery push, un PROGRESS (RECAG011B) e un OK (PNAG012)
         verify(sqsSender, timeout(4000).times(2)).pushSendEvent(any(SendEvent.class));
+
+    }
+
+
+    // CASO 2
+    @DirtiesContext
+    @Test
+    void testRECAG005CorRECAG006CorRECAG007CCaseTwoEvent() {
+        final String requestId = "PREPARE_ANALOG_DOMICILE.IUN_MUMR-VQMP-LDNZ-202303-H-1.RECINDEX_0.SENTATTEMPTMADE_0";
+        PnDeliveryRequest pnDeliveryRequest = createPnDeliveryRequest();
+
+        PnEventMeta pnEventMetaRECAG012 = new PnEventMeta();
+        pnEventMetaRECAG012.setMetaRequestId("META##" + requestId);
+        pnEventMetaRECAG012.setRequestId(requestId);
+        pnEventMetaRECAG012.setMetaStatusCode("META##RECAG012");
+        pnEventMetaRECAG012.setStatusCode("RECAG012");
+        pnEventMetaRECAG012.setTtl(Instant.now().plus(10, ChronoUnit.DAYS).getEpochSecond());
+
+        PnEventMeta pnEventMetaPNAG012 = new PnEventMeta();
+        pnEventMetaPNAG012.setMetaRequestId("META##" + requestId);
+        pnEventMetaPNAG012.setRequestId(requestId);
+        pnEventMetaPNAG012.setMetaStatusCode("META##PNAG012");
+        pnEventMetaPNAG012.setStatusCode("PNAG012");
+        pnEventMetaPNAG012.setTtl(Instant.now().plus(10, ChronoUnit.DAYS).getEpochSecond());
+
+        eventMetaDAO.createOrUpdate(pnEventMetaRECAG012).block();
+        eventMetaDAO.createOrUpdate(pnEventMetaPNAG012).block();
+
+
+        PaperProgressStatusEventDto analogMail = new PaperProgressStatusEventDto();
+        analogMail.requestId(requestId);
+        analogMail.setClientRequestTimeStamp(OffsetDateTime.now());
+        analogMail.setStatusDateTime(OffsetDateTime.now());
+        analogMail.setStatusCode("RECAG005C");
+        analogMail.setProductType("RS");
+        analogMail.setStatusDescription("In progress");
+
+
+        SingleStatusUpdateDto extChannelMessage = new SingleStatusUpdateDto();
+        extChannelMessage.setAnalogMail(analogMail);
+
+        PnDeliveryRequest afterSetForUpdate = createPnDeliveryRequest();
+        afterSetForUpdate.setStatusCode(ExternalChannelCodeEnum.getStatusCode(extChannelMessage.getAnalogMail().getStatusCode()));
+        afterSetForUpdate.setStatusDetail(extChannelMessage.getAnalogMail().getProductType()
+                .concat(" - ").concat(pnDeliveryRequest.getStatusCode()).concat(" - ").concat(extChannelMessage.getAnalogMail().getStatusDescription()));
+        afterSetForUpdate.setStatusDate(DateUtils.formatDate(Date.from(extChannelMessage.getAnalogMail().getStatusDateTime().toInstant())));
+
+        when(requestDeliveryDAO.getByRequestId(anyString())).thenReturn(Mono.just(pnDeliveryRequest));
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
+
+        // verifico che il flusso è stato completato con successo
+        assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());
+
+        //verifico che venga mandato a delivery push lo status PROGRESS
+        //lo statusCode dell'entity viene modifico dall'handler
+        assertThat(afterSetForUpdate.getStatusCode()).isEqualTo(StatusCodeEnum.PROGRESS.getValue());
+        verify(sqsSender, times(1)).pushSendEvent(any(SendEvent.class));
+
+        //verifico la clean di tutti i META e DEMAT con la stessa requestId in input
+        List<PnEventMeta> resultMeta = eventMetaDAO.findAllByRequestId("META##" + requestId).collectList().block();
+        List<PnEventDemat> resultDemat = eventDematDAO.findAllByRequestId("DEMAT##" + requestId).collectList().block();
+        assertThat(resultMeta).isEmpty();
+        assertThat(resultDemat).isEmpty();
+
+
+    }
+
+    // CASO 4
+    @DirtiesContext
+    @Test
+    void testRECAG005CorRECAG006CorRECAG007CCaseFourEvent() {
+        final String requestId = "PREPARE_ANALOG_DOMICILE.IUN_MUMR-VQMP-LDNZ-202303-H-1.RECINDEX_0.SENTATTEMPTMADE_0";
+        PnDeliveryRequest pnDeliveryRequest = createPnDeliveryRequest();
+
+
+
+        PaperProgressStatusEventDto analogMail = new PaperProgressStatusEventDto();
+        analogMail.requestId(requestId);
+        analogMail.setClientRequestTimeStamp(OffsetDateTime.now());
+        analogMail.setStatusDateTime(OffsetDateTime.now());
+        analogMail.setStatusCode("RECAG005C");
+        analogMail.setProductType("RS");
+        analogMail.setStatusDescription("In progress");
+
+
+        SingleStatusUpdateDto extChannelMessage = new SingleStatusUpdateDto();
+        extChannelMessage.setAnalogMail(analogMail);
+
+        PnDeliveryRequest afterSetForUpdate = createPnDeliveryRequest();
+        afterSetForUpdate.setStatusCode(ExternalChannelCodeEnum.getStatusCode(extChannelMessage.getAnalogMail().getStatusCode()));
+        afterSetForUpdate.setStatusDetail(extChannelMessage.getAnalogMail().getProductType()
+                .concat(" - ").concat(pnDeliveryRequest.getStatusCode()).concat(" - ").concat(extChannelMessage.getAnalogMail().getStatusDescription()));
+        afterSetForUpdate.setStatusDate(DateUtils.formatDate(Date.from(extChannelMessage.getAnalogMail().getStatusDateTime().toInstant())));
+
+        when(requestDeliveryDAO.getByRequestId(anyString())).thenReturn(Mono.just(pnDeliveryRequest));
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
+
+        // verifico che il flusso è stato completato con successo
+        assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());
+
+        //verifico che venga mandato a delivery push lo status OK
+        //lo statusCode dell'entity viene modifico dall'handler
+        assertThat(afterSetForUpdate.getStatusCode()).isEqualTo(StatusCodeEnum.OK.getValue());
+        verify(sqsSender, times(1)).pushSendEvent(any(SendEvent.class));
+
+    }
+
+    //CASO 3
+    @DirtiesContext
+    @Test
+    void testRECAG005CorRECAG006CorRECAG007CCaseOneEvent() {
+        final String requestId = "PREPARE_ANALOG_DOMICILE.IUN_MUMR-VQMP-LDNZ-202303-H-1.RECINDEX_0.SENTATTEMPTMADE_0";
+        PnDeliveryRequest pnDeliveryRequest = createPnDeliveryRequest();
+
+        PnEventMeta pnEventMetaRECAG012 = new PnEventMeta();
+        pnEventMetaRECAG012.setMetaRequestId("META##" + requestId);
+        pnEventMetaRECAG012.setRequestId(requestId);
+        pnEventMetaRECAG012.setMetaStatusCode("META##RECAG012");
+        pnEventMetaRECAG012.setStatusCode("RECAG012");
+        pnEventMetaRECAG012.setTtl(Instant.now().plus(10, ChronoUnit.DAYS).getEpochSecond());
+        pnEventMetaRECAG012.setStatusDateTime(Instant.parse("2023-03-16T17:07:00.000Z"));
+
+
+        eventMetaDAO.createOrUpdate(pnEventMetaRECAG012).block();
+
+        PaperProgressStatusEventDto analogMail = new PaperProgressStatusEventDto();
+        analogMail.requestId(requestId);
+        analogMail.setClientRequestTimeStamp(OffsetDateTime.now());
+        analogMail.setStatusDateTime(OffsetDateTime.now());
+        analogMail.setStatusCode("RECAG005C");
+        analogMail.setProductType("RS");
+        analogMail.setStatusDescription("In progress");
+
+
+        SingleStatusUpdateDto extChannelMessage = new SingleStatusUpdateDto();
+        extChannelMessage.setAnalogMail(analogMail);
+
+        PnDeliveryRequest afterSetForUpdate = createPnDeliveryRequest();
+        afterSetForUpdate.setStatusCode(ExternalChannelCodeEnum.getStatusCode(extChannelMessage.getAnalogMail().getStatusCode()));
+        afterSetForUpdate.setStatusDetail(extChannelMessage.getAnalogMail().getProductType()
+                .concat(" - ").concat(pnDeliveryRequest.getStatusCode()).concat(" - ").concat(extChannelMessage.getAnalogMail().getStatusDescription()));
+        afterSetForUpdate.setStatusDate(DateUtils.formatDate(Date.from(extChannelMessage.getAnalogMail().getStatusDateTime().toInstant())));
+
+        when(requestDeliveryDAO.getByRequestId(anyString())).thenReturn(Mono.just(pnDeliveryRequest));
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
+
+        // verifico che il flusso è stato completato con successo
+        assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());
+
+        //verifico che venga mandato a delivery push lo status PROGRESS
+        //lo statusCode dell'entity viene modifico dall'handler
+        assertThat(afterSetForUpdate.getStatusCode()).isEqualTo(StatusCodeEnum.OK.getValue());
+        assertThat(afterSetForUpdate.getStatusDetail()).isEqualTo("Distacco d'ufficio 23L fascicolo chiuso");
+        assertThat(analogMail.getStatusDateTime().toInstant()).isEqualTo(pnEventMetaRECAG012.getStatusDateTime());
+        verify(sqsSender, times(1)).pushSendEvent(any(SendEvent.class));
+
+        //verifico la clean di tutti i META e DEMAT con la stessa requestId in input
+        List<PnEventMeta> resultMeta = eventMetaDAO.findAllByRequestId("META##" + requestId).collectList().block();
+        List<PnEventDemat> resultDemat = eventDematDAO.findAllByRequestId("DEMAT##" + requestId).collectList().block();
+        assertThat(resultMeta).isEmpty();
+        assertThat(resultDemat).isEmpty();
+
 
     }
 

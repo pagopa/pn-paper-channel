@@ -22,7 +22,7 @@ import java.util.List;
 import static it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.RECAG011BMessageHandler.DEMAT_SORT_KEYS_FILTER;
 import static it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.RECAG011BMessageHandler.META_SORT_KEY_FILTER;
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.createMETAForPNAG012Event;
-import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.editPnDeliveryRequestForPNAG012;
+import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.editPnDeliveryRequestAndPaperRequestForPNAG012;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.times;
@@ -98,7 +98,7 @@ class RECAG011BMessageHandlerTest {
         verify(eventMetaDAO, times(1)).getDeliveryEventMeta("META##requestId", META_SORT_KEY_FILTER);
         verify(eventMetaDAO, times(1)).createOrUpdate(pnEventMeta);
 
-        editPnDeliveryRequestForPNAG012(entity);
+        editPnDeliveryRequestAndPaperRequestForPNAG012(entity, paperRequest, eventMetaRECAG012Expected.getStatusDateTime());
         SendEvent sendPNAG012Event = handler.createSendEventMessage(entity, paperRequest);
 
         //mi aspetto che mandi il messaggio a delivery-push
@@ -155,7 +155,7 @@ class RECAG011BMessageHandlerTest {
         verify(eventMetaDAO, times(0)).getDeliveryEventMeta("META##requestId", META_SORT_KEY_FILTER);
         verify(eventMetaDAO, times(0)).createOrUpdate(pnEventMeta);
 
-        editPnDeliveryRequestForPNAG012(entity);
+        editPnDeliveryRequestAndPaperRequestForPNAG012(entity, paperRequest, eventMetaRECAG012Expected.getStatusDateTime());
         SendEvent sendPNAG012Event = handler.createSendEventMessage(entity, paperRequest);
 
         //mi aspetto che NON mandi il messaggio PNAG012 a delivery-push
@@ -213,7 +213,7 @@ class RECAG011BMessageHandlerTest {
         verify(eventMetaDAO, times(1)).getDeliveryEventMeta("META##requestId", META_SORT_KEY_FILTER);
         verify(eventMetaDAO, times(0)).createOrUpdate(pnEventMeta);
 
-        editPnDeliveryRequestForPNAG012(entity);
+        editPnDeliveryRequestAndPaperRequestForPNAG012(entity, paperRequest, eventMetaRECAG012Expected.getStatusDateTime());
         SendEvent sendPNAG012Event = handler.createSendEventMessage(entity, paperRequest);
 
         //mi aspetto che NON mandi il messaggio PNAG012 a delivery-push
