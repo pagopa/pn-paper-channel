@@ -72,11 +72,11 @@ public class RECAG011BMessageHandler extends SaveDematMessageHandler {
                 .flatMap(pnEventDemats ->  eventMetaDAO.getDeliveryEventMeta(metadataRequestIdFilter, META_SORT_KEY_FILTER ))
                 .doOnNext(pnEventMeta -> log.info("[{}] PnEventMeta found: {}", paperRequest.getRequestId(), pnEventMeta))
                 .map(pnEventMetaRECAG012 -> createMETAForPNAG012Event(paperRequest, pnEventMetaRECAG012, ttlDaysMeta))
-                .doOnNext(pnEventMeta -> pnLogAudit.addsBeforeReceive(entity.getIun(), String.format("prepare requestId = %s Response from external-channel", entity.getRequestId())))
+                .doOnNext(pnEventMetaPNAG012 -> editPnDeliveryRequestAndPaperRequestForPNAG012(entity, paperRequest, pnEventMetaPNAG012.getStatusDateTime()))
+                .doOnNext(pnEventMetaPNAG012 -> pnLogAudit.addsBeforeReceive(entity.getIun(), String.format("prepare requestId = %s Response from external-channel", entity.getRequestId())))
                 .flatMap(eventMetaDAO::createOrUpdate)
-                .doOnNext(pnEventMeta -> logSuccessAuditLog(paperRequest, entity, pnLogAudit))
-                .doOnNext(pnEventMeta -> editPnDeliveryRequestForPNAG012(entity))
-                .doOnNext(pnEventMeta -> log.info("[{}] Sending PNAG012 to delivery push: {}", paperRequest.getRequestId(), entity))
+                .doOnNext(pnEventMetaPNAG012 -> logSuccessAuditLog(paperRequest, entity, pnLogAudit))
+                .doOnNext(pnEventMetaPNAG012 -> log.info("[{}] Sending PNAG012 to delivery push: {}", paperRequest.getRequestId(), entity))
                 .flatMap(pnEventMeta -> super.sendToDeliveryPush(entity, paperRequest));
     }
 
