@@ -10,7 +10,6 @@ import it.pagopa.pn.paperchannel.rest.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.PnLogAudit;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
@@ -83,10 +82,6 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
             }
         }
 
-        if(CollectionUtils.isEmpty(pnEventMetas)) {
-
-        }
-
 
         if (containsPNAG012 && (!containsRECAG012)) {  // presente META##PNAG012 ma NON META##RECAG012
 //            CASO 1.ii
@@ -119,7 +114,6 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
                     .then(Mono.just(pnEventMetas));
         }
 
-//        return Mono.just(pnEventMetas);
     }
 
 }
