@@ -214,11 +214,13 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
     private Mono<SendResponse> getSendResponse(Address address, List<AttachmentInfo> attachments, ProductTypeEnum productType, boolean isReversePrinter){
         return this.calculator(attachments, address, productType, isReversePrinter)
                 .map(amoutAndTotalPages -> {
-                   SendResponse response = new SendResponse();
-                   response.setAmount((int) (amoutAndTotalPages.getT1()*100));
-                   response.setNumberOfPages(amoutAndTotalPages.getT2());
-                   response.setEnvelopeWeight(getLetterWeight(amoutAndTotalPages.getT2()));
-                   return response;
+                    log.debug("Amount : {}", amoutAndTotalPages.getT1());
+                    log.debug("Total pages : {}", amoutAndTotalPages.getT2());
+                    SendResponse response = new SendResponse();
+                    response.setAmount((int) (amoutAndTotalPages.getT1()*100));
+                    response.setNumberOfPages(amoutAndTotalPages.getT2());
+                    response.setEnvelopeWeight(getLetterWeight(amoutAndTotalPages.getT2()));
+                    return response;
                 });
 
     }
@@ -258,7 +260,6 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
         return attachments.stream().map(attachment -> {
             int numberOfPages = attachment.getNumberOfPage();
             if (isReversePrinter) numberOfPages = (int) Math.ceil(((double) attachment.getNumberOfPage())/2);
-            log.info("Number of pages : {}", numberOfPages);
             return (StringUtils.equals(attachment.getDocumentType(), Const.PN_AAR)) ? numberOfPages-1 : numberOfPages;
         }).reduce(0, Integer::sum);
     }
