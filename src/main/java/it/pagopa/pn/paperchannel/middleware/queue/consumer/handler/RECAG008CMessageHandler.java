@@ -37,7 +37,10 @@ public class RECAG008CMessageHandler extends SendToDeliveryPushHandler {
                 .doOnNext(pnEventMetas -> log.info("Found correct previous states for request {}", paperRequest.getRequestId()))
 
                 // send to DeliveryPush (only if the needed metas are found)
-                .doOnNext(pnEventMetas -> super.handleMessage(entity, paperRequest))
+                .flatMap(pnEventMetas -> {
+                    super.handleMessage(entity, paperRequest);
+                    return Mono.just(pnEventMetas);
+                })
 
                 // clean all related metas and demats (only if the needed metas are found)
                 .flatMap(ignored -> metaDematCleaner.clean(paperRequest.getRequestId()));
