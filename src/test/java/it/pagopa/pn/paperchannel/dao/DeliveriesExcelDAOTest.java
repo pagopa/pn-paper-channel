@@ -14,12 +14,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.EXCEL_BADLY_CONTENT;
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DeliveriesExcelDAOTest extends BaseTest {
+class DeliveriesExcelDAOTest extends BaseTest {
 
     @Autowired
     private DeliveriesExcelDAO deliveriesExcelDAO;
