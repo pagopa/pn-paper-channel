@@ -8,6 +8,7 @@ import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PaperChannelUpdate;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PaperEvent;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Constructor;
@@ -16,6 +17,38 @@ import java.util.ArrayList;
 import java.util.List;
 
 class PreparePaperResponseMapperTest {
+    PnDeliveryRequest deliveryRequest;
+
+    @BeforeEach
+    void setUp(){
+        this.initialize();
+    }
+
+    private void initialize() {
+        deliveryRequest = new PnDeliveryRequest();
+        List<PnAttachmentInfo> attachmentUrls = new ArrayList<>();
+        PnAttachmentInfo pnAttachmentInfo = new PnAttachmentInfo();
+        pnAttachmentInfo.setDate("");
+        pnAttachmentInfo.setFileKey("http://localhost:8080");
+        pnAttachmentInfo.setId("id");
+        pnAttachmentInfo.setNumberOfPage(3);
+        pnAttachmentInfo.setDocumentType("documentType");
+        pnAttachmentInfo.setUrl("url");
+        attachmentUrls.add(pnAttachmentInfo);
+        deliveryRequest.setRequestId("requestId");
+        deliveryRequest.setRequestPaId("requestPaId");
+        deliveryRequest.setFiscalCode("fiscalCode");
+        deliveryRequest.setReceiverType("receiverType");
+        deliveryRequest.setIun("iun");
+        deliveryRequest.setHashOldAddress("hashOldAddress");
+        deliveryRequest.setPrintType("printType");
+        deliveryRequest.setCorrelationId("correlationId");
+        deliveryRequest.setStatusDetail("statusDetail");
+        deliveryRequest.setProposalProductType("proposalProductType");
+        deliveryRequest.setProductType("productType");
+        deliveryRequest.setAttachments(attachmentUrls);
+        deliveryRequest.setStatusCode("statusCode");
+    }
 
     @Test
     void exceptionConstructorTest() throws  NoSuchMethodException {
@@ -26,12 +59,13 @@ class PreparePaperResponseMapperTest {
         Assertions.assertEquals(null, exception.getMessage());
     }
 
-    //@Test
+    @Test
     void preparePaperResponseMapperFromResultTest () {
-        PaperChannelUpdate response= PreparePaperResponseMapper.fromResult(getPnDeliveryRequest(""),getPnAddress());
+        PaperChannelUpdate response= PreparePaperResponseMapper.fromResult(deliveryRequest,getPnAddress());
         Assertions.assertNotNull(response);
     }
     @Test
+
     void preparePaperResponseMapperFromResultStatusTest () {
         PaperChannelUpdate response= PreparePaperResponseMapper.fromResult(getPnDeliveryRequest(StatusDeliveryEnum.IN_PROCESSING.getCode()),getPnAddress());
         Assertions.assertNotNull(response);

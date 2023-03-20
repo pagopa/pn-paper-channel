@@ -8,6 +8,7 @@ import org.springframework.data.util.Pair;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.Calendar;
 import java.util.Date;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.BADLY_FILTER_REQUEST;
@@ -74,6 +75,18 @@ public class DateUtils {
         Instant now = Instant.now();
         int tot = first * second;
         return now.plus(tot, ChronoUnit.MINUTES);
+    }
+
+    public static Date formatDateWithSpecificHour(Date date, int hour, int min, int sec){
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(date);
+        cal.set(Calendar.HOUR_OF_DAY, hour);
+        cal.set(Calendar.MINUTE, min);
+        cal.set(Calendar.SECOND, sec);
+        cal.set(Calendar.MILLISECOND, 0);
+        Date dateTime = cal.getTime();
+
+        return dateTime;
     }
 
 }

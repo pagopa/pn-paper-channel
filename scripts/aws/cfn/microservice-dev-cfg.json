@@ -19,6 +19,8 @@
     "TtlExecutionDaysDemat": "365",
     "TtlExecutionDaysMeta": "365",
     "RetryStatus" : "006",
+    "PaperWeight" : "5",
+    "LetterWeight" : "5",
     "MaxTasksNumber": "1"
   }
 }

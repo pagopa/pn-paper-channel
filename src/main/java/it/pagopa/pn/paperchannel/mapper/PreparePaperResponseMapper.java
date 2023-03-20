@@ -34,15 +34,11 @@ public class PreparePaperResponseMapper {
     }
 
     private static boolean hasPrepareStatusCode(String statusCode) {
-        boolean prepareCode = false;
-        if (statusCode.equals(StatusDeliveryEnum.IN_PROCESSING.getCode())
+        return statusCode.equals(StatusDeliveryEnum.IN_PROCESSING.getCode())
                 || statusCode.equals(StatusDeliveryEnum.TAKING_CHARGE.getCode())
                 || statusCode.equals(StatusDeliveryEnum.NATIONAL_REGISTRY_WAITING.getCode())
                 || statusCode.equals(StatusDeliveryEnum.PAPER_CHANNEL_ASYNC_ERROR.getCode())
-                || statusCode.equals(StatusDeliveryEnum.SAFE_STORAGE_IN_ERROR.getCode())) {
-            prepareCode = true;
-        }
-        return prepareCode;
+                || statusCode.equals(StatusDeliveryEnum.SAFE_STORAGE_IN_ERROR.getCode());
     }
 
 }

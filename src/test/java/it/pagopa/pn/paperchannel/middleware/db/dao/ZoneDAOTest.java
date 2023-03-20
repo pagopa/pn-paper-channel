@@ -1,12 +1,14 @@
 package it.pagopa.pn.paperchannel.middleware.db.dao;
 
 import it.pagopa.pn.paperchannel.config.BaseTest;
+import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnZone;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.COUNTRY_NOT_FOUND;
 import static org.junit.jupiter.api.Assertions.*;
@@ -25,11 +27,12 @@ class ZoneDAOTest extends BaseTest {
 
     @Test
     void getByCountryTest(){
-        PnZone zone = this.zoneDAO.getByCountry(zoneCountry.getCountryEn()).block();
-        assertNotNull(zone);
-        assertEquals("countryIt",zone.getCountryIt());
-        assertEquals("countryEn",zone.getCountryEn());
-        assertEquals("zone_1",zone.getZone());
+        StepVerifier.create(this.zoneDAO.getByCountry(zoneCountry.getCountryEn()))
+                .expectErrorMatches(ex -> {
+                    assertTrue(ex instanceof PnGenericException);
+                    assertEquals(COUNTRY_NOT_FOUND, ((PnGenericException) ex).getExceptionType());
+                    return true;
+                });
     }
 
     @Test

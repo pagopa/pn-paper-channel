@@ -33,6 +33,12 @@ class ExcelModelMapperTest {
         DeliveriesData response= ExcelModelMapper.fromDeliveriesDrivers(getDrivers(""),getCosts());
         Assertions.assertNotNull(response);
     }
+    @Test
+    void excelModelMapperEmptyListCostTest () {
+        DeliveriesData response= ExcelModelMapper.fromDeliveriesDrivers(getDrivers("uniqueCode"),new ArrayList<>());
+        Assertions.assertNotNull(response);
+    }
+
     public List<PnCost> getCosts(){
         List<PnCost> paperCostList= new ArrayList<>();
         PnCost cost = new PnCost();
