@@ -7,151 +7,151 @@ _BASEURI=$1
 #INSERIMENTO GARA : il "code" non deve già essere presente a db. 
 curl --location --request POST "${_BASEURI}/paper-channel-bo/v1/tender" \
 --header 'Content-Type: application/json' \
---data '{
-  "code": "GARA2022",
-  "name": "Gara 2022",
-  "startDate": "2023-02-17",
-  "endDate": "2023-12-31"
-}'
+--data "{
+  \"code\": \"GARA2022\",
+  \"name\": \"Gara 2022\",
+  \"startDate\": \"2023-02-17\",
+  \"endDate\": \"2023-12-31\"
+}"
 
 
 #INSERIMENTO DEL RECAPISTA : il tender (in questo caso GARA2022) deve già essere presente a db. TaxId univoco.
 curl --location --request POST "${_BASEURI}/paper-channel-bo/v1/delivery-driver/GARA2022" \
 --header 'Content-Type: application/json' \
---data-raw '{
-  "denomination": "Denominazione",
-  "businessName": "Ragione sociale",
-  "registeredOffice": "Sede legale",
-  "pec": "email.example@pec.com",
-  "fiscalCode": "ABCDEF22G12H345K",
-  "taxId": "12345678900",
-  "phoneNumber": "+39012345678",
-  "uniqueCode": "A12C34D56789E0",
-  "fsu": true
-}'
+--data-raw "{
+  \"denomination\": \"Denominazione\",
+  \"businessName\": \"Ragione sociale\",
+  \"registeredOffice\": \"Sede legale\",
+  \"pec\": \"email.example@pec.com\",
+  \"fiscalCode\": \"ABCDEF22G12H345K\",
+  \"taxId\": \"12345678900\",
+  \"phoneNumber\": \"+39012345678\",
+  \"uniqueCode\": \"A12C34D56789E0\",
+  \"fsu\": true
+}"
 
 
 #INSERIMENTO DEL COSTO : inserimento con tender e taxId appartenente.
 curl --location --request POST "${_BASEURI}/paper-channel-bo/v1/GARA2022/delivery-driver/12345678900/cost" \
 --header 'Content-Type: application/json' \
---data '{
-  "scode": "string",
-  "price": 10,
-  "priceAdditional": 12,
-  "productType": "AR",
-  "cap": [],
-  "zone": "ZONE_1"
-}'
+--data "{
+  \"scode\": \"string\",
+  \"price\": 10,
+  \"priceAdditional\": 12,
+  \"productType\": \"AR\",
+  \"cap\": [],
+  \"zone\": \"ZONE_1\"
+}"
 
 
 #INSERIMENTO DEL COSTO
 curl --location --request POST "${_BASEURI}/paper-channel-bo/v1/GARA2022/delivery-driver/12345678900/cost" \
 --header 'Content-Type: application/json' \
---data '{
-  "scode": "string",
-  "price": 15,
-  "priceAdditional": 12,
-  "productType": "AR",
-  "cap": [],
-  "zone": "ZONE_2"
-}'
+--data "{
+  \"scode\": \"string\",
+  \"price\": 15,
+  \"priceAdditional\": 12,
+  \"productType\": \"AR\",
+  \"cap\": [],
+  \"zone\": \"ZONE_2\"
+}"
 
 
 #INSERIMENTO DEL COSTO
 curl --location --request POST "${_BASEURI}/paper-channel-bo/v1/GARA2022/delivery-driver/12345678900/cost" \
 --header 'Content-Type: application/json' \
---data '{
-  "scode": "string",
-  "price": 20,
-  "priceAdditional": 12,
-  "productType": "AR",
-  "cap": [],
-  "zone": "ZONE_3"
-}'
+--data "{
+  \"scode\": \"string\",
+  \"price\": 20,
+  \"priceAdditional\": 12,
+  \"productType\": \"AR\",
+  \"cap\": [],
+  \"zone\": \"ZONE_3\"
+}"
 
 #INSERIMENTO DEL COSTO
 curl --location --request POST "${_BASEURI}/paper-channel-bo/v1/GARA2022/delivery-driver/12345678900/cost" \
 --header 'Content-Type: application/json' \
 --data '{
-  "scode": "string",
-  "price": 18,
-  "priceAdditional": 12,
-  "productType": "RS",
-  "cap": [],
-  "zone": "ZONE_1"
+  \"scode\": \"string\",
+  \"price\": 18,
+  \"priceAdditional\": 12,
+  \"productType\": \"RS\",
+  \"cap\": [],
+  \"zone\": \"ZONE_1\"
 }'
+
+
+#INSERIMENTO DEL COSTO
+curl --location --request POST \"${_BASEURI}/paper-channel-bo/v1/GARA2022/delivery-driver/12345678900/cost\" \
+--header 'Content-Type: application/json' \
+--data "{
+  \"scode\": \"string\",
+  \"price\": 17,
+  \"priceAdditional\": 12,
+  \"productType\": \"RS\",
+  \"cap\": [],
+  \"zone\": \"ZONE_2\"
+}"
 
 
 #INSERIMENTO DEL COSTO
 curl --location --request POST "${_BASEURI}/paper-channel-bo/v1/GARA2022/delivery-driver/12345678900/cost" \
 --header 'Content-Type: application/json' \
---data '{
-  "scode": "string",
-  "price": 17,
-  "priceAdditional": 12,
-  "productType": "RS",
-  "cap": [],
-  "zone": "ZONE_2"
-}'
-
-
-#INSERIMENTO DEL COSTO
-curl --location --request POST "${_BASEURI}/paper-channel-bo/v1/GARA2022/delivery-driver/12345678900/cost" \
---header 'Content-Type: application/json' \
---data '{
-  "scode": "string",
-  "price": 29,
-  "priceAdditional": 12,
-  "productType": "RS",
-  "cap": [],
-  "zone": "ZONE_3"
-}'
+--data "{
+  \"scode\": \"string\",
+  \"price\": 29,
+  \"priceAdditional\": 12,
+  \"productType\": \"RS\",
+  \"cap\": [],
+  \"zone\": \"ZONE_3\"
+}"
 
 #INSERIMENTO DEL COSTO
 curl --location --request POST "${_BASEURI}/paper-channel-bo/v1/GARA2022/delivery-driver/12345678900/cost" \
 --header 'Content-Type: application/json' \
+--data "{
+  \"scode\": \"string\",
+  \"price\": 35,
+  \"priceAdditional\": 12,
+  \"productType\": \"890\",
+  \"cap\": [
+    \"99999\"
+  ]
+}"
+
+#INSERIMENTO DEL COSTO
+curl --location --request POST \"${_BASEURI}/paper-channel-bo/v1/GARA2022/delivery-driver/12345678900/cost\" \
+--header 'Content-Type: application/json' \
 --data '{
-  "scode": "string",
-  "price": 35,
-  "priceAdditional": 12,
-  "productType": "890",
-  "cap": [
-    "99999"
+  \"scode\": \"string\",
+  \"price\": 127,
+  \"priceAdditional\": 12,
+  \"productType\": \"AR\",
+  \"cap\": [
+    \"99999\"
   ]
 }'
 
 #INSERIMENTO DEL COSTO
 curl --location --request POST "${_BASEURI}/paper-channel-bo/v1/GARA2022/delivery-driver/12345678900/cost" \
 --header 'Content-Type: application/json' \
---data '{
-  "scode": "string",
-  "price": 127,
-  "priceAdditional": 12,
-  "productType": "AR",
-  "cap": [
-    "99999"
+--data "{
+  \"scode\": \"string\",
+  \"price\": 241,
+  \"priceAdditional\": 12,
+  \"productType\": \"RS\",
+  \"cap\": [
+    \"99999\"
   ]
-}'
-
-#INSERIMENTO DEL COSTO
-curl --location --request POST "${_BASEURI}/paper-channel-bo/v1/GARA2022/delivery-driver/12345678900/cost" \
---header 'Content-Type: application/json' \
---data '{
-  "scode": "string",
-  "price": 241,
-  "priceAdditional": 12,
-  "productType": "RS",
-  "cap": [
-    "99999"
-  ]
-}'
+}"
 
 #VALIDAZIONE
 curl --location --request PUT "${_BASEURI}/paper-channel-bo/v1/tender/GARA2022" \  
 --header 'Content-Type: application/json' \
---data-raw '{
-  "statusCode": "VALIDATED"
-}'
+--data-raw "{
+  \"statusCode\": \"VALIDATED\"
+}"
 
 
 
