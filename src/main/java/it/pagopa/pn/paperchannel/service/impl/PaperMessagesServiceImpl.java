@@ -32,6 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
 
 import java.util.Date;
@@ -181,7 +182,12 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                 })
 
                 .flatMap(addressAndAttachments ->
-                        getSendResponse(addressAndAttachments.getT1(), addressAndAttachments.getT2(), sendRequest.getProductType())
+                        getSendResponse(
+                                addressAndAttachments.getT1(),
+                                addressAndAttachments.getT2(),
+                                sendRequest.getProductType(),
+                                StringUtils.equals(sendRequest.getPrintType(), Const.BN_FRONTE_RETRO)
+                        )
                 );
     }
 
@@ -205,20 +211,16 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)));
     }
 
-    private Mono<SendResponse> getSendResponse(Address address, List<AttachmentInfo> attachments, ProductTypeEnum productType){
-        return this.calculator(attachments, address, productType)
-                .map(amout -> {
-                   SendResponse response = new SendResponse();
-                   response.setAmount((int) (amout*100));
-                   int totalPages = attachments.stream()
-                           .reduce(
-                                   0,
-                                   (prevTot, element) -> prevTot + element.getNumberOfPage(),
-                                   Integer::sum
-                           );
-                   response.setNumberOfPages(totalPages);
-                   response.setEnvelopeWeight(getLetterWeight(totalPages));
-                   return response;
+    private Mono<SendResponse> getSendResponse(Address address, List<AttachmentInfo> attachments, ProductTypeEnum productType, boolean isReversePrinter){
+        return this.calculator(attachments, address, productType, isReversePrinter)
+                .map(amoutAndTotalPages -> {
+                    log.debug("Amount : {}", amoutAndTotalPages.getT1());
+                    log.debug("Total pages : {}", amoutAndTotalPages.getT2());
+                    SendResponse response = new SendResponse();
+                    response.setAmount((int) (amoutAndTotalPages.getT1()*100));
+                    response.setNumberOfPages(amoutAndTotalPages.getT2());
+                    response.setEnvelopeWeight(getLetterWeight(amoutAndTotalPages.getT2()));
+                    return response;
                 });
 
     }
@@ -229,26 +231,37 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
         return (weightPaper * numberOfPages) + weightLetter;
     }
 
-    private Mono<Double> calculator(List<AttachmentInfo> attachments, Address address, ProductTypeEnum productType){
-        boolean isNational =
+    private Mono<Tuple2<Double, Integer>> calculator(List<AttachmentInfo> attachments, Address address, ProductTypeEnum productType, boolean isReversePrinter){
+        boolean isNational = StringUtils.isBlank(address.getCountry()) ||
                 StringUtils.equalsIgnoreCase(address.getCountry(), "it") ||
                 StringUtils.equalsIgnoreCase(address.getCountry(), "italia") ||
                 StringUtils.equalsIgnoreCase(address.getCountry(), "italy");
 
         if (StringUtils.isNotBlank(address.getCap()) && isNational) {
-            return getAmount(attachments, address.getCap(), null, getProductType(address, productType))
+            return getAmount(attachments, address.getCap(), null, getProductType(address, productType), isReversePrinter)
                     .map(item -> item);
         }
         return paperTenderService.getZoneFromCountry(address.getCountry())
-                .flatMap(zone -> getAmount(attachments,null, zone, super.getProductType(address, productType)).map(item -> item));
+                .flatMap(zone -> getAmount(attachments,null, zone, super.getProductType(address, productType), isReversePrinter).map(item -> item));
 
     }
 
-    private Mono<Double> getAmount(List<AttachmentInfo> attachments, String cap, String zone, String productType){
+    private Mono<Tuple2<Double, Integer>> getAmount(List<AttachmentInfo> attachments, String cap, String zone, String productType, boolean isReversePrinter){
         return paperTenderService.getCostFrom(cap, zone, productType)
-                .flatMap(contract -> super.getPriceAttachments(attachments, contract.getPriceAdditional())
-                        .map(priceForPages -> Double.sum(contract.getPrice(), priceForPages))
-                );
+                .map(contract ->{
+                    Integer totPages = getNumberOfPages(attachments, isReversePrinter);
+                    double priceTotPages = totPages * contract.getPriceAdditional();
+                    return Tuples.of(Double.sum(contract.getPrice(), priceTotPages), totPages);
+                });
+    }
+
+    private Integer getNumberOfPages(List<AttachmentInfo> attachments, boolean isReversePrinter){
+        if (attachments == null || attachments.isEmpty()) return 0;
+        return attachments.stream().map(attachment -> {
+            int numberOfPages = attachment.getNumberOfPage();
+            if (isReversePrinter) numberOfPages = (int) Math.ceil(((double) attachment.getNumberOfPage())/2);
+            return (StringUtils.equals(attachment.getDocumentType(), Const.PN_AAR)) ? numberOfPages-1 : numberOfPages;
+        }).reduce(0, Integer::sum);
     }
 
     private Address saveAddresses(SendRequest sendRequest) {
