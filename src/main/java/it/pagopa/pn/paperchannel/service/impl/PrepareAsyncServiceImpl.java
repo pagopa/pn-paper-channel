@@ -212,7 +212,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                      .flatMap(item -> safeStorageClient.getFile(fileKey)
                      .map(fileDownloadResponseDto -> fileDownloadResponseDto)
                      .onErrorResume(ex -> {
-                         log.error (ex.getMessage());
+                         log.error ("Error in retrieve file", ex.getMessage());
                          return Mono.error(ex);
                      })
                      .onErrorResume(PnRetryStorageException.class, ex ->

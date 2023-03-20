@@ -1,13 +1,10 @@
 package it.pagopa.pn.paperchannel.middleware.db.dao.impl;
 
 import it.pagopa.pn.paperchannel.config.AwsPropertiesConfig;
-import it.pagopa.pn.paperchannel.encryption.DataEncryption;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.middleware.db.dao.ZoneDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.BaseDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnZone;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
@@ -29,14 +26,6 @@ public class ZoneDAOImpl extends BaseDAO<PnZone> implements ZoneDAO {
     @Override
     public Mono<PnZone> getByCountry(String country) {
         return Mono.fromFuture(this.get(country,null).thenApply(item->item))
-                .switchIfEmpty(this.getBySecondaryIndex(PnZone.COUNTRY_EN_INDEX,country,null)
-                        .collectList()
-                        .map(items->{
-                            if (items.isEmpty()) {
-                                throw new PnGenericException(COUNTRY_NOT_FOUND,COUNTRY_NOT_FOUND.getMessage());
-                            }
-                            return items.get(0);
-                        })
-                );
+                .switchIfEmpty(Mono.error(new PnGenericException(COUNTRY_NOT_FOUND,COUNTRY_NOT_FOUND.getMessage())));
     }
 }

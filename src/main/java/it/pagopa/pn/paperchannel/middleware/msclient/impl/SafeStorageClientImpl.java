@@ -62,12 +62,6 @@ public class SafeStorageClientImpl extends BaseClient implements SafeStorageClie
                 .onErrorResume(WebClientResponseException.class, ex -> {
                     log.error(ex.getResponseBodyAsString());
                     return Mono.error(ex);
-                /*
-                if (ex.getStatusCode() == HttpStatus.NOT_FOUND){
-                    return Mono.error(new RaddGenericException(RETRY_AFTER, new BigDecimal(670)));
-                }
-                return Mono.error(new PnSafeStorageException(ex));
-                */
                 });
     }
 }

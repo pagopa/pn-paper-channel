@@ -204,7 +204,7 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
                                 return Mono.empty();
                             }))
                             .onErrorResume(ex -> {
-                                pnLogAudit.addsFailSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDC_TRACE_ID_KEY)));
+                                pnLogAudit.addsWarningSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDC_TRACE_ID_KEY)));
                                 return paperRequestErrorDAO.created(sendRequest.getRequestId(),
                                         EXTERNAL_CHANNEL_API_EXCEPTION.getMessage(),
                                         EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name()).flatMap(errorEntity -> Mono.error(ex));

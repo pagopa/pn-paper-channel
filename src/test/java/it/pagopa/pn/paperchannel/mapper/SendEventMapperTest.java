@@ -5,7 +5,9 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.rest.v1.dto.SendEvent;
+import it.pagopa.pn.paperchannel.rest.v1.dto.StatusCodeEnum;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Constructor;
@@ -14,6 +16,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 class SendEventMapperTest {
+
+
+    PnDeliveryRequest deliveryRequest;
+    SendEvent response;
+
+    @BeforeEach
+    void setUp(){
+        this.initialize();
+    }
 
     @Test
     void exceptionConstructorTest() throws  NoSuchMethodException {
@@ -24,14 +35,16 @@ class SendEventMapperTest {
         Assertions.assertEquals(null, exception.getMessage());
     }
 
-    //@Test
+    @Test
     void sendEventMapperFromResultTest () {
-        SendEvent response= SendEventMapper.fromResult(getPnDeliveryRequest(""),getPnAddress());
+        response.setStatusCode(StatusCodeEnum.OK);
+        response = SendEventMapper.fromResult(deliveryRequest ,getPnAddress());
         Assertions.assertNotNull(response);
     }
 
-    private PnDeliveryRequest getPnDeliveryRequest(String status){
-        PnDeliveryRequest deliveryRequest= new PnDeliveryRequest();
+    private void initialize(){
+        response = new SendEvent();
+        deliveryRequest = new PnDeliveryRequest();
         List<PnAttachmentInfo> attachmentUrls = new ArrayList<>();
         PnAttachmentInfo pnAttachmentInfo = new PnAttachmentInfo();
         pnAttachmentInfo.setDate("");
@@ -59,7 +72,7 @@ class SendEventMapperTest {
         deliveryRequest.setReceiverType("RT");
         deliveryRequest.setIun("");
         deliveryRequest.setCorrelationId("");
-        deliveryRequest.setStatusCode(status);
+        deliveryRequest.setStatusCode(StatusCodeEnum.OK.getValue());
         deliveryRequest.setStatusDetail("");
         deliveryRequest.setStatusDate("");
         deliveryRequest.setProposalProductType("");
@@ -68,7 +81,6 @@ class SendEventMapperTest {
         deliveryRequest.setProductType("RN_AR");
         deliveryRequest.setAttachments(attachmentUrls);
         List<PnAttachmentInfo> attachments;
-        return deliveryRequest;
     }
 
     public PnAddress getPnAddress() {

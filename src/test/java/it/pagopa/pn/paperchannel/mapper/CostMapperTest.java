@@ -1,12 +1,18 @@
 package it.pagopa.pn.paperchannel.mapper;
 
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnCost;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnTender;
+import it.pagopa.pn.paperchannel.model.PageModel;
 import it.pagopa.pn.paperchannel.rest.v1.dto.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+import org.springframework.data.domain.Pageable;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.List;
 
 class CostMapperTest {
 
@@ -34,6 +40,14 @@ class CostMapperTest {
         PnCost response=CostMapper.fromCostDTO("ABX_xxx", "driverId", getContractDto());
         Assertions.assertNotNull(response);
     }
+    @Test
+    void toPageableResponseTest(){
+        Pageable pageable = Mockito.mock(Pageable.class, Mockito.CALLS_REAL_METHODS);
+        List<PnCost> list= new ArrayList<>();
+        PageableCostResponseDto pageableCostResponseDto = CostMapper.toPageableResponse(CostMapper.toPagination(pageable,list));
+        Assertions.assertNotNull(pageableCostResponseDto);
+    }
+
     private CostDTO getContractDto(){
         CostDTO contractDto = new CostDTO();
         //contractDto.setCap("00061");

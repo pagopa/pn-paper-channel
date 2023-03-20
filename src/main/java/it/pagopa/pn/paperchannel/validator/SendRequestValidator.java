@@ -59,6 +59,7 @@ public class SendRequestValidator {
         if (!errors.isEmpty()){
             throw new PnInputValidatorException(DIFFERENT_DATA_REQUEST, DIFFERENT_DATA_REQUEST.getMessage(), HttpStatus.CONFLICT, errors);
         }
+
     }
 
     public static void compareProgressStatusRequestEntity(PaperProgressStatusEventDto paperProgressStatusEventDto, PnDeliveryRequest pnDeliveryEntity) {

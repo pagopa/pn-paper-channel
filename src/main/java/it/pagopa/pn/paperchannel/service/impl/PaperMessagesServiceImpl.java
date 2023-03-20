@@ -62,6 +62,68 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
     }
 
     @Override
+    public Mono<PaperChannelUpdate> preparePaperSync(String requestId, PrepareRequest prepareRequest){
+        prepareRequest.setRequestId(requestId);
+
+        if (StringUtils.isEmpty(prepareRequest.getRelatedRequestId())){
+            log.info("First attempt requestId {}", requestId);
+            //case of 204
+            return this.requestDeliveryDAO.getByRequestId(prepareRequest.getRequestId())
+                    .flatMap(entity -> {
+                        PrepareRequestValidator.compareRequestEntity(prepareRequest, entity, true);
+                        return addressDAO.findByRequestId(requestId)
+                                .map(address-> PreparePaperResponseMapper.fromResult(entity,address))
+                                .switchIfEmpty(Mono.just(PreparePaperResponseMapper.fromResult(entity,null)));
+                    })
+                    .switchIfEmpty(Mono.defer(() -> saveRequestAndAddress(prepareRequest, null, prepareRequest.getReceiverAddress())
+                            .flatMap(response -> {
+                                PrepareAsyncRequest request = new PrepareAsyncRequest(requestId, response.getIun(), false, 0);
+                                this.sqsSender.pushToInternalQueue(request);
+                                throw new PnPaperEventException(PreparePaperResponseMapper.fromEvent(prepareRequest.getRequestId()));
+                            }))
+                    );
+        }
+
+        log.info("Second attempt requestId {}", requestId);
+        return this.requestDeliveryDAO.getByRequestId(prepareRequest.getRelatedRequestId())
+                .flatMap(oldEntity -> {
+                    prepareRequest.setRequestId(oldEntity.getRequestId());
+                    PrepareRequestValidator.compareRequestEntity(prepareRequest, oldEntity, false);
+                    prepareRequest.setRequestId(requestId);
+
+                    return this.requestDeliveryDAO.getByRequestId(prepareRequest.getRequestId())
+                            .flatMap(newEntity -> {
+                                log.info("Attempt already exist");
+                                PrepareRequestValidator.compareRequestEntity(prepareRequest, newEntity, false);
+                                return addressDAO.findByRequestId(newEntity.getRequestId())
+                                        .map(address-> PreparePaperResponseMapper.fromResult(newEntity,address))
+                                        .switchIfEmpty(Mono.just(PreparePaperResponseMapper.fromResult(newEntity,null)));
+                            })
+                            .switchIfEmpty(Mono.defer(() ->
+                                    saveRequestAndAddress(prepareRequest, oldEntity.getAddressHash(), prepareRequest.getDiscoveredAddress())
+                                            .flatMap(response -> {
+                                                if (prepareRequest.getDiscoveredAddress() != null) {
+                                                    PrepareAsyncRequest request = new PrepareAsyncRequest(response.getRequestId(), response.getIun(), false, 0);
+                                                    this.sqsSender.pushToInternalQueue(request);
+                                                } else {
+                                                    log.info("Start call national");
+                                                    this.finderAddressFromNationalRegistries(
+                                                            (MDC.get(MDC_TRACE_ID_KEY) == null ? UUID.randomUUID().toString() : MDC.get(MDC_TRACE_ID_KEY)),
+                                                            response.getRequestId(),
+                                                            response.getRelatedRequestId(),
+                                                            response.getFiscalCode(),
+                                                            response.getReceiverType(),
+                                                            response.getIun(), 0);
+                                                }
+
+                                                throw new PnPaperEventException(PreparePaperResponseMapper.fromEvent(prepareRequest.getRequestId()));
+                                            })
+                            ));
+                })
+                .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)));
+    }
+
+    @Override
     public Mono<PrepareEvent> retrievePaperPrepareRequest(String requestId) {
         log.info("Start retrieve prepare request {}", requestId);
         return requestDeliveryDAO.getByRequestId(requestId)
@@ -119,18 +181,61 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                 })
 
                 .flatMap(addressAndAttachments ->
-                        this.calculator(addressAndAttachments.getT2(), addressAndAttachments.getT1(), sendRequest.getProductType())
-                )
-                .map(amount -> {
-                    log.info("Amount: {} for requestId {}", amount, requestId);
-                    SendResponse sendResponse = new SendResponse();
-                    sendResponse.setAmount(Double.valueOf(amount*100).intValue());
-                    return sendResponse;
+                        getSendResponse(addressAndAttachments.getT1(), addressAndAttachments.getT2(), sendRequest.getProductType())
+                );
+    }
+
+    @Override
+    public Mono<SendEvent> retrievePaperSendRequest(String requestId) {
+        return requestDeliveryDAO.getByRequestId(requestId)
+                .zipWhen(entity -> {
+
+
+                    if (entity.getStatusCode().equals(StatusDeliveryEnum.TAKING_CHARGE.getCode())
+                            || entity.getStatusCode().equals(StatusDeliveryEnum.IN_PROCESSING.getCode())
+                            || entity.getStatusCode().equals(StatusDeliveryEnum.PAPER_CHANNEL_DEFAULT_ERROR.getCode())
+                            || entity.getStatusCode().equals(StatusDeliveryEnum.PAPER_CHANNEL_NEW_REQUEST.getCode())) {
+                        return Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND));
+                    }
+
+                    return addressDAO.findByRequestId(requestId).map(address -> address)
+                            .switchIfEmpty(Mono.just(new PnAddress()));
+                })
+                .map(entityAndAddress -> SendEventMapper.fromResult(entityAndAddress.getT1(),entityAndAddress.getT2()))
+                .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)));
+    }
+
+    private Mono<SendResponse> getSendResponse(Address address, List<AttachmentInfo> attachments, ProductTypeEnum productType){
+        return this.calculator(attachments, address, productType)
+                .map(amout -> {
+                   SendResponse response = new SendResponse();
+                   response.setAmount((int) (amout*100));
+                   int totalPages = attachments.stream()
+                           .reduce(
+                                   0,
+                                   (prevTot, element) -> prevTot + element.getNumberOfPage(),
+                                   Integer::sum
+                           );
+                   response.setNumberOfPages(totalPages);
+                   response.setEnvelopeWeight(getLetterWeight(totalPages));
+                   return response;
                 });
+
+    }
+
+    private int getLetterWeight(int  numberOfPages){
+        int weightPaper = this.pnPaperChannelConfig.getPaperWeight();
+        int weightLetter = this.pnPaperChannelConfig.getLetterWeight();
+        return (weightPaper * numberOfPages) + weightLetter;
     }
 
     private Mono<Double> calculator(List<AttachmentInfo> attachments, Address address, ProductTypeEnum productType){
-        if (StringUtils.isNotBlank(address.getCap())) {
+        boolean isNational =
+                StringUtils.equalsIgnoreCase(address.getCountry(), "it") ||
+                StringUtils.equalsIgnoreCase(address.getCountry(), "italia") ||
+                StringUtils.equalsIgnoreCase(address.getCountry(), "italy");
+
+        if (StringUtils.isNotBlank(address.getCap()) && isNational) {
             return getAmount(attachments, address.getCap(), null, getProductType(address, productType))
                     .map(item -> item);
         }
@@ -161,92 +266,6 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
         }
 
         return address;
-    }
-
-    @Override
-    public Mono<PaperChannelUpdate> preparePaperSync(String requestId, PrepareRequest prepareRequest){
-        prepareRequest.setRequestId(requestId);
-
-        if (StringUtils.isEmpty(prepareRequest.getRelatedRequestId())){
-            log.info("First attempt requestId {}", requestId);
-            //case of 204
-            return this.requestDeliveryDAO.getByRequestId(prepareRequest.getRequestId())
-                    .flatMap(entity -> {
-                        PrepareRequestValidator.compareRequestEntity(prepareRequest, entity, true);
-                        return addressDAO.findByRequestId(requestId)
-                                .map(address-> PreparePaperResponseMapper.fromResult(entity,address))
-                                .switchIfEmpty(Mono.just(PreparePaperResponseMapper.fromResult(entity,null)));
-                    })
-                    .switchIfEmpty(Mono.defer(() -> saveRequestAndAddress(prepareRequest, null, prepareRequest.getReceiverAddress())
-                            .flatMap(response -> {
-                                PrepareAsyncRequest request = new PrepareAsyncRequest(requestId, response.getIun(), false, 0);
-                                this.sqsSender.pushToInternalQueue(request);
-                                throw new PnPaperEventException(PreparePaperResponseMapper.fromEvent(prepareRequest.getRequestId()));
-                            }))
-                    );
-        }
-
-        log.info("Second attempt requestId {}", requestId);
-        return this.requestDeliveryDAO.getByRequestId(prepareRequest.getRelatedRequestId())
-                .flatMap(oldEntity -> {
-                    prepareRequest.setRequestId(oldEntity.getRequestId());
-                    PrepareRequestValidator.compareRequestEntity(prepareRequest, oldEntity, false);
-                    prepareRequest.setRequestId(requestId);
-
-                    return this.requestDeliveryDAO.getByRequestId(prepareRequest.getRequestId())
-                            .flatMap(newEntity -> {
-                                if (newEntity == null) {
-                                    log.info("New attempt");
-                                    return Mono.empty();
-                                }
-                                log.info("Attempt already exist");
-                                PrepareRequestValidator.compareRequestEntity(prepareRequest, newEntity, false);
-                                return addressDAO.findByRequestId(newEntity.getRequestId())
-                                        .map(address-> PreparePaperResponseMapper.fromResult(newEntity,address))
-                                        .switchIfEmpty(Mono.just(PreparePaperResponseMapper.fromResult(newEntity,null)));
-                            })
-                            .switchIfEmpty(Mono.defer(() ->
-                                    saveRequestAndAddress(prepareRequest, oldEntity.getAddressHash(), prepareRequest.getDiscoveredAddress())
-                                    .flatMap(response -> {
-                                        if (prepareRequest.getDiscoveredAddress() != null) {
-                                            PrepareAsyncRequest request = new PrepareAsyncRequest(response.getRequestId(), response.getIun(), false, 0);
-                                            this.sqsSender.pushToInternalQueue(request);
-                                        } else {
-                                            log.info("Start call national");
-                                            this.finderAddressFromNationalRegistries(
-                                                    (MDC.get(MDC_TRACE_ID_KEY) == null ? UUID.randomUUID().toString() : MDC.get(MDC_TRACE_ID_KEY)),
-                                                    response.getRequestId(),
-                                                    response.getRelatedRequestId(),
-                                                    response.getFiscalCode(),
-                                                    response.getReceiverType(),
-                                                    response.getIun(), 0);
-                                        }
-
-                                        throw new PnPaperEventException(PreparePaperResponseMapper.fromEvent(prepareRequest.getRequestId()));
-                                    })
-                            ));
-                })
-                .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)));
-    }
-
-    @Override
-    public Mono<SendEvent> retrievePaperSendRequest(String requestId) {
-        return requestDeliveryDAO.getByRequestId(requestId)
-                .zipWhen(entity -> {
-
-
-                    if (entity.getStatusCode().equals(StatusDeliveryEnum.TAKING_CHARGE.getCode())
-                            || entity.getStatusCode().equals(StatusDeliveryEnum.IN_PROCESSING.getCode())
-                            || entity.getStatusCode().equals(StatusDeliveryEnum.PAPER_CHANNEL_DEFAULT_ERROR.getCode())
-                            || entity.getStatusCode().equals(StatusDeliveryEnum.PAPER_CHANNEL_NEW_REQUEST.getCode())) {
-                        return Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND));
-                    }
-
-                    return addressDAO.findByRequestId(requestId).map(address -> address)
-                            .switchIfEmpty(Mono.just(new PnAddress()));
-                })
-                .map(entityAndAddress -> SendEventMapper.fromResult(entityAndAddress.getT1(),entityAndAddress.getT2()))
-                .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)));
     }
 
     private Mono<PnDeliveryRequest> saveRequestAndAddress(PrepareRequest prepareRequest, String oldAddress, AnalogAddress address){

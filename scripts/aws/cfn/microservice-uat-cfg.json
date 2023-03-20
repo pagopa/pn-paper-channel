@@ -18,6 +18,8 @@
     "TtlExecutionRIRS": "14",
     "TtlExecutionDaysDemat": "3650",
     "TtlExecutionDaysMeta": "3650",
-    "RetryStatus" : "006"
+    "RetryStatus" : "006",
+    "PaperWeight" : "5",
+    "LetterWeight" : "5"
   }
 }
