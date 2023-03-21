@@ -20,6 +20,7 @@ class HandlersFactoryTest {
 
     @Test
     void getHandlerTest() {
+        MessageHandler con080Event = handlersFactory.getHandler("CON080");
         MessageHandler preEsitoEvent = handlersFactory.getHandler("RECRS002A");
         MessageHandler dematEvent = handlersFactory.getHandler("RECRS002B");
         MessageHandler fascicoloChiuso = handlersFactory.getHandler("RECRS002C");
@@ -32,6 +33,7 @@ class HandlersFactoryTest {
         MessageHandler recag006C = handlersFactory.getHandler("RECAG006C");
         MessageHandler recag007C = handlersFactory.getHandler("RECAG007C");
 
+        assertThat(con080Event).isInstanceOf(CON080MessageHandler.class);
         assertThat(preEsitoEvent).isInstanceOf(SaveMetadataMessageHandler.class);
         assertThat(dematEvent).isInstanceOf(SaveDematMessageHandler.class);
         assertThat(fascicoloChiuso).isInstanceOf(AggregatorMessageHandler.class);
