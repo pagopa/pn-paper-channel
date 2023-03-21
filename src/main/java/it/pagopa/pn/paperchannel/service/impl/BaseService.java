@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
+import reactor.util.function.Tuple2;
 
 import java.time.Duration;
 import java.util.Date;
@@ -114,18 +115,6 @@ public class BaseService {
                             return Mono.just("");
                         })
                 ).subscribeOn(Schedulers.boundedElastic()).subscribe();
-    }
-
-
-    protected Mono<Double> getPriceAttachments(List<AttachmentInfo> attachmentInfos, Float priceForAAr){
-        return Flux.fromStream(attachmentInfos.stream())
-                .map(attachmentInfo -> {
-                    if (StringUtils.equals(attachmentInfo.getDocumentType(), PN_AAR)) {
-                        return priceForAAr;
-                    }
-                    return attachmentInfo.getNumberOfPage() * priceForAAr;
-                })
-                .reduce(0.0, Double::sum);
     }
 
 

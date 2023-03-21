@@ -17,7 +17,6 @@ class PageModelTest {
     void testPagination(){
 
         List<String> data = List.of("1", "1", "1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1","1");
-        log.info("Size list : {}", data.size());
 
         Pageable pageable = PageRequest.of(0, 10);
 
@@ -26,8 +25,6 @@ class PageModelTest {
         Assertions.assertEquals(pageable.getPageSize(), pageString.getContent().size());
         Assertions.assertEquals(data.size(), pageString.getTotalElements());
         Assertions.assertEquals(3, pageString.getTotalPages());
-
-
 
     }
 

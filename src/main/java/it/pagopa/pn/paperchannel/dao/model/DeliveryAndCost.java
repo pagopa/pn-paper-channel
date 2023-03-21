@@ -31,15 +31,15 @@ public class DeliveryAndCost {
     @ColumnExcel("FSU")
     private Boolean fsu;
     @ColumnExcel("CAP")
-    public List<String> caps;
+    private List<String> caps;
     @ColumnExcel("ZONE")
-    public String zone;
+    private String zone;
     @ColumnExcel("PRODUCT_TYPE")
-    public String productType;
+    private String productType;
     @ColumnExcel("BASE_PRICE")
-    public Float basePrice;
+    private Float basePrice;
     @ColumnExcel("PAGE_PRICE")
-    public Float pagePrice;
+    private Float pagePrice;
 
     @Override
     public boolean equals(Object o) {
