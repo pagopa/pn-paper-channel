@@ -231,7 +231,7 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
         return (weightPaper * numberOfPages) + weightLetter;
     }
 
-    private Mono<Double> calculator(List<AttachmentInfo> attachments, Address address, ProductTypeEnum productType, boolean isReversePrinter){
+    private Mono<Float> calculator(List<AttachmentInfo> attachments, Address address, ProductTypeEnum productType, boolean isReversePrinter){
         boolean isNational = StringUtils.isBlank(address.getCountry()) ||
                 StringUtils.equalsIgnoreCase(address.getCountry(), "it") ||
                 StringUtils.equalsIgnoreCase(address.getCountry(), "italia") ||
@@ -246,12 +246,12 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
 
     }
 
-    private Mono<Double> getAmount(List<AttachmentInfo> attachments, String cap, String zone, String productType, boolean isReversePrinter){
+    private Mono<Float> getAmount(List<AttachmentInfo> attachments, String cap, String zone, String productType, boolean isReversePrinter){
         return paperTenderService.getCostFrom(cap, zone, productType)
                 .map(contract ->{
                     Integer totPages = getNumberOfPages(attachments, isReversePrinter, false);
-                    double priceTotPages = totPages * contract.getPriceAdditional();
-                    return Double.sum(contract.getPrice(), priceTotPages);
+                    float priceTotPages = totPages * contract.getPriceAdditional();
+                    return Float.sum(contract.getPrice(), priceTotPages);
                 });
     }
 
