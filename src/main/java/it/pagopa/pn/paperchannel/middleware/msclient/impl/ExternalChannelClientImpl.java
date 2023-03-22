@@ -11,7 +11,6 @@ import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.PaperEng
 import it.pagopa.pn.paperchannel.rest.v1.dto.SendRequest;
 import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
-import it.pagopa.pn.paperchannel.utils.Utility;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
@@ -24,6 +23,7 @@ import java.math.BigDecimal;
 import java.net.ConnectException;
 import java.time.Duration;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
@@ -62,8 +62,9 @@ public class ExternalChannelClientImpl extends BaseClient implements ExternalCha
         dto.setProductType(sendRequest.getProductType().getValue());
         dto.setReceiverFiscalCode(sendRequest.getReceiverFiscalCode());
         AtomicInteger i = new AtomicInteger();
-        Collections.sort(attachments);
-        attachments.forEach(a -> {
+        List<AttachmentInfo> mutableList = new ArrayList<>(attachments);
+        Collections.sort(mutableList);
+        mutableList.forEach(a -> {
             PaperEngageRequestAttachmentsDto attachmentsDto = new PaperEngageRequestAttachmentsDto();
             attachmentsDto.setDocumentType(StringUtils.equals(a.getDocumentType(), PN_AAR) ? Const.AAR : Const.ATTO);
             attachmentsDto.setSha256(a.getSha256());
@@ -94,8 +95,6 @@ public class ExternalChannelClientImpl extends BaseClient implements ExternalCha
             dto.setArCap(sendRequest.getArAddress().getCap());
             dto.setArCity(sendRequest.getArAddress().getCity());
         }
-
-        log.info(Utility.objectToJson(dto));
 
         return this.paperMessagesApi.sendPaperEngageRequest(requestIdx, this.pnPaperChannelConfig.getXPagopaExtchCxId(), dto)
                 .retryWhen(
