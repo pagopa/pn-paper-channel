@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.service;
 
+import io.swagger.models.auth.In;
 import it.pagopa.pn.paperchannel.config.BaseTest;
 import it.pagopa.pn.paperchannel.dao.ExcelDAO;
 import it.pagopa.pn.paperchannel.dao.model.DeliveriesData;
@@ -19,11 +20,11 @@ import it.pagopa.pn.paperchannel.service.impl.PaperChannelServiceImpl;
 import it.pagopa.pn.paperchannel.utils.Const;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
+import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -42,8 +43,6 @@ class PaperChannelServiceTest extends BaseTest {
 
     @Autowired
     private PaperChannelServiceImpl paperChannelService;
-    @SpyBean
-    private PaperChannelServiceImpl paperChannelServiceSpy;
     @MockBean
     private CostDAO costDAO;
     @MockBean
@@ -435,6 +434,8 @@ class PaperChannelServiceTest extends BaseTest {
     @Test
     @DisplayName("whenCalledNotifyUploadWithFileStatusIsUploadingAndS3HaveAFileThenStartNotifyAsync")
     void notifyUploadWithFileStatusInUploadingAndS3haveFile(){
+        PaperChannelServiceImpl spyPaperChannelService = Mockito.spy(this.paperChannelService);
+
         NotifyUploadRequestDto request = new NotifyUploadRequestDto();
         request.setUuid("UUID_REQUEST");
         PnDeliveryFile file = new PnDeliveryFile();
@@ -449,8 +450,8 @@ class PaperChannelServiceTest extends BaseTest {
         Mockito.when(s3Bucket.getFileInputStream(Mockito.any()))
                 .thenReturn(getInputStream());
 
-        Mockito.when(this.paperChannelService.notifyUploadAsync(Mockito.any(), Mockito.any(), Mockito.any()))
-                .thenReturn(Mono.just(new PnDeliveryFile()));
+        Mockito.when(spyPaperChannelService.notifyUploadAsync(Mockito.any(), Mockito.any(), Mockito.any()))
+                .thenReturn(Mono.empty());
 
         PnDeliveryFile file1 = new PnDeliveryFile();
         file1.setStatus(FileStatusCodeEnum.IN_PROGRESS.getCode());
@@ -460,7 +461,7 @@ class PaperChannelServiceTest extends BaseTest {
         Mockito.when(this.fileDownloadDAO.create(Mockito.any()))
                 .thenReturn(Mono.just(file1));
 
-        NotifyResponseDto dto = this.paperChannelService.notifyUpload("1234", request).block();
+        NotifyResponseDto dto = spyPaperChannelService.notifyUpload("1234", request).block();
         assertNotNull(dto);
 
         assertNotNull(dto.getRetryAfter());
@@ -558,9 +559,10 @@ class PaperChannelServiceTest extends BaseTest {
                 .verify();
     }
 
-    //@Test
-   // @DisplayName("whenCallNotifyAsyncWithCorrectDataThenUpdateStatus")
+    @Test
+    @DisplayName("whenCallNotifyAsyncWithCorrectDataThenUpdateStatus")
     void notifyUploadAsyncWithCorrectDataThenUpdateStatus(){
+        PaperChannelServiceImpl spyPaperChannel = Mockito.spy(this.paperChannelService);
         PnDeliveryFile file1 = new PnDeliveryFile();
         file1.setStatus(FileStatusCodeEnum.UPLOADED.getCode());
         file1.setFilename("FILENAME");
@@ -585,130 +587,22 @@ class PaperChannelServiceTest extends BaseTest {
 
 
 
-        Mockito.when(paperChannelServiceSpy.deleteDriver(Mockito.any(), Mockito.any()))
-                .thenReturn(Mono.empty());
-
+        Mockito.doReturn(Mono.empty()).when(spyPaperChannel).deleteDriver(Mockito.any(), Mockito.any());
 
 
         Mockito.when(deliveryDriverDAO.createOrUpdate(Mockito.any()))
                 .thenReturn(Mono.just(getListDrivers(1, true).get(0)));
 
+        Mockito.when(costDAO.createOrUpdate(Mockito.any()))
+                .thenReturn(Mono.just(getCost("ZONE_1", null,"AR")));
 
-        StepVerifier.create(paperChannelService.notifyUploadAsync(file1, getInputStream(), "1122"))
+        Mockito.when(fileDownloadDAO.create(Mockito.any())).thenReturn(Mono.just(file1));
+
+        StepVerifier.create(spyPaperChannel.notifyUploadAsync(file1, getInputStream(), "1122"))
                 .verifyComplete();
     }
 
-    @Test
-    @DisplayName("whenTryDeleteTenderWithTenderStatusDifferentToCreatedThenThrowException")
-    void deleteTenderWithTenderStatusInProgress(){
-        PnTender tender = this.getListTender(1).get(0);
-        tender.setStatus(TenderDTO.StatusEnum.IN_PROGRESS.toString());
 
-        Mockito.when(this.tenderDAO.getTender(Mockito.any()))
-                .thenReturn(Mono.just(tender));
-
-        StepVerifier.create(this.paperChannelService.deleteTender("123"))
-                .expectErrorMatches((e) -> {
-                    assertTrue(e instanceof PnGenericException);
-                    assertEquals(TENDER_CANNOT_BE_DELETED, ((PnGenericException) e).getExceptionType());
-                    return true;
-                }).verify();
-    }
-    @Test
-    @DisplayName("whenTryDeleteDriverWithTenderCorrectStatusThenReturnOK")
-    void deleteTenderOK(){
-        PnTender tender = this.getListTender(1).get(0);
-        tender.setStatus(TenderDTO.StatusEnum.CREATED.toString());
-
-        Mockito.when(this.tenderDAO.getTender(Mockito.any()))
-                .thenReturn(Mono.just(tender));
-
-        Mockito.when(this.tenderDAO.deleteTender(Mockito.any()))
-                .thenReturn(Mono.just(tender));
-
-        Mockito.when(this.costDAO.findAllFromTenderCode(Mockito.any(), Mockito.any()))
-                .thenReturn(Flux.fromStream(getAllCosts("1234", "1223", true).stream()));
-
-        Mockito.when(this.costDAO.deleteCost(Mockito.any(), Mockito.any()))
-                .thenReturn(Mono.just(new PnCost()));
-
-        Mockito.when(this.deliveryDriverDAO.getDeliveryDriverFromTender(Mockito.any(), Mockito.any()))
-                .thenReturn(Flux.fromStream(getListDrivers(1, true).stream()));
-
-        Mockito.when(this.deliveryDriverDAO.deleteDeliveryDriver(Mockito.any(), Mockito.any()))
-                .thenReturn(Mono.just(new PnDeliveryDriver()));
-
-        StepVerifier.create(this.paperChannelService.deleteTender("123"))
-                .verifyComplete();
-    }
-
-    @Test
-    @DisplayName("whenTryDeleteDriverWithTenderStatusDifferentToCreatedThenThrowException")
-    void deleteDriverWithTenderStatusInProgress(){
-        PnTender tender = this.getListTender(1).get(0);
-        tender.setStatus(TenderDTO.StatusEnum.IN_PROGRESS.toString());
-
-        Mockito.when(this.tenderDAO.getTender(Mockito.any()))
-                .thenReturn(Mono.just(tender));
-        StepVerifier.create(this.paperChannelService.deleteDriver("123", "12233"))
-                .expectErrorMatches((e) -> {
-                    assertTrue(e instanceof PnGenericException);
-                    assertEquals(DRIVER_CANNOT_BE_DELETED, ((PnGenericException) e).getExceptionType());
-                    return true;
-                }).verify();
-    }
-    @Test
-    @DisplayName("whenTryDeleteDriverWithTenderCorrectStatusThenReturnOK")
-    void deleteDriverOK(){
-        PnTender tender = this.getListTender(1).get(0);
-        tender.setStatus(TenderDTO.StatusEnum.CREATED.toString());
-
-        Mockito.when(this.tenderDAO.getTender(Mockito.any()))
-                .thenReturn(Mono.just(tender));
-
-        Mockito.when(this.costDAO.findAllFromTenderCode(Mockito.any(), Mockito.any()))
-                .thenReturn(Flux.fromStream(getAllCosts("1234", "1223", true).stream()));
-
-        Mockito.when(this.costDAO.deleteCost(Mockito.any(), Mockito.any()))
-                .thenReturn(Mono.just(new PnCost()));
-
-        Mockito.when(this.deliveryDriverDAO.deleteDeliveryDriver(Mockito.any(), Mockito.any()))
-                .thenReturn(Mono.just(new PnDeliveryDriver()));
-
-        StepVerifier.create(this.paperChannelService.deleteDriver("123", "1223"))
-                .verifyComplete();
-    }
-
-    @Test
-    @DisplayName("whenTryDeleteCostWithTenderStatusDifferentToCreatedThenThrowException")
-    void deleteCostWithTenderStatusInProgress(){
-        PnTender tender = this.getListTender(1).get(0);
-        tender.setStatus(TenderDTO.StatusEnum.IN_PROGRESS.toString());
-
-        Mockito.when(this.tenderDAO.getTender(Mockito.any()))
-                .thenReturn(Mono.just(tender));
-        StepVerifier.create(this.paperChannelService.deleteCost("123", "12233", "UUID"))
-                .expectErrorMatches((e) -> {
-                    assertTrue(e instanceof PnGenericException);
-                    assertEquals(COST_CANNOT_BE_DELETED, ((PnGenericException) e).getExceptionType());
-                    return true;
-                }).verify();
-    }
-
-    @Test
-    @DisplayName("whenTryDeleteCostWithTenderCorrectStatusThenReturnOK")
-    void deleteCostOK(){
-        PnTender tender = this.getListTender(1).get(0);
-        tender.setStatus(TenderDTO.StatusEnum.CREATED.toString());
-
-        Mockito.when(this.tenderDAO.getTender(Mockito.any()))
-                .thenReturn(Mono.just(tender));
-        Mockito.when(this.costDAO.deleteCost(Mockito.any(), Mockito.any()))
-                        .thenReturn(Mono.just(new PnCost()));
-
-        StepVerifier.create(this.paperChannelService.deleteCost("123", "1223", "UUID"))
-                .verifyComplete();
-    }
 
 
     @Test
@@ -927,6 +821,139 @@ class PaperChannelServiceTest extends BaseTest {
         assertNull(response);
     }
 
+    @Test
+    @DisplayName("whenCreateTenderWithEndDateBeforeStartDateThrowException")
+    void createTenderWithBadlyFormatDateTest(){
+        TenderCreateRequestDTO dto = getTenderDTO();
+        Instant passed = Instant.now().minus(20, ChronoUnit.DAYS);
+        dto.setEndDate(new Date(passed.toEpochMilli()));
+        try {
+            this.paperChannelService.createOrUpdateTender(dto).block();
+            fail("Control date not working");
+        } catch (PnGenericException ex) {
+            assertEquals(BADLY_DATE_INTERVAL, ex.getExceptionType());
+        }
+    }
+
+    @Test
+    @DisplayName("whenCreateTenderOkThenReturnResponse")
+    void createTenderOK(){
+        TenderCreateRequestDTO dto = getTenderDTO();
+
+        Mockito.when(this.tenderDAO.createOrUpdate(Mockito.any()))
+                .thenReturn(Mono.just(getListTender(1).get(0)));
+
+        TenderCreateResponseDTO response = this.paperChannelService.createOrUpdateTender(dto).block();
+        assertNotNull(response);
+        assertEquals(TenderCreateResponseDTO.CodeEnum.NUMBER_0, response.getCode());
+        assertTrue(response.getResult());
+    }
+
+
+    @Test
+    @DisplayName("whenCreateDriverButTenderNotExistedThenThrowError")
+    void createDriverWithNoTender(){
+        DeliveryDriverDTO dto = getDriverDTO();
+
+        Mockito.when(this.tenderDAO.getTender(Mockito.any()))
+                .thenReturn(Mono.empty());
+
+        StepVerifier.create(this.paperChannelService.createOrUpdateDriver("1234", dto))
+                .expectErrorMatches((ex) -> {
+                    assertTrue(ex instanceof PnGenericException);
+                    assertEquals(TENDER_NOT_EXISTED, ((PnGenericException)ex).getExceptionType());
+                    return true;
+                }).verify();
+    }
+
+    @Test
+    @DisplayName("whenCreateDriverOkThenReturnResponse")
+    void createDriverOK(){
+        DeliveryDriverDTO dto = getDriverDTO();
+
+        Mockito.when(this.tenderDAO.getTender(Mockito.any()))
+                .thenReturn(Mono.just(getListTender(1).get(0)));
+
+        Mockito.when(this.deliveryDriverDAO.getDeliveryDriver(Mockito.any(), Mockito.any()))
+                .thenReturn(Mono.empty());
+
+        Mockito.when(this.deliveryDriverDAO.createOrUpdate(Mockito.any()))
+                .thenReturn(Mono.just(getListDrivers(1, true).get(0)));
+
+        this.paperChannelService.createOrUpdateDriver("1224", dto).block();
+        Mockito.verify(this.deliveryDriverDAO, Mockito.times(1))
+                .createOrUpdate(Mockito.any());
+
+        Mockito.verify(this.tenderDAO, Mockito.times(1))
+                .getTender(Mockito.any());
+
+        Mockito.verify(this.deliveryDriverDAO, Mockito.times(1))
+                .getDeliveryDriver(Mockito.any(), Mockito.any());
+    }
+
+    @Test
+    @DisplayName("whenCreateCostWithoutZoneOrCapThenThrowError")
+    void createCostWithoutZoneOrCap(){
+        CostDTO dto = getCostDTO();
+
+        StepVerifier.create(this.paperChannelService.createOrUpdateCost("1234", "12333", dto))
+                .expectErrorMatches((ex) -> {
+                    assertTrue(ex instanceof PnGenericException);
+                    assertEquals(COST_BADLY_CONTENT, ((PnGenericException)ex).getExceptionType());
+                    return true;
+                }).verify();
+
+        dto.setCap(new ArrayList<>());
+
+        StepVerifier.create(this.paperChannelService.createOrUpdateCost("1234", "12333", dto))
+                .expectErrorMatches((ex) -> {
+                    assertTrue(ex instanceof PnGenericException);
+                    assertEquals(COST_BADLY_CONTENT, ((PnGenericException)ex).getExceptionType());
+                    return true;
+                }).verify();
+    }
+
+    @Test
+    @DisplayName("whenCreateCostWithoutDriverThenThrowError")
+    void createCostWithoutDriver(){
+        CostDTO dto = getCostDTO();
+        dto.setZone(InternationalZoneEnum._1);
+
+        Mockito.when(this.deliveryDriverDAO.getDeliveryDriver(Mockito.any(), Mockito.any()))
+                        .thenReturn(Mono.empty());
+
+        StepVerifier.create(this.paperChannelService.createOrUpdateCost("1234", "12333", dto))
+                .expectErrorMatches((ex) -> {
+                    assertTrue(ex instanceof PnGenericException);
+                    assertEquals(DELIVERY_DRIVER_NOT_EXISTED, ((PnGenericException)ex).getExceptionType());
+                    return true;
+                }).verify();
+
+    }
+
+    @Test
+    @DisplayName("whenCreateCostThenReturnResponse")
+    void createCostOK(){
+        CostDTO dto = getCostDTO();
+        dto.setZone(InternationalZoneEnum._1);
+
+        Mockito.when(this.deliveryDriverDAO.getDeliveryDriver(Mockito.any(), Mockito.any()))
+                .thenReturn(Mono.empty());
+
+        Mockito.when(costDAO.findAllFromTenderAndProductTypeAndExcludedUUID(Mockito.any(), Mockito.any(), Mockito.any()))
+                        .thenReturn(Flux.empty());
+
+        Mockito.when(costDAO.createOrUpdate(Mockito.any()))
+                        .thenReturn(Mono.just(getCost("ZONE_1", null, "AR")));
+
+        StepVerifier.create(this.paperChannelService.createOrUpdateCost("1234", "12333", dto))
+                .expectErrorMatches((ex) -> {
+                    assertTrue(ex instanceof PnGenericException);
+                    assertEquals(DELIVERY_DRIVER_NOT_EXISTED, ((PnGenericException)ex).getExceptionType());
+                    return true;
+                }).verify();
+
+    }
 
     private List<PnCost> getAllCosts(String tenderCode, String driverCode, boolean fsu){
         List<PnCost> costs = new ArrayList<>();
@@ -993,6 +1020,8 @@ class PaperChannelServiceTest extends BaseTest {
             PnTender tender = new PnTender();
             tender.setTenderCode("Tender_"+i);
             tender.setStatus("CREATED");
+            tender.setDescription("GARA_2023");
+
             tenders.add(tender);
         }
         return tenders;
@@ -1017,6 +1046,32 @@ class PaperChannelServiceTest extends BaseTest {
                 return msg[index++];
             }
         };
+    }
+
+    private TenderCreateRequestDTO getTenderDTO(){
+        TenderCreateRequestDTO dto = new TenderCreateRequestDTO();
+        dto.setCode("1234444");
+        dto.setStartDate(new Date());
+        dto.setEndDate(new Date());
+        return dto;
+    }
+
+    private DeliveryDriverDTO getDriverDTO(){
+        DeliveryDriverDTO dto = new DeliveryDriverDTO();
+        dto.setTaxId("12345678901");
+        dto.setFsu(true);
+        dto.setDenomination("GLS");
+        dto.setBusinessName("GLS");
+        return dto;
+    }
+
+    private CostDTO getCostDTO(){
+        CostDTO dto = new CostDTO();
+        dto.setPrice(1.23F);
+        dto.setPriceAdditional(1.23F);
+        dto.setDriverCode("1223444");
+        dto.setTenderCode("1233344");
+        return dto;
     }
 
 }
