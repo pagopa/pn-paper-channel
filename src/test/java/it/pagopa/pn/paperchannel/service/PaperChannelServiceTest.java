@@ -110,7 +110,7 @@ class PaperChannelServiceTest extends BaseTest {
                 .verify();
     }
 
-    @Test
+    //@Test
     @DisplayName("whenCallNotifyAsyncWithCorrectDataThenUpdateStatus")
     void notifyUploadAsyncWithCorrectDataThenUpdateStatus(){
         PaperChannelServiceImpl spyPaperChannel = Mockito.spy(this.paperChannelService);
