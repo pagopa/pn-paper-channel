@@ -28,7 +28,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -41,8 +40,6 @@ import java.io.InputStream;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Function;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 
@@ -204,31 +201,15 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                 }).switchIfEmpty(Mono.error(new PnGenericException(ExceptionTypeEnum.FILE_REQUEST_ASYNC_NOT_FOUND, ExceptionTypeEnum.FILE_REQUEST_ASYNC_NOT_FOUND.getMessage(), HttpStatus.NOT_FOUND)));
     }
 
-    public Mono<PnDeliveryFile> notifyUploadAsync(PnDeliveryFile item, InputStream inputStream, String tenderCode){
+    public Mono<Void> notifyUploadAsync(PnDeliveryFile item, InputStream inputStream, String tenderCode){
         return Mono.just("")
-                .map(i -> this.excelDAO.readData(inputStream))
+                .map(nothing -> this.excelDAO.readData(inputStream))
                 .map(deliveriesData -> DeliveryDriverMapper.toEntityFromExcel(deliveriesData, tenderCode))
-                .flatMap(driversAndCost ->
-                    this.deliveryDriverDAO.getDeliveryDriverFromTender(tenderCode, null)
-                            .flatMap(driver -> this.deleteDriver(tenderCode, driver.getTaxId()))
-                            .collectList()
-                            .map(none -> driversAndCost)
-                )
-                .flatMap(driversAndCost ->
-                    Flux.fromStream(driversAndCost.keySet().stream())
-                            .flatMap(driver ->
-                                    this.deliveryDriverDAO.createOrUpdate(driver)
-                                            .flatMap(driverEntity -> Flux.fromStream(driversAndCost.get(driver).stream())
-                                                    .flatMap(cost -> this.costDAO.createOrUpdate(cost))
-                                                    .collectList())
-                                            .map(costDrivers -> driver)
-
-                            )
-                            .collectList()
-                )
-                .flatMap(i -> {
+                .zipWhen(driversAndCost -> deleteAllDriverFromTender(tenderCode), (a, b) -> a )
+                .flatMap(this::createFromMap)
+                .flatMap(nothing -> {
                     item.setStatus(FileStatusCodeEnum.COMPLETE.getCode());
-                    return fileDownloadDAO.create(item);
+                    return fileDownloadDAO.create(item).then();
                 })
                 .onErrorResume(ex -> {
                     item.setStatus(FileStatusCodeEnum.ERROR.getCode());
@@ -242,6 +223,26 @@ public class PaperChannelServiceImpl implements PaperChannelService {
 
                     return  fileDownloadDAO.create(item).flatMap(entity -> Mono.error(ex));
                 });
+
+    }
+
+    private Mono<String> createFromMap(Map<PnDeliveryDriver, List<PnCost>> driversAndCosts) {
+        return  Flux.fromStream(driversAndCosts.keySet().stream())
+                .flatMap(driver -> deliveryDriverDAO.createOrUpdate(driver)
+                                        .flatMap(driverEntity -> Flux.fromStream(driversAndCosts.get(driver).stream())
+                                                                    .flatMap(cost -> this.costDAO.createOrUpdate(cost))
+                                                                    .collectList()
+                                        ).map(costs -> driver)
+                ).collectList()
+                .map(list -> "");
+
+    }
+
+    private Mono<String> deleteAllDriverFromTender(String tenderCode) {
+        return this.deliveryDriverDAO.getDeliveryDriverFromTender(tenderCode, null)
+                .flatMap(driver -> this.deleteDriver(tenderCode, driver.getTaxId()))
+                .collectList()
+                .map(list -> tenderCode);
     }
 
     private void createAndUploadFileAsync(String tenderCode,String uuid){
@@ -283,20 +284,13 @@ public class PaperChannelServiceImpl implements PaperChannelService {
     @Override
     public Mono<TenderCreateResponseDTO> createOrUpdateTender(TenderCreateRequestDTO request) {
         PnLogAudit pnLogAudit = new PnLogAudit(pnAuditLogBuilder);
-        AtomicBoolean isCreated = new AtomicBoolean(false);
-        AtomicBoolean isUpdated = new AtomicBoolean(false);
+        final boolean isCreated = (request.getCode() == null);
         if (request.getEndDate().before(request.getStartDate())){
             throw new PnGenericException(ExceptionTypeEnum.BADLY_DATE_INTERVAL, ExceptionTypeEnum.BADLY_DATE_INTERVAL.getMessage());
         }
-        if (request.getCode() == null) {
-            isCreated.set(true);
-            pnLogAudit.addsBeforeCreate("Create Tender");
-        }
-        else{
-            isUpdated.set(true);
-            pnLogAudit.addsBeforeUpdate("Update Tender");
-        }
 
+        if (isCreated) pnLogAudit.addsBeforeCreate("Create Tender");
+        else pnLogAudit.addsBeforeUpdate("Update Tender");
 
         //set 00:00
         request.getStartDate().setTime(DateUtils.formatDateWithSpecificHour(request.getStartDate(), 0,0,0).getTime());
@@ -305,17 +299,17 @@ public class PaperChannelServiceImpl implements PaperChannelService {
         return Mono.just(TenderMapper.toTenderRequest(request))
                 .flatMap(entity -> this.tenderDAO.createOrUpdate(entity))
                 .map(entity -> {
-                    if (isCreated.get()) pnLogAudit.addsSuccessCreate("Create Tender OK:"+ Utility.objectToJson(entity));
+                    if (isCreated) pnLogAudit.addsSuccessCreate("Create Tender OK:"+ Utility.objectToJson(entity));
                     TenderCreateResponseDTO response = new TenderCreateResponseDTO();
                     response.setTender(TenderMapper.tenderToDto(entity));
                     response.setCode(TenderCreateResponseDTO.CodeEnum.NUMBER_0);
                     response.setResult(true);
-                    if(isUpdated.get()) pnLogAudit.addsSuccessUpdate("Update Tender OK:"+ Utility.objectToJson(entity));
+                    if(!isCreated) pnLogAudit.addsSuccessUpdate("Update Tender OK:"+ Utility.objectToJson(entity));
                     return response;
                 })
                 .onErrorResume(ex -> {
-                    if (!isCreated.get()) pnLogAudit.addsFailCreate("Create Tender ERROR");
-                    if (!isUpdated.get()) pnLogAudit.addsFailUpdate("Update Tender ERROR");
+                    if (isCreated) pnLogAudit.addsFailCreate("Create Tender ERROR");
+                    else pnLogAudit.addsFailUpdate("Update Tender ERROR");
                     return Mono.error(ex);
                 });
     }
