@@ -41,7 +41,6 @@ class PnCostTest {
 
         toPnCost = initCost();
         toPnCost.setFsu(false);
-//        toPnCost.getCap().set(0, "00101");
         toPnCost.setCap(null);
         isEquals = pnCost.equals(toPnCost);
         Assertions.assertFalse(isEquals);

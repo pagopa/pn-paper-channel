@@ -32,7 +32,6 @@ class PnTenderTest {
         Assertions.assertEquals(status, TenderDTO.StatusEnum.IN_PROGRESS.getValue());
 
         pnTender = initTender();
-        pnTender.setStartDate(getUpdatedDate(1));
         pnTender.setEndDate(getUpdatedDate(-1));
         status = pnTender.getActualStatus();
         Assertions.assertEquals(status, TenderDTO.StatusEnum.ENDED.getValue());
@@ -83,7 +82,6 @@ class PnTenderTest {
         calendar.set(Calendar.MINUTE, 0);
         calendar.set(Calendar.SECOND, 0);
         calendar.set(Calendar.MILLISECOND, 0);
-        calendar.set(Calendar.MILLISECOND, 0);
         return calendar.getTime().toInstant();
     }
 
@@ -95,12 +93,11 @@ class PnTenderTest {
         pnTender.setTenderCode(tenderCode);
         pnTender.setDescription(description);
         pnTender.setStartDate(startDate);
-        pnTender.setEndDate(getUpdatedDate(1));
+        pnTender.setEndDate(endDate);
         return pnTender;
     }
 
     private void initialize() {
-        pnTender = new PnTender();
         author = Const.PN_PAPER_CHANNEL;
         date = Instant.now();
         status = TenderDTO.StatusEnum.VALIDATED.toString();
