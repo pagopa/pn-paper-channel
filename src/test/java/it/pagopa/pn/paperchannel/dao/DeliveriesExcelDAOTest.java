@@ -7,13 +7,19 @@ import it.pagopa.pn.paperchannel.dao.model.DeliveriesData;
 import it.pagopa.pn.paperchannel.dao.model.DeliveryAndCost;
 import it.pagopa.pn.paperchannel.exception.PnExcelValidatorException;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
+import it.pagopa.pn.paperchannel.validator.ExcelValidator;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.EXCEL_BADLY_CONTENT;
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.EXCEL_BADLY_FORMAT;
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,6 +28,8 @@ class DeliveriesExcelDAOTest extends BaseTest {
 
     @Autowired
     private DeliveriesExcelDAO deliveriesExcelDAO;
+    private MockedStatic<ExcelValidator> mockedExcelValidator;
+
     private final DeliveriesData deliveriesData = new DeliveriesData();
     private final DeliveryAndCost deliveryAndCost1 = new DeliveryAndCost();
     private final DeliveryAndCost deliveryAndCost2 = new DeliveryAndCost();
@@ -32,11 +40,19 @@ class DeliveriesExcelDAOTest extends BaseTest {
         initialize();
     }
 
+    @AfterEach
+    void after(){
+        if (mockedExcelValidator != null){
+            mockedExcelValidator.close();
+        }
+    }
+
     @Test
     void createTest(){
         ExcelEngine excelEngine = this.deliveriesExcelDAO.create(deliveriesData);
         assertNotNull(excelEngine);
     }
+
     @Test
     void readDataOKTest(){
         InputStream inputStream = this.getClass().getResourceAsStream("/exceldata/ExcelDownloadTestOK.xlsx");
@@ -44,14 +60,16 @@ class DeliveriesExcelDAOTest extends BaseTest {
         assertNotNull(data);
 
     }
+
     @Test
     void readDataErrorTest(){
-        PnExcelValidatorException exception = assertThrows(PnExcelValidatorException.class, ()-> {
+        PnExcelValidatorException exception = assertThrows(PnExcelValidatorException.class, () -> {
             InputStream inputStream = this.getClass().getResourceAsStream("/exceldata/ExcelDownloadTestFormatKO.xlsx");
             this.deliveriesExcelDAO.readData(inputStream);
         });
         assertEquals("Il file è formattato male", exception.getMessage());
     }
+
     @Test
     void readDataNullTest(){
         PnGenericException exception = assertThrows(PnGenericException.class, ()-> {
@@ -60,6 +78,21 @@ class DeliveriesExcelDAOTest extends BaseTest {
         });
         assertEquals(EXCEL_BADLY_CONTENT, exception.getExceptionType());
     }
+
+    @Test
+    void readDataWithExelValidatorError(){
+        mockedExcelValidator = Mockito.mockStatic(ExcelValidator.class);
+        mockedExcelValidator.when(() -> {
+            ExcelValidator.validateExcel(Mockito.any(), Mockito.any());
+        }).thenThrow(new DAOException("Error validation excel"));
+
+        PnGenericException exception = assertThrows(PnGenericException.class, ()-> {
+            InputStream inputStream = this.getClass().getResourceAsStream("/exceldata/ExcelDownloadTestOK.xlsx");
+            this.deliveriesExcelDAO.readData(inputStream);
+        });
+        assertEquals(EXCEL_BADLY_FORMAT, exception.getExceptionType());
+    }
+
 
     private void initialize(){
 
