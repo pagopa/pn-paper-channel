@@ -28,11 +28,14 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.EXCEL_BADLY_CONTENT;
@@ -40,15 +43,12 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class FileDownloadAndUploadFromServiceTest extends BaseTest {
 
-
     @Autowired
     private PaperChannelServiceImpl paperChannelService;
     @MockBean
     private CostDAO costDAO;
     @MockBean
     private DeliveryDriverDAO deliveryDriverDAO;
-    @MockBean
-    private TenderDAO tenderDAO;
     @MockBean
     private ExcelDAO<DeliveriesData> excelDAO;
     @MockBean
@@ -58,10 +58,15 @@ class FileDownloadAndUploadFromServiceTest extends BaseTest {
     private MockedStatic<DeliveryDriverMapper> mockedStaticDelivery;
 
     private PnDeliveryFile fileUploading;
+    private NotifyUploadRequestDto notifyUploadRequestDto;
 
     @BeforeEach
     void setUp(){
+        notifyUploadRequestDto = new NotifyUploadRequestDto();
+        notifyUploadRequestDto.setUuid("UUID_TEST");
+
         fileUploading = InstanceCreator.getPnDeliveryFile(InfoDownloadDTO.StatusEnum.UPLOADING.toString());
+
         Mockito.when(fileDownloadDAO.create(Mockito.any()))
                 .thenReturn(Mono.just(fileUploading));
 
@@ -144,7 +149,7 @@ class FileDownloadAndUploadFromServiceTest extends BaseTest {
 
     @Test
     @DisplayName("whenCalledNotifyUploadWithoutUuidThenThrowException")
-    void notifyUploadWithoutUUID(){
+    void notifyUploadSyncWithoutUUID(){
         StepVerifier.create(this.paperChannelService.notifyUpload("1234", new NotifyUploadRequestDto()))
                 .expectErrorMatches((e) -> {
                     assertTrue(e instanceof PnGenericException);
@@ -155,14 +160,12 @@ class FileDownloadAndUploadFromServiceTest extends BaseTest {
 
     @Test
     @DisplayName("whenCalledNotifyUploadButFileRequestNotExistedThenThrowException")
-    void notifyUploadButFileNotExisted(){
-        NotifyUploadRequestDto request = new NotifyUploadRequestDto();
-        request.setUuid("UUID_REQUEST");
+    void notifyUploadSyncButFileNotExisted(){
 
-        Mockito.when(this.fileDownloadDAO.getUuid(Mockito.any()))
+        Mockito.when(this.fileDownloadDAO.getUuid(notifyUploadRequestDto.getUuid()))
                 .thenReturn(Mono.empty());
 
-        StepVerifier.create(this.paperChannelService.notifyUpload("1234", request))
+        StepVerifier.create(this.paperChannelService.notifyUpload("1234", notifyUploadRequestDto))
                 .expectErrorMatches((e) -> {
                     assertTrue(e instanceof PnGenericException);
                     assertEquals(FILE_REQUEST_ASYNC_NOT_FOUND, ((PnGenericException) e).getExceptionType());
@@ -172,9 +175,7 @@ class FileDownloadAndUploadFromServiceTest extends BaseTest {
 
     @Test
     @DisplayName("whenCalledNotifyUploadWithFileStatusInErrorThrowException")
-    void notifyUploadWithFileStatusInError(){
-        NotifyUploadRequestDto request = new NotifyUploadRequestDto();
-        request.setUuid("UUID_REQUEST");
+    void notifyUploadSyncWithFileStatusInError(){
         PnErrorMessage errorMessage = new PnErrorMessage();
         errorMessage.setMessage("Error With file");
         fileUploading.setStatus(FileStatusCodeEnum.ERROR.getCode());
@@ -183,7 +184,7 @@ class FileDownloadAndUploadFromServiceTest extends BaseTest {
         Mockito.when(this.fileDownloadDAO.getUuid(Mockito.any()))
                 .thenReturn(Mono.just(fileUploading));
 
-        StepVerifier.create(this.paperChannelService.notifyUpload("1234", request))
+        StepVerifier.create(this.paperChannelService.notifyUpload("1234", notifyUploadRequestDto))
                 .expectErrorMatches((e) -> {
                     assertTrue(e instanceof PnGenericException);
                     assertEquals(EXCEL_BADLY_CONTENT, ((PnGenericException) e).getExceptionType());
@@ -201,7 +202,7 @@ class FileDownloadAndUploadFromServiceTest extends BaseTest {
         Mockito.when(this.fileDownloadDAO.getUuid(Mockito.any()))
                 .thenReturn(Mono.just(fileUploading));
 
-        StepVerifier.create(this.paperChannelService.notifyUpload("1234", request))
+        StepVerifier.create(this.paperChannelService.notifyUpload("1234", notifyUploadRequestDto))
                 .expectErrorMatches((e) -> {
                     assertTrue(e instanceof PnExcelValidatorException);
                     assertEquals(BADLY_REQUEST, ((PnExcelValidatorException) e).getErrorType());
@@ -211,9 +212,7 @@ class FileDownloadAndUploadFromServiceTest extends BaseTest {
 
     @Test
     @DisplayName("whenCalledNotifyUploadWithFileStatusIsUploadedThenResponse")
-    void notifyUploadWithFileStatusInUploaded(){
-        NotifyUploadRequestDto request = new NotifyUploadRequestDto();
-        request.setUuid("UUID_REQUEST");
+    void notifyUploadSyncWithFileStatusInUploaded(){
 
         fileUploading.setStatus(FileStatusCodeEnum.UPLOADED.getCode());
 
@@ -221,7 +220,7 @@ class FileDownloadAndUploadFromServiceTest extends BaseTest {
         Mockito.when(this.fileDownloadDAO.getUuid(Mockito.any()))
                 .thenReturn(Mono.just(fileUploading));
 
-        NotifyResponseDto dto = this.paperChannelService.notifyUpload("1234", request).block();
+        NotifyResponseDto dto = this.paperChannelService.notifyUpload("1234", notifyUploadRequestDto).block();
         assertNotNull(dto);
         assertNull(dto.getRetryAfter());
         assertEquals(NotifyResponseDto.StatusEnum.COMPLETE, dto.getStatus());
@@ -229,14 +228,11 @@ class FileDownloadAndUploadFromServiceTest extends BaseTest {
 
     @Test
     @DisplayName("whenCalledNotifyUploadWithFileStatusIsUploadingAndS3NotHaveAFileThenResponseRetryAfter")
-    void notifyUploadWithFileStatusInUploadingAndS3NoFIle(){
-        NotifyUploadRequestDto request = new NotifyUploadRequestDto();
-        request.setUuid("UUID_REQUEST");
-
+    void notifyUploadSyncWithFileStatusInUploadingAndS3NoFIle(){
         Mockito.when(s3Bucket.getFileInputStream(Mockito.any()))
                 .thenReturn(null);
 
-        NotifyResponseDto dto = this.paperChannelService.notifyUpload("1234", request).block();
+        NotifyResponseDto dto = this.paperChannelService.notifyUpload("1234", notifyUploadRequestDto).block();
         assertNotNull(dto);
         assertNotNull(dto.getRetryAfter());
         assertEquals(NotifyResponseDto.StatusEnum.IN_PROGRESS, dto.getStatus());
@@ -244,12 +240,8 @@ class FileDownloadAndUploadFromServiceTest extends BaseTest {
 
     @Test
     @DisplayName("whenCalledNotifyUploadWithFileStatusIsUploadingAndS3HaveAFileThenStartNotifyAsync")
-    void notifyUploadWithFileStatusInUploadingAndS3haveFile(){
+    void notifyUploadSyncWithFileStatusInUploadingAndS3haveFile(){
         PaperChannelServiceImpl spyPaperChannelService = Mockito.spy(this.paperChannelService);
-
-        NotifyUploadRequestDto request = new NotifyUploadRequestDto();
-        request.setUuid("UUID_REQUEST");
-
 
         Mockito.when(s3Bucket.getFileInputStream(Mockito.any()))
                 .thenReturn(getInputStream());
@@ -257,15 +249,12 @@ class FileDownloadAndUploadFromServiceTest extends BaseTest {
         Mockito.when(spyPaperChannelService.notifyUploadAsync(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.empty());
 
-        PnDeliveryFile file1 = new PnDeliveryFile();
-        file1.setStatus(FileStatusCodeEnum.IN_PROGRESS.getCode());
-        file1.setFilename("FILENAME");
-        file1.setUrl("URL");
-        file1.setUuid("UUID_REQUEST");
-        Mockito.when(this.fileDownloadDAO.create(Mockito.any()))
-                .thenReturn(Mono.just(file1));
+        fileUploading.setStatus(FileStatusCodeEnum.IN_PROGRESS.getCode());
 
-        NotifyResponseDto dto = spyPaperChannelService.notifyUpload("1234", request).block();
+        Mockito.when(this.fileDownloadDAO.create(Mockito.any()))
+                .thenReturn(Mono.just(fileUploading));
+
+        NotifyResponseDto dto = spyPaperChannelService.notifyUpload("1234", notifyUploadRequestDto).block();
         assertNotNull(dto);
 
         assertNotNull(dto.getRetryAfter());
@@ -275,7 +264,7 @@ class FileDownloadAndUploadFromServiceTest extends BaseTest {
 
     @Test
     @DisplayName("whenCallNotifyAsyncWithExcelBadlyContentThenSaveFileRequestWithError")
-    void notifyUploadWithErrorExcelValidation(){
+    void notifyUploadAsyncWithErrorExcelValidation(){
         fileUploading.setStatus(FileStatusCodeEnum.UPLOADED.getCode());
 
         Mockito.when(this.excelDAO.readData(Mockito.any()))
@@ -291,7 +280,7 @@ class FileDownloadAndUploadFromServiceTest extends BaseTest {
 
     @Test
     @DisplayName("whenCallNotifyAsyncWithBadlyMappingThenThrowException")
-    void notifyUploadWithErrorMappingFromExcel(){
+    void notifyUploadAsyncWithErrorMappingFromExcel(){
         fileUploading.setStatus(FileStatusCodeEnum.UPLOADED.getCode());
 
         Mockito.when(this.excelDAO.readData(Mockito.any()))
@@ -310,6 +299,87 @@ class FileDownloadAndUploadFromServiceTest extends BaseTest {
                 .verify();
     }
 
+    @Test
+    @DisplayName("whenCallNotifyAsyncWithExceptionCreateDriverThenThrowException")
+    void notifyUploadAsyncErrorWithCreateDriver(){
+        //MOCK EXCEL DAO READ DATA
+        Mockito.when(this.excelDAO.readData(Mockito.any()))
+                .thenReturn(new DeliveriesData());
+
+        //MOCK MAPPER AND VALIDATOR
+        Map<PnDeliveryDriver, List<PnCost>> map = new HashMap<>();
+        map.put(InstanceCreator.getDriver(true), InstanceCreator.getAllNationalCost("1234", "1234", true));
+        mockedStaticDelivery = Mockito.mockStatic(DeliveryDriverMapper.class);
+        mockedStaticDelivery.when(() -> {
+            DeliveryDriverMapper.toEntityFromExcel(Mockito.any(), Mockito.any());
+        }).thenReturn(map);
+
+
+        //MOCK GET ALL DRIVER FROM TENDER
+        Mockito.when(deliveryDriverDAO.getDeliveryDriverFromTender(Mockito.any(), Mockito.any()))
+                .thenReturn(
+                        Flux.fromStream(InstanceCreator.getListDriver(5).stream())
+                );
+
+        //MOCK DELETE ALL DRIVER
+        PaperChannelServiceImpl spyPaperChannel = Mockito.spy(this.paperChannelService);
+        Mockito.doReturn(Mono.just("").then()).when(spyPaperChannel).deleteDriver(Mockito.any(), Mockito.any());
+
+        //MOCK CREATE DRIVER
+        Mockito.when(this.deliveryDriverDAO.createOrUpdate(Mockito.any()))
+                        .thenReturn(Mono.error(new PnGenericException(DELIVERY_DRIVER_NOT_EXISTED, DELIVERY_DRIVER_NOT_EXISTED.getMessage())));
+
+        //MOCK UPDATE WITH ERROR
+        fileUploading.setStatus(FileStatusCodeEnum.UPLOADED.getCode());
+        Mockito.when(fileDownloadDAO.create(Mockito.any()))
+                .thenReturn(Mono.just(fileUploading));
+
+
+        StepVerifier.create(spyPaperChannel.notifyUploadAsync(fileUploading, getInputStream(), "1122"))
+                .expectError(PnGenericException.class)
+                .verify();
+    }
+
+    @Test
+    @DisplayName("whenCallNotifyAsyncWithCorrectDataThenUpdateStatus")
+    void notifyUploadAsyncWithCorrectDataThenUpdateStatus(){
+        //MOCK EXCEL DAO READ DATA
+        Mockito.when(this.excelDAO.readData(Mockito.any()))
+                .thenReturn(new DeliveriesData());
+
+        //MOCK MAPPER AND VALIDATOR
+        Map<PnDeliveryDriver, List<PnCost>> map = new HashMap<>();
+        map.put(InstanceCreator.getDriver(true), InstanceCreator.getAllNationalCost("1234", "1234", true));
+        mockedStaticDelivery = Mockito.mockStatic(DeliveryDriverMapper.class);
+        mockedStaticDelivery.when(() -> {
+            DeliveryDriverMapper.toEntityFromExcel(Mockito.any(), Mockito.any());
+        }).thenReturn(map);
+
+
+        //MOCK GET ALL DRIVER FROM TENDER
+        Mockito.when(deliveryDriverDAO.getDeliveryDriverFromTender(Mockito.any(), Mockito.any()))
+                .thenReturn(
+                        Flux.fromStream(InstanceCreator.getListDriver(5).stream())
+                );
+
+        //MOCK DELETE ALL DRIVER
+        PaperChannelServiceImpl spyPaperChannel = Mockito.spy(this.paperChannelService);
+        Mockito.doReturn(Mono.just("").then()).when(spyPaperChannel).deleteDriver(Mockito.any(), Mockito.any());
+
+        //MOCK CREATE DRIVER
+        Mockito.when(deliveryDriverDAO.createOrUpdate(Mockito.any()))
+                .thenReturn(Mono.just(InstanceCreator.getDriver(true)));
+
+        //MOCK CREATE COST
+        Mockito.when(costDAO.createOrUpdate(Mockito.any()))
+                .thenReturn(Mono.just(InstanceCreator.getCost("1234", null, List.of("12332"), "AR")));
+
+        //MOCK UPDATE WITH COMPLETE STATUS
+        Mockito.when(fileDownloadDAO.create(Mockito.any())).thenReturn(Mono.just(fileUploading));
+
+        StepVerifier.create(spyPaperChannel.notifyUploadAsync(fileUploading, getInputStream(), "1122"))
+                .verifyComplete();
+    }
 
 
     private PresignedUrlResponseDto getPresignedDTO(){

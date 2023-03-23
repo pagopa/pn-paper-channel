@@ -180,12 +180,13 @@ public class PaperChannelServiceImpl implements PaperChannelService {
         }
 
         return fileDownloadDAO.getUuid(uploadRequestDto.getUuid())
+                .switchIfEmpty(Mono.error(new PnGenericException(FILE_REQUEST_ASYNC_NOT_FOUND, FILE_REQUEST_ASYNC_NOT_FOUND.getMessage(), HttpStatus.NOT_FOUND)))
                 .flatMap(item -> {
                     if (StringUtils.equals(item.getStatus(), FileStatusCodeEnum.ERROR.getCode())) {
                         if (CollectionUtils.isEmpty(item.getErrorMessage().getErrorDetails())) {
-                            throw new PnGenericException(ExceptionTypeEnum.EXCEL_BADLY_CONTENT, item.getErrorMessage().getMessage());
+                            return Mono.error(new PnGenericException(ExceptionTypeEnum.EXCEL_BADLY_CONTENT, item.getErrorMessage().getMessage()));
                         }
-                        throw new PnExcelValidatorException(ExceptionTypeEnum.BADLY_REQUEST, ErrorDetailMapper.toDtos(item.getErrorMessage().getErrorDetails()));
+                        return Mono.error(new PnExcelValidatorException(ExceptionTypeEnum.BADLY_REQUEST, ErrorDetailMapper.toDtos(item.getErrorMessage().getErrorDetails())));
 
                     } else if (StringUtils.equals(item.getStatus(), FileStatusCodeEnum.UPLOADING.getCode())) {
                         String fileName = S3Bucket.PREFIX_URL + uploadRequestDto.getUuid();
@@ -195,10 +196,9 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                             item.setStatus(FileStatusCodeEnum.IN_PROGRESS.getCode());
                             return this.fileDownloadDAO.create(item).map(NotifyResponseMapper::toDto);
                         }
-                        return Mono.just(NotifyResponseMapper.toDto(item));
                     }
                     return Mono.just(NotifyResponseMapper.toDto(item));
-                }).switchIfEmpty(Mono.error(new PnGenericException(ExceptionTypeEnum.FILE_REQUEST_ASYNC_NOT_FOUND, ExceptionTypeEnum.FILE_REQUEST_ASYNC_NOT_FOUND.getMessage(), HttpStatus.NOT_FOUND)));
+                });
     }
 
     public Mono<Void> notifyUploadAsync(PnDeliveryFile item, InputStream inputStream, String tenderCode){
@@ -286,7 +286,7 @@ public class PaperChannelServiceImpl implements PaperChannelService {
         PnLogAudit pnLogAudit = new PnLogAudit(pnAuditLogBuilder);
         final boolean isCreated = (request.getCode() == null);
         if (request.getEndDate().before(request.getStartDate())){
-            throw new PnGenericException(ExceptionTypeEnum.BADLY_DATE_INTERVAL, ExceptionTypeEnum.BADLY_DATE_INTERVAL.getMessage());
+            return Mono.error(new PnGenericException(ExceptionTypeEnum.BADLY_DATE_INTERVAL, ExceptionTypeEnum.BADLY_DATE_INTERVAL.getMessage()));
         }
 
         if (isCreated) pnLogAudit.addsBeforeCreate("Create Tender");
@@ -318,22 +318,20 @@ public class PaperChannelServiceImpl implements PaperChannelService {
     public Mono<Void> createOrUpdateDriver(String tenderCode, DeliveryDriverDTO request) {
         PnLogAudit pnLogAudit = new PnLogAudit(pnAuditLogBuilder);
         AtomicBoolean isCreated = new AtomicBoolean(false);
-        AtomicBoolean isUpdated = new AtomicBoolean(false);
         return this.tenderDAO.getTender(tenderCode)
                 .switchIfEmpty(Mono.error(new PnGenericException(ExceptionTypeEnum.TENDER_NOT_EXISTED, ExceptionTypeEnum.TENDER_NOT_EXISTED.getMessage())))
                 .flatMap(tender -> this.deliveryDriverDAO.getDeliveryDriver(tenderCode, request.getTaxId())
                             .switchIfEmpty(Mono.just(new PnDeliveryDriver()))
                             .flatMap(driver -> {
-                                pnLogAudit.addsBeforeCreate("Create DeliveryDriver");
                                 if (driver == null || StringUtils.isBlank(driver.getTaxId())) {
                                     isCreated.set(true);
+                                    pnLogAudit.addsBeforeCreate("Create DeliveryDriver");
                                     return Mono.just(tender);
                                 }
                                 if (Boolean.compare(driver.fsu, request.getFsu())!=0) {
                                     return Mono.error(new PnGenericException(DELIVERY_DRIVER_HAVE_DIFFERENT_ROLE, DELIVERY_DRIVER_HAVE_DIFFERENT_ROLE.getMessage()));
                                 }
                                 pnLogAudit.addsBeforeUpdate("Update DeliveryDriver");
-                                isUpdated.set(true);
                                 return Mono.just(tender);
                             })
                 )
@@ -345,13 +343,13 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                 })
                 .flatMap(entity -> this.deliveryDriverDAO.createOrUpdate(entity))
                 .onErrorResume(ex -> {
-                    if (!isCreated.get()) pnLogAudit.addsFailCreate("Create DeliveryDriver ERROR");
-                    if (!isUpdated.get()) pnLogAudit.addsFailUpdate("Update DeliveryDriver ERROR");
+                    if (isCreated.get()) pnLogAudit.addsFailCreate("Create DeliveryDriver ERROR");
+                    if (!isCreated.get()) pnLogAudit.addsFailUpdate("Update DeliveryDriver ERROR");
                     return Mono.error(ex);
                 })
                 .mapNotNull(entity -> {
                     if (isCreated.get()) pnLogAudit.addsSuccessCreate("Create DeliveryDriver OK:"+ Utility.objectToJson(entity));
-                    if (isUpdated.get()) pnLogAudit.addsSuccessUpdate("Update DeliveryDriver OK:"+ Utility.objectToJson(entity));
+                    if (!isCreated.get()) pnLogAudit.addsSuccessUpdate("Update DeliveryDriver OK:"+ Utility.objectToJson(entity));
                     return null;
                 });
     }

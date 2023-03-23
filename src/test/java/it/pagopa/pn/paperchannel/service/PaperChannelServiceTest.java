@@ -1,23 +1,17 @@
 package it.pagopa.pn.paperchannel.service;
 
 import it.pagopa.pn.paperchannel.config.BaseTest;
-import it.pagopa.pn.paperchannel.dao.ExcelDAO;
-import it.pagopa.pn.paperchannel.dao.model.DeliveriesData;
+import it.pagopa.pn.paperchannel.config.InstanceCreator;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
-import it.pagopa.pn.paperchannel.mapper.DeliveryDriverMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.DeliveryDriverDAO;
-import it.pagopa.pn.paperchannel.middleware.db.dao.FileDownloadDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.TenderDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.*;
-import it.pagopa.pn.paperchannel.model.FileStatusCodeEnum;
 import it.pagopa.pn.paperchannel.rest.v1.dto.*;
-import it.pagopa.pn.paperchannel.s3.S3Bucket;
 import it.pagopa.pn.paperchannel.service.impl.PaperChannelServiceImpl;
 import it.pagopa.pn.paperchannel.utils.Const;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
-import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -25,7 +19,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.io.InputStream;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -45,113 +38,6 @@ class PaperChannelServiceTest extends BaseTest {
     private DeliveryDriverDAO deliveryDriverDAO;
     @MockBean
     private TenderDAO tenderDAO;
-    @MockBean
-    private ExcelDAO<DeliveriesData> excelDAO;
-    @MockBean
-    private FileDownloadDAO fileDownloadDAO;
-    @MockBean
-    private S3Bucket s3Bucket;
-
-    private MockedStatic<DeliveryDriverMapper> mockedStaticDelivery;
-
-    @AfterEach
-    void after(){
-        if (mockedStaticDelivery != null){
-            mockedStaticDelivery.close();
-        }
-    }
-
-
-
-
-
-    //@Test
-    //@DisplayName("whenCallNotifyAsyncWithExceptionCreateDriverThenThrowException")
-    void notifyUploadAsyncErrorWithCreateDriver(){
-        PnDeliveryFile file1 = new PnDeliveryFile();
-        file1.setStatus(FileStatusCodeEnum.UPLOADED.getCode());
-        file1.setFilename("FILENAME");
-        file1.setUrl("URL");
-        file1.setUuid("UUID_REQUEST");
-        Map<PnDeliveryDriver, List<PnCost>> map = new HashMap<>();
-        map.put(getListDrivers(1, true).get(0), getAllCosts("1234", "1234", true));
-
-        Mockito.when(this.excelDAO.readData(Mockito.any()))
-                .thenReturn(new DeliveriesData());
-
-        Mockito.when(fileDownloadDAO.create(Mockito.any()))
-                .thenReturn(Mono.just(file1));
-
-        mockedStaticDelivery = Mockito.mockStatic(DeliveryDriverMapper.class);
-        mockedStaticDelivery.when(() -> {
-            DeliveryDriverMapper.toEntityFromExcel(Mockito.any(), Mockito.any());
-        }).thenReturn(map);
-
-        Mockito.when(deliveryDriverDAO.getDeliveryDriverFromTender(Mockito.any(), Mockito.any()))
-                .thenReturn(Flux.fromStream(getListDrivers(5, true).stream()));
-
-        Mockito.when(costDAO.findAllFromTenderCode(Mockito.any(), Mockito.any()))
-                .thenReturn(Flux.fromStream(getAllCosts("533", "444", true).stream()));
-
-
-        Mockito.when(tenderDAO.getTender(Mockito.any()))
-                .thenReturn(Mono.just(getListTender(1).get(0)));
-
-        Mockito.when(paperChannelService.deleteDriver(Mockito.any(), Mockito.any()))
-                    .thenReturn(Mono.empty());
-
-
-        Mockito.when(this.deliveryDriverDAO.createOrUpdate(Mockito.any()))
-                    .thenThrow(new PnGenericException(DELIVERY_DRIVER_NOT_EXISTED, DELIVERY_DRIVER_NOT_EXISTED.getMessage()));
-
-
-        StepVerifier.create(this.paperChannelService.notifyUploadAsync(file1, getInputStream(), "1122"))
-                .expectError(PnGenericException.class)
-                .verify();
-    }
-
-    //@Test
-    @DisplayName("whenCallNotifyAsyncWithCorrectDataThenUpdateStatus")
-    void notifyUploadAsyncWithCorrectDataThenUpdateStatus(){
-        PaperChannelServiceImpl spyPaperChannel = Mockito.spy(this.paperChannelService);
-        PnDeliveryFile file1 = new PnDeliveryFile();
-        file1.setStatus(FileStatusCodeEnum.UPLOADED.getCode());
-        file1.setFilename("FILENAME");
-        file1.setUrl("URL");
-        file1.setUuid("UUID_REQUEST");
-        Map<PnDeliveryDriver, List<PnCost>> map = new HashMap<>();
-        map.put(getListDrivers(1, true).get(0), getAllCosts("1234", "1234", true));
-
-        Mockito.when(excelDAO.readData(Mockito.any()))
-                .thenReturn(new DeliveriesData());
-
-        Mockito.when(fileDownloadDAO.create(Mockito.any()))
-                .thenReturn(Mono.just(file1));
-
-        mockedStaticDelivery = Mockito.mockStatic(DeliveryDriverMapper.class);
-        mockedStaticDelivery.when(() -> {
-            DeliveryDriverMapper.toEntityFromExcel(Mockito.any(), Mockito.any());
-        }).thenReturn(map);
-
-        Mockito.when(deliveryDriverDAO.getDeliveryDriverFromTender(Mockito.any(), Mockito.any()))
-                .thenReturn(Flux.fromStream(getListDrivers(5, true).stream()));
-
-
-
-        Mockito.doReturn(Mono.empty()).when(spyPaperChannel).deleteDriver(Mockito.any(), Mockito.any());
-
-
-        Mockito.when(deliveryDriverDAO.createOrUpdate(Mockito.any()))
-                .thenReturn(Mono.just(getListDrivers(1, true).get(0)));
-
-        Mockito.when(costDAO.createOrUpdate(Mockito.any()))
-                .thenReturn(Mono.just(getCost("ZONE_1", null,"AR")));
-
-        Mockito.when(fileDownloadDAO.create(Mockito.any())).thenReturn(Mono.just(file1));
-
-        StepVerifier.create(spyPaperChannel.notifyUploadAsync(file1, getInputStream(), "1122"))
-                .verifyComplete();
-    }
 
     @Test
     @DisplayName("whenChangeStatusTenderThatNotExistedThrowException")
@@ -375,12 +261,9 @@ class PaperChannelServiceTest extends BaseTest {
         TenderCreateRequestDTO dto = getTenderDTO();
         Instant passed = Instant.now().minus(20, ChronoUnit.DAYS);
         dto.setEndDate(new Date(passed.toEpochMilli()));
-        try {
-            this.paperChannelService.createOrUpdateTender(dto).block();
-            fail("Control date not working");
-        } catch (PnGenericException ex) {
-            assertEquals(BADLY_DATE_INTERVAL, ex.getExceptionType());
-        }
+        StepVerifier.create(this.paperChannelService.createOrUpdateTender(dto))
+                .expectError()
+                .verify();
     }
 
     @Test
@@ -415,12 +298,58 @@ class PaperChannelServiceTest extends BaseTest {
     }
 
     @Test
+    @DisplayName("whenUpdateDriverWithDifferentRoleThrowError")
+    void updateDriverNotFSU(){
+        DeliveryDriverDTO dto = getDriverDTO();
+        PnDeliveryDriver entity = InstanceCreator.getDriver(!dto.getFsu());
+
+        Mockito.when(this.tenderDAO.getTender(Mockito.any()))
+                .thenReturn(Mono.just(InstanceCreator.getListTender(1).get(0)));
+
+        Mockito.when(this.deliveryDriverDAO.getDeliveryDriver(Mockito.any(), Mockito.any()))
+                .thenReturn(Mono.just(entity));
+
+        StepVerifier.create(paperChannelService.createOrUpdateDriver("1234", dto))
+                .expectErrorMatches((ex) -> {
+                    assertTrue(ex instanceof PnGenericException);
+                    assertEquals(DELIVERY_DRIVER_HAVE_DIFFERENT_ROLE, ((PnGenericException) ex).getExceptionType());
+                    return true;
+                }).verify();
+    }
+
+    @Test
+    @DisplayName("whenUpdateDriverOkThenReturnResponse")
+    void updateDriverOK(){
+        DeliveryDriverDTO dto = getDriverDTO();
+        PnDeliveryDriver entity = InstanceCreator.getDriver(dto.getFsu());
+
+        Mockito.when(this.tenderDAO.getTender(Mockito.any()))
+                .thenReturn(Mono.just(InstanceCreator.getListTender(1).get(0)));
+
+        Mockito.when(this.deliveryDriverDAO.getDeliveryDriver(Mockito.any(), Mockito.any()))
+                .thenReturn(Mono.just(entity));
+
+        Mockito.when(this.deliveryDriverDAO.createOrUpdate(Mockito.any()))
+                .thenReturn(Mono.just(getListDrivers(1, true).get(0)));
+
+        this.paperChannelService.createOrUpdateDriver("1224", dto).block();
+        Mockito.verify(this.deliveryDriverDAO, Mockito.times(1))
+                .createOrUpdate(Mockito.any());
+
+        Mockito.verify(this.tenderDAO, Mockito.times(1))
+                .getTender(Mockito.any());
+
+        Mockito.verify(this.deliveryDriverDAO, Mockito.times(1))
+                .getDeliveryDriver(Mockito.any(), Mockito.any());
+    }
+
+    @Test
     @DisplayName("whenCreateDriverOkThenReturnResponse")
     void createDriverOK(){
         DeliveryDriverDTO dto = getDriverDTO();
 
         Mockito.when(this.tenderDAO.getTender(Mockito.any()))
-                .thenReturn(Mono.just(getListTender(1).get(0)));
+                .thenReturn(Mono.just(InstanceCreator.getListTender(1).get(0)));
 
         Mockito.when(this.deliveryDriverDAO.getDeliveryDriver(Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.empty());
@@ -573,21 +502,6 @@ class PaperChannelServiceTest extends BaseTest {
             tenders.add(tender);
         }
         return tenders;
-    }
-
-
-    private InputStream getInputStream(){
-        return new InputStream() {
-            private final byte[] msg = "Hello World".getBytes();
-            private int index = 0;
-            @Override
-            public int read() {
-                if (index >= msg.length) {
-                    return -1;
-                }
-                return msg[index++];
-            }
-        };
     }
 
     private TenderCreateRequestDTO getTenderDTO(){
