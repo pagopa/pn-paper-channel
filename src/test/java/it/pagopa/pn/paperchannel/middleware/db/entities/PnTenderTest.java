@@ -28,6 +28,8 @@ class PnTenderTest {
     @Test
     void actualStatusTest() {
         pnTender = initTender();
+        pnTender.setStartDate(getUpdatedDate(-1));
+        pnTender.setEndDate(getUpdatedDate(1));
         String status = pnTender.getActualStatus();
         Assertions.assertEquals(status, TenderDTO.StatusEnum.IN_PROGRESS.getValue());
 
@@ -104,6 +106,6 @@ class PnTenderTest {
         tenderCode = "FRGTHYJUKILO";
         description = "DESCRIPTION";
         startDate = Instant.now();
-        endDate = getUpdatedDate(1);
+        endDate = Instant.now();
     }
 }
