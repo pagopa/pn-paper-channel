@@ -18,8 +18,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.EXCEL_BADLY_CONTENT;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.EXCEL_BADLY_FORMAT;
 import static org.junit.jupiter.api.Assertions.*;
-
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
