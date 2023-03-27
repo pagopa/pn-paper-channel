@@ -1,9 +1,9 @@
 ## Quando viene aggiornato questo file, aggiornare anche il commitId presente nel file initsh-for-testcontainer-sh
 
-echo "### START KEY KREATION FOR KMS ###"
+echo "### START KEY CREATION FOR KMS ###"
 aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     kms create-key
-echo "### END KEY KREATION FOR KMS ###"
+echo "### END KEY CREATION FOR KMS ###"
 
 echo "### CREATE QUEUES FIFO ###"
 queues_fifo="local-delivery-push-inputs.fifo"
