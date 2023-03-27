@@ -1,10 +1,17 @@
-echo "### CREATE QUEUES ###"
-queues="local-delivery-push-inputs local-delivery-push-safestorage-inputs local-delivery-push-actions local-ext-channels-inputs local-ext-channels-outputs local-delivery-push-actions-done local-ext-channels-elab-res local-user-attributes-actions"
-for qn in  $( echo $queues | tr " " "\n" ) ; do
-    echo creating queue $qn ...
+## Quando viene aggiornato questo file, aggiornare anche il commitId presente nel file initsh-for-testcontainer-sh
+
+echo "### START KEY CREATION FOR KMS ###"
+aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
+    kms create-key
+echo "### END KEY CREATION FOR KMS ###"
+
+echo "### CREATE QUEUES FIFO ###"
+queues_fifo="local-delivery-push-inputs.fifo"
+for qn in  $( echo $queues_fifo | tr " " "\n" ) ; do
+    echo creating queue fifo $qn ...
     aws --profile default --region us-east-1 --endpoint-url http://localstack:4566 \
         sqs create-queue \
-        --attributes '{"DelaySeconds":"2"}' \
+        --attributes '{"DelaySeconds":"2","FifoQueue": "true","ContentBasedDeduplication": "true"}' \
         --queue-name $qn
 done
 
