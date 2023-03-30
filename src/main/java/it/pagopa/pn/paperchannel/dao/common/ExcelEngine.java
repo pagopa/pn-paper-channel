@@ -28,7 +28,7 @@ import java.util.function.Function;
 public class ExcelEngine {
     private final XSSFWorkbook workbook;
     private final List<XSSFSheet> sheets;
-    private XSSFSheet currentSheet;
+    private final XSSFSheet currentSheet;
     private String filename;
 
     public ExcelEngine(String filename){
@@ -43,31 +43,10 @@ public class ExcelEngine {
         this.workbook = new XSSFWorkbook(stream);
         int numberOfSheets = this.workbook.getNumberOfSheets();
         this.sheets = new ArrayList<>();
-        if (numberOfSheets == 0){
-            this.currentSheet = workbook.createSheet("Sheet 1");
-            this.sheets.add(this.currentSheet);
-        } else {
-            for(int i=0; i < numberOfSheets; i++){
-                this.sheets.add(workbook.getSheetAt(i));
-            }
-            this.currentSheet = this.sheets.get(0);
+        for(int i=0; i < numberOfSheets; i++){
+            this.sheets.add(workbook.getSheetAt(i));
         }
-    }
-
-    public void createNewSheet(String nameSheet){
-        this.currentSheet = workbook.createSheet(nameSheet);
-        this.sheets.add(this.currentSheet);
-    }
-
-    public void setCurrentSheet(String nameSheet){
-        if (sheets.isEmpty()) return;
-        if (currentSheet.getSheetName().equals(nameSheet)) return;
-        for (XSSFSheet sheet: sheets) {
-            if (sheet.getSheetName().equals(nameSheet)){
-                this.currentSheet = sheet;
-                return;
-            }
-        }
+        this.currentSheet = this.sheets.get(0);
     }
 
     public File saveOnDisk() {
