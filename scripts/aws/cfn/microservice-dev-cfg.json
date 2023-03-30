@@ -9,7 +9,6 @@
     "AttemptQueueNationalRegistries": "3",
     "AttemptQueueSafeStorage": "3",
     "ExternalChannelBaseUrl": "Mock",
-    "SandboxSafeStorageBaseUrl": "http://alb.confidential.pn.internal:8080/",
     "TtlPrepare": "14",
     "TtlExecutionRNAR": "12",
     "TtlExecutionRN890" : "11" ,
