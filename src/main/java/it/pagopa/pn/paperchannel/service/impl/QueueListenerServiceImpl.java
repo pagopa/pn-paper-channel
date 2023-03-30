@@ -6,10 +6,12 @@ import it.pagopa.pn.paperchannel.mapper.AddressMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.NationalRegistryError;
 import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
+import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.DiscoveredAddressDto;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.paperchannel.msclient.generated.pnnationalregistries.v1.dto.AddressSQSMessageDto;
 import it.pagopa.pn.paperchannel.service.PaperAsyncService;
@@ -117,6 +119,7 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
     @Override
     public void externalChannelListener(SingleStatusUpdateDto data, int attempt) {
         Mono.just(data)
+                .doOnNext(this::logEvent)
                 .flatMap(request -> this.paperResultAsyncService.resultAsyncBackground(request, attempt))
                 .doOnSuccess(resultFromAsync -> log.info("End of external Channel result"))
                 .onErrorResume(ex -> {
@@ -124,6 +127,14 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                     throw new PnGenericException(EXTERNAL_CHANNEL_LISTENER_EXCEPTION, EXTERNAL_CHANNEL_LISTENER_EXCEPTION.getMessage());
                 })
                 .block();
+    }
+
+    private void logEvent(SingleStatusUpdateDto singleStatusUpdateDto) {
+        SingleStatusUpdateDto logDto = singleStatusUpdateDto;
+        DiscoveredAddressDto discoveredAddressDto = logDto.getAnalogMail().getDiscoveredAddress();
+        logDto.getAnalogMail().setDiscoveredAddress(null);
+        log.info("Received event from EXT-CHANNELS: {}", logDto.toString().replaceAll("\n", ""));
+        logDto.getAnalogMail().setDiscoveredAddress(discoveredAddressDto);
     }
 
 }
