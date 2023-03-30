@@ -7,6 +7,8 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnTender;
 import it.pagopa.pn.paperchannel.rest.v1.dto.ProductTypeEnum;
 import it.pagopa.pn.paperchannel.utils.Const;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -29,6 +31,10 @@ public class InstanceCreator {
             PnTender tender = new PnTender();
             tender.setTenderCode("Tender_"+i);
             tender.setStatus("CREATED");
+            tender.setStartDate(Instant.now().minus(10, ChronoUnit.DAYS));
+            tender.setEndDate(Instant.now().plus(10, ChronoUnit.DAYS));
+            tender.setDescription("Tender 2023");
+            tender.setDate(Instant.now());
             tenders.add(tender);
         }
         return tenders;
