@@ -143,8 +143,12 @@ public class BaseService {
 
     protected String getProposalProductType(Address address, String productType){
         String proposalProductType = "";
+        boolean isNational = StringUtils.isBlank(address.getCountry()) ||
+                StringUtils.equalsIgnoreCase(address.getCountry(), "it") ||
+                StringUtils.equalsIgnoreCase(address.getCountry(), "italia") ||
+                StringUtils.equalsIgnoreCase(address.getCountry(), "italy");
         //nazionale
-        if(StringUtils.isNotBlank(address.getCap())){
+        if (StringUtils.isNotBlank(address.getCap()) && isNational) {
             if(productType.equals(RACCOMANDATA_SEMPLICE)){
                 proposalProductType = ProductTypeEnum.RS.getValue();
             }

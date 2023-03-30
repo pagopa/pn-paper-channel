@@ -147,7 +147,8 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                     if (StringUtils.equals(entity.getStatusCode(), StatusDeliveryEnum.IN_PROCESSING.getCode())) {
                        throw new PnGenericException(DELIVERY_REQUEST_IN_PROCESSING, DELIVERY_REQUEST_IN_PROCESSING.getMessage(), HttpStatus.CONFLICT);
                     }
-
+                    log.info("RequestId - {}, Proposal product type - {}, Product type - {}",
+                            entity.getRequestId(), entity.getProposalProductType(), entity.getProductType());
                     return entity;
                 })
                 .flatMap(pnDeliveryRequest -> {
@@ -291,6 +292,8 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
            pnDeliveryRequest.setAddressHash(mapped.convertToHash());
            addressEntity = AddressMapper.toEntity(mapped, prepareRequest.getRequestId(), pnPaperChannelConfig);
            pnDeliveryRequest.setProductType(getProposalProductType(mapped, pnDeliveryRequest.getProposalProductType()));
+           log.info("RequestId - {}, Proposal product type - {}, Product type - {}",
+                   pnDeliveryRequest.getRequestId(), pnDeliveryRequest.getProposalProductType(), pnDeliveryRequest.getProductType());
        }
 
         return requestDeliveryDAO.createWithAddress(pnDeliveryRequest, addressEntity);
