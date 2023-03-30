@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -67,8 +68,8 @@ class TenderDAOTest extends BaseTest {
 
     @Test
     void getTenderStatusValidateConsolidateTest(){
-        Instant startDate = Instant.parse("2023-03-10T00:20:56.630714800Z");
-        Instant endDate = Instant.parse("2023-03-28T00:20:56.630714800Z");
+        Instant startDate = Instant.now().minus(1, ChronoUnit.DAYS);
+        Instant endDate = Instant.now().minus(2, ChronoUnit.DAYS);
         PnTender tender = this.tenderDAO.getConsolidate(startDate, endDate).block();
         assertNotNull(tender);
     }
@@ -79,6 +80,7 @@ class TenderDAOTest extends BaseTest {
         PnTender tender = this.tenderDAO.getConsolidate(startDate, endDate).block();
         assertNotNull(tender);
     }
+
     @Test
     void getTenderStatusValidateConsolidateTest3(){
         Instant startDate = Instant.parse("2023-01-08T00:20:56.630714800Z");
@@ -86,6 +88,7 @@ class TenderDAOTest extends BaseTest {
         PnTender tender = this.tenderDAO.getConsolidate(startDate, endDate).block();
         assertNotNull(tender);
     }
+
     @Test
     void getTenderStatusValidateConsolidateTest4(){
         Instant startDate = Instant.parse("2023-01-08T00:20:56.630714800Z");
@@ -93,6 +96,7 @@ class TenderDAOTest extends BaseTest {
         PnTender tender = this.tenderDAO.getConsolidate(startDate, endDate).block();
         assertNotNull(tender);
     }
+
     @Test
     void getTenderStatusValidateNotConsolidateTest(){
         Instant startDate = Instant.parse("2024-01-10T00:20:56.630714800Z");
@@ -123,8 +127,8 @@ class TenderDAOTest extends BaseTest {
 
         active.setTenderCode("GARA-2023");
         active.setDate(Instant.parse("2023-01-01T00:20:56.630714800Z"));
-        active.setStartDate(Instant.parse("2023-02-01T00:20:56.630714800Z"));
-        active.setEndDate(Instant.parse("2023-03-29T23:20:56.630714800Z"));
+        active.setStartDate(Instant.now().minus(10, ChronoUnit.DAYS));
+        active.setEndDate(Instant.now().plus(3, ChronoUnit.DAYS));
         active.setAuthor(Const.PN_PAPER_CHANNEL);
         active.setDescription("Gara 2023");
         active.setStatus(TenderDTO.StatusEnum.VALIDATED.getValue());
