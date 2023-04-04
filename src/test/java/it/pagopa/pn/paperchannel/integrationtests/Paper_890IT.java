@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.annotation.DirtiesContext;
 
 class Paper_890IT extends BaseTest {
     @Autowired
@@ -48,8 +49,9 @@ class Paper_890IT extends BaseTest {
         return json;
     }
 
+    @DirtiesContext
     @Test
-    public void test(){
+    void test(){
      System.out.println(generateObject("003","AR"));
     }
 }
