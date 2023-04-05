@@ -1,8 +1,11 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
+import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnDiscoveredAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
+import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.DiscoveredAddressDto;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,9 +41,14 @@ public class SaveMetadataMessageHandler implements MessageHandler {
         pnEventMeta.setRequestId(paperRequest.getRequestId());
         pnEventMeta.setStatusCode(paperRequest.getStatusCode());
         pnEventMeta.setDeliveryFailureCause(paperRequest.getDeliveryFailureCause());
-        pnEventMeta.setDiscoveredAddress(pnEventMeta.getDiscoveredAddress());
+
+        if (paperRequest.getDiscoveredAddress() != null )
+        {
+            PnDiscoveredAddress discoveredAddress = new BaseMapperImpl<>(DiscoveredAddressDto.class, PnDiscoveredAddress.class).toDTO(paperRequest.getDiscoveredAddress());
+            pnEventMeta.setDiscoveredAddress(discoveredAddress);
+        }
+
         pnEventMeta.setStatusDateTime(paperRequest.getStatusDateTime().toInstant());
         return pnEventMeta;
     }
-
 }
