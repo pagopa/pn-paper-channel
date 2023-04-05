@@ -33,7 +33,7 @@ public class RECAG008CMessageHandler extends SendToDeliveryPushHandler {
     public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
         return eventMetaDAO.findAllByRequestId(buildMetaRequestId(paperRequest.getRequestId()))
                 .collectList()
-                .filter(this::correctPreviousEventMeta)
+                .filter(pnEventMetas -> this.correctPreviousEventMeta(pnEventMetas, paperRequest.getRequestId()))
                 .doOnNext(pnEventMetas -> log.info("[{}] Found correct previous states", paperRequest.getRequestId()))
 
                 // send to DeliveryPush (only if the needed metas are found)
@@ -43,7 +43,7 @@ public class RECAG008CMessageHandler extends SendToDeliveryPushHandler {
                 .flatMap(ignored -> metaDematCleaner.clean(paperRequest.getRequestId()));
     }
 
-    private Boolean correctPreviousEventMeta(List<PnEventMeta> pnEventMetas)
+    private Boolean correctPreviousEventMeta(List<PnEventMeta> pnEventMetas, String requestId)
     {
         Optional<PnEventMeta> elRECAG012 = pnEventMetas.stream()
                 .filter(pnEventMeta -> META_RECAG012_STATUS_CODE.equals(pnEventMeta.getMetaStatusCode()))
@@ -53,12 +53,12 @@ public class RECAG008CMessageHandler extends SendToDeliveryPushHandler {
                 .filter(pnEventMeta -> META_PNAG012_STATUS_CODE.equals(pnEventMeta.getMetaStatusCode()))
                 .findFirst();
 
-        log.info("RECAG012 presence {}, PNAG012 presence {}", elRECAG012.isPresent(), elPNAG012.isPresent());
+        log.info("[{}] RECAG012 presence {}, PNAG012 presence {}", requestId, elRECAG012.isPresent(), elPNAG012.isPresent());
 
         // presence check and error log
         final boolean ok = elRECAG012.isPresent() && elPNAG012.isPresent();
         if (!ok) {
-            log.error("Problem with RECAG012 or PNAG012 presence!");
+            log.error("[{}] Problem with RECAG012 or PNAG012 presence!", requestId);
         }
 
         return ok;
