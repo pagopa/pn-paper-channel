@@ -65,7 +65,7 @@ public class AggregatorMessageHandler extends SendToDeliveryPushHandler {
                             .toDTO(pnEventMeta.getDiscoveredAddress());
             paperRequest.setDiscoveredAddress(discoveredAddressDto);
         } else {
-            log.warn("[{}] Missing Discovered Address in EventMeta for {}", paperRequest.getRequestId(), pnEventMeta);
+            log.info("[{}] Missing Discovered Address in EventMeta for {}", paperRequest.getRequestId(), pnEventMeta);
         }
         paperRequest.setDeliveryFailureCause(pnEventMeta.getDeliveryFailureCause());
 

@@ -47,7 +47,7 @@ public class SaveMetadataMessageHandler implements MessageHandler {
             PnDiscoveredAddress discoveredAddress = new BaseMapperImpl<>(DiscoveredAddressDto.class, PnDiscoveredAddress.class).toDTO(paperRequest.getDiscoveredAddress());
             pnEventMeta.setDiscoveredAddress(discoveredAddress);
         } else {
-            log.warn("[{}] Missing Discovered Address in PaperRequest, statusCode {}", paperRequest.getRequestId(), paperRequest.getStatusCode());
+            log.info("[{}] Missing Discovered Address in PaperRequest, statusCode {}", paperRequest.getRequestId(), paperRequest.getStatusCode());
         }
 
         pnEventMeta.setStatusDateTime(paperRequest.getStatusDateTime().toInstant());
