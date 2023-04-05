@@ -43,7 +43,7 @@ public class AggregatorMessageHandler extends SendToDeliveryPushHandler {
         return eventMetaDAO.getDeliveryEventMeta(buildMetaRequestId(paperRequest.getRequestId()),
                         preClosingMetaStatus)
                 .switchIfEmpty(Mono.defer(() -> {
-                            log.warn("Missing EventMeta for: {}", paperRequest);
+                            log.warn("[{}] Missing EventMeta for {}", paperRequest.getRequestId(), paperRequest);
                             return Mono.just(new PnEventMeta());
                 }))
                 .map(relatedMeta -> enrichEvent(paperRequest, relatedMeta))
@@ -64,6 +64,8 @@ public class AggregatorMessageHandler extends SendToDeliveryPushHandler {
                     new BaseMapperImpl<>(PnDiscoveredAddress.class, DiscoveredAddressDto.class)
                             .toDTO(pnEventMeta.getDiscoveredAddress());
             paperRequest.setDiscoveredAddress(discoveredAddressDto);
+        } else {
+            log.warn("[{}] Missing Discovered Address in EventMeta for {}", paperRequest.getRequestId(), pnEventMeta);
         }
         paperRequest.setDeliveryFailureCause(pnEventMeta.getDeliveryFailureCause());
 

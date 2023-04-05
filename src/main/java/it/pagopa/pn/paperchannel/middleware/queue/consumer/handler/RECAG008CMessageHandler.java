@@ -34,7 +34,7 @@ public class RECAG008CMessageHandler extends SendToDeliveryPushHandler {
         return eventMetaDAO.findAllByRequestId(buildMetaRequestId(paperRequest.getRequestId()))
                 .collectList()
                 .filter(this::correctPreviousEventMeta)
-                .doOnNext(pnEventMetas -> log.info("Found correct previous states for request {}", paperRequest.getRequestId()))
+                .doOnNext(pnEventMetas -> log.info("[{}] Found correct previous states", paperRequest.getRequestId()))
 
                 // send to DeliveryPush (only if the needed metas are found)
                 .flatMap(pnEventMetas -> super.handleMessage(entity, paperRequest).then(Mono.just(pnEventMetas)))
