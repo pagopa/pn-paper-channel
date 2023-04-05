@@ -539,7 +539,9 @@ class PaperMessagesServiceTest extends BaseTest {
         Mockito.when(externalChannelClient.sendEngageRequest(Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.error(new PnGenericException(EXTERNAL_CHANNEL_API_EXCEPTION, EXTERNAL_CHANNEL_API_EXCEPTION.getMessage())));
 
-
+        //MOCK RETRIEVE NATIONAL COST
+        Mockito.when(paperTenderService.getCostFrom(Mockito.any(), Mockito.any(), Mockito.any()))
+                .thenReturn(Mono.just(getNationalCost()));
 
         StepVerifier.create(paperMessagesService.executionPaper("TST-IOR.2332", sendRequest))
                 .expectErrorMatches((ex) -> {
@@ -589,7 +591,7 @@ class PaperMessagesServiceTest extends BaseTest {
         Mockito.when(paperTenderService.getZoneFromCountry(Mockito.any()))
                 .thenReturn(Mono.just("ZONE_1"));
 
-        //MOCK RETRIEVE NATIONAL COST
+        //MOCK RETRIEVE INTERNATIONAL COST
         Mockito.when(paperTenderService.getCostFrom(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(getInternationalCost()));
 
@@ -616,6 +618,7 @@ class PaperMessagesServiceTest extends BaseTest {
         }).thenAnswer((Answer<Void>) invocation -> null);
 
         Mockito.when(addressDAO.create(Mockito.any())).thenReturn(Mono.just(new PnAddress()));
+
         Mockito.when(paperTenderService.getCostFrom(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(getNationalCost()));
 

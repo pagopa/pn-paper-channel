@@ -102,11 +102,24 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                             .switchIfEmpty(Mono.defer(() ->
                                     saveRequestAndAddress(prepareRequest, oldEntity.getAddressHash(), prepareRequest.getDiscoveredAddress())
                                             .flatMap(response -> {
+                                                pnLogAudit.addsBeforeResolveLogic(
+                                                        prepareRequest.getIun(),
+                                                        String.format("prepare requestId = %s, relatedRequestId = %s Is Discovered Address present ?", requestId, prepareRequest.getRelatedRequestId())
+                                                );
+
                                                 if (prepareRequest.getDiscoveredAddress() != null) {
+                                                    pnLogAudit.addsSuccessResolveLogic(
+                                                            prepareRequest.getIun(),
+                                                            String.format("prepare requestId = %s, relatedRequestId = %s Discovered Address is present", requestId, prepareRequest.getRelatedRequestId())
+                                                    );
+
                                                     PrepareAsyncRequest request = new PrepareAsyncRequest(response.getRequestId(), response.getIun(), false, 0);
                                                     this.sqsSender.pushToInternalQueue(request);
                                                 } else {
-                                                    log.info("Start call national");
+                                                    pnLogAudit.addsSuccessResolveLogic(
+                                                            prepareRequest.getIun(),
+                                                            String.format("prepare requestId = %s, relatedRequestId = %s Discovered Address is not present", requestId, prepareRequest.getRelatedRequestId())
+                                                    );
                                                     this.finderAddressFromNationalRegistries(
                                                             (MDC.get(MDC_TRACE_ID_KEY) == null ? UUID.randomUUID().toString() : MDC.get(MDC_TRACE_ID_KEY)),
                                                             response.getRequestId(),
@@ -154,7 +167,17 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                 .flatMap(pnDeliveryRequest -> {
                     List<AttachmentInfo> attachments = pnDeliveryRequest.getAttachments().stream().map(AttachmentMapper::fromEntity).toList();
                     Address address = saveAddresses(sendRequest);
-
+                    return getSendResponse(
+                            address,
+                            attachments,
+                            sendRequest.getProductType(),
+                            StringUtils.equals(sendRequest.getPrintType(), Const.BN_FRONTE_RETRO)
+                    ).map(response -> Tuples.of(response, pnDeliveryRequest, attachments));
+                })
+                .flatMap(tuple -> {
+                    SendResponse sendResponse = tuple.getT1();
+                    PnDeliveryRequest pnDeliveryRequest = tuple.getT2();
+                    List<AttachmentInfo> attachments = tuple.getT3();
 
                     if (StringUtils.equals(pnDeliveryRequest.getStatusCode(), StatusDeliveryEnum.TAKING_CHARGE.getCode())) {
                         pnDeliveryRequest.setStatusCode(StatusDeliveryEnum.READY_TO_SEND.getCode());
@@ -171,24 +194,15 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                                     pnLogAudit.addsSuccessSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDC_TRACE_ID_KEY)));
                                     return this.requestDeliveryDAO.updateData(pnDeliveryRequest);
                                 }))
-                                .map(updated -> Tuples.of(address, attachments))
+                                .map(updated -> sendResponse)
                                 .onErrorResume(ex -> {
                                     pnLogAudit.addsFailSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDC_TRACE_ID_KEY)));
                                     return Mono.error(ex);
                                 });
 
                     }
-                    return Mono.just(Tuples.of(address, attachments));
-                })
-
-                .flatMap(addressAndAttachments ->
-                        getSendResponse(
-                                addressAndAttachments.getT1(),
-                                addressAndAttachments.getT2(),
-                                sendRequest.getProductType(),
-                                StringUtils.equals(sendRequest.getPrintType(), Const.BN_FRONTE_RETRO)
-                        )
-                );
+                    return Mono.just(sendResponse);
+                });
     }
 
     @Override
