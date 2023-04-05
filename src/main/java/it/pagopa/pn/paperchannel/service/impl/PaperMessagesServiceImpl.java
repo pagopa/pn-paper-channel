@@ -147,7 +147,8 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                     if (StringUtils.equals(entity.getStatusCode(), StatusDeliveryEnum.IN_PROCESSING.getCode())) {
                        throw new PnGenericException(DELIVERY_REQUEST_IN_PROCESSING, DELIVERY_REQUEST_IN_PROCESSING.getMessage(), HttpStatus.CONFLICT);
                     }
-
+                    log.info("RequestId - {}, Proposal product type - {}, Product type - {}",
+                            entity.getRequestId(), entity.getProposalProductType(), entity.getProductType());
                     return entity;
                 })
                 .flatMap(pnDeliveryRequest -> {
@@ -231,7 +232,7 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
         return (weightPaper * numberOfPages) + weightLetter;
     }
 
-    private Mono<Double> calculator(List<AttachmentInfo> attachments, Address address, ProductTypeEnum productType, boolean isReversePrinter){
+    private Mono<Float> calculator(List<AttachmentInfo> attachments, Address address, ProductTypeEnum productType, boolean isReversePrinter){
         boolean isNational = StringUtils.isBlank(address.getCountry()) ||
                 StringUtils.equalsIgnoreCase(address.getCountry(), "it") ||
                 StringUtils.equalsIgnoreCase(address.getCountry(), "italia") ||
@@ -246,12 +247,12 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
 
     }
 
-    private Mono<Double> getAmount(List<AttachmentInfo> attachments, String cap, String zone, String productType, boolean isReversePrinter){
+    private Mono<Float> getAmount(List<AttachmentInfo> attachments, String cap, String zone, String productType, boolean isReversePrinter){
         return paperTenderService.getCostFrom(cap, zone, productType)
                 .map(contract ->{
                     Integer totPages = getNumberOfPages(attachments, isReversePrinter, false);
-                    double priceTotPages = totPages * contract.getPriceAdditional();
-                    return Double.sum(contract.getPrice(), priceTotPages);
+                    float priceTotPages = totPages * contract.getPriceAdditional();
+                    return Float.sum(contract.getPrice(), priceTotPages);
                 });
     }
 
@@ -291,6 +292,8 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
            pnDeliveryRequest.setAddressHash(mapped.convertToHash());
            addressEntity = AddressMapper.toEntity(mapped, prepareRequest.getRequestId(), pnPaperChannelConfig);
            pnDeliveryRequest.setProductType(getProposalProductType(mapped, pnDeliveryRequest.getProposalProductType()));
+           log.info("RequestId - {}, Proposal product type - {}, Product type - {}",
+                   pnDeliveryRequest.getRequestId(), pnDeliveryRequest.getProposalProductType(), pnDeliveryRequest.getProductType());
        }
 
         return requestDeliveryDAO.createWithAddress(pnDeliveryRequest, addressEntity);

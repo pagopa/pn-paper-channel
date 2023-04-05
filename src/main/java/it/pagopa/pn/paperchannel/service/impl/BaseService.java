@@ -16,14 +16,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
-import reactor.util.function.Tuple2;
 
 import java.time.Duration;
 import java.util.Date;
-import java.util.List;
 import java.util.function.Function;
 
 import static it.pagopa.pn.commons.log.MDCWebFilter.MDC_TRACE_ID_KEY;
@@ -122,8 +119,12 @@ public class BaseService {
 
     protected String getProductType(Address address, ProductTypeEnum productTypeEnum){
         String productType = "";
+        boolean isNational = StringUtils.isBlank(address.getCountry()) ||
+                StringUtils.equalsIgnoreCase(address.getCountry(), "it") ||
+                StringUtils.equalsIgnoreCase(address.getCountry(), "italia") ||
+                StringUtils.equalsIgnoreCase(address.getCountry(), "italy");
 
-        if(StringUtils.isNotBlank(address.getCap())){
+        if (StringUtils.isNotBlank(address.getCap()) && isNational) {
             if (productTypeEnum.equals(ProductTypeEnum.AR)) {
                 productType = RACCOMANDATA_AR;
             } else if (productTypeEnum.equals(ProductTypeEnum.RS)){
@@ -143,8 +144,12 @@ public class BaseService {
 
     protected String getProposalProductType(Address address, String productType){
         String proposalProductType = "";
+        boolean isNational = StringUtils.isBlank(address.getCountry()) ||
+                StringUtils.equalsIgnoreCase(address.getCountry(), "it") ||
+                StringUtils.equalsIgnoreCase(address.getCountry(), "italia") ||
+                StringUtils.equalsIgnoreCase(address.getCountry(), "italy");
         //nazionale
-        if(StringUtils.isNotBlank(address.getCap())){
+        if (StringUtils.isNotBlank(address.getCap()) && isNational) {
             if(productType.equals(RACCOMANDATA_SEMPLICE)){
                 proposalProductType = ProductTypeEnum.RS.getValue();
             }

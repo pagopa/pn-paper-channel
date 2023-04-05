@@ -12,6 +12,7 @@ public class PaperChannelApplication {
         SpringApplication.run(PaperChannelApplication.class, args);
     }
 
+
     @RestController
     public static class HomeController {
 

@@ -8,7 +8,6 @@
     "AttemptQueueExternalChannel": "3",
     "AttemptQueueNationalRegistries": "3",
     "AttemptQueueSafeStorage": "3",
-    "SandboxSafeStorageBaseUrl": "https://ewlg4idc89.execute-api.eu-south-1.amazonaws.com/dev",
     "ExternalChannelBaseUrl": "https://zq5g01oxkb.execute-api.eu-south-1.amazonaws.com/dev/",
     "TtlPrepare": "14",
     "TtlExecutionRNAR": "12",

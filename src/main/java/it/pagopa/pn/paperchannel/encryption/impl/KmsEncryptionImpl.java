@@ -11,6 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Optional;
 
@@ -30,9 +32,10 @@ public class KmsEncryptionImpl implements DataEncryption {
     @Override
     public String encode(String data) {
         if(StringUtils.isNotEmpty(data)) {
+
             final EncryptRequest encryptRequest = new EncryptRequest()
                     .withKeyId(this.awsKmsProperties.getKeyId())
-                    .withPlaintext(ByteBuffer.wrap(data.getBytes()));
+                    .withPlaintext(ByteBuffer.wrap(data.getBytes(StandardCharsets.UTF_8)));
 
             final ByteBuffer encryptedBytes = kms.encrypt(encryptRequest).getCiphertextBlob();
 

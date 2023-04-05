@@ -19,7 +19,6 @@ import javax.annotation.PostConstruct;
 import java.net.ConnectException;
 import java.time.Duration;
 import java.util.Date;
-import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
 @Slf4j
@@ -54,6 +53,7 @@ public class NationalRegistryClientImpl extends BaseClient implements NationalRe
         filterDto.setReferenceRequestDate(DateUtils.formatDate(new Date()));
         addressRequestBodyDto.setFilter(filterDto);
 
+        log.debug("pn-national-registries-cx-id : {}", pnPaperChannelConfig.getNationalRegistryCxId());
         return addressApi.getAddresses(recipientType,addressRequestBodyDto, pnPaperChannelConfig.getNationalRegistryCxId())
                 .retryWhen(
                         Retry.backoff(2, Duration.ofMillis(500))

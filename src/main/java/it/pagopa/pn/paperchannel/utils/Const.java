@@ -5,6 +5,7 @@ public class Const {
     public static final String PN_PAPER_CHANNEL = "PN-PAPER-CHANNEL";
     public static final String PN_AAR = "PN_AAR";
     public static final String AAR = "AAR";
+    public static final String ATTO = "ATTO";
     public static final String BN_FRONTE_RETRO = "BN_FRONTE_RETRO";
     public static final String RACCOMANDATA_SEMPLICE = "RS";
     public static final String RACCOMANDATA_890 = "890";

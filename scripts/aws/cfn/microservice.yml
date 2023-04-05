@@ -351,6 +351,11 @@ Parameters:
     Type: Number
     Description: maximum autoscaling number of tasks
 
+  # Log group parameters
+  EcsLogGroup:
+    Type: String
+    Description: 'Ecs log group name'
+
 Conditions:
   UseExternalChannelMock: !Equals [ !Ref ExternalChannelBaseUrl, "Mock" ]
 
@@ -409,7 +414,7 @@ Resources:
         ContainerEnvEntry26: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUENATIONALREGISTRIES=${AttemptQueueNationalRegistries}'
         ContainerEnvEntry27: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUEEXTERNALCHANNEL=${AttemptQueueExternalChannel}'
         ContainerEnvEntry28: !Sub 'AWS_BUCKET_NAME=${PaperDeliveryDriversBucketName}'
-        ContainerEnvEntry29: !Sub 'PN_PAPERCHANNEL_NATIONALREGISTRYCHCXID=${NationalRegistryCxId}'
+        ContainerEnvEntry29: !Sub 'PN_PAPERCHANNEL_NATIONALREGISTRYCXID=${NationalRegistryCxId}'
         ContainerEnvEntry30: !Sub 'PN_PAPERCHANNEL_TTLPREPARE=${TtlPrepare}'
         ContainerEnvEntry31: !Sub 'PN_PAPERCHANNEL_TTLEXECUTIONNAR=${TtlExecutionRNAR}'
         ContainerEnvEntry32: !Sub 'PN_PAPERCHANNEL_TTLEXECUTIONN890=${TtlExecutionRN890}'
@@ -419,7 +424,7 @@ Resources:
         ContainerEnvEntry36: !Sub 'PN_PAPERCHANNEL_TTLEXECUTIONDAYSDEMAT=${TtlExecutionDaysDemat}'
         ContainerEnvEntry37: !Sub 'PN_PAPERCHANNEL_TTLEXECUTIONDAYSMETA=${TtlExecutionDaysMeta}'
         ContainerEnvEntry38: !Sub 'PN_PAPERCHANNEL_RETRYSTATUS=${RetryStatus}'
-        ContainerEnvEntry39: !Sub 'PN_PAPERCHANNEL_CLIENTDATAVAULTBASEPATH=http://alb.confidential.pn.internal:8080'
+        ContainerEnvEntry39: 'PN_PAPERCHANNEL_CLIENTDATAVAULTBASEPATH=http://alb.confidential.pn.internal:8080'
         ContainerEnvEntry40: !Sub 'PN_PAPERCHANNEL_PAPERWEIGHT=${PaperWeight}'
         ContainerEnvEntry41: !Sub 'PN_PAPERCHANNEL_LETTERWEIGHT=${LetterWeight}'
         MappedPaths: '/paper-channel-bo/*,/paper-channel-private/*'
@@ -429,8 +434,8 @@ Resources:
         EcsDefaultSecurityGroup: !Ref EcsDefaultSecurityGroup
         LoadBalancerListenerArn: !Ref ApplicationLoadBalancerListenerArn
         LoadbalancerRulePriority: !Ref MicroserviceNumber
-        CloudwatchLogKinesisStreamArn: !Ref LogsKinesisSourceStreamArn
         TaskRoleManagedPolicyArn: !Ref PaperChannelMicroserviceTaskPolicy
+        EcsLogGroup: !Ref EcsLogGroup
 
   PaperChannelMicroserviceTaskPolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -504,7 +509,6 @@ Resources:
               - !Sub "${PaperEventsTableArn}"
               - !Sub "${PaperEventsTableArn}/*"
 
-
   # Dashboard
   PaperChannelMicroserviceCloudWatchDashboard:
     Type: AWS::CloudFormation::Stack
@@ -512,16 +516,45 @@ Resources:
       TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/microservice-cloudwatch-dashboard.yaml"
       Parameters:
         DashboardName: !Sub "${ProjectName}-paper-channel"
+        DynamoDBTableNames: !Join
+          - ','
+          - - !Ref PaperEventsTableName
+            - !Ref PaperRequestErrorTableName
+            - !Ref CapDynamoTableName
+            - !Ref ZoneDynamoTableName
+            - !Ref CapDynamoTableName
+            - !Ref CostDynamoTableName
+            - !Ref DeliveryDriverDynamoTableName
+            - !Ref TenderDynamoTableName
+            - !Ref DeliveryFileDynamoTableName
+            - !Ref RequestDeliveryDynamoTableName
+        RestApiStageArns: !Join
+          - ','
+          - - !GetAtt PaperChannelGatewayDeliveryDriver.Outputs.RestApiStageArn
+        RestApiNames: !Join
+          - ','
+          - - !GetAtt PaperChannelGatewayDeliveryDriver.Outputs.RestApiName
         AlarmArns: !Join
           - ','
           - - !GetAtt PaperChannelMicroservice.Outputs.FatalLogsMetricAlarmArn
+            - !GetAtt PaperChannelGatewayDeliveryDriver.Outputs.RestApiErrorAlarmArn
+            - !GetAtt PaperChannelGatewayDeliveryDriver.Outputs.RestApiLatencyAlarmArn
+        QueueArns: !Join
+          - ','
+          - - !Ref ExternalChannelsOutputsQueueARN
+            - !Ref ExternalChannels2PaperChannelQueueARN
+            - !Ref ScheduledRequestsQueueARN
+            - !Ref NationalRegistries2PaperChannelQueueARN
+        LogGroupsNames: !Join
+          - ','
+          - - !Sub '/aws/ecs/${ProjectName}-paper-channel'   
 
   PaperChannelGatewayDeliveryDriver:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/api-gw-expose-service.yaml"
       Parameters:
-        MicroServiceUniqueName: !Sub '${ProjectName}-PaperChannel-bo'
+        MicroServiceUniqueName: !Sub '${ProjectName}-paper-channel-bo'
         IntendedUsage: BACKOFFICE
         DnsName: !Ref WebApiDnsName
         ProjectName: !Ref ProjectName
