@@ -42,12 +42,12 @@ public class SaveMetadataMessageHandler implements MessageHandler {
         pnEventMeta.setStatusCode(paperRequest.getStatusCode());
         pnEventMeta.setDeliveryFailureCause(paperRequest.getDeliveryFailureCause());
 
-        if (paperRequest.getDiscoveredAddress() != null )
+        if (paperRequest.getDiscoveredAddress() != null)
         {
             PnDiscoveredAddress discoveredAddress = new BaseMapperImpl<>(DiscoveredAddressDto.class, PnDiscoveredAddress.class).toDTO(paperRequest.getDiscoveredAddress());
             pnEventMeta.setDiscoveredAddress(discoveredAddress);
-        } else {
-            log.info("[{}] Missing Discovered Address in PaperRequest, statusCode {}", paperRequest.getRequestId(), paperRequest.getStatusCode());
+
+            log.info("[{}] Discovered Address in PaperRequest, statusCode {}", paperRequest.getRequestId(), paperRequest.getStatusCode());
         }
 
         pnEventMeta.setStatusDateTime(paperRequest.getStatusDateTime().toInstant());
