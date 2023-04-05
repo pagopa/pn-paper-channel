@@ -61,7 +61,10 @@ public enum ExternalChannelCodeEnum {
     RECAG003E("PROGRESS"),
     RECRI003B("PROGRESS"),
     RECRI004B("PROGRESS"),
-    RECRSI004B("PROGRESS");
+    RECRSI004B("PROGRESS"),
+
+    //890
+    RECAG011B("PROGRESS");
 
     private final String message;
 

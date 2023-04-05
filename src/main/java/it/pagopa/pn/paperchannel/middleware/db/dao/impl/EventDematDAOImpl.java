@@ -41,4 +41,15 @@ public class EventDematDAOImpl extends BaseDAO<PnEventDemat> implements EventDem
     public Mono<PnEventDemat> deleteEventDemat(String dematRequestId, String documentTypeStatusCode) {
         return Mono.fromFuture(this.delete(dematRequestId, documentTypeStatusCode).thenApply(item -> item));
     }
+
+    @Override
+    public Flux<PnEventDemat> findAllByKeys(String dematRequestId, String... documentTypeStatusCode) {
+        return super.findAllByKeys(dematRequestId, documentTypeStatusCode);
+    }
+
+    @Override
+    public Mono<Void> deleteBatch(String dematRequestId, String... documentTypeStatusCode) {
+        return super.deleteBatch(dematRequestId, documentTypeStatusCode);
+    }
+
 }

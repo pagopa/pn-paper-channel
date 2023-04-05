@@ -11,6 +11,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -102,6 +103,34 @@ class EventMetaDAOTestIT extends BaseTest {
 
         eventMetaFromDb = eventMetaDAO.getDeliveryEventMeta(eventMeta3.getMetaRequestId(), eventMeta3.getMetaStatusCode()).block();
         assertNull(eventMetaFromDb);
+    }
+
+    @Test
+    void deleteBatchTest() {
+        final String requestId = "LVRK-202302-G-1;RECINDEX_0;SENTATTEMPTMADE_0;PCRETRY_0";
+        eventMeta1.setMetaRequestId("META##" + requestId);
+        eventMeta1.setMetaStatusCode("META##RECAG011B");
+        eventMeta1.setRequestId(requestId);
+        eventMeta1.setStatusCode("RECAG011B");
+
+        eventMeta2.setMetaRequestId("META##" + requestId);
+        eventMeta2.setMetaStatusCode("META##PNAG012");
+        eventMeta2.setRequestId(requestId);
+        eventMeta2.setStatusCode("RECAG011B");
+
+        eventMetaDAO.createOrUpdate(eventMeta1).block();
+        eventMetaDAO.createOrUpdate(eventMeta2).block();
+
+        List<PnEventMeta> result = eventMetaDAO.findAllByRequestId("META##" + requestId).collectList().block();
+
+        assertThat(result).hasSize(2);
+
+        eventMetaDAO.deleteBatch("META##" + requestId, "META##RECAG011B", "META##PNAG012").block();
+
+        result = eventMetaDAO.findAllByRequestId("META##" + requestId).collectList().block();
+
+        assertThat(result).isEmpty();
+
     }
 
     private void initialize() {
