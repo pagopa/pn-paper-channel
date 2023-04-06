@@ -51,35 +51,54 @@ class Paper_890IT extends BaseTest {
     @Autowired
     private PaperResultAsyncService paperResultAsyncService;
 
-    @Autowired
-    private QueueListener queueListener;
-
     @MockBean
     private SqsSender sqsSender;
 
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Autowired
-    private EventDematDAO eventDematDAO;
-
     @MockBean
     private RequestDeliveryDAO requestDeliveryDAO;
 
-//    @Mock(answer = Answers.CALLS_REAL_METHODS)
-//    private QueueListenerService queueListenerService;
-//    @Mock(answer = Answers.CALLS_REAL_METHODS)
-//    private PnPaperChannelConfig paperChannelConfig;
-//    @Mock(answer = Answers.CALLS_REAL_METHODS)
-//    private ObjectMapper objectMapper;
-//    @Mock(answer = Answers.CALLS_REAL_METHODS)
-//    private PaperRequestErrorDAO paperRequestErrorDAO;
-//
-//    @Mock(answer = Answers.CALLS_REAL_METHODS)
-//    private PnAuditLogBuilder pnAuditLogBuilder;
 
 
+    @Test
+    void test_890_DossierClose_RECAG001C(){
 
+    }
+
+
+    @Test
+    void test_890_DeliverDossierClose_RECAG002C(){
+
+    }
+
+    @Test
+    void test_890_NotDeliverDossierClose_RECAG003A_RECAG003C(){
+
+    }
+
+
+    @Test
+    void test_890_untraceableDossierClose_RECAG003D_RECAG003F(){
+
+    }
+
+
+    @Test
+    void test_890_deliverStockDossierClose_RECAG005C(){
+
+    }
+
+
+    @Test
+    void test_890_deliverStockDossierClose_RECAG005C(){
+
+    }
+
+    /*
+    *****************************************************************************************************
+     */
 
     private static String generateObject(String statusCode,String productType){
         String json = """
