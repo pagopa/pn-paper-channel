@@ -94,7 +94,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                                 pnDeliveryRequest.getAddressHash()
                         );
 
-                    } else {
+                    } else if (StringUtils.isBlank(pnDeliveryRequest.getRelatedRequestId())) {
                         pnLogAudit.addsResolveLogic(pnDeliveryRequest.getIun(), String.format("prepare requestId = %s Is receiver address present ?", requestId), String.format("prepare requestId = %s receiver address is present", requestId));
                     }
 

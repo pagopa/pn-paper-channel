@@ -90,7 +90,7 @@ public class BaseService {
                 .flatMap(Mono::just)
                 .onErrorResume(ex -> {
                     pnLogAudit.addsWarningResolveService(iun, String.format("prepare requestId = %s, relatedRequestId = %s, trace_id = %s Response KO from National Registry service", requestId, relatedRequestId, MDC.get(MDC_TRACE_ID_KEY)));
-                    log.warn("NationalRegistries finder address in errors", ex.getMessage());
+                    log.warn("NationalRegistries finder address in errors {}", ex.getMessage());
                     return Mono.empty();
 
                 }).subscribeOn(Schedulers.boundedElastic()).subscribe();

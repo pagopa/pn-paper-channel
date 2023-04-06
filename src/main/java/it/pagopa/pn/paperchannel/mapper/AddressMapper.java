@@ -44,7 +44,8 @@ public class AddressMapper {
 
     public static Address fromNationalRegistry(AddressSQSMessagePhysicalAddressDto pysicalAddress){
         Address address = new Address();
-        address.setFullName(pysicalAddress.getAt());
+
+        address.setNameRow2(pysicalAddress.getAt());
         address.setAddress(pysicalAddress.getAddress());
         address.setAddressRow2(pysicalAddress.getAddressDetails());
         address.setCap(pysicalAddress.getZip());

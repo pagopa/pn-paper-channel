@@ -245,6 +245,10 @@ class PaperMessagesServiceTest extends BaseTest {
         Mockito.when(requestDeliveryDAO.getByRequestId("TST-IOR.2332"))
                         .thenReturn(Mono.empty());
 
+        //MOCK OLD ADDRESS GET
+        Mockito.when(addressDAO.findByRequestId(Mockito.any()))
+                        .thenReturn(Mono.just(getPnAddress("OLD_ADDRESS")));
+
         //MOCK SAVE NEW DELIVERY REQUEST
         Mockito.when(requestDeliveryDAO.createWithAddress(Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(deliveryRequest));
@@ -284,6 +288,10 @@ class PaperMessagesServiceTest extends BaseTest {
         //MOCK NEW DELIVERY REQUEST
         Mockito.when(requestDeliveryDAO.getByRequestId("TST-IOR.2332"))
                 .thenReturn(Mono.empty());
+
+        //MOCK OLD ADDRESS GET
+        Mockito.when(addressDAO.findByRequestId(Mockito.any()))
+                .thenReturn(Mono.just(getPnAddress("OLD_ADDRESS")));
 
         //MOCK SAVE NEW DELIVERY REQUEST
         Mockito.when(requestDeliveryDAO.createWithAddress(Mockito.any(), Mockito.any()))
