@@ -1,8 +1,6 @@
 package it.pagopa.pn.paperchannel.integrationtests;
 
 import it.pagopa.pn.paperchannel.config.BaseTest;
-import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
-import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
