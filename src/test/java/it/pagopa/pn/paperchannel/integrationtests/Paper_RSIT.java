@@ -24,8 +24,7 @@ import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
@@ -41,7 +40,33 @@ class Paper_RSIT extends BaseTest {
     @MockBean
     private RequestDeliveryDAO requestDeliveryDAO;
 
-    private void CommonMetaDematAggregateRSSequenceTest(String event1, String event2, String event3) {
+    private void CommonFinalOnlyRSSequenceTest(String event) {
+        // event (final only)
+        PnDeliveryRequest pnDeliveryRequest = CommonUtils.createPnDeliveryRequest();
+
+        PaperProgressStatusEventDto analogMail = CommonUtils.createSimpleAnalogMail();
+        analogMail.setStatusCode(event);
+
+        SingleStatusUpdateDto extChannelMessage = new SingleStatusUpdateDto();
+        extChannelMessage.setAnalogMail(analogMail);
+
+        PnDeliveryRequest afterSetForUpdate = CommonUtils.createPnDeliveryRequest();
+        afterSetForUpdate.setStatusCode(ExternalChannelCodeEnum.getStatusCode(extChannelMessage.getAnalogMail().getStatusCode()));
+        afterSetForUpdate.setStatusDetail(extChannelMessage.getAnalogMail().getProductType()
+                .concat(" - ").concat(pnDeliveryRequest.getStatusCode()).concat(" - ").concat(extChannelMessage.getAnalogMail().getStatusDescription()));
+        afterSetForUpdate.setStatusDate(DateUtils.formatDate(Date.from(extChannelMessage.getAnalogMail().getStatusDateTime().toInstant())));
+
+        when(requestDeliveryDAO.getByRequestId(anyString())).thenReturn(Mono.just(pnDeliveryRequest));
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
+
+        // verifico che il flusso è stato completato con successo
+        assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());
+
+        // verifico che è stato inviato un evento a delivery-push
+        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(any(SendEvent.class));
+    }
+
+    private void CommonMetaDematAggregateRSSequenceTest(String event1, String event2, String event3, boolean checkDeliveryFailureCauseEnrichment) {
         final String deliveryFailureCause = "M06"; // wrong address
 
         // 1. event1 - save meta
@@ -50,7 +75,9 @@ class Paper_RSIT extends BaseTest {
         PaperProgressStatusEventDto analogMail = CommonUtils.createSimpleAnalogMail();
         analogMail.setStatusCode(event1);
         analogMail.setProductType("RS");
-        analogMail.setDeliveryFailureCause(deliveryFailureCause);
+        if (checkDeliveryFailureCauseEnrichment) {
+            analogMail.setDeliveryFailureCause(deliveryFailureCause);
+        }
 
         SingleStatusUpdateDto extChannelMessage = new SingleStatusUpdateDto();
         extChannelMessage.setAnalogMail(analogMail);
@@ -137,7 +164,11 @@ class Paper_RSIT extends BaseTest {
 
         verify(sqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
 
-        assertEquals(deliveryFailureCause, caturedSendEvent.getValue().getDeliveryFailureCause());
+        if (checkDeliveryFailureCauseEnrichment) {
+            assertEquals(deliveryFailureCause, caturedSendEvent.getValue().getDeliveryFailureCause());
+        } else {
+            assertNull(caturedSendEvent.getValue().getDeliveryFailureCause());
+        }
     }
 
     @DirtiesContext
@@ -145,29 +176,7 @@ class Paper_RSIT extends BaseTest {
     void Test_RS_Delivered__RECRS001C(){
         // final only -> send to delivery push
 
-        // RECRS001C (final only)
-        PnDeliveryRequest pnDeliveryRequest = CommonUtils.createPnDeliveryRequest();
-
-        PaperProgressStatusEventDto analogMail = CommonUtils.createSimpleAnalogMail();
-        analogMail.setStatusCode("RECRS001C");
-
-        SingleStatusUpdateDto extChannelMessage = new SingleStatusUpdateDto();
-        extChannelMessage.setAnalogMail(analogMail);
-
-        PnDeliveryRequest afterSetForUpdate = CommonUtils.createPnDeliveryRequest();
-        afterSetForUpdate.setStatusCode(ExternalChannelCodeEnum.getStatusCode(extChannelMessage.getAnalogMail().getStatusCode()));
-        afterSetForUpdate.setStatusDetail(extChannelMessage.getAnalogMail().getProductType()
-                .concat(" - ").concat(pnDeliveryRequest.getStatusCode()).concat(" - ").concat(extChannelMessage.getAnalogMail().getStatusDescription()));
-        afterSetForUpdate.setStatusDate(DateUtils.formatDate(Date.from(extChannelMessage.getAnalogMail().getStatusDateTime().toInstant())));
-
-        when(requestDeliveryDAO.getByRequestId(anyString())).thenReturn(Mono.just(pnDeliveryRequest));
-        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
-
-        // verifico che il flusso è stato completato con successo
-        assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());
-
-        // verifico che è stato inviato un evento a delivery-push
-        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(any(SendEvent.class));
+        CommonFinalOnlyRSSequenceTest("RECRS001C");
     }
 
     @DirtiesContext
@@ -179,105 +188,7 @@ class Paper_RSIT extends BaseTest {
         //
         // demat PROGRESS -> send to delivery push
 
-        CommonMetaDematAggregateRSSequenceTest("RECRS002A", "RECRS002B", "RECRS002C");
-
-        /*
-        final String deliveryFailureCause = "M06"; // wrong address
-
-        // 1. RECRS002A - save meta
-        PnDeliveryRequest pnDeliveryRequest = CommonUtils.createPnDeliveryRequest();
-
-        PaperProgressStatusEventDto analogMail = CommonUtils.createSimpleAnalogMail();
-        analogMail.setStatusCode("RECRS002A");
-        analogMail.setProductType("RS");
-        analogMail.setDeliveryFailureCause(deliveryFailureCause);
-
-        SingleStatusUpdateDto extChannelMessage = new SingleStatusUpdateDto();
-        extChannelMessage.setAnalogMail(analogMail);
-
-        PnDeliveryRequest afterSetForUpdate = CommonUtils.createPnDeliveryRequest();
-        afterSetForUpdate.setStatusCode(ExternalChannelCodeEnum.getStatusCode(extChannelMessage.getAnalogMail().getStatusCode()));
-        afterSetForUpdate.setStatusDetail(extChannelMessage.getAnalogMail().getProductType()
-                .concat(" - ").concat(pnDeliveryRequest.getStatusCode()).concat(" - ").concat(extChannelMessage.getAnalogMail().getStatusDescription()));
-        afterSetForUpdate.setStatusDate(DateUtils.formatDate(Date.from(extChannelMessage.getAnalogMail().getStatusDateTime().toInstant())));
-
-        when(requestDeliveryDAO.getByRequestId(anyString())).thenReturn(Mono.just(pnDeliveryRequest));
-        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
-
-        // verifico che il flusso è stato completato con successo
-        assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());
-
-
-        // 2. RECRS002B - save demat
-        pnDeliveryRequest = CommonUtils.createPnDeliveryRequest();
-
-        analogMail = CommonUtils.createSimpleAnalogMail();
-        analogMail.setStatusCode("RECRS002B");
-        analogMail.setProductType("RS");
-        analogMail.setAttachments(List.of(
-                new AttachmentDetailsDto()
-                        .documentType("CAD")
-                        .date(OffsetDateTime.now())
-                        .url("https://safestorage.it"),
-                new AttachmentDetailsDto()
-                        .documentType("23L")
-                        .date(OffsetDateTime.now())
-                        .url("https://safestorage.it"))
-        );
-
-        SingleStatusUpdateDto extChannelMessage2 = new SingleStatusUpdateDto();
-        extChannelMessage2.setAnalogMail(analogMail);
-
-        afterSetForUpdate = CommonUtils.createPnDeliveryRequest();
-        afterSetForUpdate.setStatusCode(ExternalChannelCodeEnum.getStatusCode(extChannelMessage2.getAnalogMail().getStatusCode()));
-        afterSetForUpdate.setStatusDetail(extChannelMessage2.getAnalogMail().getProductType()
-                .concat(" - ").concat(pnDeliveryRequest.getStatusCode()).concat(" - ").concat(extChannelMessage2.getAnalogMail().getStatusDescription()));
-        afterSetForUpdate.setStatusDate(DateUtils.formatDate(Date.from(extChannelMessage2.getAnalogMail().getStatusDateTime().toInstant())));
-
-        when(requestDeliveryDAO.getByRequestId(anyString())).thenReturn(Mono.just(pnDeliveryRequest));
-        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
-
-        // verifico che il flusso è stato completato con successo
-        assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage2, 0).block());
-
-        // check PROGRESS
-        ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
-
-        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
-
-        assertEquals(StatusCodeEnum.PROGRESS, caturedSendEvent.getValue().getStatusCode());
-
-        Mockito.reset(sqsSender);
-
-
-        // 3. RECRS002C - send to push, enriched
-        pnDeliveryRequest = CommonUtils.createPnDeliveryRequest();
-
-        analogMail = CommonUtils.createSimpleAnalogMail();
-        analogMail.setStatusCode("RECRS002C");
-        analogMail.setProductType("RS");
-        analogMail.setDeliveryFailureCause(deliveryFailureCause);
-
-        SingleStatusUpdateDto extChannelMessage3 = new SingleStatusUpdateDto();
-        extChannelMessage3.setAnalogMail(analogMail);
-
-        afterSetForUpdate = CommonUtils.createPnDeliveryRequest();
-        afterSetForUpdate.setStatusCode(ExternalChannelCodeEnum.getStatusCode(extChannelMessage3.getAnalogMail().getStatusCode()));
-        afterSetForUpdate.setStatusDetail(extChannelMessage3.getAnalogMail().getProductType()
-                .concat(" - ").concat(pnDeliveryRequest.getStatusCode()).concat(" - ").concat(extChannelMessage3.getAnalogMail().getStatusDescription()));
-        afterSetForUpdate.setStatusDate(DateUtils.formatDate(Date.from(extChannelMessage3.getAnalogMail().getStatusDateTime().toInstant())));
-
-        when(requestDeliveryDAO.getByRequestId(anyString())).thenReturn(Mono.just(pnDeliveryRequest));
-        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
-
-        // verifico che il flusso è stato completato con successo
-        assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage3, 0).block());
-
-        caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
-
-        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
-
-        assertEquals(deliveryFailureCause, caturedSendEvent.getValue().getDeliveryFailureCause());*/
+        CommonMetaDematAggregateRSSequenceTest("RECRS002A", "RECRS002B", "RECRS002C", true);
     }
 
     @DirtiesContext
@@ -289,102 +200,7 @@ class Paper_RSIT extends BaseTest {
         //
         // demat PROGRESS -> send to delivery push
 
-        final String deliveryFailureCause = "M06"; // wrong address
-
-        // 1. RECRS002D - save meta
-        PnDeliveryRequest pnDeliveryRequest = CommonUtils.createPnDeliveryRequest();
-
-        PaperProgressStatusEventDto analogMail = CommonUtils.createSimpleAnalogMail();
-        analogMail.setStatusCode("RECRS002D");
-        analogMail.setProductType("RS");
-        analogMail.setDeliveryFailureCause(deliveryFailureCause);
-
-        SingleStatusUpdateDto extChannelMessage = new SingleStatusUpdateDto();
-        extChannelMessage.setAnalogMail(analogMail);
-
-        PnDeliveryRequest afterSetForUpdate = CommonUtils.createPnDeliveryRequest();
-        afterSetForUpdate.setStatusCode(ExternalChannelCodeEnum.getStatusCode(extChannelMessage.getAnalogMail().getStatusCode()));
-        afterSetForUpdate.setStatusDetail(extChannelMessage.getAnalogMail().getProductType()
-                .concat(" - ").concat(pnDeliveryRequest.getStatusCode()).concat(" - ").concat(extChannelMessage.getAnalogMail().getStatusDescription()));
-        afterSetForUpdate.setStatusDate(DateUtils.formatDate(Date.from(extChannelMessage.getAnalogMail().getStatusDateTime().toInstant())));
-
-        when(requestDeliveryDAO.getByRequestId(anyString())).thenReturn(Mono.just(pnDeliveryRequest));
-        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
-
-        // verifico che il flusso è stato completato con successo
-        assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());
-
-
-        // 2. RECRS002E - save demat
-        pnDeliveryRequest = CommonUtils.createPnDeliveryRequest();
-
-        analogMail = CommonUtils.createSimpleAnalogMail();
-        analogMail.setStatusCode("RECRS002E");
-        analogMail.setProductType("RS");
-        analogMail.setAttachments(List.of(
-                new AttachmentDetailsDto()
-                        .documentType("CAD")
-                        .date(OffsetDateTime.now())
-                        .url("https://safestorage.it"),
-                new AttachmentDetailsDto()
-                        .documentType("23L")
-                        .date(OffsetDateTime.now())
-                        .url("https://safestorage.it"))
-        );
-
-        SingleStatusUpdateDto extChannelMessage2 = new SingleStatusUpdateDto();
-        extChannelMessage2.setAnalogMail(analogMail);
-
-        afterSetForUpdate = CommonUtils.createPnDeliveryRequest();
-        afterSetForUpdate.setStatusCode(ExternalChannelCodeEnum.getStatusCode(extChannelMessage2.getAnalogMail().getStatusCode()));
-        afterSetForUpdate.setStatusDetail(extChannelMessage2.getAnalogMail().getProductType()
-                .concat(" - ").concat(pnDeliveryRequest.getStatusCode()).concat(" - ").concat(extChannelMessage2.getAnalogMail().getStatusDescription()));
-        afterSetForUpdate.setStatusDate(DateUtils.formatDate(Date.from(extChannelMessage2.getAnalogMail().getStatusDateTime().toInstant())));
-
-        when(requestDeliveryDAO.getByRequestId(anyString())).thenReturn(Mono.just(pnDeliveryRequest));
-        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
-
-        // verifico che il flusso è stato completato con successo
-        assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage2, 0).block());
-
-        // check PROGRESS
-        ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
-
-        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
-
-        assertEquals(StatusCodeEnum.PROGRESS, caturedSendEvent.getValue().getStatusCode());
-
-        Mockito.reset(sqsSender);
-
-
-        // 3. RECRS002F - send to push, enriched
-        pnDeliveryRequest = CommonUtils.createPnDeliveryRequest();
-
-        analogMail = CommonUtils.createSimpleAnalogMail();
-        analogMail.setStatusCode("RECRS002F");
-        analogMail.setProductType("RS");
-        analogMail.setDeliveryFailureCause(deliveryFailureCause);
-
-        SingleStatusUpdateDto extChannelMessage3 = new SingleStatusUpdateDto();
-        extChannelMessage3.setAnalogMail(analogMail);
-
-        afterSetForUpdate = CommonUtils.createPnDeliveryRequest();
-        afterSetForUpdate.setStatusCode(ExternalChannelCodeEnum.getStatusCode(extChannelMessage3.getAnalogMail().getStatusCode()));
-        afterSetForUpdate.setStatusDetail(extChannelMessage3.getAnalogMail().getProductType()
-                .concat(" - ").concat(pnDeliveryRequest.getStatusCode()).concat(" - ").concat(extChannelMessage3.getAnalogMail().getStatusDescription()));
-        afterSetForUpdate.setStatusDate(DateUtils.formatDate(Date.from(extChannelMessage3.getAnalogMail().getStatusDateTime().toInstant())));
-
-        when(requestDeliveryDAO.getByRequestId(anyString())).thenReturn(Mono.just(pnDeliveryRequest));
-        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
-
-        // verifico che il flusso è stato completato con successo
-        assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage3, 0).block());
-
-        caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
-
-        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
-
-        assertEquals(deliveryFailureCause, caturedSendEvent.getValue().getDeliveryFailureCause());
+        CommonMetaDematAggregateRSSequenceTest("RECRS002D", "RECRS002E", "RECRS002F", true);
     }
 
     @DirtiesContext
@@ -392,47 +208,29 @@ class Paper_RSIT extends BaseTest {
     void Test_RS_DeliveredToStorage__RECRS003C(){
         // final only -> send to delivery push
 
-        // RECRS003C (final only)
-        PnDeliveryRequest pnDeliveryRequest = CommonUtils.createPnDeliveryRequest();
-
-        PaperProgressStatusEventDto analogMail = CommonUtils.createSimpleAnalogMail();
-        analogMail.setStatusCode("RECRS003C");
-
-        SingleStatusUpdateDto extChannelMessage = new SingleStatusUpdateDto();
-        extChannelMessage.setAnalogMail(analogMail);
-
-        PnDeliveryRequest afterSetForUpdate = CommonUtils.createPnDeliveryRequest();
-        afterSetForUpdate.setStatusCode(ExternalChannelCodeEnum.getStatusCode(extChannelMessage.getAnalogMail().getStatusCode()));
-        afterSetForUpdate.setStatusDetail(extChannelMessage.getAnalogMail().getProductType()
-                .concat(" - ").concat(pnDeliveryRequest.getStatusCode()).concat(" - ").concat(extChannelMessage.getAnalogMail().getStatusDescription()));
-        afterSetForUpdate.setStatusDate(DateUtils.formatDate(Date.from(extChannelMessage.getAnalogMail().getStatusDateTime().toInstant())));
-
-        when(requestDeliveryDAO.getByRequestId(anyString())).thenReturn(Mono.just(pnDeliveryRequest));
-        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
-
-        // verifico che il flusso è stato completato con successo
-        assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());
-
-        // verifico che è stato inviato un evento a delivery-push
-        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(any(SendEvent.class));
+        CommonFinalOnlyRSSequenceTest("RECRS003C");
     }
 
     @DirtiesContext
     @Test
     void Test_RS_RefusedToStorage__RECRS004A_RECRS004B_RECRS004C(){
         // meta, demat, final (send to delivery push)
-        // ...
+        //
         //
         // demat PROGRESS -> send to delivery push
+
+        CommonMetaDematAggregateRSSequenceTest("RECRS004A", "RECRS004B", "RECRS004C", false);
     }
 
     @DirtiesContext
     @Test
     void Test_RS_CompletedStorage__RECRS005A_RECRS005B_RECRS005C(){
         // meta, demat, final (send to delivery push)
-        // ...
+        //
         //
         // demat PROGRESS -> send to delivery push
+
+        CommonMetaDematAggregateRSSequenceTest("RECRS004A", "RECRS004B", "RECRS004C", false);
     }
 
     @DirtiesContext

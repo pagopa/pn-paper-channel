@@ -90,12 +90,6 @@ class Paper_890IT extends BaseTest {
 
     }
 
-
-    @Test
-    void test_890_deliverStockDossierClose_RECAG005C(){
-
-    }
-
     /*
     *****************************************************************************************************
      */
