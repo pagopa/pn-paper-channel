@@ -32,7 +32,7 @@ public abstract class SendToDeliveryPushHandler implements MessageHandler {
     protected SendEvent createSendEventMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
         SendEvent sendEvent = new SendEvent();
         sendEvent.setStatusCode(StatusCodeEnum.valueOf(entity.getStatusCode()));
-        sendEvent.setStatusDetail(entity.getStatusDetail());
+        sendEvent.setStatusDetail(entity.getStatusCode());
         sendEvent.setStatusDescription(entity.getStatusDetail());
 
 
