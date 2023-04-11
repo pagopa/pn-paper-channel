@@ -1,9 +1,12 @@
 package it.pagopa.pn.paperchannel.integrationtests;
 
 import it.pagopa.pn.paperchannel.config.BaseTest;
+import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnDiscoveredAddress;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.AttachmentDetailsDto;
+import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.DiscoveredAddressDto;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.SendEvent;
@@ -17,7 +20,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.annotation.DirtiesContext;
 import reactor.core.publisher.Mono;
 
 import java.time.OffsetDateTime;
@@ -29,7 +31,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
-class Paper_RSIT extends BaseTest {
+class Paper_RS_AR_IT extends BaseTest {
 
     @Autowired
     private PaperResultAsyncService paperResultAsyncService;
@@ -66,7 +68,7 @@ class Paper_RSIT extends BaseTest {
         verify(sqsSender, timeout(2000).times(1)).pushSendEvent(any(SendEvent.class));
     }
 
-    private void CommonMetaDematAggregateRSSequenceTest(String event1, String event2, String event3, boolean checkDeliveryFailureCauseEnrichment) {
+    private void CommonMetaDematAggregateSequenceTest(String event1, String event2, String event3, boolean checkDeliveryFailureCauseEnrichment, boolean checkDiscoveredAddress) {
         final String deliveryFailureCause = "M06"; // wrong address
 
         // 1. event1 - save meta
@@ -75,8 +77,20 @@ class Paper_RSIT extends BaseTest {
         PaperProgressStatusEventDto analogMail = CommonUtils.createSimpleAnalogMail();
         analogMail.setStatusCode(event1);
         analogMail.setProductType("RS");
+
         if (checkDeliveryFailureCauseEnrichment) {
             analogMail.setDeliveryFailureCause(deliveryFailureCause);
+        }
+        String addressLine = "discoveredAddress";
+        if (checkDiscoveredAddress) {
+            PnDiscoveredAddress address = new PnDiscoveredAddress();
+            address.setAddress(addressLine);
+
+            DiscoveredAddressDto discoveredAddressDto =
+                    new BaseMapperImpl<>(PnDiscoveredAddress.class, DiscoveredAddressDto.class)
+                            .toDTO(address);
+
+            analogMail.setDiscoveredAddress(discoveredAddressDto);
         }
 
         SingleStatusUpdateDto extChannelMessage = new SingleStatusUpdateDto();
@@ -132,6 +146,7 @@ class Paper_RSIT extends BaseTest {
 
         verify(sqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
 
+        assertEquals(pnDeliveryRequest.getRequestId(), caturedSendEvent.getValue().getRequestId());
         assertEquals(StatusCodeEnum.PROGRESS, caturedSendEvent.getValue().getStatusCode());
 
         Mockito.reset(sqsSender);
@@ -164,14 +179,22 @@ class Paper_RSIT extends BaseTest {
 
         verify(sqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
 
+        assertEquals(pnDeliveryRequest.getRequestId(), caturedSendEvent.getValue().getRequestId());
+
         if (checkDeliveryFailureCauseEnrichment) {
             assertEquals(deliveryFailureCause, caturedSendEvent.getValue().getDeliveryFailureCause());
         } else {
             assertNull(caturedSendEvent.getValue().getDeliveryFailureCause());
         }
+
+        if (checkDiscoveredAddress) {
+            assertNotNull(caturedSendEvent.getValue().getDiscoveredAddress());
+            assertEquals(addressLine, caturedSendEvent.getValue().getDiscoveredAddress().getAddress());
+        }
     }
 
-    @DirtiesContext
+    // ******** RS ********
+
     @Test
     void Test_RS_Delivered__RECRS001C(){
         // final only -> send to delivery push
@@ -179,7 +202,6 @@ class Paper_RSIT extends BaseTest {
         CommonFinalOnlyRSSequenceTest("RECRS001C");
     }
 
-    @DirtiesContext
     @Test
     void Test_RS_NotDelivered__RECRS002A_RECRS002B_RECRS002C(){
         // meta, demat, final (send to delivery push)
@@ -188,10 +210,9 @@ class Paper_RSIT extends BaseTest {
         //
         // demat PROGRESS -> send to delivery push
 
-        CommonMetaDematAggregateRSSequenceTest("RECRS002A", "RECRS002B", "RECRS002C", true);
+        CommonMetaDematAggregateSequenceTest("RECRS002A", "RECRS002B", "RECRS002C", true, false);
     }
 
-    @DirtiesContext
     @Test
     void Test_RS_AbsoluteUntraceability__RECRS002D_RECRS002E_RECRS002F(){
         // meta, demat, final (send to delivery push)
@@ -200,10 +221,9 @@ class Paper_RSIT extends BaseTest {
         //
         // demat PROGRESS -> send to delivery push
 
-        CommonMetaDematAggregateRSSequenceTest("RECRS002D", "RECRS002E", "RECRS002F", true);
+        CommonMetaDematAggregateSequenceTest("RECRS002D", "RECRS002E", "RECRS002F", true, false);
     }
 
-    @DirtiesContext
     @Test
     void Test_RS_DeliveredToStorage__RECRS003C(){
         // final only -> send to delivery push
@@ -211,7 +231,6 @@ class Paper_RSIT extends BaseTest {
         CommonFinalOnlyRSSequenceTest("RECRS003C");
     }
 
-    @DirtiesContext
     @Test
     void Test_RS_RefusedToStorage__RECRS004A_RECRS004B_RECRS004C(){
         // meta, demat, final (send to delivery push)
@@ -219,10 +238,9 @@ class Paper_RSIT extends BaseTest {
         //
         // demat PROGRESS -> send to delivery push
 
-        CommonMetaDematAggregateRSSequenceTest("RECRS004A", "RECRS004B", "RECRS004C", false);
+        CommonMetaDematAggregateSequenceTest("RECRS004A", "RECRS004B", "RECRS004C", false, false);
     }
 
-    @DirtiesContext
     @Test
     void Test_RS_CompletedStorage__RECRS005A_RECRS005B_RECRS005C(){
         // meta, demat, final (send to delivery push)
@@ -230,12 +248,70 @@ class Paper_RSIT extends BaseTest {
         //
         // demat PROGRESS -> send to delivery push
 
-        CommonMetaDematAggregateRSSequenceTest("RECRS004A", "RECRS004B", "RECRS004C", false);
+        CommonMetaDematAggregateSequenceTest("RECRS004A", "RECRS004B", "RECRS004C", false, false);
     }
 
-    @DirtiesContext
     @Test
     void Test_RS_TheftLossDeterioration__RECRS006__RetryPC(){
+        // retry paper channel
+        // ...
+    }
+
+    // ******** AR ********
+
+    @Test
+    void Test_AR_Delivered__RECRN001A_RECRN001B_RECRN001C(){
+        // meta, demat, final (send to delivery push)
+        // ...
+        //
+        // demat PROGRESS -> send to delivery push
+    }
+
+    @Test
+    void Test_AR_NotDelivered__RECRN002A_RECRN002B_RECRN002C(){
+        // meta, demat, final (send to delivery push)
+        // ...
+        // deliveryFailureCause
+        //
+        // demat PROGRESS -> send to delivery push
+    }
+
+    @Test
+    void Test_AR_AbsoluteUntraceability__RECRN002D_RECRN002E_RECRN002F(){
+        // meta, demat, final (send to delivery push)
+        // ...
+        // deliveryFailureCause
+        // optional discoveredAddress
+        //
+        // demat PROGRESS -> send to delivery push
+    }
+
+    @Test
+    void Test_AR_DeliveredToStorage__RECRN003A_RECRN003B_RECRN003C(){
+        // meta, demat, final (send to delivery push)
+        // ...
+        //
+        // demat PROGRESS -> send to delivery push
+    }
+
+    @Test
+    void Test_AR_RefusedToStorage__RECRN004A_RECRN004B_RECRN004C(){
+        // meta, demat, final (send to delivery push)
+        // ...
+        //
+        // demat PROGRESS -> send to delivery push
+    }
+
+    @Test
+    void Test_AR_CompletedStorage__RECRN005A_RECRN005B_RECRN005C(){
+        // meta, demat, final (send to delivery push)
+        // ...
+        //
+        // demat PROGRESS -> send to delivery push
+    }
+
+    @Test
+    void Test_AR_TheftLossDeterioration__RECRN006__RetryPC(){
         // retry paper channel
         // ...
     }
