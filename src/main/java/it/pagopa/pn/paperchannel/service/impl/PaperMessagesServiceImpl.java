@@ -1,6 +1,7 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
+import it.pagopa.pn.commons.utils.LogUtils;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.exception.PnPaperEventException;
@@ -27,6 +28,7 @@ import it.pagopa.pn.paperchannel.validator.PrepareRequestValidator;
 import it.pagopa.pn.paperchannel.validator.SendRequestValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -67,6 +69,7 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
 
         if (StringUtils.isEmpty(prepareRequest.getRelatedRequestId())){
             log.info("First attempt requestId {}", requestId);
+
             //case of 204
             return this.requestDeliveryDAO.getByRequestId(prepareRequest.getRequestId())
                     .flatMap(entity -> {
@@ -86,9 +89,23 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
 
         log.info("Second attempt requestId {}", requestId);
         return this.requestDeliveryDAO.getByRequestId(prepareRequest.getRelatedRequestId())
-                .flatMap(oldEntity -> {
+                .doOnNext(oldEntity -> {
                     prepareRequest.setRequestId(oldEntity.getRequestId());
                     PrepareRequestValidator.compareRequestEntity(prepareRequest, oldEntity, false);
+                })
+                .zipWhen(oldEntity -> addressDAO.findByRequestId(oldEntity.getRequestId())
+                            .map(address -> {
+                                log.debug("Address of the related request");
+                                log.debug(
+                                        "name surname: {}, address: {}, zip: {}, foreign state: {}",
+                                        LogUtils.maskGeneric(address.getFullName()),
+                                        LogUtils.maskGeneric(address.getAddress()),
+                                        LogUtils.maskGeneric(address.getCap()),
+                                        LogUtils.maskGeneric(address.getCountry())
+                                );
+                                return address;
+                            }), (entity, address) -> entity)
+                .flatMap(oldEntity -> {
                     prepareRequest.setRequestId(requestId);
 
                     return this.requestDeliveryDAO.getByRequestId(prepareRequest.getRequestId())
@@ -108,6 +125,14 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                                                 );
 
                                                 if (prepareRequest.getDiscoveredAddress() != null) {
+                                                    log.debug("Discovered address");
+                                                    log.debug(
+                                                            "name surname: {}, address: {}, zip: {}, foreign state: {}",
+                                                            LogUtils.maskGeneric(prepareRequest.getDiscoveredAddress().getFullname()),
+                                                            LogUtils.maskGeneric(prepareRequest.getDiscoveredAddress().getAddress()),
+                                                            LogUtils.maskGeneric(prepareRequest.getDiscoveredAddress().getCap()),
+                                                            LogUtils.maskGeneric(prepareRequest.getDiscoveredAddress().getCountry())
+                                                    );
                                                     pnLogAudit.addsSuccessResolveLogic(
                                                             prepareRequest.getIun(),
                                                             String.format("prepare requestId = %s, relatedRequestId = %s Discovered Address is present", requestId, prepareRequest.getRelatedRequestId())
@@ -129,7 +154,7 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                                                             response.getIun(), 0);
                                                 }
 
-                                                throw new PnPaperEventException(PreparePaperResponseMapper.fromEvent(prepareRequest.getRequestId()));
+                                                return Mono.error(new PnPaperEventException(PreparePaperResponseMapper.fromEvent(prepareRequest.getRequestId())));
                                             })
                             ));
                 })
@@ -160,13 +185,20 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                     if (StringUtils.equals(entity.getStatusCode(), StatusDeliveryEnum.IN_PROCESSING.getCode())) {
                        throw new PnGenericException(DELIVERY_REQUEST_IN_PROCESSING, DELIVERY_REQUEST_IN_PROCESSING.getMessage(), HttpStatus.CONFLICT);
                     }
-                    log.info("RequestId - {}, Proposal product type - {}, Product type - {}",
-                            entity.getRequestId(), entity.getProposalProductType(), entity.getProductType());
+                    log.info("RequestId - {}, Product type - {}",
+                            entity.getRequestId(), entity.getProductType());
                     return entity;
                 })
                 .flatMap(pnDeliveryRequest -> {
                     List<AttachmentInfo> attachments = pnDeliveryRequest.getAttachments().stream().map(AttachmentMapper::fromEntity).toList();
                     Address address = saveAddresses(sendRequest);
+                    log.debug(
+                            "name surname: {}, address: {}, zip: {}, foreign state: {}",
+                            LogUtils.maskGeneric(sendRequest.getReceiverAddress().getFullname()),
+                            LogUtils.maskGeneric(sendRequest.getReceiverAddress().getAddress()),
+                            LogUtils.maskGeneric(sendRequest.getReceiverAddress().getCap()),
+                            LogUtils.maskGeneric(sendRequest.getReceiverAddress().getCountry())
+                        );
                     return getSendResponse(
                             address,
                             attachments,
@@ -187,16 +219,26 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                         pnDeliveryRequest.setPrintType(sendRequest.getPrintType());
 
                         sendRequest.setRequestId(requestId.concat(Const.RETRY).concat("0"));
-                        pnLogAudit.addsBeforeSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDC_TRACE_ID_KEY)));
+                        pnLogAudit.addsBeforeSend(
+                                sendRequest.getIun(),
+                                String.format("prepare requestId = %s, trace_id = %s  request to External Channel",
+                                        sendRequest.getRequestId(), MDC.get(MDC_TRACE_ID_KEY))
+                        );
 
                         return this.externalChannelClient.sendEngageRequest(sendRequest, attachments)
                                 .then(Mono.defer(() -> {
-                                    pnLogAudit.addsSuccessSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDC_TRACE_ID_KEY)));
+                                    pnLogAudit.addsSuccessSend(sendRequest.getIun(),
+                                            String.format("prepare requestId = %s, trace_id = %s  request to External Channel",
+                                                    sendRequest.getRequestId(), MDC.get(MDC_TRACE_ID_KEY))
+                                    );
                                     return this.requestDeliveryDAO.updateData(pnDeliveryRequest);
                                 }))
                                 .map(updated -> sendResponse)
                                 .onErrorResume(ex -> {
-                                    pnLogAudit.addsFailSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDC_TRACE_ID_KEY)));
+                                    pnLogAudit.addsFailSend(sendRequest.getIun(),
+                                            String.format("prepare requestId = %s, trace_id = %s  request to External Channel",
+                                                    sendRequest.getRequestId(), MDC.get(MDC_TRACE_ID_KEY))
+                                    );
                                     return Mono.error(ex);
                                 });
 
@@ -280,7 +322,7 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
     }
 
     private Address saveAddresses(SendRequest sendRequest) {
-        Address address = AddressMapper.fromAnalogToAddress(sendRequest.getReceiverAddress(), sendRequest.getProductType().getValue(),Const.EXECUTION);
+        Address address = AddressMapper.fromAnalogToAddress(sendRequest.getReceiverAddress(), sendRequest.getProductType().getValue(), Const.EXECUTION);
         PnAddress addressEntity = AddressMapper.toEntity(address,sendRequest.getRequestId(), pnPaperChannelConfig);
         //save receiver address
         addressDAO.create(addressEntity);
