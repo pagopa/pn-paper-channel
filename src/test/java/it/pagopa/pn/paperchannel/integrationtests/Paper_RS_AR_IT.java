@@ -262,18 +262,22 @@ class Paper_RS_AR_IT extends BaseTest {
     @Test
     void Test_AR_Delivered__RECRN001A_RECRN001B_RECRN001C(){
         // meta, demat, final (send to delivery push)
-        // ...
+        //
         //
         // demat PROGRESS -> send to delivery push
+
+        CommonMetaDematAggregateSequenceTest("RECRN001A", "RECRN001B", "RECRN001C", false, false);
     }
 
     @Test
     void Test_AR_NotDelivered__RECRN002A_RECRN002B_RECRN002C(){
         // meta, demat, final (send to delivery push)
-        // ...
+        //
         // deliveryFailureCause
         //
         // demat PROGRESS -> send to delivery push
+
+        CommonMetaDematAggregateSequenceTest("RECRN002A", "RECRN002B", "RECRN002C", true, false);
     }
 
     @Test
@@ -289,25 +293,31 @@ class Paper_RS_AR_IT extends BaseTest {
     @Test
     void Test_AR_DeliveredToStorage__RECRN003A_RECRN003B_RECRN003C(){
         // meta, demat, final (send to delivery push)
-        // ...
+        //
         //
         // demat PROGRESS -> send to delivery push
+
+        CommonMetaDematAggregateSequenceTest("RECRN003A", "RECRN003B", "RECRN003C", false, false);
     }
 
     @Test
     void Test_AR_RefusedToStorage__RECRN004A_RECRN004B_RECRN004C(){
         // meta, demat, final (send to delivery push)
-        // ...
+        //
         //
         // demat PROGRESS -> send to delivery push
+
+        CommonMetaDematAggregateSequenceTest("RECRN004A", "RECRN004B", "RECRN004C", false, false);
     }
 
     @Test
     void Test_AR_CompletedStorage__RECRN005A_RECRN005B_RECRN005C(){
         // meta, demat, final (send to delivery push)
-        // ...
+        //
         //
         // demat PROGRESS -> send to delivery push
+
+        CommonMetaDematAggregateSequenceTest("RECRN005A", "RECRN005B", "RECRN005C", false, false);
     }
 
     @Test
