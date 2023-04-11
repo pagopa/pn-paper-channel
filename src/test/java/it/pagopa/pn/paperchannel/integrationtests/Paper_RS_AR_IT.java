@@ -283,11 +283,13 @@ class Paper_RS_AR_IT extends BaseTest {
     @Test
     void Test_AR_AbsoluteUntraceability__RECRN002D_RECRN002E_RECRN002F(){
         // meta, demat, final (send to delivery push)
-        // ...
+        //
         // deliveryFailureCause
         // optional discoveredAddress
         //
         // demat PROGRESS -> send to delivery push
+
+        CommonMetaDematAggregateSequenceTest("RECRN005A", "RECRN005B", "RECRN005C", true, true);
     }
 
     @Test
