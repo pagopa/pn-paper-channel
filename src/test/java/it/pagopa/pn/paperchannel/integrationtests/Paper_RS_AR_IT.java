@@ -64,11 +64,15 @@ class Paper_RS_AR_IT extends BaseTest {
         // verifico che il flusso è stato completato con successo
         assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());
 
+        ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
+
         // verifico che è stato inviato un evento a delivery-push
-        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(any(SendEvent.class));
+        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
+
+        assertEquals(StatusCodeEnum.OK, caturedSendEvent.getValue().getStatusCode());
     }
 
-    private void CommonMetaDematAggregateSequenceTest(String event1, String event2, String event3, boolean checkDeliveryFailureCauseEnrichment, boolean checkDiscoveredAddress) {
+    private void CommonMetaDematAggregateSequenceTest(String event1, String event2, String event3, StatusCodeEnum expectedStatusCode, boolean checkDeliveryFailureCauseEnrichment, boolean checkDiscoveredAddress) {
         final String deliveryFailureCause = "M06"; // wrong address
 
         // 1. event1 - save meta
@@ -181,6 +185,8 @@ class Paper_RS_AR_IT extends BaseTest {
 
         assertEquals(pnDeliveryRequest.getRequestId(), caturedSendEvent.getValue().getRequestId());
 
+        assertEquals(expectedStatusCode, caturedSendEvent.getValue().getStatusCode());
+
         if (checkDeliveryFailureCauseEnrichment) {
             assertEquals(deliveryFailureCause, caturedSendEvent.getValue().getDeliveryFailureCause());
         } else {
@@ -210,7 +216,7 @@ class Paper_RS_AR_IT extends BaseTest {
         //
         // demat PROGRESS -> send to delivery push
 
-        CommonMetaDematAggregateSequenceTest("RECRS002A", "RECRS002B", "RECRS002C", true, false);
+        CommonMetaDematAggregateSequenceTest("RECRS002A", "RECRS002B", "RECRS002C", StatusCodeEnum.KO, true, false);
     }
 
     @Test
@@ -221,7 +227,7 @@ class Paper_RS_AR_IT extends BaseTest {
         //
         // demat PROGRESS -> send to delivery push
 
-        CommonMetaDematAggregateSequenceTest("RECRS002D", "RECRS002E", "RECRS002F", true, false);
+        CommonMetaDematAggregateSequenceTest("RECRS002D", "RECRS002E", "RECRS002F", StatusCodeEnum.KO, true, false);
     }
 
     @Test
@@ -238,7 +244,7 @@ class Paper_RS_AR_IT extends BaseTest {
         //
         // demat PROGRESS -> send to delivery push
 
-        CommonMetaDematAggregateSequenceTest("RECRS004A", "RECRS004B", "RECRS004C", false, false);
+        CommonMetaDematAggregateSequenceTest("RECRS004A", "RECRS004B", "RECRS004C", StatusCodeEnum.OK,false, false);
     }
 
     @Test
@@ -248,7 +254,7 @@ class Paper_RS_AR_IT extends BaseTest {
         //
         // demat PROGRESS -> send to delivery push
 
-        CommonMetaDematAggregateSequenceTest("RECRS004A", "RECRS004B", "RECRS004C", false, false);
+        CommonMetaDematAggregateSequenceTest("RECRS004A", "RECRS004B", "RECRS004C", StatusCodeEnum.OK,false, false);
     }
 
     @Test
@@ -266,7 +272,7 @@ class Paper_RS_AR_IT extends BaseTest {
         //
         // demat PROGRESS -> send to delivery push
 
-        CommonMetaDematAggregateSequenceTest("RECRN001A", "RECRN001B", "RECRN001C", false, false);
+        CommonMetaDematAggregateSequenceTest("RECRN001A", "RECRN001B", "RECRN001C", StatusCodeEnum.OK,false, false);
     }
 
     @Test
@@ -277,7 +283,7 @@ class Paper_RS_AR_IT extends BaseTest {
         //
         // demat PROGRESS -> send to delivery push
 
-        CommonMetaDematAggregateSequenceTest("RECRN002A", "RECRN002B", "RECRN002C", true, false);
+        CommonMetaDematAggregateSequenceTest("RECRN002A", "RECRN002B", "RECRN002C", StatusCodeEnum.KO, true, false);
     }
 
     @Test
@@ -289,7 +295,7 @@ class Paper_RS_AR_IT extends BaseTest {
         //
         // demat PROGRESS -> send to delivery push
 
-        CommonMetaDematAggregateSequenceTest("RECRN005A", "RECRN005B", "RECRN005C", true, true);
+        CommonMetaDematAggregateSequenceTest("RECRN005A", "RECRN005B", "RECRN005C", StatusCodeEnum.OK, true, true);
     }
 
     @Test
@@ -299,7 +305,7 @@ class Paper_RS_AR_IT extends BaseTest {
         //
         // demat PROGRESS -> send to delivery push
 
-        CommonMetaDematAggregateSequenceTest("RECRN003A", "RECRN003B", "RECRN003C", false, false);
+        CommonMetaDematAggregateSequenceTest("RECRN003A", "RECRN003B", "RECRN003C", StatusCodeEnum.OK, false, false);
     }
 
     @Test
@@ -309,7 +315,7 @@ class Paper_RS_AR_IT extends BaseTest {
         //
         // demat PROGRESS -> send to delivery push
 
-        CommonMetaDematAggregateSequenceTest("RECRN004A", "RECRN004B", "RECRN004C", false, false);
+        CommonMetaDematAggregateSequenceTest("RECRN004A", "RECRN004B", "RECRN004C", StatusCodeEnum.KO, false, false);
     }
 
     @Test
@@ -319,7 +325,7 @@ class Paper_RS_AR_IT extends BaseTest {
         //
         // demat PROGRESS -> send to delivery push
 
-        CommonMetaDematAggregateSequenceTest("RECRN005A", "RECRN005B", "RECRN005C", false, false);
+        CommonMetaDematAggregateSequenceTest("RECRN005A", "RECRN005B", "RECRN005C", StatusCodeEnum.OK,false, false);
     }
 
     @Test
