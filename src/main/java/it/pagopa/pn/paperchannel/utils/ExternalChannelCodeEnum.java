@@ -22,7 +22,7 @@ public enum ExternalChannelCodeEnum {
     RECRN002F("KO"),
     RECRN003C("OK"),
     RECRN004C("KO"),
-    RECRN005C("OK"),
+    RECRN005C("KO"),
     RECAG002C("OK"),
     RECAG003C("KO"),
     RECAG003F("KO"),
