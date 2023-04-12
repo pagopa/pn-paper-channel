@@ -1,12 +1,11 @@
 package it.pagopa.pn.paperchannel.integrationtests;
 
 import it.pagopa.pn.paperchannel.config.BaseTest;
-import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
-import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDiscoveredAddress;
 import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
@@ -48,9 +47,6 @@ class Paper_RS_AR_IT extends BaseTest {
 
     @MockBean
     private RequestDeliveryDAO requestDeliveryDAO;
-
-    //@MockBean
-    //private PnPaperChannelConfig mockConfig;
 
     @MockBean
     private ExternalChannelClient mockExtChannel;
@@ -99,6 +95,15 @@ class Paper_RS_AR_IT extends BaseTest {
         extChannelMessage.setAnalogMail(analogMail);
 
         PnDeliveryRequest afterSetForUpdate = CommonUtils.createPnDeliveryRequest();
+
+        afterSetForUpdate.setProductType("RS"); // product type
+
+        var attachment = new PnAttachmentInfo();
+        attachment.setDocumentType("Plico");
+        attachment.setDate(OffsetDateTime.now().toString());
+        attachment.setUrl("https://safestorage.it");
+        afterSetForUpdate.setAttachments(List.of(attachment));
+
         afterSetForUpdate.setStatusCode(ExternalChannelCodeEnum.getStatusCode(extChannelMessage.getAnalogMail().getStatusCode()));
         afterSetForUpdate.setStatusDetail(extChannelMessage.getAnalogMail().getProductType()
                 .concat(" - ").concat(pnDeliveryRequest.getStatusCode()).concat(" - ").concat(extChannelMessage.getAnalogMail().getStatusDescription()));
@@ -112,7 +117,6 @@ class Paper_RS_AR_IT extends BaseTest {
         pnAddress.setCity("Milan");
         pnAddress.setCap("");
 
-        //when(mockConfig.getAttemptQueueExternalChannel()).thenReturn(1);
         when(mockAddressDAO.findAllByRequestId(anyString())).thenReturn(Mono.just(List.of(pnAddress)));
         when(mockExtChannel.sendEngageRequest(any(SendRequest.class), anyList())).thenReturn(Mono.empty());
 
@@ -120,6 +124,9 @@ class Paper_RS_AR_IT extends BaseTest {
         assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());
 
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
+
+        // verifico che viene invocato ext-channels
+        verify(mockExtChannel, timeout(2000).times(1)).sendEngageRequest(any(SendRequest.class), anyList());
 
         // verifico che è stato inviato un evento a delivery-push
         verify(sqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
@@ -318,9 +325,10 @@ class Paper_RS_AR_IT extends BaseTest {
     @Test
     void Test_RS_TheftLossDeterioration__RECRS006__RetryPC(){
         // retry paper channel
-        // ...
+        //
+        // progress + retry
 
-        //CommonFinalOnlyRetrySequenceTest("RECRS006");
+        CommonFinalOnlyRetrySequenceTest("RECRS006");
     }
 
     // ******** AR ********
@@ -391,6 +399,9 @@ class Paper_RS_AR_IT extends BaseTest {
     @Test
     void Test_AR_TheftLossDeterioration__RECRN006__RetryPC(){
         // retry paper channel
-        // ...
+        //
+        // progress + retry
+
+        CommonFinalOnlyRetrySequenceTest("RECRN006");
     }
 }
