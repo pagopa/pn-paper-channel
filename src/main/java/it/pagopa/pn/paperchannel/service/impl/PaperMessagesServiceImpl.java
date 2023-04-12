@@ -24,11 +24,11 @@ import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
 import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
+import it.pagopa.pn.paperchannel.utils.Utility;
 import it.pagopa.pn.paperchannel.validator.PrepareRequestValidator;
 import it.pagopa.pn.paperchannel.validator.SendRequestValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.Log;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -271,10 +271,11 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
         return this.calculator(attachments, address, productType, isReversePrinter)
                 .map(amout -> {
                     int totalPages = getNumberOfPages(attachments, isReversePrinter, true);
-                    log.debug("Amount : {}", amout);
+                    float amoutPriceFormat = Utility.getPriceFormat(amout);
+                    log.debug("Amount : {}", amoutPriceFormat);
                     log.debug("Total pages : {}", totalPages);
                     SendResponse response = new SendResponse();
-                    response.setAmount((int) (amout*100));
+                    response.setAmount((int) (amoutPriceFormat*100));
                     response.setNumberOfPages(totalPages);
                     response.setEnvelopeWeight(getLetterWeight(totalPages));
                     return response;
