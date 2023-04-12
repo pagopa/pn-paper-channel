@@ -257,7 +257,7 @@ class Paper_RS_AR_IT extends BaseTest {
         //
         // demat PROGRESS -> send to delivery push
 
-        CommonMetaDematAggregateSequenceTest("RECRS004A", "RECRS004B", "RECRS004C", StatusCodeEnum.OK,false, false);
+        CommonMetaDematAggregateSequenceTest("RECRS005A", "RECRS005B", "RECRS005C", StatusCodeEnum.OK,false, false);
     }
 
     @Test
@@ -298,7 +298,7 @@ class Paper_RS_AR_IT extends BaseTest {
         //
         // demat PROGRESS -> send to delivery push
 
-        CommonMetaDematAggregateSequenceTest("RECRN005A", "RECRN005B", "RECRN005C", StatusCodeEnum.OK, true, true);
+        CommonMetaDematAggregateSequenceTest("RECRN002D", "RECRN002E", "RECRN002F", StatusCodeEnum.KO, true, true);
     }
 
     @Test
