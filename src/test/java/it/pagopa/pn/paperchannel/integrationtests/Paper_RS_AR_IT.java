@@ -121,11 +121,7 @@ class Paper_RS_AR_IT extends BaseTest {
         analogMail.setProductType("RS");
         analogMail.setAttachments(List.of(
                 new AttachmentDetailsDto()
-                        .documentType("CAD")
-                        .date(OffsetDateTime.now())
-                        .url("https://safestorage.it"),
-                new AttachmentDetailsDto()
-                        .documentType("23L")
+                        .documentType("Plico")
                         .date(OffsetDateTime.now())
                         .url("https://safestorage.it"))
         );
@@ -148,10 +144,17 @@ class Paper_RS_AR_IT extends BaseTest {
         // check PROGRESS
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
-        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
+        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture()); // 1 send for each attachment of the correct type
 
         assertEquals(pnDeliveryRequest.getRequestId(), caturedSendEvent.getValue().getRequestId());
         assertEquals(StatusCodeEnum.PROGRESS, caturedSendEvent.getValue().getStatusCode());
+
+        // sent attachments
+        var caturedAttachments = caturedSendEvent.getValue().getAttachments();
+        assertNotNull(caturedAttachments);
+        assertEquals(1, caturedAttachments.size());
+        assertEquals("Plico", caturedAttachments.get(0).getDocumentType());
+        assertEquals("https://safestorage.it", caturedAttachments.get(0).getUrl());
 
         Mockito.reset(sqsSender);
 
