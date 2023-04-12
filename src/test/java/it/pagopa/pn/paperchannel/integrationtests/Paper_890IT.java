@@ -8,6 +8,7 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDiscoveredAddress;
 import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
@@ -16,6 +17,7 @@ import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.Attachme
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.DiscoveredAddressDto;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.SingleStatusUpdateDto;
+import it.pagopa.pn.paperchannel.rest.v1.dto.ProductTypeEnum;
 import it.pagopa.pn.paperchannel.rest.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.rest.v1.dto.SendRequest;
 import it.pagopa.pn.paperchannel.rest.v1.dto.StatusCodeEnum;
@@ -34,10 +36,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import reactor.core.publisher.Mono;
 
 import java.time.OffsetDateTime;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -59,14 +58,26 @@ class Paper_890IT extends BaseTest {
     @MockBean
     private RequestDeliveryDAO requestDeliveryDAO;
 
+    @MockBean
+    private ExternalChannelClient mockExtChannel;
+
+    @MockBean
+    private AddressDAO mockAddressDAO;
+
+    @MockBean
+    private RetryableErrorMessageHandler handler;
+
+    @MockBean
+    private PaperRequestErrorDAO mockRequestError;
+
 
 
     @Test
     void test_890_DossierClose_RECAG001C(){
-        generateEvent("RECAG001A","","",null);
-        generateEvent("RECAG001B","","",Arrays.asList("23L"));
+        generateEvent("RECAG001A","","",null,"");
+        generateEvent("RECAG001B","","",Arrays.asList("23L"),"");
 
-        generateEvent("RECAG001C","","",null);
+        generateEvent("RECAG001C","","",null,"");
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
         verify(sqsSender, timeout(2000).times(2)).pushSendEvent(caturedSendEvent.capture());
@@ -78,11 +89,11 @@ class Paper_890IT extends BaseTest {
 
     @Test
     void test_890_DeliverDossierClose_RECAG002C(){
-        generateEvent("RECAG002A","","",null);
-        generateEvent("RECAG002B","","",Arrays.asList("CAN","23L"));
+        generateEvent("RECAG002A","","",null,"");
+        generateEvent("RECAG002B","","",Arrays.asList("CAN","23L"),"");
         //CAN OPZIONALE DA RIPETERE SENZA
 
-        generateEvent("RECAG002C","","",null);
+        generateEvent("RECAG002C","","",null,"");
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
         verify(sqsSender, timeout(2000).times(2)).pushSendEvent(caturedSendEvent.capture());
@@ -94,15 +105,15 @@ class Paper_890IT extends BaseTest {
     @Test
     void test_890_refusedDossierClose_RECAG007C(){
 
-        generateEvent("RECAG011B","","", List.of("ARCAD"));
+        generateEvent("RECAG011B","","", List.of("ARCAD"),"");
 
         //DA RITESTARE SENZA 11B con RECAG007B con ARCAD/CAD
-        generateEvent("RECAG007A","","",null);
-        generateEvent("RECAG007B","","", List.of("Plico"));
-        generateEvent("RECAG007C","","",null);
+        generateEvent("RECAG007A","","",null,"");
+        generateEvent("RECAG007B","","", List.of("Plico"),"");
+        generateEvent("RECAG007C","","",null,"");
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
-        verify(sqsSender, timeout(2000).times(4)).pushSendEvent(caturedSendEvent.capture());
+        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
 
         assertEquals(StatusCodeEnum.KO, caturedSendEvent.getValue().getStatusCode());
         log.info("Event: \n"+caturedSendEvent.getAllValues());
@@ -110,32 +121,36 @@ class Paper_890IT extends BaseTest {
 
     @Test
     void test_890_theftOrLoss_RECAG004(){
-/*
+
         PnAddress pnAddress = new PnAddress();
         pnAddress.setTypology(AddressTypeEnum.RECEIVER_ADDRESS.name());
         pnAddress.setCity("Milan");
         pnAddress.setCap("");
 
-        when(mockConfig.getAttemptQueueExternalChannel()).thenReturn(1);
+
         when(mockAddressDAO.findAllByRequestId(anyString())).thenReturn(Mono.just(List.of(pnAddress)));
         when(mockExtChannel.sendEngageRequest(any(SendRequest.class), anyList())).thenReturn(Mono.empty());
 
-        generateEvent("RECAG004","",null);
+        generateEvent("RECAG004","","",null,"retry");
 
         verify(mockExtChannel, timeout(2000).times(1)).sendEngageRequest(any(SendRequest.class), anyList());
-        verify(sqsSender, times(1)).pushSendEvent(any(SendEvent.class));
- */
+        ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
+
+        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
+
+        assertEquals(StatusCodeEnum.PROGRESS, caturedSendEvent.getValue().getStatusCode());
+
     }
 
     @Test
     void test_890_deliverStockDossierClose_RECAG005C(){
-        generateEvent("RECAG011B","","", List.of("ARCAD"));
+        generateEvent("RECAG011B","","", List.of("ARCAD"),"");
         //DA RITESTARE SENZA 11B con RECAG005B con ARCAD/CAD
 
-        generateEvent("RECAG005A","","",null);
-        generateEvent("RECAG005B","","",List.of("23L"));
+        generateEvent("RECAG005A","","",null,"");
+        generateEvent("RECAG005B","","",List.of("23L"),"");
 
-        generateEvent("RECAG005C","","",null);
+        generateEvent("RECAG005C","","",null,"");
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
         verify(sqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
@@ -146,11 +161,11 @@ class Paper_890IT extends BaseTest {
 
     @Test
     void test_890_deliverStockDossierClose_RECAG006C(){
-        generateEvent("RECAG011B","","", List.of("ARCAD"));
+        generateEvent("RECAG011B","","", List.of("ARCAD"),"");
         //DA RITESTARE SENZA 11B con RECAG006B con ARCAD/CAD
-        generateEvent("RECAG006A","","",null);
-        generateEvent("RECAG006B","","", List.of("23L"));
-        generateEvent("RECAG006C","","",null);
+        generateEvent("RECAG006A","","",null,"");
+        generateEvent("RECAG006B","","", List.of("23L"),"");
+        generateEvent("RECAG006C","","",null,"");
 
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
@@ -163,9 +178,9 @@ class Paper_890IT extends BaseTest {
 
     @Test
     void test_890_NotDeliverDossierClose_RECAG003A_RECAG003C(){
-        generateEvent("RECAG003A","M02","",null);
-        generateEvent("RECAG003B","","",List.of("Plico"));
-        generateEvent("RECAG003C","","",null);
+        generateEvent("RECAG003A","M02","",null,"");
+        generateEvent("RECAG003B","","",List.of("Plico"),"");
+        generateEvent("RECAG003C","","",null,"");
 
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
         verify(sqsSender, timeout(2000).times(2)).pushSendEvent(caturedSendEvent.capture());
@@ -177,13 +192,13 @@ class Paper_890IT extends BaseTest {
 
     @Test
     void test_890_untraceableDossierClose_RECAG003D_RECAG003F(){
-        generateEvent("RECAG003D","M01","",null);
-        generateEvent("RECAG003E","","",List.of("Plico","Indagine"));
+        generateEvent("RECAG003D","M01","discoveredAddress",null,"");
+        generateEvent("RECAG003E","","",List.of("Plico","Indagine"),"");
         //Da ritestare con il RECAG003E ripetuto con un attach solo per volta (vale per tutti quelli con più attach)
-        generateEvent("RECAG003F","","",null);
+        generateEvent("RECAG003F","","",null,"");
 
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
-        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
+        verify(sqsSender, timeout(2000).times(3)).pushSendEvent(caturedSendEvent.capture());
         log.info("Event: \n"+caturedSendEvent.getAllValues());
 
         assertEquals(StatusCodeEnum.KO, caturedSendEvent.getValue().getStatusCode());
@@ -194,13 +209,13 @@ class Paper_890IT extends BaseTest {
     void test_890_finishedDossierClose_RECAG012_RECAG011B_RECAG008C(){
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
-        generateEvent("RECAG012","","",null);
-        generateEvent("RECAG011B","","",Arrays.asList("23L","CAD"));
+        generateEvent("RECAG012","","",null,"");
+        generateEvent("RECAG011B","","",Arrays.asList("23L","CAD"),"");
 
         verify(sqsSender, timeout(2000).times(2)).pushSendEvent(caturedSendEvent.capture());
         log.info("Event: \n"+caturedSendEvent.getAllValues());
 
-        generateEvent("RECAG008C","","",null);
+        generateEvent("RECAG008C","","",null,"");
 
         //AGGIUNGERE CONTROLLO SULLA GENERAZIONE DI PNAG012
         verify(sqsSender, timeout(2000).times(3)).pushSendEvent(caturedSendEvent.capture());
@@ -214,14 +229,14 @@ class Paper_890IT extends BaseTest {
     void test_890_DeliveredDossierClose_RECAG012_RECAG011B_RECAG005C(){
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
-        generateEvent("RECAG012","","",null);
-        generateEvent("RECAG011B","","",Arrays.asList("23L","CAD"));
+        generateEvent("RECAG012","","",null,"");
+        generateEvent("RECAG011B","","",Arrays.asList("23L","CAD"),"");
 
         verify(sqsSender, timeout(2000).times(2)).pushSendEvent(caturedSendEvent.capture());
         log.info("Event: \n"+caturedSendEvent.getAllValues());
 
         //AGGIUNGERE CONTROLLO SULLA GENERAZIONE DI PNAG012
-        generateEvent("RECAG005C","","",null);
+        generateEvent("RECAG005C","","",null,"");
 
         verify(sqsSender, timeout(2000).times(3)).pushSendEvent(caturedSendEvent.capture());
         log.info("Event: \n"+caturedSendEvent.getAllValues());
@@ -233,13 +248,13 @@ class Paper_890IT extends BaseTest {
     void test_890_DeliveredDossierClose_RECAG012_RECAG011B_RECAG006C(){
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
-        generateEvent("RECAG012","","",null);
-        generateEvent("RECAG011B","","",Arrays.asList("23L","CAD"));
+        generateEvent("RECAG012","","",null,"");
+        generateEvent("RECAG011B","","",Arrays.asList("23L","CAD"),"");
 
         verify(sqsSender, timeout(2000).times(2)).pushSendEvent(caturedSendEvent.capture());
         log.info("Event: \n"+caturedSendEvent.getAllValues());
 
-        generateEvent("RECAG006C","","",null);
+        generateEvent("RECAG006C","","",null,"");
 
         verify(sqsSender, timeout(2000).times(3)).pushSendEvent(caturedSendEvent.capture());
         log.info("Event: \n"+caturedSendEvent.getAllValues());
@@ -251,13 +266,13 @@ class Paper_890IT extends BaseTest {
     void test_890_rejectedDossierClose_RECAG012_RECAG011B_RECAG007C(){
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
-        generateEvent("RECAG012","","",null);
-        generateEvent("RECAG011B","","",Arrays.asList("23L","CAD"));
+        generateEvent("RECAG012","","",null,"");
+        generateEvent("RECAG011B","","",Arrays.asList("23L","CAD"),"");
 
         verify(sqsSender, timeout(2000).times(2)).pushSendEvent(caturedSendEvent.capture());
         log.info("Event: \n"+caturedSendEvent.getAllValues());
 
-        generateEvent("RECAG007C","","",null);
+        generateEvent("RECAG007C","","",null,"");
 
         verify(sqsSender, timeout(2000).times(3)).pushSendEvent(caturedSendEvent.capture());
         log.info("Event: \n"+caturedSendEvent.getAllValues());
@@ -271,15 +286,15 @@ class Paper_890IT extends BaseTest {
     void test_890_finishedDossierClose_RECAG011B_RECAG012_RECAG011B_RECAG008C(){
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
-        generateEvent("RECAG011B","","",Arrays.asList("23L","CAD"));
+        generateEvent("RECAG011B","","",Arrays.asList("23L","CAD"),"");
 
         verify(sqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
         log.info("Event: \n"+caturedSendEvent.getAllValues());
 
-        generateEvent("RECAG012","","",null);
-        generateEvent("RECAG011B","","",Arrays.asList("23L","CAD"));
+        generateEvent("RECAG012","","",null,"");
+        generateEvent("RECAG011B","","",Arrays.asList("23L","CAD"),"");
 
-        generateEvent("RECAG008C","","",null);
+        generateEvent("RECAG008C","","",null,"");
 
         verify(sqsSender, timeout(2000).times(4)).pushSendEvent(caturedSendEvent.capture());
         log.info("Event: \n"+caturedSendEvent.getAllValues());
@@ -292,15 +307,15 @@ class Paper_890IT extends BaseTest {
     void test_890_DeliveredDossierClose_RECAG011B_RECAG012_RECAG011B_RECAG005C(){
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
-        generateEvent("RECAG011B","","",Arrays.asList("23L","CAD"));
+        generateEvent("RECAG011B","","",Arrays.asList("23L","CAD"),"");
 
         verify(sqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
         log.info("Event: \n"+caturedSendEvent.getAllValues());
 
-        generateEvent("RECAG012","","",null);
-        generateEvent("RECAG011B","","",Arrays.asList("23L","CAD"));
+        generateEvent("RECAG012","","",null,"");
+        generateEvent("RECAG011B","","",Arrays.asList("23L","CAD"),"");
 
-        generateEvent("RECAG005C","","",null);
+        generateEvent("RECAG005C","","",null,"");
 
         verify(sqsSender, timeout(2000).times(4)).pushSendEvent(caturedSendEvent.capture());
         log.info("Event: \n"+caturedSendEvent.getAllValues());
@@ -313,15 +328,15 @@ class Paper_890IT extends BaseTest {
     void test_890_DeliveredDossierClose_RECAG011B_RECAG012_RECAG011B_RECAG006C(){
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
-        generateEvent("RECAG011B","","",Arrays.asList("23L","CAD"));
+        generateEvent("RECAG011B","","",Arrays.asList("23L","CAD"),"");
 
         verify(sqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
         log.info("Event: \n"+caturedSendEvent.getAllValues());
 
-        generateEvent("RECAG012","","",null);
-        generateEvent("RECAG011B","","",Arrays.asList("23L","CAD"));
+        generateEvent("RECAG012","","",null,"");
+        generateEvent("RECAG011B","","",Arrays.asList("23L","CAD"),"");
 
-        generateEvent("RECAG006C","","",null);
+        generateEvent("RECAG006C","","",null,"");
 
         verify(sqsSender, timeout(2000).times(4)).pushSendEvent(caturedSendEvent.capture());
         log.info("Event: \n"+caturedSendEvent.getAllValues());
@@ -333,15 +348,15 @@ class Paper_890IT extends BaseTest {
     void test_890_rejectedDossierClose_RECAG011B_RECAG012_RECAG011B_RECAG007C(){
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
-        generateEvent("RECAG011B","","",Arrays.asList("23L","CAD"));
+        generateEvent("RECAG011B","","",Arrays.asList("23L","CAD"),"");
 
         verify(sqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
         log.info("Event: \n"+caturedSendEvent.getAllValues());
 
-        generateEvent("RECAG012","","",null);
-        generateEvent("RECAG011B","","",Arrays.asList("23L","CAD"));
+        generateEvent("RECAG012","","",null,"");
+        generateEvent("RECAG011B","","",Arrays.asList("23L","CAD"),"");
 
-        generateEvent("RECAG007C","","",null);
+        generateEvent("RECAG007C","","",null,"");
 
         verify(sqsSender, timeout(2000).times(4)).pushSendEvent(caturedSendEvent.capture());
         log.info("Event: \n"+caturedSendEvent.getAllValues());
@@ -354,12 +369,12 @@ class Paper_890IT extends BaseTest {
     void test_890_deliverStockDossierClose_RECAG011B_RECAG005C(){
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
-        generateEvent("RECAG011B","","",Arrays.asList("23L","CAD"));
+        generateEvent("RECAG011B","","",Arrays.asList("23L","CAD"),"");
 
         verify(sqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
         log.info("Event: \n"+caturedSendEvent.getAllValues());
 
-        generateEvent("RECAG005C","","",null);
+        generateEvent("RECAG005C","","",null,"");
 
         verify(sqsSender, timeout(2000).times(2)).pushSendEvent(caturedSendEvent.capture());
         log.info("Event: \n"+caturedSendEvent.getAllValues());
@@ -371,12 +386,12 @@ class Paper_890IT extends BaseTest {
     void test_890_deliverStockDossierClose_RECAG011B_RECAG006C(){
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
-        generateEvent("RECAG011B","","",Arrays.asList("23L","CAD"));
+        generateEvent("RECAG011B","","",Arrays.asList("23L","CAD"),"");
 
         verify(sqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
         log.info("Event: \n"+caturedSendEvent.getAllValues());
 
-        generateEvent("RECAG006C","","",null);
+        generateEvent("RECAG006C","","",null,"");
 
         verify(sqsSender, timeout(2000).times(2)).pushSendEvent(caturedSendEvent.capture());
         log.info("Event: \n"+caturedSendEvent.getAllValues());
@@ -389,12 +404,12 @@ class Paper_890IT extends BaseTest {
     void test_890_refusedDossierClose_RECAG011B_RECAG007C(){
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
-        generateEvent("RECAG011B","","",Arrays.asList("23L","CAD"));
+        generateEvent("RECAG011B","","",Arrays.asList("23L","CAD"),"");
 
         verify(sqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
         log.info("Event: \n"+caturedSendEvent.getAllValues());
 
-        generateEvent("RECAG007C","","",null);
+        generateEvent("RECAG007C","","",null,"");
 
         verify(sqsSender, timeout(2000).times(2)).pushSendEvent(caturedSendEvent.capture());
         log.info("Event: \n"+caturedSendEvent.getAllValues());
@@ -404,7 +419,7 @@ class Paper_890IT extends BaseTest {
     }
 
 
-    private void generateEvent(String statusCode, String deliveryFailureCause, String discoveryAddress, List<String> attach){
+    private void generateEvent(String statusCode, String deliveryFailureCause, String discoveredAddress, List<String> attach, String testType){
         // event (final only)
         PnDeliveryRequest pnDeliveryRequest = CommonUtils.createPnDeliveryRequest();
 
@@ -429,9 +444,9 @@ class Paper_890IT extends BaseTest {
             analogMail.setAttachments(attachments);
         }
 
-        if (discoveryAddress != null && !discoveryAddress.trim().equalsIgnoreCase("")) {
+        if (discoveredAddress != null && !discoveredAddress.trim().equalsIgnoreCase("")) {
             PnDiscoveredAddress address = new PnDiscoveredAddress();
-            address.setAddress(discoveryAddress);
+            address.setAddress(discoveredAddress);
 
             DiscoveredAddressDto discoveredAddressDto =
                     new BaseMapperImpl<>(PnDiscoveredAddress.class, DiscoveredAddressDto.class)
@@ -446,6 +461,16 @@ class Paper_890IT extends BaseTest {
         extChannelMessage.setAnalogMail(analogMail);
 
         PnDeliveryRequest afterSetForUpdate = CommonUtils.createPnDeliveryRequest();
+
+        if(testType != null && testType.equalsIgnoreCase("retry")){
+            afterSetForUpdate.setProductType("_890");
+            var attachment = new PnAttachmentInfo();
+            attachment.setDocumentType("Plico");
+            attachment.setDate(OffsetDateTime.now().toString());
+            attachment.setUrl("https://safestorage.it");
+            afterSetForUpdate.setAttachments(List.of(attachment));
+        }
+
         afterSetForUpdate.setStatusCode(ExternalChannelCodeEnum.getStatusCode(extChannelMessage.getAnalogMail().getStatusCode()));
         afterSetForUpdate.setStatusDetail(extChannelMessage.getAnalogMail().getProductType()
                 .concat(" - ").concat(pnDeliveryRequest.getStatusCode()).concat(" - ").concat(extChannelMessage.getAnalogMail().getStatusDescription()));
