@@ -58,7 +58,7 @@ public class AggregatorMessageHandler extends SendToDeliveryPushHandler {
     private PaperProgressStatusEventDto enrichEvent(PaperProgressStatusEventDto paperRequest, PnEventMeta pnEventMeta) {
         paperRequest.setDeliveryFailureCause(pnEventMeta.getDeliveryFailureCause());
 
-        if (pnEventMeta.getDiscoveredAddress() != null )
+        if (pnEventMeta.getDiscoveredAddress() != null)
         {
             DiscoveredAddressDto discoveredAddressDto =
                     new BaseMapperImpl<>(PnDiscoveredAddress.class, DiscoveredAddressDto.class)

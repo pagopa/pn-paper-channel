@@ -1,18 +1,25 @@
 package it.pagopa.pn.paperchannel.integrationtests;
 
 import it.pagopa.pn.paperchannel.config.BaseTest;
+import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
+import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDiscoveredAddress;
+import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.AttachmentDetailsDto;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.DiscoveredAddressDto;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.SendEvent;
+import it.pagopa.pn.paperchannel.rest.v1.dto.SendRequest;
 import it.pagopa.pn.paperchannel.rest.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.service.PaperResultAsyncService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
+import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum;
 import org.junit.jupiter.api.Test;
@@ -42,6 +49,15 @@ class Paper_RS_AR_IT extends BaseTest {
     @MockBean
     private RequestDeliveryDAO requestDeliveryDAO;
 
+    //@MockBean
+    //private PnPaperChannelConfig mockConfig;
+
+    @MockBean
+    private ExternalChannelClient mockExtChannel;
+
+    @MockBean
+    private AddressDAO mockAddressDAO;
+
     private void CommonFinalOnlyRSSequenceTest(String event) {
         // event (final only)
         PnDeliveryRequest pnDeliveryRequest = CommonUtils.createPnDeliveryRequest();
@@ -70,6 +86,45 @@ class Paper_RS_AR_IT extends BaseTest {
         verify(sqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
 
         assertEquals(StatusCodeEnum.OK, caturedSendEvent.getValue().getStatusCode());
+    }
+
+    private void CommonFinalOnlyRetrySequenceTest(String event) {
+        // event (final only)
+        PnDeliveryRequest pnDeliveryRequest = CommonUtils.createPnDeliveryRequest();
+
+        PaperProgressStatusEventDto analogMail = CommonUtils.createSimpleAnalogMail();
+        analogMail.setStatusCode(event);
+
+        SingleStatusUpdateDto extChannelMessage = new SingleStatusUpdateDto();
+        extChannelMessage.setAnalogMail(analogMail);
+
+        PnDeliveryRequest afterSetForUpdate = CommonUtils.createPnDeliveryRequest();
+        afterSetForUpdate.setStatusCode(ExternalChannelCodeEnum.getStatusCode(extChannelMessage.getAnalogMail().getStatusCode()));
+        afterSetForUpdate.setStatusDetail(extChannelMessage.getAnalogMail().getProductType()
+                .concat(" - ").concat(pnDeliveryRequest.getStatusCode()).concat(" - ").concat(extChannelMessage.getAnalogMail().getStatusDescription()));
+        afterSetForUpdate.setStatusDate(DateUtils.formatDate(Date.from(extChannelMessage.getAnalogMail().getStatusDateTime().toInstant())));
+
+        when(requestDeliveryDAO.getByRequestId(anyString())).thenReturn(Mono.just(pnDeliveryRequest));
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
+
+        PnAddress pnAddress = new PnAddress();
+        pnAddress.setTypology(AddressTypeEnum.RECEIVER_ADDRESS.name());
+        pnAddress.setCity("Milan");
+        pnAddress.setCap("");
+
+        //when(mockConfig.getAttemptQueueExternalChannel()).thenReturn(1);
+        when(mockAddressDAO.findAllByRequestId(anyString())).thenReturn(Mono.just(List.of(pnAddress)));
+        when(mockExtChannel.sendEngageRequest(any(SendRequest.class), anyList())).thenReturn(Mono.empty());
+
+        // verifico che il flusso è stato completato con successo
+        assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());
+
+        ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
+
+        // verifico che è stato inviato un evento a delivery-push
+        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
+
+        assertEquals(StatusCodeEnum.PROGRESS, caturedSendEvent.getValue().getStatusCode());
     }
 
     private void CommonMetaDematAggregateSequenceTest(String event1, String event2, String event3, StatusCodeEnum expectedStatusCode, boolean checkDeliveryFailureCauseEnrichment, boolean checkDiscoveredAddress) {
@@ -247,7 +302,7 @@ class Paper_RS_AR_IT extends BaseTest {
         //
         // demat PROGRESS -> send to delivery push
 
-        CommonMetaDematAggregateSequenceTest("RECRS004A", "RECRS004B", "RECRS004C", StatusCodeEnum.OK,false, false);
+        CommonMetaDematAggregateSequenceTest("RECRS004A", "RECRS004B", "RECRS004C", StatusCodeEnum.KO,false, false);
     }
 
     @Test
@@ -257,13 +312,15 @@ class Paper_RS_AR_IT extends BaseTest {
         //
         // demat PROGRESS -> send to delivery push
 
-        CommonMetaDematAggregateSequenceTest("RECRS005A", "RECRS005B", "RECRS005C", StatusCodeEnum.OK,false, false);
+        CommonMetaDematAggregateSequenceTest("RECRS005A", "RECRS005B", "RECRS005C", StatusCodeEnum.KO,false, false);
     }
 
     @Test
     void Test_RS_TheftLossDeterioration__RECRS006__RetryPC(){
         // retry paper channel
         // ...
+
+        //CommonFinalOnlyRetrySequenceTest("RECRS006");
     }
 
     // ******** AR ********

@@ -12,8 +12,8 @@ public enum ExternalChannelCodeEnum {
     RECRS002C("KO"),
     RECRS002F("KO"),
     RECRS003C("OK"),
-    RECRS004C("OK"),
-    RECRS005C("OK"),
+    RECRS004C("KO"),
+    RECRS005C("KO"),
     RECRN006("PROGRESS"), // furto o smarrimento
     RECRS006("PROGRESS"), // furto o smarrimento
     RECAG001C("OK"),
