@@ -9,6 +9,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -18,6 +21,15 @@ public class Utility {
 
     private Utility() {
         throw new IllegalCallerException();
+    }
+
+    public static Float getPriceFormat(float value) {
+        DecimalFormat fr = new DecimalFormat("#######.##");
+        fr.setRoundingMode(RoundingMode.HALF_UP);
+        DecimalFormatSymbols symbols = new DecimalFormatSymbols();
+        symbols.setDecimalSeparator('.');
+        fr.setDecimalFormatSymbols(symbols);
+        return Float.valueOf(fr.format(value));
     }
 
     public static String convertToHash(String string) {

@@ -126,15 +126,15 @@ components:
             - __RECRS002C__- [RS] - [KO] - Mancata consegna - Fascicolo Chiuso <br/>
             - __RECRS002F__- [RS] - [KO] - Irreperibilità Assoluta - Fascicolo Chiuso <br/>
             - __RECRS003C__- [RS] - [OK] - Consegnato presso Punti di Giacenza - Fascicolo Chiuso <br/>
-            - __RECRS004C__- [RS] - [OK] - Mancata consegna presso Punti di Giacenza - Fascicolo Chiuso <br/>
-            - __RECRS005C__- [RS] - [OK] - Compiuta giacenza - Fascicolo Chiuso <br/>
+            - __RECRS004C__- [RS] - [KO] - Mancata consegna presso Punti di Giacenza - Fascicolo Chiuso <br/>
+            - __RECRS005C__- [RS] - [KO] - Compiuta giacenza - Fascicolo Chiuso <br/>
             - __RECRS006__- [RS] - [PROGRESS] - Furto/Smarrimanto/deterioramento <br/>
             - __RECRN001C__- [AR] - [OK] - Consegnato - Fascicolo Chiuso <br/>
             - __RECRN002C__- [AR] - [KO] - Mancata consegna - Fascicolo Chiuso <br/>
             - __RECRN002F__- [AR] - [KO] - Irreperibilità Assoluta - Fascicolo Chiuso <br/>
             - __RECRN003C__- [AR] - [OK] - Consegnato presso Punti di Giacenza - Fascicolo Chiuso <br/>
             - __RECRN004C__- [AR] - [KO] - Mancata consegna presso Punti di Giacenza - Fascicolo Chiuso <br/>
-            - __RECRN005C__- [AR] - [OK] - Compiuta giacenza - Fascicolo Chiuso <br/>
+            - __RECRN005C__- [AR] - [KO] - Compiuta giacenza - Fascicolo Chiuso <br/>
             - __RECRN006__- [AR] - [PROGRESS] - Furto/Smarrimanto/deterioramento <br/>
             - __RECAG001C__- [890] - [OK] - Consegnato - Fascicolo Chiuso <br/>
             - __RECAG002C__- [890] - [OK] - Consegnato a persona abilitata - Fascicolo Chiuso <br/>
@@ -145,7 +145,7 @@ components:
             - __RECAG006C__- [890] - [OK | PROGRESS] - Consegna a persona abilitata presso Punti di Giacenza - Fascicolo Chiuso <br/>
             - __RECAG007C__- [890] - [KO | PROGRESS] - Mancata consegna presso Punti di Giacenza - Fascicolo Chiuso <br/>
             - __RECAG008C__- [890] - [PROGRESS] - Compiuta giacenza - Fascicolo Chiuso <br/>
-            - __PNAG012__- [890] - [KO] - Distacco d'ufficio 23L - Fascicolo Chiuso <br/>
+            - __PNAG012__- [890] - [OK] - Distacco d'ufficio 23L - Fascicolo Chiuso <br/>
             - __RECRI003C__- [RIR] - [OK] - Consegnato - Fascicolo Chiuso <br/>
             - __RECRI004C__- [RIR] - [KO] - Non Consegnato - fascicolo Chiuso <br/>
             - __RECRI005__- [RIR] - [PROGRESS] - Furto/Smarrimanto/deterioramento <br/>
