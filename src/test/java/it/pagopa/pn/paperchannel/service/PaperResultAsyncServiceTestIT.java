@@ -589,10 +589,12 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
         // verifico che il flusso è stato completato con successo
         assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());
 
-        //verifico che venga mandato a delivery push lo status OK
-        //lo statusCode dell'entity viene modifico dall'handler
-        assertThat(afterSetForUpdate.getStatusCode()).isEqualTo(StatusCodeEnum.OK.getValue());
-        verify(sqsSender, times(1)).pushSendEvent(any(SendEvent.class));
+        //verifico che venga mandato a delivery push lo status mappato dal ExternalChannelCodeEnum
+        ArgumentCaptor<SendEvent> sendEventArgumentCaptor = ArgumentCaptor.forClass(SendEvent.class);
+        verify(sqsSender, times(1)).pushSendEvent(sendEventArgumentCaptor.capture());
+
+        SendEvent sendEvent = sendEventArgumentCaptor.getValue();
+        assertThat(sendEvent.getStatusCode().getValue()).isEqualTo(ExternalChannelCodeEnum.getStatusCode(analogMail.getStatusCode()));
 
     }
 
@@ -638,12 +640,16 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
         // verifico che il flusso è stato completato con successo
         assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());
 
-        //verifico che venga mandato a delivery push lo status PROGRESS
-        //lo statusCode dell'entity viene modifico dall'handler
-        assertThat(afterSetForUpdate.getStatusCode()).isEqualTo(StatusCodeEnum.OK.getValue());
-        assertThat(afterSetForUpdate.getStatusDetail()).isEqualTo("Distacco d'ufficio 23L fascicolo chiuso");
-        assertThat(analogMail.getStatusDateTime().toInstant()).isEqualTo(pnEventMetaRECAG012.getStatusDateTime());
-        verify(sqsSender, times(1)).pushSendEvent(any(SendEvent.class));
+        //verifico che vengano mandati 2 eventi a delivery push
+        // il primo è l'evento finale OK di PNAG012
+        // il secondo è l'evento IN PROGRESS dell'evento originale
+        ArgumentCaptor<SendEvent> sendEventArgumentCaptor = ArgumentCaptor.forClass(SendEvent.class);
+        verify(sqsSender, times(2)).pushSendEvent(sendEventArgumentCaptor.capture());
+        List<SendEvent> sendEvents = sendEventArgumentCaptor.getAllValues();
+        assertThat(sendEvents.get(0).getStatusCode()).isEqualTo(StatusCodeEnum.OK);
+        assertThat(sendEvents.get(0).getStatusDetail()).isEqualTo("PNAG012");
+        assertThat(sendEvents.get(1).getStatusCode()).isEqualTo(StatusCodeEnum.PROGRESS);
+        assertThat(sendEvents.get(1).getStatusDetail()).isEqualTo("RECAG005C");
 
         //verifico la clean di tutti i META e DEMAT con la stessa requestId in input
         List<PnEventMeta> resultMeta = eventMetaDAO.findAllByRequestId("META##" + requestId).collectList().block();

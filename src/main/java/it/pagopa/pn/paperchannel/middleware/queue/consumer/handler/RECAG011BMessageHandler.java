@@ -5,8 +5,9 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventDemat;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
+import it.pagopa.pn.paperchannel.middleware.queue.model.PNAG012Wrapper;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.PaperProgressStatusEventDto;
-import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.PnLogAudit;
 import lombok.extern.slf4j.Slf4j;
@@ -72,12 +73,9 @@ public class RECAG011BMessageHandler extends SaveDematMessageHandler {
                 .flatMap(pnEventDemats ->  eventMetaDAO.getDeliveryEventMeta(metadataRequestIdFilter, META_SORT_KEY_FILTER ))
                 .doOnNext(pnEventMeta -> log.info("[{}] PnEventMeta found: {}", paperRequest.getRequestId(), pnEventMeta))
                 .map(pnEventMetaRECAG012 -> createMETAForPNAG012Event(paperRequest, pnEventMetaRECAG012, ttlDaysMeta))
-                .doOnNext(pnEventMetaPNAG012 -> editPnDeliveryRequestAndPaperRequestForPNAG012(entity, paperRequest, pnEventMetaPNAG012.getStatusDateTime()))
-                .doOnNext(pnEventMetaPNAG012 -> pnLogAudit.addsBeforeReceive(entity.getIun(), String.format("prepare requestId = %s Response from external-channel", entity.getRequestId())))
-                .flatMap(eventMetaDAO::createOrUpdate)
-                .doOnNext(pnEventMetaPNAG012 -> logSuccessAuditLog(paperRequest, entity, pnLogAudit))
-                .doOnNext(pnEventMetaPNAG012 -> log.info("[{}] Sending PNAG012 to delivery push: {}", paperRequest.getRequestId(), entity))
-                .flatMap(pnEventMeta -> super.sendToDeliveryPush(entity, paperRequest));
+                .flatMap(pnEventMetaPNAG012 -> this.pnag012Flow(pnEventMetaPNAG012, entity, paperRequest, pnLogAudit))
+                .doOnNext(pnag012Wrapper -> log.info("[{}] Sending PNAG012 to delivery push: {}", pnag012Wrapper.getPaperProgressStatusEventDtoPNAG012().getRequestId(), pnag012Wrapper.getPnDeliveryRequestPNAG012()))
+                .flatMap(pnag012Wrapper -> super.sendToDeliveryPush(pnag012Wrapper.getPnDeliveryRequestPNAG012(), pnag012Wrapper.getPaperProgressStatusEventDtoPNAG012()));
     }
 
     private boolean canCreatePNAG012Event(List<PnEventDemat> pnEventDemats) {
@@ -93,13 +91,14 @@ public class RECAG011BMessageHandler extends SaveDematMessageHandler {
         return twentyThreeLElement.isPresent() && arcadOrCadElement.isPresent();
     }
 
-    // simulo lo stesso log di evento ricevuto da ext-channels
-    private void logSuccessAuditLog(PaperProgressStatusEventDto paperRequest, PnDeliveryRequest entity, PnLogAudit pnLogAudit) {
-        paperRequest.setStatusCode(PNAG012_STATUS_CODE);
-        SingleStatusUpdateDto singleStatusUpdateDto = new SingleStatusUpdateDto().analogMail(paperRequest);
-        pnLogAudit.addsSuccessReceive(entity.getIun(),
-                String.format("prepare requestId = %s Response %s from external-channel status code %s",
-                        entity.getRequestId(), singleStatusUpdateDto.toString().replaceAll("\n", ""), entity.getStatusCode()));
+    private Mono<PNAG012Wrapper> pnag012Flow(PnEventMeta pnEventMetaPNAG012, PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest, PnLogAudit pnLogAudit) {
+        PNAG012Wrapper pnag012Wrapper = PNAG012Wrapper.buildPNAG012Wrapper(entity, paperRequest, pnEventMetaPNAG012.getStatusDateTime());
+        var pnag012PaperRequest = pnag012Wrapper.getPaperProgressStatusEventDtoPNAG012();
+        var pnag012DeliveryRequest = pnag012Wrapper.getPnDeliveryRequestPNAG012();
+        pnLogAudit.addsBeforeReceive(pnag012DeliveryRequest.getIun(), String.format("prepare requestId = %s Response from external-channel", pnag012DeliveryRequest.getRequestId()));
+        return eventMetaDAO.createOrUpdate(pnEventMetaPNAG012)
+                .doOnNext(pnEventMetaRECAG012Updated -> logSuccessAuditLog(pnag012PaperRequest, pnag012DeliveryRequest, pnLogAudit))
+                .thenReturn(pnag012Wrapper);
     }
 
 }

@@ -27,9 +27,9 @@ public enum ExternalChannelCodeEnum {
     RECAG003C("KO"),
     RECAG003F("KO"),
     RECAG004("PROGRESS"), // furto o smarrimento
-    RECAG005C("PROGRESS"), // KO or Progress
-    RECAG006C("PROGRESS"), // KO or Progress
-    RECAG007C("PROGRESS"), // KO or Progress
+    RECAG005C("OK"),
+    RECAG006C("OK"),
+    RECAG007C("KO"),
     RECAG008C("PROGRESS"),
     PNAG012("KO"),
     RECRI003C("OK"),

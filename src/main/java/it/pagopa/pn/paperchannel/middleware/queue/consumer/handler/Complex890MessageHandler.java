@@ -5,6 +5,7 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
 import it.pagopa.pn.paperchannel.middleware.queue.consumer.MetaDematCleaner;
+import it.pagopa.pn.paperchannel.middleware.queue.model.PNAG012Wrapper;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.service.SqsSender;
@@ -31,7 +32,7 @@ RECAG005C RECAG006C o RECAG007C
         essere effettuata la transizione in "Distacco d'ufficio 23L fascicolo chiuso":
    - Recuperare l’evento con SK META##RECAG012 e recuperare la statusDateTime
    - generazione dell’evento finale PNAG012 verso delivery_push (vedi dettaglio in paragrafo Evento PNAG012)
-   - inoltro dell’evento orginale (RECAG005C RECAG006C o RECAG007C) con statusCode PROGRESS verso delivery_push
+   - inoltro dell’evento originale (RECAG005C RECAG006C o RECAG007C) con statusCode PROGRESS verso delivery_push
 
 4. Nel caso in cui il risultato della query non produca nessun risultato (raggiunto stato finale di recapito entro il
         perfezionamento d’ufficio) allora lo stato originale (RECAG005C RECAG006C o RECAG007C)  potrà essere considerato FINALE ed inoltrato direttamente a delivery_push
@@ -100,16 +101,22 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
             log.info("[{}] Result of query is: META##RECAG012 present, META##PNAG012 not present", paperRequest.getRequestId());
             PnAuditLogBuilder auditLogBuilder = new PnAuditLogBuilder();
             PnLogAudit pnLogAudit = new PnLogAudit(auditLogBuilder);
-            editPnDeliveryRequestAndPaperRequestForPNAG012(entity, paperRequest, pnEventMetaRECAG012.getStatusDateTime());
-            pnLogAudit.addsBeforeReceive(entity.getIun(), String.format("prepare requestId = %s Response from external-channel", entity.getRequestId()));
-            pnLogAudit.addsSuccessReceive(entity.getIun(), String.format("prepare requestId = %s Response %s from external-channel status code %s",  entity.getRequestId(), paperRequest.toString().replaceAll("\n", ""), entity.getStatusCode()));
-            return super.handleMessage(entity, paperRequest).then(Mono.just(pnEventMetas));
+            PNAG012Wrapper pnag012Wrapper = PNAG012Wrapper.buildPNAG012Wrapper(entity, paperRequest, pnEventMetaRECAG012.getStatusDateTime());
+            var pnag012PaperRequest = pnag012Wrapper.getPaperProgressStatusEventDtoPNAG012();
+            var pnag012DeliveryRequest = pnag012Wrapper.getPnDeliveryRequestPNAG012();
+            pnLogAudit.addsBeforeReceive(entity.getIun(), String.format("prepare requestId = %s Response from external-channel",pnag012DeliveryRequest.getRequestId()));
+            logSuccessAuditLog(pnag012PaperRequest, pnag012DeliveryRequest, pnLogAudit);
+
+            entity.setStatusCode(StatusCodeEnum.PROGRESS.getValue());
+            return super.handleMessage(pnag012DeliveryRequest, pnag012PaperRequest)
+                    .then(super.handleMessage(entity, paperRequest))
+                    .then(Mono.just(pnEventMetas));
         }
 
         else { // entrambi non presenti
 //            CASO 4
             log.info("[{}] Result of query has no PNAG012 and no RECAG012", paperRequest.getRequestId());
-            entity.setStatusCode(StatusCodeEnum.OK.getValue());
+            // qui lo status è OK o KO in base alla trasformazione fatta nel passo di update entity
             return super.handleMessage(entity, paperRequest)
                     .then(Mono.just(pnEventMetas));
         }
