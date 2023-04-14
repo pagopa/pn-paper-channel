@@ -12,6 +12,7 @@ import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -180,12 +181,17 @@ class Complex890MessageHandlerTest {
         SendEvent sendPNAG012Event = handler.createSendEventMessage(pnDeliveryRequestPNAG012, paperProgressStatusEventDtoPNAG012);
         assertThat(sendPNAG012Event.getStatusCode()).isEqualTo(StatusCodeEnum.OK);
         assertThat(sendPNAG012Event.getStatusDetail()).isEqualTo("PNAG012");
-        verify(sqsSender, times(1)).pushSendEvent(sendPNAG012Event);
+        assertThat(sendPNAG012Event.getStatusDateTime()).isEqualTo(pnEventMetaRECAG012.getStatusDateTime());
+
+        ArgumentCaptor<SendEvent> sendEventArgumentCaptor = ArgumentCaptor.forClass(SendEvent.class);
+        verify(sqsSender, times(2)).pushSendEvent(sendEventArgumentCaptor.capture());
+        sendPNAG012Event.setClientRequestTimeStamp(sendEventArgumentCaptor.getAllValues().get(0).getClientRequestTimeStamp());
+        assertThat(sendEventArgumentCaptor.getAllValues().get(0)).isEqualTo(sendPNAG012Event);
 
         //verifico che viene inviato a delivery-push l'evento originale RECAG005C in stato PROGRESS
         SendEvent sendEvent = new SaveDematMessageHandler(null, null, null).createSendEventMessage(entity, paperRequest);
         assertThat(sendEvent.getStatusCode()).isEqualTo(StatusCodeEnum.PROGRESS);
         assertThat(sendEvent.getStatusDetail()).isEqualTo("RECAG005C");
-        verify(sqsSender, times(1)).pushSendEvent(sendEvent);
+        assertThat(sendEventArgumentCaptor.getAllValues().get(1)).isEqualTo(sendEvent);
     }
 }

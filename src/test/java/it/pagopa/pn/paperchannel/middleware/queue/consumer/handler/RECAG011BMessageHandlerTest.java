@@ -13,6 +13,7 @@ import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -23,6 +24,7 @@ import java.util.List;
 import static it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.RECAG011BMessageHandler.DEMAT_SORT_KEYS_FILTER;
 import static it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.RECAG011BMessageHandler.META_SORT_KEY_FILTER;
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.createMETAForPNAG012Event;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.times;
@@ -104,7 +106,10 @@ class RECAG011BMessageHandlerTest {
         SendEvent sendPNAG012Event = handler.createSendEventMessage(pnDeliveryRequestPNAG012, paperProgressStatusEventDtoPNAG012);
 
         //mi aspetto che mandi il messaggio a delivery-push
-        verify(mockSqsSender, times(1)).pushSendEvent(sendPNAG012Event);
+        ArgumentCaptor<SendEvent> sendEventArgumentCaptor = ArgumentCaptor.forClass(SendEvent.class);
+        verify(mockSqsSender, times(2)).pushSendEvent(sendEventArgumentCaptor.capture());
+        sendPNAG012Event.setClientRequestTimeStamp(sendEventArgumentCaptor.getAllValues().get(1).getClientRequestTimeStamp());
+        assertThat(sendEventArgumentCaptor.getAllValues().get(1)).isEqualTo(sendPNAG012Event);
 
 
     }

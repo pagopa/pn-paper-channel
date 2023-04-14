@@ -10,6 +10,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.PNAG012_STATUS_CODE;
+import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.PNAG012_STATUS_DESCRIPTION;
 
 /**
  * Classe wrapper utilizzata per contenere gli oggetti modificati di PnDeliveryRequest e PaperProgressStatusEventDto
@@ -35,7 +36,7 @@ public class PNAG012Wrapper {
         // nelle nuova entità PnDeliveryRequest valorizzo solo i campi necessari per SendEvent (evento mandato a delivery-push)
         pnDeliveryRequestPNAG012 = new PnDeliveryRequest();
         pnDeliveryRequestPNAG012.setStatusCode(StatusCodeEnum.OK.getValue()); //evento finale OK
-        pnDeliveryRequestPNAG012.setStatusDetail("Distacco d'ufficio 23L fascicolo chiuso");
+        pnDeliveryRequestPNAG012.setStatusDetail(PNAG012_STATUS_DESCRIPTION);
         pnDeliveryRequestPNAG012.setStatusDetail(originalPnDeliveryRequest.getStatusDetail());
         pnDeliveryRequestPNAG012.setRequestId(originalPnDeliveryRequest.getRequestId());
 
@@ -46,11 +47,8 @@ public class PNAG012Wrapper {
         paperProgressStatusEventDtoPNAG012.setRegisteredLetterCode(originalPaperRequest.getRegisteredLetterCode());
         paperProgressStatusEventDtoPNAG012.setProductType(originalPaperRequest.getProductType());
         paperProgressStatusEventDtoPNAG012.setIun(originalPaperRequest.getIun());
-        paperProgressStatusEventDtoPNAG012.setStatusDescription(originalPaperRequest.getStatusDescription());
-        paperProgressStatusEventDtoPNAG012.setClientRequestTimeStamp(originalPaperRequest.getClientRequestTimeStamp());
-        paperProgressStatusEventDtoPNAG012.setDeliveryFailureCause(originalPaperRequest.getDeliveryFailureCause());
-        paperProgressStatusEventDtoPNAG012.setDiscoveredAddress(originalPaperRequest.getDiscoveredAddress());
-        paperProgressStatusEventDtoPNAG012.setAttachments(originalPaperRequest.getAttachments());
+        paperProgressStatusEventDtoPNAG012.setStatusDescription(PNAG012_STATUS_DESCRIPTION);
+        paperProgressStatusEventDtoPNAG012.setClientRequestTimeStamp(OffsetDateTime.now());
 
         paperProgressStatusEventDtoPNAG012.setStatusDateTime(OffsetDateTime.ofInstant(statusDateTimeRECAG012, ZoneOffset.UTC));
         paperProgressStatusEventDtoPNAG012.setStatusCode(PNAG012_STATUS_CODE);

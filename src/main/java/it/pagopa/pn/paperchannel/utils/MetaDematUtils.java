@@ -19,6 +19,8 @@ public class MetaDematUtils {
 
     public static final String RECAG012_STATUS_CODE = "RECAG012";
 
+    public static final String PNAG012_STATUS_DESCRIPTION = "Distacco d'ufficio 23L fascicolo chiuso";
+
     private MetaDematUtils() {}
 
     public static String buildMetaRequestId(String requestId) {
