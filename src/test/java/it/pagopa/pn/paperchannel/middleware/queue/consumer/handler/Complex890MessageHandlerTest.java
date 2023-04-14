@@ -4,12 +4,15 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
 import it.pagopa.pn.paperchannel.middleware.queue.consumer.MetaDematCleaner;
+import it.pagopa.pn.paperchannel.middleware.queue.model.PNAG012Wrapper;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.rest.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.service.SqsSender;
+import it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -51,7 +54,7 @@ class Complex890MessageHandlerTest {
         String metadataRequestid = buildMetaRequestId(requestId);
         PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
                 .requestId(requestId)
-                .statusCode("RECRS002A")
+                .statusCode("RECAG005C")
                 .statusDateTime(instant)
                 .clientRequestTimeStamp(instant)
                 .deliveryFailureCause("M02");
@@ -59,7 +62,7 @@ class Complex890MessageHandlerTest {
         PnDeliveryRequest entity = new PnDeliveryRequest();
         entity.setRequestId("requestId");
         entity.setStatusDetail("statusDetail");
-        entity.setStatusCode(StatusCodeEnum.PROGRESS.getValue());
+        entity.setStatusCode(ExternalChannelCodeEnum.getStatusCode(paperRequest.getStatusCode()));
 
         when(eventMetaDAO.findAllByRequestId(metadataRequestid)).thenReturn(Flux.empty());
 
@@ -67,7 +70,7 @@ class Complex890MessageHandlerTest {
 
         verify(eventMetaDAO, times(0)).createOrUpdate(any(PnEventMeta.class));
 
-        //lo statusCode dell'entity viene modificato dall'handler
+        //lo statusCode dell'entity è uguale a quello della trasformazione fatta dall' ExternalChannelCodeEnum nella fase di update Entity
         assertThat(entity.getStatusCode()).isEqualTo(StatusCodeEnum.OK.getValue());
         SendEvent sendEvent = new SaveDematMessageHandler(null, null, null).createSendEventMessage(entity, paperRequest);
 
@@ -82,7 +85,7 @@ class Complex890MessageHandlerTest {
         String metadataRequestid = buildMetaRequestId(requestId);
         PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
                 .requestId(requestId)
-                .statusCode("RECRS002A")
+                .statusCode("RECAG005C")
                 .statusDateTime(instant)
                 .clientRequestTimeStamp(instant)
                 .deliveryFailureCause("M02");
@@ -90,7 +93,7 @@ class Complex890MessageHandlerTest {
         PnDeliveryRequest entity = new PnDeliveryRequest();
         entity.setRequestId("requestId");
         entity.setStatusDetail("statusDetail");
-        entity.setStatusCode(StatusCodeEnum.PROGRESS.getValue());
+        entity.setStatusCode(ExternalChannelCodeEnum.getStatusCode(paperRequest.getStatusCode()));
 
         PnEventMeta pnEventMetaPNAG012 = new PnEventMeta();
         pnEventMetaPNAG012.setMetaRequestId(buildMetaRequestId(requestId));
@@ -113,7 +116,7 @@ class Complex890MessageHandlerTest {
         String metadataRequestid = buildMetaRequestId(requestId);
         PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
                 .requestId(requestId)
-                .statusCode("RECRS002A")
+                .statusCode("RECAG005C")
                 .statusDateTime(instant)
                 .clientRequestTimeStamp(instant)
                 .deliveryFailureCause("M02");
@@ -121,7 +124,7 @@ class Complex890MessageHandlerTest {
         PnDeliveryRequest entity = new PnDeliveryRequest();
         entity.setRequestId("requestId");
         entity.setStatusDetail("statusDetail");
-        entity.setStatusCode(StatusCodeEnum.PROGRESS.getValue());
+        entity.setStatusCode(ExternalChannelCodeEnum.getStatusCode(paperRequest.getStatusCode()));
 
         PnEventMeta pnEventMetaPNAG012 = new PnEventMeta();
         pnEventMetaPNAG012.setMetaRequestId(buildMetaRequestId(requestId));
@@ -152,7 +155,7 @@ class Complex890MessageHandlerTest {
         String metadataRequestid = buildMetaRequestId(requestId);
         PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
                 .requestId(requestId)
-                .statusCode("RECRS002A")
+                .statusCode("RECAG005C")
                 .statusDateTime(instant)
                 .clientRequestTimeStamp(instant)
                 .deliveryFailureCause("M02");
@@ -160,7 +163,7 @@ class Complex890MessageHandlerTest {
         PnDeliveryRequest entity = new PnDeliveryRequest();
         entity.setRequestId("requestId");
         entity.setStatusDetail("statusDetail");
-        entity.setStatusCode(StatusCodeEnum.PROGRESS.getValue());
+        entity.setStatusCode(ExternalChannelCodeEnum.getStatusCode(paperRequest.getStatusCode()));
 
         PnEventMeta pnEventMetaRECAG012 = new PnEventMeta();
         pnEventMetaRECAG012.setMetaRequestId(buildMetaRequestId(requestId));
@@ -171,13 +174,24 @@ class Complex890MessageHandlerTest {
 
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
 
-        //lo statusCode dell'entity e lo statusDateTime di paperRequest vengono modificati dall'handler
-        assertThat(entity.getStatusCode()).isEqualTo(StatusCodeEnum.OK.getValue());
-        assertThat(entity.getStatusDetail()).isEqualTo("Distacco d'ufficio 23L fascicolo chiuso");
-        assertThat(paperRequest.getStatusDateTime().toInstant()).isEqualTo(pnEventMetaRECAG012.getStatusDateTime());
+        //verifico che viene inviato a delivery-push l'evento finale PNAG012
+        PNAG012Wrapper pnag012Wrapper = PNAG012Wrapper.buildPNAG012Wrapper(entity, paperRequest, pnEventMetaRECAG012.getStatusDateTime());
+        PnDeliveryRequest pnDeliveryRequestPNAG012 = pnag012Wrapper.getPnDeliveryRequestPNAG012();
+        PaperProgressStatusEventDto paperProgressStatusEventDtoPNAG012 = pnag012Wrapper.getPaperProgressStatusEventDtoPNAG012();
+        SendEvent sendPNAG012Event = handler.createSendEventMessage(pnDeliveryRequestPNAG012, paperProgressStatusEventDtoPNAG012);
+        assertThat(sendPNAG012Event.getStatusCode()).isEqualTo(StatusCodeEnum.OK);
+        assertThat(sendPNAG012Event.getStatusDetail()).isEqualTo("PNAG012");
+        assertThat(sendPNAG012Event.getStatusDateTime()).isEqualTo(pnEventMetaRECAG012.getStatusDateTime());
 
+        ArgumentCaptor<SendEvent> sendEventArgumentCaptor = ArgumentCaptor.forClass(SendEvent.class);
+        verify(sqsSender, times(2)).pushSendEvent(sendEventArgumentCaptor.capture());
+        sendPNAG012Event.setClientRequestTimeStamp(sendEventArgumentCaptor.getAllValues().get(0).getClientRequestTimeStamp());
+        assertThat(sendEventArgumentCaptor.getAllValues().get(0)).isEqualTo(sendPNAG012Event);
+
+        //verifico che viene inviato a delivery-push l'evento originale RECAG005C in stato PROGRESS
         SendEvent sendEvent = new SaveDematMessageHandler(null, null, null).createSendEventMessage(entity, paperRequest);
-
-        verify(sqsSender, times(1)).pushSendEvent(sendEvent);
+        assertThat(sendEvent.getStatusCode()).isEqualTo(StatusCodeEnum.PROGRESS);
+        assertThat(sendEvent.getStatusDetail()).isEqualTo("RECAG005C");
+        assertThat(sendEventArgumentCaptor.getAllValues().get(1)).isEqualTo(sendEvent);
     }
 }
