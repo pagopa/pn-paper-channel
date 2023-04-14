@@ -7,6 +7,7 @@ import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.Attachme
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.SendRequest;
 import it.pagopa.pn.paperchannel.utils.Utility;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 
@@ -18,6 +19,8 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DIFFERENT_DA
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DIFFERENT_DATA_RESULT;
 import static it.pagopa.pn.paperchannel.mapper.AddressMapper.fromAnalogToAddress;
 
+
+@Slf4j
 public class SendRequestValidator {
     private SendRequestValidator() {
         throw new IllegalCallerException();
@@ -28,32 +31,39 @@ public class SendRequestValidator {
 
         if (!sendRequest.getRequestId().equals(pnDeliveryEntity.getRequestId())) {
             errors.add("RequestId");
+            log.debug("Comparison between request and entity failed, different data: RequestId");
         }
 
         if (!Utility.convertToHash(sendRequest.getReceiverFiscalCode()).equals(pnDeliveryEntity.getHashedFiscalCode())) {
             errors.add("FiscalCode");
+            log.debug("Comparison between request and entity failed, different data: FiscalCode");
         }
 
         if (!sendRequest.getProductType().getValue().equals(pnDeliveryEntity.getProductType())) {
             errors.add("ProductType");
+            log.debug("Comparison between request and entity failed, different data: ProductType");
         }
 
         if (!sendRequest.getReceiverType().equals(pnDeliveryEntity.getReceiverType())){
             errors.add("ReceiverType");
+            log.debug("Comparison between request and entity failed, different data: ReceiverType");
         }
 
         if (!sendRequest.getPrintType().equals(pnDeliveryEntity.getPrintType())){
-            errors.add("printType");
+            errors.add("PrintType");
+            log.debug("Comparison between request and entity failed, different data: PrintType");
         }
 
         List<String> fromDb = pnDeliveryEntity.getAttachments().stream()
                 .map(PnAttachmentInfo::getFileKey).collect(Collectors.toList());
         if (!AttachmentValidator.checkBetweenLists(sendRequest.getAttachmentUrls(), fromDb)){
             errors.add("Attachments");
+            log.debug("Comparison between request and entity failed, different data: Attachments");
         }
 
         if (!fromAnalogToAddress(sendRequest.getReceiverAddress()).convertToHash().equals(pnDeliveryEntity.getAddressHash())) {
             errors.add("Address");
+            log.debug("Comparison between request and entity failed, different data: Address");
         }
 
         if (!errors.isEmpty()){
