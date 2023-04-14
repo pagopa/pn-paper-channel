@@ -3,11 +3,7 @@ package it.pagopa.pn.paperchannel.utils;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.PaperProgressStatusEventDto;
-import it.pagopa.pn.paperchannel.rest.v1.dto.StatusCodeEnum;
-
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
+import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.SingleStatusUpdateDto;
 
 public class MetaDematUtils {
 
@@ -22,6 +18,8 @@ public class MetaDematUtils {
     public static final String PNAG012_STATUS_CODE = "PNAG012";
 
     public static final String RECAG012_STATUS_CODE = "RECAG012";
+
+    public static final String PNAG012_STATUS_DESCRIPTION = "Distacco d'ufficio 23L fascicolo chiuso";
 
     private MetaDematUtils() {}
 
@@ -53,12 +51,12 @@ public class MetaDematUtils {
         return pnEventMeta;
     }
 
-
-    public static void editPnDeliveryRequestAndPaperRequestForPNAG012(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest, Instant statusDateTimeRECAG012) {
-        entity.setStatusCode(StatusCodeEnum.OK.getValue());
-        entity.setStatusDetail("Distacco d'ufficio 23L fascicolo chiuso");
-
-        paperRequest.setStatusDateTime(OffsetDateTime.ofInstant(statusDateTimeRECAG012, ZoneOffset.UTC));
+    // simulo lo stesso log di evento ricevuto da ext-channels
+    public static void logSuccessAuditLog(PaperProgressStatusEventDto paperRequest, PnDeliveryRequest entity, PnLogAudit pnLogAudit) {
+        SingleStatusUpdateDto singleStatusUpdateDto = new SingleStatusUpdateDto().analogMail(paperRequest);
+        pnLogAudit.addsSuccessReceive(entity.getIun(),
+                String.format("prepare requestId = %s Response %s from external-channel status code %s",
+                        entity.getRequestId(), singleStatusUpdateDto.toString().replaceAll("\n", ""), entity.getStatusCode()));
     }
 
 
