@@ -29,7 +29,7 @@ import java.util.List;
 import static it.pagopa.pn.paperchannel.utils.Const.RACCOMANDATA_SEMPLICE;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class PrepareAsyncServiceTest extends BaseTest {
+class PrepareAsyncServiceTest extends BaseTest {
 
     @Autowired
     private PrepareAsyncServiceImpl prepareAsyncService;

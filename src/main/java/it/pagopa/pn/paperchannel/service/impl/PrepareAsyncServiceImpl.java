@@ -110,7 +110,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                 .flatMap(deliveryRequestAndAddress -> {
                     //Controllo se l'indirizzo che ho proviene da NationalRegistry
                     if (Boolean.TRUE.equals(deliveryRequestAndAddress.getT2())){
-                        log.info("National registry address");
+                        log.debug("National registry address for request id: {}", requestId);
                         deliveryRequestAndAddress.getT1().setAddressHash(addressFromNationalRegistry.convertToHash());
                         //set flowType per TTL
                         addressFromNationalRegistry.setFlowType(Const.PREPARE);
@@ -128,12 +128,17 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                             })
                 )
                 .onErrorResume(ex -> {
-                    log.error("on Error : {}", ex.getMessage());
+                    log.error("Error prepare async requestId {}, {}", requestId, ex.getMessage(), ex);
                     StatusDeliveryEnum statusDeliveryEnum = StatusDeliveryEnum.PAPER_CHANNEL_ASYNC_ERROR;
                     if(ex instanceof PnGenericException) {
-                        statusDeliveryEnum = mapper(((PnGenericException) ex).getExceptionType()) ;
+                        statusDeliveryEnum = mapper(((PnGenericException) ex).getExceptionType());
                     }
                     return updateStatus(requestId, correlationId, statusDeliveryEnum)
+                            .doOnNext(entity -> {
+                                if (entity.getStatusCode().equals(StatusDeliveryEnum.UNTRACEABLE.getCode())){
+                                    sendUnreachableEvent(entity);
+                                }
+                            })
                             .flatMap(entity -> Mono.error(ex));
                 });
     }
@@ -212,7 +217,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                      .flatMap(item -> safeStorageClient.getFile(fileKey)
                      .map(fileDownloadResponseDto -> fileDownloadResponseDto)
                      .onErrorResume(ex -> {
-                         log.error ("Error in retrieve file", ex.getMessage());
+                         log.error ("Error with retrieve {}", ex.getMessage());
                          return Mono.error(ex);
                      })
                      .onErrorResume(PnRetryStorageException.class, ex ->
@@ -236,7 +241,6 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                         new BigDecimal(0))
                 )
                 .flatMap(fileResponse -> {
-
                     AttachmentInfo info = AttachmentMapper.fromSafeStorage(fileResponse);
                     if (info.getUrl() == null)
                         return Flux.error(new PnGenericException(INVALID_SAFE_STORAGE, INVALID_SAFE_STORAGE.getMessage()));
@@ -269,6 +273,11 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                 });
     }
 
+
+    private void sendUnreachableEvent(PnDeliveryRequest request){
+        log.debug("Send Unreachable Event request id - {}, iun - {}", request.getRequestId(), request.getIun());
+        this.sqsSender.pushPrepareEvent(PrepareEventMapper.toPrepareEvent(request, null, StatusCodeEnum.KOUNREACHABLE));
+    }
 
 
 }
