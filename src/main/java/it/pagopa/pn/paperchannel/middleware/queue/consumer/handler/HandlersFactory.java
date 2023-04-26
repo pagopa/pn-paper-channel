@@ -82,6 +82,10 @@ public class HandlersFactory {
         map.put(ExternalChannelCodeEnum.RECAG004.name(), handler);
         map.put(ExternalChannelCodeEnum.RECRI005.name(), handler);
         map.put(ExternalChannelCodeEnum.RECRSI005.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECRS013.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECRN013.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECRS015.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECRN015.name(), handler);
     }
 
     private void addNotRetryableErrorStatusCodes(ConcurrentHashMap<String, MessageHandler> map, NotRetryableErrorMessageHandler handler) {

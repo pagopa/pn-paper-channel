@@ -14,8 +14,12 @@ public enum ExternalChannelCodeEnum {
     RECRS003C("OK"),
     RECRS004C("KO"),
     RECRS005C("KO"),
-    RECRN006("PROGRESS"), // furto o smarrimento
-    RECRS006("PROGRESS"), // furto o smarrimento
+    RECRN006("PROGRESS"), // furto o smarrimento o rapinato
+    RECRS006("PROGRESS"), // furto o smarrimento o rapinato
+    RECRS013("PROGRESS"), // furto o smarrimento o rapinato
+    RECRN013("PROGRESS"), // furto o smarrimento o rapinato
+    RECRS015("PROGRESS"),
+    RECRN015("PROGRESS"),
     RECAG001C("OK"),
     RECRN001C("OK"),
     RECRN002C("KO"),
@@ -74,20 +78,25 @@ public enum ExternalChannelCodeEnum {
 
     public static boolean isRetryStatusCode(String code) {
         if (StringUtils.equalsIgnoreCase(code, RECRS006.name())
-            || StringUtils.equalsIgnoreCase(code, RECRN006.name())
-            || StringUtils.equalsIgnoreCase(code, RECAG004.name())
-            || StringUtils.equalsIgnoreCase(code, RECRI005.name())
-            || StringUtils.equalsIgnoreCase(code, RECRSI005.name())
+                || StringUtils.equalsIgnoreCase(code, RECRN006.name())
+                || StringUtils.equalsIgnoreCase(code, RECAG004.name())
+                || StringUtils.equalsIgnoreCase(code, RECRI005.name())
+                || StringUtils.equalsIgnoreCase(code, RECRSI005.name())
+                || StringUtils.equalsIgnoreCase(code, RECRS013.name())
+                || StringUtils.equalsIgnoreCase(code, RECRN013.name())
+                || StringUtils.equalsIgnoreCase(code, RECRS015.name())
+                || StringUtils.equalsIgnoreCase(code, RECRN015.name())
         ) return true;
         return false;
     }
 
     public static boolean isErrorStatusCode(String code) {
         if (StringUtils.equalsIgnoreCase(code, CON998.name())
-        || StringUtils.equalsIgnoreCase(code, CON997.name())
-        || StringUtils.equalsIgnoreCase(code, CON996.name())
-        || StringUtils.equalsIgnoreCase(code, CON995.name())
-        || StringUtils.equalsIgnoreCase(code, CON993.name())) return true;
+                || StringUtils.equalsIgnoreCase(code, CON997.name())
+                || StringUtils.equalsIgnoreCase(code, CON996.name())
+                || StringUtils.equalsIgnoreCase(code, CON995.name())
+                || StringUtils.equalsIgnoreCase(code, CON993.name())
+        ) return true;
         return false;
     }
 

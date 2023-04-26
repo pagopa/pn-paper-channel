@@ -84,12 +84,18 @@ class Paper_RS_AR_IT extends BaseTest {
         assertEquals(StatusCodeEnum.OK, caturedSendEvent.getValue().getStatusCode());
     }
 
-    private void CommonFinalOnlyRetrySequenceTest(String event) {
+    private void CommonFinalOnlyRetrySequenceTest(String event, boolean checkDeliveryFailureCauseEnrichment) {
+        final String deliveryFailureCause = "F04"; // robbed
+
         // event (final only)
         PnDeliveryRequest pnDeliveryRequest = CommonUtils.createPnDeliveryRequest();
 
         PaperProgressStatusEventDto analogMail = CommonUtils.createSimpleAnalogMail();
         analogMail.setStatusCode(event);
+
+        if (checkDeliveryFailureCauseEnrichment) {
+            analogMail.setDeliveryFailureCause(deliveryFailureCause);
+        }
 
         SingleStatusUpdateDto extChannelMessage = new SingleStatusUpdateDto();
         extChannelMessage.setAnalogMail(analogMail);
@@ -132,6 +138,12 @@ class Paper_RS_AR_IT extends BaseTest {
         verify(sqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
 
         assertEquals(StatusCodeEnum.PROGRESS, caturedSendEvent.getValue().getStatusCode());
+
+        if (checkDeliveryFailureCauseEnrichment) {
+            assertEquals(deliveryFailureCause, caturedSendEvent.getValue().getDeliveryFailureCause());
+        } else {
+            assertNull(caturedSendEvent.getValue().getDeliveryFailureCause());
+        }
     }
 
     private void CommonMetaDematAggregateSequenceTest(String event1, String event2, String event3, StatusCodeEnum expectedStatusCode, boolean checkDeliveryFailureCauseEnrichment, boolean checkDiscoveredAddress) {
@@ -326,9 +338,22 @@ class Paper_RS_AR_IT extends BaseTest {
     void Test_RS_TheftLossDeterioration__RECRS006__RetryPC(){
         // retry paper channel
         //
+        // deliveryFailureCause
+        //
         // progress + retry
 
-        CommonFinalOnlyRetrySequenceTest("RECRS006");
+        CommonFinalOnlyRetrySequenceTest("RECRS006", true);
+    }
+
+    @Test
+    void Test_RS_TheftLossDeterioration__RECRS013__RetryPC(){
+        // retry paper channel
+        //
+        // deliveryFailureCause
+        //
+        // progress + retry
+
+        CommonFinalOnlyRetrySequenceTest("RECRS013", true);
     }
 
     // ******** AR ********
@@ -400,8 +425,21 @@ class Paper_RS_AR_IT extends BaseTest {
     void Test_AR_TheftLossDeterioration__RECRN006__RetryPC(){
         // retry paper channel
         //
+        // deliveryFailureCause
+        //
         // progress + retry
 
-        CommonFinalOnlyRetrySequenceTest("RECRN006");
+        CommonFinalOnlyRetrySequenceTest("RECRN006", true);
+    }
+
+    @Test
+    void Test_AR_TheftLossDeterioration__RECRN013__RetryPC(){
+        // retry paper channel
+        //
+        // deliveryFailureCause
+        //
+        // progress + retry
+
+        CommonFinalOnlyRetrySequenceTest("RECRN013", true);
     }
 }
