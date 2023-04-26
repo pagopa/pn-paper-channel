@@ -279,14 +279,14 @@ class Paper_RS_AR_IT extends BaseTest {
     // ******** RS ********
 
     @Test
-    void Test_RS_Delivered__RECRS001C(){
+    void Test_RS_Delivered__RECRS001C() {
         // final only -> send to delivery push
 
         CommonFinalOnlyRSSequenceTest("RECRS001C");
     }
 
     @Test
-    void Test_RS_NotDelivered__RECRS002A_RECRS002B_RECRS002C(){
+    void Test_RS_NotDelivered__RECRS002A_RECRS002B_RECRS002C() {
         // meta, demat, final (send to delivery push)
         //
         // deliveryFailureCause
@@ -297,7 +297,7 @@ class Paper_RS_AR_IT extends BaseTest {
     }
 
     @Test
-    void Test_RS_AbsoluteUntraceability__RECRS002D_RECRS002E_RECRS002F(){
+    void Test_RS_AbsoluteUntraceability__RECRS002D_RECRS002E_RECRS002F() {
         // meta, demat, final (send to delivery push)
         //
         // deliveryFailureCause
@@ -308,14 +308,14 @@ class Paper_RS_AR_IT extends BaseTest {
     }
 
     @Test
-    void Test_RS_DeliveredToStorage__RECRS003C(){
+    void Test_RS_DeliveredToStorage__RECRS003C() {
         // final only -> send to delivery push
 
         CommonFinalOnlyRSSequenceTest("RECRS003C");
     }
 
     @Test
-    void Test_RS_RefusedToStorage__RECRS004A_RECRS004B_RECRS004C(){
+    void Test_RS_RefusedToStorage__RECRS004A_RECRS004B_RECRS004C() {
         // meta, demat, final (send to delivery push)
         //
         //
@@ -325,7 +325,7 @@ class Paper_RS_AR_IT extends BaseTest {
     }
 
     @Test
-    void Test_RS_CompletedStorage__RECRS005A_RECRS005B_RECRS005C(){
+    void Test_RS_CompletedStorage__RECRS005A_RECRS005B_RECRS005C() {
         // meta, demat, final (send to delivery push)
         //
         //
@@ -335,7 +335,7 @@ class Paper_RS_AR_IT extends BaseTest {
     }
 
     @Test
-    void Test_RS_TheftLossDeteriorationRobbed__RECRS006__RetryPC(){
+    void Test_RS_TheftLossDeteriorationRobbed__RECRS006__RetryPC() {
         // retry paper channel
         //
         // deliveryFailureCause
@@ -346,7 +346,7 @@ class Paper_RS_AR_IT extends BaseTest {
     }
 
     @Test
-    void Test_RS_NotAccountableRobbed__RECRS013__RetryPC(){
+    void Test_RS_NotAccountableRobbed__RECRS013__RetryPC() {
         // retry paper channel
         //
         // deliveryFailureCause
@@ -357,7 +357,7 @@ class Paper_RS_AR_IT extends BaseTest {
     }
 
     @Test
-    void Test_RS_MajorCause__RECRS015__RetryPC(){
+    void Test_RS_MajorCause__RECRS015__RetryPC() { // CORREGGERE TEST E LOGICA: NON RETRY, SOLO PROGRESS (like RECRS001C, but PROGRESS)
         // retry paper channel
         //
         // progress + retry
@@ -368,7 +368,7 @@ class Paper_RS_AR_IT extends BaseTest {
     // ******** AR ********
 
     @Test
-    void Test_AR_Delivered__RECRN001A_RECRN001B_RECRN001C(){
+    void Test_AR_Delivered__RECRN001A_RECRN001B_RECRN001C() {
         // meta, demat, final (send to delivery push)
         //
         //
@@ -378,7 +378,7 @@ class Paper_RS_AR_IT extends BaseTest {
     }
 
     @Test
-    void Test_AR_NotDelivered__RECRN002A_RECRN002B_RECRN002C(){
+    void Test_AR_NotDelivered__RECRN002A_RECRN002B_RECRN002C() {
         // meta, demat, final (send to delivery push)
         //
         // deliveryFailureCause
@@ -389,7 +389,7 @@ class Paper_RS_AR_IT extends BaseTest {
     }
 
     @Test
-    void Test_AR_AbsoluteUntraceability__RECRN002D_RECRN002E_RECRN002F(){
+    void Test_AR_AbsoluteUntraceability__RECRN002D_RECRN002E_RECRN002F() {
         // meta, demat, final (send to delivery push)
         //
         // deliveryFailureCause
@@ -401,7 +401,7 @@ class Paper_RS_AR_IT extends BaseTest {
     }
 
     @Test
-    void Test_AR_DeliveredToStorage__RECRN003A_RECRN003B_RECRN003C(){
+    void Test_AR_DeliveredToStorage__RECRN003A_RECRN003B_RECRN003C() {
         // meta, demat, final (send to delivery push)
         //
         //
@@ -411,7 +411,7 @@ class Paper_RS_AR_IT extends BaseTest {
     }
 
     @Test
-    void Test_AR_RefusedToStorage__RECRN004A_RECRN004B_RECRN004C(){
+    void Test_AR_RefusedToStorage__RECRN004A_RECRN004B_RECRN004C() {
         // meta, demat, final (send to delivery push)
         //
         //
@@ -421,7 +421,7 @@ class Paper_RS_AR_IT extends BaseTest {
     }
 
     @Test
-    void Test_AR_CompletedStorage__RECRN005A_RECRN005B_RECRN005C(){
+    void Test_AR_CompletedStorage__RECRN005A_RECRN005B_RECRN005C() {
         // meta, demat, final (send to delivery push)
         //
         //
@@ -431,7 +431,7 @@ class Paper_RS_AR_IT extends BaseTest {
     }
 
     @Test
-    void Test_AR_TheftLossDeteriorationRobbed__RECRN006__RetryPC(){
+    void Test_AR_TheftLossDeteriorationRobbed__RECRN006__RetryPC() {
         // retry paper channel
         //
         // deliveryFailureCause
@@ -442,7 +442,7 @@ class Paper_RS_AR_IT extends BaseTest {
     }
 
     @Test
-    void Test_AR_NotAccountable__RECRN013__RetryPC(){
+    void Test_AR_NotAccountable__RECRN013__RetryPC() {
         // retry paper channel
         //
         // deliveryFailureCause
@@ -453,7 +453,7 @@ class Paper_RS_AR_IT extends BaseTest {
     }
 
     @Test
-    void Test_RS_MajorCause__RECRN015__RetryPC(){
+    void Test_RS_MajorCause__RECRN015__RetryPC() { // CORREGGERE TEST E LOGICA: NON RETRY, SOLO PROGRESS (like RECRS001C, but PROGRESS)
         // retry paper channel
         //
         // progress + retry
