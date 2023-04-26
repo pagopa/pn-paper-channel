@@ -346,7 +346,7 @@ class Paper_RS_AR_IT extends BaseTest {
     }
 
     @Test
-    void Test_RS_TheftLossDeteriorationRobbed__RECRS013__RetryPC(){
+    void Test_RS_NotAccountableRobbed__RECRS013__RetryPC(){
         // retry paper channel
         //
         // deliveryFailureCause
@@ -442,7 +442,7 @@ class Paper_RS_AR_IT extends BaseTest {
     }
 
     @Test
-    void Test_AR_TheftLossDeteriorationRobbed__RECRN013__RetryPC(){
+    void Test_AR_NotAccountable__RECRN013__RetryPC(){
         // retry paper channel
         //
         // deliveryFailureCause
