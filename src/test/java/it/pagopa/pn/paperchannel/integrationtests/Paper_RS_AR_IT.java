@@ -335,7 +335,7 @@ class Paper_RS_AR_IT extends BaseTest {
     }
 
     @Test
-    void Test_RS_TheftLossDeterioration__RECRS006__RetryPC(){
+    void Test_RS_TheftLossDeteriorationRobbed__RECRS006__RetryPC(){
         // retry paper channel
         //
         // deliveryFailureCause
@@ -346,7 +346,7 @@ class Paper_RS_AR_IT extends BaseTest {
     }
 
     @Test
-    void Test_RS_TheftLossDeterioration__RECRS013__RetryPC(){
+    void Test_RS_TheftLossDeteriorationRobbed__RECRS013__RetryPC(){
         // retry paper channel
         //
         // deliveryFailureCause
@@ -354,6 +354,15 @@ class Paper_RS_AR_IT extends BaseTest {
         // progress + retry
 
         CommonFinalOnlyRetrySequenceTest("RECRS013", true);
+    }
+
+    @Test
+    void Test_RS_MajorCause__RECRS015__RetryPC(){
+        // retry paper channel
+        //
+        // progress + retry
+
+        CommonFinalOnlyRetrySequenceTest("RECRS015", false);
     }
 
     // ******** AR ********
@@ -422,7 +431,7 @@ class Paper_RS_AR_IT extends BaseTest {
     }
 
     @Test
-    void Test_AR_TheftLossDeterioration__RECRN006__RetryPC(){
+    void Test_AR_TheftLossDeteriorationRobbed__RECRN006__RetryPC(){
         // retry paper channel
         //
         // deliveryFailureCause
@@ -433,7 +442,7 @@ class Paper_RS_AR_IT extends BaseTest {
     }
 
     @Test
-    void Test_AR_TheftLossDeterioration__RECRN013__RetryPC(){
+    void Test_AR_TheftLossDeteriorationRobbed__RECRN013__RetryPC(){
         // retry paper channel
         //
         // deliveryFailureCause
@@ -441,5 +450,14 @@ class Paper_RS_AR_IT extends BaseTest {
         // progress + retry
 
         CommonFinalOnlyRetrySequenceTest("RECRN013", true);
+    }
+
+    @Test
+    void Test_RS_MajorCause__RECRN015__RetryPC(){
+        // retry paper channel
+        //
+        // progress + retry
+
+        CommonFinalOnlyRetrySequenceTest("RECRN015", false);
     }
 }
