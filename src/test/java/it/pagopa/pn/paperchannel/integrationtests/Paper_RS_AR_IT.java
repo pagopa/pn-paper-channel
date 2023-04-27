@@ -54,7 +54,7 @@ class Paper_RS_AR_IT extends BaseTest {
     @MockBean
     private AddressDAO mockAddressDAO;
 
-    private void CommonFinalOnlyRSSequenceTest(String event) {
+    private void CommonFinalOnlySequenceTest(String event, StatusCodeEnum statusToCheck) {
         // event (final only)
         PnDeliveryRequest pnDeliveryRequest = CommonUtils.createPnDeliveryRequest();
 
@@ -81,15 +81,21 @@ class Paper_RS_AR_IT extends BaseTest {
         // verifico che è stato inviato un evento a delivery-push
         verify(sqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
 
-        assertEquals(StatusCodeEnum.OK, caturedSendEvent.getValue().getStatusCode());
+        assertEquals(statusToCheck, caturedSendEvent.getValue().getStatusCode());
     }
 
-    private void CommonFinalOnlyRetrySequenceTest(String event) {
+    private void CommonFinalOnlyRetrySequenceTest(String event, boolean checkDeliveryFailureCauseEnrichment) {
+        final String deliveryFailureCause = "F04"; // robbed
+
         // event (final only)
         PnDeliveryRequest pnDeliveryRequest = CommonUtils.createPnDeliveryRequest();
 
         PaperProgressStatusEventDto analogMail = CommonUtils.createSimpleAnalogMail();
         analogMail.setStatusCode(event);
+
+        if (checkDeliveryFailureCauseEnrichment) {
+            analogMail.setDeliveryFailureCause(deliveryFailureCause);
+        }
 
         SingleStatusUpdateDto extChannelMessage = new SingleStatusUpdateDto();
         extChannelMessage.setAnalogMail(analogMail);
@@ -132,6 +138,12 @@ class Paper_RS_AR_IT extends BaseTest {
         verify(sqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
 
         assertEquals(StatusCodeEnum.PROGRESS, caturedSendEvent.getValue().getStatusCode());
+
+        if (checkDeliveryFailureCauseEnrichment) {
+            assertEquals(deliveryFailureCause, caturedSendEvent.getValue().getDeliveryFailureCause());
+        } else {
+            assertNull(caturedSendEvent.getValue().getDeliveryFailureCause());
+        }
     }
 
     private void CommonMetaDematAggregateSequenceTest(String event1, String event2, String event3, StatusCodeEnum expectedStatusCode, boolean checkDeliveryFailureCauseEnrichment, boolean checkDiscoveredAddress) {
@@ -267,14 +279,14 @@ class Paper_RS_AR_IT extends BaseTest {
     // ******** RS ********
 
     @Test
-    void Test_RS_Delivered__RECRS001C(){
+    void Test_RS_Delivered__RECRS001C() {
         // final only -> send to delivery push
 
-        CommonFinalOnlyRSSequenceTest("RECRS001C");
+        CommonFinalOnlySequenceTest("RECRS001C", StatusCodeEnum.OK);
     }
 
     @Test
-    void Test_RS_NotDelivered__RECRS002A_RECRS002B_RECRS002C(){
+    void Test_RS_NotDelivered__RECRS002A_RECRS002B_RECRS002C() {
         // meta, demat, final (send to delivery push)
         //
         // deliveryFailureCause
@@ -285,7 +297,7 @@ class Paper_RS_AR_IT extends BaseTest {
     }
 
     @Test
-    void Test_RS_AbsoluteUntraceability__RECRS002D_RECRS002E_RECRS002F(){
+    void Test_RS_AbsoluteUntraceability__RECRS002D_RECRS002E_RECRS002F() {
         // meta, demat, final (send to delivery push)
         //
         // deliveryFailureCause
@@ -296,14 +308,14 @@ class Paper_RS_AR_IT extends BaseTest {
     }
 
     @Test
-    void Test_RS_DeliveredToStorage__RECRS003C(){
+    void Test_RS_DeliveredToStorage__RECRS003C() {
         // final only -> send to delivery push
 
-        CommonFinalOnlyRSSequenceTest("RECRS003C");
+        CommonFinalOnlySequenceTest("RECRS003C", StatusCodeEnum.OK);
     }
 
     @Test
-    void Test_RS_RefusedToStorage__RECRS004A_RECRS004B_RECRS004C(){
+    void Test_RS_RefusedToStorage__RECRS004A_RECRS004B_RECRS004C() {
         // meta, demat, final (send to delivery push)
         //
         //
@@ -313,7 +325,7 @@ class Paper_RS_AR_IT extends BaseTest {
     }
 
     @Test
-    void Test_RS_CompletedStorage__RECRS005A_RECRS005B_RECRS005C(){
+    void Test_RS_CompletedStorage__RECRS005A_RECRS005B_RECRS005C() {
         // meta, demat, final (send to delivery push)
         //
         //
@@ -323,18 +335,38 @@ class Paper_RS_AR_IT extends BaseTest {
     }
 
     @Test
-    void Test_RS_TheftLossDeterioration__RECRS006__RetryPC(){
+    void Test_RS_TheftLossDeteriorationRobbed__RECRS006__RetryPC() {
+        // retry paper channel
+        //
+        // deliveryFailureCause
+        //
+        // progress + retry
+
+        CommonFinalOnlyRetrySequenceTest("RECRS006", true);
+    }
+
+    @Test
+    void Test_RS_NotAccountable__RECRS013__RetryPC() {
         // retry paper channel
         //
         // progress + retry
 
-        CommonFinalOnlyRetrySequenceTest("RECRS006");
+        CommonFinalOnlyRetrySequenceTest("RECRS013", false);
+    }
+
+    @Test
+    void Test_RS_MajorCause__RECRS015() {
+        // final only -> send to delivery push
+        //
+        // progress
+
+        CommonFinalOnlySequenceTest("RECRS015", StatusCodeEnum.PROGRESS);
     }
 
     // ******** AR ********
 
     @Test
-    void Test_AR_Delivered__RECRN001A_RECRN001B_RECRN001C(){
+    void Test_AR_Delivered__RECRN001A_RECRN001B_RECRN001C() {
         // meta, demat, final (send to delivery push)
         //
         //
@@ -344,7 +376,7 @@ class Paper_RS_AR_IT extends BaseTest {
     }
 
     @Test
-    void Test_AR_NotDelivered__RECRN002A_RECRN002B_RECRN002C(){
+    void Test_AR_NotDelivered__RECRN002A_RECRN002B_RECRN002C() {
         // meta, demat, final (send to delivery push)
         //
         // deliveryFailureCause
@@ -355,7 +387,7 @@ class Paper_RS_AR_IT extends BaseTest {
     }
 
     @Test
-    void Test_AR_AbsoluteUntraceability__RECRN002D_RECRN002E_RECRN002F(){
+    void Test_AR_AbsoluteUntraceability__RECRN002D_RECRN002E_RECRN002F() {
         // meta, demat, final (send to delivery push)
         //
         // deliveryFailureCause
@@ -367,7 +399,7 @@ class Paper_RS_AR_IT extends BaseTest {
     }
 
     @Test
-    void Test_AR_DeliveredToStorage__RECRN003A_RECRN003B_RECRN003C(){
+    void Test_AR_DeliveredToStorage__RECRN003A_RECRN003B_RECRN003C() {
         // meta, demat, final (send to delivery push)
         //
         //
@@ -377,7 +409,7 @@ class Paper_RS_AR_IT extends BaseTest {
     }
 
     @Test
-    void Test_AR_RefusedToStorage__RECRN004A_RECRN004B_RECRN004C(){
+    void Test_AR_RefusedToStorage__RECRN004A_RECRN004B_RECRN004C() {
         // meta, demat, final (send to delivery push)
         //
         //
@@ -387,7 +419,7 @@ class Paper_RS_AR_IT extends BaseTest {
     }
 
     @Test
-    void Test_AR_CompletedStorage__RECRN005A_RECRN005B_RECRN005C(){
+    void Test_AR_CompletedStorage__RECRN005A_RECRN005B_RECRN005C() {
         // meta, demat, final (send to delivery push)
         //
         //
@@ -397,11 +429,31 @@ class Paper_RS_AR_IT extends BaseTest {
     }
 
     @Test
-    void Test_AR_TheftLossDeterioration__RECRN006__RetryPC(){
+    void Test_AR_TheftLossDeteriorationRobbed__RECRN006__RetryPC() {
+        // retry paper channel
+        //
+        // deliveryFailureCause
+        //
+        // progress + retry
+
+        CommonFinalOnlyRetrySequenceTest("RECRN006", true);
+    }
+
+    @Test
+    void Test_AR_NotAccountable__RECRN013__RetryPC() {
         // retry paper channel
         //
         // progress + retry
 
-        CommonFinalOnlyRetrySequenceTest("RECRN006");
+        CommonFinalOnlyRetrySequenceTest("RECRN013", false);
+    }
+
+    @Test
+    void Test_RS_MajorCause__RECRN015() {
+        // final only -> send to delivery push
+        //
+        // progress
+
+        CommonFinalOnlySequenceTest("RECRN015", StatusCodeEnum.PROGRESS);
     }
 }
