@@ -54,7 +54,7 @@ class Paper_RS_AR_IT extends BaseTest {
     @MockBean
     private AddressDAO mockAddressDAO;
 
-    private void CommonFinalOnlyRSSequenceTest(String event) {
+    private void CommonFinalOnlySequenceTest(String event, StatusCodeEnum statusToCheck) {
         // event (final only)
         PnDeliveryRequest pnDeliveryRequest = CommonUtils.createPnDeliveryRequest();
 
@@ -81,7 +81,7 @@ class Paper_RS_AR_IT extends BaseTest {
         // verifico che è stato inviato un evento a delivery-push
         verify(sqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
 
-        assertEquals(StatusCodeEnum.OK, caturedSendEvent.getValue().getStatusCode());
+        assertEquals(statusToCheck, caturedSendEvent.getValue().getStatusCode());
     }
 
     private void CommonFinalOnlyRetrySequenceTest(String event, boolean checkDeliveryFailureCauseEnrichment) {
@@ -282,7 +282,7 @@ class Paper_RS_AR_IT extends BaseTest {
     void Test_RS_Delivered__RECRS001C() {
         // final only -> send to delivery push
 
-        CommonFinalOnlyRSSequenceTest("RECRS001C");
+        CommonFinalOnlySequenceTest("RECRS001C", StatusCodeEnum.OK);
     }
 
     @Test
@@ -311,7 +311,7 @@ class Paper_RS_AR_IT extends BaseTest {
     void Test_RS_DeliveredToStorage__RECRS003C() {
         // final only -> send to delivery push
 
-        CommonFinalOnlyRSSequenceTest("RECRS003C");
+        CommonFinalOnlySequenceTest("RECRS003C", StatusCodeEnum.OK);
     }
 
     @Test
@@ -346,23 +346,21 @@ class Paper_RS_AR_IT extends BaseTest {
     }
 
     @Test
-    void Test_RS_NotAccountableRobbed__RECRS013__RetryPC() {
+    void Test_RS_NotAccountable__RECRS013__RetryPC() {
         // retry paper channel
-        //
-        // deliveryFailureCause
         //
         // progress + retry
 
-        CommonFinalOnlyRetrySequenceTest("RECRS013", true);
+        CommonFinalOnlyRetrySequenceTest("RECRS013", false);
     }
 
     @Test
-    void Test_RS_MajorCause__RECRS015__RetryPC() { // CORREGGERE TEST E LOGICA: NON RETRY, SOLO PROGRESS (like RECRS001C, but PROGRESS)
-        // retry paper channel
+    void Test_RS_MajorCause__RECRS015() {
+        // final only -> send to delivery push
         //
-        // progress + retry
+        // progress
 
-        CommonFinalOnlyRetrySequenceTest("RECRS015", false);
+        CommonFinalOnlySequenceTest("RECRS015", StatusCodeEnum.PROGRESS);
     }
 
     // ******** AR ********
@@ -445,19 +443,17 @@ class Paper_RS_AR_IT extends BaseTest {
     void Test_AR_NotAccountable__RECRN013__RetryPC() {
         // retry paper channel
         //
-        // deliveryFailureCause
-        //
         // progress + retry
 
-        CommonFinalOnlyRetrySequenceTest("RECRN013", true);
+        CommonFinalOnlyRetrySequenceTest("RECRN013", false);
     }
 
     @Test
-    void Test_RS_MajorCause__RECRN015__RetryPC() { // CORREGGERE TEST E LOGICA: NON RETRY, SOLO PROGRESS (like RECRS001C, but PROGRESS)
-        // retry paper channel
+    void Test_RS_MajorCause__RECRN015() {
+        // final only -> send to delivery push
         //
-        // progress + retry
+        // progress
 
-        CommonFinalOnlyRetrySequenceTest("RECRN015", false);
+        CommonFinalOnlySequenceTest("RECRN015", StatusCodeEnum.PROGRESS);
     }
 }

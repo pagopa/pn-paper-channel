@@ -84,8 +84,6 @@ public class HandlersFactory {
         map.put(ExternalChannelCodeEnum.RECRSI005.name(), handler);
         map.put(ExternalChannelCodeEnum.RECRS013.name(), handler);
         map.put(ExternalChannelCodeEnum.RECRN013.name(), handler);
-        map.put(ExternalChannelCodeEnum.RECRS015.name(), handler);
-        map.put(ExternalChannelCodeEnum.RECRN015.name(), handler);
     }
 
     private void addNotRetryableErrorStatusCodes(ConcurrentHashMap<String, MessageHandler> map, NotRetryableErrorMessageHandler handler) {
@@ -174,8 +172,11 @@ public class HandlersFactory {
 
     private void addDirectlySendStatusCodes(ConcurrentHashMap<String, MessageHandler> map, DirectlySendMessageHandler handler) {
         // casi particolari di addAggregatorStatusCodes, in cui non c'è un meta precedente e vanno direttamente inviati
-        map.put(ExternalChannelCodeEnum.RECRS001C.name(), handler); // iniziale e finale, no meta e demat prima
-        map.put(ExternalChannelCodeEnum.RECRS003C.name(), handler); // iniziale e finale, no meta e demat prima
+        map.put(ExternalChannelCodeEnum.RECRS001C.name(), handler); // iniziale e finale, no meta e demat prima, ok
+        map.put(ExternalChannelCodeEnum.RECRS003C.name(), handler); // iniziale e finale, no meta e demat prima, ok
+
+        map.put(ExternalChannelCodeEnum.RECRS015.name(), handler); // progress
+        map.put(ExternalChannelCodeEnum.RECRN015.name(), handler); // progress
     }
 
     private void addAggregatorStatusCodes(ConcurrentHashMap<String, MessageHandler> map, AggregatorMessageHandler handler) {

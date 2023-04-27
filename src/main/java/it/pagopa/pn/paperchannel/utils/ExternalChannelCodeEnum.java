@@ -84,8 +84,6 @@ public enum ExternalChannelCodeEnum {
                 || StringUtils.equalsIgnoreCase(code, RECRSI005.name())
                 || StringUtils.equalsIgnoreCase(code, RECRS013.name())
                 || StringUtils.equalsIgnoreCase(code, RECRN013.name())
-                || StringUtils.equalsIgnoreCase(code, RECRS015.name())
-                || StringUtils.equalsIgnoreCase(code, RECRN015.name())
         ) return true;
         return false;
     }
