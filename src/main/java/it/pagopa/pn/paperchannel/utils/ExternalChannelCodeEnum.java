@@ -31,6 +31,7 @@ public enum ExternalChannelCodeEnum {
     RECAG003C("KO"),
     RECAG003F("KO"),
     RECAG004("PROGRESS"), // furto o smarrimento
+    RECAG013("PROGRESS"),
     RECAG005C("OK"),
     RECAG006C("OK"),
     RECAG007C("KO"),
@@ -84,6 +85,7 @@ public enum ExternalChannelCodeEnum {
                 || StringUtils.equalsIgnoreCase(code, RECRSI005.name())
                 || StringUtils.equalsIgnoreCase(code, RECRS013.name())
                 || StringUtils.equalsIgnoreCase(code, RECRN013.name())
+                || StringUtils.equalsIgnoreCase(code, RECAG013.name())
         ) return true;
         return false;
     }
