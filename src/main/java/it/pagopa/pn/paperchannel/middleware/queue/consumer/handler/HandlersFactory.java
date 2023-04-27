@@ -167,6 +167,11 @@ public class HandlersFactory {
         map.put(ExternalChannelCodeEnum.RECRI003B.name(), handler);
         map.put(ExternalChannelCodeEnum.RECRI004B.name(), handler);
         map.put(ExternalChannelCodeEnum.RECRSI004B.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECAG005B.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECAG006B.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECAG007B.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECAG008B.name(), handler);
+
 
     }
 
