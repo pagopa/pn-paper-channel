@@ -317,7 +317,7 @@ class Paper_890IT extends BaseTest {
     }
 
 
-    
+
     @Test
     void test_890_finishedDossierClose_RECAG012_RECAG011B_RECAG008C(){
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
@@ -359,6 +359,7 @@ class Paper_890IT extends BaseTest {
 
         assertEquals("RECAG008C", caturedSendEvent.getValue().getStatusDetail());
         assertEquals(StatusCodeEnum.PROGRESS, caturedSendEvent.getValue().getStatusCode());
+        
     }
 
 
