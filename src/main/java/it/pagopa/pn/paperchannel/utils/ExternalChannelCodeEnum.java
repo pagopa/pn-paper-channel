@@ -20,6 +20,7 @@ public enum ExternalChannelCodeEnum {
     RECRN013("PROGRESS"), // furto o smarrimento o rapinato
     RECRS015("PROGRESS"),
     RECRN015("PROGRESS"),
+    RECAG015("PROGRESS"),
     RECAG001C("OK"),
     RECRN001C("OK"),
     RECRN002C("KO"),
