@@ -170,6 +170,7 @@ public class HandlersFactory {
         map.put(ExternalChannelCodeEnum.RECAG007B.name(), handler);
         map.put(ExternalChannelCodeEnum.RECAG008B.name(), handler);
 
+
     }
 
     private void addDirectlySendStatusCodes(ConcurrentHashMap<String, MessageHandler> map, DirectlySendMessageHandler handler) {
