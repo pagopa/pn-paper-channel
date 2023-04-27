@@ -34,7 +34,7 @@ public class Utility {
 
     public static String convertToHash(String string) {
         if(string==null){
-            return null;
+            string = "";
         }
         string = string.toLowerCase().replaceAll("\\s", "");
         return DigestUtils.sha256Hex(string);

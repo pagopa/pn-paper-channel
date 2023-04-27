@@ -1,6 +1,5 @@
 {
   "Parameters" : {
-    "NotificationCheckAddress": "true",
     "SafeStorageCxId": "pn-cons-000",
     "XPagopaExtchCxId": "pn-cons-000",
     "NationalRegistryCxId": "pn-paper-channel",
