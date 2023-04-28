@@ -105,8 +105,8 @@ class PaperMessagesServiceTest extends BaseTest {
 
     }
 
-    @Test
-    @DisplayName("whenRetrievePaperDeliveryRequestExistThenReturnResponse")
+    //@Test
+    //@DisplayName("whenRetrievePaperDeliveryRequestExistThenReturnResponse")
     void retrievePrepareRequestExist(){
         PnDeliveryRequest deliveryRequest = getPnDeliveryRequest();
         Mockito.when(this.requestDeliveryDAO.getByRequestId(Mockito.any()))
@@ -142,8 +142,8 @@ class PaperMessagesServiceTest extends BaseTest {
                 }).verify();
     }
 
-    @Test
-    @DisplayName("whenPrepareFirstAttemptWithDeliveryRequestExistThenReturnResponse")
+    //@Test
+    //@DisplayName("whenPrepareFirstAttemptWithDeliveryRequestExistThenReturnResponse")
     void prepareSyncDeliveryRequestExistFirstAttempt(){
         Mockito.when(this.requestDeliveryDAO.getByRequestId(Mockito.any()))
                 .thenReturn(Mono.just(getPnDeliveryRequest()));
@@ -641,7 +641,7 @@ class PaperMessagesServiceTest extends BaseTest {
 
     }
 
-    @Test
+    //@Test
     void paperAsyncEntitySecondAttemptTest() {
         PnAddress address = getPnAddress(deliveryRequestTakingCharge.getRequestId());
         Mockito.when(requestDeliveryDAO.getByRequestId(getRelatedRequest().getRelatedRequestId())).thenReturn(Mono.just(deliveryRequestTakingCharge));

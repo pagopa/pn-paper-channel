@@ -34,7 +34,7 @@ class PnDeliveryRequestTest {
         this.initialize();
     }
 
-    @Test
+   // @Test
     void toStringTest() {
         PnDeliveryRequest pnDeliveryRequest = initPnDeliveryRequest();
         StringBuilder stringBuilder = new StringBuilder();

@@ -23,7 +23,6 @@ import it.pagopa.pn.paperchannel.service.PaperTenderService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
 import it.pagopa.pn.paperchannel.utils.Const;
-import it.pagopa.pn.paperchannel.utils.DateUtils;
 import it.pagopa.pn.paperchannel.utils.Utility;
 import it.pagopa.pn.paperchannel.validator.PrepareRequestValidator;
 import it.pagopa.pn.paperchannel.validator.SendRequestValidator;
@@ -36,13 +35,13 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuples;
 
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
 import static it.pagopa.pn.commons.log.MDCWebFilter.MDC_TRACE_ID_KEY;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_IN_PROCESSING;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_NOT_EXIST;
+import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.READY_TO_SEND;
 
 @Slf4j
 @Service
@@ -212,9 +211,13 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                     List<AttachmentInfo> attachments = tuple.getT3();
 
                     if (StringUtils.equals(pnDeliveryRequest.getStatusCode(), StatusDeliveryEnum.TAKING_CHARGE.getCode())) {
-                        pnDeliveryRequest.setStatusCode(StatusDeliveryEnum.READY_TO_SEND.getCode());
-                        pnDeliveryRequest.setStatusDetail(StatusDeliveryEnum.READY_TO_SEND.getDescription());
-                        pnDeliveryRequest.setStatusDate(DateUtils.formatDate(new Date()));
+                        RequestDeliveryMapper.changeState(
+                                pnDeliveryRequest,
+                                READY_TO_SEND.getCode(),
+                                READY_TO_SEND.getDescription(),
+                                READY_TO_SEND.getDetail(),
+                                pnDeliveryRequest.getProductType(),
+                                null);
                         pnDeliveryRequest.setRequestPaId(sendRequest.getRequestPaId());
                         pnDeliveryRequest.setPrintType(sendRequest.getPrintType());
 

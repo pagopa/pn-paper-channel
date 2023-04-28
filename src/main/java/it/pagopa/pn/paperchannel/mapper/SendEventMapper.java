@@ -10,7 +10,6 @@ import it.pagopa.pn.paperchannel.rest.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.stream.Collectors;
 
 @Slf4j
 public class SendEventMapper {
@@ -25,14 +24,15 @@ public class SendEventMapper {
         SendEvent entityEvent = new SendEvent();
         entityEvent.setRequestId(request.getRequestId());
         try {
-            entityEvent.setStatusCode(StatusCodeEnum.valueOf(request.getStatusCode()));
+            entityEvent.setStatusCode(StatusCodeEnum.valueOf(request.getStatusDetail()));
         } catch (IllegalArgumentException ex) {
             log.info("status code not found"+request.getStatusCode());
         }
-        entityEvent.setStatusDetail(request.getStatusDetail());
+        entityEvent.setStatusDescription(request.getStatusDescription());
+        entityEvent.setStatusDetail(request.getStatusCode());
         entityEvent.setRegisteredLetterCode(request.getProductType());
         entityEvent.setStatusDateTime((DateUtils.parseDateString(request.getStatusDate())));
-        entityEvent.setAttachments(request.getAttachments().stream().map(AttachmentMapper::toAttachmentDetails).collect(Collectors.toList()));
+        entityEvent.setAttachments(request.getAttachments().stream().map(AttachmentMapper::toAttachmentDetails).toList());
         if (address != null && address.getTtl() != null) {
             entityEvent.setDiscoveredAddress(baseMapperAddress.toDTO(address));
         }

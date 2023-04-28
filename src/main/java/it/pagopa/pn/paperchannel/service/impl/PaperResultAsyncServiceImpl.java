@@ -5,6 +5,7 @@ import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
 import it.pagopa.pn.paperchannel.mapper.AttachmentMapper;
+import it.pagopa.pn.paperchannel.mapper.RequestDeliveryMapper;
 import it.pagopa.pn.paperchannel.mapper.SendRequestMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
@@ -34,6 +35,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Date;
 
 import static it.pagopa.pn.commons.log.MDCWebFilter.MDC_TRACE_ID_KEY;
@@ -214,10 +216,14 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
     }
 
     private Mono<PnDeliveryRequest> updateEntityResult(SingleStatusUpdateDto singleStatusUpdateDto, PnDeliveryRequest pnDeliveryRequestMono) {
-        pnDeliveryRequestMono.setStatusCode(ExternalChannelCodeEnum.getStatusCode(singleStatusUpdateDto.getAnalogMail().getStatusCode()));
-        pnDeliveryRequestMono.setStatusDetail(singleStatusUpdateDto.getAnalogMail().getProductType()
-                .concat(" - ").concat(pnDeliveryRequestMono.getStatusCode()).concat(" - ").concat(singleStatusUpdateDto.getAnalogMail().getStatusDescription()));
-        pnDeliveryRequestMono.setStatusDate(DateUtils.formatDate(Date.from(singleStatusUpdateDto.getAnalogMail().getStatusDateTime().toInstant())));
+        RequestDeliveryMapper.changeState(
+                pnDeliveryRequestMono,
+                singleStatusUpdateDto.getAnalogMail().getStatusCode(),
+                singleStatusUpdateDto.getAnalogMail().getStatusDescription(),
+                ExternalChannelCodeEnum.getStatusCode(singleStatusUpdateDto.getAnalogMail().getStatusCode()),
+                pnDeliveryRequestMono.getProductType(),
+                singleStatusUpdateDto.getAnalogMail().getStatusDateTime().toInstant()
+        );
         return requestDeliveryDAO.updateData(pnDeliveryRequestMono);
     }
 
