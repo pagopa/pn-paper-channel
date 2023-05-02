@@ -2,10 +2,16 @@ package it.pagopa.pn.paperchannel.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -17,9 +23,18 @@ public class Utility {
         throw new IllegalCallerException();
     }
 
+    public static Float getPriceFormat(float value) {
+        DecimalFormat fr = new DecimalFormat("#######.##");
+        fr.setRoundingMode(RoundingMode.HALF_UP);
+        DecimalFormatSymbols symbols = new DecimalFormatSymbols();
+        symbols.setDecimalSeparator('.');
+        fr.setDecimalFormatSymbols(symbols);
+        return Float.valueOf(fr.format(value));
+    }
+
     public static String convertToHash(String string) {
         if(string==null){
-            return null;
+            string = "";
         }
         string = string.toLowerCase().replaceAll("\\s", "");
         return DigestUtils.sha256Hex(string);
@@ -27,11 +42,14 @@ public class Utility {
 
     public static <T> String objectToJson (T data){
        try{
-           ObjectMapper objectMapper = new ObjectMapper();
+           ObjectMapper objectMapper = new ObjectMapper()
+                   .registerModule(new Jdk8Module())
+                   .registerModule(new JavaTimeModule());
+           objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
            return objectMapper.writeValueAsString(data);
        }
        catch (JsonProcessingException ex){
-           log.error("Error with mapping : {}", ex.getMessage(), ex);
+           log.warn("Error with mapping : {}", ex.getMessage(), ex);
            return null;
        }
     }

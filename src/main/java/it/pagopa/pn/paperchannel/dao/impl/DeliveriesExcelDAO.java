@@ -13,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -53,9 +52,6 @@ public class DeliveriesExcelDAO implements ExcelDAO<DeliveriesData> {
             response =  new DeliveriesData();
             response.setDeliveriesAndCosts(data);
 
-        } catch (IOException e) {
-            log.error("ERROR WITH EXCEL : {}", e.getMessage());
-            return null;
         } catch (DAOException e){
             throw new PnGenericException(EXCEL_BADLY_FORMAT, e.getMessage());
         } catch (Exception e) {

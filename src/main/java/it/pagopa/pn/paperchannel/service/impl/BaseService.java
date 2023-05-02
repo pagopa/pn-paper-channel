@@ -16,13 +16,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.time.Duration;
 import java.util.Date;
-import java.util.List;
 import java.util.function.Function;
 
 import static it.pagopa.pn.commons.log.MDCWebFilter.MDC_TRACE_ID_KEY;
@@ -92,7 +90,7 @@ public class BaseService {
                 .flatMap(Mono::just)
                 .onErrorResume(ex -> {
                     pnLogAudit.addsWarningResolveService(iun, String.format("prepare requestId = %s, relatedRequestId = %s, trace_id = %s Response KO from National Registry service", requestId, relatedRequestId, MDC.get(MDC_TRACE_ID_KEY)));
-                    log.warn("NationalRegistries finder address in errors", ex.getMessage());
+                    log.warn("NationalRegistries finder address in errors {}", ex.getMessage());
                     return Mono.empty();
 
                 }).subscribeOn(Schedulers.boundedElastic()).subscribe();
@@ -117,24 +115,16 @@ public class BaseService {
     }
 
 
-    protected Mono<Double> getPriceAttachments(List<AttachmentInfo> attachmentInfos, Float priceForAAr){
-        return Flux.fromStream(attachmentInfos.stream())
-                .map(attachmentInfo -> {
-                    if (StringUtils.equals(attachmentInfo.getDocumentType(), PN_AAR)) {
-                        return priceForAAr;
-                    }
-                    return attachmentInfo.getNumberOfPage() * priceForAAr;
-                })
-                .reduce(0.0, Double::sum);
-    }
-
-
 
 
     protected String getProductType(Address address, ProductTypeEnum productTypeEnum){
         String productType = "";
+        boolean isNational = StringUtils.isBlank(address.getCountry()) ||
+                StringUtils.equalsIgnoreCase(address.getCountry(), "it") ||
+                StringUtils.equalsIgnoreCase(address.getCountry(), "italia") ||
+                StringUtils.equalsIgnoreCase(address.getCountry(), "italy");
 
-        if(StringUtils.isNotBlank(address.getCap())){
+        if (StringUtils.isNotBlank(address.getCap()) && isNational) {
             if (productTypeEnum.equals(ProductTypeEnum.AR)) {
                 productType = RACCOMANDATA_AR;
             } else if (productTypeEnum.equals(ProductTypeEnum.RS)){
@@ -154,8 +144,12 @@ public class BaseService {
 
     protected String getProposalProductType(Address address, String productType){
         String proposalProductType = "";
+        boolean isNational = StringUtils.isBlank(address.getCountry()) ||
+                StringUtils.equalsIgnoreCase(address.getCountry(), "it") ||
+                StringUtils.equalsIgnoreCase(address.getCountry(), "italia") ||
+                StringUtils.equalsIgnoreCase(address.getCountry(), "italy");
         //nazionale
-        if(StringUtils.isNotBlank(address.getCap())){
+        if (StringUtils.isNotBlank(address.getCap()) && isNational) {
             if(productType.equals(RACCOMANDATA_SEMPLICE)){
                 proposalProductType = ProductTypeEnum.RS.getValue();
             }

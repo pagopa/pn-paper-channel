@@ -6,6 +6,8 @@ import it.pagopa.pn.paperchannel.mapper.AddressMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.NationalRegistryError;
@@ -72,21 +74,23 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                     log.info("Received message from National Registry queue with correlationId "+correlationId);
                     return requestDeliveryDAO.getByCorrelationId(correlationId)
                             .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage())));
-                }).flatMap(addressAndEntity -> {
-                    if (StringUtils.isEmpty(addressAndEntity.getT1().getError())) {
-                        pnLogAudit.addsSuccessResolveService(addressAndEntity.getT2().getIun(), String.format("prepare requestId = %s, relatedRequestId = %s, traceId = %s Response OK from National Registry service", addressAndEntity.getT2().getRequestId(), addressAndEntity.getT2().getRelatedRequestId(), addressAndEntity.getT2().getCorrelationId()));
-                    } else {
-                        pnLogAudit.addsFailResolveService(addressAndEntity.getT2().getIun(), String.format("prepare requestId = %s, relatedRequestId = %s, traceId = %s Response KO from National Registry service", addressAndEntity.getT2().getRequestId(), addressAndEntity.getT2().getRelatedRequestId(), addressAndEntity.getT2().getCorrelationId()));
-                    }
-                    Address address = null;
+                })
+                .doOnNext(addressAndEntity -> nationalResolveLogAudit(addressAndEntity.getT2(), addressAndEntity.getT1()))
+                .flatMap(addressAndEntity -> {
+                    AddressSQSMessageDto addressFromNational = addressAndEntity.getT1();
+                    PnDeliveryRequest entity = addressAndEntity.getT2();
 
-                    if (addressAndEntity.getT1().getPhysicalAddress() != null) {
-                        address = AddressMapper.fromNationalRegistry(addressAndEntity.getT1().getPhysicalAddress());
+
+                    if (addressFromNational.getPhysicalAddress() != null) {
+                        Address address = AddressMapper.fromNationalRegistry(addressFromNational.getPhysicalAddress());
+                        return this.retrieveRelatedAddress(entity.getRelatedRequestId(), address)
+                                .map(updateAddress -> new PrepareAsyncRequest(entity.getCorrelationId(), updateAddress));
                     }
 
-                    PrepareAsyncRequest prepareAsyncRequest =
-                            new PrepareAsyncRequest(addressAndEntity.getT2().getCorrelationId(), address);
-                    this.sqsSender.pushToInternalQueue(prepareAsyncRequest);
+                    return Mono.just(new PrepareAsyncRequest(addressAndEntity.getT2().getCorrelationId(), null));
+                })
+                .flatMap(prepareRequest -> {
+                    this.sqsSender.pushToInternalQueue(prepareRequest);
                     return Mono.empty();
                 })
                 .block();
@@ -124,6 +128,35 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                     throw new PnGenericException(EXTERNAL_CHANNEL_LISTENER_EXCEPTION, EXTERNAL_CHANNEL_LISTENER_EXCEPTION.getMessage());
                 })
                 .block();
+    }
+
+
+    private Mono<Address> retrieveRelatedAddress(String relatedRequestId, Address fromNationalRegistry){
+        return addressDAO.findByRequestId(relatedRequestId)
+                .map(address -> {
+                    fromNationalRegistry.setFullName(address.getFullName());
+                    return fromNationalRegistry;
+                }).switchIfEmpty(Mono.just(fromNationalRegistry));
+
+    }
+
+
+    private void nationalResolveLogAudit(PnDeliveryRequest entity, AddressSQSMessageDto address) {
+        if (StringUtils.isEmpty(address.getError())) {
+            pnLogAudit.addsSuccessResolveService(
+                    entity.getIun(),
+                    String.format("prepare requestId = %s, relatedRequestId = %s, traceId = %s Response OK from National Registry service",
+                            entity.getRequestId(),
+                            entity.getRelatedRequestId(),
+                            entity.getCorrelationId()));
+        } else {
+            pnLogAudit.addsFailResolveService(
+                    entity.getIun(),
+                    String.format("prepare requestId = %s, relatedRequestId = %s, traceId = %s Response KO from National Registry service",
+                            entity.getRequestId(),
+                            entity.getRelatedRequestId(),
+                            entity.getCorrelationId()));
+        }
     }
 
 }

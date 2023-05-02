@@ -12,6 +12,8 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
+import it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.HandlersFactory;
+import it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.MessageHandler;
 import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.DiscoveredAddressDto;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.SingleStatusUpdateDto;
@@ -27,7 +29,6 @@ import it.pagopa.pn.paperchannel.utils.PnLogAudit;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.MDC;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -43,22 +44,29 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.EXTERNAL_CHA
 @Service
 public class PaperResultAsyncServiceImpl extends BaseService implements PaperResultAsyncService {
 
-    @Autowired
-    private ExternalChannelClient externalChannelClient;
+    private final ExternalChannelClient externalChannelClient;
     private final PnPaperChannelConfig pnPaperChannelConfig;
     private final AddressDAO addressDAO;
     private final PaperRequestErrorDAO paperRequestErrorDAO;
 
+    private final HandlersFactory handlersFactory;
+
     public PaperResultAsyncServiceImpl(PnAuditLogBuilder auditLogBuilder, RequestDeliveryDAO requestDeliveryDAO,
-                                       NationalRegistryClient nationalRegistryClient, SqsSender sqsSender, PnPaperChannelConfig pnPaperChannelConfig, AddressDAO addressDAO, PaperRequestErrorDAO paperRequestErrorDAO) {
+                                       NationalRegistryClient nationalRegistryClient, SqsSender sqsSender,
+                                       PnPaperChannelConfig pnPaperChannelConfig, AddressDAO addressDAO,
+                                       PaperRequestErrorDAO paperRequestErrorDAO, HandlersFactory handlersFactory,
+                                       ExternalChannelClient externalChannelClient) {
         super(auditLogBuilder, requestDeliveryDAO, null, nationalRegistryClient, sqsSender);
         this.pnPaperChannelConfig = pnPaperChannelConfig;
         this.addressDAO = addressDAO;
         this.paperRequestErrorDAO = paperRequestErrorDAO;
+        this.handlersFactory = handlersFactory;
+        this.externalChannelClient = externalChannelClient;
     }
 
-    @Override
-    public Mono<PnDeliveryRequest> resultAsyncBackground(SingleStatusUpdateDto singleStatusUpdateDto, Integer attempt) {
+    //TODO cancellare questo metodo inutilizzato
+//    @Override
+    public Mono<PnDeliveryRequest> resultAsyncBackgroundOld(SingleStatusUpdateDto singleStatusUpdateDto, Integer attempt) {
         if (singleStatusUpdateDto == null || singleStatusUpdateDto.getAnalogMail() == null || StringUtils.isBlank(singleStatusUpdateDto.getAnalogMail().getRequestId())){
             log.error("the message sent from external channel, includes errors. It cannot be processing");
             return Mono.error(new PnGenericException(DATA_NULL_OR_INVALID, DATA_NULL_OR_INVALID.getMessage()));
@@ -108,6 +116,34 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
                                 return Mono.error(ex);
                             });
                 });
+    }
+
+    @Override
+    public Mono<Void> resultAsyncBackground(SingleStatusUpdateDto singleStatusUpdateDto, Integer attempt) {
+        if (singleStatusUpdateDto == null || singleStatusUpdateDto.getAnalogMail() == null || StringUtils.isBlank(singleStatusUpdateDto.getAnalogMail().getRequestId())) {
+            log.error("the message sent from external channel, includes errors. It cannot be processing");
+            return Mono.error(new PnGenericException(DATA_NULL_OR_INVALID, DATA_NULL_OR_INVALID.getMessage()));
+        }
+
+        MessageHandler handler = handlersFactory.getHandler(singleStatusUpdateDto.getAnalogMail().getStatusCode());
+
+        String requestId = getPrefixRequestId(singleStatusUpdateDto.getAnalogMail().getRequestId());
+        return requestDeliveryDAO.getByRequestId(requestId)
+                .doOnNext(entity -> logEntity(entity, singleStatusUpdateDto))
+                .flatMap(entity -> updateEntityResult(singleStatusUpdateDto, entity))
+                .flatMap(entity -> handler.handleMessage(entity, singleStatusUpdateDto.getAnalogMail()))
+                .doOnError(ex ->  log.error("Error in retrieve EC from queue", ex));
+
+    }
+
+    private void logEntity(PnDeliveryRequest entity, SingleStatusUpdateDto singleStatusUpdateDto) {
+        log.info("GETTED ENTITY: {}", entity.getRequestId());
+        SingleStatusUpdateDto logDto = singleStatusUpdateDto;
+        DiscoveredAddressDto discoveredAddressDto = logDto.getAnalogMail().getDiscoveredAddress();
+        logDto.getAnalogMail().setDiscoveredAddress(null);
+        pnLogAudit.addsBeforeReceive(entity.getIun(), String.format("prepare requestId = %s Response from external-channel", entity.getRequestId()));
+        pnLogAudit.addsSuccessReceive(entity.getIun(), String.format("prepare requestId = %s Response %s from external-channel status code %s", entity.getRequestId(), logDto.toString().replaceAll("\n", ""), entity.getStatusCode()));
+        logDto.getAnalogMail().setDiscoveredAddress(discoveredAddressDto);
     }
 
     private String getPrefixRequestId(String requestId) {

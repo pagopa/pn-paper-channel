@@ -7,16 +7,13 @@ import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.SingleStatusUpdateDto;
-import it.pagopa.pn.paperchannel.msclient.generated.pnnationalregistries.v1.dto.AddressOKDto;
 import it.pagopa.pn.paperchannel.msclient.generated.pnnationalregistries.v1.dto.AddressSQSMessageDto;
 import it.pagopa.pn.paperchannel.msclient.generated.pnnationalregistries.v1.dto.AddressSQSMessagePhysicalAddressDto;
-import it.pagopa.pn.paperchannel.service.PaperAsyncService;
-import it.pagopa.pn.paperchannel.service.PaperResultAsyncService;
-import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.service.impl.QueueListenerServiceImpl;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,10 +23,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import reactor.core.publisher.Mono;
-import reactor.test.StepVerifier;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
 class QueueListenerServiceImplTest extends BaseTest {
@@ -73,7 +68,7 @@ class QueueListenerServiceImplTest extends BaseTest {
             this.queueListenerService.internalListener(new PrepareAsyncRequest(),10);
         }
         catch(PnGenericException ex){
-            Assertions.assertEquals(ex.getExceptionType(),PREPARE_ASYNC_LISTENER_EXCEPTION);
+            Assertions.assertEquals(PREPARE_ASYNC_LISTENER_EXCEPTION, ex.getExceptionType());
         }
     }
 
@@ -84,7 +79,7 @@ class QueueListenerServiceImplTest extends BaseTest {
            Assertions.fail("Il metodo non è andato in eccezione");
        }
         catch(PnGenericException ex){
-            Assertions.assertEquals(ex.getExceptionType(),UNTRACEABLE_ADDRESS);
+            Assertions.assertEquals(UNTRACEABLE_ADDRESS, ex.getExceptionType());
         }
 
         AddressSQSMessageDto addressSQSMessageDto = new AddressSQSMessageDto();
@@ -93,7 +88,7 @@ class QueueListenerServiceImplTest extends BaseTest {
             this.queueListenerService.nationalRegistriesResponseListener(addressSQSMessageDto);
         }
         catch(PnGenericException ex){
-            Assertions.assertEquals(ex.getExceptionType(),UNTRACEABLE_ADDRESS);
+            Assertions.assertEquals(UNTRACEABLE_ADDRESS, ex.getExceptionType());
         }
     }
     @Test
@@ -105,7 +100,7 @@ class QueueListenerServiceImplTest extends BaseTest {
             this.queueListenerService.nationalRegistriesResponseListener(addressSQSMessageDto);
         }
         catch(PnGenericException ex){
-            Assertions.assertEquals(ex.getExceptionType(),DELIVERY_REQUEST_NOT_EXIST);
+            Assertions.assertEquals(DELIVERY_REQUEST_NOT_EXIST, ex.getExceptionType());
         }
     }
 
@@ -117,6 +112,7 @@ class QueueListenerServiceImplTest extends BaseTest {
         deliveryRequest.setRelatedRequestId("1234abc");
         deliveryRequest.setCorrelationId("9999");
         Mockito.when(this.requestDeliveryDAO.getByCorrelationId(Mockito.anyString())).thenReturn(Mono.just(deliveryRequest));
+        Mockito.when(this.addressDAO.findByRequestId(Mockito.anyString())).thenReturn(Mono.just(getRelatedAddress()));
         AddressSQSMessageDto addressSQSMessageDto = new AddressSQSMessageDto();
         addressSQSMessageDto.setCorrelationId("1234");
         addressSQSMessageDto.setError("ok");
@@ -159,7 +155,7 @@ class QueueListenerServiceImplTest extends BaseTest {
 
     @Test
     void externalChannelListenerOkTest(){
-        Mockito.when(this.paperResultAsyncService.resultAsyncBackground(Mockito.any(), Mockito.any())).thenReturn(Mono.just(new PnDeliveryRequest()));
+        Mockito.when(this.paperResultAsyncService.resultAsyncBackground(Mockito.any(), Mockito.any())).thenReturn(Mono.empty());
         this.queueListenerService.externalChannelListener(new SingleStatusUpdateDto(),10);
     }
 
@@ -170,7 +166,13 @@ class QueueListenerServiceImplTest extends BaseTest {
             this.queueListenerService.externalChannelListener(new SingleStatusUpdateDto(),10);
         }
         catch(PnGenericException ex){
-            Assertions.assertEquals(ex.getExceptionType(),EXTERNAL_CHANNEL_LISTENER_EXCEPTION);
+            Assertions.assertEquals(EXTERNAL_CHANNEL_LISTENER_EXCEPTION, ex.getExceptionType());
         }
+    }
+
+    private PnAddress getRelatedAddress(){
+        PnAddress address = new PnAddress();
+        address.setFullName("Mario Rossi");
+        return address;
     }
 }
