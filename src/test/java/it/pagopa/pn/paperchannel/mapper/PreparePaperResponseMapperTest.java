@@ -38,16 +38,14 @@ class PreparePaperResponseMapperTest {
         deliveryRequest.setRequestId("requestId");
         deliveryRequest.setRequestPaId("requestPaId");
         deliveryRequest.setFiscalCode("fiscalCode");
-        deliveryRequest.setReceiverType("receiverType");
+        deliveryRequest.setReceiverType("PF");
         deliveryRequest.setIun("iun");
         deliveryRequest.setHashOldAddress("hashOldAddress");
-        deliveryRequest.setPrintType("printType");
-        deliveryRequest.setCorrelationId("correlationId");
-        deliveryRequest.setStatusDetail("statusDetail");
-        deliveryRequest.setProposalProductType("proposalProductType");
-        deliveryRequest.setProductType("productType");
+        deliveryRequest.setPrintType("FRONTE-RETRO");
+        deliveryRequest.setProposalProductType("AR");
+        deliveryRequest.setProductType("AR");
         deliveryRequest.setAttachments(attachmentUrls);
-        deliveryRequest.setStatusCode("statusCode");
+
     }
 
     @Test
@@ -60,61 +58,67 @@ class PreparePaperResponseMapperTest {
     }
 
     @Test
-    void preparePaperResponseMapperFromResultTest () {
-        PaperChannelUpdate response= PreparePaperResponseMapper.fromResult(deliveryRequest,getPnAddress());
+    void preparePaperResponseMapperFromResultInProcessingStatusTest() {
+        PaperChannelUpdate response= PreparePaperResponseMapper.fromResult(setStatus(StatusDeliveryEnum.IN_PROCESSING),getPnAddress());
         Assertions.assertNotNull(response);
+        Assertions.assertNotNull(response.getPrepareEvent());
+        Assertions.assertEquals(response.getPrepareEvent().getStatusCode().getValue(),StatusDeliveryEnum.IN_PROCESSING.getDetail());
+        Assertions.assertEquals(response.getPrepareEvent().getStatusDetail(), StatusDeliveryEnum.IN_PROCESSING.getCode());
     }
-    //@Test
-    void preparePaperResponseMapperFromResultStatusTest () {
-        PaperChannelUpdate response= PreparePaperResponseMapper.fromResult(getPnDeliveryRequest(StatusDeliveryEnum.IN_PROCESSING.getCode()),getPnAddress());
-        Assertions.assertNotNull(response);
-    }
+
     @Test
-    void preparePaperResponseMapperFromEventTest () {
-        PaperEvent response= PreparePaperResponseMapper.fromEvent("12345");
+    void preparePaperResponseMapperFromResultTakingChargeStatusTest() {
+        PaperChannelUpdate response= PreparePaperResponseMapper.fromResult(setStatus(StatusDeliveryEnum.TAKING_CHARGE),getPnAddress());
         Assertions.assertNotNull(response);
+        Assertions.assertNotNull(response.getPrepareEvent());
+        Assertions.assertEquals(response.getPrepareEvent().getStatusCode().getValue(),StatusDeliveryEnum.TAKING_CHARGE.getDetail());
+        Assertions.assertEquals(response.getPrepareEvent().getStatusDetail(), StatusDeliveryEnum.TAKING_CHARGE.getCode());
     }
-    private PnDeliveryRequest getPnDeliveryRequest(String status){
-        PnDeliveryRequest deliveryRequest= new PnDeliveryRequest();
-        List<PnAttachmentInfo> attachmentUrls = new ArrayList<>();
-        PnAttachmentInfo pnAttachmentInfo = new PnAttachmentInfo();
-        pnAttachmentInfo.setDate("");
-        pnAttachmentInfo.setFileKey("http://localhost:8080");
-        pnAttachmentInfo.setId("");
-        pnAttachmentInfo.setNumberOfPage(3);
-        pnAttachmentInfo.setDocumentType("");
-        pnAttachmentInfo.setUrl("");
-        attachmentUrls.add(pnAttachmentInfo);
 
-        Address address = new Address();
-        address.setAddress("via roma");
-        address.setAddressRow2("via lazio");
-        address.setCap("00061");
-        address.setCity("roma");
-        address.setCity2("viterbo");
-        address.setCountry("italia");
-        address.setPr("PR");
-        address.setFullName("Ettore Fieramosca");
-        address.setNameRow2("Ettore");
-        deliveryRequest.setAddressHash(address.convertToHash());
-
-        deliveryRequest.setRequestId("12345abcde");
-        deliveryRequest.setFiscalCode("ABCD123AB501");
-        deliveryRequest.setReceiverType("RT");
-        deliveryRequest.setIun("");
-        deliveryRequest.setCorrelationId("");
-        deliveryRequest.setStatusCode(status);
-        deliveryRequest.setStatusDetail("");
-        deliveryRequest.setStatusDate("");
-        deliveryRequest.setProposalProductType("");
-        deliveryRequest.setPrintType("PT");
-        deliveryRequest.setStartDate("");
-        deliveryRequest.setProductType("RN_AR");
-        deliveryRequest.setAttachments(attachmentUrls);
-        List<PnAttachmentInfo> attachments;
-        return deliveryRequest;
+    @Test
+    void preparePaperResponseMapperFromResultNationalRegistryWaitingStatusTest() {
+        PaperChannelUpdate response= PreparePaperResponseMapper.fromResult(setStatus(StatusDeliveryEnum.NATIONAL_REGISTRY_WAITING),getPnAddress());
+        Assertions.assertNotNull(response);
+        Assertions.assertNotNull(response.getPrepareEvent());
+        Assertions.assertEquals(response.getPrepareEvent().getStatusCode().getValue(),StatusDeliveryEnum.NATIONAL_REGISTRY_WAITING.getDetail());
+        Assertions.assertEquals(response.getPrepareEvent().getStatusDetail(), StatusDeliveryEnum.NATIONAL_REGISTRY_WAITING.getCode());
     }
-    public PnAddress getPnAddress() {
+
+    @Test
+    void preparePaperResponseMapperFromResultAsyncErrorStatusTest() {
+        PaperChannelUpdate response= PreparePaperResponseMapper.fromResult(setStatus(StatusDeliveryEnum.PAPER_CHANNEL_ASYNC_ERROR),getPnAddress());
+        Assertions.assertNotNull(response);
+        Assertions.assertNotNull(response.getPrepareEvent());
+        Assertions.assertEquals(response.getPrepareEvent().getStatusCode().getValue(),StatusDeliveryEnum.PAPER_CHANNEL_ASYNC_ERROR.getDetail());
+        Assertions.assertEquals(response.getPrepareEvent().getStatusDetail(), StatusDeliveryEnum.PAPER_CHANNEL_ASYNC_ERROR.getCode());
+    }
+
+    @Test
+    void preparePaperResponseMapperFromResultSafeStorageErrorStatusTest() {
+        PaperChannelUpdate response= PreparePaperResponseMapper.fromResult(setStatus(StatusDeliveryEnum.SAFE_STORAGE_IN_ERROR),getPnAddress());
+        Assertions.assertNotNull(response);
+        Assertions.assertNotNull(response.getPrepareEvent());
+        Assertions.assertEquals(response.getPrepareEvent().getStatusCode().getValue(),StatusDeliveryEnum.SAFE_STORAGE_IN_ERROR.getDetail());
+        Assertions.assertEquals(response.getPrepareEvent().getStatusDetail(), StatusDeliveryEnum.SAFE_STORAGE_IN_ERROR.getCode());
+    }
+
+    @Test
+    void preparePaperResponseMapperPrepareEventNullTest() {
+        PaperChannelUpdate response= PreparePaperResponseMapper.fromResult(setStatus(StatusDeliveryEnum.PRINTED),getPnAddress());
+        Assertions.assertNotNull(response);
+        Assertions.assertNotNull(response.getSendEvent());
+  }
+
+    private PnDeliveryRequest setStatus(StatusDeliveryEnum status){
+        deliveryRequest.setStatusCode(status.getCode());
+        deliveryRequest.setStatusDetail(status.getDetail());
+        deliveryRequest.setStatusDescription(status.getDescription());
+        return  deliveryRequest;
+    }
+
+
+
+    private PnAddress getPnAddress() {
         PnAddress pnAddress = new PnAddress();
         pnAddress.setAddress("via roma");
         pnAddress.setAddressRow2("via lazio");

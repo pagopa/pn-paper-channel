@@ -20,6 +20,7 @@ class PnDeliveryRequestTest {
     private String hashOldAddress;
     private String statusCode;
     private String statusDetail;
+    private String statusDescription;
     private String statusDate;
     private String proposalProductType;
     private String printType;
@@ -34,7 +35,7 @@ class PnDeliveryRequestTest {
         this.initialize();
     }
 
-   // @Test
+    @Test
     void toStringTest() {
         PnDeliveryRequest pnDeliveryRequest = initPnDeliveryRequest();
         StringBuilder stringBuilder = new StringBuilder();
@@ -69,6 +70,9 @@ class PnDeliveryRequestTest {
         stringBuilder.append(", ");
         stringBuilder.append("statusDetail=");
         stringBuilder.append(statusDetail);
+        stringBuilder.append(", ");
+        stringBuilder.append("statusDescription=");
+        stringBuilder.append(statusDescription);
         stringBuilder.append(", ");
         stringBuilder.append("statusDate=");
         stringBuilder.append(statusDate);

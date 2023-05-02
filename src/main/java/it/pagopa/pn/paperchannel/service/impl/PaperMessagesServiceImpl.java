@@ -81,7 +81,7 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                             .flatMap(response -> {
                                 PrepareAsyncRequest request = new PrepareAsyncRequest(requestId, response.getIun(), false, 0);
                                 this.sqsSender.pushToInternalQueue(request);
-                                throw new PnPaperEventException(PreparePaperResponseMapper.fromEvent(prepareRequest.getRequestId()));
+                                throw new PnPaperEventException(prepareRequest.getRequestId());
                             }))
                     );
         }
@@ -153,7 +153,7 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                                                             response.getIun(), 0);
                                                 }
 
-                                                return Mono.error(new PnPaperEventException(PreparePaperResponseMapper.fromEvent(prepareRequest.getRequestId())));
+                                                return Mono.error(new PnPaperEventException(prepareRequest.getRequestId()));
                                             })
                             ));
                 })
