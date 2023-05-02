@@ -41,5 +41,4 @@ public class PnPaperChannelConfig {
     private Long ttlExecutionDaysDemat;
     private Integer paperWeight;
     private Integer letterWeight;
-    private String retryStatus;
 }
