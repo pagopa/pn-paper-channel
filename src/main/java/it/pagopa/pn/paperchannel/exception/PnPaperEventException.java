@@ -6,10 +6,10 @@ import lombok.Getter;
 @Getter
 public class PnPaperEventException extends RuntimeException{
 
-    private final PaperEvent paperEvent;
+    private final String requestId;
 
-    public PnPaperEventException(PaperEvent paperEvent){
-        this.paperEvent = paperEvent;
+    public PnPaperEventException(String requestId){
+        this.requestId = requestId;
     }
 
 
