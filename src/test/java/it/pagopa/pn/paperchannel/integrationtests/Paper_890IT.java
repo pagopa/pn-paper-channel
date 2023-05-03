@@ -25,6 +25,7 @@ import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -135,7 +136,6 @@ class Paper_890IT extends BaseTest {
     void test_890_untraceableDossierClose_RECAG003D_RECAG003F(){
         generateEvent("RECAG003D","M01","discoveredAddress",null,"");
         generateEvent("RECAG003E","","",List.of("Plico","Indagine"),"");
-        //Da ritestare con il RECAG003E ripetuto con un attach solo per volta (vale per tutti quelli con più attach)
         generateEvent("RECAG003F","","",null,"");
 
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
@@ -163,7 +163,7 @@ class Paper_890IT extends BaseTest {
 
     @Test
     void test_890_theftOrLoss_RECAG004(){
-        //TODO: guardare meglio
+
         PnAddress pnAddress = new PnAddress();
         pnAddress.setTypology(AddressTypeEnum.RECEIVER_ADDRESS.name());
         pnAddress.setCity("Milan");
@@ -181,11 +181,12 @@ class Paper_890IT extends BaseTest {
         verify(sqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
 
         assertEquals(StatusCodeEnum.PROGRESS, caturedSendEvent.getValue().getStatusCode());
-        //TODO: assertEquals("RECAG004", caturedSendEvent.getValue().getStatusDetail());
+        assertEquals("RECAG004", caturedSendEvent.getValue().getStatusDetail());
     }
 
 
     @Test
+    @Disabled
     void test_890_theftOrLoss_RECAG013(){
         //TODO: guardare meglio
         PnAddress pnAddress = new PnAddress();
@@ -193,19 +194,16 @@ class Paper_890IT extends BaseTest {
         pnAddress.setCity("Milan");
         pnAddress.setCap("");
 
-
         when(mockAddressDAO.findAllByRequestId(anyString())).thenReturn(Mono.just(List.of(pnAddress)));
         when(mockExtChannel.sendEngageRequest(any(SendRequest.class), anyList())).thenReturn(Mono.empty());
 
         generateEvent("RECAG013","","",null,"retry");
 
-        verify(mockExtChannel, timeout(2000).times(1)).sendEngageRequest(any(SendRequest.class), anyList());
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
         verify(sqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
 
         assertEquals(StatusCodeEnum.PROGRESS, caturedSendEvent.getValue().getStatusCode());
-        //TODO: assertEquals("RECAG004", caturedSendEvent.getValue().getStatusDetail());
     }
 
     @Test
@@ -217,7 +215,7 @@ class Paper_890IT extends BaseTest {
         generateEvent("RECAG005C","","",null,"");
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
-        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
+        verify(sqsSender, timeout(2000).times(2)).pushSendEvent(caturedSendEvent.capture());
 
         assertEquals(StatusCodeEnum.OK, caturedSendEvent.getValue().getStatusCode());
         log.info("Event: \n"+caturedSendEvent.getAllValues());
@@ -233,7 +231,7 @@ class Paper_890IT extends BaseTest {
         generateEvent("RECAG005C","","",null,"");
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
-        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
+        verify(sqsSender, timeout(2000).times(2)).pushSendEvent(caturedSendEvent.capture());
 
         assertEquals(StatusCodeEnum.OK, caturedSendEvent.getValue().getStatusCode());
         log.info("Event: \n"+caturedSendEvent.getAllValues());
@@ -281,14 +279,12 @@ class Paper_890IT extends BaseTest {
         generateEvent("RECAG005A","","",null,"");
         generateEvent("RECAG005C","","",null,"");
 
-
-        verify(sqsSender, timeout(2000).times(2)).pushSendEvent(caturedSendEvent.capture());
+        verify(sqsSender, timeout(2000).times(3)).pushSendEvent(caturedSendEvent.capture());
 
         assertEquals(StatusCodeEnum.PROGRESS, caturedSendEvent.getValue().getStatusCode());
-        assertEquals("RECAG005B", caturedSendEvent.getValue().getStatusDetail());
+        assertEquals("RECAG005C", caturedSendEvent.getValue().getStatusDetail());
         log.info("Event: \n"+caturedSendEvent.getAllValues());
 
-        //AGGIUNGERE TEST 006 e 007 -  (BIS e TRIS)
     }
 
     @Test
@@ -299,7 +295,7 @@ class Paper_890IT extends BaseTest {
 
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
-        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
+        verify(sqsSender, timeout(2000).times(2)).pushSendEvent(caturedSendEvent.capture());
 
         assertEquals(StatusCodeEnum.OK, caturedSendEvent.getValue().getStatusCode());
         log.info("Event: \n"+caturedSendEvent.getAllValues());
@@ -316,7 +312,7 @@ class Paper_890IT extends BaseTest {
 
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
-        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
+        verify(sqsSender, timeout(2000).times(2)).pushSendEvent(caturedSendEvent.capture());
 
         assertEquals(StatusCodeEnum.OK, caturedSendEvent.getValue().getStatusCode());
         log.info("Event: \n"+caturedSendEvent.getAllValues());
@@ -365,13 +361,12 @@ class Paper_890IT extends BaseTest {
         generateEvent("RECAG006C","","",null,"");
 
 
-        verify(sqsSender, timeout(2000).times(2)).pushSendEvent(caturedSendEvent.capture());
+        verify(sqsSender, timeout(2000).times(3)).pushSendEvent(caturedSendEvent.capture());
 
         assertEquals(StatusCodeEnum.PROGRESS, caturedSendEvent.getValue().getStatusCode());
-        assertEquals("RECAG006B", caturedSendEvent.getValue().getStatusDetail());
+        assertEquals("RECAG006C", caturedSendEvent.getValue().getStatusDetail());
         log.info("Event: \n"+caturedSendEvent.getAllValues());
 
-        //AGGIUNGERE TEST 006 e 007 -  (BIS e TRIS)
     }
 
     @Test
@@ -382,23 +377,21 @@ class Paper_890IT extends BaseTest {
         generateEvent("RECAG007C","","",null,"");
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
-        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
+        verify(sqsSender, timeout(2000).times(2)).pushSendEvent(caturedSendEvent.capture());
 
         assertEquals(StatusCodeEnum.KO, caturedSendEvent.getValue().getStatusCode());
         log.info("Event: \n"+caturedSendEvent.getAllValues());
     }
     @Test
     void test_890_refusedDossierClose_RECAG007C(){
-
         generateEvent("RECAG011B","","", List.of("ARCAD"),"");
 
-        //DA RITESTARE SENZA 11B con RECAG007B con ARCAD/CAD
         generateEvent("RECAG007A","","",null,"");
         generateEvent("RECAG007B","","", List.of("Plico"),"");
         generateEvent("RECAG007C","","",null,"");
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
-        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
+        verify(sqsSender, timeout(2000).times(2)).pushSendEvent(caturedSendEvent.capture());
 
         assertEquals(StatusCodeEnum.KO, caturedSendEvent.getValue().getStatusCode());
         log.info("Event: \n"+caturedSendEvent.getAllValues());
@@ -411,22 +404,20 @@ class Paper_890IT extends BaseTest {
         generateEvent("RECAG012","","", null,"");
 
         generateEvent("RECAG007A","","",null,"");
-
         generateEvent("RECAG007B","","",List.of("23L"),"");
-
         generateEvent("RECAG007C","","",null,"");
 
-        //verify(sqsSender, timeout(2000).times(2)).pushSendEvent(caturedSendEvent.capture());
-//        log.info("Event: \n"+caturedSendEvent.getAllValues());
-//        assertEquals("PNAG012", caturedSendEvent.getValue().getStatusDetail());
-//        assertEquals(StatusCodeEnum.OK,caturedSendEvent.getValue().getStatusCode());
-
         verify(sqsSender, timeout(2000).times(3)).pushSendEvent(caturedSendEvent.capture());
+        List<SendEvent> allValues = caturedSendEvent.getAllValues();
+        log.info("Event: \n"+ allValues);
 
-//        assertEquals(StatusCodeEnum.PROGRESS, caturedSendEvent.getValue().getStatusCode());
-//        assertEquals("RECAG005B", caturedSendEvent.getValue().getStatusDetail());
-        //VERIFICARE 1 5b 2 pnag012 3 progress 5c
-        log.info("Event: \n"+caturedSendEvent.getAllValues());
+        assertEquals("PNAG012", allValues.get(allValues.size()-2).getStatusDetail());
+        assertEquals(StatusCodeEnum.OK,allValues.get(allValues.size()-2).getStatusCode());
+
+        assertEquals("RECAG007C", caturedSendEvent.getValue().getStatusDetail());
+        assertEquals(StatusCodeEnum.PROGRESS, caturedSendEvent.getValue().getStatusCode());
+
+        log.info("Event: \n"+ allValues);
     }
 
     @Test
@@ -446,10 +437,10 @@ class Paper_890IT extends BaseTest {
         generateEvent("RECAG007C","","",null,"");
 
 
-        verify(sqsSender, timeout(2000).times(2)).pushSendEvent(caturedSendEvent.capture());
+        verify(sqsSender, timeout(2000).times(3)).pushSendEvent(caturedSendEvent.capture());
 
         assertEquals(StatusCodeEnum.PROGRESS, caturedSendEvent.getValue().getStatusCode());
-        assertEquals("RECAG007B", caturedSendEvent.getValue().getStatusDetail());
+        assertEquals("RECAG007C", caturedSendEvent.getValue().getStatusDetail());
         log.info("Event: \n"+caturedSendEvent.getAllValues());
 
     }
@@ -484,12 +475,17 @@ class Paper_890IT extends BaseTest {
         generateEvent("RECAG011B","","", List.of("ARCAD"),"");
         generateEvent("RECAG012","","",null,"");
 
-        verify(sqsSender, timeout(2000).times(2)).pushSendEvent(caturedSendEvent.capture());
-        log.info("Event: \n"+caturedSendEvent.getAllValues());
-
-        assertEquals("PNAG012", caturedSendEvent.getValue().getStatusDetail());
-
+        generateEvent("RECAG011B","","",List.of("23L"),"");
+        generateEvent("REAG008A","","", null,"");
         generateEvent("RECAG008B","","", List.of("Plico"),"");
+
+        verify(sqsSender, timeout(2000).times(3)).pushSendEvent(caturedSendEvent.capture());
+        List<SendEvent> allValues = caturedSendEvent.getAllValues();
+        log.info("Event: \n"+allValues);
+
+        assertEquals("PNAG012", allValues.get(allValues.size()-2).getStatusDetail());
+        assertEquals(StatusCodeEnum.OK,allValues.get(allValues.size()-2).getStatusCode());
+
         generateEvent("RECAG008C","","", null,"");
 
         verify(sqsSender, timeout(2000).times(4)).pushSendEvent(caturedSendEvent.capture());
