@@ -9,6 +9,7 @@ import it.pagopa.pn.paperchannel.exception.PnRetryStorageException;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
 import it.pagopa.pn.paperchannel.mapper.AttachmentMapper;
 import it.pagopa.pn.paperchannel.mapper.PrepareEventMapper;
+import it.pagopa.pn.paperchannel.mapper.RequestDeliveryMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
@@ -41,6 +42,7 @@ import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.Date;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
+import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.TAKING_CHARGE;
 
 @Slf4j
 @Service
@@ -48,8 +50,6 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
 
     @Autowired
     private SafeStorageClient safeStorageClient;
-    @Autowired
-    private AddressManagerClient addressManagerClient;
     @Autowired
     private AddressDAO addressDAO;
     @Autowired

@@ -24,14 +24,6 @@ public class PreparePaperResponseMapper {
         return paperChannelUpdate;
     }
 
-    public static PaperEvent fromEvent(String requestId){
-        PaperEvent event = new PaperEvent();
-        event.setRequestId(requestId);
-        event.setStatusCode("PRESA_IN_CARICO");
-        event.setStatusDetail("Presa in carico");
-        event.setStatusDateTime(new Date());
-        return event;
-    }
 
     private static boolean hasPrepareStatusCode(String statusCode) {
         return statusCode.equals(StatusDeliveryEnum.IN_PROCESSING.getCode())

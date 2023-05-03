@@ -2,6 +2,7 @@ package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.paperchannel.encryption.DataEncryption;
+import it.pagopa.pn.paperchannel.mapper.RequestDeliveryMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
@@ -9,7 +10,6 @@ import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.model.*;
 import it.pagopa.pn.paperchannel.rest.v1.dto.ProductTypeEnum;
 import it.pagopa.pn.paperchannel.service.SqsSender;
-import it.pagopa.pn.paperchannel.utils.DateUtils;
 import it.pagopa.pn.paperchannel.utils.PnLogAudit;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -20,11 +20,11 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.time.Duration;
-import java.util.Date;
 import java.util.function.Function;
 
 import static it.pagopa.pn.commons.log.MDCWebFilter.MDC_TRACE_ID_KEY;
 import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.NATIONAL_REGISTRY_ERROR;
+import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.NATIONAL_REGISTRY_WAITING;
 import static it.pagopa.pn.paperchannel.utils.Const.*;
 
 @Slf4j
@@ -78,13 +78,9 @@ public class BaseService {
                     log.info("National registries has response");
                     return this.requestDeliveryDAO.getByRequestId(requestId)
                             .flatMap(entity -> {
-                                log.debug("Entity edited with correlation id and new status");
-                                
+                                log.debug("Entity edited with correlation id {} and new status {}", correlationId, NATIONAL_REGISTRY_WAITING.getDetail());
                                 entity.setCorrelationId(correlationId);
-                                entity.setStatusCode(StatusDeliveryEnum.NATIONAL_REGISTRY_WAITING.getCode());
-                                entity.setStatusDetail(StatusDeliveryEnum.NATIONAL_REGISTRY_WAITING.getDescription());
-                                entity.setStatusDate(DateUtils.formatDate(new Date()));
-                                return this.requestDeliveryDAO.updateData(entity).flatMap(Mono::just);
+                                return changeStatusDeliveryRequest(entity, NATIONAL_REGISTRY_WAITING);
                             });
                 })
                 .flatMap(Mono::just)
@@ -97,11 +93,14 @@ public class BaseService {
     }
 
 
-    private Mono<PnDeliveryRequest> changeStatusDeliveryRequest(PnDeliveryRequest pnDeliveryRequeste, StatusDeliveryEnum status){
-        pnDeliveryRequeste.setStatusCode(status.getCode());
-        pnDeliveryRequeste.setStatusDetail(status.getDescription());
-        pnDeliveryRequeste.setStatusDate(DateUtils.formatDate(new Date()));
-        return this.requestDeliveryDAO.updateData(pnDeliveryRequeste).flatMap(Mono::just);
+    private Mono<PnDeliveryRequest> changeStatusDeliveryRequest(PnDeliveryRequest deliveryRequest, StatusDeliveryEnum status){
+        RequestDeliveryMapper.changeState(
+                deliveryRequest,
+                status.getCode(),
+                status.getDescription(),
+                status.getDetail(),
+                deliveryRequest.getProductType(), null);
+        return this.requestDeliveryDAO.updateData(deliveryRequest).flatMap(Mono::just);
     }
 
     private <T> void saveErrorAndPushError(String requestId, StatusDeliveryEnum status,  T error, Function<T, Void> queuePush){

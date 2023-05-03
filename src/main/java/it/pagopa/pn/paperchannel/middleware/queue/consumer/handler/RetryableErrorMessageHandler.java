@@ -56,7 +56,7 @@ public class RetryableErrorMessageHandler extends SendToDeliveryPushHandler {
 
         if (hasOtherAttempt(paperRequest.getRequestId())) {
             //invio di nuovo la richiesta a ext-channels
-            return sendEngageRequest(entity, paperRequest.getRequestId())
+            return sendEngageRequest(entity, setRetryRequestId(paperRequest.getRequestId()))
                     .flatMap(pnDeliveryRequest -> super.handleMessage(entity, paperRequest));
         } else {
             return paperRequestErrorDAO.created(entity.getRequestId(),
@@ -76,6 +76,15 @@ public class RetryableErrorMessageHandler extends SendToDeliveryPushHandler {
             retry = Integer.parseInt(requestId.substring(requestId.lastIndexOf("_")+1));
         }
         return retry;
+    }
+
+    private String setRetryRequestId(String requestId) {
+        if (requestId.contains(Const.RETRY)) {
+            String prefix = requestId.substring(0, requestId.indexOf(Const.RETRY));
+            String attempt = String.valueOf(getRetryAttempt(requestId)+1);
+            requestId = prefix.concat(Const.RETRY).concat(attempt);
+        }
+        return requestId;
     }
 
     private Mono<PnDeliveryRequest> sendEngageRequest(PnDeliveryRequest pnDeliveryRequest, String requestId) {
