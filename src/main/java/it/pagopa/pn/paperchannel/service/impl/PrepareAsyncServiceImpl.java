@@ -9,6 +9,7 @@ import it.pagopa.pn.paperchannel.exception.PnRetryStorageException;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
 import it.pagopa.pn.paperchannel.mapper.AttachmentMapper;
 import it.pagopa.pn.paperchannel.mapper.PrepareEventMapper;
+import it.pagopa.pn.paperchannel.mapper.RequestDeliveryMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
@@ -41,6 +42,7 @@ import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.Date;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
+import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.TAKING_CHARGE;
 
 @Slf4j
 @Service
@@ -81,9 +83,14 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
         return requestDeliveryEntityMono
                 .flatMap(deliveryRequest -> checkAndUpdateAddress(correlationId, deliveryRequest, addressFromNationalRegistry))
                 .map(pnDeliveryRequest -> {
-                    pnDeliveryRequest.setStatusCode(StatusDeliveryEnum.TAKING_CHARGE.getCode());
-                    pnDeliveryRequest.setStatusDetail(StatusDeliveryEnum.TAKING_CHARGE.getDescription());
-                    pnDeliveryRequest.setStatusDate(DateUtils.formatDate(new Date()));
+                    RequestDeliveryMapper.changeState(
+                            pnDeliveryRequest,
+                            TAKING_CHARGE.getCode(),
+                            TAKING_CHARGE.getDescription(),
+                            TAKING_CHARGE.getDetail(),
+                            pnDeliveryRequest.getProductType(),
+                            null
+                    );
                     return pnDeliveryRequest;
                 })
                 .flatMap(pnDeliveryRequest -> getAttachmentsInfo(pnDeliveryRequest, request))
