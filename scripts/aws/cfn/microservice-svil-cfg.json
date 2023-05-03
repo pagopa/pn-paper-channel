@@ -7,7 +7,6 @@
     "AttemptQueueExternalChannel": "3",
     "AttemptQueueNationalRegistries": "3",
     "AttemptQueueSafeStorage": "3",
-    "ExternalChannelBaseUrl": "https://zq5g01oxkb.execute-api.eu-south-1.amazonaws.com/dev/",
     "TtlPrepare": "14",
     "TtlExecutionRNAR": "12",
     "TtlExecutionRN890" : "11" ,
