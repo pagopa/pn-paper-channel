@@ -640,7 +640,6 @@ class PaperMessagesServiceTest extends BaseTest {
                 }).verifyComplete();
 
     }
-
     @Test
     void paperAsyncEntitySecondAttemptTest() {
         PnAddress address = getPnAddress(deliveryRequestTakingCharge.getRequestId());
@@ -704,8 +703,9 @@ class PaperMessagesServiceTest extends BaseTest {
         deliveryRequest.setReceiverType("RT");
         deliveryRequest.setIun("");
         deliveryRequest.setCorrelationId("");
-        deliveryRequest.setStatusCode("PC000");
-        deliveryRequest.setStatusDetail("");
+        deliveryRequest.setStatusCode(StatusDeliveryEnum.IN_PROCESSING.getCode());
+        deliveryRequest.setStatusDetail(StatusDeliveryEnum.IN_PROCESSING.getDetail());
+        deliveryRequest.setStatusDescription(StatusDeliveryEnum.IN_PROCESSING.getDescription());
         deliveryRequest.setStatusDate("");
         deliveryRequest.setProposalProductType("AR");
         deliveryRequest.setHashedFiscalCode(Utility.convertToHash(deliveryRequest.getFiscalCode()));
@@ -770,7 +770,8 @@ class PaperMessagesServiceTest extends BaseTest {
         deliveryRequest.setIun("iun");
         deliveryRequest.setCorrelationId("");
         deliveryRequest.setStatusCode(status.getCode());
-        deliveryRequest.setStatusDetail(status.getDescription());
+        deliveryRequest.setStatusDetail(status.getDetail());
+        deliveryRequest.setStatusDescription(status.getDescription());
         deliveryRequest.setStatusDate("");
         deliveryRequest.setProposalProductType("AR");
         deliveryRequest.setPrintType("PT");

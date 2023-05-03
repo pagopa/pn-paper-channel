@@ -2,6 +2,7 @@ package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.api.dto.events.GenericEventHeader;
 
+import it.pagopa.pn.commons.utils.LogUtils;
 import it.pagopa.pn.paperchannel.middleware.queue.model.InternalEventHeader;
 import it.pagopa.pn.paperchannel.middleware.queue.model.InternalPushEvent;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.DeliveryPushMomProducer;
@@ -61,6 +62,17 @@ public class SqsQueueSender implements SqsSender {
         paperChannelUpdate.setSendEvent(sendEvent);
 
         DeliveryPushEvent deliveryPushEvent = new DeliveryPushEvent(deliveryHeader, paperChannelUpdate);
+        if (prepareEvent!=null){
+            log.debug(
+                    "name surname: {}, address: {}, zip: {},city:{}, pr:{},foreign state: {}",
+                    LogUtils.maskGeneric(prepareEvent.getReceiverAddress().getFullname()),
+                    LogUtils.maskGeneric(prepareEvent.getReceiverAddress().getAddress()),
+                    LogUtils.maskGeneric(prepareEvent.getReceiverAddress().getCap()),
+                    LogUtils.maskGeneric(prepareEvent.getReceiverAddress().getCity()),
+                    LogUtils.maskGeneric(prepareEvent.getReceiverAddress().getPr()),
+                    LogUtils.maskGeneric(prepareEvent.getReceiverAddress().getCountry())
+        );
+        }
 
         this.deliveryPushMomProducer.push(deliveryPushEvent);
     }

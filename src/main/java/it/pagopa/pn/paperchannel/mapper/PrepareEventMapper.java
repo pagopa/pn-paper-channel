@@ -24,20 +24,13 @@ public class PrepareEventMapper {
     public static PrepareEvent fromResult(PnDeliveryRequest request, PnAddress address){
         PrepareEvent entityEvent = new PrepareEvent();
         entityEvent.setRequestId(request.getRequestId());
-        entityEvent.setStatusCode(StatusCodeEnum.OK);
-        if (request.getStatusCode().equals(StatusDeliveryEnum.IN_PROCESSING.getCode()) || request.getStatusCode().equals(StatusDeliveryEnum.NATIONAL_REGISTRY_WAITING.getCode())){
-            entityEvent.setStatusCode(StatusCodeEnum.PROGRESS);
-        }
-
-        else if (request.getStatusCode().equals(StatusDeliveryEnum.UNTRACEABLE.getCode())){
-            entityEvent.setStatusCode(StatusCodeEnum.KOUNREACHABLE);
-        }
+        entityEvent.setStatusCode(StatusCodeEnum.fromValue(request.getStatusDetail()));
 
         if (address != null && address.getTtl() != null){
            entityEvent.setReceiverAddress(baseMapperAddress.toDTO(address));
         }
 
-        entityEvent.setStatusDetail(request.getStatusDetail());
+        entityEvent.setStatusDetail(request.getStatusCode());
         entityEvent.setProductType(request.getProductType());
         entityEvent.setStatusDateTime((DateUtils.parseDateString(request.getStatusDate())));
         return entityEvent;

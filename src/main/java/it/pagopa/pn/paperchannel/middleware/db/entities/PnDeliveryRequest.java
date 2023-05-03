@@ -23,6 +23,7 @@ public class PnDeliveryRequest {
     public static final String COL_FISCAL_CODE = "fiscalCode";
 
     public static final String COL_HASHED_FISCAL_CODE = "hashedFiscalCode";
+
     public static final String COL_RECEIVER_TYPE = "receiverType";
 
     public static final String COL_IUN = "iun";
@@ -41,6 +42,8 @@ public class PnDeliveryRequest {
 
     private static final String COL_STATUS_DETAIL = "statusDetail";
 
+    private static final String COL_STATUS_DESCRIPTION = "statusDescription";
+
     private static final String COL_STATUS_DATE = "statusDate";
 
     private static final String COL_PROPOSAL_PRODUCT_TYPE = "proposalProductType";
@@ -51,8 +54,11 @@ public class PnDeliveryRequest {
     private static final String COL_ATTACHMENTS = "attachments";
 
     private static final String COL_PRODUCT_TYPE = "productType";
+
     private static final String COL_RELATED_REQUEST_ID = "relatedRequestId";
+
     private static final String COL_HASH_OLD_ADDRESS = "hashOldAddress";
+
     public static final String COL_REQUEST_PA_ID = "requestPaId";
 
     @Getter(onMethod = @__({@DynamoDbPartitionKey,@DynamoDbAttribute(COL_REQUEST_ID)}))
@@ -85,6 +91,9 @@ public class PnDeliveryRequest {
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_STATUS_DETAIL)}))
     private String statusDetail;
 
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_STATUS_DESCRIPTION)}))
+    private String statusDescription;
+
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_STATUS_DATE)}))
     private String statusDate;
 
@@ -105,6 +114,7 @@ public class PnDeliveryRequest {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_ATTACHMENTS)}))
     private List<PnAttachmentInfo> attachments;
+
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_REQUEST_PA_ID)}))
     private String requestPaId;
 
