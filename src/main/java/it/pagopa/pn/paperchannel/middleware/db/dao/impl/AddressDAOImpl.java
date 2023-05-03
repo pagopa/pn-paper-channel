@@ -24,10 +24,6 @@ import java.util.List;
 @Slf4j
 public class AddressDAOImpl extends BaseDAO <PnAddress> implements AddressDAO {
 
-    @Autowired
-    @Qualifier("kmsEncryption")
-    private DataEncryption kmsEncryption;
-
     public AddressDAOImpl(DataEncryption kmsEncryption,
                           DynamoDbEnhancedAsyncClient dynamoDbEnhancedAsyncClient,
                           DynamoDbAsyncClient dynamoDbAsyncClient,
@@ -57,7 +53,12 @@ public class AddressDAOImpl extends BaseDAO <PnAddress> implements AddressDAO {
 
     @Override
     public Mono<PnAddress> findByRequestId(String requestId) {
-        return Mono.fromFuture(this.get(requestId, AddressTypeEnum.RECEIVER_ADDRESS.toString()).thenApply(item -> item));
+        return this.findByRequestId(requestId, AddressTypeEnum.RECEIVER_ADDRESS);
+    }
+
+    @Override
+    public Mono<PnAddress> findByRequestId(String requestId, AddressTypeEnum addressTypeEnum) {
+        return Mono.fromFuture(this.get(requestId, addressTypeEnum.toString()).thenApply(item -> item));
     }
 
     @Override

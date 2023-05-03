@@ -8,6 +8,7 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.BaseDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
+import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
 import it.pagopa.pn.paperchannel.utils.Utility;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,43 +50,53 @@ public class RequestDeliveryDAOImpl extends BaseDAO<PnDeliveryRequest> implement
 
     @Override
     public Mono<PnDeliveryRequest> createWithAddress(PnDeliveryRequest request, PnAddress pnAddress) {
+       return createWithAddress(request, pnAddress, null);
+    }
+
+    @Override
+    public Mono<PnDeliveryRequest> createWithAddress(PnDeliveryRequest request, PnAddress pnAddress, PnAddress discoveredAddress) {
         String fiscalCode = request.getFiscalCode();
         return Mono.fromFuture(countOccurrencesEntity(request.getRequestId())
-            .thenCompose( total -> {
-                log.debug("Delivery request with same request id : {}", total);
-                if (total == 0){
-                    try {
-                        TransactWriteItemsEnhancedRequest.Builder builder =
-                                TransactWriteItemsEnhancedRequest.builder();
+                        .thenCompose( total -> {
+                            log.debug("Delivery request with same request id : {}", total);
+                            if (total == 0){
+                                try {
+                                    TransactWriteItemsEnhancedRequest.Builder builder =
+                                            TransactWriteItemsEnhancedRequest.builder();
 
-                        if(pnAddress != null) {
-                            addressDAO.createTransaction(builder, pnAddress);
-                        }
+                                    if(pnAddress != null) {
+                                        addressDAO.createTransaction(builder, pnAddress);
+                                    }
 
-                        request.setHashedFiscalCode(Utility.convertToHash(request.getFiscalCode()));
-                        TransactPutItemEnhancedRequest<PnDeliveryRequest> requestEntity =
-                                TransactPutItemEnhancedRequest.builder(PnDeliveryRequest.class)
-                                        .item(encode(request))
-                                        .build();
+                                    if (discoveredAddress != null) {
+                                        discoveredAddress.setTypology(AddressTypeEnum.DISCOVERED_ADDRESS.name());
+                                        addressDAO.createTransaction(builder, discoveredAddress);
+                                    }
 
-                        builder.addPutItem(this.dynamoTable, requestEntity);
-                        return putWithTransact(builder.build()).thenApply(item-> {
-                            request.setFiscalCode(fiscalCode);
-                            return request;
-                        });
-                    } catch (TransactionCanceledException tce) {
-                        log.error("Transaction Canceled {}", tce.getMessage());
-                        return null;
-                    }
-                } else {
-                    throw new PnHttpResponseException("Data already existed", HttpStatus.BAD_REQUEST.value());
-                }
-            })
-            )
-            .onErrorResume(throwable -> {
-                throwable.printStackTrace();
-                return Mono.error(throwable);
-            });
+                                    request.setHashedFiscalCode(Utility.convertToHash(request.getFiscalCode()));
+                                    TransactPutItemEnhancedRequest<PnDeliveryRequest> requestEntity =
+                                            TransactPutItemEnhancedRequest.builder(PnDeliveryRequest.class)
+                                                    .item(encode(request))
+                                                    .build();
+
+                                    builder.addPutItem(this.dynamoTable, requestEntity);
+                                    return putWithTransact(builder.build()).thenApply(item-> {
+                                        request.setFiscalCode(fiscalCode);
+                                        return request;
+                                    });
+                                } catch (TransactionCanceledException tce) {
+                                    log.error("Transaction Canceled {}", tce.getMessage());
+                                    return null;
+                                }
+                            } else {
+                                throw new PnHttpResponseException("Data already existed", HttpStatus.BAD_REQUEST.value());
+                            }
+                        })
+                )
+                .onErrorResume(throwable -> {
+                    throwable.printStackTrace();
+                    return Mono.error(throwable);
+                });
     }
 
     @Override

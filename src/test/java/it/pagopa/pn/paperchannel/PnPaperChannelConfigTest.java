@@ -10,6 +10,7 @@ class PnPaperChannelConfigTest {
     private String clientNationalRegistriesBasepath;
     private String clientExternalChannelBasepath;
     private String clientDataVaultBasepath;
+    private String clientAddressManagerBasepath;
     private String safeStorageCxId;
     private String xPagopaExtchCxId;
     private String nationalRegistryCxId;
@@ -67,6 +68,9 @@ class PnPaperChannelConfigTest {
         stringBuilder.append(", ");
         stringBuilder.append("clientDataVaultBasepath=");
         stringBuilder.append(clientDataVaultBasepath);
+        stringBuilder.append(", ");
+        stringBuilder.append("clientAddressManagerBasepath=");
+        stringBuilder.append(clientAddressManagerBasepath);
         stringBuilder.append(", ");
         stringBuilder.append("safeStorageCxId=");
         stringBuilder.append(safeStorageCxId);

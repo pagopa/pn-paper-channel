@@ -5,6 +5,7 @@ import it.pagopa.pn.paperchannel.mapper.common.BaseMapper;
 import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.model.Address;
+import it.pagopa.pn.paperchannel.msclient.generated.pnaddressmanager.v1.dto.AnalogAddressDto;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.DiscoveredAddressDto;
 import it.pagopa.pn.paperchannel.msclient.generated.pnnationalregistries.v1.dto.AddressSQSMessagePhysicalAddressDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.AnalogAddress;
@@ -13,6 +14,7 @@ import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
 import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.math3.analysis.function.Add;
 
 import java.time.LocalDateTime;
 
@@ -44,7 +46,6 @@ public class AddressMapper {
 
     public static Address fromNationalRegistry(AddressSQSMessagePhysicalAddressDto pysicalAddress){
         Address address = new Address();
-
         address.setNameRow2(pysicalAddress.getAt());
         address.setAddress(pysicalAddress.getAddress());
         address.setAddressRow2(pysicalAddress.getAddressDetails());
@@ -114,5 +115,28 @@ public class AddressMapper {
         return mapperAnalog.toDTO(toDTO(address));
     }
 
+    public static AnalogAddressDto toAnalogAddressManager(Address address){
+        AnalogAddressDto analogAddress = new AnalogAddressDto();
+        analogAddress.setAddressRow(address.getAddress());
+        analogAddress.setAddressRow2(address.getAddressRow2());
+        analogAddress.setCap(address.getCap());
+        analogAddress.setCity(address.getCity());
+        analogAddress.setCity2(address.getCity2());
+        analogAddress.setPr(address.getPr());
+        analogAddress.setCountry(address.getCountry());
+        return analogAddress;
+    }
+
+    public static Address fromAnalogAddressManager(AnalogAddressDto analogAddress){
+        Address address = new Address();
+        address.setAddress(analogAddress.getAddressRow());
+        address.setAddressRow2(analogAddress.getAddressRow2());
+        address.setCap(analogAddress.getCap());
+        address.setCity(analogAddress.getCity());
+        address.setCity2(analogAddress.getCity2());
+        address.setPr(analogAddress.getPr());
+        address.setCountry(analogAddress.getCountry());
+        return address;
+    }
 
 }
