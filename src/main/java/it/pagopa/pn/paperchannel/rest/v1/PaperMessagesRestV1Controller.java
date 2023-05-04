@@ -20,10 +20,6 @@ public class PaperMessagesRestV1Controller implements PaperMessagesApi {
     @Override
     public Mono<ResponseEntity<PaperChannelUpdate>> sendPaperPrepareRequest(String requestId, Mono<PrepareRequest> prepareRequest, ServerWebExchange exchange) {
        return prepareRequest
-               .doOnNext(request -> {
-                   log.debug("Delivery Request of prepare flow");
-                   log.debug(request.getReceiverAddress().toString());
-               })
                .flatMap(request -> paperMessagesService.preparePaperSync(requestId, request))
                 .map(ResponseEntity::ok);
     }
