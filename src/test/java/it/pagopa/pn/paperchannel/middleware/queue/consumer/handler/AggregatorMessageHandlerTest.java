@@ -62,8 +62,8 @@ class AggregatorMessageHandlerTest {
 
         PnDeliveryRequest entity = new PnDeliveryRequest();
         entity.setRequestId("PREPARE_ANALOG_DOMICILE.IUN_MUMR-VQMP-LDNZ-202303-H-1.RECINDEX_0.SENTATTEMPTMADE_0");
-        entity.setStatusDetail("statusDetail");
-        entity.setStatusCode(StatusCodeEnum.OK.getValue());
+        entity.setStatusCode("statusDetail");
+        entity.setStatusDetail(StatusCodeEnum.OK.getValue());
 
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
@@ -112,8 +112,8 @@ class AggregatorMessageHandlerTest {
 
         PnDeliveryRequest entity = new PnDeliveryRequest();
         entity.setRequestId("PREPARE_ANALOG_DOMICILE.IUN_MUMR-VQMP-LDNZ-202303-H-1.RECINDEX_0.SENTATTEMPTMADE_0");
-        entity.setStatusDetail("statusDetail");
-        entity.setStatusCode(StatusCodeEnum.OK.getValue());
+        entity.setStatusCode("statusDetail");
+        entity.setStatusDetail(StatusCodeEnum.OK.getValue());
 
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
@@ -159,8 +159,8 @@ class AggregatorMessageHandlerTest {
 
         PnDeliveryRequest entity = new PnDeliveryRequest();
         entity.setRequestId("PREPARE_ANALOG_DOMICILE.IUN_MUMR-VQMP-LDNZ-202303-H-1.RECINDEX_0.SENTATTEMPTMADE_0");
-        entity.setStatusDetail("statusDetail");
-        entity.setStatusCode(StatusCodeEnum.OK.getValue());
+        entity.setStatusCode("statusDetail");
+        entity.setStatusDetail(StatusCodeEnum.OK.getValue());
 
         // mock: when
         // getDeliveryEventMeta
@@ -206,8 +206,8 @@ class AggregatorMessageHandlerTest {
 
         PnDeliveryRequest entity = new PnDeliveryRequest();
         entity.setRequestId("PREPARE_ANALOG_DOMICILE.IUN_MUMR-VQMP-LDNZ-202303-H-1.RECINDEX_0.SENTATTEMPTMADE_0");
-        entity.setStatusDetail("statusDetail");
-        entity.setStatusCode(StatusCodeEnum.OK.getValue());
+        entity.setStatusCode("statusDetail");
+        entity.setStatusDetail(StatusCodeEnum.OK.getValue());
 
         // mock: when
         // getDeliveryEventMeta
@@ -251,8 +251,8 @@ class AggregatorMessageHandlerTest {
 
         PnDeliveryRequest entity = new PnDeliveryRequest();
         entity.setRequestId("PREPARE_ANALOG_DOMICILE.IUN_MUMR-VQMP-LDNZ-202303-H-1.RECINDEX_0.SENTATTEMPTMADE_0");
-        entity.setStatusDetail("statusDetail");
-        entity.setStatusCode(StatusCodeEnum.OK.getValue());
+        entity.setStatusCode("statusDetail");
+        entity.setStatusDetail(StatusCodeEnum.OK.getValue());
 
         // mock: when
         // getDeliveryEventMeta
