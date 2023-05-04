@@ -57,7 +57,7 @@ public class AddressDAOImpl extends BaseDAO <PnAddress> implements AddressDAO {
 
     @Override
     public Mono<PnAddress> findByRequestId(String requestId) {
-        return Mono.fromFuture(this.get(requestId, AddressTypeEnum.RECEIVER_ADDRESS.toString()).thenApply(item -> item));
+        return Mono.fromFuture(this.get(requestId, AddressTypeEnum.RECEIVER_ADDRESS.toString()).thenApply(this::decode));
     }
 
     @Override
