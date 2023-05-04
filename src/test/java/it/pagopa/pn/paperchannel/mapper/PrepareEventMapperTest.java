@@ -26,16 +26,20 @@ class PrepareEventMapperTest {
         Assertions.assertEquals(null, exception.getMessage());
     }
 
-    // @Test
+    @Test
     void prepareEventMapperProcessingTest () {
         PrepareEvent response= PrepareEventMapper.fromResult(getDeliveryRequest("12345",StatusDeliveryEnum.IN_PROCESSING),getPnAddress());
         Assertions.assertNotNull(response);
+        Assertions.assertEquals(response.getStatusCode().getValue(),StatusDeliveryEnum.IN_PROCESSING.getDetail());
+        Assertions.assertEquals(response.getStatusDetail(), StatusDeliveryEnum.IN_PROCESSING.getCode());
     }
 
-    // @Test
+    @Test
     void prepareEventMapperUntaceableTest () {
         PrepareEvent response= PrepareEventMapper.fromResult(getDeliveryRequest("12345",StatusDeliveryEnum.UNTRACEABLE),getPnAddress());
         Assertions.assertNotNull(response);
+        Assertions.assertEquals(response.getStatusCode().getValue(),StatusDeliveryEnum.UNTRACEABLE.getDetail());
+        Assertions.assertEquals(response.getStatusDetail(), StatusDeliveryEnum.UNTRACEABLE.getCode());
     }
 
     @Test
@@ -76,7 +80,8 @@ class PrepareEventMapperTest {
         deliveryRequest.setIun("iun");
         deliveryRequest.setCorrelationId("");
         deliveryRequest.setStatusCode(status.getCode());
-        deliveryRequest.setStatusDetail(status.getDescription());
+        deliveryRequest.setStatusDescription(status.getDescription());
+        deliveryRequest.setStatusDetail(status.getDetail());
         deliveryRequest.setStatusDate("");
         deliveryRequest.setProposalProductType("AR");
         deliveryRequest.setPrintType("PT");

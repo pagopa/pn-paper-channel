@@ -105,8 +105,8 @@ class PaperMessagesServiceTest extends BaseTest {
 
     }
 
-    //@Test
-    //@DisplayName("whenRetrievePaperDeliveryRequestExistThenReturnResponse")
+    @Test
+    @DisplayName("whenRetrievePaperDeliveryRequestExistThenReturnResponse")
     void retrievePrepareRequestExist(){
         PnDeliveryRequest deliveryRequest = getPnDeliveryRequest();
         Mockito.when(this.requestDeliveryDAO.getByRequestId(Mockito.any()))
@@ -142,8 +142,8 @@ class PaperMessagesServiceTest extends BaseTest {
                 }).verify();
     }
 
-    //@Test
-    //@DisplayName("whenPrepareFirstAttemptWithDeliveryRequestExistThenReturnResponse")
+    @Test
+    @DisplayName("whenPrepareFirstAttemptWithDeliveryRequestExistThenReturnResponse")
     void prepareSyncDeliveryRequestExistFirstAttempt(){
         Mockito.when(this.requestDeliveryDAO.getByRequestId(Mockito.any()))
                 .thenReturn(Mono.just(getPnDeliveryRequest()));
@@ -640,8 +640,7 @@ class PaperMessagesServiceTest extends BaseTest {
                 }).verifyComplete();
 
     }
-
-    //@Test
+    @Test
     void paperAsyncEntitySecondAttemptTest() {
         PnAddress address = getPnAddress(deliveryRequestTakingCharge.getRequestId());
         Mockito.when(requestDeliveryDAO.getByRequestId(getRelatedRequest().getRelatedRequestId())).thenReturn(Mono.just(deliveryRequestTakingCharge));
@@ -704,8 +703,9 @@ class PaperMessagesServiceTest extends BaseTest {
         deliveryRequest.setReceiverType("RT");
         deliveryRequest.setIun("");
         deliveryRequest.setCorrelationId("");
-        deliveryRequest.setStatusCode("PC000");
-        deliveryRequest.setStatusDetail("");
+        deliveryRequest.setStatusCode(StatusDeliveryEnum.IN_PROCESSING.getCode());
+        deliveryRequest.setStatusDetail(StatusDeliveryEnum.IN_PROCESSING.getDetail());
+        deliveryRequest.setStatusDescription(StatusDeliveryEnum.IN_PROCESSING.getDescription());
         deliveryRequest.setStatusDate("");
         deliveryRequest.setProposalProductType("AR");
         deliveryRequest.setHashedFiscalCode(Utility.convertToHash(deliveryRequest.getFiscalCode()));
@@ -770,7 +770,8 @@ class PaperMessagesServiceTest extends BaseTest {
         deliveryRequest.setIun("iun");
         deliveryRequest.setCorrelationId("");
         deliveryRequest.setStatusCode(status.getCode());
-        deliveryRequest.setStatusDetail(status.getDescription());
+        deliveryRequest.setStatusDetail(status.getDetail());
+        deliveryRequest.setStatusDescription(status.getDescription());
         deliveryRequest.setStatusDate("");
         deliveryRequest.setProposalProductType("AR");
         deliveryRequest.setPrintType("PT");
