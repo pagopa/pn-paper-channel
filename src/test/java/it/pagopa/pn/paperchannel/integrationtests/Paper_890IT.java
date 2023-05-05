@@ -186,7 +186,6 @@ class Paper_890IT extends BaseTest {
 
 
     @Test
-    @Disabled
     void test_890_theftOrLoss_RECAG013(){
         //TODO: guardare meglio
         PnAddress pnAddress = new PnAddress();
