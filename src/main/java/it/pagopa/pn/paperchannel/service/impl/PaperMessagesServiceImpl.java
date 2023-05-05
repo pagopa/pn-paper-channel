@@ -43,6 +43,7 @@ import java.util.UUID;
 import static it.pagopa.pn.commons.log.MDCWebFilter.MDC_TRACE_ID_KEY;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_IN_PROCESSING;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_NOT_EXIST;
+import static it.pagopa.pn.paperchannel.utils.Const.AAR;
 
 @Slf4j
 @Service
@@ -307,9 +308,13 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
     private Mono<Float> getAmount(List<AttachmentInfo> attachments, String cap, String zone, String productType, boolean isReversePrinter){
         return paperTenderService.getCostFrom(cap, zone, productType)
                 .map(contract ->{
-                    Integer totPages = getNumberOfPages(attachments, isReversePrinter, false);
-                    float priceTotPages = totPages * contract.getPriceAdditional();
-                    return Float.sum(contract.getPrice(), priceTotPages);
+                    if (!pnPaperChannelConfig.getChargeCalculationMode().equalsIgnoreCase(AAR)){
+                        Integer totPages = getNumberOfPages(attachments, isReversePrinter, false);
+                        float priceTotPages = totPages * contract.getPriceAdditional();
+                        return Float.sum(contract.getPrice(), priceTotPages);
+                    }else{
+                        return contract.getPrice();
+                    }
                 });
     }
 
