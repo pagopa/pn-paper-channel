@@ -165,7 +165,6 @@ class PnPaperChannelConfigTest {
         pnPaperChannelConfig.setTtlExecutionDaysDemat(ttlExecutionDaysDemat);
         pnPaperChannelConfig.setPaperWeight(paperWeight);
         pnPaperChannelConfig.setLetterWeight(letterWeight);
-        pnPaperChannelConfig.setRetryStatus(retryStatus);
         return pnPaperChannelConfig;
     }
 
