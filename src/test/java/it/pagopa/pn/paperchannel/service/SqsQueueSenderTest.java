@@ -9,6 +9,7 @@ import it.pagopa.pn.paperchannel.middleware.queue.producer.InternalQueueMomProdu
 import it.pagopa.pn.paperchannel.model.ExternalChannelError;
 import it.pagopa.pn.paperchannel.model.NationalRegistryError;
 import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
+import it.pagopa.pn.paperchannel.rest.v1.dto.AnalogAddress;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareEvent;
 import it.pagopa.pn.paperchannel.rest.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.rest.v1.dto.StatusCodeEnum;
@@ -120,11 +121,20 @@ class SqsQueueSenderTest extends BaseTest {
 
     private PrepareEvent getPrepareEvent() {
         PrepareEvent event = new PrepareEvent();
+        AnalogAddress address = new AnalogAddress();
+        address.setFullname("fullName");
+        address.setAddress("address");
+        address.setCap("cap");
+        address.setCity("city");
+        address.setPr("pr");
+        address.setCountry("country");
+
         event.setRequestId("1234");
         event.setStatusCode(StatusCodeEnum.OK);
         event.setStatusDateTime(new Date());
         event.setStatusDetail(StatusCodeEnum.OK.getValue());
         event.setProductType("AR");
+        event.setReceiverAddress(address);
         return event;
     }
 }

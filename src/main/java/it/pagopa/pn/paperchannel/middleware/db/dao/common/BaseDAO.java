@@ -6,6 +6,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -14,12 +15,11 @@ import software.amazon.awssdk.enhanced.dynamodb.model.*;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
-
+@Slf4j
 public abstract class BaseDAO<T> {
 
     @Getter
@@ -171,6 +171,14 @@ public abstract class BaseDAO<T> {
             pnAddress.setCity2(dataEncryption.decode(pnAddress.getCity2()));
             pnAddress.setPr(dataEncryption.decode(pnAddress.getPr()));
             pnAddress.setCountry(dataEncryption.decode(pnAddress.getCountry()));
+            log.info(pnAddress.getFullName());
+            log.info(pnAddress.getNameRow2());
+            log.info(pnAddress.getAddress());
+            log.info(pnAddress.getAddressRow2());
+            log.info(pnAddress.getCap());
+            log.info(pnAddress.getCity());
+            log.info(pnAddress.getPr());
+            log.info(pnAddress.getCountry());
         }
         if(data instanceof PnDeliveryRequest pnDeliveryRequest) {
             pnDeliveryRequest.setFiscalCode(dataEncryption.decode(pnDeliveryRequest.getFiscalCode()));
