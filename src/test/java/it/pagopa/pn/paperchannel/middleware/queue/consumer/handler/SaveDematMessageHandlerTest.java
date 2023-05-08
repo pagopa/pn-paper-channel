@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
+import it.pagopa.pn.paperchannel.mapper.SendEventMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventDemat;
@@ -51,11 +52,11 @@ class SaveDematMessageHandlerTest {
 
         PnDeliveryRequest entity = new PnDeliveryRequest();
         entity.setRequestId("requestId");
-        entity.setStatusDetail("statusDetail");
-        entity.setStatusCode(StatusCodeEnum.PROGRESS.getValue());
+        entity.setStatusCode("statusDetail");
+        entity.setStatusDetail(StatusCodeEnum.PROGRESS.getValue());
 
         PnEventDemat pnEventDemat = handler.buildPnEventDemat(paperRequest, paperRequest.getAttachments().get(0));
-        SendEvent sendEventExpected = handler.createSendEventMessage(entity, paperRequest);
+        SendEvent sendEventExpected = SendEventMapper.createSendEventMessage(entity, paperRequest);
 
         when(mockDao.createOrUpdate(pnEventDemat)).thenReturn(Mono.just(pnEventDemat));
 
@@ -84,11 +85,11 @@ class SaveDematMessageHandlerTest {
 
         PnDeliveryRequest entity = new PnDeliveryRequest();
         entity.setRequestId("requestId");
-        entity.setStatusDetail("statusDetail");
-        entity.setStatusCode(StatusCodeEnum.PROGRESS.getValue());
+        entity.setStatusCode("statusDetail");
+        entity.setStatusDetail(StatusCodeEnum.PROGRESS.getValue());
 
         PnEventDemat pnEventDemat = handler.buildPnEventDemat(paperRequest, paperRequest.getAttachments().get(0));
-        SendEvent sendEventNotExpected = handler.createSendEventMessage(entity, paperRequest);
+        SendEvent sendEventNotExpected = SendEventMapper.createSendEventMessage(entity, paperRequest);
 
         when(mockDao.createOrUpdate(pnEventDemat)).thenReturn(Mono.just(pnEventDemat));
 
@@ -122,15 +123,15 @@ class SaveDematMessageHandlerTest {
 
         PnDeliveryRequest entity = new PnDeliveryRequest();
         entity.setRequestId("requestId");
-        entity.setStatusDetail("statusDetail");
-        entity.setStatusCode(StatusCodeEnum.PROGRESS.getValue());
+        entity.setStatusCode("statusDetail");
+        entity.setStatusDetail(StatusCodeEnum.PROGRESS.getValue());
 
 
         PnEventDemat pnEventDematCAD = handler.buildPnEventDemat(paperRequest, paperRequest.getAttachments().get(0));
         PnEventDemat pnEventDemat23L = handler.buildPnEventDemat(paperRequest, paperRequest.getAttachments().get(1));
 
-        SendEvent sendEventCAD = handler.createSendEventMessage(entity, getPaperRequestForOneAttachment(paperRequest, paperRequest.getAttachments().get(0)));
-        SendEvent sendEvent23L = handler.createSendEventMessage(entity, getPaperRequestForOneAttachment(paperRequest, paperRequest.getAttachments().get(1)));
+        SendEvent sendEventCAD = SendEventMapper.createSendEventMessage(entity, getPaperRequestForOneAttachment(paperRequest, paperRequest.getAttachments().get(0)));
+        SendEvent sendEvent23L = SendEventMapper.createSendEventMessage(entity, getPaperRequestForOneAttachment(paperRequest, paperRequest.getAttachments().get(1)));
 
         when(mockDao.createOrUpdate(pnEventDematCAD)).thenReturn(Mono.just(pnEventDematCAD));
         when(mockDao.createOrUpdate(pnEventDemat23L)).thenReturn(Mono.just(pnEventDemat23L));

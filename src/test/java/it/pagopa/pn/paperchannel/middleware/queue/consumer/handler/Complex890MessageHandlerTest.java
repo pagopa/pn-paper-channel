@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
+import it.pagopa.pn.paperchannel.mapper.SendEventMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
@@ -61,8 +62,8 @@ class Complex890MessageHandlerTest {
 
         PnDeliveryRequest entity = new PnDeliveryRequest();
         entity.setRequestId("requestId");
-        entity.setStatusDetail("statusDetail");
-        entity.setStatusCode(ExternalChannelCodeEnum.getStatusCode(paperRequest.getStatusCode()));
+        entity.setStatusCode("statusDetail");
+        entity.setStatusDetail(ExternalChannelCodeEnum.getStatusCode(paperRequest.getStatusCode()));
 
         when(eventMetaDAO.findAllByRequestId(metadataRequestid)).thenReturn(Flux.empty());
 
@@ -71,8 +72,8 @@ class Complex890MessageHandlerTest {
         verify(eventMetaDAO, times(0)).createOrUpdate(any(PnEventMeta.class));
 
         //lo statusCode dell'entity è uguale a quello della trasformazione fatta dall' ExternalChannelCodeEnum nella fase di update Entity
-        assertThat(entity.getStatusCode()).isEqualTo(StatusCodeEnum.OK.getValue());
-        SendEvent sendEvent = new SaveDematMessageHandler(null, null, null).createSendEventMessage(entity, paperRequest);
+        assertThat(entity.getStatusDetail()).isEqualTo(StatusCodeEnum.OK.getValue());
+        SendEvent sendEvent = SendEventMapper.createSendEventMessage(entity, paperRequest);
 
         verify(sqsSender, times(1)).pushSendEvent(sendEvent);
     }
@@ -123,8 +124,8 @@ class Complex890MessageHandlerTest {
 
         PnDeliveryRequest entity = new PnDeliveryRequest();
         entity.setRequestId("requestId");
-        entity.setStatusDetail("statusDetail");
-        entity.setStatusCode(ExternalChannelCodeEnum.getStatusCode(paperRequest.getStatusCode()));
+        entity.setStatusCode("statusDetail");
+        entity.setStatusDetail(ExternalChannelCodeEnum.getStatusCode(paperRequest.getStatusCode()));
 
         PnEventMeta pnEventMetaPNAG012 = new PnEventMeta();
         pnEventMetaPNAG012.setMetaRequestId(buildMetaRequestId(requestId));
@@ -141,8 +142,8 @@ class Complex890MessageHandlerTest {
         verify(eventMetaDAO, times(0)).createOrUpdate(any(PnEventMeta.class));
 
         //lo statusCode dell'entity viene modificato dall'handler
-        assertThat(entity.getStatusCode()).isEqualTo(StatusCodeEnum.PROGRESS.getValue());
-        SendEvent sendEvent = new SaveDematMessageHandler(null, null, null).createSendEventMessage(entity, paperRequest);
+        assertThat(entity.getStatusDetail()).isEqualTo(StatusCodeEnum.PROGRESS.getValue());
+        SendEvent sendEvent = SendEventMapper.createSendEventMessage(entity, paperRequest);
 
         verify(sqsSender, times(1)).pushSendEvent(sendEvent);
     }
@@ -178,7 +179,7 @@ class Complex890MessageHandlerTest {
         PNAG012Wrapper pnag012Wrapper = PNAG012Wrapper.buildPNAG012Wrapper(entity, paperRequest, pnEventMetaRECAG012.getStatusDateTime());
         PnDeliveryRequest pnDeliveryRequestPNAG012 = pnag012Wrapper.getPnDeliveryRequestPNAG012();
         PaperProgressStatusEventDto paperProgressStatusEventDtoPNAG012 = pnag012Wrapper.getPaperProgressStatusEventDtoPNAG012();
-        SendEvent sendPNAG012Event = handler.createSendEventMessage(pnDeliveryRequestPNAG012, paperProgressStatusEventDtoPNAG012);
+        SendEvent sendPNAG012Event = SendEventMapper.createSendEventMessage(pnDeliveryRequestPNAG012, paperProgressStatusEventDtoPNAG012);
         assertThat(sendPNAG012Event.getStatusCode()).isEqualTo(StatusCodeEnum.OK);
         assertThat(sendPNAG012Event.getStatusDetail()).isEqualTo("PNAG012");
         assertThat(sendPNAG012Event.getStatusDateTime()).isEqualTo(pnEventMetaRECAG012.getStatusDateTime());
@@ -189,7 +190,7 @@ class Complex890MessageHandlerTest {
         assertThat(sendEventArgumentCaptor.getAllValues().get(0)).isEqualTo(sendPNAG012Event);
 
         //verifico che viene inviato a delivery-push l'evento originale RECAG005C in stato PROGRESS
-        SendEvent sendEvent = new SaveDematMessageHandler(null, null, null).createSendEventMessage(entity, paperRequest);
+        SendEvent sendEvent = SendEventMapper.createSendEventMessage(entity, paperRequest);
         assertThat(sendEvent.getStatusCode()).isEqualTo(StatusCodeEnum.PROGRESS);
         assertThat(sendEvent.getStatusDetail()).isEqualTo("RECAG005C");
         assertThat(sendEventArgumentCaptor.getAllValues().get(1)).isEqualTo(sendEvent);

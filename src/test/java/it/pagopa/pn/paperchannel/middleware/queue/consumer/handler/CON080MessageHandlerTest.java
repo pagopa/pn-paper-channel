@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
+import it.pagopa.pn.paperchannel.mapper.SendEventMapper;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.AttachmentDetailsDto;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.PaperProgressStatusEventDto;
@@ -43,13 +44,13 @@ class CON080MessageHandlerTest {
 
         PnDeliveryRequest entity = new PnDeliveryRequest();
         entity.setRequestId("requestId");
-        entity.setStatusDetail("statusDetail");
-        entity.setStatusCode(StatusCodeEnum.PROGRESS.getValue());
+        entity.setStatusCode("statusDetail");
+        entity.setStatusDetail(StatusCodeEnum.PROGRESS.getValue());
 
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
 
         //mi aspetto che mandi il messaggio a delivery-push
-        SendEvent sendEventExpected = handler.createSendEventMessage(entity, paperRequest);
+        SendEvent sendEventExpected = SendEventMapper.createSendEventMessage(entity, paperRequest);
         verify(mockSqsSender, times(1)).pushSendEvent(sendEventExpected);
     }
 }

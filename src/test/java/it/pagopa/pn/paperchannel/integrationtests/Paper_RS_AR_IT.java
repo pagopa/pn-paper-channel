@@ -65,11 +65,11 @@ class Paper_RS_AR_IT extends BaseTest {
         extChannelMessage.setAnalogMail(analogMail);
 
         PnDeliveryRequest afterSetForUpdate = CommonUtils.createPnDeliveryRequest();
-        afterSetForUpdate.setStatusCode(ExternalChannelCodeEnum.getStatusCode(extChannelMessage.getAnalogMail().getStatusCode()));
-        afterSetForUpdate.setStatusDetail(extChannelMessage.getAnalogMail().getProductType()
+        afterSetForUpdate.setStatusDetail(ExternalChannelCodeEnum.getStatusCode(extChannelMessage.getAnalogMail().getStatusCode()));
+        afterSetForUpdate.setStatusDescription(extChannelMessage.getAnalogMail().getProductType()
                 .concat(" - ").concat(pnDeliveryRequest.getStatusCode()).concat(" - ").concat(extChannelMessage.getAnalogMail().getStatusDescription()));
         afterSetForUpdate.setStatusDate(DateUtils.formatDate(Date.from(extChannelMessage.getAnalogMail().getStatusDateTime().toInstant())));
-
+        afterSetForUpdate.setStatusCode(extChannelMessage.getAnalogMail().getStatusCode());
         when(requestDeliveryDAO.getByRequestId(anyString())).thenReturn(Mono.just(pnDeliveryRequest));
         when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
 
@@ -110,11 +110,11 @@ class Paper_RS_AR_IT extends BaseTest {
         attachment.setUrl("https://safestorage.it");
         afterSetForUpdate.setAttachments(List.of(attachment));
 
-        afterSetForUpdate.setStatusCode(ExternalChannelCodeEnum.getStatusCode(extChannelMessage.getAnalogMail().getStatusCode()));
-        afterSetForUpdate.setStatusDetail(extChannelMessage.getAnalogMail().getProductType()
+        afterSetForUpdate.setStatusDetail(ExternalChannelCodeEnum.getStatusCode(extChannelMessage.getAnalogMail().getStatusCode()));
+        afterSetForUpdate.setStatusDescription(extChannelMessage.getAnalogMail().getProductType()
                 .concat(" - ").concat(pnDeliveryRequest.getStatusCode()).concat(" - ").concat(extChannelMessage.getAnalogMail().getStatusDescription()));
         afterSetForUpdate.setStatusDate(DateUtils.formatDate(Date.from(extChannelMessage.getAnalogMail().getStatusDateTime().toInstant())));
-
+        afterSetForUpdate.setStatusCode(extChannelMessage.getAnalogMail().getStatusCode());
         when(requestDeliveryDAO.getByRequestId(anyString())).thenReturn(Mono.just(pnDeliveryRequest));
         when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
 
@@ -175,11 +175,11 @@ class Paper_RS_AR_IT extends BaseTest {
         extChannelMessage.setAnalogMail(analogMail);
 
         PnDeliveryRequest afterSetForUpdate = CommonUtils.createPnDeliveryRequest();
-        afterSetForUpdate.setStatusCode(ExternalChannelCodeEnum.getStatusCode(extChannelMessage.getAnalogMail().getStatusCode()));
-        afterSetForUpdate.setStatusDetail(extChannelMessage.getAnalogMail().getProductType()
+        afterSetForUpdate.setStatusDetail(ExternalChannelCodeEnum.getStatusCode(extChannelMessage.getAnalogMail().getStatusCode()));
+        afterSetForUpdate.setStatusDescription(extChannelMessage.getAnalogMail().getProductType()
                 .concat(" - ").concat(pnDeliveryRequest.getStatusCode()).concat(" - ").concat(extChannelMessage.getAnalogMail().getStatusDescription()));
         afterSetForUpdate.setStatusDate(DateUtils.formatDate(Date.from(extChannelMessage.getAnalogMail().getStatusDateTime().toInstant())));
-
+        afterSetForUpdate.setStatusCode(extChannelMessage.getAnalogMail().getStatusCode());
         when(requestDeliveryDAO.getByRequestId(anyString())).thenReturn(Mono.just(pnDeliveryRequest));
         when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
 
@@ -204,11 +204,11 @@ class Paper_RS_AR_IT extends BaseTest {
         extChannelMessage2.setAnalogMail(analogMail);
 
         afterSetForUpdate = CommonUtils.createPnDeliveryRequest();
-        afterSetForUpdate.setStatusCode(ExternalChannelCodeEnum.getStatusCode(extChannelMessage2.getAnalogMail().getStatusCode()));
-        afterSetForUpdate.setStatusDetail(extChannelMessage2.getAnalogMail().getProductType()
+        afterSetForUpdate.setStatusDetail(ExternalChannelCodeEnum.getStatusCode(extChannelMessage2.getAnalogMail().getStatusCode()));
+        afterSetForUpdate.setStatusDescription(extChannelMessage2.getAnalogMail().getProductType()
                 .concat(" - ").concat(pnDeliveryRequest.getStatusCode()).concat(" - ").concat(extChannelMessage2.getAnalogMail().getStatusDescription()));
         afterSetForUpdate.setStatusDate(DateUtils.formatDate(Date.from(extChannelMessage2.getAnalogMail().getStatusDateTime().toInstant())));
-
+        afterSetForUpdate.setStatusCode(extChannelMessage2.getAnalogMail().getStatusCode());
         when(requestDeliveryDAO.getByRequestId(anyString())).thenReturn(Mono.just(pnDeliveryRequest));
         when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
 
@@ -245,11 +245,11 @@ class Paper_RS_AR_IT extends BaseTest {
         extChannelMessage3.setAnalogMail(analogMail);
 
         afterSetForUpdate = CommonUtils.createPnDeliveryRequest();
-        afterSetForUpdate.setStatusCode(ExternalChannelCodeEnum.getStatusCode(extChannelMessage3.getAnalogMail().getStatusCode()));
-        afterSetForUpdate.setStatusDetail(extChannelMessage3.getAnalogMail().getProductType()
+        afterSetForUpdate.setStatusDetail(ExternalChannelCodeEnum.getStatusCode(extChannelMessage3.getAnalogMail().getStatusCode()));
+        afterSetForUpdate.setStatusDescription(extChannelMessage3.getAnalogMail().getProductType()
                 .concat(" - ").concat(pnDeliveryRequest.getStatusCode()).concat(" - ").concat(extChannelMessage3.getAnalogMail().getStatusDescription()));
         afterSetForUpdate.setStatusDate(DateUtils.formatDate(Date.from(extChannelMessage3.getAnalogMail().getStatusDateTime().toInstant())));
-
+        afterSetForUpdate.setStatusCode(extChannelMessage3.getAnalogMail().getStatusCode());
         when(requestDeliveryDAO.getByRequestId(anyString())).thenReturn(Mono.just(pnDeliveryRequest));
         when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
 
