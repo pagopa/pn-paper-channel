@@ -62,12 +62,12 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
     public Mono<PnDeliveryRequest> prepareAsync(PrepareAsyncRequest request){
 
         String correlationId = request.getCorrelationId();
-        String requestId = request.getRequestId();
+        final String requestId = request.getRequestId();
         Address addressFromNationalRegistry = request.getAddress();
 
 
 
-        Mono<PnDeliveryRequest> requestDeliveryEntityMono =null;
+        Mono<PnDeliveryRequest> requestDeliveryEntityMono = null;
         if(correlationId!= null) {
             log.info("Start async for {} correlation id", request.getCorrelationId());
             requestDeliveryEntityMono = requestDeliveryDAO.getByCorrelationId(correlationId);
@@ -168,9 +168,14 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
         }
         return pnDeliveryRequest.flatMap(
                 entity -> {
-                    entity.setStatusCode(status.getCode());
-                    entity.setStatusDetail(status.getDescription());
-                    entity.setStatusDate(DateUtils.formatDate(new Date()));
+                    RequestDeliveryMapper.changeState(
+                            entity,
+                            status.getCode(),
+                            status.getDescription(),
+                            status.getDetail(),
+                            null,
+                            null
+                    );
                     return this.requestDeliveryDAO.updateData(entity);
                 });
     }
