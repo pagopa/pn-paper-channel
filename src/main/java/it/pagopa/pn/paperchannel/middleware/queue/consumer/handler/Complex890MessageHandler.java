@@ -94,8 +94,7 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
         else if (containsPNAG012 && containsRECAG012) { // presenti META##RECAG012  e META##PNAG012
 //            CASO 2
             log.info("[{}] Result of query is: META##RECAG012 present, META##PNAG012 present", paperRequest.getRequestId());
-            SendEventMapper.changeToProgressStatus(entity);
-            return super.handleMessage(entity, paperRequest)
+            return super.handleMessage(SendEventMapper.changeToProgressStatus(entity), paperRequest)
                     .then(Mono.just(pnEventMetas));
         }
         else if ( (!containsPNAG012) && containsRECAG012) { // presente META##RECAG012  e non META##PNAG012
@@ -108,9 +107,8 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
             var pnag012DeliveryRequest = pnag012Wrapper.getPnDeliveryRequestPNAG012();
             pnLogAudit.addsBeforeReceive(entity.getIun(), String.format("prepare requestId = %s Response from external-channel",pnag012DeliveryRequest.getRequestId()));
             logSuccessAuditLog(pnag012PaperRequest, pnag012DeliveryRequest, pnLogAudit);
-            SendEventMapper.changeToProgressStatus(entity);
             return super.handleMessage(pnag012DeliveryRequest, pnag012PaperRequest)
-                    .then(super.handleMessage(entity, paperRequest))
+                    .then(super.handleMessage(SendEventMapper.changeToProgressStatus(entity), paperRequest))
                     .then(Mono.just(pnEventMetas));
         }
 
