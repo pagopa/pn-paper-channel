@@ -1,6 +1,8 @@
 #!/bin/sh
 
+# Script da utilizzare solo in ambienti di test in quanto il popolamento dei dati andrebbe eseguito tramite il portale Backoffice
 
+# _BASEURI contiene l'url di base dell'application load balancer di PN Core
 _BASEURI=$1
 
 
