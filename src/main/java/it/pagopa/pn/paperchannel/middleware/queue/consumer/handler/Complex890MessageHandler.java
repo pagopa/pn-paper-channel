@@ -1,12 +1,14 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
+import it.pagopa.pn.paperchannel.mapper.SendEventMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
 import it.pagopa.pn.paperchannel.middleware.queue.consumer.MetaDematCleaner;
 import it.pagopa.pn.paperchannel.middleware.queue.model.PNAG012Wrapper;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.PaperProgressStatusEventDto;
+import it.pagopa.pn.paperchannel.rest.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.rest.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.PnLogAudit;
@@ -92,8 +94,7 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
         else if (containsPNAG012 && containsRECAG012) { // presenti META##RECAG012  e META##PNAG012
 //            CASO 2
             log.info("[{}] Result of query is: META##RECAG012 present, META##PNAG012 present", paperRequest.getRequestId());
-            entity.setStatusCode(StatusCodeEnum.PROGRESS.getValue());
-            return super.handleMessage(entity, paperRequest)
+            return super.handleMessage(SendEventMapper.changeToProgressStatus(entity), paperRequest)
                     .then(Mono.just(pnEventMetas));
         }
         else if ( (!containsPNAG012) && containsRECAG012) { // presente META##RECAG012  e non META##PNAG012
@@ -106,10 +107,8 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
             var pnag012DeliveryRequest = pnag012Wrapper.getPnDeliveryRequestPNAG012();
             pnLogAudit.addsBeforeReceive(entity.getIun(), String.format("prepare requestId = %s Response from external-channel",pnag012DeliveryRequest.getRequestId()));
             logSuccessAuditLog(pnag012PaperRequest, pnag012DeliveryRequest, pnLogAudit);
-
-            entity.setStatusCode(StatusCodeEnum.PROGRESS.getValue());
             return super.handleMessage(pnag012DeliveryRequest, pnag012PaperRequest)
-                    .then(super.handleMessage(entity, paperRequest))
+                    .then(super.handleMessage(SendEventMapper.changeToProgressStatus(entity), paperRequest))
                     .then(Mono.just(pnEventMetas));
         }
 

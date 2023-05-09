@@ -7,6 +7,7 @@ import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Map;
 import java.util.Optional;
@@ -51,7 +52,7 @@ public class EncryptedUtils {
     }
 
     private static ByteBuffer parseCipher(String valueString) {
-        return ByteBuffer.wrap(Base64.getDecoder().decode(valueString.getBytes()));
+        return ByteBuffer.wrap(Base64.getDecoder().decode(valueString.getBytes(StandardCharsets.UTF_8)));
     }
 
     private static EncryptionModel parseOptions(String optionsString) {
@@ -64,7 +65,7 @@ public class EncryptedUtils {
     }
 
     private static Map<String, String> parseContext(String contextString) {
-        return parseKeyValueMap(contextString, v -> new String(Base64.getDecoder().decode(v)));
+        return parseKeyValueMap(contextString, v -> new String(Base64.getDecoder().decode(v.getBytes(StandardCharsets.UTF_8))));
     }
 
     private static Map<String, String> parseKeyValueMap(String kvString) {

@@ -40,8 +40,8 @@ class RECAG012MessageHandlerTest {
 
         PnDeliveryRequest entity = new PnDeliveryRequest();
         entity.setRequestId("requestId");
-        entity.setStatusDetail("statusDetail");
-        entity.setStatusCode(StatusCodeEnum.PROGRESS.getValue());
+        entity.setStatusCode("statusDetail");
+        entity.setStatusDetail(StatusCodeEnum.PROGRESS.getValue());
 
         PnEventMeta pnEventMeta = handler.buildPnEventMeta(paperRequest);
 
@@ -67,8 +67,8 @@ class RECAG012MessageHandlerTest {
 
         PnDeliveryRequest entity = new PnDeliveryRequest();
         entity.setRequestId("requestId");
-        entity.setStatusDetail("statusDetail");
-        entity.setStatusCode(StatusCodeEnum.PROGRESS.getValue());
+        entity.setStatusCode("statusDetail");
+        entity.setStatusDetail(StatusCodeEnum.PROGRESS.getValue());
 
         PnEventMeta pnEventMeta = handler.buildPnEventMeta(paperRequest);
 

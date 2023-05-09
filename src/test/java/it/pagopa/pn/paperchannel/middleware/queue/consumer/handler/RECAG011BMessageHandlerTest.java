@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
+import it.pagopa.pn.paperchannel.mapper.SendEventMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
@@ -65,12 +66,12 @@ class RECAG011BMessageHandlerTest {
 
         PnDeliveryRequest entity = new PnDeliveryRequest();
         entity.setRequestId("requestId");
-        entity.setStatusDetail("statusDetail");
-        entity.setStatusCode(ExternalChannelCodeEnum.getStatusCode(paperRequest.getStatusCode()));
+        entity.setStatusCode("statusDetail");
+        entity.setStatusDetail(ExternalChannelCodeEnum.getStatusCode(paperRequest.getStatusCode()));
 
         // mock per flusso normale DEMAT
         PnEventDemat pnEventDematExpected = handler.buildPnEventDemat(paperRequest, paperRequest.getAttachments().get(0));
-        SendEvent eventDematToDeliveryPushExpected = handler.createSendEventMessage(entity, paperRequest);
+        SendEvent eventDematToDeliveryPushExpected = SendEventMapper.createSendEventMessage(entity, paperRequest);
 
         when(eventDematDAO.createOrUpdate(pnEventDematExpected)).thenReturn(Mono.just(pnEventDematExpected));
 
@@ -103,7 +104,7 @@ class RECAG011BMessageHandlerTest {
         PNAG012Wrapper pnag012Wrapper = PNAG012Wrapper.buildPNAG012Wrapper(entity, paperRequest, eventMetaRECAG012Expected.getStatusDateTime());
         PnDeliveryRequest pnDeliveryRequestPNAG012 = pnag012Wrapper.getPnDeliveryRequestPNAG012();
         PaperProgressStatusEventDto paperProgressStatusEventDtoPNAG012 = pnag012Wrapper.getPaperProgressStatusEventDtoPNAG012();
-        SendEvent sendPNAG012Event = handler.createSendEventMessage(pnDeliveryRequestPNAG012, paperProgressStatusEventDtoPNAG012);
+        SendEvent sendPNAG012Event = SendEventMapper.createSendEventMessage(pnDeliveryRequestPNAG012, paperProgressStatusEventDtoPNAG012);
 
         //mi aspetto che mandi il messaggio a delivery-push
         ArgumentCaptor<SendEvent> sendEventArgumentCaptor = ArgumentCaptor.forClass(SendEvent.class);
@@ -130,12 +131,12 @@ class RECAG011BMessageHandlerTest {
 
         PnDeliveryRequest entity = new PnDeliveryRequest();
         entity.setRequestId("requestId");
-        entity.setStatusDetail("statusDetail");
-        entity.setStatusCode(ExternalChannelCodeEnum.getStatusCode(paperRequest.getStatusCode()));
+        entity.setStatusCode("statusDetail");
+        entity.setStatusDetail(ExternalChannelCodeEnum.getStatusCode(paperRequest.getStatusCode()));
 
         // mock per flusso normale DEMAT
         PnEventDemat pnEventDematExpected = handler.buildPnEventDemat(paperRequest, paperRequest.getAttachments().get(0));
-        SendEvent eventDematToDeliveryPushExpected = handler.createSendEventMessage(entity, paperRequest);
+        SendEvent eventDematToDeliveryPushExpected = SendEventMapper.createSendEventMessage(entity, paperRequest);
 
         when(eventDematDAO.createOrUpdate(pnEventDematExpected)).thenReturn(Mono.just(pnEventDematExpected));
 
@@ -165,7 +166,7 @@ class RECAG011BMessageHandlerTest {
         PNAG012Wrapper pnag012Wrapper = PNAG012Wrapper.buildPNAG012Wrapper(entity, paperRequest, eventMetaRECAG012Expected.getStatusDateTime());
         PnDeliveryRequest pnDeliveryRequestPNAG012 = pnag012Wrapper.getPnDeliveryRequestPNAG012();
         PaperProgressStatusEventDto paperProgressStatusEventDtoPNAG012 = pnag012Wrapper.getPaperProgressStatusEventDtoPNAG012();
-        SendEvent sendPNAG012Event = handler.createSendEventMessage(pnDeliveryRequestPNAG012, paperProgressStatusEventDtoPNAG012);
+        SendEvent sendPNAG012Event = SendEventMapper.createSendEventMessage(pnDeliveryRequestPNAG012, paperProgressStatusEventDtoPNAG012);
 
         //mi aspetto che NON mandi il messaggio PNAG012 a delivery-push
         verify(mockSqsSender, times(0)).pushSendEvent(sendPNAG012Event);
@@ -189,12 +190,12 @@ class RECAG011BMessageHandlerTest {
 
         PnDeliveryRequest entity = new PnDeliveryRequest();
         entity.setRequestId("requestId");
-        entity.setStatusDetail("statusDetail");
-        entity.setStatusCode(ExternalChannelCodeEnum.getStatusCode(paperRequest.getStatusCode()));
+        entity.setStatusCode("statusDetail");
+        entity.setStatusDetail(ExternalChannelCodeEnum.getStatusCode(paperRequest.getStatusCode()));
 
         // mock per flusso normale DEMAT
         PnEventDemat pnEventDematExpected = handler.buildPnEventDemat(paperRequest, paperRequest.getAttachments().get(0));
-        SendEvent eventDematToDeliveryPushExpected = handler.createSendEventMessage(entity, paperRequest);
+        SendEvent eventDematToDeliveryPushExpected = SendEventMapper.createSendEventMessage(entity, paperRequest);
 
         when(eventDematDAO.createOrUpdate(pnEventDematExpected)).thenReturn(Mono.just(pnEventDematExpected));
 
@@ -225,7 +226,7 @@ class RECAG011BMessageHandlerTest {
         PNAG012Wrapper pnag012Wrapper = PNAG012Wrapper.buildPNAG012Wrapper(entity, paperRequest, eventMetaRECAG012Expected.getStatusDateTime());
         PnDeliveryRequest pnDeliveryRequestPNAG012 = pnag012Wrapper.getPnDeliveryRequestPNAG012();
         PaperProgressStatusEventDto paperProgressStatusEventDtoPNAG012 = pnag012Wrapper.getPaperProgressStatusEventDtoPNAG012();
-        SendEvent sendPNAG012Event = handler.createSendEventMessage(pnDeliveryRequestPNAG012, paperProgressStatusEventDtoPNAG012);
+        SendEvent sendPNAG012Event = SendEventMapper.createSendEventMessage(pnDeliveryRequestPNAG012, paperProgressStatusEventDtoPNAG012);
 
         //mi aspetto che NON mandi il messaggio PNAG012 a delivery-push
         verify(mockSqsSender, times(0)).pushSendEvent(sendPNAG012Event);

@@ -61,7 +61,7 @@ class RetryableErrorMessageHandlerTest {
         OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T16:33:00.000Z");
         PnDeliveryRequest pnDeliveryRequest = new PnDeliveryRequest();
         pnDeliveryRequest.setRequestId(currentRequestId);
-        pnDeliveryRequest.setStatusCode(StatusCodeEnum.PROGRESS.getValue());
+        pnDeliveryRequest.setStatusDetail(StatusCodeEnum.PROGRESS.getValue());
         pnDeliveryRequest.setAttachments(new ArrayList<>());
         pnDeliveryRequest.setProductType(ProductTypeEnum.AR.getValue());
 
@@ -93,7 +93,7 @@ class RetryableErrorMessageHandlerTest {
         OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T16:33:00.000Z");
         PnDeliveryRequest pnDeliveryRequest = new PnDeliveryRequest();
         pnDeliveryRequest.setRequestId("request");
-        pnDeliveryRequest.setStatusCode(StatusCodeEnum.PROGRESS.getValue());
+        pnDeliveryRequest.setStatusDetail(StatusCodeEnum.PROGRESS.getValue());
         pnDeliveryRequest.setAttachments(new ArrayList<>());
         pnDeliveryRequest.setProductType(ProductTypeEnum.AR.getValue());
 
