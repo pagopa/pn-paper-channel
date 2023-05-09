@@ -35,9 +35,9 @@ public class PNAG012Wrapper {
     private PNAG012Wrapper(PnDeliveryRequest originalPnDeliveryRequest, PaperProgressStatusEventDto originalPaperRequest, Instant statusDateTimeRECAG012) {
         // nelle nuova entità PnDeliveryRequest valorizzo solo i campi necessari per SendEvent (evento mandato a delivery-push)
         pnDeliveryRequestPNAG012 = new PnDeliveryRequest();
-        pnDeliveryRequestPNAG012.setStatusCode(StatusCodeEnum.OK.getValue()); //evento finale OK
-        pnDeliveryRequestPNAG012.setStatusDetail(PNAG012_STATUS_DESCRIPTION);
-        pnDeliveryRequestPNAG012.setStatusDetail(originalPnDeliveryRequest.getStatusDetail());
+        pnDeliveryRequestPNAG012.setStatusDetail(StatusCodeEnum.OK.getValue()); //evento finale OK
+        pnDeliveryRequestPNAG012.setStatusCode(PNAG012_STATUS_DESCRIPTION);
+        pnDeliveryRequestPNAG012.setStatusCode(originalPnDeliveryRequest.getStatusDetail());
         pnDeliveryRequestPNAG012.setRequestId(originalPnDeliveryRequest.getRequestId());
 
         // nelle nuova entità PaperProgressStatusEventDto valorizzo tutti i campi poiché poi questo oggetto
