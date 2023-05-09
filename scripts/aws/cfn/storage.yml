@@ -32,6 +32,10 @@ Parameters:
     Type: String
     Description: 'Where to send Logs'
 
+  LogRetention:
+    Type: Number
+    Default: 14
+
 Resources:
   PaperDeliveryDriversBucket:
     Type: AWS::S3::Bucket
@@ -403,6 +407,7 @@ Resources:
       TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/log-group.yaml"
       Parameters:
         LogGroupName: !Sub '${ProjectName}-paper-channel'
+        LogGroupRetention: !Ref LogRetention
         LogsKinesisSourceStreamArn: !Ref LogsKinesisSourceStreamArn
 
 Outputs:
