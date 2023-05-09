@@ -20,6 +20,9 @@ public class PnPaperChannelConfig {
     private String clientNationalRegistriesBasepath;
     private String clientExternalChannelBasepath;
     private String clientDataVaultBasepath;
+    private String clientAddressManagerBasepath;
+    private String addressManagerCxId;
+    private String addressManagerApiKey;
     private String safeStorageCxId;
     private String xPagopaExtchCxId;
     private String nationalRegistryCxId;

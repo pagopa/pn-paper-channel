@@ -5,6 +5,8 @@ import lombok.Getter;
 @Getter
 public enum ExceptionTypeEnum{
     DELIVERY_REQUEST_NOT_EXIST("DELIVERY_REQUEST_NOT_EXIST", "La richiesta non esiste"),
+    ADDRESS_NOT_EXIST("ADDRESS_NOT_EXIST", "L'indirizzo non è presente a DB"),
+    ADDRESS_MANAGER_ERROR("ADDRESS_MANAGER_ERROR", "Problemi con l'indirizzo"),
     DELIVERY_REQUEST_IN_PROCESSING("DELIVERY_REQUEST_IN_PROCESSING", "La richiesta in elaborazione"),
     DATA_NULL_OR_INVALID("DATA_NULL_OR_INVALID", "La richiesta è vuota o contiene dati non validi per l'elaborazione"),
     MAPPER_ERROR("MAPPER_ERROR", "Non è stato possibile mappare l'oggetto richiesto"),
