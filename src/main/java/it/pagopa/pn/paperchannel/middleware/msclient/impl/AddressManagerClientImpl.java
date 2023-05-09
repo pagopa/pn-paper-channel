@@ -44,7 +44,11 @@ public class AddressManagerClientImpl extends BaseClient implements AddressManag
         requestDto.setTargetAddress(AddressMapper.toAnalogAddressManager(target));
         requestDto.setCorrelationId(correlationId);
         log.debug("Call Deduplicates with correlationId : {}", correlationId);
-        return this.apiService.deduplicates("pnAddressMangareCxId", "xApiKey", requestDto)
+        return this.apiService.deduplicates(
+                        this.pnPaperChannelConfig.getAddressManagerCxId(),
+                        this.pnPaperChannelConfig.getAddressManagerApiKey(),
+                        requestDto
+                )
                 .retryWhen(
                         Retry.backoff(2, Duration.ofMillis(500))
                                 .filter(throwable -> throwable instanceof TimeoutException || throwable instanceof ConnectException)

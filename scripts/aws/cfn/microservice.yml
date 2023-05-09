@@ -87,6 +87,14 @@ Parameters:
     Type: String
     Description: 'SafeStorage cx-id'
 
+  AddressManagerCxId:
+    Type: String
+    Description: 'AddressManager cx-id'
+
+  AddressManagerApiKey:
+    Type: String
+    Description: 'AddressManager api-key'
+
   XPagopaExtchCxId:
     Type: String
     Description: 'SafeStorage cx-id'
@@ -428,6 +436,8 @@ Resources:
         ContainerEnvEntry40: !Sub 'PN_PAPERCHANNEL_PAPERWEIGHT=${PaperWeight}'
         ContainerEnvEntry41: !Sub 'PN_PAPERCHANNEL_LETTERWEIGHT=${LetterWeight}'
         ContainerEnvEntry42: !Sub 'PN_PAPERCHANNEL_CLIENTADDRESSMANAGERBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
+        ContainerEnvEntry43: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERCXID=${AddressManagerCxId}'
+        ContainerEnvEntry44: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=${AddressManagerApiKey}'
         MappedPaths: '/paper-channel-bo/*,/paper-channel-private/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds

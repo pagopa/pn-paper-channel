@@ -2,6 +2,8 @@
   "Parameters" : {
     "SafeStorageCxId": "pn-cons-000",
     "XPagopaExtchCxId": "pn-cons-000",
+    "AddressManagerCxId": "pn-paper-channel",
+    "AddressManagerApiKey": "_",
     "NationalRegistryCxId": "pn-paper-channel",
     "AttemptSafeStorage": "4",
     "AttemptQueueExternalChannel": "3",
