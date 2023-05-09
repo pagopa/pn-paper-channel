@@ -841,10 +841,12 @@ class Paper_890IT extends BaseTest {
             afterSetForUpdate.setAttachments(List.of(attachment));
         }
 
-        afterSetForUpdate.setStatusCode(ExternalChannelCodeEnum.getStatusCode(extChannelMessage.getAnalogMail().getStatusCode()));
-        afterSetForUpdate.setStatusDetail(extChannelMessage.getAnalogMail().getProductType()
+        afterSetForUpdate.setStatusDetail(ExternalChannelCodeEnum.getStatusCode(extChannelMessage.getAnalogMail().getStatusCode()));
+        afterSetForUpdate.setStatusDescription(extChannelMessage.getAnalogMail().getProductType()
                 .concat(" - ").concat(pnDeliveryRequest.getStatusCode()).concat(" - ").concat(extChannelMessage.getAnalogMail().getStatusDescription()));
         afterSetForUpdate.setStatusDate(DateUtils.formatDate(Date.from(extChannelMessage.getAnalogMail().getStatusDateTime().toInstant())));
+
+        afterSetForUpdate.setStatusCode(extChannelMessage.getAnalogMail().getStatusCode());
 
         when(requestDeliveryDAO.getByRequestId(anyString())).thenReturn(Mono.just(pnDeliveryRequest));
         when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
