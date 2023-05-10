@@ -42,7 +42,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 @Slf4j
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class Paper_890IT extends BaseTest {
 
     @Autowired
@@ -212,14 +211,16 @@ class Paper_890IT extends BaseTest {
 
         generateEvent("RECAG005A","","",null,"");
         generateEvent("RECAG005B","","",List.of("ARCAD","23L"),"");
-
         generateEvent("RECAG005C","","",null,"");
+
+
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
         verify(sqsSender, timeout(2000).times(2)).pushSendEvent(caturedSendEvent.capture());
-
-        assertEquals(StatusCodeEnum.OK, caturedSendEvent.getValue().getStatusCode());
         log.info("Event: \n"+caturedSendEvent.getAllValues());
+        
+        assertEquals(StatusCodeEnum.OK, caturedSendEvent.getValue().getStatusCode());
+
     }
 
     @Test
