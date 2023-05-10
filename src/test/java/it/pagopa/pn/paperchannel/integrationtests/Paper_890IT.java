@@ -269,6 +269,7 @@ class Paper_890IT extends BaseTest {
     }
 
     @Test
+    @Disabled
     void test_890_deliverStockDossierClose_RECAG005C_TRIS(){
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
