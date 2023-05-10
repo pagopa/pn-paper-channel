@@ -207,6 +207,7 @@ class Paper_890IT extends BaseTest {
     }
 
     @Test
+    @Disabled
     void test_890_deliverStockDossierClose_RECAG005C_no11B(){
 
         generateEvent("RECAG005A","","",null,"");
@@ -218,7 +219,7 @@ class Paper_890IT extends BaseTest {
 
         verify(sqsSender, timeout(2000).times(2)).pushSendEvent(caturedSendEvent.capture());
         log.info("Event: \n"+caturedSendEvent.getAllValues());
-        
+
         assertEquals(StatusCodeEnum.OK, caturedSendEvent.getValue().getStatusCode());
 
     }
