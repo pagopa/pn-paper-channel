@@ -437,8 +437,8 @@ Resources:
         ContainerEnvEntry41: !Sub 'PN_PAPERCHANNEL_LETTERWEIGHT=${LetterWeight}'
         ContainerEnvEntry42: !Sub 'PN_PAPERCHANNEL_CLIENTADDRESSMANAGERBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
         ContainerEnvEntry43: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERCXID=${AddressManagerCxId}'
-        ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-paper-channel-Secrets-Secrets:AddressManagerApiKey:AWSCURRENT:'
-        MicroServiceSecretPrefix: pn-paper-channel-Secrets
+        ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
+        MicroServiceSecretPrefix: pn-PaperChannel-Secrets
         MappedPaths: '/paper-channel-bo/*,/paper-channel-private/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds
