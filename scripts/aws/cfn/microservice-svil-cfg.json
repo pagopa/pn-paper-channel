@@ -19,6 +19,7 @@
     "TtlExecutionDaysMeta": "3650",
     "RetryStatus" : "006",
     "PaperWeight" : "5",
-    "LetterWeight" : "5"
+    "LetterWeight" : "5",
+    "AddressManagerBaseUrl": "http://alb.confidential.pn.internal:8080"
   }
 }
