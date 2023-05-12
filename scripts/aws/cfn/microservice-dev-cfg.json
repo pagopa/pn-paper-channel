@@ -1,5 +1,6 @@
 {
   "Parameters" : {
+    "ExternalChannelBaseUrl": "http://alb.confidential.pn.internal:8080/",
     "SafeStorageCxId": "pn-cons-000",
     "XPagopaExtchCxId": "pn-cons-000",
     "AddressManagerCxId": "pn-paper-channel",
