@@ -264,6 +264,11 @@ Parameters:
     Type: String
     Description: 'Send and pull requests in this queue'
 
+  #ChargeCalculationMode
+  ChargeCalculationMode:
+    Type: String
+    Description: 'Variable that determines the amount. It can be AAR or ALL'
+
   # OpenApi Bucket params
   MicroserviceBucketName:
     Type: String
@@ -421,6 +426,7 @@ Resources:
         ContainerEnvEntry38: !Sub 'PN_PAPERCHANNEL_CLIENTDATAVAULTBASEPATH=http://alb.confidential.pn.internal:8080'
         ContainerEnvEntry39: !Sub 'PN_PAPERCHANNEL_PAPERWEIGHT=${PaperWeight}'
         ContainerEnvEntry40: !Sub 'PN_PAPERCHANNEL_LETTERWEIGHT=${LetterWeight}'
+        ContainerEnvEntry41: !Sub 'PN_PAPERCHANNEL_CHARGECALCULATIONMODE=${ChargeCalculationMode}'
         MappedPaths: '/paper-channel-bo/*,/paper-channel-private/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds

@@ -18,6 +18,7 @@
     "TtlExecutionDaysDemat": "365",
     "TtlExecutionDaysMeta": "365",
     "PaperWeight" : "5",
-    "LetterWeight" : "5"
+    "LetterWeight" : "5",
+    "ChargeCalculationMode": "AAR"
   }
 }

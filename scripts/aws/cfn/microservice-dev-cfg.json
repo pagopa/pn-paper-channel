@@ -19,6 +19,7 @@
     "TtlExecutionDaysMeta": "365",
     "PaperWeight" : "5",
     "LetterWeight" : "5",
-    "MaxTasksNumber": "1"
+    "MaxTasksNumber": "1",
+    "ChargeCalculationMode": "AAR"
   }
 }
