@@ -1,6 +1,7 @@
 package it.pagopa.pn.paperchannel.service;
 
 import it.pagopa.pn.paperchannel.config.BaseTest;
+import it.pagopa.pn.paperchannel.exception.PnDematNotValidException;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
@@ -22,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.annotation.DirtiesContext;
 import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -146,6 +148,45 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
 
         // verifico che è stato inviato 1 solo evento a delivery-push
         verify(sqsSender, timeout(2000).times(1)).pushSendEvent(any(SendEvent.class));
+
+    }
+
+    @DirtiesContext
+    @Test
+    void testDematEventWithoutAttachments() {
+        final String metadataRequestExpected = "DEMAT##PREPARE_ANALOG_DOMICILE.IUN_MUMR-VQMP-LDNZ-202303-H-1.RECINDEX_0.SENTATTEMPTMADE_0";
+        final String metadataStatusCodeCADExpected = "CAD##RECRS002B";
+        final String metadataStatusCode23LExpected = "23L##RECRS002B";
+        PnEventDemat entityCAD = eventDematDAO.getDeliveryEventDemat(metadataRequestExpected, metadataStatusCodeCADExpected).block();
+        PnEventDemat entity23L = eventDematDAO.getDeliveryEventDemat(metadataRequestExpected, metadataStatusCode23LExpected).block();
+        assertThat(entityCAD).isNull();
+        assertThat(entity23L).isNull();
+        PnDeliveryRequest pnDeliveryRequest = createPnDeliveryRequest();
+
+        PaperProgressStatusEventDto analogMail = new PaperProgressStatusEventDto();
+        analogMail.requestId("PREPARE_ANALOG_DOMICILE.IUN_MUMR-VQMP-LDNZ-202303-H-1.RECINDEX_0.SENTATTEMPTMADE_0");
+        analogMail.setClientRequestTimeStamp(OffsetDateTime.now());
+        analogMail.setStatusDateTime(OffsetDateTime.now());
+        analogMail.setStatusCode("RECRS002B");
+        analogMail.setProductType("RS");
+        analogMail.setStatusDescription("In progress");
+
+        SingleStatusUpdateDto extChannelMessage = new SingleStatusUpdateDto();
+        extChannelMessage.setAnalogMail(analogMail);
+
+        PnDeliveryRequest afterSetForUpdate = createPnDeliveryRequest();
+        afterSetForUpdate.setStatusDetail(ExternalChannelCodeEnum.getStatusCode(extChannelMessage.getAnalogMail().getStatusCode()));
+        afterSetForUpdate.setStatusDescription(extChannelMessage.getAnalogMail().getProductType()
+                .concat(" - ").concat(pnDeliveryRequest.getStatusCode()).concat(" - ").concat(extChannelMessage.getAnalogMail().getStatusDescription()));
+        afterSetForUpdate.setStatusDate(DateUtils.formatDate(Date.from(extChannelMessage.getAnalogMail().getStatusDateTime().toInstant())));
+        afterSetForUpdate.setStatusCode(extChannelMessage.getAnalogMail().getStatusCode());
+        when(requestDeliveryDAO.getByRequestId(anyString())).thenReturn(Mono.just(pnDeliveryRequest));
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
+
+        // verifico che il flusso è andato in eccezione per demat non valido
+        StepVerifier.create(paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0))
+                .expectError(PnDematNotValidException.class)
+                .verify();
 
     }
 
