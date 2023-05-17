@@ -13,8 +13,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
-import java.util.Date;
-
 @RequiredArgsConstructor
 @Slf4j
 public abstract class SendToDeliveryPushHandler implements MessageHandler {
@@ -24,6 +22,7 @@ public abstract class SendToDeliveryPushHandler implements MessageHandler {
     @Override
     public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
         log.debug("[{}] Sending to delivery-push", paperRequest.getRequestId());
+        log.debug("[{}] Response of ExternalChannel from request id {}", paperRequest.getRequestId(), paperRequest);
         SendEvent sendEvent = SendEventMapper.createSendEventMessage(entity, paperRequest);
         sqsSender.pushSendEvent(sendEvent);
         log.info("[{}] Sent to delivery-push: {}", paperRequest.getRequestId(), sendEvent);

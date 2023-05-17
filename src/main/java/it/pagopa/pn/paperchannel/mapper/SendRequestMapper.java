@@ -20,7 +20,10 @@ public class SendRequestMapper {
         SendRequest sendRequest = new SendRequest();
         sendRequest.setRequestId(pnDeliveryRequest.getRequestId());
         sendRequest.setIun(pnDeliveryRequest.getIun());
-        sendRequest.setProductType(ProductTypeEnum.valueOf(pnDeliveryRequest.getProductType()));
+        if (pnDeliveryRequest.getProductType().equals("890"))
+            sendRequest.setProductType(ProductTypeEnum.valueOf(("_").concat(pnDeliveryRequest.getProductType())));
+        else
+            sendRequest.setProductType(ProductTypeEnum.valueOf(pnDeliveryRequest.getProductType()));
         sendRequest.setRequestPaId(pnDeliveryRequest.getRequestPaId());
         sendRequest.setPrintType(pnDeliveryRequest.getPrintType());
         sendRequest.setAttachmentUrls(pnDeliveryRequest.getAttachments().stream().map(PnAttachmentInfo::getUrl).toList());
