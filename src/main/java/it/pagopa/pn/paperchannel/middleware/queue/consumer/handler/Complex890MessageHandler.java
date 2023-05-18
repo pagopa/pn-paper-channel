@@ -93,9 +93,7 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
             else if(META_RECAG011A_STATUS_CODE.equals(pnEventMeta.getMetaStatusCode())) {
                 recag011A_DateTime = pnEventMeta.getStatusDateTime();
             }
-            else if(entity.getStatusCode().equals("RECAG005C") && pnEventMeta.getStatusCode().equals("RECAG005A")
-                || entity.getStatusCode().equals("RECAG006C") && pnEventMeta.getStatusCode().equals("RECAG006A")
-                || entity.getStatusCode().equals("RECAG007C") && pnEventMeta.getStatusCode().equals("RECAG007A")) {
+            else if(checkForMetaCorrespondence(entity, pnEventMeta)) {
                 recag00_A_DateTime = pnEventMeta.getStatusDateTime();
             }
         }
@@ -135,6 +133,12 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
                     .then(Mono.just(pnEventMetas));
         }
 
+    }
+
+    boolean checkForMetaCorrespondence(PnDeliveryRequest entity,  PnEventMeta pnEventMeta) {
+        return entity.getStatusCode().equals("RECAG005C") && pnEventMeta.getStatusCode().equals("RECAG005A")
+                || entity.getStatusCode().equals("RECAG006C") && pnEventMeta.getStatusCode().equals("RECAG006A")
+                || entity.getStatusCode().equals("RECAG007C") && pnEventMeta.getStatusCode().equals("RECAG007A");
     }
 
     boolean lessThanTenDaysBetweenRECAG00XAAndRECAG011A(Instant recag011A_DateTime, Instant recag00_A_DateTime) {
