@@ -15,6 +15,8 @@ import it.pagopa.pn.paperchannel.utils.PnLogAudit;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
@@ -48,6 +50,8 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
 
     private static final String META_PNAG012_STATUS_CODE = buildMetaStatusCode(PNAG012_STATUS_CODE);
 
+    private static final String META_RECAG011A_STATUS_CODE = buildMetaStatusCode(RECAG011A_STATUS_CODE);
+
     private final EventMetaDAO eventMetaDAO;
 
     private final MetaDematCleaner metaDematCleaner;
@@ -74,14 +78,25 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
         boolean containsRECAG012 = false;
         PnEventMeta pnEventMetaRECAG012 = null;
 
+        Instant recag011A_DateTime = null;
+        Instant recag00_A_DateTime = null;
+
 
         for (PnEventMeta pnEventMeta: pnEventMetas) {
             if(META_PNAG012_STATUS_CODE.equals(pnEventMeta.getMetaStatusCode())) {
                 containsPNAG012 = true;
             }
-            if(META_RECAG012_STATUS_CODE.equals(pnEventMeta.getMetaStatusCode())) {
+            else if(META_RECAG012_STATUS_CODE.equals(pnEventMeta.getMetaStatusCode())) {
                 containsRECAG012 = true;
                 pnEventMetaRECAG012 = pnEventMeta;
+            }
+            else if(META_RECAG011A_STATUS_CODE.equals(pnEventMeta.getMetaStatusCode())) {
+                recag011A_DateTime = pnEventMeta.getStatusDateTime();
+            }
+            else if(entity.getStatusCode().equals("RECAG005C") && pnEventMeta.getStatusCode().equals("RECAG005A")
+                || entity.getStatusCode().equals("RECAG006C") && pnEventMeta.getStatusCode().equals("RECAG006A")
+                || entity.getStatusCode().equals("RECAG007C") && pnEventMeta.getStatusCode().equals("RECAG007A")) {
+                recag00_A_DateTime = pnEventMeta.getStatusDateTime();
             }
         }
 
@@ -122,4 +137,8 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
 
     }
 
+    boolean lessThanTenDaysBetweenRECAG00XAAndRECAG011A(Instant recag011A_DateTime, Instant recag00_A_DateTime) {
+        // (statusDateTime[META##RECAG00_A] - statusDateTime[META##RECAG011A]) < 10
+        return Duration.between(recag011A_DateTime, recag00_A_DateTime).toDays() < 10;
+    }
 }

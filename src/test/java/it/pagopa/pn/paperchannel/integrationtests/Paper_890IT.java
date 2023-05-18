@@ -408,6 +408,8 @@ class Paper_890IT extends BaseTest {
     void test_890_deliverStockDossierClose_RECAG007C_BIS(){
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
+        generateEvent("RECAG011A","","",null,"");
+
         generateEvent("RECAG011B","","", List.of("ARCAD"),"");
         generateEvent("RECAG012","","", null,"");
 
