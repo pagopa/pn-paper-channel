@@ -58,7 +58,7 @@ class AttachmentMapperTest {
         fileDownloadInfoDto.setUrl("www.google.com");
         response.setKey("12345");
         response.setDownload(fileDownloadInfoDto);
-        response.setStatus("ok");
+        //response.setDocumentStatus("ok");
         response.setDocumentType("pdf");
         return response;
     }

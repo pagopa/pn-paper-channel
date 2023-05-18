@@ -34,7 +34,7 @@ class PnPaperChannelConfigTest {
     private Long ttlExecutionDaysDemat;
     private Integer paperWeight;
     private Integer letterWeight;
-    private String retryStatus;
+    private String chargeCalculationMode;
 
 
     @BeforeEach
@@ -143,8 +143,8 @@ class PnPaperChannelConfigTest {
         stringBuilder.append("letterWeight=");
         stringBuilder.append(letterWeight);
         stringBuilder.append(", ");
-        stringBuilder.append("retryStatus=");
-        stringBuilder.append(retryStatus);
+        stringBuilder.append("chargeCalculationMode=");
+        stringBuilder.append(chargeCalculationMode);
         stringBuilder.append(")");
         String toTest = stringBuilder.toString();
         Assertions.assertEquals(toTest, pnPaperChannelConfig.toString());
@@ -177,7 +177,7 @@ class PnPaperChannelConfigTest {
         pnPaperChannelConfig.setTtlExecutionDaysDemat(ttlExecutionDaysDemat);
         pnPaperChannelConfig.setPaperWeight(paperWeight);
         pnPaperChannelConfig.setLetterWeight(letterWeight);
-        pnPaperChannelConfig.setRetryStatus(retryStatus);
+        pnPaperChannelConfig.setChargeCalculationMode(chargeCalculationMode);
         return pnPaperChannelConfig;
     }
 
@@ -206,6 +206,6 @@ class PnPaperChannelConfigTest {
         ttlExecutionDaysDemat = 7L;
         paperWeight = 5;
         letterWeight = 6;
-        retryStatus = "retryStatus";
+        chargeCalculationMode = "AAR";
     }
 }

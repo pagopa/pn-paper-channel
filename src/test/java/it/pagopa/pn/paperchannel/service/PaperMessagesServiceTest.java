@@ -517,7 +517,7 @@ class PaperMessagesServiceTest extends BaseTest {
                 .expectNextMatches((response) -> {
                     // price 1 and additionalPrice 2 getNationalCost()
                     // attachments 1 and number of page 3
-                    assertEquals(700,response.getAmount());
+                    assertEquals(100,response.getAmount());
                     assertEquals(3, response.getNumberOfPages());
                     return true;
                 }).verifyComplete();
@@ -609,7 +609,7 @@ class PaperMessagesServiceTest extends BaseTest {
                 .expectNextMatches((response) -> {
                     // price 1 and additionalPrice 2 getNationalCost()
                     // attachments 1 and number of page 3
-                    assertEquals(800,response.getAmount());
+                    assertEquals(200,response.getAmount());
                     assertEquals(3, response.getNumberOfPages());
                     return true;
                 }).verifyComplete();
@@ -636,7 +636,7 @@ class PaperMessagesServiceTest extends BaseTest {
                 .expectNextMatches((response) -> {
                     // price 1 and additionalPrice 2 getNationalCost()
                     // attachments 1 and number of page 3
-                    assertEquals(700,response.getAmount());
+                    assertEquals(100,response.getAmount());
                     assertEquals(3, response.getNumberOfPages());
                     return true;
                 }).verifyComplete();

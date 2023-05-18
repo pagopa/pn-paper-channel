@@ -20,6 +20,7 @@
     "RetryStatus" : "006",
     "PaperWeight" : "5",
     "LetterWeight" : "5",
+    "ChargeCalculationMode": "AAR",
     "AddressManagerBaseUrl": "http://alb.confidential.pn.internal:8080"
   }
 }
