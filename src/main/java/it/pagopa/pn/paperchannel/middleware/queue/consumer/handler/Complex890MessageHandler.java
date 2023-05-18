@@ -21,7 +21,7 @@ import java.util.List;
 
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
 
-/*
+/* old
 RECAG005C RECAG006C o RECAG007C
 
 1. effettuare una query con operatore di uguaglianza su hashKey (META##<requestId>)
@@ -29,7 +29,7 @@ RECAG005C RECAG006C o RECAG007C
      i. Il risultato può contenere l’evento META##RECAG012
      ii. in caso di presenza del META##PNAG012 deve essere necessariamente presente un elemento META##RECAG012, in caso contrario segnalare il problema
 
-2. Nel caso in cui il risultato della query produca le entry META##RECAG012  e META##PNAG012 allora dovrà essere inoltrato
+2. Nel caso in cui il risultato della query produca le entry META##RECAG012 e META##PNAG012 allora dovrà essere inoltrato
         l’evento orginale (RECAG005C RECAG006C o RECAG007C) con statusCode PROGRESS verso delivery_push
 
 3. Nel caso in cui il risultato della query produca il risultato META##RECAG012  senza il META##PNAG012 allora dovrà
@@ -43,6 +43,40 @@ RECAG005C RECAG006C o RECAG007C
 
 5. A valle di questo processo vanno cancellate le righe in tabella per le hashKey DEMAT##<requestId> e META##<requestId>
 */
+
+/* new
+1. effettuare una query con operatore di uguaglianza su hashKey (META##<requestId>)
+    Nota:
+    i. Il risultato può contenere l’evento META##RECAG012
+    ii. in caso di presenza del META##PNAG012 deve essere necessariamente presente un elemento META##RECAG012, in caso contrario segnalare il problema
+    iii. Il risultato della query contiene sicuramente gli eventi META correlati allo specifico evento di fascicolo chiuso (a seconda del caso RECAG005A RECAG006A o RECAG007A)  - questi eventi sono ora da prendere in considerazione
+    iv. evento META##RECAG011A
+
+2. Nel caso in cui il risultato della query contenga l’entry META##PNAG012 allora dovrà essere inoltrato
+    l’evento originale (RECAG005C RECAG006C o RECAG007C) con statusCode PROGRESS verso delivery_push
+
+3. In caso contrario (l’entry META##PNAG012 non è presente), a questo punto va recuperato l’evento di
+    pre-esito META##RECAG00_A (che può essere  RECAG005A RECAG006A o RECAG007A a seconda dei casi) e
+    l’evento META##RECAG011A ed effettuata la differenza tra gli statusDateTime ( META##RECAG00_A - META##RECAG011A)
+
+    se (statusDateTime[META##RECAG00_A] - statusDateTime[META##RECAG011A]) < 10
+
+        inoltro dell’evento originale (RECAG005C RECAG006C o RECAG007C) come finale verso deliveryPush
+
+    se (statusDateTime[META##RECAG00_A] - statusDateTime[META##RECAG011A]) >= 10
+
+        generare l’evento generazione dell’evento finale PNAG012 verso delivery_push (vedi dettaglio in paragrafo Evento PNAG012)  impostando come statusDateTime (META##RECAG011A+10) che dovrebbe sempre coincidere con META##RECAG012
+
+4. A valle di questo processo vanno cancellate le righe in tabella per le hashKey DEMAT##<requestId> e META##<requestId>
+ */
+
+
+/* CAMBI:
+    - rimuovere caso 4
+    - correggere caso 3b -> anche inoltro progress evento originale
+    - calcolo data caso 3b: META##RECAG011A+10 (mentre caso RECAG011B (non qui) rimane META##RECAG012)
+    - correggere documentazione sopra per caso 3b
+ */
 @Slf4j
 public class Complex890MessageHandler extends SendToDeliveryPushHandler {
 
@@ -104,25 +138,43 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
             log.error("[{}] META##PNAG012 is present but META##RECAG012 is not present", paperRequest.getRequestId());
             return Mono.empty();
         }
-        else if (containsPNAG012 && containsRECAG012) { // presenti META##RECAG012  e META##PNAG012
+        else if (containsPNAG012 /*&& containsRECAG012*/) { // presenti META##RECAG012  e META##PNAG012
 //            CASO 2
             log.info("[{}] Result of query is: META##RECAG012 present, META##PNAG012 present", paperRequest.getRequestId());
             return super.handleMessage(SendEventMapper.changeToProgressStatus(entity), paperRequest)
                     .then(Mono.just(pnEventMetas));
         }
-        else if ( (!containsPNAG012) && containsRECAG012) { // presente META##RECAG012  e non META##PNAG012
+        else if (/*(!containsPNAG012) &&*/ containsRECAG012) { // presente META##RECAG012  e non META##PNAG012
 //            CASO 3
             log.info("[{}] Result of query is: META##RECAG012 present, META##PNAG012 not present", paperRequest.getRequestId());
-            PnAuditLogBuilder auditLogBuilder = new PnAuditLogBuilder();
-            PnLogAudit pnLogAudit = new PnLogAudit(auditLogBuilder);
-            PNAG012Wrapper pnag012Wrapper = PNAG012Wrapper.buildPNAG012Wrapper(entity, paperRequest, pnEventMetaRECAG012.getStatusDateTime());
-            var pnag012PaperRequest = pnag012Wrapper.getPaperProgressStatusEventDtoPNAG012();
-            var pnag012DeliveryRequest = pnag012Wrapper.getPnDeliveryRequestPNAG012();
-            pnLogAudit.addsBeforeReceive(entity.getIun(), String.format("prepare requestId = %s Response from external-channel",pnag012DeliveryRequest.getRequestId()));
-            logSuccessAuditLog(pnag012PaperRequest, pnag012DeliveryRequest, pnLogAudit);
-            return super.handleMessage(pnag012DeliveryRequest, pnag012PaperRequest)
-                    .then(super.handleMessage(SendEventMapper.changeToProgressStatus(entity), paperRequest))
-                    .then(Mono.just(pnEventMetas));
+
+            if (recag011A_DateTime == null || recag00_A_DateTime == null) {
+                log.error("[{}] needed META##RECAG00_A is present and/or META##RECAG011A not present", paperRequest.getRequestId());
+                return Mono.empty();
+            }
+
+            if (lessThanTenDaysBetweenRECAG00XAAndRECAG011A(recag011A_DateTime, recag00_A_DateTime)) {
+                // 3 a
+                log.info("[{}] (statusDateTime[META##RECAG00_A] - statusDateTime[META##RECAG011A]) < 10", paperRequest.getRequestId());
+
+                return super.handleMessage(entity, paperRequest)
+                        .then(Mono.just(pnEventMetas));
+            } else {
+                // 3 b
+                log.info("[{}] (statusDateTime[META##RECAG00_A] - statusDateTime[META##RECAG011A]) >= 10", paperRequest.getRequestId());
+
+                PnAuditLogBuilder auditLogBuilder = new PnAuditLogBuilder();
+                PnLogAudit pnLogAudit = new PnLogAudit(auditLogBuilder);
+                PNAG012Wrapper pnag012Wrapper = PNAG012Wrapper.buildPNAG012Wrapper(entity, paperRequest, pnEventMetaRECAG012.getStatusDateTime());
+                var pnag012PaperRequest = pnag012Wrapper.getPaperProgressStatusEventDtoPNAG012();
+                var pnag012DeliveryRequest = pnag012Wrapper.getPnDeliveryRequestPNAG012();
+
+                pnLogAudit.addsBeforeReceive(entity.getIun(), String.format("prepare requestId = %s Response from external-channel",pnag012DeliveryRequest.getRequestId()));
+                logSuccessAuditLog(pnag012PaperRequest, pnag012DeliveryRequest, pnLogAudit);
+
+                return super.handleMessage(pnag012DeliveryRequest, pnag012PaperRequest)
+                        .then(Mono.just(pnEventMetas));
+            }
         }
 
         else { // entrambi non presenti
@@ -132,13 +184,16 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
             return super.handleMessage(entity, paperRequest)
                     .then(Mono.just(pnEventMetas));
         }
-
     }
 
     boolean checkForMetaCorrespondence(PnDeliveryRequest entity,  PnEventMeta pnEventMeta) {
-        return entity.getStatusCode().equals("RECAG005C") && pnEventMeta.getStatusCode().equals("RECAG005A")
-                || entity.getStatusCode().equals("RECAG006C") && pnEventMeta.getStatusCode().equals("RECAG006A")
-                || entity.getStatusCode().equals("RECAG007C") && pnEventMeta.getStatusCode().equals("RECAG007A");
+        var metaPrefix = "META##";
+        var entityStatusCode = entity.getStatusCode();
+        var metaStatusCode = pnEventMeta.getMetaStatusCode().replace(metaPrefix, "");
+
+        return entityStatusCode.equals("RECAG005C") && metaStatusCode.equals("RECAG005A")
+                || entityStatusCode.equals("RECAG006C") && metaStatusCode.equals("RECAG006A")
+                || entityStatusCode.equals("RECAG007C") && metaStatusCode.equals("RECAG007A");
     }
 
     boolean lessThanTenDaysBetweenRECAG00XAAndRECAG011A(Instant recag011A_DateTime, Instant recag00_A_DateTime) {

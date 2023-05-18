@@ -164,14 +164,24 @@ class Complex890MessageHandlerTest {
         PnDeliveryRequest entity = new PnDeliveryRequest();
         entity.setRequestId("requestId");
         entity.setStatusDetail("statusDetail");
-        entity.setStatusCode(ExternalChannelCodeEnum.getStatusCode(paperRequest.getStatusCode()));
+        entity.setStatusCode(paperRequest.getStatusCode());
 
         PnEventMeta pnEventMetaRECAG012 = new PnEventMeta();
         pnEventMetaRECAG012.setMetaRequestId(buildMetaRequestId(requestId));
         pnEventMetaRECAG012.setMetaStatusCode(buildMetaStatusCode("RECAG012"));
         pnEventMetaRECAG012.setStatusDateTime(Instant.parse("2023-03-16T17:07:00.000Z"));
 
-        when(eventMetaDAO.findAllByRequestId(metadataRequestid)).thenReturn(Flux.just(pnEventMetaRECAG012));
+        PnEventMeta pnEventMetaRECAG011A = new PnEventMeta();
+        pnEventMetaRECAG011A.setMetaRequestId(buildMetaRequestId(requestId));
+        pnEventMetaRECAG011A.setMetaStatusCode(buildMetaStatusCode("RECAG011A"));
+        pnEventMetaRECAG011A.setStatusDateTime(Instant.parse("2023-03-16T17:07:00.000Z"));
+
+        PnEventMeta pnEventMetaRECAG005A = new PnEventMeta();
+        pnEventMetaRECAG005A.setMetaRequestId(buildMetaRequestId(requestId));
+        pnEventMetaRECAG005A.setMetaStatusCode(buildMetaStatusCode("RECAG005A"));
+        pnEventMetaRECAG005A.setStatusDateTime(Instant.parse("2023-03-16T17:07:00.000Z"));
+
+        when(eventMetaDAO.findAllByRequestId(metadataRequestid)).thenReturn(Flux.just(pnEventMetaRECAG012, pnEventMetaRECAG011A, pnEventMetaRECAG005A));
 
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
 
