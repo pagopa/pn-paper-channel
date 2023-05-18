@@ -68,7 +68,7 @@ class SendRequestValidatorTest {
 
         deliveryRequest.setProposalProductType("AR");
         AttachmentDetailsDto detailsDto = new AttachmentDetailsDto();
-        detailsDto.setUrl("localhost:8080");
+        detailsDto.setUri("localhost:8080");
         dto.setAttachments(List.of(detailsDto));
 
         try {

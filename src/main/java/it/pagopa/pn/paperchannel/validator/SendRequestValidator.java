@@ -87,7 +87,7 @@ public class SendRequestValidator {
             List<String> fromDb = pnDeliveryEntity.getAttachments().stream()
                     .map(PnAttachmentInfo::getUrl).collect(Collectors.toList());
             List<String> fromExternal = paperProgressStatusEventDto.getAttachments().stream()
-                    .map(AttachmentDetailsDto::getUrl).collect(Collectors.toList());
+                    .map(AttachmentDetailsDto::getUri).collect(Collectors.toList());
 
             if(!AttachmentValidator.checkBetweenLists(fromDb, fromExternal)) {
                 errors.add("Attachments");

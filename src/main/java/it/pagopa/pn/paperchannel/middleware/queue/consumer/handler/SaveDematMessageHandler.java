@@ -83,7 +83,7 @@ public class SaveDematMessageHandler extends SendToDeliveryPushHandler {
         pnEventDemat.setDocumentType(attachmentDetailsDto.getDocumentType());
         pnEventDemat.setDocumentDate(attachmentDetailsDto.getDate().toInstant());
         pnEventDemat.setStatusDateTime(paperRequest.getStatusDateTime().toInstant());
-        pnEventDemat.setUri(attachmentDetailsDto.getUrl());
+        pnEventDemat.setUri(attachmentDetailsDto.getUri());
         return pnEventDemat;
     }
 
