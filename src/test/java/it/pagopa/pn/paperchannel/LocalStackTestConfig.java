@@ -35,7 +35,7 @@ public class LocalStackTestConfig {
     static LocalStackContainer localStack =
             new LocalStackContainer(DockerImageName.parse("localstack/localstack:1.0.4").asCompatibleSubstituteFor("localstack/localstack"))
                     .withServices(DYNAMODB)
-                    .withClasspathResourceMapping("testcontainers/localinit.sh",
+                    .withClasspathResourceMapping("testcontainers/initsh-for-testcontainer.sh",
                             "/docker-entrypoint-initaws.d/make-storages.sh", BindMode.READ_ONLY)
                     .withClasspathResourceMapping("testcontainers/credentials",
                             "/root/.aws/credentials", BindMode.READ_ONLY)
