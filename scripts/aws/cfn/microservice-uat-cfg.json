@@ -2,23 +2,25 @@
   "Parameters" : {
     "SafeStorageCxId": "pn-cons-000",
     "XPagopaExtchCxId": "pn-cons-000",
+    "AddressManagerCxId": "pn-paper-channel",
+    "AddressManagerApiKey": "_",
     "NationalRegistryCxId": "pn-paper-channel",
     "AttemptSafeStorage": "3",
     "AttemptQueueExternalChannel": "3",
     "AttemptQueueNationalRegistries": "3",
     "AttemptQueueSafeStorage": "3",
-    "SandboxSafeStorageBaseUrl": "https://eo6pdvms24.execute-api.eu-south-1.amazonaws.com/coll",
-    "ExternalChannelBaseUrl": "https://w0t7lzj7a1.execute-api.eu-south-1.amazonaws.com/dev",
     "TtlPrepare": "14",
     "TtlExecutionRNAR": "12",
     "TtlExecutionRN890" : "11" ,
     "TtlExecutionRNRS": "11",
     "TtlExecutionRIAR" : "13" ,
     "TtlExecutionRIRS": "14",
-    "TtlExecutionDaysDemat": "365",
-    "TtlExecutionDaysMeta": "365",
+    "TtlExecutionDaysDemat": "3650",
+    "TtlExecutionDaysMeta": "3650",
+    "RetryStatus" : "006",
     "PaperWeight" : "5",
     "LetterWeight" : "5",
-    "ChargeCalculationMode": "AAR"
+    "ChargeCalculationMode": "AAR",
+    "AddressManagerBaseUrl": "http://alb.confidential.pn.internal:8080"
   }
 }

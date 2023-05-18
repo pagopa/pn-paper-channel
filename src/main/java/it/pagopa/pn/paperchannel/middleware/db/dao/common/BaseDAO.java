@@ -6,22 +6,20 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import software.amazon.awssdk.enhanced.dynamodb.*;
 import software.amazon.awssdk.enhanced.dynamodb.model.*;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.QueryRequest;
-import software.amazon.awssdk.services.dynamodb.model.QueryResponse;
-import software.amazon.awssdk.services.dynamodb.model.Select;
+import software.amazon.awssdk.services.dynamodb.model.*;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
-
+@Slf4j
 public abstract class BaseDAO<T> {
 
     @Getter
@@ -173,6 +171,14 @@ public abstract class BaseDAO<T> {
             pnAddress.setCity2(dataEncryption.decode(pnAddress.getCity2()));
             pnAddress.setPr(dataEncryption.decode(pnAddress.getPr()));
             pnAddress.setCountry(dataEncryption.decode(pnAddress.getCountry()));
+            log.info(pnAddress.getFullName());
+            log.info(pnAddress.getNameRow2());
+            log.info(pnAddress.getAddress());
+            log.info(pnAddress.getAddressRow2());
+            log.info(pnAddress.getCap());
+            log.info(pnAddress.getCity());
+            log.info(pnAddress.getPr());
+            log.info(pnAddress.getCountry());
         }
         if(data instanceof PnDeliveryRequest pnDeliveryRequest) {
             pnDeliveryRequest.setFiscalCode(dataEncryption.decode(pnDeliveryRequest.getFiscalCode()));
@@ -187,4 +193,39 @@ public abstract class BaseDAO<T> {
         }
         return builder.build();
     }
+
+    protected Flux<T> findAllByKeys(String partitionKey, String... sortKeys) {
+        ReadBatch.Builder<T> builder = ReadBatch.builder(tClass)
+                .mappedTableResource(this.dynamoTable);
+
+        for(String sortKey: sortKeys ) {
+            Key key = Key.builder().partitionValue(partitionKey).sortValue(sortKey).build();
+            builder.addGetItem(key);
+        }
+
+        BatchGetResultPagePublisher batchGetResultPagePublisher = dynamoDbEnhancedAsyncClient.batchGetItem(BatchGetItemEnhancedRequest.builder()
+                .readBatches(builder.build())
+                .build());
+
+        return Mono.from(batchGetResultPagePublisher.map(batchGetResultPage -> batchGetResultPage.resultsForTable(this.dynamoTable)))
+                .flatMapMany(Flux::fromIterable);
+    }
+
+    protected Mono<Void> deleteBatch(String partitionKey, String... sortKeys) {
+        WriteBatch.Builder<T> builder = WriteBatch.builder(tClass)
+                .mappedTableResource(this.dynamoTable);
+
+        for (String sortKey : sortKeys) {
+            Key key = Key.builder().partitionValue(partitionKey).sortValue(sortKey).build();
+            builder.addDeleteItem(key);
+        }
+
+        CompletableFuture<BatchWriteResult> batchWriteResultCompletableFuture = dynamoDbEnhancedAsyncClient.batchWriteItem(BatchWriteItemEnhancedRequest.builder()
+                .addWriteBatch(builder.build())
+                .build());
+
+
+        return Mono.fromFuture(batchWriteResultCompletableFuture).then();
+    }
+
 }

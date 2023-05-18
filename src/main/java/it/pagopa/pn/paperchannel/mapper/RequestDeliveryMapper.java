@@ -2,11 +2,15 @@ package it.pagopa.pn.paperchannel.mapper;
 
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
-import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareRequest;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
+import org.apache.commons.lang3.StringUtils;
 
+import javax.validation.constraints.NotNull;
+import java.time.Instant;
 import java.util.Date;
+
+import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.IN_PROCESSING;
 
 public class RequestDeliveryMapper {
     private RequestDeliveryMapper() {
@@ -18,12 +22,11 @@ public class RequestDeliveryMapper {
         entity.setRequestId(request.getRequestId());
         entity.setProposalProductType(request.getProposalProductType().getValue());
         entity.setStartDate(DateUtils.formatDate(new Date()));
-        entity.setStatusCode(StatusDeliveryEnum.IN_PROCESSING.getCode());
-        entity.setStatusDetail(StatusDeliveryEnum.IN_PROCESSING.getDescription());
         entity.setIun(request.getIun());
         entity.setRelatedRequestId(request.getRelatedRequestId());
 
-        entity.setStatusDate(DateUtils.formatDate(new Date()));
+        changeState(entity, IN_PROCESSING.getCode(), IN_PROCESSING.getDescription(), IN_PROCESSING.getDetail(), null, null);
+
         entity.setFiscalCode(request.getReceiverFiscalCode());
         entity.setPrintType(request.getPrintType());
         entity.setReceiverType(request.getReceiverType());
@@ -34,6 +37,20 @@ public class RequestDeliveryMapper {
         }).toList());
 
         return entity;
+    }
+
+    public static void changeState(@NotNull PnDeliveryRequest request, @NotNull String statusCode, @NotNull String statusDescription, @NotNull String statusDetail, String productType, Instant statusDate) {
+        request.setStatusCode(statusCode);
+        String description = statusCode.concat(" - ").concat(statusDescription);
+        if (StringUtils.isNotBlank(productType)){
+            description = productType.concat(" - ").concat(statusCode).concat(" - ").concat(statusDescription);
+        }
+        request.setStatusDescription(description);
+        request.setStatusDetail(statusDetail);
+        request.setStatusDate(DateUtils.formatDate(new Date()));
+        if (statusDate != null) {
+            request.setStatusDate(DateUtils.formatDate(Date.from(statusDate)));
+        }
     }
 
 }

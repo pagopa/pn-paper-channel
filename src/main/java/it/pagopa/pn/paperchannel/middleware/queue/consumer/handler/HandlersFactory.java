@@ -6,6 +6,7 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
 import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
+import it.pagopa.pn.paperchannel.middleware.queue.consumer.MetaDematCleaner;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum;
 import lombok.RequiredArgsConstructor;
@@ -33,18 +34,25 @@ public class HandlersFactory {
 
     private final EventDematDAO eventDematDAO;
 
+    private final MetaDematCleaner metaDematCleaner;
+
     private ConcurrentHashMap<String, MessageHandler> map;
 
     private final LogMessageHandler logExtChannelsMessageHandler = new LogMessageHandler();
 
     @PostConstruct
     public void initializeHandlers() {
+        var con080MessageHandler = new CON080MessageHandler(sqsSender);
         var saveMetadataMessageHandler = new SaveMetadataMessageHandler(eventMetaDAO, pnPaperChannelConfig.getTtlExecutionDaysMeta());
         var saveDematMessageHandler = new SaveDematMessageHandler(sqsSender, eventDematDAO, pnPaperChannelConfig.getTtlExecutionDaysDemat());
         var retryableErrorExtChannelsMessageHandler = new RetryableErrorMessageHandler(sqsSender, externalChannelClient, addressDAO, paperRequestErrorDAO, pnPaperChannelConfig);
         var notRetryableErrorMessageHandler = new NotRetryableErrorMessageHandler(paperRequestErrorDAO);
-        var aggregatorMessageHandler = new AggregatorMessageHandler(sqsSender, eventMetaDAO, eventDematDAO);
+        var aggregatorMessageHandler = new AggregatorMessageHandler(sqsSender, eventMetaDAO, metaDematCleaner);
         var directlySendMessageHandler = new DirectlySendMessageHandler(sqsSender);
+        var recag012MessageHandler = new RECAG012MessageHandler(eventMetaDAO, pnPaperChannelConfig.getTtlExecutionDaysMeta());
+        var recag011BMessageHandler = new RECAG011BMessageHandler(sqsSender, eventDematDAO, pnPaperChannelConfig.getTtlExecutionDaysDemat(), eventMetaDAO, pnPaperChannelConfig.getTtlExecutionDaysMeta());
+        var recag008CMessageHandler = new RECAG008CMessageHandler(sqsSender, eventMetaDAO, metaDematCleaner);
+        var complex890MessageHandler = new Complex890MessageHandler(sqsSender, eventMetaDAO, metaDematCleaner);
 
         map = new ConcurrentHashMap<>();
 
@@ -54,6 +62,18 @@ public class HandlersFactory {
         addSaveDematStatusCodes(map, saveDematMessageHandler);
         addAggregatorStatusCodes(map, aggregatorMessageHandler);
         addDirectlySendStatusCodes(map, directlySendMessageHandler);
+
+        //caso CON080
+        map.put(ExternalChannelCodeEnum.CON080.name(), con080MessageHandler);
+
+        //casi 890
+        map.put("RECAG012", recag012MessageHandler);
+        map.put("RECAG011B", recag011BMessageHandler);
+        map.put("RECAG008C", recag008CMessageHandler);
+
+        map.put("RECAG005C", complex890MessageHandler);
+        map.put("RECAG006C", complex890MessageHandler);
+        map.put("RECAG007C", complex890MessageHandler);
     }
 
     private void addRetryableErrorStatusCodes(ConcurrentHashMap<String, MessageHandler> map, RetryableErrorMessageHandler handler) {
@@ -62,6 +82,9 @@ public class HandlersFactory {
         map.put(ExternalChannelCodeEnum.RECAG004.name(), handler);
         map.put(ExternalChannelCodeEnum.RECRI005.name(), handler);
         map.put(ExternalChannelCodeEnum.RECRSI005.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECRS013.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECRN013.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECAG013.name(), handler);
     }
 
     private void addNotRetryableErrorStatusCodes(ConcurrentHashMap<String, MessageHandler> map, NotRetryableErrorMessageHandler handler) {
@@ -128,51 +151,61 @@ public class HandlersFactory {
 //    }
 
     private void addSaveDematStatusCodes(ConcurrentHashMap<String, MessageHandler> map, SaveDematMessageHandler handler) {
-        map.put("RECRS002B", handler);
-        map.put("RECRS002E", handler);
-        map.put("RECRS004B", handler);
-        map.put("RECRS005B", handler);
-        map.put("RECRN001B", handler);
-        map.put("RECRN002B", handler);
-        map.put("RECRN002E", handler);
-        map.put("RECRN003B", handler);
-        map.put("RECRN004B", handler);
-        map.put("RECRN005B", handler);
-        map.put("RECAG001B", handler);
-        map.put("RECAG002B", handler);
-        map.put("RECAG003B", handler);
-        map.put("RECAG003E", handler);
-        map.put("RECRI003B", handler);
-        map.put("RECRI004B", handler);
-        map.put("RECRSI004B", handler);
+        map.put(ExternalChannelCodeEnum.RECRS002B.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECRS002E.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECRS004B.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECRS005B.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECRN001B.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECRN002B.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECRN002E.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECRN003B.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECRN004B.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECRN005B.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECAG001B.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECAG002B.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECAG003B.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECAG003E.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECRI003B.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECRI004B.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECRSI004B.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECAG005B.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECAG006B.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECAG007B.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECAG008B.name(), handler);
+
 
     }
 
     private void addDirectlySendStatusCodes(ConcurrentHashMap<String, MessageHandler> map, DirectlySendMessageHandler handler) {
         // casi particolari di addAggregatorStatusCodes, in cui non c'è un meta precedente e vanno direttamente inviati
-        map.put("RECRS001C", handler); // iniziale e finale, no meta e demat prima
-        map.put("RECRS003C", handler); // iniziale e finale, no meta e demat prima
+        map.put(ExternalChannelCodeEnum.RECRS001C.name(), handler); // iniziale e finale, no meta e demat prima; ok
+        map.put(ExternalChannelCodeEnum.RECRS003C.name(), handler); // iniziale e finale, no meta e demat prima; ok
+
+        map.put(ExternalChannelCodeEnum.RECRS015.name(), handler); // progress
+        map.put(ExternalChannelCodeEnum.RECRN015.name(), handler); // progress
+
+        map.put(ExternalChannelCodeEnum.RECAG015.name(), handler); // progress
     }
 
     private void addAggregatorStatusCodes(ConcurrentHashMap<String, MessageHandler> map, AggregatorMessageHandler handler) {
-        map.put("RECRS002C", handler);
-        map.put("RECRS002F", handler);
-        map.put("RECRS004C", handler);
-        map.put("RECRS005C", handler);
-        map.put("RECRN001C", handler);
-        map.put("RECRN002C", handler);
-        map.put("RECRN002F", handler);
-        map.put("RECRN003C", handler);
-        map.put("RECRN004C", handler);
-        map.put("RECRN005C", handler);
-        map.put("RECAG001C", handler);
-        map.put("RECAG002C", handler);
-        map.put("RECAG003C", handler);
-        map.put("RECAG003F", handler);
-        map.put("RECRI003C", handler);
-        map.put("RECRI004C", handler);
-        map.put("RECRSI003C", handler); //L’evento potrebbe non essere mai generato in quanto non garantito su tutte i diversi paesi internazionali
-        map.put("RECRSI004C", handler);
+        map.put(ExternalChannelCodeEnum.RECRS002C.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECRS002F.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECRS004C.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECRS005C.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECRN001C.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECRN002C.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECRN002F.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECRN003C.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECRN004C.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECRN005C.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECAG001C.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECAG002C.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECAG003C.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECAG003F.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECRI003C.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECRI004C.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECRSI003C.name(), handler); //L’evento potrebbe non essere mai generato in quanto non garantito su tutte i diversi paesi internazionali
+        map.put(ExternalChannelCodeEnum.RECRSI004C.name(), handler);
     }
 
     public MessageHandler getHandler(@NotNull String code) {

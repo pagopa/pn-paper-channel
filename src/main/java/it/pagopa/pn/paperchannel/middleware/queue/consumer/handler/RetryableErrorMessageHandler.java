@@ -56,7 +56,7 @@ public class RetryableErrorMessageHandler extends SendToDeliveryPushHandler {
 
         if (hasOtherAttempt(paperRequest.getRequestId())) {
             //invio di nuovo la richiesta a ext-channels
-            return sendEngageRequest(entity, paperRequest.getRequestId())
+            return sendEngageRequest(entity, setRetryRequestId(paperRequest.getRequestId()))
                     .flatMap(pnDeliveryRequest -> super.handleMessage(entity, paperRequest));
         } else {
             return paperRequestErrorDAO.created(entity.getRequestId(),
@@ -76,6 +76,15 @@ public class RetryableErrorMessageHandler extends SendToDeliveryPushHandler {
             retry = Integer.parseInt(requestId.substring(requestId.lastIndexOf("_")+1));
         }
         return retry;
+    }
+
+    private String setRetryRequestId(String requestId) {
+        if (requestId.contains(Const.RETRY)) {
+            String prefix = requestId.substring(0, requestId.indexOf(Const.RETRY));
+            String attempt = String.valueOf(getRetryAttempt(requestId)+1);
+            requestId = prefix.concat(Const.RETRY).concat(attempt);
+        }
+        return requestId;
     }
 
     private Mono<PnDeliveryRequest> sendEngageRequest(PnDeliveryRequest pnDeliveryRequest, String requestId) {
@@ -100,7 +109,7 @@ public class RetryableErrorMessageHandler extends SendToDeliveryPushHandler {
                         String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDC_TRACE_ID_KEY)))
                 )
                 .onErrorResume(ex -> {
-                    pnLogAudit.addsFailSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDC_TRACE_ID_KEY)));
+                    pnLogAudit.addsWarningSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDC_TRACE_ID_KEY)));
                     return paperRequestErrorDAO.created(sendRequest.getRequestId(), EXTERNAL_CHANNEL_API_EXCEPTION.getMessage(),
                                     EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name())
                             .flatMap(errorEntity -> Mono.error(ex));

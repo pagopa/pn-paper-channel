@@ -51,6 +51,7 @@ class PaperMessagesServiceTest extends BaseTest {
 
     @MockBean
     private AddressDAO addressDAO;
+
     @MockBean
     private PaperTenderService paperTenderService;
 
@@ -130,7 +131,7 @@ class PaperMessagesServiceTest extends BaseTest {
         Mockito.when(this.requestDeliveryDAO.getByRequestId(Mockito.any()))
                 .thenReturn(Mono.empty());
 
-        Mockito.when(requestDeliveryDAO.createWithAddress(Mockito.any(), Mockito.any()))
+        Mockito.when(requestDeliveryDAO.createWithAddress(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(getPnDeliveryRequest()));
 
         Mockito.doNothing().when(this.sqsSender).pushToInternalQueue(Mockito.any());
@@ -155,7 +156,8 @@ class PaperMessagesServiceTest extends BaseTest {
         Mockito.when(this.addressDAO.findByRequestId(Mockito.any()))
                 .thenReturn(Mono.just(getPnAddress(getPnDeliveryRequest().getRequestId())));
 
-        PaperChannelUpdate update = this.paperMessagesService.preparePaperSync("TST-IOR.2332", getRequestOK()).block();
+        PaperChannelUpdate update = this.paperMessagesService
+                .preparePaperSync("TST-IOR.2332", getRequestOK()).block();
 
         assertNotNull(update);
         assertNotNull(update.getPrepareEvent());
@@ -250,7 +252,7 @@ class PaperMessagesServiceTest extends BaseTest {
                         .thenReturn(Mono.just(getPnAddress("OLD_ADDRESS")));
 
         //MOCK SAVE NEW DELIVERY REQUEST
-        Mockito.when(requestDeliveryDAO.createWithAddress(Mockito.any(), Mockito.any()))
+        Mockito.when(requestDeliveryDAO.createWithAddress(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(deliveryRequest));
 
         //MOCK PUSH QUEUE
@@ -294,7 +296,7 @@ class PaperMessagesServiceTest extends BaseTest {
                 .thenReturn(Mono.just(getPnAddress("OLD_ADDRESS")));
 
         //MOCK SAVE NEW DELIVERY REQUEST
-        Mockito.when(requestDeliveryDAO.createWithAddress(Mockito.any(), Mockito.any()))
+        Mockito.when(requestDeliveryDAO.createWithAddress(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(deliveryRequest));
 
         Mockito.when(this.requestDeliveryDAO.updateData(Mockito.any()))
@@ -640,7 +642,6 @@ class PaperMessagesServiceTest extends BaseTest {
                 }).verifyComplete();
 
     }
-
     @Test
     void paperAsyncEntitySecondAttemptTest() {
         PnAddress address = getPnAddress(deliveryRequestTakingCharge.getRequestId());
@@ -663,8 +664,10 @@ class PaperMessagesServiceTest extends BaseTest {
 
         PnAddress address = getPnAddress(deliveryRequestTakingCharge.getRequestId());
         Mockito.when(requestDeliveryDAO.getByRequestId(deliveryRequestTakingCharge.getRequestId())).thenReturn(Mono.empty());
-        Mockito.when(addressDAO.findByRequestId(deliveryRequestTakingCharge.getRequestId())).thenReturn(Mono.just(address));
-        Mockito.when(requestDeliveryDAO.createWithAddress(Mockito.any(), Mockito.any())).thenReturn(Mono.just(deliveryRequestTakingCharge));
+        Mockito.when(addressDAO.findByRequestId(deliveryRequestTakingCharge.getRequestId()))
+                .thenReturn(Mono.just(address));
+        Mockito.when(requestDeliveryDAO.createWithAddress(Mockito.any(), Mockito.any(), Mockito.any()))
+                .thenReturn(Mono.just(deliveryRequestTakingCharge));
         Mockito.doNothing().when(sqsSender).pushToInternalQueue(Mockito.any());
         StepVerifier.create(paperMessagesService.preparePaperSync(deliveryRequestTakingCharge.getRequestId(), getRequestOK())).expectError(PnPaperEventException.class).verify();
     }
@@ -704,8 +707,9 @@ class PaperMessagesServiceTest extends BaseTest {
         deliveryRequest.setReceiverType("RT");
         deliveryRequest.setIun("");
         deliveryRequest.setCorrelationId("");
-        deliveryRequest.setStatusCode("PC000");
-        deliveryRequest.setStatusDetail("");
+        deliveryRequest.setStatusCode(StatusDeliveryEnum.IN_PROCESSING.getCode());
+        deliveryRequest.setStatusDetail(StatusDeliveryEnum.IN_PROCESSING.getDetail());
+        deliveryRequest.setStatusDescription(StatusDeliveryEnum.IN_PROCESSING.getDescription());
         deliveryRequest.setStatusDate("");
         deliveryRequest.setProposalProductType("AR");
         deliveryRequest.setHashedFiscalCode(Utility.convertToHash(deliveryRequest.getFiscalCode()));
@@ -770,7 +774,8 @@ class PaperMessagesServiceTest extends BaseTest {
         deliveryRequest.setIun("iun");
         deliveryRequest.setCorrelationId("");
         deliveryRequest.setStatusCode(status.getCode());
-        deliveryRequest.setStatusDetail(status.getDescription());
+        deliveryRequest.setStatusDetail(status.getDetail());
+        deliveryRequest.setStatusDescription(status.getDescription());
         deliveryRequest.setStatusDate("");
         deliveryRequest.setProposalProductType("AR");
         deliveryRequest.setPrintType("PT");

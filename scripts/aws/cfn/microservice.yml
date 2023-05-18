@@ -87,6 +87,18 @@ Parameters:
     Type: String
     Description: 'SafeStorage cx-id'
 
+  AddressManagerCxId:
+    Type: String
+    Description: 'AddressManager cx-id'
+
+  AddressManagerApiKey:
+    Type: String
+    Description: 'AddressManager api-key'
+
+  AddressManagerBaseUrl:
+    Type: String
+    Description: 'Address Manager BaseUrl'
+
   XPagopaExtchCxId:
     Type: String
     Description: 'SafeStorage cx-id'
@@ -356,6 +368,11 @@ Parameters:
     Type: Number
     Description: maximum autoscaling number of tasks
 
+  # Log group parameters
+  EcsLogGroup:
+    Type: String
+    Description: 'Ecs log group name'
+
 Conditions:
   UseExternalChannelMock: !Equals [ !Ref ExternalChannelBaseUrl, "Mock" ]
 
@@ -423,10 +440,16 @@ Resources:
         ContainerEnvEntry35: !Sub 'PN_PAPERCHANNEL_TTLEXECUTIONIRS=${TtlExecutionRIRS}'
         ContainerEnvEntry36: !Sub 'PN_PAPERCHANNEL_TTLEXECUTIONDAYSDEMAT=${TtlExecutionDaysDemat}'
         ContainerEnvEntry37: !Sub 'PN_PAPERCHANNEL_TTLEXECUTIONDAYSMETA=${TtlExecutionDaysMeta}'
-        ContainerEnvEntry38: !Sub 'PN_PAPERCHANNEL_CLIENTDATAVAULTBASEPATH=http://alb.confidential.pn.internal:8080'
-        ContainerEnvEntry39: !Sub 'PN_PAPERCHANNEL_PAPERWEIGHT=${PaperWeight}'
-        ContainerEnvEntry40: !Sub 'PN_PAPERCHANNEL_LETTERWEIGHT=${LetterWeight}'
-        ContainerEnvEntry41: !Sub 'PN_PAPERCHANNEL_CHARGECALCULATIONMODE=${ChargeCalculationMode}'
+        ContainerEnvEntry38: !Sub 'PN_PAPERCHANNEL_RETRYSTATUS=${RetryStatus}'
+        ContainerEnvEntry39: 'PN_PAPERCHANNEL_CLIENTDATAVAULTBASEPATH=http://alb.confidential.pn.internal:8080'
+        ContainerEnvEntry40: !Sub 'PN_PAPERCHANNEL_PAPERWEIGHT=${PaperWeight}'
+        ContainerEnvEntry41: !Sub 'PN_PAPERCHANNEL_LETTERWEIGHT=${LetterWeight}'
+        ContainerEnvEntry42: !Sub 'PN_PAPERCHANNEL_CLIENTADDRESSMANAGERBASEPATH=${AddressManagerBaseUrl}'
+        ContainerEnvEntry43: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERCXID=${AddressManagerCxId}'
+        ContainerEnvEntry44: !Sub 'PN_PAPERCHANNEL_LETTERWEIGHT=${LetterWeight}'
+        ContainerEnvEntry45: !Sub 'PN_PAPERCHANNEL_CHARGECALCULATIONMODE=${ChargeCalculationMode}'
+        ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
+        MicroServiceSecretPrefix: pn-PaperChannel-Secrets
         MappedPaths: '/paper-channel-bo/*,/paper-channel-private/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds
@@ -434,8 +457,8 @@ Resources:
         EcsDefaultSecurityGroup: !Ref EcsDefaultSecurityGroup
         LoadBalancerListenerArn: !Ref ApplicationLoadBalancerListenerArn
         LoadbalancerRulePriority: !Ref MicroserviceNumber
-        CloudwatchLogKinesisStreamArn: !Ref LogsKinesisSourceStreamArn
         TaskRoleManagedPolicyArn: !Ref PaperChannelMicroserviceTaskPolicy
+        EcsLogGroup: !Ref EcsLogGroup
 
   PaperChannelMicroserviceTaskPolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -509,7 +532,6 @@ Resources:
               - !Sub "${PaperEventsTableArn}"
               - !Sub "${PaperEventsTableArn}/*"
 
-
   # Dashboard
   PaperChannelMicroserviceCloudWatchDashboard:
     Type: AWS::CloudFormation::Stack
@@ -517,16 +539,45 @@ Resources:
       TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/microservice-cloudwatch-dashboard.yaml"
       Parameters:
         DashboardName: !Sub "${ProjectName}-paper-channel"
+        DynamoDBTableNames: !Join
+          - ','
+          - - !Ref PaperEventsTableName
+            - !Ref PaperRequestErrorTableName
+            - !Ref CapDynamoTableName
+            - !Ref ZoneDynamoTableName
+            - !Ref CapDynamoTableName
+            - !Ref CostDynamoTableName
+            - !Ref DeliveryDriverDynamoTableName
+            - !Ref TenderDynamoTableName
+            - !Ref DeliveryFileDynamoTableName
+            - !Ref RequestDeliveryDynamoTableName
+        RestApiStageArns: !Join
+          - ','
+          - - !GetAtt PaperChannelGatewayDeliveryDriver.Outputs.RestApiStageArn
+        RestApiNames: !Join
+          - ','
+          - - !GetAtt PaperChannelGatewayDeliveryDriver.Outputs.RestApiName
         AlarmArns: !Join
           - ','
           - - !GetAtt PaperChannelMicroservice.Outputs.FatalLogsMetricAlarmArn
+            - !GetAtt PaperChannelGatewayDeliveryDriver.Outputs.RestApiErrorAlarmArn
+            - !GetAtt PaperChannelGatewayDeliveryDriver.Outputs.RestApiLatencyAlarmArn
+        QueueArns: !Join
+          - ','
+          - - !Ref ExternalChannelsOutputsQueueARN
+            - !Ref ExternalChannels2PaperChannelQueueARN
+            - !Ref ScheduledRequestsQueueARN
+            - !Ref NationalRegistries2PaperChannelQueueARN
+        LogGroupsNames: !Join
+          - ','
+          - - !Sub '/aws/ecs/${ProjectName}-paper-channel'   
 
   PaperChannelGatewayDeliveryDriver:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/api-gw-expose-service.yaml"
       Parameters:
-        MicroServiceUniqueName: !Sub '${ProjectName}-PaperChannel-bo'
+        MicroServiceUniqueName: !Sub '${ProjectName}-paper-channel-bo'
         IntendedUsage: BACKOFFICE
         DnsName: !Ref WebApiDnsName
         ProjectName: !Ref ProjectName

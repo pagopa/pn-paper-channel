@@ -12,4 +12,6 @@ public interface EventMetaDAO {
     Flux<PnEventMeta> findAllByRequestId(String metaRequestId);
 
     Mono<PnEventMeta> deleteEventMeta(String metaRequestId, String metaStatusCode);
+
+    Mono<Void> deleteBatch(String metaRequestId, String... metaStatusCodes);
 }

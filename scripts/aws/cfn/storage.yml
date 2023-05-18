@@ -28,6 +28,14 @@ Parameters:
     Type: String
     Description: "Topic alarm"
     
+  LogsKinesisSourceStreamArn:
+    Type: String
+    Description: 'Where to send Logs'
+
+  LogRetention:
+    Type: Number
+    Default: 14
+
 Resources:
   PaperDeliveryDriversBucket:
     Type: AWS::S3::Bucket
@@ -85,6 +93,8 @@ Resources:
   # Internal queues
   ScheduledRequestsQueue:
     Type: AWS::CloudFormation::Stack
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain 
     Properties:
       TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/sqs-queue.yaml"
       Parameters:
@@ -94,6 +104,8 @@ Resources:
 
   RequestDeliveryDynamoTable:
     Type: AWS::DynamoDB::Table
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain 
     Properties:
       TableName: !Sub '${ProjectName}-PaperRequestDelivery'
       AttributeDefinitions:
@@ -129,6 +141,8 @@ Resources:
 
   AddressDynamoTable:
     Type: AWS::DynamoDB::Table
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain 
     Properties:
       TableName: !Sub '${ProjectName}-PaperAddress'
       AttributeDefinitions:
@@ -154,6 +168,8 @@ Resources:
 
   TenderDynamoTable:
     Type: AWS::DynamoDB::Table
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain 
     Properties:
       TableName: !Sub '${ProjectName}-PaperTender'
       AttributeDefinitions:
@@ -185,6 +201,8 @@ Resources:
 
   DeliveryDriverDynamoTable:
     Type: AWS::DynamoDB::Table
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain 
     Properties:
       TableName: !Sub '${ProjectName}-PaperDeliveryDriver'
       AttributeDefinitions:
@@ -226,6 +244,8 @@ Resources:
 
   CostDynamoTable:
     Type: AWS::DynamoDB::Table
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain 
     Properties:
       TableName: !Sub '${ProjectName}-PaperCost'
       AttributeDefinitions:
@@ -257,6 +277,8 @@ Resources:
 
   ZoneDynamoTable:
     Type: AWS::DynamoDB::Table
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain 
     Properties:
       TableName: !Sub '${ProjectName}-PaperZone'
       AttributeDefinitions:
@@ -284,6 +306,8 @@ Resources:
 
   CapDynamoTable:
     Type: AWS::DynamoDB::Table
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain 
     Properties:
       TableName: !Sub '${ProjectName}-PaperCap'
       AttributeDefinitions:
@@ -306,6 +330,8 @@ Resources:
 
   DeliveryFileDynamoTable:
     Type: AWS::DynamoDB::Table
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain 
     Properties:
       TableName: !Sub '${ProjectName}-PaperDeliveryFile'
       AttributeDefinitions:
@@ -324,6 +350,8 @@ Resources:
 
   PaperRequestErrorDynamoTable:
     Type: AWS::DynamoDB::Table
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain 
     Properties:
       TableName: !Sub '${ProjectName}-PaperRequestError'
       AttributeDefinitions:
@@ -346,6 +374,8 @@ Resources:
 
   PaperEventsDynamoTable:
     Type: AWS::DynamoDB::Table
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain     
     Properties:
       TableName: !Sub '${ProjectName}-PaperEvents'
       AttributeDefinitions:
@@ -368,6 +398,17 @@ Resources:
         Enabled: true
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: true
+
+  PnPaperChannelLogGroup:
+    Type: AWS::CloudFormation::Stack
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain 
+    Properties:
+      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/log-group.yaml"
+      Parameters:
+        LogGroupName: !Sub '${ProjectName}-paper-channel'
+        LogGroupRetention: !Ref LogRetention
+        LogsKinesisSourceStreamArn: !Ref LogsKinesisSourceStreamArn
 
 Outputs:
   PaperDeliveryDriversBucketName:
@@ -468,3 +509,7 @@ Outputs:
   CapDynamoTableArn:
     Description: ARN of dynamodb table containing cap
     Value: !Sub '${CapDynamoTable.Arn}'
+
+  # Log group exports
+  EcsLogGroup:
+    Value: !GetAtt PnPaperChannelLogGroup.Outputs.LogGroupName

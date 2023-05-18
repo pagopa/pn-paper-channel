@@ -50,7 +50,7 @@ class RestExceptionHandlerTest {
         paperEvent.setStatusDetail(statusDetail);
         paperEvent.setStatusCode(statusCode);
 
-        PnPaperEventException pnPaperEventException = new PnPaperEventException(paperEvent);
+        PnPaperEventException pnPaperEventException = new PnPaperEventException(paperEvent.getRequestId());
         restExceptionHandler.handlePnPaperEventException(pnPaperEventException)
                 .map(responseEntity -> {
                         Assertions.assertFalse(responseEntity.hasBody());

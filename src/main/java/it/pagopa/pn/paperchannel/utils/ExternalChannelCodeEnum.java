@@ -12,24 +12,30 @@ public enum ExternalChannelCodeEnum {
     RECRS002C("KO"),
     RECRS002F("KO"),
     RECRS003C("OK"),
-    RECRS004C("OK"),
-    RECRS005C("OK"),
-    RECRN006("PROGRESS"), // furto o smarrimento
-    RECRS006("PROGRESS"), // furto o smarrimento
+    RECRS004C("KO"),
+    RECRS005C("KO"),
+    RECRN006("PROGRESS"), // furto o smarrimento o rapinato
+    RECRS006("PROGRESS"), // furto o smarrimento o rapinato
+    RECRS013("PROGRESS"), // furto o smarrimento o rapinato
+    RECRN013("PROGRESS"), // furto o smarrimento o rapinato
+    RECRS015("PROGRESS"),
+    RECRN015("PROGRESS"),
+    RECAG015("PROGRESS"),
     RECAG001C("OK"),
     RECRN001C("OK"),
     RECRN002C("KO"),
     RECRN002F("KO"),
     RECRN003C("OK"),
     RECRN004C("KO"),
-    RECRN005C("OK"),
+    RECRN005C("KO"),
     RECAG002C("OK"),
     RECAG003C("KO"),
     RECAG003F("KO"),
     RECAG004("PROGRESS"), // furto o smarrimento
-    RECAG005C("PROGRESS"), // KO or Progress
-    RECAG006C("PROGRESS"), // KO or Progress
-    RECAG007C("PROGRESS"), // KO or Progress
+    RECAG013("PROGRESS"),
+    RECAG005C("OK"),
+    RECAG006C("OK"),
+    RECAG007C("KO"),
     RECAG008C("PROGRESS"),
     PNAG012("KO"),
     RECRI003C("OK"),
@@ -61,7 +67,14 @@ public enum ExternalChannelCodeEnum {
     RECAG003E("PROGRESS"),
     RECRI003B("PROGRESS"),
     RECRI004B("PROGRESS"),
-    RECRSI004B("PROGRESS");
+    RECRSI004B("PROGRESS"),
+    RECAG005B("PROGRESS"),
+    RECAG006B("PROGRESS"),
+    RECAG007B("PROGRESS"),
+    RECAG008B("PROGRESS"),
+
+    //890
+    RECAG011B("PROGRESS");
 
     private final String message;
 
@@ -71,20 +84,24 @@ public enum ExternalChannelCodeEnum {
 
     public static boolean isRetryStatusCode(String code) {
         if (StringUtils.equalsIgnoreCase(code, RECRS006.name())
-            || StringUtils.equalsIgnoreCase(code, RECRN006.name())
-            || StringUtils.equalsIgnoreCase(code, RECAG004.name())
-            || StringUtils.equalsIgnoreCase(code, RECRI005.name())
-            || StringUtils.equalsIgnoreCase(code, RECRSI005.name())
+                || StringUtils.equalsIgnoreCase(code, RECRN006.name())
+                || StringUtils.equalsIgnoreCase(code, RECAG004.name())
+                || StringUtils.equalsIgnoreCase(code, RECRI005.name())
+                || StringUtils.equalsIgnoreCase(code, RECRSI005.name())
+                || StringUtils.equalsIgnoreCase(code, RECRS013.name())
+                || StringUtils.equalsIgnoreCase(code, RECRN013.name())
+                || StringUtils.equalsIgnoreCase(code, RECAG013.name())
         ) return true;
         return false;
     }
 
     public static boolean isErrorStatusCode(String code) {
         if (StringUtils.equalsIgnoreCase(code, CON998.name())
-        || StringUtils.equalsIgnoreCase(code, CON997.name())
-        || StringUtils.equalsIgnoreCase(code, CON996.name())
-        || StringUtils.equalsIgnoreCase(code, CON995.name())
-        || StringUtils.equalsIgnoreCase(code, CON993.name())) return true;
+                || StringUtils.equalsIgnoreCase(code, CON997.name())
+                || StringUtils.equalsIgnoreCase(code, CON996.name())
+                || StringUtils.equalsIgnoreCase(code, CON995.name())
+                || StringUtils.equalsIgnoreCase(code, CON993.name())
+        ) return true;
         return false;
     }
 

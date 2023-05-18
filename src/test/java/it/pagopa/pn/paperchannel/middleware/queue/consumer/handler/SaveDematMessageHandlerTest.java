@@ -1,5 +1,7 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
+import it.pagopa.pn.paperchannel.exception.PnDematNotValidException;
+import it.pagopa.pn.paperchannel.mapper.SendEventMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventDemat;
@@ -11,6 +13,7 @@ import it.pagopa.pn.paperchannel.service.SqsSender;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -51,11 +54,11 @@ class SaveDematMessageHandlerTest {
 
         PnDeliveryRequest entity = new PnDeliveryRequest();
         entity.setRequestId("requestId");
-        entity.setStatusDetail("statusDetail");
-        entity.setStatusCode(StatusCodeEnum.PROGRESS.getValue());
+        entity.setStatusCode("statusDetail");
+        entity.setStatusDetail(StatusCodeEnum.PROGRESS.getValue());
 
         PnEventDemat pnEventDemat = handler.buildPnEventDemat(paperRequest, paperRequest.getAttachments().get(0));
-        SendEvent sendEventExpected = handler.createSendEventMessage(entity, paperRequest);
+        SendEvent sendEventExpected = SendEventMapper.createSendEventMessage(entity, paperRequest);
 
         when(mockDao.createOrUpdate(pnEventDemat)).thenReturn(Mono.just(pnEventDemat));
 
@@ -84,11 +87,11 @@ class SaveDematMessageHandlerTest {
 
         PnDeliveryRequest entity = new PnDeliveryRequest();
         entity.setRequestId("requestId");
-        entity.setStatusDetail("statusDetail");
-        entity.setStatusCode(StatusCodeEnum.PROGRESS.getValue());
+        entity.setStatusCode("statusDetail");
+        entity.setStatusDetail(StatusCodeEnum.PROGRESS.getValue());
 
         PnEventDemat pnEventDemat = handler.buildPnEventDemat(paperRequest, paperRequest.getAttachments().get(0));
-        SendEvent sendEventNotExpected = handler.createSendEventMessage(entity, paperRequest);
+        SendEvent sendEventNotExpected = SendEventMapper.createSendEventMessage(entity, paperRequest);
 
         when(mockDao.createOrUpdate(pnEventDemat)).thenReturn(Mono.just(pnEventDemat));
 
@@ -122,15 +125,15 @@ class SaveDematMessageHandlerTest {
 
         PnDeliveryRequest entity = new PnDeliveryRequest();
         entity.setRequestId("requestId");
-        entity.setStatusDetail("statusDetail");
-        entity.setStatusCode(StatusCodeEnum.PROGRESS.getValue());
+        entity.setStatusCode("statusDetail");
+        entity.setStatusDetail(StatusCodeEnum.PROGRESS.getValue());
 
 
         PnEventDemat pnEventDematCAD = handler.buildPnEventDemat(paperRequest, paperRequest.getAttachments().get(0));
         PnEventDemat pnEventDemat23L = handler.buildPnEventDemat(paperRequest, paperRequest.getAttachments().get(1));
 
-        SendEvent sendEventCAD = handler.createSendEventMessage(entity, getPaperRequestForOneAttachment(paperRequest, paperRequest.getAttachments().get(0)));
-        SendEvent sendEvent23L = handler.createSendEventMessage(entity, getPaperRequestForOneAttachment(paperRequest, paperRequest.getAttachments().get(1)));
+        SendEvent sendEventCAD = SendEventMapper.createSendEventMessage(entity, getPaperRequestForOneAttachment(paperRequest, paperRequest.getAttachments().get(0)));
+        SendEvent sendEvent23L = SendEventMapper.createSendEventMessage(entity, getPaperRequestForOneAttachment(paperRequest, paperRequest.getAttachments().get(1)));
 
         when(mockDao.createOrUpdate(pnEventDematCAD)).thenReturn(Mono.just(pnEventDematCAD));
         when(mockDao.createOrUpdate(pnEventDemat23L)).thenReturn(Mono.just(pnEventDemat23L));
@@ -145,6 +148,26 @@ class SaveDematMessageHandlerTest {
         verify(mockSqsSender, times(0)).pushSendEvent(sendEventCAD);
         //mi aspetto che mandi il messaggio a delivery-push per l'evento 23L
         verify(mockSqsSender, times(1)).pushSendEvent(sendEvent23L);
+
+    }
+
+    @Test
+    void handleMessageWithoutAttachmentsTest() {
+        OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
+        PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
+                .requestId("requestId")
+                .statusCode("RECAG002B")
+                .statusDateTime(instant)
+                .clientRequestTimeStamp(instant);
+
+        PnDeliveryRequest entity = new PnDeliveryRequest();
+        entity.setRequestId("requestId");
+        entity.setStatusCode("statusDetail");
+        entity.setStatusDetail(StatusCodeEnum.PROGRESS.getValue());
+
+        StepVerifier.create(handler.handleMessage(entity, paperRequest))
+                .expectError(PnDematNotValidException.class)
+                .verify();
 
     }
 
