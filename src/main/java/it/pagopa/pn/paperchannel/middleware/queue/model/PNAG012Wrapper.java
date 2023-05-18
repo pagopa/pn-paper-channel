@@ -36,7 +36,6 @@ public class PNAG012Wrapper {
         // nelle nuova entità PnDeliveryRequest valorizzo solo i campi necessari per SendEvent (evento mandato a delivery-push)
         pnDeliveryRequestPNAG012 = new PnDeliveryRequest();
         pnDeliveryRequestPNAG012.setStatusDetail(StatusCodeEnum.OK.getValue()); //evento finale OK
-        pnDeliveryRequestPNAG012.setStatusCode(PNAG012_STATUS_DESCRIPTION);
         pnDeliveryRequestPNAG012.setStatusCode(originalPnDeliveryRequest.getStatusDetail());
         pnDeliveryRequestPNAG012.setRequestId(originalPnDeliveryRequest.getRequestId());
 
