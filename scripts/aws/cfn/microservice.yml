@@ -445,7 +445,7 @@ Resources:
         ContainerEnvEntry36: !Sub 'PN_PAPERCHANNEL_TTLEXECUTIONDAYSDEMAT=${TtlExecutionDaysDemat}'
         ContainerEnvEntry37: !Sub 'PN_PAPERCHANNEL_TTLEXECUTIONDAYSMETA=${TtlExecutionDaysMeta}'
         ContainerEnvEntry38: !Sub 'PN_PAPERCHANNEL_RETRYSTATUS=${RetryStatus}'
-        ContainerEnvEntry39: 'PN_PAPERCHANNEL_CLIENTDATAVAULTBASEPATH=${DataVaultBaseUrl}'
+        ContainerEnvEntry39: !Sub 'PN_PAPERCHANNEL_CLIENTDATAVAULTBASEPATH=${DataVaultBaseUrl}'
         ContainerEnvEntry40: !Sub 'PN_PAPERCHANNEL_PAPERWEIGHT=${PaperWeight}'
         ContainerEnvEntry41: !Sub 'PN_PAPERCHANNEL_LETTERWEIGHT=${LetterWeight}'
         ContainerEnvEntry42: !Sub 'PN_PAPERCHANNEL_CLIENTADDRESSMANAGERBASEPATH=${AddressManagerBaseUrl}'
