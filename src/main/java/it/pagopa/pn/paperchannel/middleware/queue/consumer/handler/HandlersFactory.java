@@ -117,7 +117,7 @@ public class HandlersFactory {
         map.put("RECRI003A", handler);
         map.put("RECRI004A", handler);
         map.put("RECRSI004A", handler);
-
+        map.put("RECAG011A", handler);
     }
 
 //    private void addDemaSavedStatusCodes(ConcurrentHashMap<DematKey, MessageHandler> map, DematMessageHandler handler) {
