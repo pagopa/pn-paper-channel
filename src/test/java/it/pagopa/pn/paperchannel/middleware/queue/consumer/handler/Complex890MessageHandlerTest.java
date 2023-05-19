@@ -164,7 +164,8 @@ class Complex890MessageHandlerTest {
         PnDeliveryRequest entity = new PnDeliveryRequest();
         entity.setRequestId("requestId");
         entity.setStatusDetail("statusDetail");
-        entity.setStatusCode(paperRequest.getStatusCode());
+        //entity.setStatusCode(paperRequest.getStatusCode());
+        entity.setStatusCode(ExternalChannelCodeEnum.getStatusCode(paperRequest.getStatusCode()));
 
         PnEventMeta pnEventMetaRECAG012 = new PnEventMeta();
         pnEventMetaRECAG012.setMetaRequestId(buildMetaRequestId(requestId));

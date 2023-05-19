@@ -72,10 +72,11 @@ RECAG005C RECAG006C o RECAG007C
 
 
 /* CAMBI:
-    - rimuovere caso 4
+    - ricontrollare tutta la specifica poco sopra col task dopo un refresh
     - correggere caso 3b -> anche inoltro progress evento originale
     - calcolo data caso 3b: META##RECAG011A+10 (mentre caso RECAG011B (non qui) rimane META##RECAG012)
     - correggere documentazione sopra per caso 3b
+    - in checkForMetaCorrespondence, invece di status da entity, provare a prenderlo da paperrequest
  */
 @Slf4j
 public class Complex890MessageHandler extends SendToDeliveryPushHandler {
@@ -112,23 +113,27 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
         boolean containsRECAG012 = false;
         PnEventMeta pnEventMetaRECAG012 = null;
 
-        Instant recag011A_DateTime = null;
-        Instant recag00_A_DateTime = null;
+        Instant recag011ADateTime = null;
+        Instant recag00XADateTime = null;
+
+        int numberOrRequiredDateTimesPresent = 0;
 
 
         for (PnEventMeta pnEventMeta: pnEventMetas) {
-            if(META_PNAG012_STATUS_CODE.equals(pnEventMeta.getMetaStatusCode())) {
+            if (META_PNAG012_STATUS_CODE.equals(pnEventMeta.getMetaStatusCode())) {
                 containsPNAG012 = true;
             }
-            else if(META_RECAG012_STATUS_CODE.equals(pnEventMeta.getMetaStatusCode())) {
+            else if (META_RECAG012_STATUS_CODE.equals(pnEventMeta.getMetaStatusCode())) {
                 containsRECAG012 = true;
                 pnEventMetaRECAG012 = pnEventMeta;
             }
-            else if(META_RECAG011A_STATUS_CODE.equals(pnEventMeta.getMetaStatusCode())) {
-                recag011A_DateTime = pnEventMeta.getStatusDateTime();
+            else if (META_RECAG011A_STATUS_CODE.equals(pnEventMeta.getMetaStatusCode())) {
+                recag011ADateTime = pnEventMeta.getStatusDateTime();
+                numberOrRequiredDateTimesPresent++;
             }
-            else if(checkForMetaCorrespondence(entity, pnEventMeta)) {
-                recag00_A_DateTime = pnEventMeta.getStatusDateTime();
+            else if (checkForMetaCorrespondence(entity, pnEventMeta)) {
+                recag00XADateTime = pnEventMeta.getStatusDateTime();
+                numberOrRequiredDateTimesPresent++;
             }
         }
 
@@ -148,12 +153,12 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
 //            CASO 3
             log.info("[{}] Result of query is: META##RECAG012 present, META##PNAG012 not present", paperRequest.getRequestId());
 
-            if (recag011A_DateTime == null || recag00_A_DateTime == null) {
+            if (numberOrRequiredDateTimesPresent != 2) {
                 log.error("[{}] needed META##RECAG00_A is present and/or META##RECAG011A not present", paperRequest.getRequestId());
                 return Mono.empty();
             }
 
-            if (lessThanTenDaysBetweenRECAG00XAAndRECAG011A(recag011A_DateTime, recag00_A_DateTime)) {
+            if (lessThanTenDaysBetweenRECAG00XAAndRECAG011A(recag011ADateTime, recag00XADateTime)) {
                 // 3 a
                 log.info("[{}] (statusDateTime[META##RECAG00_A] - statusDateTime[META##RECAG011A]) < 10", paperRequest.getRequestId());
 
@@ -176,14 +181,12 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
                         .then(Mono.just(pnEventMetas));
             }
         }
-
-        else { // entrambi non presenti
+        // RECAG012 sarà sempre presente: lasciato quest'ultimo caso solo per esaurire le casistiche e fare comunque la return
 //            CASO 4
-            log.info("[{}] Result of query has no PNAG012 and no RECAG012", paperRequest.getRequestId());
-            // qui lo status è OK o KO in base alla trasformazione fatta nel passo di update entity
-            return super.handleMessage(entity, paperRequest)
-                    .then(Mono.just(pnEventMetas));
-        }
+        log.info("[{}] Result of query has no PNAG012 and no RECAG012", paperRequest.getRequestId());
+        // qui lo status è OK o KO in base alla trasformazione fatta nel passo di update entity
+        return super.handleMessage(entity, paperRequest)
+                .then(Mono.just(pnEventMetas));
     }
 
     boolean checkForMetaCorrespondence(PnDeliveryRequest entity,  PnEventMeta pnEventMeta) {
@@ -196,8 +199,8 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
                 || entityStatusCode.equals("RECAG007C") && metaStatusCode.equals("RECAG007A");
     }
 
-    boolean lessThanTenDaysBetweenRECAG00XAAndRECAG011A(Instant recag011A_DateTime, Instant recag00_A_DateTime) {
+    boolean lessThanTenDaysBetweenRECAG00XAAndRECAG011A(Instant recag011ADateTime, Instant recag00XADateTime) {
         // (statusDateTime[META##RECAG00_A] - statusDateTime[META##RECAG011A]) < 10
-        return Duration.between(recag011A_DateTime, recag00_A_DateTime).toDays() < 10;
+        return Duration.between(recag011ADateTime, recag00XADateTime).toDays() < 10;
     }
 }
