@@ -58,7 +58,7 @@ class AttachmentMapperTest {
         fileDownloadInfoDto.setUrl("www.google.com");
         response.setKey("12345");
         response.setDownload(fileDownloadInfoDto);
-        response.setStatus("ok");
+        //response.setDocumentStatus("ok");
         response.setDocumentType("pdf");
         return response;
     }
@@ -74,7 +74,7 @@ class AttachmentMapperTest {
         dto.setDate(OffsetDateTime.now());
         dto.setId("12345");
         dto.setDocumentType("pdf");
-        dto.setUrl("http://localhost:8080");
+        dto.setUri("http://localhost:8080");
         return dto;
     }
 }

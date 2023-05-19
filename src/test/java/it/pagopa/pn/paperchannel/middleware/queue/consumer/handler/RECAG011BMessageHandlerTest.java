@@ -61,7 +61,7 @@ class RECAG011BMessageHandlerTest {
                 .attachments(List.of(new AttachmentDetailsDto()
                         .documentType("Plico")
                         .date(instant)
-                        .url("https://safestorage.it"))
+                        .uri("https://safestorage.it"))
                 );
 
         PnDeliveryRequest entity = new PnDeliveryRequest();
@@ -126,7 +126,7 @@ class RECAG011BMessageHandlerTest {
                 .attachments(List.of(new AttachmentDetailsDto()
                         .documentType("Plico")
                         .date(instant)
-                        .url("https://safestorage.it"))
+                        .uri("https://safestorage.it"))
                 );
 
         PnDeliveryRequest entity = new PnDeliveryRequest();
@@ -185,7 +185,7 @@ class RECAG011BMessageHandlerTest {
                 .attachments(List.of(new AttachmentDetailsDto()
                         .documentType("Plico")
                         .date(instant)
-                        .url("https://safestorage.it"))
+                        .uri("https://safestorage.it"))
                 );
 
         PnDeliveryRequest entity = new PnDeliveryRequest();

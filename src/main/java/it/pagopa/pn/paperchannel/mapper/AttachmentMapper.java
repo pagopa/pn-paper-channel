@@ -55,7 +55,7 @@ public class AttachmentMapper {
         AttachmentDetails attachmentDetails = new AttachmentDetails();
         attachmentDetails.setId(attachments.getId());
         attachmentDetails.setDocumentType(attachments.getDocumentType());
-        attachmentDetails.setUrl(attachments.getUrl());
+        attachmentDetails.setUrl(attachments.getUri());
         attachmentDetails.setDate(DateUtils.getDatefromOffsetDateTime(attachments.getDate()));
         return attachmentDetails;
     }
