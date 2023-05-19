@@ -21,30 +21,8 @@ import java.util.List;
 
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
 
-/* old
-RECAG005C RECAG006C o RECAG007C
 
-1. effettuare una query con operatore di uguaglianza su hashKey (META##<requestId>)
-   Nota:
-     i. Il risultato può contenere l’evento META##RECAG012
-     ii. in caso di presenza del META##PNAG012 deve essere necessariamente presente un elemento META##RECAG012, in caso contrario segnalare il problema
-
-2. Nel caso in cui il risultato della query produca le entry META##RECAG012 e META##PNAG012 allora dovrà essere inoltrato
-        l’evento orginale (RECAG005C RECAG006C o RECAG007C) con statusCode PROGRESS verso delivery_push
-
-3. Nel caso in cui il risultato della query produca il risultato META##RECAG012  senza il META##PNAG012 allora dovrà
-        essere effettuata la transizione in "Distacco d'ufficio 23L fascicolo chiuso":
-   - Recuperare l’evento con SK META##RECAG012 e recuperare la statusDateTime
-   - generazione dell’evento finale PNAG012 verso delivery_push (vedi dettaglio in paragrafo Evento PNAG012)
-   - inoltro dell’evento originale (RECAG005C RECAG006C o RECAG007C) con statusCode PROGRESS verso delivery_push
-
-4. Nel caso in cui il risultato della query non produca nessun risultato (raggiunto stato finale di recapito entro il
-        perfezionamento d’ufficio) allora lo stato originale (RECAG005C RECAG006C o RECAG007C)  potrà essere considerato FINALE ed inoltrato direttamente a delivery_push
-
-5. A valle di questo processo vanno cancellate le righe in tabella per le hashKey DEMAT##<requestId> e META##<requestId>
-*/
-
-/* new
+/*
 1. effettuare una query con operatore di uguaglianza su hashKey (META##<requestId>)
     Nota:
     i. Il risultato può contenere l’evento META##RECAG012
@@ -57,25 +35,23 @@ RECAG005C RECAG006C o RECAG007C
 
 3. In caso contrario (l’entry META##PNAG012 non è presente), a questo punto va recuperato l’evento di
     pre-esito META##RECAG00_A (che può essere  RECAG005A RECAG006A o RECAG007A a seconda dei casi) e
-    l’evento META##RECAG011A ed effettuata la differenza tra gli statusDateTime ( META##RECAG00_A - META##RECAG011A)
+    l’evento META##RECAG011A ed effettuata la differenza tra gli statusDateTime (META##RECAG00_A - META##RECAG011A)
 
-    se (statusDateTime[META##RECAG00_A] - statusDateTime[META##RECAG011A]) < 10
+    se (statusDateTime[META##RECAG00_A] - statusDateTime[META##RECAG011A]) < 10 giorni
 
         inoltro dell’evento originale (RECAG005C RECAG006C o RECAG007C) come finale verso deliveryPush
 
-    se (statusDateTime[META##RECAG00_A] - statusDateTime[META##RECAG011A]) >= 10
+    se (statusDateTime[META##RECAG00_A] - statusDateTime[META##RECAG011A]) >= 10 giorni
 
-        generare l’evento generazione dell’evento finale PNAG012 verso delivery_push (vedi dettaglio in paragrafo Evento PNAG012)  impostando come statusDateTime (META##RECAG011A+10) che dovrebbe sempre coincidere con META##RECAG012
+        i. generare l’evento generazione dell’evento finale PNAG012 verso delivery_push (vedi dettaglio in paragrafo Evento PNAG012)  impostando come statusDateTime (META##RECAG011A+10 giorni) che dovrebbe sempre coincidere con META##RECAG012
+        ii. inoltro dell’evento originale (RECAG005C RECAG006C o RECAG007C) come PROGRESS verso deliveryPush
 
 4. A valle di questo processo vanno cancellate le righe in tabella per le hashKey DEMAT##<requestId> e META##<requestId>
  */
 
 
 /* CAMBI:
-    - ricontrollare tutta la specifica poco sopra col task dopo un refresh
-    - correggere caso 3b -> anche inoltro progress evento originale
     - calcolo data caso 3b: META##RECAG011A+10 (mentre caso RECAG011B (non qui) rimane META##RECAG012)
-    - correggere documentazione sopra per caso 3b
     - in checkForMetaCorrespondence, invece di status da entity, provare a prenderlo da paperrequest
  */
 @Slf4j
@@ -174,6 +150,7 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
                 logSuccessAuditLog(pnag012PaperRequest, pnag012DeliveryRequest, pnLogAudit);
 
                 return super.handleMessage(pnag012DeliveryRequest, pnag012PaperRequest) // generated event sent as final
+                        .then(super.handleMessage(SendEventMapper.changeToProgressStatus(entity), paperRequest))  // original event sent as progress
                         .then(Mono.just(pnEventMetas));
             }
         }
