@@ -150,7 +150,7 @@ class Complex890MessageHandlerTest {
 
     //CASO 3
     @Test
-    void handleMessageMETAPNAG012NotPresentMETARECAG012PresentTest() {
+    void handleMessageMETAPNAG012NotPresentMETARECAG012PresentLessThan10DaysTest() {
         OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
         String requestId = "requestId";
         String metadataRequestid = buildMetaRequestId(requestId);
@@ -163,7 +163,7 @@ class Complex890MessageHandlerTest {
 
         PnDeliveryRequest entity = new PnDeliveryRequest();
         entity.setRequestId("requestId");
-        entity.setStatusDetail("statusDetail");
+        entity.setStatusDetail("OK");
         entity.setStatusCode(ExternalChannelCodeEnum.getStatusCode(paperRequest.getStatusCode()));
 
         PnEventMeta pnEventMetaRECAG012 = new PnEventMeta();
@@ -175,6 +175,52 @@ class Complex890MessageHandlerTest {
         pnEventMetaRECAG011A.setMetaRequestId(buildMetaRequestId(requestId));
         pnEventMetaRECAG011A.setMetaStatusCode(buildMetaStatusCode("RECAG011A"));
         pnEventMetaRECAG011A.setStatusDateTime(Instant.parse("2023-03-16T17:07:00.000Z"));
+
+        PnEventMeta pnEventMetaRECAG005A = new PnEventMeta();
+        pnEventMetaRECAG005A.setMetaRequestId(buildMetaRequestId(requestId));
+        pnEventMetaRECAG005A.setMetaStatusCode(buildMetaStatusCode("RECAG005A"));
+        pnEventMetaRECAG005A.setStatusDateTime(Instant.parse("2023-03-16T17:07:00.000Z"));
+
+        when(eventMetaDAO.findAllByRequestId(metadataRequestid)).thenReturn(Flux.just(pnEventMetaRECAG012, pnEventMetaRECAG011A, pnEventMetaRECAG005A));
+
+        assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
+
+        ArgumentCaptor<SendEvent> sendEventArgumentCaptor = ArgumentCaptor.forClass(SendEvent.class);
+        verify(sqsSender, times(1)).pushSendEvent(sendEventArgumentCaptor.capture());
+
+        //verifico che viene inviato a delivery-push l'evento originale RECAG005C in stato OK
+        SendEvent sendEvent = SendEventMapper.createSendEventMessage(entity, paperRequest);
+        assertThat(sendEvent.getStatusCode()).isEqualTo(StatusCodeEnum.OK);
+        assertThat(sendEvent.getStatusDetail()).isEqualTo("RECAG005C");
+        assertThat(sendEventArgumentCaptor.getAllValues().get(0)).isEqualTo(sendEvent);
+    }
+
+    @Test
+    void handleMessageMETAPNAG012NotPresentMETARECAG012PresentNotLessThan10DaysTest() {
+        OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
+        String requestId = "requestId";
+        String metadataRequestid = buildMetaRequestId(requestId);
+        PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
+                .requestId(requestId)
+                .statusCode("RECAG005C")
+                .statusDateTime(instant)
+                .clientRequestTimeStamp(instant)
+                .deliveryFailureCause("M02");
+
+        PnDeliveryRequest entity = new PnDeliveryRequest();
+        entity.setRequestId("requestId");
+        entity.setStatusDetail("OK");
+        entity.setStatusCode(ExternalChannelCodeEnum.getStatusCode(paperRequest.getStatusCode()));
+
+        PnEventMeta pnEventMetaRECAG012 = new PnEventMeta();
+        pnEventMetaRECAG012.setMetaRequestId(buildMetaRequestId(requestId));
+        pnEventMetaRECAG012.setMetaStatusCode(buildMetaStatusCode("RECAG012"));
+        pnEventMetaRECAG012.setStatusDateTime(Instant.parse("2023-03-16T17:07:00.000Z"));
+
+        PnEventMeta pnEventMetaRECAG011A = new PnEventMeta();
+        pnEventMetaRECAG011A.setMetaRequestId(buildMetaRequestId(requestId));
+        pnEventMetaRECAG011A.setMetaStatusCode(buildMetaStatusCode("RECAG011A"));
+        pnEventMetaRECAG011A.setStatusDateTime(Instant.parse("2023-03-05T17:07:00.000Z")); // 11 days before than RECAG005A
 
         PnEventMeta pnEventMetaRECAG005A = new PnEventMeta();
         pnEventMetaRECAG005A.setMetaRequestId(buildMetaRequestId(requestId));

@@ -32,7 +32,7 @@ public class PNAG012Wrapper {
         return new PNAG012Wrapper(originalPnDeliveryRequest, originalPaperRequest, statusDateTimeToSet);
     }
 
-    private PNAG012Wrapper(PnDeliveryRequest originalPnDeliveryRequest, PaperProgressStatusEventDto originalPaperRequest, Instant statusDateTimeRECAG012) {
+    private PNAG012Wrapper(PnDeliveryRequest originalPnDeliveryRequest, PaperProgressStatusEventDto originalPaperRequest, Instant statusDateTimeToSet) {
         // nelle nuova entità PnDeliveryRequest valorizzo solo i campi necessari per SendEvent (evento mandato a delivery-push)
         pnDeliveryRequestPNAG012 = new PnDeliveryRequest();
         pnDeliveryRequestPNAG012.setStatusDetail(StatusCodeEnum.OK.getValue()); //evento finale OK
@@ -49,7 +49,7 @@ public class PNAG012Wrapper {
         paperProgressStatusEventDtoPNAG012.setStatusDescription(PNAG012_STATUS_DESCRIPTION);
         paperProgressStatusEventDtoPNAG012.setClientRequestTimeStamp(OffsetDateTime.now());
 
-        paperProgressStatusEventDtoPNAG012.setStatusDateTime(OffsetDateTime.ofInstant(statusDateTimeRECAG012, ZoneOffset.UTC));
+        paperProgressStatusEventDtoPNAG012.setStatusDateTime(OffsetDateTime.ofInstant(statusDateTimeToSet, ZoneOffset.UTC));
         paperProgressStatusEventDtoPNAG012.setStatusCode(PNAG012_STATUS_CODE);
 
     }
