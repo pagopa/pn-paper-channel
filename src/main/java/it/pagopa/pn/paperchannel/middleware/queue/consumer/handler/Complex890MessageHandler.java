@@ -50,7 +50,6 @@ import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
 
 /* CAMBI:
     - calcolo data caso 3b: META##RECAG011A+10 (mentre caso RECAG011B (non qui) rimane META##RECAG012)
-    - in checkForMetaCorrespondence, invece di status da entity, provare a prenderlo da paperrequest
  */
 @Slf4j
 public class Complex890MessageHandler extends SendToDeliveryPushHandler {

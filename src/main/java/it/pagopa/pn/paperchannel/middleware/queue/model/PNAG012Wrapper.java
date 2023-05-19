@@ -28,8 +28,8 @@ public class PNAG012Wrapper {
 
     private PaperProgressStatusEventDto paperProgressStatusEventDtoPNAG012;
 
-    public static PNAG012Wrapper buildPNAG012Wrapper(PnDeliveryRequest originalPnDeliveryRequest, PaperProgressStatusEventDto originalPaperRequest,  Instant statusDateTimeRECAG012) {
-        return new PNAG012Wrapper(originalPnDeliveryRequest, originalPaperRequest, statusDateTimeRECAG012);
+    public static PNAG012Wrapper buildPNAG012Wrapper(PnDeliveryRequest originalPnDeliveryRequest, PaperProgressStatusEventDto originalPaperRequest,  Instant statusDateTimeToSet) {
+        return new PNAG012Wrapper(originalPnDeliveryRequest, originalPaperRequest, statusDateTimeToSet);
     }
 
     private PNAG012Wrapper(PnDeliveryRequest originalPnDeliveryRequest, PaperProgressStatusEventDto originalPaperRequest, Instant statusDateTimeRECAG012) {
