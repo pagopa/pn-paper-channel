@@ -116,8 +116,6 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
         Instant recag011ADateTime = null;
         Instant recag00XADateTime = null;
 
-        int numberOrRequiredDateTimesPresent = 0;
-
 
         for (PnEventMeta pnEventMeta: pnEventMetas) {
             if (META_PNAG012_STATUS_CODE.equals(pnEventMeta.getMetaStatusCode())) {
@@ -129,11 +127,9 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
             }
             else if (META_RECAG011A_STATUS_CODE.equals(pnEventMeta.getMetaStatusCode())) {
                 recag011ADateTime = pnEventMeta.getStatusDateTime();
-                numberOrRequiredDateTimesPresent++;
             }
             else if (checkForMetaCorrespondence(entity, pnEventMeta)) {
                 recag00XADateTime = pnEventMeta.getStatusDateTime();
-                numberOrRequiredDateTimesPresent++;
             }
         }
 
@@ -153,7 +149,7 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
 //            CASO 3
             log.info("[{}] Result of query is: META##RECAG012 present, META##PNAG012 not present", paperRequest.getRequestId());
 
-            if (numberOrRequiredDateTimesPresent != 2) {
+            if (missingRequiredDateTimes(recag011ADateTime, recag00XADateTime)) {
                 log.error("[{}] needed META##RECAG00_A is present and/or META##RECAG011A not present", paperRequest.getRequestId());
                 return Mono.empty();
             }
@@ -162,7 +158,7 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
                 // 3 a
                 log.info("[{}] (statusDateTime[META##RECAG00_A] - statusDateTime[META##RECAG011A]) < 10", paperRequest.getRequestId());
 
-                return super.handleMessage(entity, paperRequest)
+                return super.handleMessage(entity, paperRequest) // original event sent as final
                         .then(Mono.just(pnEventMetas));
             } else {
                 // 3 b
@@ -177,7 +173,7 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
                 pnLogAudit.addsBeforeReceive(entity.getIun(), String.format("prepare requestId = %s Response from external-channel",pnag012DeliveryRequest.getRequestId()));
                 logSuccessAuditLog(pnag012PaperRequest, pnag012DeliveryRequest, pnLogAudit);
 
-                return super.handleMessage(pnag012DeliveryRequest, pnag012PaperRequest)
+                return super.handleMessage(pnag012DeliveryRequest, pnag012PaperRequest) // generated event sent as final
                         .then(Mono.just(pnEventMetas));
             }
         }
@@ -202,5 +198,9 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
     boolean lessThanTenDaysBetweenRECAG00XAAndRECAG011A(Instant recag011ADateTime, Instant recag00XADateTime) {
         // (statusDateTime[META##RECAG00_A] - statusDateTime[META##RECAG011A]) < 10
         return Duration.between(recag011ADateTime, recag00XADateTime).toDays() < 10;
+    }
+
+    boolean missingRequiredDateTimes(Instant recag011ADateTime, Instant recag00XADateTime) {
+        return (recag011ADateTime == null || recag00XADateTime == null);
     }
 }
