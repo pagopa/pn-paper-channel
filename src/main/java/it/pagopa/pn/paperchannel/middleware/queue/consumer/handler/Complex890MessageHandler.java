@@ -8,8 +8,6 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
 import it.pagopa.pn.paperchannel.middleware.queue.consumer.MetaDematCleaner;
 import it.pagopa.pn.paperchannel.middleware.queue.model.PNAG012Wrapper;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.PaperProgressStatusEventDto;
-import it.pagopa.pn.paperchannel.rest.v1.dto.SendEvent;
-import it.pagopa.pn.paperchannel.rest.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.PnLogAudit;
 import lombok.extern.slf4j.Slf4j;
@@ -104,7 +102,7 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
             else if (META_RECAG011A_STATUS_CODE.equals(pnEventMeta.getMetaStatusCode())) {
                 recag011ADateTime = pnEventMeta.getStatusDateTime();
             }
-            else if (checkForMetaCorrespondence(entity, pnEventMeta)) {
+            else if (checkForMetaCorrespondence(paperRequest, pnEventMeta)) {
                 recag00XADateTime = pnEventMeta.getStatusDateTime();
             }
         }
@@ -162,14 +160,14 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
                 .then(Mono.just(pnEventMetas));
     }
 
-    boolean checkForMetaCorrespondence(PnDeliveryRequest entity,  PnEventMeta pnEventMeta) {
+    boolean checkForMetaCorrespondence(PaperProgressStatusEventDto paperRequest,  PnEventMeta pnEventMeta) {
         var metaPrefix = "META##";
-        var entityStatusCode = entity.getStatusCode();
+        var paperRequestStatusCode = paperRequest.getStatusCode();
         var metaStatusCode = pnEventMeta.getMetaStatusCode().replace(metaPrefix, "");
 
-        return entityStatusCode.equals("RECAG005C") && metaStatusCode.equals("RECAG005A")
-                || entityStatusCode.equals("RECAG006C") && metaStatusCode.equals("RECAG006A")
-                || entityStatusCode.equals("RECAG007C") && metaStatusCode.equals("RECAG007A");
+        return paperRequestStatusCode.equals("RECAG005C") && metaStatusCode.equals("RECAG005A")
+                || paperRequestStatusCode.equals("RECAG006C") && metaStatusCode.equals("RECAG006A")
+                || paperRequestStatusCode.equals("RECAG007C") && metaStatusCode.equals("RECAG007A");
     }
 
     boolean lessThanTenDaysBetweenRECAG00XAAndRECAG011A(Instant recag011ADateTime, Instant recag00XADateTime) {
