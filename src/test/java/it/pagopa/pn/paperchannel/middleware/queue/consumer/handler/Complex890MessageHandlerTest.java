@@ -19,6 +19,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -232,13 +233,13 @@ class Complex890MessageHandlerTest {
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
 
         //verifico che viene inviato a delivery-push l'evento finale PNAG012
-        PNAG012Wrapper pnag012Wrapper = PNAG012Wrapper.buildPNAG012Wrapper(entity, paperRequest, pnEventMetaRECAG012.getStatusDateTime());
+        PNAG012Wrapper pnag012Wrapper = PNAG012Wrapper.buildPNAG012Wrapper(entity, paperRequest, pnEventMetaRECAG011A.getStatusDateTime().plus(10, ChronoUnit.DAYS));
         PnDeliveryRequest pnDeliveryRequestPNAG012 = pnag012Wrapper.getPnDeliveryRequestPNAG012();
         PaperProgressStatusEventDto paperProgressStatusEventDtoPNAG012 = pnag012Wrapper.getPaperProgressStatusEventDtoPNAG012();
         SendEvent sendPNAG012Event = SendEventMapper.createSendEventMessage(pnDeliveryRequestPNAG012, paperProgressStatusEventDtoPNAG012);
         assertThat(sendPNAG012Event.getStatusCode()).isEqualTo(StatusCodeEnum.OK);
         assertThat(sendPNAG012Event.getStatusDetail()).isEqualTo("PNAG012");
-        assertThat(sendPNAG012Event.getStatusDateTime()).isEqualTo(pnEventMetaRECAG012.getStatusDateTime());
+        assertThat(sendPNAG012Event.getStatusDateTime()).isEqualTo("2023-03-15T17:07:00.000Z");
 
         ArgumentCaptor<SendEvent> sendEventArgumentCaptor = ArgumentCaptor.forClass(SendEvent.class);
         verify(sqsSender, times(2)).pushSendEvent(sendEventArgumentCaptor.capture());

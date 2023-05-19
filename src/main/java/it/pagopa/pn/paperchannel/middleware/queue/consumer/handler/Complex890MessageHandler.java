@@ -15,6 +15,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
@@ -45,12 +46,8 @@ import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
         ii. inoltro dell’evento originale (RECAG005C RECAG006C o RECAG007C) come PROGRESS verso deliveryPush
 
 4. A valle di questo processo vanno cancellate le righe in tabella per le hashKey DEMAT##<requestId> e META##<requestId>
- */
+*/
 
-
-/* CAMBI:
-    - calcolo data caso 3b: META##RECAG011A+10 (mentre caso RECAG011B (non qui) rimane META##RECAG012)
- */
 @Slf4j
 public class Complex890MessageHandler extends SendToDeliveryPushHandler {
 
@@ -84,7 +81,7 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
                                                       PaperProgressStatusEventDto paperRequest) {
         boolean containsPNAG012 = false;
         boolean containsRECAG012 = false;
-        PnEventMeta pnEventMetaRECAG012 = null;
+        //PnEventMeta pnEventMetaRECAG012 = null;
 
         Instant recag011ADateTime = null;
         Instant recag00XADateTime = null;
@@ -96,7 +93,7 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
             }
             else if (META_RECAG012_STATUS_CODE.equals(pnEventMeta.getMetaStatusCode())) {
                 containsRECAG012 = true;
-                pnEventMetaRECAG012 = pnEventMeta;
+                //pnEventMetaRECAG012 = pnEventMeta;
             }
             else if (META_RECAG011A_STATUS_CODE.equals(pnEventMeta.getMetaStatusCode())) {
                 recag011ADateTime = pnEventMeta.getStatusDateTime();
@@ -133,13 +130,13 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
 
                 return super.handleMessage(entity, paperRequest) // original event sent as final
                         .then(Mono.just(pnEventMetas));
-            } else {
+            } else if (recag011ADateTime != null) { // if check only for not having a warning when calling .plus
                 // 3 b
                 log.info("[{}] (statusDateTime[META##RECAG00_A] - statusDateTime[META##RECAG011A]) >= 10", paperRequest.getRequestId());
 
                 PnAuditLogBuilder auditLogBuilder = new PnAuditLogBuilder();
                 PnLogAudit pnLogAudit = new PnLogAudit(auditLogBuilder);
-                PNAG012Wrapper pnag012Wrapper = PNAG012Wrapper.buildPNAG012Wrapper(entity, paperRequest, pnEventMetaRECAG012.getStatusDateTime());
+                PNAG012Wrapper pnag012Wrapper = PNAG012Wrapper.buildPNAG012Wrapper(entity, paperRequest, recag011ADateTime.plus(10, ChronoUnit.DAYS));
                 var pnag012PaperRequest = pnag012Wrapper.getPaperProgressStatusEventDtoPNAG012();
                 var pnag012DeliveryRequest = pnag012Wrapper.getPnDeliveryRequestPNAG012();
 
