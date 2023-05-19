@@ -43,7 +43,7 @@ public class PrepareEventMapper {
         if (address != null){
             entityEvent.setReceiverAddress(AddressMapper.toPojo(address));
         }
-        entityEvent.setStatusDetail(StatusDeliveryEnum.TAKING_CHARGE.getDescription());
+        entityEvent.setStatusDetail(deliveryRequest.getStatusCode());
         entityEvent.setProductType(deliveryRequest.getProductType());
         entityEvent.setStatusDateTime(new Date());
         return entityEvent;
