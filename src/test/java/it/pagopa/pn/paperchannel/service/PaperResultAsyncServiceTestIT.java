@@ -116,11 +116,11 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
                 new AttachmentDetailsDto()
                         .documentType("CAD")
                         .date(OffsetDateTime.now())
-                        .url("https://safestorage.it"),
+                        .uri("https://safestorage.it"),
                 new AttachmentDetailsDto()
                         .documentType("23L")
                         .date(OffsetDateTime.now())
-                        .url("https://safestorage.it"))
+                        .uri("https://safestorage.it"))
         );
 
         SingleStatusUpdateDto extChannelMessage = new SingleStatusUpdateDto();
@@ -503,7 +503,7 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
                 new AttachmentDetailsDto()
                         .documentType("Plico")
                         .date(OffsetDateTime.now())
-                        .url("https://safestorage.it"))
+                        .uri("https://safestorage.it"))
         );
 
         SingleStatusUpdateDto extChannelMessage = new SingleStatusUpdateDto();

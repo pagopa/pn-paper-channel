@@ -49,7 +49,7 @@ class SaveDematMessageHandlerTest {
                 .attachments(List.of(new AttachmentDetailsDto()
                         .documentType("Plico")
                         .date(instant)
-                        .url("https://safestorage.it"))
+                        .uri("https://safestorage.it"))
                 );
 
         PnDeliveryRequest entity = new PnDeliveryRequest();
@@ -82,7 +82,7 @@ class SaveDematMessageHandlerTest {
                 .attachments(List.of(new AttachmentDetailsDto()
                         .documentType("CAD")
                         .date(instant)
-                        .url("https://safestorage.it"))
+                        .uri("https://safestorage.it"))
                 );
 
         PnDeliveryRequest entity = new PnDeliveryRequest();
@@ -116,11 +116,11 @@ class SaveDematMessageHandlerTest {
                         new AttachmentDetailsDto()
                         .documentType("CAD")
                         .date(instant)
-                        .url("https://safestorage.it"),
+                        .uri("https://safestorage.it"),
                         new AttachmentDetailsDto()
                                 .documentType("23L")
                                 .date(instant)
-                                .url("https://safestorage.it"))
+                                .uri("https://safestorage.it"))
                 );
 
         PnDeliveryRequest entity = new PnDeliveryRequest();

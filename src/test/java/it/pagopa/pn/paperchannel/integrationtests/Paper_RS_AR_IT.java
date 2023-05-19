@@ -197,7 +197,7 @@ class Paper_RS_AR_IT extends BaseTest {
                 new AttachmentDetailsDto()
                         .documentType("Plico")
                         .date(OffsetDateTime.now())
-                        .url("https://safestorage.it"))
+                        .uri("https://safestorage.it"))
         );
 
         SingleStatusUpdateDto extChannelMessage2 = new SingleStatusUpdateDto();

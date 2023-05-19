@@ -445,7 +445,6 @@ class QueueListenerTest extends BaseTest {
                      "digitalLegal": null,
                      "analogMail": 
                      {
-                        "requestId": "AKUZ-AWPL-LTPX-20230415",
                         "registeredLetterCode": null, 
                         "productType": "AR",
                         "iun": "AKUZ-AWPL-LTPX-20230415",

@@ -39,7 +39,7 @@ class CON080MessageHandlerTest {
                 .attachments(List.of(new AttachmentDetailsDto()
                         .documentType("Plico")
                         .date(instant)
-                        .url("https://safestorage.it"))
+                        .uri("https://safestorage.it"))
                 );
 
         PnDeliveryRequest entity = new PnDeliveryRequest();
