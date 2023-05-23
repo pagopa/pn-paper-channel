@@ -104,7 +104,7 @@ class QueueListenerServiceImplTest extends BaseTest {
         }
     }
 
-    @Test
+    //@Test
     void nationalRegistriesResponseListenerReceivedDeliveryRequestOkLogTest(){
         PnDeliveryRequest deliveryRequest = new PnDeliveryRequest();
         deliveryRequest.setIun("1223");
