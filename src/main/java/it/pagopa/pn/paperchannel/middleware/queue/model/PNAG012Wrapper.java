@@ -28,6 +28,13 @@ public class PNAG012Wrapper {
 
     private PaperProgressStatusEventDto paperProgressStatusEventDtoPNAG012;
 
+    /**
+     *
+     * @param originalPnDeliveryRequest the original PnDeliveryRequest
+     * @param originalPaperRequest the original PaperRequest
+     * @param statusDateTimeToSet the status datetime to set on the newly created PNAG012 event (it is normally set to RECAG012 statusDateTime or RECAG011A + 10 days, based on the context)
+     * @return
+     */
     public static PNAG012Wrapper buildPNAG012Wrapper(PnDeliveryRequest originalPnDeliveryRequest, PaperProgressStatusEventDto originalPaperRequest,  Instant statusDateTimeToSet) {
         return new PNAG012Wrapper(originalPnDeliveryRequest, originalPaperRequest, statusDateTimeToSet);
     }
