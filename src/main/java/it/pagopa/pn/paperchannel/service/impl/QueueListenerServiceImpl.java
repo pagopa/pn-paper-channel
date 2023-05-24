@@ -18,6 +18,7 @@ import it.pagopa.pn.paperchannel.service.PaperAsyncService;
 import it.pagopa.pn.paperchannel.service.PaperResultAsyncService;
 import it.pagopa.pn.paperchannel.service.QueueListenerService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
+import lombok.CustomLog;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,8 +27,8 @@ import reactor.core.publisher.Mono;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 
-@Slf4j
 @Service
+@CustomLog
 public class QueueListenerServiceImpl extends BaseService implements QueueListenerService {
     @Autowired
     private PaperResultAsyncService paperResultAsyncService;
@@ -35,6 +36,11 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
     private PaperAsyncService paperAsyncService;
     @Autowired
     private AddressDAO addressDAO;
+    String SQS_SENDER = "SQS SENDER";
+    String SQS_SENDER_DESCRIPTION = "Pushing prepare event.";
+
+    String NATIONAL_REGISTRY = "NATIONAL REGISTRY";
+    String NATIONAL_REGISTRY_DESCRIPTION = "Retrieve the address.";
 
     public QueueListenerServiceImpl(PnAuditLogBuilder auditLogBuilder,
                                     RequestDeliveryDAO requestDeliveryDAO,
@@ -46,13 +52,17 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
 
     @Override
     public void internalListener(PrepareAsyncRequest body, int attempt) {
+        String PROCESS_NAME = "InternalListener";
+        log.logStartingProcess(PROCESS_NAME);
         Mono.just(body)
                 .flatMap(prepareRequest -> {
                     prepareRequest.setAttemptRetry(attempt);
                     return this.paperAsyncService.prepareAsync(prepareRequest);
                 })
-                .doOnSuccess(resultFromAsync ->
-                        log.info("End of prepare async internal")
+                .doOnSuccess(resultFromAsync ->{
+                            log.info("End of prepare async internal");
+                            log.logEndingProcess(PROCESS_NAME);
+                        }
                 )
                 .doOnError(throwable -> {
                     log.error(throwable.getMessage());
@@ -63,6 +73,8 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
 
     @Override
     public void nationalRegistriesResponseListener(AddressSQSMessageDto body) {
+        String PROCESS_NAME = "National Registries Response Listener";
+        log.logStartingProcess(PROCESS_NAME);
         log.info("Received message from National Registry queue");
         Mono.just(body)
                 .map(msg -> {
@@ -90,7 +102,9 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                     return Mono.just(new PrepareAsyncRequest(addressAndEntity.getT2().getCorrelationId(), null));
                 })
                 .flatMap(prepareRequest -> {
+                    log.logInvokingAsyncExternalService(SQS_SENDER, SQS_SENDER_DESCRIPTION, prepareRequest.getRequestId());
                     this.sqsSender.pushToInternalQueue(prepareRequest);
+                    log.logEndingProcess(PROCESS_NAME);
                     return Mono.empty();
                 })
                 .block();
@@ -98,9 +112,12 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
 
     @Override
     public void nationalRegistriesErrorListener(NationalRegistryError data, int attempt) {
+        String PROCESS_NAME = "National Registries Error Listener";
+        log.logStartingProcess(PROCESS_NAME);
         Mono.just(data)
                 .doOnSuccess(nationalRegistryError -> {
                     log.info("Called national Registries");
+                    log.logInvokingAsyncExternalService(NATIONAL_REGISTRY,NATIONAL_REGISTRY_DESCRIPTION, nationalRegistryError.getRequestId());
                     this.finderAddressFromNationalRegistries(
                             nationalRegistryError.getCorrelationId(),
                             nationalRegistryError.getRequestId(),
@@ -110,6 +127,7 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                             nationalRegistryError.getIun(),
                             attempt
                     );
+                    log.logEndingProcess(PROCESS_NAME);
                 })
                 .doOnError(throwable -> {
                     log.error(throwable.getMessage());
@@ -120,9 +138,14 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
 
     @Override
     public void externalChannelListener(SingleStatusUpdateDto data, int attempt) {
+        String PROCESS_NAME = "External Channel Listener";
+        log.logStartingProcess(PROCESS_NAME);
         Mono.just(data)
                 .flatMap(request -> this.paperResultAsyncService.resultAsyncBackground(request, attempt))
-                .doOnSuccess(resultFromAsync -> log.info("End of external Channel result"))
+                .doOnSuccess(resultFromAsync -> {
+                    log.info("End of external Channel result");
+                    log.logEndingProcess(PROCESS_NAME);
+                })
                 .onErrorResume(ex -> {
                     log.error(ex.getMessage());
                     throw new PnGenericException(EXTERNAL_CHANNEL_LISTENER_EXCEPTION, EXTERNAL_CHANNEL_LISTENER_EXCEPTION.getMessage());
