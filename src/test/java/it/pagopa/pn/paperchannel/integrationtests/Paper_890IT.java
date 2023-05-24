@@ -253,9 +253,12 @@ class Paper_890IT extends BaseTest {
 
         generateEvent("RECAG005C","","",null,"", null);
 
-        verify(sqsSender, timeout(2000).times(3)).pushSendEvent(caturedSendEvent.capture());
+        verify(sqsSender, timeout(2000).times(4)).pushSendEvent(caturedSendEvent.capture());
         List<SendEvent> allValues = caturedSendEvent.getAllValues();
         log.info("Event: \n"+ allValues);
+
+        assertEquals("RECAG011A", allValues.get(allValues.size()-4).getStatusDetail());
+        assertEquals(StatusCodeEnum.PROGRESS,allValues.get(allValues.size()-4).getStatusCode());
 
         assertEquals("RECAG005B", allValues.get(allValues.size()-3).getStatusDetail());
         assertEquals(StatusCodeEnum.PROGRESS,allValues.get(allValues.size()-3).getStatusCode());
@@ -340,9 +343,12 @@ class Paper_890IT extends BaseTest {
 
         generateEvent("RECAG006C","","",null,"", null);
 
-        verify(sqsSender, timeout(2000).times(3)).pushSendEvent(caturedSendEvent.capture());
+        verify(sqsSender, timeout(2000).times(4)).pushSendEvent(caturedSendEvent.capture());
         List<SendEvent> allValues = caturedSendEvent.getAllValues();
         log.info("Event: \n"+ allValues);
+
+        assertEquals("RECAG011A", allValues.get(allValues.size()-4).getStatusDetail());
+        assertEquals(StatusCodeEnum.PROGRESS,allValues.get(allValues.size()-4).getStatusCode());
 
         assertEquals("RECAG006B", allValues.get(allValues.size()-3).getStatusDetail());
         assertEquals(StatusCodeEnum.PROGRESS,allValues.get(allValues.size()-3).getStatusCode());
@@ -419,9 +425,15 @@ class Paper_890IT extends BaseTest {
         generateEvent("RECAG007B","","",List.of("23L"),"", null);
         generateEvent("RECAG007C","","",null,"", null);
 
-        verify(sqsSender, timeout(2000).times(3)).pushSendEvent(caturedSendEvent.capture());
+        verify(sqsSender, timeout(2000).times(4)).pushSendEvent(caturedSendEvent.capture());
         List<SendEvent> allValues = caturedSendEvent.getAllValues();
         log.info("Event: \n"+ allValues);
+
+        assertEquals("RECAG011A", allValues.get(allValues.size()-4).getStatusDetail());
+        assertEquals(StatusCodeEnum.PROGRESS,allValues.get(allValues.size()-4).getStatusCode());
+
+        assertEquals("RECAG007B", allValues.get(allValues.size()-3).getStatusDetail());
+        assertEquals(StatusCodeEnum.PROGRESS,allValues.get(allValues.size()-3).getStatusCode());
 
         assertEquals("PNAG012", allValues.get(allValues.size()-2).getStatusDetail());
         assertEquals(StatusCodeEnum.OK,allValues.get(allValues.size()-2).getStatusCode());
