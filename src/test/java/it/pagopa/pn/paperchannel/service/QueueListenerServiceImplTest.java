@@ -129,6 +129,23 @@ class QueueListenerServiceImplTest extends BaseTest {
     }
 
     @Test
+    void nationalRegistriesResponseOk(){
+        PnDeliveryRequest deliveryRequest = new PnDeliveryRequest();
+        deliveryRequest.setIun("1223");
+        deliveryRequest.setRequestId("1234dc");
+        deliveryRequest.setRelatedRequestId("1234abc");
+        deliveryRequest.setCorrelationId("9999");
+        Mockito.when(this.requestDeliveryDAO.getByCorrelationId(Mockito.anyString())).thenReturn(Mono.just(deliveryRequest));
+        Mockito.when(this.addressDAO.findByRequestId(Mockito.anyString())).thenReturn(Mono.just(getRelatedAddress()));
+        AddressSQSMessageDto addressSQSMessageDto = new AddressSQSMessageDto();
+        addressSQSMessageDto.setCorrelationId("1234");
+        AddressSQSMessagePhysicalAddressDto addressDto = new AddressSQSMessagePhysicalAddressDto();
+        addressSQSMessageDto.setPhysicalAddress(addressDto);
+        this.queueListenerService.nationalRegistriesResponseListener(addressSQSMessageDto);
+
+    }
+
+    @Test
     void nationalRegistriesResponseListenerReceivedDeliveryRequestKoLogTest(){
         PnDeliveryRequest deliveryRequest = new PnDeliveryRequest();
         deliveryRequest.setIun("1223");
