@@ -50,6 +50,7 @@ public class HandlersFactory {
         var aggregatorMessageHandler = new AggregatorMessageHandler(sqsSender, eventMetaDAO, metaDematCleaner);
         var directlySendMessageHandler = new DirectlySendMessageHandler(sqsSender);
         var recag012MessageHandler = new RECAG012MessageHandler(eventMetaDAO, pnPaperChannelConfig.getTtlExecutionDaysMeta());
+        var recag011AMessageHandler =  new RECAG011AMessageHandler(sqsSender, eventMetaDAO, pnPaperChannelConfig.getTtlExecutionDaysMeta());
         var recag011BMessageHandler = new RECAG011BMessageHandler(sqsSender, eventDematDAO, pnPaperChannelConfig.getTtlExecutionDaysDemat(), eventMetaDAO, pnPaperChannelConfig.getTtlExecutionDaysMeta());
         var recag008CMessageHandler = new RECAG008CMessageHandler(sqsSender, eventMetaDAO, metaDematCleaner);
         var complex890MessageHandler = new Complex890MessageHandler(sqsSender, eventMetaDAO, metaDematCleaner);
@@ -68,6 +69,7 @@ public class HandlersFactory {
 
         //casi 890
         map.put("RECAG012", recag012MessageHandler);
+        map.put("RECAG011A", recag011AMessageHandler);
         map.put("RECAG011B", recag011BMessageHandler);
         map.put("RECAG008C", recag008CMessageHandler);
 
@@ -117,7 +119,6 @@ public class HandlersFactory {
         map.put("RECRI003A", handler);
         map.put("RECRI004A", handler);
         map.put("RECRSI004A", handler);
-        map.put("RECAG011A", handler);
     }
 
 //    private void addDemaSavedStatusCodes(ConcurrentHashMap<DematKey, MessageHandler> map, DematMessageHandler handler) {
