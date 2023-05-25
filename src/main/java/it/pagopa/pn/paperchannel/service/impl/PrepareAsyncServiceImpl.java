@@ -261,6 +261,48 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                             )
                     )
                     .map(AddressMapper::toDTO)
+
+
+                    .doOnNext(address ->
+                            pnLogAudit.addsBeforeResolveLogic(
+                                    pnDeliveryRequest.getIun(),
+                                    String.format("prepare requestId = %s, relatedRequestId = %s Is National Registry Address equal compared to the previous address?",
+                                            pnDeliveryRequest.getRequestId(),
+                                            pnDeliveryRequest.getRelatedRequestId())
+                            )
+                    )
+                    .zipWhen(receiverAddress -> addressManagerClient.deduplicates(correlationId, receiverAddress, fromNationalRegistries))
+                    .flatMap(receiverAddressAndResponseDeduplicates -> {
+                        if (Boolean.TRUE.equals(receiverAddressAndResponseDeduplicates.getT2().getEqualityResult())) {
+                            pnLogAudit.addsSuccessResolveLogic(
+                                    pnDeliveryRequest.getIun(),
+                                    String.format("prepare requestId = %s, relatedRequestId = %s National Registry Address is equals previous address. Case KOUNREACHALE",
+                                            pnDeliveryRequest.getRequestId(),
+                                            pnDeliveryRequest.getRelatedRequestId())
+                            );
+                            return Mono.error(new PnGenericException(UNTRACEABLE_ADDRESS, UNTRACEABLE_ADDRESS.getMessage()));
+                        }
+                        if (receiverAddressAndResponseDeduplicates.getT2().getError() != null){
+                            log.error("Response from address manager {} with request id {}", receiverAddressAndResponseDeduplicates.getT2().getError(), pnDeliveryRequest.getRequestId());
+                            return Mono.error(new PnGenericException(ADDRESS_MANAGER_ERROR, receiverAddressAndResponseDeduplicates.getT2().getError()));
+                        }
+                        pnLogAudit.addsSuccessResolveLogic(
+                                pnDeliveryRequest.getIun(),
+                                String.format("prepare requestId = %s, relatedRequestId = %s National Registry Address is not equals previous address",
+                                        pnDeliveryRequest.getRequestId(),
+                                        pnDeliveryRequest.getRelatedRequestId())
+                        );
+                        AnalogAddressDto addressFromManager = receiverAddressAndResponseDeduplicates.getT2().getNormalizedAddress();
+
+                        if (addressFromManager == null) {
+                            log.error("Response from address manager have a address null {}", pnDeliveryRequest.getRequestId());
+                            return Mono.error(new PnGenericException(UNTRACEABLE_ADDRESS, UNTRACEABLE_ADDRESS.getMessage()));
+                        }
+                        Address address = AddressMapper.fromAnalogAddressManager(addressFromManager) ;
+                        address.setFullName(receiverAddressAndResponseDeduplicates.getT1().getFullName());
+                        address.setNameRow2(receiverAddressAndResponseDeduplicates.getT1().getNameRow2());
+                        return Mono.just(address);
+                    })
                     .flatMap(newAddress -> {
                         pnDeliveryRequest.setAddressHash(newAddress.convertToHash());
                         pnDeliveryRequest.setProductType(getProposalProductType(newAddress, pnDeliveryRequest.getProposalProductType()));
