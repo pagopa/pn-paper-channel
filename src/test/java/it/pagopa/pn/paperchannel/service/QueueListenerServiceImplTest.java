@@ -4,6 +4,7 @@ import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.paperchannel.config.BaseTest;
 import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
+import it.pagopa.pn.paperchannel.exception.PnRetryStorageException;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
@@ -23,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 
@@ -73,13 +75,13 @@ class QueueListenerServiceImplTest extends BaseTest {
     }
 
     @Test
-    void nationalRegistriesResponseListenerUntraceableAddressTest(){
+    void nationalRegistriesResponseListenerUntraceableAddressBecauseCorrelationIdIsNotFoundTest(){
        try{
            this.queueListenerService.nationalRegistriesResponseListener(new AddressSQSMessageDto());
            Assertions.fail("Il metodo non è andato in eccezione");
        }
         catch(PnGenericException ex){
-            Assertions.assertEquals(UNTRACEABLE_ADDRESS, ex.getExceptionType());
+            Assertions.assertEquals(CORRELATION_ID_NOT_FOUND, ex.getExceptionType());
         }
 
         AddressSQSMessageDto addressSQSMessageDto = new AddressSQSMessageDto();
@@ -88,7 +90,7 @@ class QueueListenerServiceImplTest extends BaseTest {
             this.queueListenerService.nationalRegistriesResponseListener(addressSQSMessageDto);
         }
         catch(PnGenericException ex){
-            Assertions.assertEquals(UNTRACEABLE_ADDRESS, ex.getExceptionType());
+            Assertions.assertEquals(CORRELATION_ID_NOT_FOUND, ex.getExceptionType());
         }
     }
     @Test
@@ -105,7 +107,7 @@ class QueueListenerServiceImplTest extends BaseTest {
     }
 
     @Test
-    void nationalRegistriesResponseListenerReceivedDeliveryRequestOkLogTest(){
+    void nationalRegistriesResponseListenerReceivedDeliveryRequestErrormessageisnotemptyforcorrelationId(){
         PnDeliveryRequest deliveryRequest = new PnDeliveryRequest();
         deliveryRequest.setIun("1223");
         deliveryRequest.setRequestId("1234dc");
@@ -118,7 +120,29 @@ class QueueListenerServiceImplTest extends BaseTest {
         addressSQSMessageDto.setError("ok");
         AddressSQSMessagePhysicalAddressDto addressDto = new AddressSQSMessagePhysicalAddressDto();
         addressSQSMessageDto.setPhysicalAddress(addressDto);
+        try{
+            this.queueListenerService.nationalRegistriesResponseListener(addressSQSMessageDto);
+        }
+        catch(PnGenericException ex){
+            Assertions.assertEquals(NATIONAL_REGISTRY_LISTENER_EXCEPTION, ex.getExceptionType());
+        }
+    }
+
+    @Test
+    void nationalRegistriesResponseOk(){
+        PnDeliveryRequest deliveryRequest = new PnDeliveryRequest();
+        deliveryRequest.setIun("1223");
+        deliveryRequest.setRequestId("1234dc");
+        deliveryRequest.setRelatedRequestId("1234abc");
+        deliveryRequest.setCorrelationId("9999");
+        Mockito.when(this.requestDeliveryDAO.getByCorrelationId(Mockito.anyString())).thenReturn(Mono.just(deliveryRequest));
+        Mockito.when(this.addressDAO.findByRequestId(Mockito.anyString())).thenReturn(Mono.just(getRelatedAddress()));
+        AddressSQSMessageDto addressSQSMessageDto = new AddressSQSMessageDto();
+        addressSQSMessageDto.setCorrelationId("1234");
+        AddressSQSMessagePhysicalAddressDto addressDto = new AddressSQSMessagePhysicalAddressDto();
+        addressSQSMessageDto.setPhysicalAddress(addressDto);
         this.queueListenerService.nationalRegistriesResponseListener(addressSQSMessageDto);
+
     }
 
     @Test

@@ -5,8 +5,8 @@ import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.model.Address;
@@ -35,6 +35,8 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
     private PaperAsyncService paperAsyncService;
     @Autowired
     private AddressDAO addressDAO;
+    @Autowired
+    private PaperRequestErrorDAO paperRequestErrorDAO;
 
     public QueueListenerServiceImpl(PnAuditLogBuilder auditLogBuilder,
                                     RequestDeliveryDAO requestDeliveryDAO,
@@ -66,7 +68,7 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
         log.info("Received message from National Registry queue");
         Mono.just(body)
                 .map(msg -> {
-                    if (msg==null || StringUtils.isBlank(msg.getCorrelationId())) throw new PnGenericException(UNTRACEABLE_ADDRESS, UNTRACEABLE_ADDRESS.getMessage());
+                    if (msg==null || StringUtils.isBlank(msg.getCorrelationId())) throw new PnGenericException(CORRELATION_ID_NOT_FOUND, CORRELATION_ID_NOT_FOUND.getMessage());
                     else return msg;
                 })
                 .zipWhen(msgDto -> {
@@ -79,7 +81,12 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                 .flatMap(addressAndEntity -> {
                     AddressSQSMessageDto addressFromNational = addressAndEntity.getT1();
                     PnDeliveryRequest entity = addressAndEntity.getT2();
-
+                    // check error body
+                    if (StringUtils.isNotEmpty(addressFromNational.getError())) {
+                        log.info("Error message is not empty for correlationId" +addressFromNational.getCorrelationId());
+                        paperRequestErrorDAO.created(entity.getRequestId(), NATIONAL_REGISTRY_LISTENER_EXCEPTION.getTitle(), NATIONAL_REGISTRY_LISTENER_EXCEPTION.getMessage());
+                        throw new PnGenericException(NATIONAL_REGISTRY_LISTENER_EXCEPTION, NATIONAL_REGISTRY_LISTENER_EXCEPTION.getMessage());
+                    }
 
                     if (addressFromNational.getPhysicalAddress() != null) {
                         Address address = AddressMapper.fromNationalRegistry(addressFromNational.getPhysicalAddress());
