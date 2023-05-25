@@ -11,6 +11,7 @@ public enum ExceptionTypeEnum{
     DATA_NULL_OR_INVALID("DATA_NULL_OR_INVALID", "La richiesta è vuota o contiene dati non validi per l'elaborazione"),
     MAPPER_ERROR("MAPPER_ERROR", "Non è stato possibile mappare l'oggetto richiesto"),
     PREPARE_ASYNC_LISTENER_EXCEPTION("PREPARE_ASYNC_LISTENER_EXCEPTION", "Si è verificato un errore durante la prepare async"),
+    NATIONAL_REGISTRY_LISTENER_EXCEPTION("NATIONAL_REGISTRY_LISTENER_EXCEPTION", "Si è verificato un errore nel listener National Registry"),
     EXTERNAL_CHANNEL_LISTENER_EXCEPTION("EXTERNAL_CHANNEL_LISTENER_EXCEPTION", "Si è verificato un errore durante la RESULT di external channel"),
     EXTERNAL_CHANNEL_API_EXCEPTION("EXTERNAL_CHANNEL_API_EXCEPTION", "Si è verificato un errore durante l'invocazione a external channel"),
     NATIONAL_REGISTRY_ADDRESS_NOT_FOUND("NATIONAL_REGISTRY_ADDRESS_NOT_FOUND", "Non è stato trovato alcun indirizzo"),
