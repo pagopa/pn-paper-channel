@@ -14,11 +14,10 @@ import reactor.core.publisher.Mono;
 import java.util.Date;
 import java.util.stream.Collectors;
 
-import static it.pagopa.pn.commons.log.MDCWebFilter.MDC_TRACE_ID_KEY;
-
 @Slf4j
 @ControllerAdvice
 public class RestExceptionHandler {
+    public static final String MDC_TRACE_ID_KEY = "trace_id";
 
     @ExceptionHandler(JsonMappingException.class)
     public void handle(JsonMappingException e) {
