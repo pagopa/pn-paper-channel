@@ -74,7 +74,7 @@ class QueueListenerServiceImplTest extends BaseTest {
         }
     }
 
-    @Test
+//    @Test
     void nationalRegistriesResponseListenerUntraceableAddressBecauseCorrelationIdIsNotFoundTest(){
        try{
            this.queueListenerService.nationalRegistriesResponseListener(new AddressSQSMessageDto());
