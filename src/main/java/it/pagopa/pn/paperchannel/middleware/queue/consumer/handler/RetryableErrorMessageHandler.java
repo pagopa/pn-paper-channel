@@ -24,7 +24,6 @@ import reactor.core.scheduler.Schedulers;
 import java.time.Duration;
 import java.util.List;
 
-import static it.pagopa.pn.commons.log.MDCWebFilter.MDC_TRACE_ID_KEY;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.EXTERNAL_CHANNEL_API_EXCEPTION;
 
 // handler per stati gialli: Retry su ExtCh con suffisso +1, invio dello stato in progress verso DP
@@ -39,6 +38,7 @@ public class RetryableErrorMessageHandler extends SendToDeliveryPushHandler {
     private final PaperRequestErrorDAO paperRequestErrorDAO;
 
     private final PnPaperChannelConfig pnPaperChannelConfig;
+    public static final String MDC_TRACE_ID_KEY = "trace_id";
 
     public RetryableErrorMessageHandler(SqsSender sqsSender, ExternalChannelClient externalChannelClient,
                                         AddressDAO addressDAO, PaperRequestErrorDAO paperRequestErrorDAO,

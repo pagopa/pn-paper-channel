@@ -22,7 +22,6 @@ import reactor.core.scheduler.Schedulers;
 import java.time.Duration;
 import java.util.function.Function;
 
-import static it.pagopa.pn.commons.log.MDCWebFilter.MDC_TRACE_ID_KEY;
 import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.NATIONAL_REGISTRY_ERROR;
 import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.NATIONAL_REGISTRY_WAITING;
 import static it.pagopa.pn.paperchannel.utils.Const.*;
@@ -35,7 +34,7 @@ public class BaseService {
     protected final SqsSender sqsSender;
     protected RequestDeliveryDAO requestDeliveryDAO;
     protected CostDAO costDAO;
-
+    public static final String MDC_TRACE_ID_KEY = "trace_id";
     @Autowired
     @Qualifier("dataVaultEncryption")
     protected DataEncryption dataEncryption;
@@ -85,7 +84,7 @@ public class BaseService {
                 })
                 .flatMap(Mono::just)
                 .onErrorResume(ex -> {
-                    pnLogAudit.addsWarningResolveService(iun, String.format("prepare requestId = %s, relatedRequestId = %s, trace_id = %s Response KO from National Registry service", requestId, relatedRequestId, MDC.get(MDC_TRACE_ID_KEY)));
+                    pnLogAudit.addsWarningResolveService(iun, String.format("prepare requestId = %s, relatedRequestId = %s, trace_id = %s Response KO from National Registry service", requestId, relatedRequestId, null));
                     log.warn("NationalRegistries finder address in errors {}", ex.getMessage());
                     return Mono.empty();
 

@@ -41,6 +41,11 @@
         </dependency>
 
         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>io.swagger</groupId>
             <artifactId>swagger-annotations</artifactId>
             <version>1.6.5</version>
@@ -294,7 +299,7 @@
                                 <useTags>true</useTags>
                                 <basePackage>${project.groupId}.paperchannel.rest.v1</basePackage>
                                 <modelPackage>${project.groupId}.paperchannel.rest.v1.dto</modelPackage>
-                                <apiPackage>${project.groupId}.paperchannel.rest.v1.api</apiPackage>
+                                <apiPackage>${project.groupId}.paperchannel.generated.openapi.server.rest.api</apiPackage>
                                 <configPackage>${project.groupId}.paperchannel.rest.v1.config</configPackage>
                             </configOptions>
                         </configuration>

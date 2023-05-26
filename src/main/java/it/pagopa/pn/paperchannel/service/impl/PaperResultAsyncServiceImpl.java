@@ -27,7 +27,7 @@ import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum;
 import it.pagopa.pn.paperchannel.utils.PnLogAudit;
-import lombok.extern.slf4j.Slf4j;
+import lombok.CustomLog;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
@@ -35,14 +35,12 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.time.Duration;
-import java.time.Instant;
 import java.util.Date;
 
-import static it.pagopa.pn.commons.log.MDCWebFilter.MDC_TRACE_ID_KEY;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DATA_NULL_OR_INVALID;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.EXTERNAL_CHANNEL_API_EXCEPTION;
 
-@Slf4j
+@CustomLog
 @Service
 public class PaperResultAsyncServiceImpl extends BaseService implements PaperResultAsyncService {
 
@@ -52,6 +50,8 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
     private final PaperRequestErrorDAO paperRequestErrorDAO;
 
     private final HandlersFactory handlersFactory;
+
+    private final String processName = "Result Async Background";
 
     public PaperResultAsyncServiceImpl(PnAuditLogBuilder auditLogBuilder, RequestDeliveryDAO requestDeliveryDAO,
                                        NationalRegistryClient nationalRegistryClient, SqsSender sqsSender,
@@ -122,6 +122,7 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
 
     @Override
     public Mono<Void> resultAsyncBackground(SingleStatusUpdateDto singleStatusUpdateDto, Integer attempt) {
+        log.logStartingProcess(processName);
         if (singleStatusUpdateDto == null || singleStatusUpdateDto.getAnalogMail() == null || StringUtils.isBlank(singleStatusUpdateDto.getAnalogMail().getRequestId())) {
             log.error("the message sent from external channel, includes errors. It cannot be processing");
             return Mono.error(new PnGenericException(DATA_NULL_OR_INVALID, DATA_NULL_OR_INVALID.getMessage()));
@@ -198,11 +199,11 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
                 .flatMap(pnAddresses -> {
                     SendRequest sendRequest = SendRequestMapper.toDto(pnAddresses, pnDeliveryRequest);
                     sendRequest.setRequestId(requestId);
-                    pnLogAudit.addsBeforeSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDC_TRACE_ID_KEY)));
+                    pnLogAudit.addsBeforeSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), null));
 
                     return this.externalChannelClient.sendEngageRequest(sendRequest, pnDeliveryRequest.getAttachments().stream().map(AttachmentMapper::fromEntity).toList()).publishOn(Schedulers.boundedElastic())
                             .then(Mono.defer(() -> {
-                                pnLogAudit.addsSuccessSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDC_TRACE_ID_KEY)));
+                                pnLogAudit.addsSuccessSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), null));
                                 return Mono.empty();
                             }))
                             .onErrorResume(ex -> {
@@ -224,6 +225,7 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
                 pnDeliveryRequestMono.getProductType(),
                 singleStatusUpdateDto.getAnalogMail().getStatusDateTime().toInstant()
         );
+        log.logEndingProcess(processName);
         return requestDeliveryDAO.updateData(pnDeliveryRequestMono);
     }
 

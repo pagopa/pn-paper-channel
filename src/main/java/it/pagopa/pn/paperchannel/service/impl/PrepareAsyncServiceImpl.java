@@ -30,6 +30,7 @@ import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
 import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
+import lombok.CustomLog;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,8 +44,8 @@ import java.time.Duration;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.TAKING_CHARGE;
 
-@Slf4j
 @Service
+@CustomLog
 public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncService {
 
     @Autowired
@@ -57,6 +58,8 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
     private PaperRequestErrorDAO paperRequestErrorDAO;
     @Autowired
     private AddressManagerClient addressManagerClient;
+    String SQS_SENDER = "SQS SENDER";
+    String SQS_SENDER_DESCRIPTION = "Pushing prepare event.";
 
     public PrepareAsyncServiceImpl(PnAuditLogBuilder auditLogBuilder, NationalRegistryClient nationalRegistryClient,
                                    RequestDeliveryDAO requestDeliveryDAO,SqsSender sqsQueueSender, CostDAO costDAO ) {
@@ -65,6 +68,8 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
 
     @Override
     public Mono<PnDeliveryRequest> prepareAsync(PrepareAsyncRequest request){
+        String PROCESS_NAME = "Prepare Async";
+        log.logStartingProcess(PROCESS_NAME);
 
         String correlationId = request.getCorrelationId();
         final String requestId = request.getRequestId();
@@ -80,10 +85,12 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
             log.info("Start async for {} request id", request.getRequestId());
             requestDeliveryEntityMono = requestDeliveryDAO.getByRequestId(requestId);
         }
-
+        String VALIDATION_NAME = "Check and update address";
+        log.logChecking(VALIDATION_NAME);
         return requestDeliveryEntityMono
                 .flatMap(deliveryRequest -> checkAndUpdateAddress(correlationId, deliveryRequest, addressFromNationalRegistry))
                 .map(pnDeliveryRequest -> {
+                    log.logCheckingOutcome(VALIDATION_NAME, true);
                     RequestDeliveryMapper.changeState(
                             pnDeliveryRequest,
                             TAKING_CHARGE.getCode(),
@@ -98,6 +105,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                 .flatMap(pnDeliveryRequest ->
                      this.addressDAO.findByRequestId(pnDeliveryRequest.getRequestId())
                             .flatMap(address -> {
+                                log.logInvokingAsyncExternalService(SQS_SENDER, SQS_SENDER_DESCRIPTION, requestId );
                                 this.sqsSender.pushPrepareEvent(PrepareEventMapper.toPrepareEvent(pnDeliveryRequest, AddressMapper.toDTO(address), StatusCodeEnum.OK));
                                 return this.requestDeliveryDAO.updateData(pnDeliveryRequest);
                             })
@@ -111,7 +119,9 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                     return updateStatus(requestId, correlationId, statusDeliveryEnum)
                             .doOnNext(entity -> {
                                 if (entity.getStatusCode().equals(StatusDeliveryEnum.UNTRACEABLE.getCode())){
+                                    log.logInvokingAsyncExternalService(SQS_SENDER, SQS_SENDER_DESCRIPTION, requestId );
                                     sendUnreachableEvent(entity);
+                                    log.logEndingProcess(PROCESS_NAME);
                                 }
                             })
                             .flatMap(entity -> Mono.error(ex));
