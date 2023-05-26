@@ -299,7 +299,7 @@
                                 <useTags>true</useTags>
                                 <basePackage>${project.groupId}.paperchannel.rest.v1</basePackage>
                                 <modelPackage>${project.groupId}.paperchannel.rest.v1.dto</modelPackage>
-                                <apiPackage>${project.groupId}.paperchannel.rest.v1.api</apiPackage>
+                                <apiPackage>${project.groupId}.paperchannel.generated.openapi.server.rest.api</apiPackage>
                                 <configPackage>${project.groupId}.paperchannel.rest.v1.config</configPackage>
                             </configOptions>
                         </configuration>
