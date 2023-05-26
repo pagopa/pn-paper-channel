@@ -28,15 +28,21 @@ public class PNAG012Wrapper {
 
     private PaperProgressStatusEventDto paperProgressStatusEventDtoPNAG012;
 
-    public static PNAG012Wrapper buildPNAG012Wrapper(PnDeliveryRequest originalPnDeliveryRequest, PaperProgressStatusEventDto originalPaperRequest,  Instant statusDateTimeRECAG012) {
-        return new PNAG012Wrapper(originalPnDeliveryRequest, originalPaperRequest, statusDateTimeRECAG012);
+    /**
+     *
+     * @param originalPnDeliveryRequest the original PnDeliveryRequest
+     * @param originalPaperRequest the original PaperRequest
+     * @param statusDateTimeToSet the status datetime to set on the newly created PNAG012 event (it is normally set to RECAG012 statusDateTime or RECAG011A + 10 days, based on the context)
+     * @return
+     */
+    public static PNAG012Wrapper buildPNAG012Wrapper(PnDeliveryRequest originalPnDeliveryRequest, PaperProgressStatusEventDto originalPaperRequest,  Instant statusDateTimeToSet) {
+        return new PNAG012Wrapper(originalPnDeliveryRequest, originalPaperRequest, statusDateTimeToSet);
     }
 
-    private PNAG012Wrapper(PnDeliveryRequest originalPnDeliveryRequest, PaperProgressStatusEventDto originalPaperRequest, Instant statusDateTimeRECAG012) {
+    private PNAG012Wrapper(PnDeliveryRequest originalPnDeliveryRequest, PaperProgressStatusEventDto originalPaperRequest, Instant statusDateTimeToSet) {
         // nelle nuova entità PnDeliveryRequest valorizzo solo i campi necessari per SendEvent (evento mandato a delivery-push)
         pnDeliveryRequestPNAG012 = new PnDeliveryRequest();
         pnDeliveryRequestPNAG012.setStatusDetail(StatusCodeEnum.OK.getValue()); //evento finale OK
-        pnDeliveryRequestPNAG012.setStatusCode(PNAG012_STATUS_DESCRIPTION);
         pnDeliveryRequestPNAG012.setStatusCode(originalPnDeliveryRequest.getStatusDetail());
         pnDeliveryRequestPNAG012.setRequestId(originalPnDeliveryRequest.getRequestId());
 
@@ -50,7 +56,7 @@ public class PNAG012Wrapper {
         paperProgressStatusEventDtoPNAG012.setStatusDescription(PNAG012_STATUS_DESCRIPTION);
         paperProgressStatusEventDtoPNAG012.setClientRequestTimeStamp(OffsetDateTime.now());
 
-        paperProgressStatusEventDtoPNAG012.setStatusDateTime(OffsetDateTime.ofInstant(statusDateTimeRECAG012, ZoneOffset.UTC));
+        paperProgressStatusEventDtoPNAG012.setStatusDateTime(OffsetDateTime.ofInstant(statusDateTimeToSet, ZoneOffset.UTC));
         paperProgressStatusEventDtoPNAG012.setStatusCode(PNAG012_STATUS_CODE);
 
     }
