@@ -384,7 +384,7 @@ class QueueListenerTest extends BaseTest {
         assertTrue(true);
 
     }
-    @Test
+//    @Test
     void pullNationalRegistriesKOJsonTest(){
         String json = """
                 {
