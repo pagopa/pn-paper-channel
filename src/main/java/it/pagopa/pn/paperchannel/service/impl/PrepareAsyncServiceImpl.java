@@ -266,17 +266,20 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                     .doOnNext(address ->
                             pnLogAudit.addsBeforeResolveLogic(
                                     pnDeliveryRequest.getIun(),
-                                    String.format("prepare requestId = %s, relatedRequestId = %s Is National Registry Address equal compared to the previous address?",
+                                    String.format("prepare requestId = %s, relatedRequestId = %s Is Discovered Address equal compared to the previous address?",
                                             pnDeliveryRequest.getRequestId(),
                                             pnDeliveryRequest.getRelatedRequestId())
                             )
                     )
-                    .zipWhen(receiverAddress -> addressManagerClient.deduplicates(correlationId, receiverAddress, fromNationalRegistries))
+                    .zipWhen(discoveredAddress ->
+                       addressDAO.findByRequestId(pnDeliveryRequest.getCorrelationId(), AddressTypeEnum.RECEIVER_ADDRESS).map(pnAddress-> AddressMapper.toDTO(pnAddress))
+                    )
+                    .zipWhen(addressAndDiscoveredAddress -> addressManagerClient.deduplicates(correlationId, addressAndDiscoveredAddress.getT2(), addressAndDiscoveredAddress.getT1()))
                     .flatMap(receiverAddressAndResponseDeduplicates -> {
                         if (Boolean.TRUE.equals(receiverAddressAndResponseDeduplicates.getT2().getEqualityResult())) {
                             pnLogAudit.addsSuccessResolveLogic(
                                     pnDeliveryRequest.getIun(),
-                                    String.format("prepare requestId = %s, relatedRequestId = %s National Registry Address is equals previous address. Case KOUNREACHALE",
+                                    String.format("prepare requestId = %s, relatedRequestId = %s Discovered Address is equal compared to the previous address. Case KOUNREACHALE",
                                             pnDeliveryRequest.getRequestId(),
                                             pnDeliveryRequest.getRelatedRequestId())
                             );
@@ -299,8 +302,8 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                             return Mono.error(new PnGenericException(UNTRACEABLE_ADDRESS, UNTRACEABLE_ADDRESS.getMessage()));
                         }
                         Address address = AddressMapper.fromAnalogAddressManager(addressFromManager) ;
-                        address.setFullName(receiverAddressAndResponseDeduplicates.getT1().getFullName());
-                        address.setNameRow2(receiverAddressAndResponseDeduplicates.getT1().getNameRow2());
+                        address.setFullName(receiverAddressAndResponseDeduplicates.getT1().getT1().getFullName());
+                        address.setNameRow2(receiverAddressAndResponseDeduplicates.getT1().getT1().getNameRow2());
                         return Mono.just(address);
                     })
                     .flatMap(newAddress -> {
