@@ -1,10 +1,10 @@
 package it.pagopa.pn.paperchannel.utils;
 
-import io.swagger.v3.oas.models.security.SecurityScheme;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.util.Pair;
+
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
