@@ -74,14 +74,14 @@ class QueueListenerServiceImplTest extends BaseTest {
         }
     }
 
-//    @Test
+    @Test
     void nationalRegistriesResponseListenerUntraceableAddressBecauseCorrelationIdIsNotFoundTest(){
        try{
            this.queueListenerService.nationalRegistriesResponseListener(new AddressSQSMessageDto());
            Assertions.fail("Il metodo non è andato in eccezione");
        }
         catch(PnGenericException ex){
-            Assertions.assertEquals(CORRELATION_ID_NOT_FOUND, ex.getExceptionType());
+            Assertions.assertEquals(UNTRACEABLE_ADDRESS, ex.getExceptionType());
         }
 
         AddressSQSMessageDto addressSQSMessageDto = new AddressSQSMessageDto();
@@ -90,7 +90,7 @@ class QueueListenerServiceImplTest extends BaseTest {
             this.queueListenerService.nationalRegistriesResponseListener(addressSQSMessageDto);
         }
         catch(PnGenericException ex){
-            Assertions.assertEquals(CORRELATION_ID_NOT_FOUND, ex.getExceptionType());
+            Assertions.assertEquals(UNTRACEABLE_ADDRESS, ex.getExceptionType());
         }
     }
     @Test

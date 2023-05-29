@@ -299,8 +299,8 @@ class FileDownloadAndUploadFromServiceTest extends BaseTest {
                 .verify();
     }
 
-//    @Test
-//    @DisplayName("whenCallNotifyAsyncWithExceptionCreateDriverThenThrowException")
+    @Test
+    @DisplayName("whenCallNotifyAsyncWithExceptionCreateDriverThenThrowException")
     void notifyUploadAsyncErrorWithCreateDriver(){
         //MOCK EXCEL DAO READ DATA
         Mockito.when(this.excelDAO.readData(Mockito.any()))
