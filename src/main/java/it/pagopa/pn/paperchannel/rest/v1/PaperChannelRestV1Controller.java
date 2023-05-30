@@ -1,7 +1,7 @@
 package it.pagopa.pn.paperchannel.rest.v1;
 
 
-import it.pagopa.pn.paperchannel.generated.openapi.server.rest.api.DeliveryDriverApi;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.api.DeliveryDriverApi;
 import it.pagopa.pn.paperchannel.rest.v1.dto.*;
 import it.pagopa.pn.paperchannel.service.PaperChannelService;
 import org.springframework.beans.factory.annotation.Autowired;

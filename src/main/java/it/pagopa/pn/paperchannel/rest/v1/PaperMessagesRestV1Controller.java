@@ -1,6 +1,7 @@
 package it.pagopa.pn.paperchannel.rest.v1;
 
-import it.pagopa.pn.paperchannel.rest.v1.api.PaperMessagesApi;
+
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.api.PaperMessagesApi;
 import it.pagopa.pn.paperchannel.rest.v1.dto.*;
 import it.pagopa.pn.paperchannel.service.PaperMessagesService;
 import lombok.extern.slf4j.Slf4j;
