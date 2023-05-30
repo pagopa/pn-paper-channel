@@ -6,34 +6,23 @@ import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.Api
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.api.FileDownloadApi;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileDownloadResponseDto;
 import it.pagopa.pn.paperchannel.middleware.msclient.SafeStorageClient;
-import it.pagopa.pn.paperchannel.middleware.msclient.common.BaseClient;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
-
-import javax.annotation.PostConstruct;
 import java.net.ConnectException;
 import java.time.Duration;
 import java.util.concurrent.TimeoutException;
 
 
 @Slf4j
-@Component
-public class SafeStorageClientImpl extends BaseClient implements SafeStorageClient {
+public class SafeStorageClientImpl implements SafeStorageClient {
     private final PnPaperChannelConfig pnPaperChannelConfig;
-    private FileDownloadApi fileDownloadApi;
+    private final FileDownloadApi fileDownloadApi;
 
-    public SafeStorageClientImpl(PnPaperChannelConfig pnPaperChannelConfig) {
+    public SafeStorageClientImpl(ApiClient apiClient, PnPaperChannelConfig pnPaperChannelConfig) {
+        this.fileDownloadApi = new FileDownloadApi(apiClient);
         this.pnPaperChannelConfig = pnPaperChannelConfig;
-    }
-
-    @PostConstruct
-    public void init(){
-        ApiClient newApiClient = new ApiClient(super.initWebClient(ApiClient.buildWebClientBuilder()));
-        newApiClient.setBasePath(this.pnPaperChannelConfig.getClientSafeStorageBasepath());
-        this.fileDownloadApi = new FileDownloadApi(newApiClient);
     }
 
 
