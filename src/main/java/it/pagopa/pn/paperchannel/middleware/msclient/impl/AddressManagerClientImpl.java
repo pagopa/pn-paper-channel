@@ -1,40 +1,32 @@
 package it.pagopa.pn.paperchannel.middleware.msclient.impl;
 
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
-import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.ApiClient;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.api.DeduplicatesAddressServiceApi;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.dto.DeduplicatesRequestDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.dto.DeduplicatesResponseDto;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
 import it.pagopa.pn.paperchannel.middleware.msclient.AddressManagerClient;
-import it.pagopa.pn.paperchannel.middleware.msclient.common.BaseClient;
 import it.pagopa.pn.paperchannel.model.Address;
-import lombok.extern.slf4j.Slf4j;
+import lombok.CustomLog;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
 
-import javax.annotation.PostConstruct;
 import java.net.ConnectException;
 import java.time.Duration;
 import java.util.concurrent.TimeoutException;
 
-@Slf4j
 @Component
-public class AddressManagerClientImpl extends BaseClient implements AddressManagerClient {
+@CustomLog
+public class AddressManagerClientImpl implements AddressManagerClient {
     private final PnPaperChannelConfig pnPaperChannelConfig;
 
-    private DeduplicatesAddressServiceApi apiService;
+    private final DeduplicatesAddressServiceApi apiService;
 
-    public AddressManagerClientImpl(PnPaperChannelConfig pnPaperChannelConfig) {
-        this.pnPaperChannelConfig = pnPaperChannelConfig;
-    }
-
-    @PostConstruct
-    public void init(){
-        ApiClient newApiClient = new ApiClient(super.initWebClient(ApiClient.buildWebClientBuilder()));
-        newApiClient.setBasePath(this.pnPaperChannelConfig.getClientAddressManagerBasepath());
-        this.apiService = new DeduplicatesAddressServiceApi(newApiClient);
+    public AddressManagerClientImpl(PnPaperChannelConfig cfg,
+                                    DeduplicatesAddressServiceApi deduplicatesAddressServiceApi) {
+        this.pnPaperChannelConfig = cfg;
+        this.apiService = deduplicatesAddressServiceApi;
     }
 
     @Override

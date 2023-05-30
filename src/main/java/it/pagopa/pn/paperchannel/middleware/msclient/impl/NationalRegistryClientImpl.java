@@ -1,7 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.msclient.impl;
 
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
-import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnnationalregistries.v1.ApiClient;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnnationalregistries.v1.api.AddressApi;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnnationalregistries.v1.dto.AddressOKDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnnationalregistries.v1.dto.AddressRequestBodyDto;
@@ -15,7 +14,6 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
 
-import javax.annotation.PostConstruct;
 import java.net.ConnectException;
 import java.time.Duration;
 import java.util.Date;
@@ -26,20 +24,15 @@ import java.util.concurrent.TimeoutException;
 public class NationalRegistryClientImpl extends BaseClient implements NationalRegistryClient {
 
     private final PnPaperChannelConfig pnPaperChannelConfig;
+    private final AddressApi addressApi;
 
 
-    private AddressApi addressApi;
-
-    public NationalRegistryClientImpl(PnPaperChannelConfig pnPaperChannelConfig) {
+    public NationalRegistryClientImpl(PnPaperChannelConfig pnPaperChannelConfig, AddressApi addressApi) {
         this.pnPaperChannelConfig = pnPaperChannelConfig;
+        this.addressApi = addressApi;
     }
 
-    @PostConstruct
-    public void init(){
-        ApiClient newApiClient = new ApiClient(super.initWebClient(ApiClient.buildWebClientBuilder()));
-        newApiClient.setBasePath(this.pnPaperChannelConfig.getClientNationalRegistriesBasepath());
-        this.addressApi = new AddressApi(newApiClient);
-    }
+
 
     @Override
     public Mono<AddressOKDto> finderAddress(String correlationId, String recipientTaxId, String recipientType) {

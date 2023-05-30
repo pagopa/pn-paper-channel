@@ -1,7 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.msclient.impl;
 
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
-import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.ApiClient;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.api.PaperMessagesApi;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperEngageRequestAttachmentsDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperEngageRequestDto;
@@ -18,8 +17,6 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
 
-
-import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.net.ConnectException;
 import java.time.Duration;
@@ -36,19 +33,14 @@ import static it.pagopa.pn.paperchannel.utils.Const.PN_AAR;
 @Component
 public class ExternalChannelClientImpl extends BaseClient implements ExternalChannelClient {
     private final PnPaperChannelConfig pnPaperChannelConfig;
+    private final PaperMessagesApi paperMessagesApi;
 
-    private PaperMessagesApi paperMessagesApi;
 
-    public ExternalChannelClientImpl(PnPaperChannelConfig pnPaperChannelConfig) {
+    public ExternalChannelClientImpl(PnPaperChannelConfig pnPaperChannelConfig, PaperMessagesApi paperMessagesApi) {
         this.pnPaperChannelConfig = pnPaperChannelConfig;
+        this.paperMessagesApi = paperMessagesApi;
     }
 
-    @PostConstruct
-    public void init(){
-        ApiClient newApiClient = new ApiClient(super.initWebClient(ApiClient.buildWebClientBuilder()));
-        newApiClient.setBasePath(this.pnPaperChannelConfig.getClientExternalChannelBasepath());
-        this.paperMessagesApi = new PaperMessagesApi(newApiClient);
-    }
 
     public Mono<Void> sendEngageRequest(SendRequest sendRequest, List<AttachmentInfo> attachments){
         String requestIdx = sendRequest.getRequestId();

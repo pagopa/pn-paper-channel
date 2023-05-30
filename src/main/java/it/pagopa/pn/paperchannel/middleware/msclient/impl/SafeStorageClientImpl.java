@@ -2,11 +2,11 @@ package it.pagopa.pn.paperchannel.middleware.msclient.impl;
 
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.PnRetryStorageException;
-import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.ApiClient;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.api.FileDownloadApi;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileDownloadResponseDto;
 import it.pagopa.pn.paperchannel.middleware.msclient.SafeStorageClient;
-import lombok.extern.slf4j.Slf4j;
+import lombok.CustomLog;
+import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
@@ -15,14 +15,16 @@ import java.time.Duration;
 import java.util.concurrent.TimeoutException;
 
 
-@Slf4j
+@Component
+@CustomLog
 public class SafeStorageClientImpl implements SafeStorageClient {
-    private final PnPaperChannelConfig pnPaperChannelConfig;
-    private final FileDownloadApi fileDownloadApi;
+    private PnPaperChannelConfig pnPaperChannelConfig;
+    private FileDownloadApi fileDownloadApi;
 
-    public SafeStorageClientImpl(ApiClient apiClient, PnPaperChannelConfig pnPaperChannelConfig) {
-        this.fileDownloadApi = new FileDownloadApi(apiClient);
-        this.pnPaperChannelConfig = pnPaperChannelConfig;
+    public SafeStorageClientImpl(PnPaperChannelConfig cfg,
+                                   FileDownloadApi fileDownloadApi) {
+        this.pnPaperChannelConfig = cfg;
+        this.fileDownloadApi = fileDownloadApi;
     }
 
 
