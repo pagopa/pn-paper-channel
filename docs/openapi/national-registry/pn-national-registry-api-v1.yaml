@@ -3,12 +3,12 @@ info:
   title: PN-NationalRegistries REST APIs
   description: |-
     Nell’ambito del progetto Piattaforme Notifiche, il componente PN-NationalRegistries si occuperà di recuperare i dati dalle banche dati esterne previste. Tali banche dati esporranno delle interfacce web verso il componente PN-NationalRegistries, accessibili tramite piattaforma di interoperabilità.
-  version: 0.11.2
+  version: 0.11.5
 servers:
   - url: http://127.0.0.1
 tags:
   - name: agenziaEntrate
-    description: Servizi esposti dall'agenzia delle entrate per la verifica del codice fiscale e la verifica del legale rappresentante (corrispondenza fra il codice fiscale del rappresentante legale di un soggetto giuridico e il soggetto giuridico stesso).
+    description: Servizi esposti dall'agenzia delle entrate per la verifica del codice fiscale o e la verifica del legale rappresentante (corrispondenza fra il codice fiscale del rappresentante legale di un soggetto giuridico e il soggetto giuridico stesso).
   - name: addressANPR
     description: Il servizio viene invocato per ottenere la residenza presente in ANPR per un cittadino, alla data di riferimento della richiesta.
   - name: digitalAddressINAD
@@ -16,6 +16,44 @@ tags:
   - name: infoCamere
     description: Servizi esposti dalla banca dati esterna InfoCamere per il recupero della PEC, dell'indirizzo della Sede Legale e per la verifica del Legale Rappresentante.
 paths:
+  /national-registries-private/ipa/pec:
+    post:
+      tags:
+        - ipa
+      summary: 'Il servizio consente di individuare i domicili digitali associati ad un codice fiscale di un Ente o al codice fiscale di un suo servizio di fatturazione elettronica.'
+      description: 'Il servizio consente di individuare i domicili digitali associati ad un codice fiscale di un Ente o al codice fiscale di un suo servizio di fatturazione elettronica.'
+      operationId: ipaPec
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IPARequestBody'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IPAPec'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IPAPecError'
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IPAPecError'
+        "503":
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IPAPecError'
   /national-registries-private/agenzia-entrate/legal:
     post:
       tags:
@@ -152,11 +190,11 @@ paths:
     post:
       tags:
         - agenziaEntrate
-      summary: 'Questo servizio ritorna la validità e l’esistenza di un dato codice fiscale descritta da un campo di ritorno booleano nell’oggetto json di response'
-      description: 'Questo servizio ritorna la validità e l’esistenza di un dato codice fiscale descritta da un campo di ritorno booleano nell’oggetto json di response'
+      summary: 'Questo servizio ritorna la validità e l’esistenza di un dato codice fiscale/Partita IVA descritta da un campo di ritorno booleano nell’oggetto json di response'
+      description: 'Questo servizio ritorna la validità e l’esistenza di un dato codice fiscale/Partita IVA descritta da un campo di ritorno booleano nell’oggetto json di response'
       operationId: checkTaxId
       requestBody:
-        description: Effettua la ricerca di un codice fiscale
+        description: Effettua la ricerca di un codice fiscale/Partita IVA
         content:
           application/json:
             schema:
@@ -412,6 +450,7 @@ components:
               example: AAAZZZ00H00T000Z
             referenceRequestDate:
               type: string
+              format: date-time
             correlationId:
               type: string
             domicileType:
@@ -446,14 +485,14 @@ components:
           enum: [B001_CHECK_TAX_ID_ERR01, B001_CHECK_TAX_ID_ERR02, B001_CHECK_TAX_ID_ERR03]
           description: >
             Error codes:
-
-
+            
+            
             _'B001_CHECK_TAX_ID_ERR01'_: CODICE FISCALE VALIDO NON UTILIZZABILE
-
-
+            
+            
             _'B001_CHECK_TAX_ID_ERR02'_: CODICE FISCALE NON VALIDO AGGIORNATO IN ALTRO
-
-
+            
+            
             _'B001_CHECK_TAX_ID_ERR03'_: CODICE FISCALE NON VALIDO
     CheckTaxIdError:
       type: object
@@ -680,6 +719,17 @@ components:
             taxId:
               type: string
               example: AAAZZZ00H00T0
+    IPAPec:
+      type: object
+      properties:
+        domicilioDigitale:
+          type: string
+        tipo:
+          type: string
+        codEnte:
+          type: string
+        denominazione:
+          type: string
     GetAddressRegistroImpreseOK:
       type: object
       properties:
@@ -782,7 +832,7 @@ components:
           type: string
           example: BBBCCC00H00T000Z
         verificationResult:
-          type: string
+          type: boolean
     InfoCamereLegalError:
       type: object
       properties:
@@ -808,6 +858,17 @@ components:
                 type: string
               detail:
                 type: string
+    IPARequestBody:
+      type: object
+      properties:
+        filter:
+          type: object
+          required:
+            - taxId
+          properties:
+            taxId:
+              type: string
+              example: AAAZZZ00H00T000Z
     ADELegalRequestBody:
       type: object
       properties:
@@ -833,26 +894,26 @@ components:
           enum: [XX00, XX01, XX02, XX0A, XX03, XX04, XXXX]
           description: >
             Values:
-
-
+            
+            
             _'XX00'_: richiesta corretta
-
-
+            
+            
             _'XX01'_: codice fiscale Ente e/o Rappresentante errato
-
-
+            
+            
             _'XX02'_: codice fiscale Ente non di soggetto diverso da persona fisica
-
-
+            
+            
             _'XX0A'_: errore nell’elaborazione
-
-
+            
+            
             _'XX03'_: timeout interno all'elaborazione
-
-
+            
+            
             _'XX04'_: errore di autenticazione
-
-
+            
+            
             _'XXXX'_: errore non codificato
         resultCode:
           type: string
@@ -860,16 +921,41 @@ components:
           enum: ['00', '01', '02']
           description: >
             Values:
-
-
+            
+            
             _'00'_: Richiesta correttamente eseguita
-
-
+            
+            
             _'01'_: Richiesta andata in errore
-
-
+            
+            
             _'02'_: Formato dati in input non corretto
     ADELegalError:
+      type: object
+      properties:
+        status:
+          type: integer
+          description: Contiene il codice HTTP dell'errore
+        title:
+          type: string
+        detail:
+          type: string
+        traceId:
+          type: string
+        timestamp:
+          type: integer
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              code:
+                type: string
+              element:
+                type: string
+              detail:
+                type: string
+    IPAPecError:
       type: object
       properties:
         status:
@@ -920,14 +1006,14 @@ components:
                 enum: [IMPRESA, PROFESSIONISTA, PERSONA_FISICA]
                 description: >
                   Values:
-
-
+                  
+                  
                   _'IMPRESA'_: Indica che l'indirizzo digitale corrente è riferito ad un'impresa
-
-
+                  
+                  
                   _'PROFESSIONISTA'_: Indica che l'indirizzo digitale corrente è riferito ad un professionista
-
-
+                  
+                  
                   _'PERSONA FISICA'_: Indica che l'indirizzo digitale corrente è riferito ad una Persona Fisica
         physicalAddress:
           description: >
@@ -957,6 +1043,9 @@ components:
           type: string
         taxId:
           type: string
+        error:
+          type: string
+          description: Se presente indica che si è verificato un errore durante l'esecuzione dell'operazione richiesta.
         digitalAddress:
           type: array
           description: >
@@ -973,9 +1062,9 @@ components:
                 enum: [IMPRESA, PROFESSIONISTA]
                 description: >
                   Values:
-
-
+                  
+                  
                   _'IMPRESA'_: Indica che l'indirizzo digitale corrente è riferito ad un'impresa
-
-
+                  
+                  
                   _'PROFESSIONISTA'_: Indica che l'indirizzo digitale corrente è riferito ad un professionista
