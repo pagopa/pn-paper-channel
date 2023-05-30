@@ -50,7 +50,7 @@ public class NationalRegistryClientImpl extends BaseClient implements NationalRe
         filterDto.setCorrelationId(correlationId);
         filterDto.setDomicileType(AddressRequestBodyFilterDto.DomicileTypeEnum.PHYSICAL);
         filterDto.setTaxId(recipientTaxId);
-        filterDto.setReferenceRequestDate(DateUtils.formatDate(new Date()));
+        filterDto.setReferenceRequestDate(DateUtils.getOffsetDateTimeFromDate(new Date()));
         addressRequestBodyDto.setFilter(filterDto);
 
         log.debug("pn-national-registries-cx-id : {}", pnPaperChannelConfig.getNationalRegistryCxId());

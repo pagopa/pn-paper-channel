@@ -643,7 +643,7 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
     //CASO 3
     @DirtiesContext
     @Test
-    void testRECAG005CorRECAG006CorRECAG007CCaseOneEvent() {
+    void testRECAG005CorRECAG006CorRECAG007CCaseThreeBEvent() {
         final String requestId = "PREPARE_ANALOG_DOMICILE.IUN_MUMR-VQMP-LDNZ-202303-H-1.RECINDEX_0.SENTATTEMPTMADE_0";
         PnDeliveryRequest pnDeliveryRequest = createPnDeliveryRequest();
 
@@ -655,8 +655,28 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
         pnEventMetaRECAG012.setTtl(Instant.now().plus(10, ChronoUnit.DAYS).getEpochSecond());
         pnEventMetaRECAG012.setStatusDateTime(Instant.parse("2023-03-16T17:07:00.000Z"));
 
-
         eventMetaDAO.createOrUpdate(pnEventMetaRECAG012).block();
+
+        PnEventMeta pnEventMetaRECAG011A = new PnEventMeta();
+        pnEventMetaRECAG011A.setMetaRequestId("META##" + requestId);
+        pnEventMetaRECAG011A.setRequestId(requestId);
+        pnEventMetaRECAG011A.setMetaStatusCode("META##RECAG011A");
+        pnEventMetaRECAG011A.setStatusCode("RECAG011A");
+        pnEventMetaRECAG011A.setTtl(Instant.now().plus(10, ChronoUnit.DAYS).getEpochSecond());
+        pnEventMetaRECAG011A.setStatusDateTime(Instant.parse("2023-03-05T17:07:00.000Z"));
+
+        eventMetaDAO.createOrUpdate(pnEventMetaRECAG011A).block();
+
+        PnEventMeta pnEventMetaRECAG005A = new PnEventMeta();
+        pnEventMetaRECAG005A.setMetaRequestId("META##" + requestId);
+        pnEventMetaRECAG005A.setRequestId(requestId);
+        pnEventMetaRECAG005A.setMetaStatusCode("META##RECAG005A");
+        pnEventMetaRECAG005A.setStatusCode("RECAG005A");
+        pnEventMetaRECAG005A.setTtl(Instant.now().plus(10, ChronoUnit.DAYS).getEpochSecond());
+        pnEventMetaRECAG005A.setStatusDateTime(Instant.parse("2023-03-16T17:07:00.000Z"));
+
+        eventMetaDAO.createOrUpdate(pnEventMetaRECAG005A).block();
+
 
         PaperProgressStatusEventDto analogMail = new PaperProgressStatusEventDto();
         analogMail.requestId(requestId);
