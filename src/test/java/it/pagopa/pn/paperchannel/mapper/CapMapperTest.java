@@ -1,12 +1,11 @@
 package it.pagopa.pn.paperchannel.mapper;
 
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.CapDto;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.CapResponseDto;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnCap;
-import it.pagopa.pn.paperchannel.rest.v1.dto.CapDto;
-import it.pagopa.pn.paperchannel.rest.v1.dto.CapResponseDto;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;

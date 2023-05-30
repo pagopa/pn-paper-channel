@@ -1,6 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.msclient;
 
-import it.pagopa.pn.paperchannel.msclient.generated.pnsafestorage.v1.dto.FileDownloadResponseDto;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileDownloadResponseDto;
 import reactor.core.publisher.Mono;
 
 public interface SafeStorageClient {

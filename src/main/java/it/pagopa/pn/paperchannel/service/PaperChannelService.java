@@ -1,6 +1,7 @@
 package it.pagopa.pn.paperchannel.service;
 
-import it.pagopa.pn.paperchannel.rest.v1.dto.*;
+
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;

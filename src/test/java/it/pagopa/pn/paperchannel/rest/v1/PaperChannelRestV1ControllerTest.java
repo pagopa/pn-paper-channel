@@ -1,15 +1,16 @@
 package it.pagopa.pn.paperchannel.rest.v1;
 
-import it.pagopa.pn.paperchannel.rest.v1.dto.*;
+
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.paperchannel.service.PaperChannelService;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;

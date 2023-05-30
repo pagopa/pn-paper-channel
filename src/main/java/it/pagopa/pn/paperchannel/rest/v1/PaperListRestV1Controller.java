@@ -2,7 +2,7 @@ package it.pagopa.pn.paperchannel.rest.v1;
 
 
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.api.SelectListApi;
-import it.pagopa.pn.paperchannel.rest.v1.dto.CapResponseDto;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.CapResponseDto;
 import it.pagopa.pn.paperchannel.service.PaperListService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

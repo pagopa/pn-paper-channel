@@ -1,10 +1,12 @@
 package it.pagopa.pn.paperchannel.middleware.db.entities;
 
-import it.pagopa.pn.paperchannel.rest.v1.dto.TenderDTO;
+
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.TenderDTO;
 import it.pagopa.pn.paperchannel.utils.Const;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 import java.time.Instant;
 import java.util.Calendar;
 import java.util.Date;

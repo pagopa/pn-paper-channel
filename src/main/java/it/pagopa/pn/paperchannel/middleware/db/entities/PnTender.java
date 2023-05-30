@@ -1,6 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.db.entities;
 
-import it.pagopa.pn.paperchannel.rest.v1.dto.TenderDTO;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.TenderDTO;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;

@@ -1,9 +1,10 @@
 package it.pagopa.pn.paperchannel.exception;
 
 import com.fasterxml.jackson.databind.JsonMappingException;
-import it.pagopa.pn.paperchannel.rest.v1.dto.PaperEvent;
-import it.pagopa.pn.paperchannel.rest.v1.dto.Problem;
-import it.pagopa.pn.paperchannel.rest.v1.dto.ProblemError;
+
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PaperEvent;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.Problem;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ProblemError;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;

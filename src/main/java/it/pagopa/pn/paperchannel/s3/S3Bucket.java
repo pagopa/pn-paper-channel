@@ -1,6 +1,6 @@
 package it.pagopa.pn.paperchannel.s3;
 
-import it.pagopa.pn.paperchannel.rest.v1.dto.PresignedUrlResponseDto;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PresignedUrlResponseDto;
 import reactor.core.publisher.Mono;
 
 import java.io.File;

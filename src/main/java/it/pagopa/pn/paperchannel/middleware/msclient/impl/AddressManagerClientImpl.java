@@ -1,14 +1,14 @@
 package it.pagopa.pn.paperchannel.middleware.msclient.impl;
 
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.ApiClient;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.api.DeduplicatesAddressServiceApi;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.dto.DeduplicatesRequestDto;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.dto.DeduplicatesResponseDto;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
 import it.pagopa.pn.paperchannel.middleware.msclient.AddressManagerClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.common.BaseClient;
 import it.pagopa.pn.paperchannel.model.Address;
-import it.pagopa.pn.paperchannel.msclient.generated.pnaddressmanager.v1.ApiClient;
-import it.pagopa.pn.paperchannel.msclient.generated.pnaddressmanager.v1.api.DeduplicatesAddressServiceApi;
-import it.pagopa.pn.paperchannel.msclient.generated.pnaddressmanager.v1.dto.DeduplicatesRequestDto;
-import it.pagopa.pn.paperchannel.msclient.generated.pnaddressmanager.v1.dto.DeduplicatesResponseDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;

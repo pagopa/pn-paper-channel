@@ -1,17 +1,19 @@
 package it.pagopa.pn.paperchannel.exception;
 
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PaperEvent;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
-import it.pagopa.pn.paperchannel.rest.v1.dto.PaperEvent;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Spy;
 import org.springframework.http.HttpStatus;
 import reactor.core.publisher.Mono;
+
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 
 

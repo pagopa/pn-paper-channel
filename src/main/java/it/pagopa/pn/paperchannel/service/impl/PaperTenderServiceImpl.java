@@ -2,11 +2,11 @@ package it.pagopa.pn.paperchannel.service.impl;
 
 
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.CostDTO;
 import it.pagopa.pn.paperchannel.mapper.CostMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.TenderDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.ZoneDAO;
-import it.pagopa.pn.paperchannel.rest.v1.dto.CostDTO;
 import it.pagopa.pn.paperchannel.service.PaperTenderService;
 import lombok.CustomLog;
 import org.springframework.beans.factory.annotation.Autowired;
