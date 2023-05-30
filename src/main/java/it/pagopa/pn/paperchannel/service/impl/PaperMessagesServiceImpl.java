@@ -59,7 +59,6 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
 
     String EXTERNAL_CHANNEL = "EXTERNAL-CHANNEL";
     String EXTERNAL_CHANNEL_DESCRIPTION = "Shipment notification service";
-     String VALIDATION_NAME = "Prepare Request Validator";
 
     public PaperMessagesServiceImpl(PnAuditLogBuilder auditLogBuilder, RequestDeliveryDAO requestDeliveryDAO, CostDAO costDAO,
                                     NationalRegistryClient nationalRegistryClient, SqsSender sqsSender) {
@@ -79,9 +78,7 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
             return this.requestDeliveryDAO.getByRequestId(prepareRequest.getRequestId())
                     .flatMap(entity -> {
                         log.info("Founded data in DynamoDB table {}", "RequestDeliveryDynamoTable");
-                        log.logChecking(VALIDATION_NAME);
                         PrepareRequestValidator.compareRequestEntity(prepareRequest, entity, true);
-                        log.logCheckingOutcome(VALIDATION_NAME, true);
                         log.debug("Getting PnAddress with requestId {}, in DynamoDB table {}", requestId, "AddressDynamoTable");
                         return addressDAO.findByRequestId(requestId)
                                 .map(address-> {
@@ -106,9 +103,7 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                 .doOnNext(oldEntity -> {
                     log.info("Founded data in DynamoDB table {}", "RequestDeliveryDynamoTable");
                     prepareRequest.setRequestId(oldEntity.getRequestId());
-                    log.logChecking(VALIDATION_NAME);
                     PrepareRequestValidator.compareRequestEntity(prepareRequest, oldEntity, false);
-                    log.logCheckingOutcome(VALIDATION_NAME, true);
                 })
                 .zipWhen(oldEntity -> {
                     log.debug("Getting PnAddress with requestId {}, in DynamoDB table {}", oldEntity.getRequestId(), "AddressDynamoTable");
@@ -133,9 +128,7 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                             .flatMap(newEntity -> {
                                 log.info("Attempt already exist for request id : {}", prepareRequest.getRequestId());
                                 log.info("Founded data in DynamoDB table {}", "RequestDeliveryDynamoTable");
-                                log.logChecking(VALIDATION_NAME);
                                 PrepareRequestValidator.compareRequestEntity(prepareRequest, newEntity, false);
-                                log.logCheckingOutcome(VALIDATION_NAME, true);
                                 log.debug("Getting PnAddress with requestId {}, in DynamoDB table {}", newEntity.getRequestId(), "AddressDynamoTable");
                                 return addressDAO.findByRequestId(newEntity.getRequestId())
                                         .map(address-> {
@@ -226,10 +219,7 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)))
                 .map(entity -> {
                     log.info("Founded data in DynamoDb table {}", "RequestDeliveryDynamoTable");
-                    String VALIDATION_NAME = "Send request validator";
-                    log.logChecking(VALIDATION_NAME);
                     SendRequestValidator.compareRequestEntity(sendRequest,entity);
-                    log.logCheckingOutcome(VALIDATION_NAME, true);
                     if (StringUtils.equals(entity.getStatusCode(), StatusDeliveryEnum.IN_PROCESSING.getCode())) {
                        throw new PnGenericException(DELIVERY_REQUEST_IN_PROCESSING, DELIVERY_REQUEST_IN_PROCESSING.getMessage(), HttpStatus.CONFLICT);
                     }

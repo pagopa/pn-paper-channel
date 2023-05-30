@@ -31,7 +31,6 @@ import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
 import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import lombok.CustomLog;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -85,12 +84,9 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
             log.info("Start async for {} request id", request.getRequestId());
             requestDeliveryEntityMono = requestDeliveryDAO.getByRequestId(requestId);
         }
-        String VALIDATION_NAME = "Check and update address";
-        log.logChecking(VALIDATION_NAME);
         return requestDeliveryEntityMono
                 .flatMap(deliveryRequest -> checkAndUpdateAddress(correlationId, deliveryRequest, addressFromNationalRegistry))
                 .map(pnDeliveryRequest -> {
-                    log.logCheckingOutcome(VALIDATION_NAME, true);
                     RequestDeliveryMapper.changeState(
                             pnDeliveryRequest,
                             TAKING_CHARGE.getCode(),
@@ -160,6 +156,8 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
     }
 
     private Mono<PnDeliveryRequest> checkAndUpdateAddress(String correlationId, PnDeliveryRequest pnDeliveryRequest, Address fromNationalRegistries){
+        String VALIDATION_NAME = "Check and update address";
+        log.logChecking(VALIDATION_NAME);
         pnLogAudit.addsBeforeResolveLogic(
                 pnDeliveryRequest.getIun(),
                 String.format("prepare requestId = %s, relatedRequestId = %s Is National Registry Address present ?",
@@ -182,11 +180,13 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                                 pnDeliveryRequest.getRequestId(),
                                 pnDeliveryRequest.getRelatedRequestId())
                 );
+                log.logCheckingOutcome(VALIDATION_NAME, false, UNTRACEABLE_ADDRESS.getMessage());
                 return Mono.error(new PnGenericException(UNTRACEABLE_ADDRESS, UNTRACEABLE_ADDRESS.getMessage()));
             }
 
             return this.addressDAO.findByRequestId(pnDeliveryRequest.getRequestId(), AddressTypeEnum.RECEIVER_ADDRESS)
                     .switchIfEmpty(Mono.defer(() -> {
+                        log.logCheckingOutcome(VALIDATION_NAME, false, ADDRESS_NOT_EXIST.getMessage());
                         log.error("Receiver Address for {} request id not found on DB", pnDeliveryRequest.getRequestId());
                         throw new PnGenericException(ADDRESS_NOT_EXIST, ADDRESS_NOT_EXIST.getMessage());
                     }))
@@ -208,10 +208,12 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                                            pnDeliveryRequest.getRequestId(),
                                            pnDeliveryRequest.getRelatedRequestId())
                            );
+                           log.logCheckingOutcome(VALIDATION_NAME, false, UNTRACEABLE_ADDRESS.getMessage());
                            return Mono.error(new PnGenericException(UNTRACEABLE_ADDRESS, UNTRACEABLE_ADDRESS.getMessage()));
                        }
                        if (responseDeduplicates.getError() != null){
                            log.error("Response from address manager {} with request id {}", responseDeduplicates.getError(), pnDeliveryRequest.getRequestId());
+                           log.logCheckingOutcome(VALIDATION_NAME, false, responseDeduplicates.getError());
                            return Mono.error(new PnGenericException(ADDRESS_MANAGER_ERROR, responseDeduplicates.getError()));
                        }
                         pnLogAudit.addsSuccessResolveLogic(
@@ -224,11 +226,13 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
 
                         if (addressFromManager == null) {
                             log.error("Response from address manager have a address null {}", pnDeliveryRequest.getRequestId());
+                            log.logCheckingOutcome(VALIDATION_NAME, false, UNTRACEABLE_ADDRESS.getMessage());
                             return Mono.error(new PnGenericException(UNTRACEABLE_ADDRESS, UNTRACEABLE_ADDRESS.getMessage()));
                         }
                         return Mono.just(AddressMapper.fromAnalogAddressManager(addressFromManager));
                     })
                     .flatMap(newAddress -> {
+                        log.logCheckingOutcome(VALIDATION_NAME, true);
                         pnDeliveryRequest.setAddressHash(newAddress.convertToHash());
                         pnDeliveryRequest.setProductType(getProposalProductType(newAddress, pnDeliveryRequest.getProposalProductType()));
 
