@@ -224,6 +224,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                 })
                 .onErrorResume(ex -> {
                     request.setIun(deliveryRequest.getIun());
+                    log.error("SAFE STORAGE ERROR - PUSH INTERNAL ERROR");
                     this.sqsSender.pushInternalError(request, request.getAttemptRetry(), PrepareAsyncRequest.class);
                     return Mono.error(ex);
                 });

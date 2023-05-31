@@ -56,8 +56,8 @@ public class AddressManagerClientImpl extends BaseClient implements AddressManag
                         Retry.backoff(2, Duration.ofMillis(500))
                                 .filter(throwable -> throwable instanceof TimeoutException || throwable instanceof ConnectException)
                 ).map(response -> {
-                    log.debug("Deduplicates response correlationId : {}", response.getCorrelationId());
-                    log.debug("Equality : {}", response.getEqualityResult());
+                    log.info("Deduplicates response correlationId : {}", response.getCorrelationId());
+                    log.info("Equality : {}", response.getEqualityResult());
                     log.info("Error : {}", response.getError());
                     return response;
                 })

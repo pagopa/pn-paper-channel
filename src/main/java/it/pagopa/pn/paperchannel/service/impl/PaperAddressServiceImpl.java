@@ -67,14 +67,14 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
 
                     // Only discovered address is null and retrieved national registry address
                     if (StringUtils.isNotBlank(deliveryRequest.getCorrelationId())){
-                        logAuditSuccess("prepare requestId = %s, relatedRequestId = %s National Registry Address is present", deliveryRequest);
-
                         if (fromNationalRegistry == null) {
                             logAuditSuccess("prepare requestId = %s, relatedRequestId = %s National Registry Address is null", deliveryRequest);
                             return Mono.error(new PnGenericException(UNTRACEABLE_ADDRESS, UNTRACEABLE_ADDRESS.getMessage()));
                         }
+                        logAuditSuccess("prepare requestId = %s, relatedRequestId = %s National Registry Address is present", deliveryRequest);
                         return flowNationalRegistry(deliveryRequest, fromNationalRegistry, receiverAddress);
                     }
+                    logAuditSuccess("prepare requestId = %s, relatedRequestId = %s National Registry not present", deliveryRequest);
 
                     // Only discovered address is present and check discovered address
                     logAuditBefore("prepare requestId = %s, relatedRequestId = %s Is Second attempt ?", deliveryRequest);
@@ -93,6 +93,7 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
                                 .flatMap(discoveredAddress -> flowPostmanAddress(deliveryRequest, discoveredAddress, receiverAddress));
                     }
 
+
                     logAuditSuccess("prepare requestId = %s, relatedRequestId = %s Is not second attempt and use receiver address", deliveryRequest);
                     return Mono.just(receiverAddress);
                 })
@@ -105,6 +106,7 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
                                 deliveryRequest.getFiscalCode(),
                                 deliveryRequest.getReceiverType(),
                                 deliveryRequest.getIun(), 0);
+                        return Mono.error(ex);
                     }
                     if (ex.getExceptionType() == DISCARD_NOTIFICATION){
                         return traceError(deliveryRequest.getRequestId(), ex.getMessage(), ex.getExceptionType().getTitle())
@@ -112,6 +114,8 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
                     }
                     if (ex.getExceptionType() == ADDRESS_MANAGER_ERROR){
                         queueModel.setIun(deliveryRequest.getIun());
+                        queueModel.setRequestId(deliveryRequest.getRequestId());
+                        queueModel.setCorrelationId(deliveryRequest.getCorrelationId());
                         this.sqsSender.pushInternalError(queueModel, queueModel.getAttemptRetry(), PrepareAsyncRequest.class);
                     }
                     return Mono.error(ex);

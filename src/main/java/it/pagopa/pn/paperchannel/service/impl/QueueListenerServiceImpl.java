@@ -120,7 +120,7 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                 })
                 .doOnError(throwable -> {
                     log.error(throwable.getMessage());
-                    throw new PnGenericException(PREPARE_ASYNC_LISTENER_EXCEPTION, PREPARE_ASYNC_LISTENER_EXCEPTION.getMessage());
+                    throw new PnGenericException(NATIONAL_REGISTRY_LISTENER_EXCEPTION, NATIONAL_REGISTRY_LISTENER_EXCEPTION.getMessage());
                 })
                 .block();
     }

@@ -125,6 +125,7 @@ public class QueueListener {
                     });
 
         } else if (internalEventHeader.getEventType().equals(EventTypeEnum.PREPARE_ASYNC_FLOW.name())){
+            log.info("Push internal queue - first time");
             PrepareAsyncRequest request = convertToObject(node, PrepareAsyncRequest.class);
             this.queueListenerService.internalListener(request, internalEventHeader.getAttempt());
         }
