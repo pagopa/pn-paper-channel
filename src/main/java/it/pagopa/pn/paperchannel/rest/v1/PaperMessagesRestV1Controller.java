@@ -27,7 +27,8 @@ public class PaperMessagesRestV1Controller implements PaperMessagesApi {
                    log.debug(request.getReceiverAddress().toString());
                })
                .flatMap(request -> paperMessagesService.preparePaperSync(requestId, request))
-                .map(ResponseEntity::ok);
+               .map(ResponseEntity::ok)
+               .switchIfEmpty(Mono.just(ResponseEntity.noContent().build()));
     }
 
     @Override

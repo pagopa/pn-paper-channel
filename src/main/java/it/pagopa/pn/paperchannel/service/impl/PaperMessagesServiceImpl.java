@@ -92,7 +92,7 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                                 PrepareAsyncRequest request = new PrepareAsyncRequest(requestId, response.getIun(), false, 0);
                                 this.sqsSender.pushToInternalQueue(request);
                                 log.logEndingProcess(processName);
-                                throw new PnPaperEventException(prepareRequest.getRequestId());
+                                return Mono.empty();
                             }))
                     );
         }
