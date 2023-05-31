@@ -15,16 +15,15 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
-import it.pagopa.pn.paperchannel.middleware.msclient.AddressManagerClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.AttachmentInfo;
 import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
-import it.pagopa.pn.paperchannel.msclient.generated.pnaddressmanager.v1.dto.AnalogAddressDto;
 import it.pagopa.pn.paperchannel.msclient.generated.pnsafestorage.v1.dto.FileDownloadResponseDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.StatusCodeEnum;
+import it.pagopa.pn.paperchannel.service.PaperAddressService;
 import it.pagopa.pn.paperchannel.service.PaperAsyncService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
@@ -40,6 +39,7 @@ import reactor.core.publisher.Mono;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.Duration;
+
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.TAKING_CHARGE;
 
@@ -56,11 +56,12 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
     @Autowired
     private PaperRequestErrorDAO paperRequestErrorDAO;
     @Autowired
-    private AddressManagerClient addressManagerClient;
+    private PaperAddressService paperAddressService;
 
     public PrepareAsyncServiceImpl(PnAuditLogBuilder auditLogBuilder, NationalRegistryClient nationalRegistryClient,
                                    RequestDeliveryDAO requestDeliveryDAO,SqsSender sqsQueueSender, CostDAO costDAO ) {
         super(auditLogBuilder, requestDeliveryDAO, costDAO, nationalRegistryClient, sqsQueueSender);
+
     }
 
     @Override
@@ -69,8 +70,6 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
         String correlationId = request.getCorrelationId();
         final String requestId = request.getRequestId();
         Address addressFromNationalRegistry = request.getAddress();
-
-
 
         Mono<PnDeliveryRequest> requestDeliveryEntityMono = null;
         if(correlationId!= null) {
@@ -82,7 +81,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
         }
 
         return requestDeliveryEntityMono
-                .flatMap(deliveryRequest -> checkAndUpdateAddress(correlationId, deliveryRequest, addressFromNationalRegistry))
+                .flatMap(deliveryRequest -> checkAndUpdateAddress(deliveryRequest, addressFromNationalRegistry, request))
                 .map(pnDeliveryRequest -> {
                     RequestDeliveryMapper.changeState(
                             pnDeliveryRequest,
@@ -128,7 +127,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
 
     }
 
-    public Mono<PnDeliveryRequest> updateStatus(String requestId, String correlationId, StatusDeliveryEnum status ){
+    private Mono<PnDeliveryRequest> updateStatus(String requestId, String correlationId, StatusDeliveryEnum status ){
         Mono<PnDeliveryRequest> pnDeliveryRequest;
         if (StringUtils.isNotEmpty(requestId) && !StringUtils.isNotEmpty(correlationId) ){
             pnDeliveryRequest= this.requestDeliveryDAO.getByRequestId(requestId);
@@ -149,133 +148,21 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                 });
     }
 
-    private Mono<PnDeliveryRequest> checkAndUpdateAddress(String correlationId, PnDeliveryRequest pnDeliveryRequest, Address fromNationalRegistries){
-        pnLogAudit.addsBeforeResolveLogic(
-                pnDeliveryRequest.getIun(),
-                String.format("prepare requestId = %s, relatedRequestId = %s Is National Registry Address present ?",
-                        pnDeliveryRequest.getRequestId(),
-                        pnDeliveryRequest.getRelatedRequestId())
-        );
-        if (StringUtils.isNotBlank(correlationId)) {
+    private Mono<PnDeliveryRequest> checkAndUpdateAddress(PnDeliveryRequest pnDeliveryRequest, Address fromNationalRegistries, PrepareAsyncRequest queueModel){
+        return this.paperAddressService.getCorrectAddress(pnDeliveryRequest, fromNationalRegistries, queueModel)
+                .flatMap(newAddress -> {
+                    pnDeliveryRequest.setAddressHash(newAddress.convertToHash());
+                    pnDeliveryRequest.setProductType(getProposalProductType(newAddress, pnDeliveryRequest.getProposalProductType()));
 
-            pnLogAudit.addsSuccessResolveLogic(
-                    pnDeliveryRequest.getIun(),
-                    String.format("prepare requestId = %s, relatedRequestId = %s National Registry Address is present",
-                            pnDeliveryRequest.getRequestId(),
-                            pnDeliveryRequest.getRelatedRequestId())
-            );
-
-            if (fromNationalRegistries == null){
-                pnLogAudit.addsSuccessResolveLogic(
-                        pnDeliveryRequest.getIun(),
-                        String.format("prepare requestId = %s, relatedRequestId = %s National Registry Address is null",
-                                pnDeliveryRequest.getRequestId(),
-                                pnDeliveryRequest.getRelatedRequestId())
+                    //set flowType per TTL
+                    newAddress.setFlowType(Const.PREPARE);
+                    return addressDAO.create(AddressMapper.toEntity(newAddress, pnDeliveryRequest.getRequestId(), AddressTypeEnum.RECEIVER_ADDRESS, paperChannelConfig))
+                            .map(item -> pnDeliveryRequest);
+                })
+                .onErrorResume(ex ->
+                    traceError(pnDeliveryRequest.getRequestId(), ex.getMessage(), "CHECK_ADDRESS_FLOW" )
+                        .then(Mono.defer(() -> Mono.error(ex)))
                 );
-                return Mono.error(new PnGenericException(UNTRACEABLE_ADDRESS, UNTRACEABLE_ADDRESS.getMessage()));
-            }
-
-            return this.addressDAO.findByRequestId(pnDeliveryRequest.getRequestId(), AddressTypeEnum.RECEIVER_ADDRESS)
-                    .switchIfEmpty(Mono.defer(() -> {
-                        log.error("Receiver Address for {} request id not found on DB", pnDeliveryRequest.getRequestId());
-                        throw new PnGenericException(ADDRESS_NOT_EXIST, ADDRESS_NOT_EXIST.getMessage());
-                    }))
-                    .map(AddressMapper::toDTO)
-                    .doOnNext(address ->
-                        pnLogAudit.addsBeforeResolveLogic(
-                                pnDeliveryRequest.getIun(),
-                                String.format("prepare requestId = %s, relatedRequestId = %s Is National Registry Address is not equals previous address ?",
-                                        pnDeliveryRequest.getRequestId(),
-                                        pnDeliveryRequest.getRelatedRequestId())
-                        )
-                    )
-                    .zipWhen(receiverAddress -> addressManagerClient.deduplicates(correlationId, receiverAddress, fromNationalRegistries))
-                    .flatMap(receiverAddressAndResponseDeduplicates -> {
-                       if (Boolean.TRUE.equals(receiverAddressAndResponseDeduplicates.getT2().getEqualityResult())) {
-                           pnLogAudit.addsSuccessResolveLogic(
-                                   pnDeliveryRequest.getIun(),
-                                   String.format("prepare requestId = %s, relatedRequestId = %s National Registry Address is equals previous address",
-                                           pnDeliveryRequest.getRequestId(),
-                                           pnDeliveryRequest.getRelatedRequestId())
-                           );
-                           return Mono.error(new PnGenericException(UNTRACEABLE_ADDRESS, UNTRACEABLE_ADDRESS.getMessage()));
-                       }
-                       if (receiverAddressAndResponseDeduplicates.getT2().getError() != null){
-                           log.error("Response from address manager {} with request id {}", receiverAddressAndResponseDeduplicates.getT2().getError(), pnDeliveryRequest.getRequestId());
-                           return Mono.error(new PnGenericException(ADDRESS_MANAGER_ERROR, receiverAddressAndResponseDeduplicates.getT2().getError()));
-                       }
-                        pnLogAudit.addsSuccessResolveLogic(
-                                pnDeliveryRequest.getIun(),
-                                String.format("prepare requestId = %s, relatedRequestId = %s National Registry Address is not equals previous address",
-                                        pnDeliveryRequest.getRequestId(),
-                                        pnDeliveryRequest.getRelatedRequestId())
-                        );
-                        AnalogAddressDto addressFromManager = receiverAddressAndResponseDeduplicates.getT2().getNormalizedAddress();
-
-                        if (addressFromManager == null) {
-                            log.error("Response from address manager have a address null {}", pnDeliveryRequest.getRequestId());
-                            return Mono.error(new PnGenericException(UNTRACEABLE_ADDRESS, UNTRACEABLE_ADDRESS.getMessage()));
-                        }
-                        Address address = AddressMapper.fromAnalogAddressManager(addressFromManager) ;
-                        address.setFullName(receiverAddressAndResponseDeduplicates.getT1().getFullName());
-                        address.setNameRow2(receiverAddressAndResponseDeduplicates.getT1().getNameRow2());
-                        return Mono.just(address);
-                    })
-                    .flatMap(newAddress -> {
-                        pnDeliveryRequest.setAddressHash(newAddress.convertToHash());
-                        pnDeliveryRequest.setProductType(getProposalProductType(newAddress, pnDeliveryRequest.getProposalProductType()));
-
-                        //set flowType per TTL
-                        newAddress.setFlowType(Const.PREPARE);
-                        return addressDAO.create(AddressMapper.toEntity(newAddress, pnDeliveryRequest.getRequestId(), AddressTypeEnum.RECEIVER_ADDRESS, paperChannelConfig))
-                                .map(item -> pnDeliveryRequest);
-                    })
-                    .onErrorResume(ex ->
-                        traceError(pnDeliveryRequest.getRequestId(), ex.getMessage(), "CHECK_ADDRESS_FLOW" )
-                            .then(Mono.defer(() -> Mono.error(ex)))
-                    );
-
-        }
-
-        pnLogAudit.addsSuccessResolveLogic(
-                pnDeliveryRequest.getIun(),
-                String.format("prepare requestId = %s, relatedRequestId = %s Is National Registry Address is not present",
-                        pnDeliveryRequest.getRequestId(),
-                        pnDeliveryRequest.getRelatedRequestId())
-        );
-
-        if (StringUtils.isNotBlank(pnDeliveryRequest.getRelatedRequestId())) {
-            pnLogAudit.addsBeforeResolveLogic(
-                    pnDeliveryRequest.getIun(),
-                    String.format("prepare requestId = %s, relatedRequestId = %s Is Discovered Address present ?",
-                            pnDeliveryRequest.getRequestId(),
-                            pnDeliveryRequest.getRelatedRequestId())
-            );
-            return addressDAO.findByRequestId(pnDeliveryRequest.getRequestId(), AddressTypeEnum.DISCOVERED_ADDRESS)
-                    .doOnNext(discovered ->
-                            pnLogAudit.addsSuccessResolveLogic(
-                                    pnDeliveryRequest.getIun(),
-                                    String.format("prepare requestId = %s, relatedRequestId = %s Discovered Address is present",
-                                            pnDeliveryRequest.getRequestId(),
-                                            pnDeliveryRequest.getRelatedRequestId())
-                            )
-                    )
-                    .map(AddressMapper::toDTO)
-                    .flatMap(newAddress -> {
-                        pnDeliveryRequest.setAddressHash(newAddress.convertToHash());
-                        pnDeliveryRequest.setProductType(getProposalProductType(newAddress, pnDeliveryRequest.getProposalProductType()));
-
-                        newAddress.setFlowType(Const.PREPARE);
-                        return addressDAO.create(AddressMapper.toEntity(newAddress, pnDeliveryRequest.getRequestId(), AddressTypeEnum.RECEIVER_ADDRESS, paperChannelConfig))
-                                .map(item -> pnDeliveryRequest);
-                    });
-        }
-
-        pnLogAudit.addsResolveLogic(
-                pnDeliveryRequest.getIun(),
-                String.format("prepare requestId = %s Is receiver address present ?", pnDeliveryRequest.getRequestId()),
-                String.format("prepare requestId = %s receiver address is present", pnDeliveryRequest.getRequestId()));
-        return Mono.just(pnDeliveryRequest);
     }
 
     public Mono<FileDownloadResponseDto> getFileRecursive(Integer n, String fileKey, BigDecimal millis){

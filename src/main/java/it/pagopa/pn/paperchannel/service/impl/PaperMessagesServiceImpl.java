@@ -38,7 +38,7 @@ import reactor.util.function.Tuples;
 import java.util.List;
 import java.util.UUID;
 
-import static it.pagopa.pn.commons.log.MDCWebFilter.MDC_TRACE_ID_KEY;
+import static it.pagopa.pn.commons.utils.MDCUtils.MDC_TRACE_ID_KEY;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_IN_PROCESSING;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_NOT_EXIST;
 import static it.pagopa.pn.paperchannel.utils.Const.AAR;
@@ -54,7 +54,6 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
     private ExternalChannelClient externalChannelClient;
     @Autowired
     private PnPaperChannelConfig pnPaperChannelConfig;
-
     @Autowired
     private PaperTenderService paperTenderService;
 
