@@ -140,11 +140,8 @@ class PaperMessagesServiceTest extends BaseTest {
 
         Mockito.doNothing().when(this.sqsSender).pushToInternalQueue(Mockito.any());
 
-        StepVerifier.create(this.paperMessagesService.preparePaperSync("TST-IOR.2332", getRequestOK()))
-                .expectErrorMatches((ex) -> {
-                    assertTrue(ex instanceof PnPaperEventException);
-                    return true;
-                }).verify();
+        PaperChannelUpdate update = this.paperMessagesService.preparePaperSync("TST-IOR.2332", getRequestOK()).block();
+        assertNull(update);
     }
 
     @Test
@@ -673,7 +670,8 @@ class PaperMessagesServiceTest extends BaseTest {
         Mockito.when(requestDeliveryDAO.createWithAddress(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(deliveryRequestTakingCharge));
         Mockito.doNothing().when(sqsSender).pushToInternalQueue(Mockito.any());
-        StepVerifier.create(paperMessagesService.preparePaperSync(deliveryRequestTakingCharge.getRequestId(), getRequestOK())).expectError(PnPaperEventException.class).verify();
+        PaperChannelUpdate update = paperMessagesService.preparePaperSync(deliveryRequestTakingCharge.getRequestId(), getRequestOK()).block();
+        assertNull(update);
     }
 
     private SendRequest getRequest(String requestId){
