@@ -62,7 +62,7 @@ public class SqsQueueSender implements SqsSender {
         paperChannelUpdate.setSendEvent(sendEvent);
 
         DeliveryPushEvent deliveryPushEvent = new DeliveryPushEvent(deliveryHeader, paperChannelUpdate);
-        if (prepareEvent!=null){
+        if (prepareEvent!=null && prepareEvent.getReceiverAddress() !=null){
             log.debug(
                     "name surname: {}, address: {}, zip: {},city:{}, pr:{},foreign state: {}",
                     LogUtils.maskGeneric(prepareEvent.getReceiverAddress().getFullname()),
