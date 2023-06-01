@@ -67,7 +67,7 @@ class PrepareAsyncServiceTest extends BaseTest {
     @Test
     @DisplayName("prepareAsyncTestCorrelationIdNullNotCorrectAddress")
     void prepareAsyncTestCorrelationIdNull(){
-        Mockito.when(this.requestDeliveryDAO.getByRequestId(Mockito.any())).thenReturn(Mono.just(getDeliveryRequest()));
+        Mockito.when(this.requestDeliveryDAO.getByRequestId(Mockito.any(), Mockito.any())).thenReturn(Mono.just(getDeliveryRequest()));
         Mockito.when(this.addressDAO.findByRequestId(Mockito.any())).thenReturn(Mono.just(getAddress()));
         Mockito.doNothing().when(this.sqsSender).pushPrepareEvent(Mockito.any());
         Mockito.when(this.requestDeliveryDAO.updateData(Mockito.any())).thenReturn(Mono.just(getDeliveryRequest()));
@@ -81,7 +81,7 @@ class PrepareAsyncServiceTest extends BaseTest {
     @Test
     @DisplayName("prepareAsyncTestCorrelationIdCorrectAddressPopulate")
     void prepareAsyncTestCorrelationId(){
-        Mockito.when(this.requestDeliveryDAO.getByCorrelationId(Mockito.any()))
+        Mockito.when(this.requestDeliveryDAO.getByCorrelationId(Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(getDeliveryRequest()));
 
         Mockito.when(this.addressManagerClient.deduplicates(Mockito.any(), Mockito.any(), Mockito.any()))
@@ -109,7 +109,7 @@ class PrepareAsyncServiceTest extends BaseTest {
     @Test
     @DisplayName("prepareAsyncTestErrorUntraceableAddress")
     void prepareAsyncTestErrorUntraceableAddress(){
-        Mockito.when(this.requestDeliveryDAO.getByCorrelationId(Mockito.any()))
+        Mockito.when(this.requestDeliveryDAO.getByCorrelationId(Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(getDeliveryRequest()));
 
 
@@ -143,7 +143,7 @@ class PrepareAsyncServiceTest extends BaseTest {
     void prepareAsyncTestErrorInvalidSafeStorage(){
         PnDeliveryRequest requestDelivery = getDeliveryRequest();
 
-        Mockito.when(this.requestDeliveryDAO.getByCorrelationId(Mockito.any()))
+        Mockito.when(this.requestDeliveryDAO.getByCorrelationId(Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(requestDelivery));
 
         Mockito.when(this.addressDAO.findByRequestId(Mockito.any(), Mockito.any()))
