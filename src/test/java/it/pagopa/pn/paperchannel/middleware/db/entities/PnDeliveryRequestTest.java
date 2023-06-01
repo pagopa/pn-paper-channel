@@ -44,9 +44,6 @@ class PnDeliveryRequestTest {
         stringBuilder.append("requestId=");
         stringBuilder.append(requestId);
         stringBuilder.append(", ");
-        stringBuilder.append("fiscalCode=");
-        stringBuilder.append(fiscalCode);
-        stringBuilder.append(", ");
         stringBuilder.append("hashedFiscalCode=");
         stringBuilder.append(hashedFiscalCode);
         stringBuilder.append(", ");

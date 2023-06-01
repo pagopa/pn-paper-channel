@@ -76,12 +76,6 @@ class PnCostTest {
         stringBuilder.append("uuid=");
         stringBuilder.append(uuid);
         stringBuilder.append(", ");
-        stringBuilder.append("cap=");
-        stringBuilder.append(cap);
-        stringBuilder.append(", ");
-        stringBuilder.append("zone=");
-        stringBuilder.append(zone);
-        stringBuilder.append(", ");
         stringBuilder.append("tenderCode=");
         stringBuilder.append(tenderCode);
         stringBuilder.append(", ");

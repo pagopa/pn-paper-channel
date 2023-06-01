@@ -20,14 +20,6 @@ class PnZoneTest {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(pnZone.getClass().getSimpleName());
         stringBuilder.append("(");
-        stringBuilder.append("countryIt=");
-        stringBuilder.append(countryIt);
-        stringBuilder.append(", ");
-        stringBuilder.append("countryEn=");
-        stringBuilder.append(countryEn);
-        stringBuilder.append(", ");
-        stringBuilder.append("zone=");
-        stringBuilder.append(zone);
         stringBuilder.append(")");
 
         String toTest = stringBuilder.toString();

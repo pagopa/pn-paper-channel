@@ -195,7 +195,8 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
     }
 
     private void sendEngageRequest(PnDeliveryRequest pnDeliveryRequest, String requestId) {
-        Mono.delay(Duration.ofMillis(10)).publishOn(Schedulers.boundedElastic())
+        MDC.put(MDCUtils.MDC_TRACE_ID_KEY, MDC.get(MDCUtils.MDC_TRACE_ID_KEY));
+        MDCUtils.addMDCToContextAndExecute(Mono.delay(Duration.ofMillis(10)).publishOn(Schedulers.boundedElastic())
                 .flatMap(i ->  addressDAO.findAllByRequestId(pnDeliveryRequest.getRequestId()))
                 .flatMap(pnAddresses -> {
                     SendRequest sendRequest = SendRequestMapper.toDto(pnAddresses, pnDeliveryRequest);
@@ -214,7 +215,7 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
                                         EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name()).flatMap(errorEntity -> Mono.error(ex));
                             });
                 })
-                .subscribeOn(Schedulers.boundedElastic()).subscribe();
+                .subscribeOn(Schedulers.boundedElastic())).subscribe();
     }
 
     private Mono<PnDeliveryRequest> updateEntityResult(SingleStatusUpdateDto singleStatusUpdateDto, PnDeliveryRequest pnDeliveryRequestMono) {
