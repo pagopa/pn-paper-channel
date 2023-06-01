@@ -10,6 +10,7 @@
     "AttemptQueueExternalChannel": "3",
     "AttemptQueueNationalRegistries": "3",
     "AttemptQueueSafeStorage": "3",
+    "AttemptQueueAddressManager": "3",
     "TtlPrepare": "14",
     "TtlExecutionRNAR": "12",
     "TtlExecutionRN890" : "11" ,
@@ -24,6 +25,8 @@
     "MaxTasksNumber": "1",
     "ChargeCalculationMode": "AAR",
     "AddressManagerBaseUrl": "http://alb.confidential.pn.internal:8080",
-    "DataVaultBaseUrl": "http://alb.confidential.pn.internal:8080"
+    "DataVaultBaseUrl": "http://alb.confidential.pn.internal:8080",
+    "OriginalPostmanAddressUsageMode": "PAPERSEND"
+
   }
 }

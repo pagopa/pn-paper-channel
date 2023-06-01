@@ -4,6 +4,7 @@ import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.paperchannel.config.HttpConnector;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
+import it.pagopa.pn.paperchannel.exception.PnAddressFlowException;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.exception.PnRetryStorageException;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
@@ -72,12 +73,12 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
         Address addressFromNationalRegistry = request.getAddress();
 
         Mono<PnDeliveryRequest> requestDeliveryEntityMono = null;
-        if(correlationId!= null) {
+        if (correlationId!= null) {
             log.info("Start async for {} correlation id", request.getCorrelationId());
-            requestDeliveryEntityMono = requestDeliveryDAO.getByCorrelationId(correlationId);
-        }else {
+            requestDeliveryEntityMono = requestDeliveryDAO.getByCorrelationId(correlationId, true);
+        } else {
             log.info("Start async for {} request id", request.getRequestId());
-            requestDeliveryEntityMono = requestDeliveryDAO.getByRequestId(requestId);
+            requestDeliveryEntityMono = requestDeliveryDAO.getByRequestId(requestId, true);
         }
 
         return requestDeliveryEntityMono
@@ -103,6 +104,8 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                 )
                 .onErrorResume(ex -> {
                     log.error("Error prepare async requestId {}, {}", requestId, ex.getMessage(), ex);
+                    if (ex instanceof PnAddressFlowException) return Mono.error(ex);
+
                     StatusDeliveryEnum statusDeliveryEnum = StatusDeliveryEnum.PAPER_CHANNEL_ASYNC_ERROR;
                     if(ex instanceof PnGenericException) {
                         statusDeliveryEnum = mapper(((PnGenericException) ex).getExceptionType());
@@ -159,7 +162,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                     return addressDAO.create(AddressMapper.toEntity(newAddress, pnDeliveryRequest.getRequestId(), AddressTypeEnum.RECEIVER_ADDRESS, paperChannelConfig))
                             .map(item -> pnDeliveryRequest);
                 })
-                .onErrorResume(ex ->
+                .onErrorResume(PnGenericException.class, ex ->
                     traceError(pnDeliveryRequest.getRequestId(), ex.getMessage(), "CHECK_ADDRESS_FLOW" )
                         .then(Mono.defer(() -> Mono.error(ex)))
                 );

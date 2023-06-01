@@ -23,9 +23,6 @@ class PrepareAsyncRequestTest {
     void setGetTest() {
         PrepareAsyncRequest prepareAsyncRequest = new PrepareAsyncRequest(requestId, iun, correlationId, address, isSecondAttempt, attemptRetry);
         Assertions.assertNotNull(prepareAsyncRequest);
-        Assertions.assertFalse(prepareAsyncRequest.isSecondAttempt());
-        prepareAsyncRequest.setSecondAttempt(true);
-        Assertions.assertTrue(prepareAsyncRequest.isSecondAttempt());
     }
 
     @Test
@@ -46,9 +43,6 @@ class PrepareAsyncRequestTest {
         stringBuilder.append("address=");
         stringBuilder.append(address);
         stringBuilder.append(", ");
-        stringBuilder.append("isSecondAttempt=");
-        stringBuilder.append(isSecondAttempt);
-        stringBuilder.append(", ");
         stringBuilder.append("attemptRetry=");
         stringBuilder.append(attemptRetry);
         stringBuilder.append(")");
@@ -63,7 +57,6 @@ class PrepareAsyncRequestTest {
         prepareAsyncRequest.setIun(iun);
         prepareAsyncRequest.setCorrelationId(correlationId);
         prepareAsyncRequest.setAddress(address);
-        prepareAsyncRequest.setSecondAttempt(isSecondAttempt);
         prepareAsyncRequest.setAttemptRetry(attemptRetry);
         return prepareAsyncRequest;
     }

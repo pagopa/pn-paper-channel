@@ -171,14 +171,6 @@ public abstract class BaseDAO<T> {
             pnAddress.setCity2(dataEncryption.decode(pnAddress.getCity2()));
             pnAddress.setPr(dataEncryption.decode(pnAddress.getPr()));
             pnAddress.setCountry(dataEncryption.decode(pnAddress.getCountry()));
-            log.info(pnAddress.getFullName());
-            log.info(pnAddress.getNameRow2());
-            log.info(pnAddress.getAddress());
-            log.info(pnAddress.getAddressRow2());
-            log.info(pnAddress.getCap());
-            log.info(pnAddress.getCity());
-            log.info(pnAddress.getPr());
-            log.info(pnAddress.getCountry());
         }
         if(data instanceof PnDeliveryRequest pnDeliveryRequest) {
             pnDeliveryRequest.setFiscalCode(dataEncryption.decode(pnDeliveryRequest.getFiscalCode()));

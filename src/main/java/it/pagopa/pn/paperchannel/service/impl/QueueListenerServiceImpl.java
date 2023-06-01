@@ -1,6 +1,7 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
+import it.pagopa.pn.paperchannel.exception.PnAddressFlowException;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
@@ -54,10 +55,11 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                     return this.paperAsyncService.prepareAsync(prepareRequest);
                 })
                 .doOnSuccess(resultFromAsync ->
-                        log.info("End of prepare async internal")
+                    log.info("End of prepare async internal")
                 )
                 .doOnError(throwable -> {
                     log.error(throwable.getMessage());
+                    if (throwable instanceof PnAddressFlowException) return;
                     throw new PnGenericException(PREPARE_ASYNC_LISTENER_EXCEPTION, PREPARE_ASYNC_LISTENER_EXCEPTION.getMessage());
                 })
                 .block();

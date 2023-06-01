@@ -6,6 +6,7 @@ import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.PnAddressFlowException;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
+import it.pagopa.pn.paperchannel.mapper.RequestDeliveryMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
@@ -15,6 +16,7 @@ import it.pagopa.pn.paperchannel.middleware.msclient.AddressManagerClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
+import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.msclient.generated.pnaddressmanager.v1.dto.AnalogAddressDto;
 import it.pagopa.pn.paperchannel.service.PaperAddressService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
@@ -109,13 +111,17 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
                         return Mono.error(ex);
                     }
                     if (ex.getExceptionType() == DISCARD_NOTIFICATION){
-                        return traceError(deliveryRequest.getRequestId(), ex.getMessage(), ex.getExceptionType().getTitle())
-                                .then(Mono.defer(() -> Mono.error(ex)));
+                        return changeStateDeliveryRequest(deliveryRequest, StatusDeliveryEnum.DISCARD_NOTIFICATION)
+                                .flatMap(entity ->
+                                        traceError(deliveryRequest.getRequestId(), ex.getMessage(), ex.getExceptionType().getTitle())
+                                            .then(Mono.defer(() -> Mono.error(ex)))
+                                );
                     }
                     if (ex.getExceptionType() == ADDRESS_MANAGER_ERROR){
                         queueModel.setIun(deliveryRequest.getIun());
                         queueModel.setRequestId(deliveryRequest.getRequestId());
                         queueModel.setCorrelationId(deliveryRequest.getCorrelationId());
+                        queueModel.setAddressRetry(true);
                         this.sqsSender.pushInternalError(queueModel, queueModel.getAttemptRetry(), PrepareAsyncRequest.class);
                     }
                     return Mono.error(ex);
@@ -210,6 +216,21 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
     private Mono<Void> traceError(String requestId, String error, String flowType){
         return this.paperRequestErrorDAO.created(requestId, error, flowType)
                 .then();
+    }
+
+    private Mono<PnDeliveryRequest> changeStateDeliveryRequest(PnDeliveryRequest deliveryRequest, StatusDeliveryEnum status) {
+        return super.requestDeliveryDAO.getByRequestId(deliveryRequest.getRequestId()).flatMap(
+                entity -> {
+                    RequestDeliveryMapper.changeState(
+                            entity,
+                            status.getCode(),
+                            status.getDescription(),
+                            status.getDetail(),
+                            null,
+                            null
+                    );
+                    return this.requestDeliveryDAO.updateData(entity);
+                });
     }
 
 }
