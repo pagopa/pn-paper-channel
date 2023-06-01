@@ -1,10 +1,13 @@
 package it.pagopa.pn.paperchannel;
 
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+
+@Slf4j
 class PnPaperChannelConfigTest {
     private String clientSafeStorageBasepath;
     private String clientNationalRegistriesBasepath;
@@ -24,6 +27,7 @@ class PnPaperChannelConfigTest {
     private Integer attemptQueueSafeStorage;
     private Integer attemptQueueExternalChannel;
     private Integer attemptQueueNationalRegistries;
+    private Integer attemptQueueAddressManager;
     private Long ttlPrepare;
     private Long ttlExecutionN_890;
     private Long ttlExecutionN_AR;
@@ -35,6 +39,7 @@ class PnPaperChannelConfigTest {
     private Integer paperWeight;
     private Integer letterWeight;
     private String chargeCalculationMode;
+    private String originalPostmanAddressUsageMode;
 
 
     @BeforeEach
@@ -113,6 +118,9 @@ class PnPaperChannelConfigTest {
         stringBuilder.append("attemptQueueNationalRegistries=");
         stringBuilder.append(attemptQueueNationalRegistries);
         stringBuilder.append(", ");
+        stringBuilder.append("attemptQueueAddressManager=");
+        stringBuilder.append(attemptQueueAddressManager);
+        stringBuilder.append(", ");
         stringBuilder.append("ttlPrepare=");
         stringBuilder.append(ttlPrepare);
         stringBuilder.append(", ");
@@ -145,6 +153,9 @@ class PnPaperChannelConfigTest {
         stringBuilder.append(", ");
         stringBuilder.append("chargeCalculationMode=");
         stringBuilder.append(chargeCalculationMode);
+        stringBuilder.append(", ");
+        stringBuilder.append("originalPostmanAddressUsageMode=");
+        stringBuilder.append(originalPostmanAddressUsageMode);
         stringBuilder.append(")");
         String toTest = stringBuilder.toString();
         Assertions.assertEquals(toTest, pnPaperChannelConfig.toString());
@@ -167,6 +178,7 @@ class PnPaperChannelConfigTest {
         pnPaperChannelConfig.setAttemptQueueSafeStorage(attemptQueueSafeStorage);
         pnPaperChannelConfig.setAttemptQueueExternalChannel(attemptQueueExternalChannel);
         pnPaperChannelConfig.setAttemptQueueNationalRegistries(attemptQueueNationalRegistries);
+        pnPaperChannelConfig.setAttemptQueueAddressManager(attemptQueueAddressManager);
         pnPaperChannelConfig.setTtlPrepare(ttlPrepare);
         pnPaperChannelConfig.setTtlExecutionN_890(ttlExecutionN_890);
         pnPaperChannelConfig.setTtlExecutionN_AR(ttlExecutionN_AR);
@@ -195,7 +207,8 @@ class PnPaperChannelConfigTest {
         attemptSafeStorage = 1;
         attemptQueueSafeStorage = 2;
         attemptQueueExternalChannel = 3;
-        attemptQueueNationalRegistries = 4;
+        attemptQueueNationalRegistries = 3;
+        attemptQueueAddressManager = 3;
         ttlPrepare = 0L;
         ttlExecutionN_890 = 1L;
         ttlExecutionN_AR = 2L;
@@ -207,5 +220,6 @@ class PnPaperChannelConfigTest {
         paperWeight = 5;
         letterWeight = 6;
         chargeCalculationMode = "AAR";
+        originalPostmanAddressUsageMode= "PAPERSEND";
     }
 }

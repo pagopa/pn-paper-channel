@@ -32,7 +32,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static it.pagopa.pn.paperchannel.utils.Const.RACCOMANDATA_SEMPLICE;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PrepareAsyncServiceTest extends BaseTest {
 
@@ -48,6 +49,8 @@ class PrepareAsyncServiceTest extends BaseTest {
     private SafeStorageClient safeStorageClient;
     @MockBean
     private AddressManagerClient addressManagerClient;
+    @MockBean
+    private PaperAddressService paperAddressService;
     @MockBean
     private PaperRequestErrorDAO paperRequestErrorDAO;
 
@@ -68,6 +71,8 @@ class PrepareAsyncServiceTest extends BaseTest {
         Mockito.when(this.addressDAO.findByRequestId(Mockito.any())).thenReturn(Mono.just(getAddress()));
         Mockito.doNothing().when(this.sqsSender).pushPrepareEvent(Mockito.any());
         Mockito.when(this.requestDeliveryDAO.updateData(Mockito.any())).thenReturn(Mono.just(getDeliveryRequest()));
+        Mockito.when(this.paperAddressService.getCorrectAddress(Mockito.any(), Mockito.any(), Mockito.any()))
+                .thenReturn(Mono.just(new Address()));
         PnDeliveryRequest deliveryRequest = this.prepareAsyncService.prepareAsync(request).block();
         assertNotNull(deliveryRequest);
 
@@ -92,6 +97,9 @@ class PrepareAsyncServiceTest extends BaseTest {
                 .thenReturn(Mono.just(getAddress()));
         Mockito.doNothing().when(this.sqsSender).pushPrepareEvent(Mockito.any());
         Mockito.when(this.requestDeliveryDAO.updateData(Mockito.any())).thenReturn(Mono.just(getDeliveryRequest()));
+        Mockito.when(this.paperAddressService.getCorrectAddress(Mockito.any(), Mockito.any(), Mockito.any()))
+                        .thenReturn(Mono.just(new Address()));
+
         request.setCorrelationId("FFPAPERTEST.IUN_FATY");
         PnDeliveryRequest deliveryRequest = this.prepareAsyncService.prepareAsync(request).block();
         assertNotNull(deliveryRequest);
@@ -112,6 +120,9 @@ class PrepareAsyncServiceTest extends BaseTest {
                 .thenReturn(Mono.just(getNormalizedAddress(true)));
 
         Mockito.doNothing().when(this.sqsSender).pushPrepareEvent(Mockito.any());
+
+        Mockito.when(this.paperAddressService.getCorrectAddress(Mockito.any(), Mockito.any(), Mockito.any()))
+                .thenReturn(Mono.just(new Address()));
 
         Mockito.when(this.requestDeliveryDAO.updateData(Mockito.any())).thenReturn(Mono.just(getDeliveryRequest()));
 
@@ -140,6 +151,9 @@ class PrepareAsyncServiceTest extends BaseTest {
 
         Mockito.when(this.addressManagerClient.deduplicates(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(getNormalizedAddress(false)));
+
+        Mockito.when(this.paperAddressService.getCorrectAddress(Mockito.any(), Mockito.any(), Mockito.any()))
+                .thenReturn(Mono.just(new Address()));
 
         Mockito.when(this.addressDAO.create(Mockito.any()))
                 .thenReturn(Mono.just(getAddress()));
