@@ -154,13 +154,13 @@ public class QueueListener {
 
     }
 
-    @SqsListener(value = "${pn.paper-channel.queue-national-registries}")
+    @SqsListener(value = "${pn.paper-channel.queue-national-registries}", deletionPolicy = SqsMessageDeletionPolicy.ALWAYS)
     public void pullNationalRegistries(@Payload String node, @Headers Map<String, Object> headers){
         AddressSQSMessageDto dto = convertToObject(node, AddressSQSMessageDto.class);
         this.queueListenerService.nationalRegistriesResponseListener(dto);
     }
 
-    @SqsListener(value = "${pn.paper-channel.queue-external-channel}")
+    @SqsListener(value = "${pn.paper-channel.queue-external-channel}", deletionPolicy = SqsMessageDeletionPolicy.ALWAYS)
     public void pullExternalChannel(@Payload String node, @Headers Map<String,Object> headers){
         SingleStatusUpdateDto body = convertToObject(node, SingleStatusUpdateDto.class);
         this.queueListenerService.externalChannelListener(body, 0);

@@ -71,7 +71,7 @@ public class SqsQueueSender implements SqsSender {
                     LogUtils.maskGeneric(prepareEvent.getReceiverAddress().getCity()),
                     LogUtils.maskGeneric(prepareEvent.getReceiverAddress().getPr()),
                     LogUtils.maskGeneric(prepareEvent.getReceiverAddress().getCountry())
-            );
+        );
         }
 
         this.deliveryPushMomProducer.push(deliveryPushEvent);
