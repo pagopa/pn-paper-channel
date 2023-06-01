@@ -33,9 +33,11 @@ public class PnCost {
     private String uuid;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_CAP)}))
+    @ToString.Exclude
     private List<String> cap;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_ZONE)}))
+    @ToString.Exclude
     private String zone;
 
     @Getter(onMethod = @__({@DynamoDbSecondaryPartitionKey(indexNames = TENDER_INDEX), @DynamoDbAttribute(COL_TENDER_CODE)}))

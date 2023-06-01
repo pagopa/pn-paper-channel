@@ -21,8 +21,10 @@ public class PnCap {
     public String author;
 
     @Getter(onMethod = @__({@DynamoDbSortKey, @DynamoDbAttribute(COL_CAP)}))
+    @ToString.Exclude
     public String cap;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_CITY)}))
+    @ToString.Exclude
     public String city;
 }

@@ -21,11 +21,14 @@ public class PnZone {
     public static final String COL_COUNTRY_IT = "countryIt";
 
     @Getter(onMethod = @__({@DynamoDbPartitionKey,@DynamoDbAttribute(COL_COUNTRY_IT)}))
+    @ToString.Exclude
     public String countryIt;
 
     @Getter(onMethod = @__({@DynamoDbSecondaryPartitionKey(indexNames = COUNTRY_EN_INDEX),@DynamoDbAttribute(COL_COUNTRY_EN)}))
+    @ToString.Exclude
     public String countryEn;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_ZONE)}))
+    @ToString.Exclude
     public String zone;
 }

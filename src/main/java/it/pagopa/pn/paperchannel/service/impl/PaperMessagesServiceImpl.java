@@ -3,6 +3,7 @@ package it.pagopa.pn.paperchannel.service.impl;
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.commons.log.PnLogger;
 import it.pagopa.pn.commons.utils.LogUtils;
+import it.pagopa.pn.commons.utils.MDCUtils;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.exception.PnPaperEventException;
@@ -164,7 +165,7 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                                                             String.format("prepare requestId = %s, relatedRequestId = %s Discovered Address is not present", requestId, prepareRequest.getRelatedRequestId())
                                                     );
                                                     this.finderAddressFromNationalRegistries(
-                                                            (MDC.get(MDC_TRACE_ID_KEY) == null ? UUID.randomUUID().toString() : MDC.get(MDC_TRACE_ID_KEY)),
+                                                            (MDC.get(MDCUtils.MDC_TRACE_ID_KEY) == null ? UUID.randomUUID().toString() : MDC.get(MDCUtils.MDC_TRACE_ID_KEY)),
                                                             response.getRequestId(),
                                                             response.getRelatedRequestId(),
                                                             response.getFiscalCode(),
@@ -257,13 +258,13 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                         pnLogAudit.addsBeforeSend(
                                 sendRequest.getIun(),
                                 String.format("prepare requestId = %s, trace_id = %s  request to External Channel",
-                                        sendRequest.getRequestId(), MDC.get(MDC_TRACE_ID_KEY))
+                                        sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY))
                         );
                         return this.externalChannelClient.sendEngageRequest(sendRequest, attachments)
                                 .then(Mono.defer(() -> {
                                     pnLogAudit.addsSuccessSend(sendRequest.getIun(),
                                             String.format("prepare requestId = %s, trace_id = %s  request to External Channel",
-                                                    sendRequest.getRequestId(), MDC.get(MDC_TRACE_ID_KEY))
+                                                    sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY))
                                     );
                                     log.debug("Updating data {} with requestId {} in DynamoDb table {}", "PnDeliveryRequest", requestId, "RequestDeliveryDynamoTable");
                                     return this.requestDeliveryDAO.updateData(pnDeliveryRequest);
@@ -275,7 +276,7 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                                 .onErrorResume(ex -> {
                                     pnLogAudit.addsFailSend(sendRequest.getIun(),
                                             String.format("prepare requestId = %s, trace_id = %s  request to External Channel",
-                                                    sendRequest.getRequestId(), MDC.get(MDC_TRACE_ID_KEY))
+                                                    sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY))
                                     );
                                     return Mono.error(ex);
                                 });

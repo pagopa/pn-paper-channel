@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.msclient.impl;
 
+import it.pagopa.pn.commons.log.PnLogger;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.PnRetryStorageException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.api.FileDownloadApi;
@@ -30,6 +31,8 @@ public class SafeStorageClientImpl implements SafeStorageClient {
 
     @Override
     public Mono<FileDownloadResponseDto> getFile(String fileKey) {
+        String PN_SAFE_STORAGE_DESCRIPTION = "Safe Storage getFile";
+        log.logInvokingAsyncExternalService(PnLogger.EXTERNAL_SERVICES.PN_SAFE_STORAGE, PN_SAFE_STORAGE_DESCRIPTION, null);
         String reqFileKey = fileKey;
         log.info("Getting file with {} key", fileKey);
         String BASE_URL = "safestorage://";

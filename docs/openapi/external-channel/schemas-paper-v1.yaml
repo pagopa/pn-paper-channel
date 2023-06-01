@@ -163,47 +163,38 @@ components:
           description: >-
             Potrebbe servire ai recapitisti in caso di offerte migliorative per i destinatari (servizi a valore aggiunto basati su cf).
         senderName:
-          x-field-extra-annotation: "@lombok.ToString.Exclude"
           type: string
           description: >-
             Ragione sociale del mittente (PagoPA).
         senderAddress:
-          x-field-extra-annotation: "@lombok.ToString.Exclude"
           type: string
           description: >-
             Indirizzo del mittente.
         senderCity:
-          x-field-extra-annotation: "@lombok.ToString.Exclude"
           type: string
           description: >-
             Città del mittente
         senderPr:
-          x-field-extra-annotation: "@lombok.ToString.Exclude"
           type: string
           description: >-
             Provincia del mittente.
         senderDigitalAddress:
-          x-field-extra-annotation: "@lombok.ToString.Exclude"
           type: string
           description: >-
             Indirizzo PEC del mittente.
         arName:
-          x-field-extra-annotation: "@lombok.ToString.Exclude"
           type: string
           description: >-
             Nominativo di riferimento per l’Avviso di Ritorno.
         arAddress:
-          x-field-extra-annotation: "@lombok.ToString.Exclude"
           type: string
           description: >-
             Indirizzo per AR.
         arCap:
-          x-field-extra-annotation: "@lombok.ToString.Exclude"
           type: string
           description: >-
             CAP AR.
         arCity:
-          x-field-extra-annotation: "@lombok.ToString.Exclude"
           type: string
           description: >-
             Città per AR.

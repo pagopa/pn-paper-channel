@@ -20,6 +20,7 @@ public class PnDeliveryRequest {
 
     public static final String COL_REQUEST_ID = "requestId";
 
+    @ToString.Exclude
     public static final String COL_FISCAL_CODE = "fiscalCode";
 
     public static final String COL_HASHED_FISCAL_CODE = "hashedFiscalCode";
@@ -65,6 +66,7 @@ public class PnDeliveryRequest {
     private String requestId;
 
     @Getter(onMethod = @__({@DynamoDbSecondaryPartitionKey(indexNames = FISCAL_CODE_INDEX),@DynamoDbAttribute(COL_FISCAL_CODE)}))
+    @ToString.Exclude
     private String fiscalCode;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_HASHED_FISCAL_CODE)}))

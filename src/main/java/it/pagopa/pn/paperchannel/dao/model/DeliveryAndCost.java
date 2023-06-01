@@ -2,6 +2,7 @@ package it.pagopa.pn.paperchannel.dao.model;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
@@ -19,20 +20,26 @@ public class DeliveryAndCost {
     @ColumnExcel("OFFICE_NAME")
     private String registeredOffice;
     @ColumnExcel("PEC")
+    @ToString.Exclude
     private String pec;
     @ColumnExcel("FISCAL_CODE")
+    @ToString.Exclude
     private String fiscalCode;
     @ColumnExcel("TAX_ID")
+    @ToString.Exclude
     private String taxId;
     @ColumnExcel("PHONE_NUMBER")
+    @ToString.Exclude
     private String phoneNumber;
     @ColumnExcel("UNIQUE_CODE")
     private String uniqueCode;
     @ColumnExcel("FSU")
     private Boolean fsu;
     @ColumnExcel("CAP")
+    @ToString.Exclude
     private List<String> caps;
     @ColumnExcel("ZONE")
+    @ToString.Exclude
     private String zone;
     @ColumnExcel("PRODUCT_TYPE")
     private String productType;

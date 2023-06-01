@@ -1,4 +1,5 @@
 package it.pagopa.pn.paperchannel.middleware.db.entities;
+
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -6,8 +7,6 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttri
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey;
-
-import java.util.List;
 
 @DynamoDbBean
 @Getter
@@ -41,30 +40,39 @@ public class PnAddress {
     private String requestId;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_FULL_NAME)}))
+    @ToString.Exclude
     private String fullName;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_NAME_ROW_2)}))
+    @ToString.Exclude
     private String nameRow2;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_ADDRESS)}))
+    @ToString.Exclude
     private String address;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_ADDRESS_ROW_2)}))
+    @ToString.Exclude
     private String addressRow2;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_CAP)}))
+    @ToString.Exclude
     private String cap;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_CITY)}))
+    @ToString.Exclude
     private String city;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_CITY2)}))
+    @ToString.Exclude
     private String city2;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_PR)}))
+    @ToString.Exclude
     private String pr;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_COUNTRY)}))
+    @ToString.Exclude
     private String country;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_TTL)}))

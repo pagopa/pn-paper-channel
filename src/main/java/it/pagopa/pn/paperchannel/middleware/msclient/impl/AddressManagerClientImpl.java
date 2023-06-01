@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.msclient.impl;
 
+import it.pagopa.pn.commons.log.PnLogger;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.api.DeduplicatesAddressServiceApi;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.dto.DeduplicatesRequestDto;
@@ -31,6 +32,8 @@ public class AddressManagerClientImpl implements AddressManagerClient {
 
     @Override
     public Mono<DeduplicatesResponseDto> deduplicates(String correlationId, Address base, Address target) {
+        String PN_ADDRESS_MANAGER_DESCRIPTION = "Address Manager deduplicates";
+        log.logInvokingAsyncExternalService(PnLogger.EXTERNAL_SERVICES.PN_ADDRESS_MANAGER, PN_ADDRESS_MANAGER_DESCRIPTION, correlationId);
         DeduplicatesRequestDto requestDto = new DeduplicatesRequestDto();
         requestDto.setBaseAddress(AddressMapper.toAnalogAddressManager(base));
         requestDto.setTargetAddress(AddressMapper.toAnalogAddressManager(target));
