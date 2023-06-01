@@ -24,7 +24,7 @@ import reactor.core.scheduler.Schedulers;
 import java.time.Duration;
 import java.util.List;
 
-import static it.pagopa.pn.commons.log.MDCWebFilter.MDC_TRACE_ID_KEY;
+import static it.pagopa.pn.commons.utils.MDCUtils.MDC_TRACE_ID_KEY;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.EXTERNAL_CHANNEL_API_EXCEPTION;
 
 // handler per stati gialli: Retry su ExtCh con suffisso +1, invio dello stato in progress verso DP

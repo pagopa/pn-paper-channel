@@ -14,7 +14,7 @@ import reactor.core.publisher.Mono;
 import java.util.Date;
 import java.util.stream.Collectors;
 
-import static it.pagopa.pn.commons.log.MDCWebFilter.MDC_TRACE_ID_KEY;
+import static it.pagopa.pn.commons.utils.MDCUtils.MDC_TRACE_ID_KEY;
 
 @Slf4j
 @ControllerAdvice

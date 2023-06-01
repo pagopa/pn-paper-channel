@@ -83,6 +83,14 @@ Parameters:
     Type: Number
     Description: 'Number of attempts for called prepare async for retry retrieve file'
 
+  AttemptQueueAddressManager:
+    Type: Number
+    Description: 'Number of attempts for called prepare async for retry address manager'
+
+  OriginalPostmanAddressUsageMode:
+    Type: Number
+    Description: 'Address usage modo for postman flow'
+
   SafeStorageCxId:
     Type: String
     Description: 'SafeStorage cx-id'
@@ -451,6 +459,8 @@ Resources:
         ContainerEnvEntry42: !Sub 'PN_PAPERCHANNEL_CLIENTADDRESSMANAGERBASEPATH=${AddressManagerBaseUrl}'
         ContainerEnvEntry43: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERCXID=${AddressManagerCxId}'
         ContainerEnvEntry44: !Sub 'PN_PAPERCHANNEL_CHARGECALCULATIONMODE=${ChargeCalculationMode}'
+        ContainerEnvEntry45: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUEADDRESSMANAGER=${AttemptQueueAddressManager}'
+        ContainerEnvEntry46: !Sub 'PN_PAPERCHANNEL_ORIGINALPOSTAMNADDRESSUSAGEMODE=${OriginalPostmanAddressUsageMode}'
         ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-PaperChannel-Secrets
         MappedPaths: '/paper-channel-bo/*,/paper-channel-private/*'

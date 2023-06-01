@@ -62,7 +62,7 @@ public class QueueListener {
 
         if (internalEventHeader.getEventType().equals(EventTypeEnum.NATIONAL_REGISTRIES_ERROR.name())){
 
-            boolean noAttempt = paperChannelConfig.getAttemptQueueNationalRegistries() < internalEventHeader.getAttempt();
+            boolean noAttempt = (paperChannelConfig.getAttemptQueueNationalRegistries()-1) < internalEventHeader.getAttempt();
             NationalRegistryError error = convertToObject(node, NationalRegistryError.class);
             execution(error, noAttempt, internalEventHeader.getAttempt(), internalEventHeader.getExpired(), NationalRegistryError.class,
                     entity -> {
@@ -80,7 +80,7 @@ public class QueueListener {
 
         } else if (internalEventHeader.getEventType().equals(EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name())){
 
-            boolean noAttempt = paperChannelConfig.getAttemptQueueExternalChannel() < internalEventHeader.getAttempt();
+            boolean noAttempt = (paperChannelConfig.getAttemptQueueExternalChannel()-1) < internalEventHeader.getAttempt();
             ExternalChannelError error = convertToObject(node, ExternalChannelError.class);
             execution(error, noAttempt, internalEventHeader.getAttempt(), internalEventHeader.getExpired(), ExternalChannelError.class,
                     entity -> {
@@ -104,7 +104,7 @@ public class QueueListener {
 
         } else if (internalEventHeader.getEventType().equals(EventTypeEnum.SAFE_STORAGE_ERROR.name())){
 
-            boolean noAttempt = paperChannelConfig.getAttemptQueueSafeStorage() < internalEventHeader.getAttempt();
+            boolean noAttempt = (paperChannelConfig.getAttemptQueueSafeStorage()-1) < internalEventHeader.getAttempt();
             PrepareAsyncRequest error = convertToObject(node, PrepareAsyncRequest.class);
             execution(error, noAttempt, internalEventHeader.getAttempt(), internalEventHeader.getExpired(), PrepareAsyncRequest.class,
                     entity -> {
@@ -124,7 +124,30 @@ public class QueueListener {
                         return null;
                     });
 
+        } else if (internalEventHeader.getEventType().equals(EventTypeEnum.ADDRESS_MANAGER_ERROR.name())){
+
+            boolean noAttempt = (paperChannelConfig.getAttemptQueueAddressManager()-1) < internalEventHeader.getAttempt();
+            PrepareAsyncRequest error = convertToObject(node, PrepareAsyncRequest.class);
+            execution(error, noAttempt, internalEventHeader.getAttempt(), internalEventHeader.getExpired(), PrepareAsyncRequest.class,
+                    entity -> {
+                        PnLogAudit pnLogAudit = new PnLogAudit(pnAuditLogBuilder);
+                        pnLogAudit.addsBeforeDiscard(entity.getIun(), String.format("requestId = %s finish retry address manager error ?", entity.getRequestId()));
+
+                        paperRequestErrorDAO.created(
+                                        entity.getRequestId(),
+                                        ADDRESS_MANAGER_ERROR.getMessage(),
+                                        EventTypeEnum.ADDRESS_MANAGER_ERROR.name())
+                                .subscribe();
+                        pnLogAudit.addsSuccessDiscard(entity.getIun(), String.format("requestId = %s finish retry address manager error", entity.getRequestId()));
+                        return null;
+                    },
+                    entityAndAttempt -> {
+                        this.queueListenerService.internalListener(entityAndAttempt.getFirst(), entityAndAttempt.getSecond());
+                        return null;
+                    });
+
         } else if (internalEventHeader.getEventType().equals(EventTypeEnum.PREPARE_ASYNC_FLOW.name())){
+            log.info("Push internal queue - first time");
             PrepareAsyncRequest request = convertToObject(node, PrepareAsyncRequest.class);
             this.queueListenerService.internalListener(request, internalEventHeader.getAttempt());
         }

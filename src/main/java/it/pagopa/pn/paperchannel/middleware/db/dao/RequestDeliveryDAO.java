@@ -11,7 +11,9 @@ public interface RequestDeliveryDAO {
     Mono<PnDeliveryRequest> updateData(PnDeliveryRequest pnDeliveryRequest);
 
     Mono<PnDeliveryRequest> getByRequestId(String requestId);
-
+    Mono<PnDeliveryRequest> getByRequestId(String requestId, boolean decode);
+    Mono<PnDeliveryRequest> getByCorrelationId(String requestId, boolean decode);
     Mono<PnDeliveryRequest> getByCorrelationId(String correlationId);
+
 
 }

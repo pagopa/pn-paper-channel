@@ -1,6 +1,7 @@
 package it.pagopa.pn.paperchannel.middleware.msclient.impl;
 
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
+import it.pagopa.pn.paperchannel.exception.PnAddressFlowException;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
 import it.pagopa.pn.paperchannel.middleware.msclient.AddressManagerClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.common.BaseClient;
@@ -18,6 +19,8 @@ import javax.annotation.PostConstruct;
 import java.net.ConnectException;
 import java.time.Duration;
 import java.util.concurrent.TimeoutException;
+
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.ADDRESS_MANAGER_ERROR;
 
 @Slf4j
 @Component
@@ -53,14 +56,14 @@ public class AddressManagerClientImpl extends BaseClient implements AddressManag
                         Retry.backoff(2, Duration.ofMillis(500))
                                 .filter(throwable -> throwable instanceof TimeoutException || throwable instanceof ConnectException)
                 ).map(response -> {
-                    log.debug("Deduplicates response correlationId : {}", response.getCorrelationId());
-                    log.debug("Equality : {}", response.getEqualityResult());
+                    log.info("Deduplicates response correlationId : {}", response.getCorrelationId());
+                    log.info("Equality : {}", response.getEqualityResult());
                     log.info("Error : {}", response.getError());
                     return response;
                 })
                 .onErrorResume(ex -> {
                     log.error("Error with deduplicates API with correlation id: {}", correlationId, ex);
-                    return Mono.error(ex);
+                    return Mono.error(new PnAddressFlowException(ADDRESS_MANAGER_ERROR));
                 });
     }
 }

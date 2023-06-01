@@ -44,7 +44,6 @@ public enum ExceptionTypeEnum{
     COST_CANNOT_BE_DELETED("COST_CANNOT_BE_DELETED", "Il costo non può essere eliminato, appartiene ad una gara convalidata."),
     DATA_VAULT_ENCRYPTION_ERROR("DATA_VAULT_ENCRYPTION_ERROR", "Servizio irraggiungibile od errore in fase di criptazione"),
     DATA_VAULT_DECRYPTION_ERROR("DATA_VAULT_DECRYPTION_ERROR", "Servizio irraggiungibile od errore in fase di decriptazione"),
-
     CONSOLIDATE_ERROR("CONSOLIDATE_ERROR", "non è possibile consolidare la Gara perchè ne esiste già una consolidata in questo range di date"),
     STATUS_NOT_VARIABLE("STATUS_NOT_VARIABLE", "Lo stato della Gara non può essere aggiornato"),
     FSUCOST_VALIDATOR_NOTVALID("FSUCOST_VALIDATOR_NOTVALID", "La gara non può essere consolidata, non sono stati definiti i costi di default per fsu"),
@@ -52,7 +51,9 @@ public enum ExceptionTypeEnum{
     INVALID_CAP_FSU("INVALID_CAP_FSU", "Per FSU non sono stati inseriti i cap di default"),
     INVALID_ZONE_FSU("INVALID_ZONE_FSU", "Non sono stati inseriti i costi internazionali obbligatori per FSU"),
     INVALID_ZONE_PRODUCT_TYPE("INVALID_ZONE_PRODUCT_TYPE", "Ci sono Costi internazionali duplicati."),
-
+    ATTEMPT_ADDRESS_NATIONAL_REGISTRY("ATTEMPT_ADDRESS_NATIONAL_REGISTRY", "Discovered and first attempt are equals, find from national registry"),
+    DISCARD_NOTIFICATION("DISCARD_NOTIFICATION", "Discard notification"),
+    INVALID_VALUE_FROM_PROPS("INVALID_VALUE_FROM_PROPS", "Il valore della proprietà è diverso da quello atteso"),
     INVALID_SAFE_STORAGE("INVALID_SAFE_STORAGE", "Il Safe Storage selezionato è inesistente.");
 
     private final String title;

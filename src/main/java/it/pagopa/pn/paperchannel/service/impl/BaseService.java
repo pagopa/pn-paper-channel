@@ -22,7 +22,7 @@ import reactor.core.scheduler.Schedulers;
 import java.time.Duration;
 import java.util.function.Function;
 
-import static it.pagopa.pn.commons.log.MDCWebFilter.MDC_TRACE_ID_KEY;
+import static it.pagopa.pn.commons.utils.MDCUtils.MDC_TRACE_ID_KEY;
 import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.NATIONAL_REGISTRY_ERROR;
 import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.NATIONAL_REGISTRY_WAITING;
 import static it.pagopa.pn.paperchannel.utils.Const.*;
