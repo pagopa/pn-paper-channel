@@ -19,12 +19,7 @@ public class PaperListServiceImpl implements PaperListService {
 
     @Override
     public Mono<CapResponseDto> getAllCap(String value) {
-        String processName = "Get All Cap";
-        log.logStartingProcess(processName);
         return capDAO.getAllCap(value)
-                .map(paperCosts -> {
-                    log.logEndingProcess(processName);
-                    return CapMapper.toResponse(paperCosts);
-                });
+                .map(CapMapper::toResponse);
     }
 }

@@ -57,8 +57,6 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
     private PaperRequestErrorDAO paperRequestErrorDAO;
     @Autowired
     private AddressManagerClient addressManagerClient;
-    String SQS_SENDER = "SQS SENDER";
-    String SQS_SENDER_DESCRIPTION = "Pushing prepare event.";
 
     public PrepareAsyncServiceImpl(PnAuditLogBuilder auditLogBuilder, NationalRegistryClient nationalRegistryClient,
                                    RequestDeliveryDAO requestDeliveryDAO,SqsSender sqsQueueSender, CostDAO costDAO ) {
@@ -101,7 +99,6 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                 .flatMap(pnDeliveryRequest ->
                      this.addressDAO.findByRequestId(pnDeliveryRequest.getRequestId())
                             .flatMap(address -> {
-                                log.logInvokingAsyncExternalService(SQS_SENDER, SQS_SENDER_DESCRIPTION, requestId );
                                 this.sqsSender.pushPrepareEvent(PrepareEventMapper.toPrepareEvent(pnDeliveryRequest, AddressMapper.toDTO(address), StatusCodeEnum.OK));
                                 return this.requestDeliveryDAO.updateData(pnDeliveryRequest);
                             })
@@ -115,7 +112,6 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                     return updateStatus(requestId, correlationId, statusDeliveryEnum)
                             .doOnNext(entity -> {
                                 if (entity.getStatusCode().equals(StatusDeliveryEnum.UNTRACEABLE.getCode())){
-                                    log.logInvokingAsyncExternalService(SQS_SENDER, SQS_SENDER_DESCRIPTION, requestId );
                                     sendUnreachableEvent(entity);
                                     log.logEndingProcess(PROCESS_NAME);
                                 }
@@ -135,12 +131,15 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
     }
 
     public Mono<PnDeliveryRequest> updateStatus(String requestId, String correlationId, StatusDeliveryEnum status ){
+        String processName = "Update Status";
+        log.logStartingProcess(processName);
         Mono<PnDeliveryRequest> pnDeliveryRequest;
         if (StringUtils.isNotEmpty(requestId) && !StringUtils.isNotEmpty(correlationId) ){
             pnDeliveryRequest= this.requestDeliveryDAO.getByRequestId(requestId);
         }else{
             pnDeliveryRequest= this.requestDeliveryDAO.getByCorrelationId(correlationId);
         }
+        log.logEndingProcess(processName);
         return pnDeliveryRequest.flatMap(
                 entity -> {
                     RequestDeliveryMapper.changeState(

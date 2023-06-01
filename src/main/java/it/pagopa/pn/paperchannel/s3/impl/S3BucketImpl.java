@@ -7,6 +7,7 @@ import it.pagopa.pn.paperchannel.config.AwsBucketProperties;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PresignedUrlResponseDto;
 import it.pagopa.pn.paperchannel.mapper.PresignedUrlResponseMapper;
 import it.pagopa.pn.paperchannel.s3.S3Bucket;
+import lombok.CustomLog;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
@@ -18,12 +19,14 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.UUID;
 
-@Slf4j
+@CustomLog
 public class S3BucketImpl implements S3Bucket {
     private static final String XSLS_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
     private final AmazonS3 s3Client;
     private final AwsBucketProperties awsBucketProperties;
+
+    private final String s3BucketName = "S3Bucket";
 
     public S3BucketImpl(AmazonS3 s3Client, AwsBucketProperties awsBucketProperties) {
         this.s3Client = s3Client;
@@ -32,6 +35,8 @@ public class S3BucketImpl implements S3Bucket {
 
     @Override
     public Mono<PresignedUrlResponseDto> presignedUrl() {
+        String processName = "Get Presigned Url";
+        log.logInvokingExternalService(s3BucketName, processName);
         String uuid = UUID.randomUUID().toString();
         String fileName = PREFIX_URL.concat(uuid);
         GeneratePresignedUrlRequest generatePresignedUrlRequest = new GeneratePresignedUrlRequest(this.awsBucketProperties.getName(), fileName)
@@ -46,6 +51,8 @@ public class S3BucketImpl implements S3Bucket {
     @Override
     public Mono<File> putObject(File file) {
         try {
+            String processName = "Create And Upload File Async";
+            log.logInvokingAsyncExternalService(s3BucketName, processName, null);
             PutObjectRequest request = new PutObjectRequest(this.awsBucketProperties.getName(), file.getName(), file);
             // set metadata
             ObjectMetadata metadata = new ObjectMetadata();
@@ -60,6 +67,8 @@ public class S3BucketImpl implements S3Bucket {
     }
 
     public byte[] getObjectData(String filename) {
+        String processName = "Download File";
+        log.logInvokingExternalService(s3BucketName, processName);
         byte[] data = null;
         S3Object fullObject = s3Client.getObject(new GetObjectRequest(this.awsBucketProperties.getName(), filename));
         if (fullObject != null) {
@@ -73,6 +82,8 @@ public class S3BucketImpl implements S3Bucket {
     }
 
     public InputStream getFileInputStream(String filename) {
+        String processName = "Notify Upload";
+        log.logInvokingExternalService(s3BucketName, processName);
         S3Object fullObject = s3Client.getObject(new GetObjectRequest(this.awsBucketProperties.getName(), filename));
         if (fullObject != null) {
             return fullObject.getObjectContent().getDelegateStream();

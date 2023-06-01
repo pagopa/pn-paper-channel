@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import static it.pagopa.pn.commons.log.PnLogger.EXTERNAL_SERVICES.PN_NATIONAL_REGISTRIES;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 
 @Service
@@ -37,10 +38,6 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
     private AddressDAO addressDAO;
     @Autowired
     private PaperRequestErrorDAO paperRequestErrorDAO;
-    String SQS_SENDER = "SQS SENDER";
-    String SQS_SENDER_DESCRIPTION = "Pushing prepare event.";
-
-    String NATIONAL_REGISTRY = "NATIONAL REGISTRY";
     String NATIONAL_REGISTRY_DESCRIPTION = "Retrieve the address.";
 
     public QueueListenerServiceImpl(PnAuditLogBuilder auditLogBuilder,
@@ -108,7 +105,6 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                     return Mono.just(new PrepareAsyncRequest(addressAndEntity.getT2().getCorrelationId(), null));
                 })
                 .flatMap(prepareRequest -> {
-                    log.logInvokingAsyncExternalService(SQS_SENDER, SQS_SENDER_DESCRIPTION, prepareRequest.getRequestId());
                     this.sqsSender.pushToInternalQueue(prepareRequest);
                     log.logEndingProcess(PROCESS_NAME);
                     return Mono.empty();
@@ -123,7 +119,7 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
         Mono.just(data)
                 .doOnSuccess(nationalRegistryError -> {
                     log.info("Called national Registries");
-                    log.logInvokingAsyncExternalService(NATIONAL_REGISTRY,NATIONAL_REGISTRY_DESCRIPTION, nationalRegistryError.getRequestId());
+                    log.logInvokingAsyncExternalService(PN_NATIONAL_REGISTRIES,NATIONAL_REGISTRY_DESCRIPTION, nationalRegistryError.getRequestId());
                     this.finderAddressFromNationalRegistries(
                             nationalRegistryError.getCorrelationId(),
                             nationalRegistryError.getRequestId(),

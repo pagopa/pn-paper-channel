@@ -1,6 +1,7 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
+import it.pagopa.pn.commons.log.PnLogger;
 import it.pagopa.pn.commons.utils.LogUtils;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
@@ -57,7 +58,6 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
     @Autowired
     private PaperTenderService paperTenderService;
 
-    String EXTERNAL_CHANNEL = "EXTERNAL-CHANNEL";
     String EXTERNAL_CHANNEL_DESCRIPTION = "Shipment notification service";
 
     public PaperMessagesServiceImpl(PnAuditLogBuilder auditLogBuilder, RequestDeliveryDAO requestDeliveryDAO, CostDAO costDAO,
@@ -67,8 +67,6 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
 
     @Override
     public Mono<PaperChannelUpdate> preparePaperSync(String requestId, PrepareRequest prepareRequest){
-        String processName = "PREPARE PAPER SYNC";
-        log.logStartingProcess(processName);
         prepareRequest.setRequestId(requestId);
         if (StringUtils.isEmpty(prepareRequest.getRelatedRequestId())){
             log.info("First attempt requestId {}", requestId);
@@ -91,7 +89,6 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                             .flatMap(response -> {
                                 PrepareAsyncRequest request = new PrepareAsyncRequest(requestId, response.getIun(), false, 0);
                                 this.sqsSender.pushToInternalQueue(request);
-                                log.logEndingProcess(processName);
                                 return Mono.empty();
                             }))
                     );
@@ -174,7 +171,6 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                                                             response.getReceiverType(),
                                                             response.getIun(), 0);
                                                 }
-                                                log.logEndingProcess(processName);
                                                 return Mono.error(new PnPaperEventException(prepareRequest.getRequestId()));
                                             })
                             ));
@@ -184,8 +180,6 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
 
     @Override
     public Mono<PrepareEvent> retrievePaperPrepareRequest(String requestId) {
-        String processName = "RETRIVE PAPER PREPARE REQUEST";
-        log.logStartingProcess(processName);
         log.info("Start retrieve prepare request {}", requestId);
         log.debug("Getting PnDeliveryRequest with requestId {}, in DynamoDB table {}", requestId, "RequestDeliveryDynamoTable");
         return requestDeliveryDAO.getByRequestId(requestId)
@@ -199,18 +193,12 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                             .switchIfEmpty(Mono.just(new PnAddress()));
                         }
                 )
-                .map(entityAndAddress -> {
-                    PrepareEvent prepareEvent = PrepareEventMapper.fromResult(entityAndAddress.getT1(), entityAndAddress.getT2());
-                    log.logEndingProcess(processName);
-                    return prepareEvent;
-                })
+                .map(entityAndAddress -> PrepareEventMapper.fromResult(entityAndAddress.getT1(), entityAndAddress.getT2()))
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)));
     }
 
     @Override
     public Mono<SendResponse> executionPaper(String requestId, SendRequest sendRequest) {
-        String PROCESS_NAME = "Execution Paper";
-        log.logStartingProcess(PROCESS_NAME);
         log.info("Start executionPaper with requestId {}", requestId);
         sendRequest.setRequestId(requestId);
 
@@ -271,7 +259,6 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                                 String.format("prepare requestId = %s, trace_id = %s  request to External Channel",
                                         sendRequest.getRequestId(), MDC.get(MDC_TRACE_ID_KEY))
                         );
-                        log.logInvokingAsyncExternalService(EXTERNAL_CHANNEL, EXTERNAL_CHANNEL_DESCRIPTION, requestId);
                         return this.externalChannelClient.sendEngageRequest(sendRequest, attachments)
                                 .then(Mono.defer(() -> {
                                     pnLogAudit.addsSuccessSend(sendRequest.getIun(),
@@ -294,15 +281,12 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                                 });
 
                     }
-                    log.logEndingProcess(PROCESS_NAME);
                     return Mono.just(sendResponse);
                 });
     }
 
     @Override
     public Mono<SendEvent> retrievePaperSendRequest(String requestId) {
-        String PROCESS_NAME = "Retrieve Paper SendRequest";
-        log.logStartingProcess(PROCESS_NAME);
         log.debug("Getting data {} with requestId {} in DynamoDb table {}", "PnDeliveryRequest", requestId, "RequestDeliveryDynamoTable");
         return requestDeliveryDAO.getByRequestId(requestId)
                 .zipWhen(entity -> {
@@ -321,10 +305,7 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                             })
                             .switchIfEmpty(Mono.just(new PnAddress()));
                 })
-                .map(entityAndAddress -> {
-                    log.logEndingProcess(PROCESS_NAME);
-                    return SendEventMapper.fromResult(entityAndAddress.getT1(),entityAndAddress.getT2());
-                })
+                .map(entityAndAddress -> SendEventMapper.fromResult(entityAndAddress.getT1(),entityAndAddress.getT2()))
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)));
     }
 
@@ -366,13 +347,17 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
     }
 
     private Mono<Float> getAmount(List<AttachmentInfo> attachments, String cap, String zone, String productType, boolean isReversePrinter){
+        String processName = "Get Amount";
+        log.logStartingProcess(processName);
         return paperTenderService.getCostFrom(cap, zone, productType)
                 .map(contract ->{
                     if (!pnPaperChannelConfig.getChargeCalculationMode().equalsIgnoreCase(AAR)){
                         Integer totPages = getNumberOfPages(attachments, isReversePrinter, false);
                         float priceTotPages = totPages * contract.getPriceAdditional();
+                        log.logEndingProcess(processName);
                         return Float.sum(contract.getPrice(), priceTotPages);
                     }else{
+                        log.logEndingProcess(processName);
                         return contract.getPrice();
                     }
                 });
@@ -388,6 +373,8 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
     }
 
     private Address saveAddresses(SendRequest sendRequest) {
+        String processName = "Save Address";
+        log.logStartingProcess(processName);
         Address address = AddressMapper.fromAnalogToAddress(sendRequest.getReceiverAddress(), sendRequest.getProductType().getValue(), Const.EXECUTION);
         PnAddress addressEntity = AddressMapper.toEntity(address,sendRequest.getRequestId(), pnPaperChannelConfig);
         //save receiver address
@@ -406,12 +393,14 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
             addressDAO.create(AddressMapper.toEntity(arAddress,sendRequest.getRequestId(), AddressTypeEnum.AR_ADDRESS, pnPaperChannelConfig));
             log.info("Inserted data in DynamoDb table {}", "AddressDynamoTable");
         }
-
+        log.logEndingProcess(processName);
         return address;
     }
 
 
     private Mono<PnDeliveryRequest> saveRequestAndAddress(PrepareRequest prepareRequest){
+        String processName = "Save Request and Address";
+        log.logStartingProcess(processName);
         PnDeliveryRequest pnDeliveryRequest = RequestDeliveryMapper.toEntity(prepareRequest);
         PnAddress receiverAddressEntity = null;
         PnAddress discoveredAddressEntity = null;
@@ -430,7 +419,7 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
            pnDeliveryRequest.setHashOldAddress(mapped.convertToHash());
            discoveredAddressEntity = AddressMapper.toEntity(mapped, prepareRequest.getRequestId(), AddressTypeEnum.DISCOVERED_ADDRESS, pnPaperChannelConfig);
        }
-
+        log.logEndingProcess(processName);
         return requestDeliveryDAO.createWithAddress(pnDeliveryRequest, receiverAddressEntity, discoveredAddressEntity);
     }
 }
