@@ -20,7 +20,7 @@ import java.util.concurrent.TimeoutException;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.ADDRESS_MANAGER_ERROR;
 
-@Slf4j
+
 @Component
 @CustomLog
 public class AddressManagerClientImpl implements AddressManagerClient {
