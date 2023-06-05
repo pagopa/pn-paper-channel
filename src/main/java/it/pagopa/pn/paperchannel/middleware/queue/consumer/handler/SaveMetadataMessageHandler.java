@@ -28,8 +28,8 @@ public class SaveMetadataMessageHandler implements MessageHandler {
         log.debug("[{}] Saving PaperRequest from ExcChannel", paperRequest.getRequestId());
         PnEventMeta pnEventMeta = buildPnEventMeta(paperRequest);
         return eventMetaDAO.createOrUpdate(pnEventMeta)
-                        .doOnNext(savedEntity ->  log.info("[{}] Saved PaperRequest from ExcChannel: {}", paperRequest.getRequestId(), savedEntity))
-                        .then();
+                .doOnNext(savedEntity -> log.info("[{}] Saved PaperRequest from ExcChannel: {}", paperRequest.getRequestId(), savedEntity))
+                .then();
     }
 
     protected PnEventMeta buildPnEventMeta(PaperProgressStatusEventDto paperRequest) {

@@ -38,6 +38,7 @@ public class HandlersFactory {
 
     private ConcurrentHashMap<String, MessageHandler> map;
 
+
     private final LogMessageHandler logExtChannelsMessageHandler = new LogMessageHandler();
 
     @PostConstruct
