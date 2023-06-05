@@ -114,6 +114,22 @@ public class RequestDeliveryDAOImpl extends BaseDAO<PnDeliveryRequest> implement
     }
 
     @Override
+    public Mono<PnDeliveryRequest> getByRequestId(String requestId, boolean decode) {
+        return this.getByRequestId(requestId).map(entity -> {
+            if (decode) return this.decode(entity);
+            return entity;
+        });
+    }
+
+    @Override
+    public Mono<PnDeliveryRequest> getByCorrelationId(String requestId, boolean decode) {
+        return this.getByCorrelationId(requestId).map(entity -> {
+            if (decode) return this.decode(entity);
+            return entity;
+        });
+    }
+
+    @Override
     public Mono<PnDeliveryRequest> getByCorrelationId(String correlationId) {
         return this.getBySecondaryIndex(PnDeliveryRequest.CORRELATION_INDEX, correlationId, null)
                 .collectList()
@@ -122,6 +138,8 @@ public class RequestDeliveryDAOImpl extends BaseDAO<PnDeliveryRequest> implement
                     return Mono.just(item.get(0));
                 });
     }
+
+
 
     private CompletableFuture<Integer> countOccurrencesEntity(String requestId){
         String keyConditionExpression = PnDeliveryRequest.COL_REQUEST_ID + " = :requestId";

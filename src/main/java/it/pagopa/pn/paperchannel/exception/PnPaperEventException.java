@@ -4,7 +4,7 @@ package it.pagopa.pn.paperchannel.exception;
 import lombok.Getter;
 
 @Getter
-public class PnPaperEventException extends RuntimeException{
+public class PnPaperEventException extends RuntimeException {
 
     private final String requestId;
 

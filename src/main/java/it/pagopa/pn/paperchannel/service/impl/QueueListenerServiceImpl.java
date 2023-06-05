@@ -1,6 +1,7 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
+import it.pagopa.pn.paperchannel.exception.PnAddressFlowException;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnnationalregistries.v1.dto.AddressSQSMessageDto;
@@ -64,6 +65,7 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                 )
                 .doOnError(throwable -> {
                     log.error(throwable.getMessage());
+                    if (throwable instanceof PnAddressFlowException) return;
                     throw new PnGenericException(PREPARE_ASYNC_LISTENER_EXCEPTION, PREPARE_ASYNC_LISTENER_EXCEPTION.getMessage());
                 })
                 .block();
@@ -133,7 +135,7 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                 })
                 .doOnError(throwable -> {
                     log.error(throwable.getMessage());
-                    throw new PnGenericException(PREPARE_ASYNC_LISTENER_EXCEPTION, PREPARE_ASYNC_LISTENER_EXCEPTION.getMessage());
+                    throw new PnGenericException(NATIONAL_REGISTRY_LISTENER_EXCEPTION, NATIONAL_REGISTRY_LISTENER_EXCEPTION.getMessage());
                 })
                 .block();
     }

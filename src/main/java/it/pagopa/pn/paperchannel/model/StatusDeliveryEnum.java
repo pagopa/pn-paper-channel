@@ -6,6 +6,7 @@ import lombok.Getter;
 public enum StatusDeliveryEnum {
     IN_PROCESSING("PC000", "In elaborazione", "PROGRESS"),
     TAKING_CHARGE("PC001","Presa in carico", "PROGRESS"),
+    DISCARD_NOTIFICATION("PC999","Discard Notification", "KO"),
     NATIONAL_REGISTRY_WAITING("PC002", "In attesa di indirizzo da National Registry", "PROGRESS"),
     NATIONAL_REGISTRY_ERROR("PC005", "Errore con il recupero indirizzo da National Registry", "PROGRESS"),
     READY_TO_SEND("PC003","Pronto per l'invio", "PROGRESS"),

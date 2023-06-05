@@ -4,6 +4,7 @@ import it.pagopa.pn.commons.conf.SharedAutoConfiguration;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -34,6 +35,7 @@ public class PnPaperChannelConfig {
     private Integer attemptQueueSafeStorage;
     private Integer attemptQueueExternalChannel;
     private Integer attemptQueueNationalRegistries;
+    private Integer attemptQueueAddressManager;
     private Long ttlPrepare;
     private Long ttlExecutionN_890;
     private Long ttlExecutionN_AR;
@@ -45,4 +47,12 @@ public class PnPaperChannelConfig {
     private Integer paperWeight;
     private Integer letterWeight;
     private String chargeCalculationMode;
+    private String originalPostmanAddressUsageMode;
+
+    public String getOriginalPostmanAddressUsageMode() {
+        if (StringUtils.isBlank(originalPostmanAddressUsageMode)){
+            return "PAPERSEND";
+        }
+        return this.originalPostmanAddressUsageMode;
+    }
 }

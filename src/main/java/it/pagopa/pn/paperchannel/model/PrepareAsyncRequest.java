@@ -23,8 +23,8 @@ public class PrepareAsyncRequest {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Address address;
 
-    @JsonProperty("isSecondAttempt")
-    private boolean isSecondAttempt;
+    @JsonProperty("isAddressRetry")
+    private boolean isAddressRetry = false;
 
     @JsonProperty("attempt")
     private Integer attemptRetry;
@@ -37,10 +37,10 @@ public class PrepareAsyncRequest {
     }
 
 
-    public PrepareAsyncRequest(String requestId, String iun, boolean isSecondAttempt, Integer attemptRetry) {
+    public PrepareAsyncRequest(String requestId, String iun, boolean isAddressRetry, Integer attemptRetry) {
         this.requestId = requestId;
         this.iun = iun;
-        this.isSecondAttempt = isSecondAttempt;
+        this.isAddressRetry = isAddressRetry;
         this.attemptRetry = attemptRetry;
     }
 }

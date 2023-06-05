@@ -61,7 +61,7 @@ public class SqsQueueSender implements SqsSender {
         paperChannelUpdate.setSendEvent(sendEvent);
 
         DeliveryPushEvent deliveryPushEvent = new DeliveryPushEvent(deliveryHeader, paperChannelUpdate);
-        if (prepareEvent!=null){
+        if (prepareEvent != null && prepareEvent.getReceiverAddress() != null){
             log.debug(
                     "name surname: {}, address: {}, zip: {},city:{}, pr:{},foreign state: {}",
                     LogUtils.maskGeneric(prepareEvent.getReceiverAddress().getFullname()),
@@ -94,7 +94,7 @@ public class SqsQueueSender implements SqsSender {
 
     @Override
     public <T> void pushInternalError(T entity, int attempt, Class<T> tClass) {
-        EventTypeEnum eventTypeEnum = getTypeEnum(tClass);
+        EventTypeEnum eventTypeEnum = getTypeEnum(entity, tClass);
         if (eventTypeEnum == null) return;
         InternalEventHeader prepareHeader= InternalEventHeader.builder()
                 .publisher(PUBLISHER_PREPARE)
@@ -109,7 +109,7 @@ public class SqsQueueSender implements SqsSender {
 
     @Override
     public <T> void rePushInternalError(T entity, int attempt, Instant expired, Class<T> tClass) {
-        EventTypeEnum eventTypeEnum = getTypeEnum(tClass);
+        EventTypeEnum eventTypeEnum = getTypeEnum(entity, tClass);
         if (eventTypeEnum == null) return;
         InternalEventHeader prepareHeader= InternalEventHeader.builder()
                 .publisher(PUBLISHER_PREPARE)
@@ -122,11 +122,12 @@ public class SqsQueueSender implements SqsSender {
         this.internalQueueMomProducer.push(new InternalPushEvent<>(prepareHeader, entity));
     }
 
-    private <T> EventTypeEnum getTypeEnum(Class<T> tClass){
+    private <T> EventTypeEnum getTypeEnum(T entity, Class<T> tClass){
         EventTypeEnum typeEnum = null;
         if (tClass == NationalRegistryError.class) typeEnum = NATIONAL_REGISTRIES_ERROR;
         if (tClass == ExternalChannelError.class) typeEnum = EXTERNAL_CHANNEL_ERROR;
         if (tClass == PrepareAsyncRequest.class) typeEnum = SAFE_STORAGE_ERROR;
+        if (tClass == PrepareAsyncRequest.class && ((PrepareAsyncRequest) entity).isAddressRetry()) typeEnum = ADDRESS_MANAGER_ERROR;
 
         return typeEnum;
     }

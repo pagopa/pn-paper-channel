@@ -1,16 +1,18 @@
 package it.pagopa.pn.paperchannel.model;
 
 import it.pagopa.pn.paperchannel.utils.Const;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+@Slf4j
 class PrepareAsyncRequestTest {
     private String requestId;
     private String iun;
     private String correlationId;
     private Address address;
-    private boolean isSecondAttempt;
+    private boolean isAddressRetry = false;
     private Integer attemptRetry;
 
 
@@ -21,11 +23,8 @@ class PrepareAsyncRequestTest {
 
     @Test
     void setGetTest() {
-        PrepareAsyncRequest prepareAsyncRequest = new PrepareAsyncRequest(requestId, iun, correlationId, address, isSecondAttempt, attemptRetry);
+        PrepareAsyncRequest prepareAsyncRequest = new PrepareAsyncRequest(requestId, iun, correlationId, address, false, attemptRetry);
         Assertions.assertNotNull(prepareAsyncRequest);
-        Assertions.assertFalse(prepareAsyncRequest.isSecondAttempt());
-        prepareAsyncRequest.setSecondAttempt(true);
-        Assertions.assertTrue(prepareAsyncRequest.isSecondAttempt());
     }
 
     @Test
@@ -46,14 +45,16 @@ class PrepareAsyncRequestTest {
         stringBuilder.append("address=");
         stringBuilder.append(address);
         stringBuilder.append(", ");
-        stringBuilder.append("isSecondAttempt=");
-        stringBuilder.append(isSecondAttempt);
+        stringBuilder.append("isAddressRetry=");
+        stringBuilder.append(isAddressRetry);
         stringBuilder.append(", ");
         stringBuilder.append("attemptRetry=");
         stringBuilder.append(attemptRetry);
         stringBuilder.append(")");
 
         String toTest = stringBuilder.toString();
+        log.info(toTest);
+        log.info(prepareAsyncRequest.toString());
         Assertions.assertEquals(toTest, prepareAsyncRequest.toString());
     }
 
@@ -63,7 +64,6 @@ class PrepareAsyncRequestTest {
         prepareAsyncRequest.setIun(iun);
         prepareAsyncRequest.setCorrelationId(correlationId);
         prepareAsyncRequest.setAddress(address);
-        prepareAsyncRequest.setSecondAttempt(isSecondAttempt);
         prepareAsyncRequest.setAttemptRetry(attemptRetry);
         return prepareAsyncRequest;
     }
@@ -85,7 +85,7 @@ class PrepareAsyncRequestTest {
         address.setFlowType(Const.PREPARE);
         address.setCap("00100");
         address.setProductType("890");
-        isSecondAttempt = false;
+        isAddressRetry = false;
         attemptRetry = 3;
     }
 }

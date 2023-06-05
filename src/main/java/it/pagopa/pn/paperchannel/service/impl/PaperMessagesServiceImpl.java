@@ -55,7 +55,6 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
     private ExternalChannelClient externalChannelClient;
     @Autowired
     private PnPaperChannelConfig pnPaperChannelConfig;
-
     @Autowired
     private PaperTenderService paperTenderService;
 

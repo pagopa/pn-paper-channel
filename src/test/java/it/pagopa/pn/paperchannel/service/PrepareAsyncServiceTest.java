@@ -1,6 +1,8 @@
 package it.pagopa.pn.paperchannel.service;
 
 import it.pagopa.pn.paperchannel.config.BaseTest;
+import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
+import it.pagopa.pn.paperchannel.exception.PnAddressFlowException;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.dto.AnalogAddressDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.dto.DeduplicatesResponseDto;
@@ -32,8 +34,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static it.pagopa.pn.paperchannel.utils.Const.RACCOMANDATA_SEMPLICE;
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.UNTRACEABLE_ADDRESS;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class PrepareAsyncServiceTest extends BaseTest {
 
@@ -50,6 +54,8 @@ class PrepareAsyncServiceTest extends BaseTest {
     @MockBean
     private AddressManagerClient addressManagerClient;
     @MockBean
+    private PaperAddressService paperAddressService;
+    @MockBean
     private PaperRequestErrorDAO paperRequestErrorDAO;
 
     private final PrepareAsyncRequest request = new PrepareAsyncRequest();
@@ -65,34 +71,34 @@ class PrepareAsyncServiceTest extends BaseTest {
     @Test
     @DisplayName("prepareAsyncTestCorrelationIdNullNotCorrectAddress")
     void prepareAsyncTestCorrelationIdNull(){
-        Mockito.when(this.requestDeliveryDAO.getByRequestId(Mockito.any())).thenReturn(Mono.just(getDeliveryRequest()));
-        Mockito.when(this.addressDAO.findByRequestId(Mockito.any())).thenReturn(Mono.just(getAddress()));
-        Mockito.doNothing().when(this.sqsSender).pushPrepareEvent(Mockito.any());
-        Mockito.when(this.requestDeliveryDAO.updateData(Mockito.any())).thenReturn(Mono.just(getDeliveryRequest()));
-        PnDeliveryRequest deliveryRequest = this.prepareAsyncService.prepareAsync(request).block();
-        assertNotNull(deliveryRequest);
+        Mockito.when(this.requestDeliveryDAO.getByRequestId(Mockito.any(), Mockito.anyBoolean())).thenReturn(Mono.just(getDeliveryRequest()));
+        Mockito.when(this.paperAddressService.getCorrectAddress(Mockito.any(), Mockito.any(), Mockito.any()))
+                .thenThrow(new PnAddressFlowException(ExceptionTypeEnum.ADDRESS_NOT_EXIST));
+
+        assertThrows(PnAddressFlowException.class, () -> this.prepareAsyncService.prepareAsync(request).block());
 
     }
 
     @Test
     @DisplayName("prepareAsyncTestCorrelationIdCorrectAddressPopulate")
     void prepareAsyncTestCorrelationId(){
-        Mockito.when(this.requestDeliveryDAO.getByCorrelationId(Mockito.any()))
+
+        Mockito.when(this.requestDeliveryDAO.getByCorrelationId(Mockito.any(), Mockito.anyBoolean()))
                 .thenReturn(Mono.just(getDeliveryRequest()));
 
-        Mockito.when(this.addressManagerClient.deduplicates(Mockito.any(), Mockito.any(), Mockito.any()))
-                .thenReturn(Mono.just(getNormalizedAddress(false)));
+        Mockito.when(this.paperAddressService.getCorrectAddress(Mockito.any(), Mockito.any(), Mockito.any()))
+                .thenReturn(Mono.just(new Address()));
 
-        Mockito.when(this.addressDAO.findByRequestId(Mockito.any(), Mockito.any()))
+        Mockito.when(this.addressDAO.create(Mockito.any()))
                 .thenReturn(Mono.just(getAddress()));
 
         Mockito.when(this.addressDAO.findByRequestId(Mockito.any()))
                 .thenReturn(Mono.just(getAddress()));
 
-        Mockito.when(this.addressDAO.create(Mockito.any()))
-                .thenReturn(Mono.just(getAddress()));
         Mockito.doNothing().when(this.sqsSender).pushPrepareEvent(Mockito.any());
+
         Mockito.when(this.requestDeliveryDAO.updateData(Mockito.any())).thenReturn(Mono.just(getDeliveryRequest()));
+
         request.setCorrelationId("FFPAPERTEST.IUN_FATY");
         PnDeliveryRequest deliveryRequest = this.prepareAsyncService.prepareAsync(request).block();
         assertNotNull(deliveryRequest);
@@ -102,22 +108,23 @@ class PrepareAsyncServiceTest extends BaseTest {
     @Test
     @DisplayName("prepareAsyncTestErrorUntraceableAddress")
     void prepareAsyncTestErrorUntraceableAddress(){
-        Mockito.when(this.requestDeliveryDAO.getByCorrelationId(Mockito.any()))
+
+        Mockito.when(this.requestDeliveryDAO.getByCorrelationId(Mockito.any(), Mockito.anyBoolean()))
                 .thenReturn(Mono.just(getDeliveryRequest()));
 
-
-        Mockito.when(this.addressDAO.findByRequestId(Mockito.any(), Mockito.any()))
-                .thenReturn(Mono.just(getAddress()));
-
-        Mockito.when(this.addressManagerClient.deduplicates(Mockito.any(), Mockito.any(), Mockito.any()))
-                .thenReturn(Mono.just(getNormalizedAddress(true)));
-
-        Mockito.doNothing().when(this.sqsSender).pushPrepareEvent(Mockito.any());
-
-        Mockito.when(this.requestDeliveryDAO.updateData(Mockito.any())).thenReturn(Mono.just(getDeliveryRequest()));
+        Mockito.when(this.paperAddressService.getCorrectAddress(Mockito.any(), Mockito.any(), Mockito.any()))
+                .thenThrow(new PnGenericException(UNTRACEABLE_ADDRESS, UNTRACEABLE_ADDRESS.getMessage()));
 
         Mockito.when(this.paperRequestErrorDAO.created(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(new PnRequestError()));
+
+        Mockito.when(this.requestDeliveryDAO.getByCorrelationId(Mockito.any()))
+            .thenReturn(Mono.just(getDeliveryRequest()));
+
+        Mockito.when(this.requestDeliveryDAO.updateData(Mockito.any())).thenReturn(Mono.just(getDeliveryRequest()));
+
+        Mockito.doNothing().when(this.sqsSender).pushPrepareEvent(Mockito.any());
+
 
         request.setCorrelationId("FFPAPERTEST.IUN_FATY");
 
@@ -133,22 +140,25 @@ class PrepareAsyncServiceTest extends BaseTest {
     void prepareAsyncTestErrorInvalidSafeStorage(){
         PnDeliveryRequest requestDelivery = getDeliveryRequest();
 
-        Mockito.when(this.requestDeliveryDAO.getByCorrelationId(Mockito.any()))
+        Mockito.when(this.requestDeliveryDAO.getByCorrelationId(Mockito.any(), Mockito.anyBoolean()))
                 .thenReturn(Mono.just(requestDelivery));
 
-        Mockito.when(this.addressDAO.findByRequestId(Mockito.any(), Mockito.any()))
-                .thenReturn(Mono.just(getAddress()));
-
-        Mockito.when(this.addressManagerClient.deduplicates(Mockito.any(), Mockito.any(), Mockito.any()))
-                .thenReturn(Mono.just(getNormalizedAddress(false)));
+        Mockito.when(this.paperAddressService.getCorrectAddress(Mockito.any(), Mockito.any(), Mockito.any()))
+                        .thenReturn(Mono.just(new Address()));
 
         Mockito.when(this.addressDAO.create(Mockito.any()))
-                .thenReturn(Mono.just(getAddress()));
+                        .thenReturn(Mono.just(getAddress()));
+
+        Mockito.when(this.safeStorageClient.getFile(Mockito.any())).thenReturn(Mono.just(fileDownloadResponseDto()));
 
         Mockito.doNothing().when(this.sqsSender)
                 .pushInternalError(Mockito.any(), Mockito.anyInt(), Mockito.any());
+
+        Mockito.when(this.requestDeliveryDAO.getByCorrelationId(Mockito.any()))
+                    .thenReturn(Mono.just(getDeliveryRequest()));
+
         Mockito.when(this.requestDeliveryDAO.updateData(Mockito.any())).thenReturn(Mono.just(getDeliveryRequest()));
-        Mockito.when(this.safeStorageClient.getFile(Mockito.any())).thenReturn(Mono.just(fileDownloadResponseDto()));
+
         request.setCorrelationId("FFPAPERTEST.IUN_FATY");
         pnDeliveryRequest.setAttachments(attachmentInfoList());
         StepVerifier.create(this.prepareAsyncService.prepareAsync(request))
