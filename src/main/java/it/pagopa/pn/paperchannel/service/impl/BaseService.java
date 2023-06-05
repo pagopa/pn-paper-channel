@@ -54,7 +54,8 @@ public class BaseService {
 
 
     protected void finderAddressFromNationalRegistries(String correlationId, String requestId, String relatedRequestId, String fiscalCode, String personType, String iun, Integer attempt){
-        Mono.delay(Duration.ofMillis(20)).publishOn(Schedulers.boundedElastic())
+        MDC.put(MDCUtils.MDC_TRACE_ID_KEY, MDC.get(MDCUtils.MDC_TRACE_ID_KEY));
+        MDCUtils.addMDCToContextAndExecute(Mono.delay(Duration.ofMillis(20)).publishOn(Schedulers.boundedElastic())
                 .flatMap(i -> {
                     log.info("Start call national registries for find address");
                     pnLogAudit.addsBeforeResolveService(iun, String.format("prepare requestId = %s, relatedRequestId= %s, trace_id = %s Request to National Registry service", requestId, relatedRequestId, correlationId));
@@ -90,7 +91,7 @@ public class BaseService {
                     log.warn("NationalRegistries finder address in errors {}", ex.getMessage());
                     return Mono.empty();
 
-                }).subscribeOn(Schedulers.boundedElastic()).subscribe();
+                }).subscribeOn(Schedulers.boundedElastic())).subscribe();
     }
 
 
