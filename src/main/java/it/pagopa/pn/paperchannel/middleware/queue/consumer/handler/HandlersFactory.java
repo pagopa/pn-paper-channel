@@ -55,6 +55,8 @@ public class HandlersFactory {
         var recag011BMessageHandler = new RECAG011BMessageHandler(sqsSender, eventDematDAO, pnPaperChannelConfig.getTtlExecutionDaysDemat(), eventMetaDAO, pnPaperChannelConfig.getTtlExecutionDaysMeta());
         var recag008CMessageHandler = new RECAG008CMessageHandler(sqsSender, eventMetaDAO, metaDematCleaner);
         var complex890MessageHandler = new Complex890MessageHandler(sqsSender, eventMetaDAO, metaDematCleaner);
+        var recrn00xcMessageHandler = new RECRN00XCMessageHandler(sqsSender, eventMetaDAO, metaDematCleaner);
+        var recrn011cMessageHandler = new RECRN011MessageHandler(sqsSender, eventMetaDAO, pnPaperChannelConfig.getTtlExecutionDaysMeta());
 
         map = new ConcurrentHashMap<>();
 
@@ -77,6 +79,11 @@ public class HandlersFactory {
         map.put("RECAG005C", complex890MessageHandler);
         map.put("RECAG006C", complex890MessageHandler);
         map.put("RECAG007C", complex890MessageHandler);
+        map.put("RECRN011", recrn011cMessageHandler);
+
+        map.put("RECRN003C", recrn00xcMessageHandler);
+        map.put("RECRN004C", recrn00xcMessageHandler);
+        map.put("RECRN005C", recrn00xcMessageHandler);
     }
 
     private void addRetryableErrorStatusCodes(ConcurrentHashMap<String, MessageHandler> map, RetryableErrorMessageHandler handler) {
