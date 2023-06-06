@@ -21,9 +21,6 @@ public class MetaDematUtils {
     public static final String PNRN012_STATUS_CODE = "PNRN012";
 
     public static final String RECAG011A_STATUS_CODE = "RECAG011A";
-    public static final String RECRN011_STATUS_CODE = "RECRN011";
-
-    public static final String RECAG011A_STATUS_CODE = "RECAG011A";
 
     public static final String RECRN011_STATUS_CODE = "RECRN011";
 
