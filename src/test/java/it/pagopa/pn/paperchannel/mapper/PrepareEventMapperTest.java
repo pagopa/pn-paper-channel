@@ -1,12 +1,12 @@
 package it.pagopa.pn.paperchannel.mapper;
 
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PrepareEvent;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
-import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareEvent;
-import it.pagopa.pn.paperchannel.rest.v1.dto.StatusCodeEnum;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

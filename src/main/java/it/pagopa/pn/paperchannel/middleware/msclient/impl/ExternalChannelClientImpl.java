@@ -1,24 +1,22 @@
 package it.pagopa.pn.paperchannel.middleware.msclient.impl;
 
+import it.pagopa.pn.commons.log.PnLogger;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.api.PaperMessagesApi;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperEngageRequestAttachmentsDto;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperEngageRequestDto;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.common.BaseClient;
 import it.pagopa.pn.paperchannel.model.AttachmentInfo;
-import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.ApiClient;
-import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.api.PaperMessagesApi;
-import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.PaperEngageRequestAttachmentsDto;
-import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.PaperEngageRequestDto;
-import it.pagopa.pn.paperchannel.rest.v1.dto.SendRequest;
 import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
-import lombok.extern.slf4j.Slf4j;
+import lombok.CustomLog;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
 
-
-import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.net.ConnectException;
 import java.time.Duration;
@@ -31,25 +29,23 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static it.pagopa.pn.paperchannel.utils.Const.PN_AAR;
 
-@Slf4j
+
+@CustomLog
 @Component
 public class ExternalChannelClientImpl extends BaseClient implements ExternalChannelClient {
     private final PnPaperChannelConfig pnPaperChannelConfig;
+    private final PaperMessagesApi paperMessagesApi;
 
-    private PaperMessagesApi paperMessagesApi;
 
-    public ExternalChannelClientImpl(PnPaperChannelConfig pnPaperChannelConfig) {
+    public ExternalChannelClientImpl(PnPaperChannelConfig pnPaperChannelConfig, PaperMessagesApi paperMessagesApi) {
         this.pnPaperChannelConfig = pnPaperChannelConfig;
+        this.paperMessagesApi = paperMessagesApi;
     }
 
-    @PostConstruct
-    public void init(){
-        ApiClient newApiClient = new ApiClient(super.initWebClient(ApiClient.buildWebClientBuilder()));
-        newApiClient.setBasePath(this.pnPaperChannelConfig.getClientExternalChannelBasepath());
-        this.paperMessagesApi = new PaperMessagesApi(newApiClient);
-    }
 
     public Mono<Void> sendEngageRequest(SendRequest sendRequest, List<AttachmentInfo> attachments){
+        String PN_EXTERNAL_CHANNEL_DESCRIPTION = "External Channel sendEngageRequest";
+        log.logInvokingAsyncExternalService(PnLogger.EXTERNAL_SERVICES.PN_EXTERNAL_CHANNELS, PN_EXTERNAL_CHANNEL_DESCRIPTION, sendRequest.getRequestId());
         String requestIdx = sendRequest.getRequestId();
         PaperEngageRequestDto dto = new PaperEngageRequestDto();
         dto.setRequestId(sendRequest.getRequestId());

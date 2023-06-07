@@ -1,9 +1,11 @@
 package it.pagopa.pn.paperchannel.exception;
 
 import com.fasterxml.jackson.databind.JsonMappingException;
-import it.pagopa.pn.paperchannel.rest.v1.dto.PaperEvent;
-import it.pagopa.pn.paperchannel.rest.v1.dto.Problem;
-import it.pagopa.pn.paperchannel.rest.v1.dto.ProblemError;
+
+import it.pagopa.pn.commons.utils.MDCUtils;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PaperEvent;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.Problem;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ProblemError;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
@@ -13,8 +15,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import reactor.core.publisher.Mono;
 import java.util.Date;
 import java.util.stream.Collectors;
-
-import static it.pagopa.pn.commons.utils.MDCUtils.MDC_TRACE_ID_KEY;
 
 @Slf4j
 @ControllerAdvice
@@ -86,7 +86,7 @@ public class RestExceptionHandler {
 
     private void settingTraceId(Problem problem){
         try {
-            problem.setTraceId(MDC.get(MDC_TRACE_ID_KEY));
+            problem.setTraceId(MDC.get(MDCUtils.MDC_TRACE_ID_KEY));
         } catch (Exception e) {
             log.warn("Cannot get traceid", e);
         }

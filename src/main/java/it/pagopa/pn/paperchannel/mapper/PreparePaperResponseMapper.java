@@ -1,10 +1,10 @@
 package it.pagopa.pn.paperchannel.mapper;
 
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PaperChannelUpdate;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
-import it.pagopa.pn.paperchannel.rest.v1.dto.PaperChannelUpdate;
-import it.pagopa.pn.paperchannel.rest.v1.dto.PaperEvent;
+
 
 import java.util.Date;
 

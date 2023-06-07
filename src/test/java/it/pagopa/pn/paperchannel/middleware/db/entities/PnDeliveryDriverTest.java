@@ -56,9 +56,6 @@ class PnDeliveryDriverTest {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(pnDeliveryDriver.getClass().getSimpleName());
         stringBuilder.append("(");
-        stringBuilder.append("taxId=");
-        stringBuilder.append(taxId);
-        stringBuilder.append(", ");
         stringBuilder.append("uniqueCode=");
         stringBuilder.append(uniqueCode);
         stringBuilder.append(", ");
@@ -67,9 +64,6 @@ class PnDeliveryDriverTest {
         stringBuilder.append(", ");
         stringBuilder.append("denomination=");
         stringBuilder.append(denomination);
-        stringBuilder.append(", ");
-        stringBuilder.append("phoneNumber=");
-        stringBuilder.append(phoneNumber);
         stringBuilder.append(", ");
         stringBuilder.append("fsu=");
         stringBuilder.append(fsu);
@@ -85,12 +79,6 @@ class PnDeliveryDriverTest {
         stringBuilder.append(", ");
         stringBuilder.append("registeredOffice=");
         stringBuilder.append(registeredOffice);
-        stringBuilder.append(", ");
-        stringBuilder.append("pec=");
-        stringBuilder.append(pec);
-        stringBuilder.append(", ");
-        stringBuilder.append("fiscalCode=");
-        stringBuilder.append(fiscalCode);
         stringBuilder.append(")");
 
         String toTest = stringBuilder.toString();

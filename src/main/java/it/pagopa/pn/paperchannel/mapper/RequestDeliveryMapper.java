@@ -1,8 +1,9 @@
 package it.pagopa.pn.paperchannel.mapper;
 
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PrepareRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
-import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareRequest;
+
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import org.apache.commons.lang3.StringUtils;
 

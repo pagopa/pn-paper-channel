@@ -7,6 +7,7 @@ import it.pagopa.pn.paperchannel.dao.model.DeliveriesData;
 import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnExcelValidatorException;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.paperchannel.mapper.*;
 import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.DeliveryDriverDAO;
@@ -14,7 +15,6 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.FileDownloadDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.TenderDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.*;
 import it.pagopa.pn.paperchannel.model.FileStatusCodeEnum;
-import it.pagopa.pn.paperchannel.rest.v1.dto.*;
 import it.pagopa.pn.paperchannel.s3.S3Bucket;
 import it.pagopa.pn.paperchannel.service.PaperChannelService;
 import it.pagopa.pn.paperchannel.utils.Const;
@@ -22,7 +22,7 @@ import it.pagopa.pn.paperchannel.utils.DateUtils;
 import it.pagopa.pn.paperchannel.utils.PnLogAudit;
 import it.pagopa.pn.paperchannel.utils.Utility;
 import it.pagopa.pn.paperchannel.validator.CostValidator;
-import lombok.extern.slf4j.Slf4j;
+import lombok.CustomLog;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,13 +38,16 @@ import reactor.util.function.Tuples;
 import java.io.File;
 import java.io.InputStream;
 import java.time.Duration;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 
 
-@Slf4j
+@CustomLog
 @Service
 public class PaperChannelServiceImpl implements PaperChannelService {
     @Autowired
@@ -61,6 +64,7 @@ public class PaperChannelServiceImpl implements PaperChannelService {
     private PnAuditLogBuilder pnAuditLogBuilder;
     private final S3Bucket s3Bucket;
 
+
     public PaperChannelServiceImpl(S3Bucket s3Bucket) {
         this.s3Bucket = s3Bucket;
     }
@@ -68,7 +72,6 @@ public class PaperChannelServiceImpl implements PaperChannelService {
     @Override
     public Mono<PageableTenderResponseDto> getAllTender(Integer page, Integer size) {
         Pageable pageable = PageRequest.of(page-1, size);
-
         return tenderDAO.getTenders()
                 .map(list -> TenderMapper.toPagination(pageable, list))
                 .map(TenderMapper::toPageableResponse);
@@ -145,8 +148,6 @@ public class PaperChannelServiceImpl implements PaperChannelService {
     }
 
     public Mono<InfoDownloadDTO> downloadTenderFile(String tenderCode,String uuid) {
-        log.info("Start downloadTenderFile");
-
         if(StringUtils.isNotEmpty(uuid)) {
             return fileDownloadDAO.getUuid(uuid)
                     .map(item -> {
@@ -239,13 +240,20 @@ public class PaperChannelServiceImpl implements PaperChannelService {
     }
 
     private Mono<String> deleteAllDriverFromTender(String tenderCode) {
+        String processName = "Delete All Driver From Tender";
+        log.logStartingProcess(processName);
         return this.deliveryDriverDAO.getDeliveryDriverFromTender(tenderCode, null)
                 .flatMap(driver -> this.deleteDriver(tenderCode, driver.getTaxId()))
                 .collectList()
-                .map(list -> tenderCode);
+                .map(list -> {
+                    log.logEndingProcess(processName);
+                    return tenderCode;
+                });
     }
 
     private void createAndUploadFileAsync(String tenderCode,String uuid){
+        String processName = "Create And Upload File Async";
+        log.logStartingProcess(processName);
         Mono.delay(Duration.ofMillis(10)).publishOn(Schedulers.boundedElastic())
                 .flatMap(i ->  {
                     if (StringUtils.isNotBlank(tenderCode)) {
@@ -275,6 +283,7 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                             .map(file -> {
                                 boolean delete = entityAndFile.getT1().delete();
                                 log.debug("Deleted file "+delete);
+                                log.logEndingProcess(processName);
                                 return FileMapper.toDownloadFile(entityAndFile.getT2(), s3Bucket.getObjectData(entityAndFile.getT2().getFilename()));
                             });
                 })
@@ -438,7 +447,7 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                                         .flatMap(cost -> this.costDAO.deleteCost(cost.getDeliveryDriverCode(),cost.getUuid()))
                                         .collectList()
                         )
-                        .flatMap(costs -> this.deliveryDriverDAO.deleteDeliveryDriver(tenderCode,deliveryDriverId))
+                        .flatMap(costs -> this.deliveryDriverDAO.deleteDeliveryDriver(tenderCode, deliveryDriverId))
                         .onErrorResume(ex -> {
                             pnLogAudit.addsFailDelete("Delete DeliveryDriver with tenderCode:" +tenderCode+ "ERROR");
                             return Mono.error(ex);
@@ -455,7 +464,7 @@ public class PaperChannelServiceImpl implements PaperChannelService {
         PnLogAudit pnLogAudit = new PnLogAudit(pnAuditLogBuilder);
         pnLogAudit.addsBeforeDelete("Delete Cost with tenderCode:" + tenderCode);
         return this.tenderWithCreatedStatus(tenderCode, COST_CANNOT_BE_DELETED)
-                .flatMap(tender -> this.costDAO.deleteCost(deliveryDriverId,uuid))
+                .flatMap(tender -> this.costDAO.deleteCost(deliveryDriverId, uuid))
                 .onErrorResume(ex ->{
                     pnLogAudit.addsFailDelete("Delete Cost with tenderCode:" +tenderCode+ "ERROR");
                     return Mono.error(ex);
@@ -468,11 +477,14 @@ public class PaperChannelServiceImpl implements PaperChannelService {
 
 
     private Mono<PnTender> tenderWithCreatedStatus(String tenderCode, ExceptionTypeEnum typeException){
+        String processName = "Tender With Created Status";
+        log.logChecking(processName);
         return this.tenderDAO.getTender(tenderCode)
                 .flatMap(tender -> {
                     if (!tender.status.equals(TenderDTO.StatusEnum.CREATED.toString())){
                         return Mono.error(new PnGenericException(typeException, typeException.getMessage()));
                     }
+                    log.logCheckingOutcome(processName, tender.status.equals(TenderDTO.StatusEnum.CREATED.toString()), typeException.getMessage());
                     return Mono.just(tender);
                 });
     }
@@ -511,11 +523,14 @@ public class PaperChannelServiceImpl implements PaperChannelService {
 
 
     private Mono<PnTender> consolidateTender(PnTender tender){
+        String processName = "Consolidate Tender";
+        log.logChecking(processName);
         return this.tenderDAO.getConsolidate(tender.getStartDate(), tender.getEndDate())
                 .map(newTender -> true)
                 .switchIfEmpty(Mono.just(false))
                 .flatMap(existConsolidated -> {
                     if (Boolean.TRUE.equals(existConsolidated)){
+                        log.logCheckingOutcome(processName, false, "exist Consolidate");
                         return Mono.error(new PnGenericException(CONSOLIDATE_ERROR, CONSOLIDATE_ERROR.getMessage()));
                     }
                     return isValidFSUCost(tender.getTenderCode());
@@ -524,11 +539,14 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                     if (Boolean.FALSE.equals(isValidTender)) {
                         return Mono.error(new PnGenericException(FSUCOST_VALIDATOR_NOTVALID, FSUCOST_VALIDATOR_NOTVALID.getMessage()));
                     }
+                    log.logCheckingOutcome(processName, true);
                     return Mono.just(tender);
                 });
     }
 
     private Mono<Boolean> isValidFSUCost(String tenderCode){
+        String processName = "Valid FSU Cost";
+        log.logChecking(processName);
         return this.deliveryDriverDAO.getDeliveryDriverFSU(tenderCode)
                 .switchIfEmpty(Mono.error(new PnGenericException(COST_DRIVER_OR_FSU_NOT_FOUND, COST_DRIVER_OR_FSU_NOT_FOUND.getMessage())))
                 .flatMap(fsu -> this.costDAO.findAllFromTenderCode(tenderCode, fsu.getTaxId()).collectList())
@@ -550,7 +568,10 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                     });
                     return mapValidationCost;
                 })
-                .map(mapValidation ->  mapValidation.values().stream().filter(Boolean.FALSE::equals).toList().isEmpty());
+                .map(mapValidation -> {
+                    log.logCheckingOutcome(processName, mapValidation.containsValue(true), "Empty Validation Cost");
+                    return mapValidation.values().stream().filter(Boolean.FALSE::equals).toList().isEmpty();
+                });
     }
 
 }

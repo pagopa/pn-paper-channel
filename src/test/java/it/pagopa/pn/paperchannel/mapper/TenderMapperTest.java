@@ -1,10 +1,9 @@
 package it.pagopa.pn.paperchannel.mapper;
 
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PageableTenderResponseDto;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.TenderCreateRequestDTO;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.TenderDTO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnTender;
-import it.pagopa.pn.paperchannel.rest.v1.dto.PageableTenderResponseDto;
-import it.pagopa.pn.paperchannel.rest.v1.dto.TenderCreateRequestDTO;
-import it.pagopa.pn.paperchannel.rest.v1.dto.TenderDTO;
-import org.joda.time.Instant;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

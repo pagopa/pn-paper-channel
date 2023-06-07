@@ -1,6 +1,6 @@
 package it.pagopa.pn.paperchannel.service;
 
-import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.SingleStatusUpdateDto;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.SingleStatusUpdateDto;
 import reactor.core.publisher.Mono;
 
 public interface PaperResultAsyncService {

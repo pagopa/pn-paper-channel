@@ -41,6 +41,11 @@
         </dependency>
 
         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>io.swagger</groupId>
             <artifactId>swagger-annotations</artifactId>
             <version>1.6.5</version>
@@ -231,6 +236,24 @@
                 </configuration>
             </plugin>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.1.2</version>
+                <executions>
+                    <execution>
+                        <id>unpack-dependencies</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>unpack-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <includeArtifactIds>pn-commons</includeArtifactIds>
+                            <outputDirectory>${project.build.directory}/dependency-resources</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
@@ -244,7 +267,7 @@
                         <goals>
                             <goal>generate</goal>
                         </goals>
-                        <phase>process-resources</phase>
+                        <phase>generate-resources</phase>
                         <configuration>
                             <inputSpec>${project.basedir}/docs/openapi/api-internal-v1.yaml</inputSpec>
                             <generatorName>spring</generatorName>
@@ -252,6 +275,7 @@
                             <generateApiDocumentation>false</generateApiDocumentation>
                             <generateApiTests>false</generateApiTests>
                             <generateModelTests>false</generateModelTests>
+                            <templateDirectory>${project.build.directory}/dependency-resources/scripts/openapi/templates/5.4.0/server</templateDirectory>
                             <configOptions>
                                 <dateLibrary>java11</dateLibrary>
                                 <delegatePattern>true</delegatePattern>
@@ -262,10 +286,10 @@
                                 <reactive>true</reactive>
                                 <skipDefaultInterface>false</skipDefaultInterface>
                                 <useTags>true</useTags>
-                                <basePackage>${project.groupId}.paperchannel.rest.v1</basePackage>
-                                <modelPackage>${project.groupId}.paperchannel.rest.v1.dto</modelPackage>
-                                <apiPackage>${project.groupId}.paperchannel.rest.v1.api</apiPackage>
-                                <configPackage>${project.groupId}.paperchannel.rest.v1.config</configPackage>
+                                <basePackage>${project.groupId}.paperchannel.generated.openapi.server.v1</basePackage>
+                                <modelPackage>${project.groupId}.paperchannel.generated.openapi.server.v1.dto</modelPackage>
+                                <apiPackage>${project.groupId}.paperchannel.generated.openapi.server.v1.api</apiPackage>
+                                <configPackage>${project.groupId}.paperchannel.generated.openapi.server.v1.config</configPackage>
                             </configOptions>
                         </configuration>
                     </execution>
@@ -274,7 +298,7 @@
                         <goals>
                             <goal>generate</goal>
                         </goals>
-                        <phase>process-resources</phase>
+                        <phase>generate-resources</phase>
                         <configuration>
                             <inputSpec>${project.basedir}/docs/openapi/pn-paper-channel-v1.yaml</inputSpec>
                             <generatorName>spring</generatorName>
@@ -282,6 +306,7 @@
                             <generateApiDocumentation>false</generateApiDocumentation>
                             <generateApiTests>false</generateApiTests>
                             <generateModelTests>false</generateModelTests>
+                            <templateDirectory>${project.build.directory}/dependency-resources/scripts/openapi/templates/5.4.0/server</templateDirectory>
                             <configOptions>
                                 <dateLibrary>java11</dateLibrary>
                                 <delegatePattern>true</delegatePattern>
@@ -292,10 +317,10 @@
                                 <reactive>true</reactive>
                                 <skipDefaultInterface>false</skipDefaultInterface>
                                 <useTags>true</useTags>
-                                <basePackage>${project.groupId}.paperchannel.rest.v1</basePackage>
-                                <modelPackage>${project.groupId}.paperchannel.rest.v1.dto</modelPackage>
-                                <apiPackage>${project.groupId}.paperchannel.rest.v1.api</apiPackage>
-                                <configPackage>${project.groupId}.paperchannel.rest.v1.config</configPackage>
+                                <basePackage>${project.groupId}.paperchannel.generated.openapi.server.v1</basePackage>
+                                <modelPackage>${project.groupId}.paperchannel.generated.openapi.server.v1.dto</modelPackage>
+                                <apiPackage>${project.groupId}.paperchannel.generated.openapi.server.v1.api</apiPackage>
+                                <configPackage>${project.groupId}.paperchannel.generated.openapi.server.v1.config</configPackage>
                             </configOptions>
                         </configuration>
                     </execution>
@@ -304,7 +329,7 @@
                         <goals>
                             <goal>generate</goal>
                         </goals>
-                        <phase>process-resources</phase>
+                        <phase>generate-resources</phase>
                         <configuration>
                             <inputSpec>https://raw.githubusercontent.com/pagopa/pn-safe-storage/59b1c5255759262e4eb645ad3e8345bc810d03e1/docs/openapi/pn-safestorage-v1-api.yaml</inputSpec>
                             <generatorName>java</generatorName>
@@ -313,12 +338,13 @@
                             <generateApiTests>false</generateApiTests>
                             <generateModelTests>false</generateModelTests>
                             <generateSupportingFiles>true</generateSupportingFiles>
+                            <templateDirectory>${project.build.directory}/dependency-resources/scripts/openapi/templates/5.4.0/client</templateDirectory>
                             <configOptions>
                                 <swaggerAnnotations>false</swaggerAnnotations>
                                 <openApiNullable>false</openApiNullable>
                             </configOptions>
-                            <modelPackage>${project.groupId}.paperchannel.msclient.generated.pnsafestorage.v1.dto</modelPackage>
-                            <apiPackage>${project.groupId}.paperchannel.msclient.generated.pnsafestorage.v1.api</apiPackage>
+                            <modelPackage>${project.groupId}.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto</modelPackage>
+                            <apiPackage>${project.groupId}.paperchannel.generated.openapi.msclient.pnsafestorage.v1.api</apiPackage>
                             <modelNameSuffix>Dto</modelNameSuffix>
                         </configuration>
                     </execution>
@@ -327,7 +353,7 @@
                         <goals>
                             <goal>generate</goal>
                         </goals>
-                        <phase>process-resources</phase>
+                        <phase>generate-resources</phase>
                         <configuration>
                             <inputSpec>${project.basedir}/docs/openapi/national-registry/pn-national-registry-api-v1.yaml</inputSpec>
                             <generatorName>java</generatorName>
@@ -336,12 +362,13 @@
                             <generateApiTests>false</generateApiTests>
                             <generateModelTests>false</generateModelTests>
                             <generateSupportingFiles>true</generateSupportingFiles>
+                            <templateDirectory>${project.build.directory}/dependency-resources/scripts/openapi/templates/5.4.0/client</templateDirectory>
                             <configOptions>
                                 <swaggerAnnotations>false</swaggerAnnotations>
                                 <openApiNullable>false</openApiNullable>
                             </configOptions>
-                            <modelPackage>${project.groupId}.paperchannel.msclient.generated.pnnationalregistries.v1.dto</modelPackage>
-                            <apiPackage>${project.groupId}.paperchannel.msclient.generated.pnnationalregistries.v1.api</apiPackage>
+                            <modelPackage>${project.groupId}.paperchannel.generated.openapi.msclient.pnnationalregistries.v1.dto</modelPackage>
+                            <apiPackage>${project.groupId}.paperchannel.generated.openapi.msclient.pnnationalregistries.v1.api</apiPackage>
                             <modelNameSuffix>Dto</modelNameSuffix>
                         </configuration>
                     </execution>
@@ -351,7 +378,7 @@
                         <goals>
                             <goal>generate</goal>
                         </goals>
-                        <phase>process-resources</phase>
+                        <phase>generate-resources</phase>
                         <configuration>
                             <inputSpec>${project.basedir}/docs/openapi/external-channel/pn-external-channel.yaml</inputSpec>
                             <generatorName>java</generatorName>
@@ -360,12 +387,13 @@
                             <generateApiTests>false</generateApiTests>
                             <generateModelTests>false</generateModelTests>
                             <generateSupportingFiles>true</generateSupportingFiles>
+                            <templateDirectory>${project.build.directory}/dependency-resources/scripts/openapi/templates/5.4.0/client</templateDirectory>
                             <configOptions>
                                 <swaggerAnnotations>false</swaggerAnnotations>
                                 <openApiNullable>false</openApiNullable>
                             </configOptions>
-                            <modelPackage>${project.groupId}.paperchannel.msclient.generated.pnextchannel.v1.dto</modelPackage>
-                            <apiPackage>${project.groupId}.paperchannel.msclient.generated.pnextchannel.v1.api</apiPackage>
+                            <modelPackage>${project.groupId}.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto</modelPackage>
+                            <apiPackage>${project.groupId}.paperchannel.generated.openapi.msclient.pnextchannel.v1.api</apiPackage>
                             <modelNameSuffix>Dto</modelNameSuffix>
                         </configuration>
                     </execution>
@@ -374,7 +402,7 @@
                         <goals>
                             <goal>generate</goal>
                         </goals>
-                        <phase>process-resources</phase>
+                        <phase>generate-resources</phase>
                         <configuration>
                             <inputSpec>https://raw.githubusercontent.com/pagopa/pn-data-vault/43455b4cc0ab02eef418448595eb8b86d9a609cd/docs/openapi/pn-datavault-api-v1.yaml</inputSpec>
                             <generatorName>java</generatorName>
@@ -383,12 +411,13 @@
                             <generateApiTests>false</generateApiTests>
                             <generateModelTests>false</generateModelTests>
                             <generateSupportingFiles>true</generateSupportingFiles>
+                            <templateDirectory>${project.build.directory}/dependency-resources/scripts/openapi/templates/5.4.0/client</templateDirectory>
                             <configOptions>
                                 <swaggerAnnotations>false</swaggerAnnotations>
                                 <openApiNullable>false</openApiNullable>
                             </configOptions>
-                            <modelPackage>${project.groupId}.paperchannel.msclient.generated.pndatavault.v1.dto</modelPackage>
-                            <apiPackage>${project.groupId}.paperchannel.msclient.generated.pndatavault.v1.api</apiPackage>
+                            <modelPackage>${project.groupId}.paperchannel.generated.openapi.msclient.pndatavault.v1.dto</modelPackage>
+                            <apiPackage>${project.groupId}.paperchannel.generated.openapi.msclient.pndatavault.v1.api</apiPackage>
                             <modelNameSuffix>Dto</modelNameSuffix>
                         </configuration>
                     </execution>
@@ -397,7 +426,7 @@
                         <goals>
                             <goal>generate</goal>
                         </goals>
-                        <phase>process-resources</phase>
+                        <phase>generate-resources</phase>
                         <configuration>
                             <inputSpec>https://raw.githubusercontent.com/pagopa/pn-address-manager/fbfd1ec3833ba0e390026901b9e18d17225e7647/docs/openapi/pn-address-manager-v1.yaml</inputSpec>
                             <generatorName>java</generatorName>
@@ -406,12 +435,13 @@
                             <generateApiTests>false</generateApiTests>
                             <generateModelTests>false</generateModelTests>
                             <generateSupportingFiles>true</generateSupportingFiles>
+                            <templateDirectory>${project.build.directory}/dependency-resources/scripts/openapi/templates/5.4.0/client</templateDirectory>
                             <configOptions>
                                 <swaggerAnnotations>false</swaggerAnnotations>
                                 <openApiNullable>false</openApiNullable>
                             </configOptions>
-                            <modelPackage>${project.groupId}.paperchannel.msclient.generated.pnaddressmanager.v1.dto</modelPackage>
-                            <apiPackage>${project.groupId}.paperchannel.msclient.generated.pnaddressmanager.v1.api</apiPackage>
+                            <modelPackage>${project.groupId}.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.dto</modelPackage>
+                            <apiPackage>${project.groupId}.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.api</apiPackage>
                             <modelNameSuffix>Dto</modelNameSuffix>
                         </configuration>
                     </execution>

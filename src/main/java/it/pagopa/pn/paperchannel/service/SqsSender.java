@@ -1,8 +1,9 @@
 package it.pagopa.pn.paperchannel.service;
 
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PrepareEvent;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
-import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareEvent;
-import it.pagopa.pn.paperchannel.rest.v1.dto.SendEvent;
+
 
 import java.time.Instant;
 

@@ -7,6 +7,8 @@ import it.pagopa.pn.paperchannel.config.BaseTest;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.exception.PnInputValidatorException;
 import it.pagopa.pn.paperchannel.exception.PnPaperEventException;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnnationalregistries.v1.dto.AddressOKDto;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
@@ -16,15 +18,17 @@ import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
-import it.pagopa.pn.paperchannel.msclient.generated.pnnationalregistries.v1.dto.AddressOKDto;
-import it.pagopa.pn.paperchannel.rest.v1.dto.*;
 import it.pagopa.pn.paperchannel.service.impl.PaperMessagesServiceImpl;
 import it.pagopa.pn.paperchannel.utils.Utility;
 import it.pagopa.pn.paperchannel.validator.PrepareRequestValidator;
 import it.pagopa.pn.paperchannel.validator.SendRequestValidator;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.*;
-import org.mockito.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -136,11 +140,8 @@ class PaperMessagesServiceTest extends BaseTest {
 
         Mockito.doNothing().when(this.sqsSender).pushToInternalQueue(Mockito.any());
 
-        StepVerifier.create(this.paperMessagesService.preparePaperSync("TST-IOR.2332", getRequestOK()))
-                .expectErrorMatches((ex) -> {
-                    assertTrue(ex instanceof PnPaperEventException);
-                    return true;
-                }).verify();
+        PaperChannelUpdate update = this.paperMessagesService.preparePaperSync("TST-IOR.2332", getRequestOK()).block();
+        assertNull(update);
     }
 
     @Test
@@ -669,7 +670,8 @@ class PaperMessagesServiceTest extends BaseTest {
         Mockito.when(requestDeliveryDAO.createWithAddress(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(deliveryRequestTakingCharge));
         Mockito.doNothing().when(sqsSender).pushToInternalQueue(Mockito.any());
-        StepVerifier.create(paperMessagesService.preparePaperSync(deliveryRequestTakingCharge.getRequestId(), getRequestOK())).expectError(PnPaperEventException.class).verify();
+        PaperChannelUpdate update = paperMessagesService.preparePaperSync(deliveryRequestTakingCharge.getRequestId(), getRequestOK()).block();
+        assertNull(update);
     }
 
     private SendRequest getRequest(String requestId){

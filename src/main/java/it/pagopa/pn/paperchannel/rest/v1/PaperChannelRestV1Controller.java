@@ -1,7 +1,9 @@
 package it.pagopa.pn.paperchannel.rest.v1;
 
-import it.pagopa.pn.paperchannel.rest.v1.api.DeliveryDriverApi;
-import it.pagopa.pn.paperchannel.rest.v1.dto.*;
+
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.api.DeliveryDriverApi;
+
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.paperchannel.service.PaperChannelService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +23,7 @@ public class PaperChannelRestV1Controller implements DeliveryDriverApi {
     }
 
     @Override
-    public Mono<ResponseEntity<PageableDeliveryDriverResponseDto>> takeDeliveriesDrivers(String tenderCode, Integer page, Integer size, Boolean fsu,ServerWebExchange exchange) {
+    public Mono<ResponseEntity<PageableDeliveryDriverResponseDto>> takeDeliveriesDrivers(String tenderCode, Integer page, Integer size, Boolean fsu, ServerWebExchange exchange) {
         return this.paperChannelService.getAllDeliveriesDrivers(tenderCode, page, size, fsu).map(ResponseEntity::ok) ;
     }
 

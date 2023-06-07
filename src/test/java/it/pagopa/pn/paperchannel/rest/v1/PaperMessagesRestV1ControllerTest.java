@@ -1,7 +1,7 @@
 package it.pagopa.pn.paperchannel.rest.v1;
 
 
-import it.pagopa.pn.paperchannel.rest.v1.dto.*;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.paperchannel.service.PaperMessagesService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -11,7 +11,9 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 @WebFluxTest(controllers = {PaperMessagesRestV1Controller.class})
 class PaperMessagesRestV1ControllerTest {

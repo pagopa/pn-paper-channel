@@ -1,12 +1,13 @@
 package it.pagopa.pn.paperchannel.middleware.db.dao.common;
 
+import it.pagopa.pn.commons.utils.MDCUtils;
 import it.pagopa.pn.paperchannel.encryption.DataEncryption;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import lombok.AllArgsConstructor;
+import lombok.CustomLog;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -19,7 +20,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
-@Slf4j
+@CustomLog
 public abstract class BaseDAO<T> {
 
     @Getter
@@ -62,10 +63,14 @@ public abstract class BaseDAO<T> {
     }
 
     protected CompletableFuture<T> put(T entity){
+        log.logPuttingDynamoDBEntity(dynamoTable.tableName(), entity);
         PutItemEnhancedRequest<T> putRequest = PutItemEnhancedRequest.builder(tClass)
                 .item(encode(entity))
                 .build();
-        return dynamoTable.putItem(putRequest).thenApply(x -> entity);
+        return dynamoTable.putItem(putRequest).thenApply(x -> {
+            log.logPutDoneDynamoDBEntity(dynamoTable.tableName());
+            return entity;
+        });
     }
 
     protected CompletableFuture<T> delete(String partitionKey, String sortKey){
@@ -73,17 +78,26 @@ public abstract class BaseDAO<T> {
         if (!StringUtils.isBlank(sortKey)){
             keyBuilder.sortValue(sortKey);
         }
-        return dynamoTable.deleteItem(keyBuilder.build());
+        return dynamoTable.deleteItem(keyBuilder.build()).thenApply(t -> {
+            log.logDeleteDynamoDBEntity(dynamoTable.tableName(), keyBuild(partitionKey, sortKey), t);
+            return t;
+        });
     }
 
     protected CompletableFuture<Void> putWithTransact(TransactWriteItemsEnhancedRequest transactRequest){
-        return dynamoDbEnhancedAsyncClient.transactWriteItems(transactRequest).thenApply(item -> null);
+        transactRequest.transactWriteItems().forEach(log::logTransactionDynamoDBEntity);
+        Map<String, String> copyOfContextMap = MDCUtils.retrieveMDCContextMap();
+        return this.dynamoDbEnhancedAsyncClient.transactWriteItems(transactRequest)
+                .thenApply(queryResponse -> MDCUtils.enrichWithMDC(queryResponse, copyOfContextMap));
     }
 
     protected CompletableFuture<T> update(T entity){
         UpdateItemEnhancedRequest<T> updateRequest = UpdateItemEnhancedRequest
                 .builder(tClass).item(entity).build();
-        return dynamoTable.updateItem(updateRequest);
+        return dynamoTable.updateItem(updateRequest).thenApply(t -> {
+            log.logUpdateDynamoDBEntity(dynamoTable.tableName(), t);
+            return t;
+        });
     }
 
     protected CompletableFuture<T> get(String partitionKey, String sortKey){
@@ -92,7 +106,10 @@ public abstract class BaseDAO<T> {
             keyBuilder.sortValue(sortKey);
         }
 
-        return dynamoTable.getItem(keyBuilder.build()).thenApply(this::decode);
+        return dynamoTable.getItem(keyBuilder.build()).thenApply(data -> {
+            log.logGetDynamoDBEntity(dynamoTable.tableName(), keyBuild(partitionKey, sortKey), data);
+            return decode(data);
+        });
     }
 
     protected Flux<T> getBySecondaryIndex(String index, String partitionKey, String sortKey){

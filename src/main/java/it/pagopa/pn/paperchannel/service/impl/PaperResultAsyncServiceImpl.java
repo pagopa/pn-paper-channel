@@ -1,8 +1,14 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
+import it.pagopa.pn.commons.utils.MDCUtils;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.DiscoveredAddressDto;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.SingleStatusUpdateDto;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendRequest;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
 import it.pagopa.pn.paperchannel.mapper.AttachmentMapper;
 import it.pagopa.pn.paperchannel.mapper.RequestDeliveryMapper;
@@ -16,18 +22,13 @@ import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.HandlersFactory;
 import it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.MessageHandler;
 import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
-import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.DiscoveredAddressDto;
-import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.SingleStatusUpdateDto;
-import it.pagopa.pn.paperchannel.rest.v1.dto.SendEvent;
-import it.pagopa.pn.paperchannel.rest.v1.dto.SendRequest;
-import it.pagopa.pn.paperchannel.rest.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.service.PaperResultAsyncService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum;
 import it.pagopa.pn.paperchannel.utils.PnLogAudit;
-import lombok.extern.slf4j.Slf4j;
+import lombok.CustomLog;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
@@ -37,11 +38,10 @@ import reactor.core.scheduler.Schedulers;
 import java.time.Duration;
 import java.util.Date;
 
-import static it.pagopa.pn.commons.utils.MDCUtils.MDC_TRACE_ID_KEY;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DATA_NULL_OR_INVALID;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.EXTERNAL_CHANNEL_API_EXCEPTION;
 
-@Slf4j
+@CustomLog
 @Service
 public class PaperResultAsyncServiceImpl extends BaseService implements PaperResultAsyncService {
 
@@ -51,6 +51,8 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
     private final PaperRequestErrorDAO paperRequestErrorDAO;
 
     private final HandlersFactory handlersFactory;
+
+    private final String processName = "Result Async Background";
 
     public PaperResultAsyncServiceImpl(PnAuditLogBuilder auditLogBuilder, RequestDeliveryDAO requestDeliveryDAO,
                                        NationalRegistryClient nationalRegistryClient, SqsSender sqsSender,
@@ -121,6 +123,7 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
 
     @Override
     public Mono<Void> resultAsyncBackground(SingleStatusUpdateDto singleStatusUpdateDto, Integer attempt) {
+        log.logStartingProcess(processName);
         if (singleStatusUpdateDto == null || singleStatusUpdateDto.getAnalogMail() == null || StringUtils.isBlank(singleStatusUpdateDto.getAnalogMail().getRequestId())) {
             log.error("the message sent from external channel, includes errors. It cannot be processing");
             return Mono.error(new PnGenericException(DATA_NULL_OR_INVALID, DATA_NULL_OR_INVALID.getMessage()));
@@ -192,26 +195,27 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
     }
 
     private void sendEngageRequest(PnDeliveryRequest pnDeliveryRequest, String requestId) {
-        Mono.delay(Duration.ofMillis(10)).publishOn(Schedulers.boundedElastic())
+        MDC.put(MDCUtils.MDC_TRACE_ID_KEY, MDC.get(MDCUtils.MDC_TRACE_ID_KEY));
+        MDCUtils.addMDCToContextAndExecute(Mono.delay(Duration.ofMillis(10)).publishOn(Schedulers.boundedElastic())
                 .flatMap(i ->  addressDAO.findAllByRequestId(pnDeliveryRequest.getRequestId()))
                 .flatMap(pnAddresses -> {
                     SendRequest sendRequest = SendRequestMapper.toDto(pnAddresses, pnDeliveryRequest);
                     sendRequest.setRequestId(requestId);
-                    pnLogAudit.addsBeforeSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDC_TRACE_ID_KEY)));
+                    pnLogAudit.addsBeforeSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY)));
 
                     return this.externalChannelClient.sendEngageRequest(sendRequest, pnDeliveryRequest.getAttachments().stream().map(AttachmentMapper::fromEntity).toList()).publishOn(Schedulers.boundedElastic())
                             .then(Mono.defer(() -> {
-                                pnLogAudit.addsSuccessSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDC_TRACE_ID_KEY)));
+                                pnLogAudit.addsSuccessSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY)));
                                 return Mono.empty();
                             }))
                             .onErrorResume(ex -> {
-                                pnLogAudit.addsWarningSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDC_TRACE_ID_KEY)));
+                                pnLogAudit.addsWarningSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY)));
                                 return paperRequestErrorDAO.created(sendRequest.getRequestId(),
                                         EXTERNAL_CHANNEL_API_EXCEPTION.getMessage(),
                                         EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name()).flatMap(errorEntity -> Mono.error(ex));
                             });
                 })
-                .subscribeOn(Schedulers.boundedElastic()).subscribe();
+                .subscribeOn(Schedulers.boundedElastic())).subscribe();
     }
 
     private Mono<PnDeliveryRequest> updateEntityResult(SingleStatusUpdateDto singleStatusUpdateDto, PnDeliveryRequest pnDeliveryRequestMono) {
@@ -223,6 +227,7 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
                 pnDeliveryRequestMono.getProductType(),
                 singleStatusUpdateDto.getAnalogMail().getStatusDateTime().toInstant()
         );
+        log.logEndingProcess(processName);
         return requestDeliveryDAO.updateData(pnDeliveryRequestMono);
     }
 

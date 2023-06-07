@@ -31,6 +31,7 @@ public class PnDeliveryDriver {
     public static final String COL_START_DATE = "startDate";
 
     @Getter(onMethod = @__({@DynamoDbSortKey, @DynamoDbAttribute(COL_TAX_ID)}))
+    @ToString.Exclude
     public String taxId;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_UNIQUE_CODE)}))
@@ -43,6 +44,7 @@ public class PnDeliveryDriver {
     public String denomination;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_PHONE_NUMBER)}))
+    @ToString.Exclude
     public String phoneNumber;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_FSU)}))
@@ -59,8 +61,10 @@ public class PnDeliveryDriver {
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_REGISTERED_OFFICE)}))
     private String registeredOffice;
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_PEC)}))
+    @ToString.Exclude
     private String pec;
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_FISCAL_CODE)}))
+    @ToString.Exclude
     private String fiscalCode;
 
     @Override

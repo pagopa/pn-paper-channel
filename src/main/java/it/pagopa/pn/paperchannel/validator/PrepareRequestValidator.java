@@ -1,11 +1,11 @@
 package it.pagopa.pn.paperchannel.validator;
 
 import it.pagopa.pn.paperchannel.exception.PnInputValidatorException;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PrepareRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
-import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareRequest;
 import it.pagopa.pn.paperchannel.utils.Utility;
-import lombok.extern.slf4j.Slf4j;
+import lombok.CustomLog;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 
@@ -17,8 +17,10 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DIFFERENT_DA
 import static it.pagopa.pn.paperchannel.mapper.AddressMapper.fromAnalogToAddress;
 
 
-@Slf4j
+@CustomLog
 public class PrepareRequestValidator {
+
+    static String VALIDATION_NAME = "Prepare Request Validator";
 
     private PrepareRequestValidator(){
         throw new IllegalCallerException("the constructor must not called");
@@ -26,6 +28,7 @@ public class PrepareRequestValidator {
 
     public static void compareRequestEntity(PrepareRequest prepareRequest, PnDeliveryRequest pnDeliveryEntity, boolean firstAttempt) {
         List<String> errors = new ArrayList<>();
+        log.logChecking(VALIDATION_NAME);
 
         if (!StringUtils.equals(prepareRequest.getRequestId(), pnDeliveryEntity.getRequestId())) {
             errors.add("RequestId");
@@ -81,8 +84,10 @@ public class PrepareRequestValidator {
         }
 
         if (!errors.isEmpty()) {
+            log.logCheckingOutcome(VALIDATION_NAME, false, errors.toString());
             throw new PnInputValidatorException(DIFFERENT_DATA_REQUEST, DIFFERENT_DATA_REQUEST.getMessage(), HttpStatus.CONFLICT, errors);
         }
+        log.logCheckingOutcome(VALIDATION_NAME, true);
     }
 
 }

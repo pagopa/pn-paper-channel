@@ -1,14 +1,17 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
+import it.pagopa.pn.commons.utils.MDCUtils;
 import it.pagopa.pn.paperchannel.encryption.DataEncryption;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ProductTypeEnum;
 import it.pagopa.pn.paperchannel.mapper.RequestDeliveryMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
-import it.pagopa.pn.paperchannel.model.*;
-import it.pagopa.pn.paperchannel.rest.v1.dto.ProductTypeEnum;
+import it.pagopa.pn.paperchannel.model.Address;
+import it.pagopa.pn.paperchannel.model.NationalRegistryError;
+import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.PnLogAudit;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +25,6 @@ import reactor.core.scheduler.Schedulers;
 import java.time.Duration;
 import java.util.function.Function;
 
-import static it.pagopa.pn.commons.utils.MDCUtils.MDC_TRACE_ID_KEY;
 import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.NATIONAL_REGISTRY_ERROR;
 import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.NATIONAL_REGISTRY_WAITING;
 import static it.pagopa.pn.paperchannel.utils.Const.*;
@@ -35,7 +37,6 @@ public class BaseService {
     protected final SqsSender sqsSender;
     protected RequestDeliveryDAO requestDeliveryDAO;
     protected CostDAO costDAO;
-
     @Autowired
     @Qualifier("dataVaultEncryption")
     protected DataEncryption dataEncryption;
@@ -53,7 +54,8 @@ public class BaseService {
 
 
     protected void finderAddressFromNationalRegistries(String correlationId, String requestId, String relatedRequestId, String fiscalCode, String personType, String iun, Integer attempt){
-        Mono.delay(Duration.ofMillis(20)).publishOn(Schedulers.boundedElastic())
+        MDC.put(MDCUtils.MDC_TRACE_ID_KEY, MDC.get(MDCUtils.MDC_TRACE_ID_KEY));
+        MDCUtils.addMDCToContextAndExecute(Mono.delay(Duration.ofMillis(20)).publishOn(Schedulers.boundedElastic())
                 .flatMap(i -> {
                     log.info("Start call national registries for find address");
                     pnLogAudit.addsBeforeResolveService(iun, String.format("prepare requestId = %s, relatedRequestId= %s, trace_id = %s Request to National Registry service", requestId, relatedRequestId, correlationId));
@@ -85,11 +87,11 @@ public class BaseService {
                 })
                 .flatMap(Mono::just)
                 .onErrorResume(ex -> {
-                    pnLogAudit.addsWarningResolveService(iun, String.format("prepare requestId = %s, relatedRequestId = %s, trace_id = %s Response KO from National Registry service", requestId, relatedRequestId, MDC.get(MDC_TRACE_ID_KEY)));
+                    pnLogAudit.addsWarningResolveService(iun, String.format("prepare requestId = %s, relatedRequestId = %s, trace_id = %s Response KO from National Registry service", requestId, relatedRequestId, MDC.get(MDCUtils.MDC_TRACE_ID_KEY)));
                     log.warn("NationalRegistries finder address in errors {}", ex.getMessage());
                     return Mono.empty();
 
-                }).subscribeOn(Schedulers.boundedElastic()).subscribe();
+                }).subscribeOn(Schedulers.boundedElastic())).subscribe();
     }
 
 

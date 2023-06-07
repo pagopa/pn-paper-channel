@@ -446,6 +446,7 @@ components:
             - domicileType
           properties:
             taxId:
+              x-field-extra-annotation: "@lombok.ToString.Exclude"
               type: string
               example: AAAZZZ00H00T000Z
             referenceRequestDate:

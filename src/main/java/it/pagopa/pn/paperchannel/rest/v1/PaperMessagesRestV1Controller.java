@@ -1,7 +1,9 @@
 package it.pagopa.pn.paperchannel.rest.v1;
 
-import it.pagopa.pn.paperchannel.rest.v1.api.PaperMessagesApi;
-import it.pagopa.pn.paperchannel.rest.v1.dto.*;
+
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.api.PaperMessagesApi;
+
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.paperchannel.service.PaperMessagesService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +27,8 @@ public class PaperMessagesRestV1Controller implements PaperMessagesApi {
                    log.debug(request.getReceiverAddress().toString());
                })
                .flatMap(request -> paperMessagesService.preparePaperSync(requestId, request))
-                .map(ResponseEntity::ok);
+               .map(ResponseEntity::ok)
+               .switchIfEmpty(Mono.just(ResponseEntity.noContent().build()));
     }
 
     @Override

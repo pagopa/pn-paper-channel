@@ -1,13 +1,13 @@
 package it.pagopa.pn.paperchannel.validator;
 
 import it.pagopa.pn.paperchannel.exception.PnInputValidatorException;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.AttachmentDetailsDto;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
-import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.AttachmentDetailsDto;
-import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.PaperProgressStatusEventDto;
-import it.pagopa.pn.paperchannel.rest.v1.dto.SendRequest;
 import it.pagopa.pn.paperchannel.utils.Utility;
-import lombok.extern.slf4j.Slf4j;
+import lombok.CustomLog;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 
@@ -20,15 +20,17 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DIFFERENT_DA
 import static it.pagopa.pn.paperchannel.mapper.AddressMapper.fromAnalogToAddress;
 
 
-@Slf4j
+@CustomLog
 public class SendRequestValidator {
+
+    static String VALIDATION_NAME = "Send request validator";
     private SendRequestValidator() {
         throw new IllegalCallerException();
     }
 
     public static void compareRequestEntity(SendRequest sendRequest, PnDeliveryRequest pnDeliveryEntity){
         List<String> errors = new ArrayList<>();
-
+        log.logChecking(VALIDATION_NAME);
         if (!sendRequest.getRequestId().equals(pnDeliveryEntity.getRequestId())) {
             errors.add("RequestId");
             log.debug("Comparison between request and entity failed, different data: RequestId");
@@ -67,9 +69,10 @@ public class SendRequestValidator {
         }
 
         if (!errors.isEmpty()){
+            log.logCheckingOutcome(VALIDATION_NAME, false, errors.toString());
             throw new PnInputValidatorException(DIFFERENT_DATA_REQUEST, DIFFERENT_DATA_REQUEST.getMessage(), HttpStatus.CONFLICT, errors);
         }
-
+        log.logCheckingOutcome(VALIDATION_NAME, true);
     }
 
     public static void compareProgressStatusRequestEntity(PaperProgressStatusEventDto paperProgressStatusEventDto, PnDeliveryRequest pnDeliveryEntity) {

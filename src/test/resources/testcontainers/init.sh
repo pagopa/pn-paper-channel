@@ -6,13 +6,14 @@ aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
 echo "### END KEY CREATION FOR KMS ###"
 
 echo "### CREATE QUEUES ###"
-queues="local-delivery-push-safestorage-inputs local-delivery-push-actions local-delivery-push-inputs local-ext-channels-inputs local-ext-channels-outputs local-delivery-push-actions-done local-ext-channels-elab-res local-user-attributes-actions"
+queues="local-delivery-push-safestorage-inputs local-delivery-push-actions local-delivery-push-inputs local-ext-channels-inputs local-ext-channels-outputs"
 for qn in  $( echo $queues | tr " " "\n" ) ; do
     echo creating queue $qn ...
     aws --profile default --region us-east-1 --endpoint-url http://localstack:4566 \
         sqs create-queue \
         --attributes '{"DelaySeconds":"2"}' \
         --queue-name $qn
+    echo ending create queue
 done
 
 echo "### CREATE BUCKETS ###"

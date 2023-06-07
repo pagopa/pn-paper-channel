@@ -2,7 +2,8 @@ package it.pagopa.pn.paperchannel.middleware.queue.model;
 
 import it.pagopa.pn.api.dto.events.GenericEvent;
 import it.pagopa.pn.api.dto.events.GenericEventHeader;
-import it.pagopa.pn.paperchannel.rest.v1.dto.PaperChannelUpdate;
+
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PaperChannelUpdate;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor

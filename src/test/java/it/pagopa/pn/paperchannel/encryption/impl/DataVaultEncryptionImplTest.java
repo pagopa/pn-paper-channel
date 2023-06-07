@@ -2,7 +2,6 @@ package it.pagopa.pn.paperchannel.encryption.impl;
 
 import it.pagopa.pn.paperchannel.config.BaseTest;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
-import it.pagopa.pn.paperchannel.msclient.generated.pndatavault.v1.api.RecipientsApi;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;

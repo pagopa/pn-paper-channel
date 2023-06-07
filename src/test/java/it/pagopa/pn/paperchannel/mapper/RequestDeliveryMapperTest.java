@@ -1,9 +1,9 @@
 package it.pagopa.pn.paperchannel.mapper;
 
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.AnalogAddress;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PrepareRequest;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ProposalTypeEnum;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
-import it.pagopa.pn.paperchannel.rest.v1.dto.AnalogAddress;
-import it.pagopa.pn.paperchannel.rest.v1.dto.PrepareRequest;
-import it.pagopa.pn.paperchannel.rest.v1.dto.ProposalTypeEnum;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

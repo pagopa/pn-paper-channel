@@ -1,9 +1,10 @@
 package it.pagopa.pn.paperchannel.mapper;
 
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.CostDTO;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.InternationalZoneEnum;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PageableCostResponseDto;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ProductTypeEnumDto;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnCost;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnTender;
-import it.pagopa.pn.paperchannel.model.PageModel;
-import it.pagopa.pn.paperchannel.rest.v1.dto.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;

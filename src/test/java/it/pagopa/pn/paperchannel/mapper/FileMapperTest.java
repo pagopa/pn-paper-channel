@@ -1,7 +1,7 @@
 package it.pagopa.pn.paperchannel.mapper;
 
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.InfoDownloadDTO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryFile;
-import it.pagopa.pn.paperchannel.rest.v1.dto.InfoDownloadDTO;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

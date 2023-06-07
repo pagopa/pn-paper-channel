@@ -1,18 +1,15 @@
 package it.pagopa.pn.paperchannel.middleware.msclient;
 
 import it.pagopa.pn.paperchannel.config.BaseTest;
-
-import it.pagopa.pn.paperchannel.model.AttachmentInfo;
-import it.pagopa.pn.paperchannel.rest.v1.dto.AnalogAddress;
-import it.pagopa.pn.paperchannel.rest.v1.dto.ProductTypeEnum;
-import it.pagopa.pn.paperchannel.rest.v1.dto.SendRequest;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.AnalogAddress;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ProductTypeEnum;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendRequest;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
-import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.Date;

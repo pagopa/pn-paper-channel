@@ -1,6 +1,6 @@
 package it.pagopa.pn.paperchannel.service;
 
-import it.pagopa.pn.paperchannel.rest.v1.dto.CostDTO;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.CostDTO;
 import reactor.core.publisher.Mono;
 
 public interface PaperTenderService {

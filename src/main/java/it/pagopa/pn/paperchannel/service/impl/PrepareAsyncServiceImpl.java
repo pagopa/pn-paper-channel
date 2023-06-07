@@ -7,6 +7,8 @@ import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnAddressFlowException;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.exception.PnRetryStorageException;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileDownloadResponseDto;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
 import it.pagopa.pn.paperchannel.mapper.AttachmentMapper;
 import it.pagopa.pn.paperchannel.mapper.PrepareEventMapper;
@@ -22,15 +24,13 @@ import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.AttachmentInfo;
 import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
-import it.pagopa.pn.paperchannel.msclient.generated.pnsafestorage.v1.dto.FileDownloadResponseDto;
-import it.pagopa.pn.paperchannel.rest.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.service.PaperAddressService;
 import it.pagopa.pn.paperchannel.service.PaperAsyncService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
 import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
-import lombok.extern.slf4j.Slf4j;
+import lombok.CustomLog;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -41,11 +41,12 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.Duration;
 
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DOCUMENT_URL_NOT_FOUND;
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.INVALID_SAFE_STORAGE;
 import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.TAKING_CHARGE;
 
-@Slf4j
 @Service
+@CustomLog
 public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncService {
 
     @Autowired
@@ -62,11 +63,12 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
     public PrepareAsyncServiceImpl(PnAuditLogBuilder auditLogBuilder, NationalRegistryClient nationalRegistryClient,
                                    RequestDeliveryDAO requestDeliveryDAO,SqsSender sqsQueueSender, CostDAO costDAO ) {
         super(auditLogBuilder, requestDeliveryDAO, costDAO, nationalRegistryClient, sqsQueueSender);
-
     }
 
     @Override
     public Mono<PnDeliveryRequest> prepareAsync(PrepareAsyncRequest request){
+        String PROCESS_NAME = "Prepare Async";
+        log.logStartingProcess(PROCESS_NAME);
 
         String correlationId = request.getCorrelationId();
         final String requestId = request.getRequestId();
@@ -80,7 +82,6 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
             log.info("Start async for {} request id", request.getRequestId());
             requestDeliveryEntityMono = requestDeliveryDAO.getByRequestId(requestId, true);
         }
-
         return requestDeliveryEntityMono
                 .flatMap(deliveryRequest -> checkAndUpdateAddress(deliveryRequest, addressFromNationalRegistry, request))
                 .map(pnDeliveryRequest -> {
@@ -114,6 +115,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                             .doOnNext(entity -> {
                                 if (entity.getStatusCode().equals(StatusDeliveryEnum.UNTRACEABLE.getCode())){
                                     sendUnreachableEvent(entity);
+                                    log.logEndingProcess(PROCESS_NAME);
                                 }
                             })
                             .flatMap(entity -> Mono.error(ex));
@@ -131,12 +133,15 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
     }
 
     private Mono<PnDeliveryRequest> updateStatus(String requestId, String correlationId, StatusDeliveryEnum status ){
+        String processName = "Update Status";
+        log.logStartingProcess(processName);
         Mono<PnDeliveryRequest> pnDeliveryRequest;
         if (StringUtils.isNotEmpty(requestId) && !StringUtils.isNotEmpty(correlationId) ){
             pnDeliveryRequest= this.requestDeliveryDAO.getByRequestId(requestId);
         }else{
             pnDeliveryRequest= this.requestDeliveryDAO.getByCorrelationId(correlationId);
         }
+        log.logEndingProcess(processName);
         return pnDeliveryRequest.flatMap(
                 entity -> {
                     RequestDeliveryMapper.changeState(
@@ -152,8 +157,10 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
     }
 
     private Mono<PnDeliveryRequest> checkAndUpdateAddress(PnDeliveryRequest pnDeliveryRequest, Address fromNationalRegistries, PrepareAsyncRequest queueModel){
+        String VALIDATION_NAME = "Check and update address";
         return this.paperAddressService.getCorrectAddress(pnDeliveryRequest, fromNationalRegistries, queueModel)
                 .flatMap(newAddress -> {
+                    log.logCheckingOutcome(VALIDATION_NAME, true);
                     pnDeliveryRequest.setAddressHash(newAddress.convertToHash());
                     pnDeliveryRequest.setProductType(getProposalProductType(newAddress, pnDeliveryRequest.getProposalProductType()));
 
@@ -227,7 +234,6 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                 })
                 .onErrorResume(ex -> {
                     request.setIun(deliveryRequest.getIun());
-                    log.error("SAFE STORAGE ERROR - PUSH INTERNAL ERROR");
                     this.sqsSender.pushInternalError(request, request.getAttemptRetry(), PrepareAsyncRequest.class);
                     return Mono.error(ex);
                 });

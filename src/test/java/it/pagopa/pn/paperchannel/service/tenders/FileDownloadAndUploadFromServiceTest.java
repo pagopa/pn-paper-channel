@@ -7,17 +7,16 @@ import it.pagopa.pn.paperchannel.dao.model.DeliveriesData;
 import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnExcelValidatorException;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.InfoDownloadDTO;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.NotifyResponseDto;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.NotifyUploadRequestDto;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PresignedUrlResponseDto;
 import it.pagopa.pn.paperchannel.mapper.DeliveryDriverMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.DeliveryDriverDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.FileDownloadDAO;
-import it.pagopa.pn.paperchannel.middleware.db.dao.TenderDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.*;
 import it.pagopa.pn.paperchannel.model.FileStatusCodeEnum;
-import it.pagopa.pn.paperchannel.rest.v1.dto.InfoDownloadDTO;
-import it.pagopa.pn.paperchannel.rest.v1.dto.NotifyResponseDto;
-import it.pagopa.pn.paperchannel.rest.v1.dto.NotifyUploadRequestDto;
-import it.pagopa.pn.paperchannel.rest.v1.dto.PresignedUrlResponseDto;
 import it.pagopa.pn.paperchannel.s3.S3Bucket;
 import it.pagopa.pn.paperchannel.service.impl.PaperChannelServiceImpl;
 import org.junit.jupiter.api.AfterEach;
@@ -38,7 +37,6 @@ import java.util.List;
 import java.util.Map;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.EXCEL_BADLY_CONTENT;
 import static org.junit.jupiter.api.Assertions.*;
 
 class FileDownloadAndUploadFromServiceTest extends BaseTest {

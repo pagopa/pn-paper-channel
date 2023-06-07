@@ -24,12 +24,6 @@ class PnCapTest {
         stringBuilder.append("(");
         stringBuilder.append("author=");
         stringBuilder.append(author);
-        stringBuilder.append(", ");
-        stringBuilder.append("cap=");
-        stringBuilder.append(cap);
-        stringBuilder.append(", ");
-        stringBuilder.append("city=");
-        stringBuilder.append(city);
         stringBuilder.append(")");
 
         String toTest = stringBuilder.toString();

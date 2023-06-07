@@ -1,47 +1,43 @@
 package it.pagopa.pn.paperchannel.middleware.msclient.impl;
 
+import it.pagopa.pn.commons.log.PnLogger;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.api.DeduplicatesAddressServiceApi;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.dto.DeduplicatesRequestDto;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.dto.DeduplicatesResponseDto;
 import it.pagopa.pn.paperchannel.exception.PnAddressFlowException;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
 import it.pagopa.pn.paperchannel.middleware.msclient.AddressManagerClient;
-import it.pagopa.pn.paperchannel.middleware.msclient.common.BaseClient;
 import it.pagopa.pn.paperchannel.model.Address;
-import it.pagopa.pn.paperchannel.msclient.generated.pnaddressmanager.v1.ApiClient;
-import it.pagopa.pn.paperchannel.msclient.generated.pnaddressmanager.v1.api.DeduplicatesAddressServiceApi;
-import it.pagopa.pn.paperchannel.msclient.generated.pnaddressmanager.v1.dto.DeduplicatesRequestDto;
-import it.pagopa.pn.paperchannel.msclient.generated.pnaddressmanager.v1.dto.DeduplicatesResponseDto;
-import lombok.extern.slf4j.Slf4j;
+import lombok.CustomLog;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
 
-import javax.annotation.PostConstruct;
 import java.net.ConnectException;
 import java.time.Duration;
 import java.util.concurrent.TimeoutException;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.ADDRESS_MANAGER_ERROR;
 
-@Slf4j
+
 @Component
-public class AddressManagerClientImpl extends BaseClient implements AddressManagerClient {
+@CustomLog
+public class AddressManagerClientImpl implements AddressManagerClient {
     private final PnPaperChannelConfig pnPaperChannelConfig;
 
-    private DeduplicatesAddressServiceApi apiService;
+    private final DeduplicatesAddressServiceApi apiService;
 
-    public AddressManagerClientImpl(PnPaperChannelConfig pnPaperChannelConfig) {
-        this.pnPaperChannelConfig = pnPaperChannelConfig;
-    }
-
-    @PostConstruct
-    public void init(){
-        ApiClient newApiClient = new ApiClient(super.initWebClient(ApiClient.buildWebClientBuilder()));
-        newApiClient.setBasePath(this.pnPaperChannelConfig.getClientAddressManagerBasepath());
-        this.apiService = new DeduplicatesAddressServiceApi(newApiClient);
+    public AddressManagerClientImpl(PnPaperChannelConfig cfg,
+                                    DeduplicatesAddressServiceApi deduplicatesAddressServiceApi) {
+        this.pnPaperChannelConfig = cfg;
+        this.apiService = deduplicatesAddressServiceApi;
     }
 
     @Override
     public Mono<DeduplicatesResponseDto> deduplicates(String correlationId, Address base, Address target) {
+        String PN_ADDRESS_MANAGER_DESCRIPTION = "Address Manager deduplicates";
+        log.logInvokingAsyncExternalService(PnLogger.EXTERNAL_SERVICES.PN_ADDRESS_MANAGER, PN_ADDRESS_MANAGER_DESCRIPTION, correlationId);
         DeduplicatesRequestDto requestDto = new DeduplicatesRequestDto();
         requestDto.setBaseAddress(AddressMapper.toAnalogAddressManager(base));
         requestDto.setTargetAddress(AddressMapper.toAnalogAddressManager(target));
