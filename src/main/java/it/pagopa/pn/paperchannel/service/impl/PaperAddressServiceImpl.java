@@ -133,7 +133,7 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
     private Mono<Address> flowPostmanAddress(PnDeliveryRequest deliveryRequest, Address discovered, Address firstAttempt){
         logAuditBefore("prepare requestId = %s, relatedRequestId = %s Discovered and First address is Equals ?", deliveryRequest);
 
-        return this.addressManagerClient.deduplicates(UUID.randomUUID().toString(), discovered, firstAttempt)
+        return this.addressManagerClient.deduplicates(UUID.randomUUID().toString(), firstAttempt, discovered)
                 .flatMap(deduplicatesResponse -> {
                     if (StringUtils.isNotBlank(deduplicatesResponse.getError())){
                         if (StringUtils.equalsIgnoreCase(paperProperties.getOriginalPostmanAddressUsageMode(), Const.PAPERSEND)){
