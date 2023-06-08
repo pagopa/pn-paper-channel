@@ -21,6 +21,7 @@ import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
@@ -398,7 +399,9 @@ class Paper_RS_AR_IT extends BaseTest {
         CommonMetaDematAggregateSequenceTest("RECRN002D", "RECRN002E", "RECRN002F", StatusCodeEnum.KO, true, true);
     }
 
+    /* Da eliminare perchè sono state implementati in PN-5972 */
     @Test
+    @Disabled
     void Test_AR_DeliveredToStorage__RECRN003A_RECRN003B_RECRN003C() {
         // meta, demat, final (send to delivery push)
         //
@@ -408,7 +411,10 @@ class Paper_RS_AR_IT extends BaseTest {
         CommonMetaDematAggregateSequenceTest("RECRN003A", "RECRN003B", "RECRN003C", StatusCodeEnum.OK, false, false);
     }
 
+
+    /* Da eliminare perchè sono state implementati in PN-5972 */
     @Test
+    @Disabled
     void Test_AR_RefusedToStorage__RECRN004A_RECRN004B_RECRN004C() {
         // meta, demat, final (send to delivery push)
         //
@@ -418,7 +424,10 @@ class Paper_RS_AR_IT extends BaseTest {
         CommonMetaDematAggregateSequenceTest("RECRN004A", "RECRN004B", "RECRN004C", StatusCodeEnum.KO, false, false);
     }
 
+
+    /* Da eliminare perchè sono state implementati in PN-5972 */
     @Test
+    @Disabled
     void Test_AR_CompletedStorage__RECRN005A_RECRN005B_RECRN005C() {
         // meta, demat, final (send to delivery push)
         //
