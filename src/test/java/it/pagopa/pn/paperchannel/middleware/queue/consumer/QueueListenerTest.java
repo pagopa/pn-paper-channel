@@ -404,7 +404,7 @@ class QueueListenerTest extends BaseTest {
                     }
                 }
                 """;
-        PnGenericException exception = assertThrows(PnGenericException.class, ()->{
+        PnGenericException exception = assertThrows(PnGenericException.class, ()-> {
             Mockito.doNothing().when(sender).pushToInternalQueue(Mockito.any());
             queueListener.pullNationalRegistries(json, new HashMap<>());
         });

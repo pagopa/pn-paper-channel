@@ -4,8 +4,6 @@ import it.pagopa.pn.paperchannel.config.BaseTest;
 import it.pagopa.pn.paperchannel.mapper.RequestDeliveryMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
-import it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.HandlersFactory;
-import it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.RECRN011MessageHandler;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.StatusCodeEnum;
@@ -23,10 +21,9 @@ import java.time.OffsetDateTime;
 
 import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.TAKING_CHARGE;
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.RECRN011_STATUS_CODE;
-import static org.mockito.Mockito.mock;
 
 
-public class PaperPNRN012IT extends BaseTest {
+class PaperPNRN012IT extends BaseTest {
     private static final String REQUEST_ID = "abc-234-SDSS";
     private static final String PRODUCT_TYPE = "AR";
     @Autowired
@@ -36,8 +33,6 @@ public class PaperPNRN012IT extends BaseTest {
     private SqsSender sqsSender;
     @MockBean
     private RequestDeliveryDAO requestDeliveryDAO;
-    @MockBean
-    private HandlersFactory handlersFactory;
 
 
     @Test
@@ -46,8 +41,10 @@ public class PaperPNRN012IT extends BaseTest {
         SingleStatusUpdateDto extChannelMessage = new SingleStatusUpdateDto();
         extChannelMessage.setAnalogMail(createSimpleAnalogMail(RECRN011_STATUS_CODE, StatusCodeEnum.PROGRESS.getValue(), PRODUCT_TYPE));
 
+        PnDeliveryRequest requestHandler = getDeliveryRequest(TAKING_CHARGE.getCode(), TAKING_CHARGE.getDetail(), TAKING_CHARGE.getDescription());
+
         Mockito.when(requestDeliveryDAO.getByRequestId(REQUEST_ID))
-                .thenReturn(Mono.just(getDeliveryRequest(TAKING_CHARGE.getCode(), TAKING_CHARGE.getDetail(), TAKING_CHARGE.getDescription())));
+                .thenReturn(Mono.just(requestHandler));
 
         PnDeliveryRequest updatedIntoResultAsync = getDeliveryRequest(TAKING_CHARGE.getCode(), TAKING_CHARGE.getDetail(), TAKING_CHARGE.getDescription());
         RequestDeliveryMapper.changeState(
@@ -55,18 +52,15 @@ public class PaperPNRN012IT extends BaseTest {
                 extChannelMessage.getAnalogMail().getStatusCode(),
                 extChannelMessage.getAnalogMail().getStatusDescription(),
                 ExternalChannelCodeEnum.getStatusCode(extChannelMessage.getAnalogMail().getStatusCode()),
-                PRODUCT_TYPE,
+                updatedIntoResultAsync.getProductType(),
                 extChannelMessage.getAnalogMail().getStatusDateTime().toInstant()
                 );
 
-        RECRN011MessageHandler handler = mock(RECRN011MessageHandler.class);
-        Mockito.when(handlersFactory.getHandler(Mockito.any()))
-                .thenReturn(handler);
+        Mockito.when(requestDeliveryDAO.updateData(Mockito.any()))
+                .thenReturn(Mono.just(updatedIntoResultAsync));
 
-        Mockito.when(handler.handleMessage(Mockito.any(), Mockito.any()))
-                        .thenReturn(Mono.empty());
+        Mockito.doNothing().when(sqsSender).pushSendEvent(Mockito.any());
 
-        Mockito.when(requestDeliveryDAO.updateData(updatedIntoResultAsync)).thenReturn(Mono.just(updatedIntoResultAsync));
 
         Assertions.assertDoesNotThrow(() -> {
             this.paperResultAsyncService.resultAsyncBackground(extChannelMessage, 15).block();
@@ -92,6 +86,7 @@ public class PaperPNRN012IT extends BaseTest {
         analogMail.setStatusDateTime(OffsetDateTime.now());
         analogMail.setStatusCode(statusCode);
         analogMail.setProductType(productType);
+
         analogMail.setStatusDescription(statusDetail);
 
         return analogMail;

@@ -50,6 +50,8 @@ public enum ExternalChannelCodeEnum {
     CON995("KO"),
     CON993("KO"),
 
+    RECRN011("PROGRESS"),
+
     //DEMAT STATUS CODE
     RECRS002B("PROGRESS"),
     RECRS002E("PROGRESS"),
