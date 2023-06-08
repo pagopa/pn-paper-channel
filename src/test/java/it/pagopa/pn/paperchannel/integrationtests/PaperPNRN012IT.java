@@ -9,6 +9,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDiscoveredAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventDemat;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
+import it.pagopa.pn.paperchannel.middleware.queue.consumer.MetaDematCleaner;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.AttachmentDetailsDto;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.SingleStatusUpdateDto;
@@ -23,6 +24,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.annotation.DirtiesContext;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
@@ -56,9 +58,12 @@ class PaperPNRN012IT extends BaseTest {
     private EventDematDAO eventDematDAO;
     @MockBean
     private EventMetaDAO eventMetaDAO;
+    @MockBean
+    private MetaDematCleaner metaDematCleaner;
 
 
     @Test
+    @DirtiesContext
     void Test_AR_StartProcessing__RECRN011(){
         /* BODY OF EXTERNAL CHANNEL QUEUE */
         SingleStatusUpdateDto extChannelMessage = new SingleStatusUpdateDto();
@@ -88,20 +93,20 @@ class PaperPNRN012IT extends BaseTest {
          */
 
         ArgumentCaptor<SendEvent> capturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
+        verify(sqsSender).pushSendEvent(capturedSendEvent.capture());
         assertNotNull(capturedSendEvent);
         assertNotNull(capturedSendEvent.getValue());
         assertEquals(RECRN011_STATUS_CODE, capturedSendEvent.getValue().getStatusDetail());
         assertEquals(StatusCodeEnum.PROGRESS, capturedSendEvent.getValue().getStatusCode());
-
     }
 
     @Test
+    @DirtiesContext
     void Test_AR_Save_MetaData__RECRN003A() {
         String RECRN003A_STATUS_CODE = "RECRN003A";
         /* BODY OF EXTERNAL CHANNEL QUEUE */
         SingleStatusUpdateDto extChannelMessage = new SingleStatusUpdateDto();
         extChannelMessage.setAnalogMail(createSimpleAnalogMail(RECRN003A_STATUS_CODE, StatusCodeEnum.PROGRESS.getValue(), PRODUCT_TYPE));
-
 
         /* ENTITY ALREADY EXISTED INTO DB */
         PnDeliveryRequest entityFromDB = getDeliveryRequest(RECRN011_STATUS_CODE, StatusCodeEnum.PROGRESS.getValue(), RECRN011_STATUS_CODE.concat(StatusCodeEnum.PROGRESS.getValue()));
@@ -112,21 +117,23 @@ class PaperPNRN012IT extends BaseTest {
         /* MOCKS OF RESULT ASYNC SERVICE */
         mockResultAsync(entityFromDB, entityForUpdated, extChannelMessage.getAnalogMail());
 
-
         PnEventMeta pnEventMeta = getEventMeta(RECRN003A_STATUS_CODE, Instant.now());
 
-        Mockito.when(eventMetaDAO.createOrUpdate(pnEventMeta))
+        Mockito.when(eventMetaDAO.createOrUpdate(Mockito.any()))
                 .thenReturn(Mono.just(pnEventMeta));
 
         Assertions.assertDoesNotThrow(() -> {
             this.paperResultAsyncService.resultAsyncBackground(extChannelMessage, 15).block();
         });
 
-        verify(eventMetaDAO, times(1)).createOrUpdate(pnEventMeta);
+        ArgumentCaptor<PnEventMeta> capturedEventMetaDAO = ArgumentCaptor.forClass(PnEventMeta.class);
+        verify(eventMetaDAO).createOrUpdate(capturedEventMetaDAO.capture());
+        assertNotNull(capturedEventMetaDAO.getValue());
+        assertEquals(RECRN003A_STATUS_CODE, capturedEventMetaDAO.getValue().getStatusCode());
     }
 
-
     @Test
+    @DirtiesContext
     void Test_AR_SaveDemat__RECRN004B(){
         String RECRN004B = "RECRN004B";
         String RECRN004A = "RECRN004A";
@@ -155,70 +162,21 @@ class PaperPNRN012IT extends BaseTest {
         /* START MOCK SAVE DEMAT HANDLER */
         Mockito.when(eventDematDAO.createOrUpdate(Mockito.any()))
                 .thenReturn(Mono.just(new PnEventDemat()));
+
         /* END MOCK SAVE DEMAT HANDLER */
 
         Assertions.assertDoesNotThrow(() -> {
             this.paperResultAsyncService.resultAsyncBackground(extChannelMessage, 15).block();
         });
 
+        ArgumentCaptor<PnEventDemat> capturedEventMetaDAO = ArgumentCaptor.forClass(PnEventDemat.class);
+        verify(eventDematDAO).createOrUpdate(capturedEventMetaDAO.capture());
+        assertNotNull(capturedEventMetaDAO.getValue());
+        assertNotNull(RECRN004B, capturedEventMetaDAO.getValue().getStatusCode());
     }
 
-
     @Test
-    void Test_AR_SendPNRN012ToDeliveryPush__RECRN00XC(){
-        String RECRN004C = "RECRN004C";
-
-        /* BODY OF EXTERNAL CHANNEL QUEUE */
-        SingleStatusUpdateDto extChannelMessage = new SingleStatusUpdateDto();
-        PaperProgressStatusEventDto analog = createSimpleAnalogMail(RECRN004C, StatusCodeEnum.OK.getValue(), PRODUCT_TYPE);
-        analog.setAttachments(List.of(
-                new AttachmentDetailsDto()
-                        .documentType("Plico")
-                        .date(OffsetDateTime.now())
-                        .uri("https://safestorage.it")));
-        extChannelMessage.setAnalogMail(analog);
-
-        /* ENTITY ALREADY EXISTED INTO DB */
-        PnDeliveryRequest entityFromDB = getDeliveryRequest(RECRN011_STATUS_CODE, StatusCodeEnum.PROGRESS.getValue(), RECRN011_STATUS_CODE.concat(StatusCodeEnum.PROGRESS.getValue()));
-
-        /* ENTITY FOR UPDATE WITH NEW STATUS ON DB */
-        PnDeliveryRequest entityForUpdated = getDeliveryRequest(RECRN011_STATUS_CODE, StatusCodeEnum.PROGRESS.getValue(), RECRN011_STATUS_CODE.concat(StatusCodeEnum.PROGRESS.getValue()));
-
-        /* MOCKS OF RESULT ASYNC SERVICE */
-        mockResultAsync(entityFromDB, entityForUpdated, extChannelMessage.getAnalogMail());
-
-        /* START MOCKS OF RECRN00XCMESSAGEHANDLER */
-
-        /* ENTITY FOR CALCULATED TIME DIFFERENCE */
-        PnEventMeta eventRECRN011 = getEventMeta(RECRN011_STATUS_CODE, Instant.now().minus(20, ChronoUnit.DAYS));
-        PnEventMeta eventRECRN004A = getEventMeta("RECRN004A", Instant.now().minus(15, ChronoUnit.DAYS));
-
-        Mockito.when(eventMetaDAO.getDeliveryEventMeta(eventRECRN011.getMetaRequestId(), eventRECRN011.getMetaStatusCode()))
-                .thenReturn(Mono.just(eventRECRN011));
-
-        Mockito.when(eventMetaDAO.getDeliveryEventMeta(eventRECRN004A.getMetaRequestId(), eventRECRN004A.getMetaStatusCode()))
-                .thenReturn(Mono.just(eventRECRN004A));
-
-
-        Mockito.doNothing().when(sqsSender).pushSendEvent(Mockito.any());
-
-        /* END OF MOCKS OF RECRN00XCMESSAGEHANDLER*/
-
-        Assertions.assertDoesNotThrow(() -> {
-            this.paperResultAsyncService.resultAsyncBackground(extChannelMessage, 15).block();
-        });
-
-        ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
-        assertNotNull(caturedSendEvent);
-        assertNotNull(caturedSendEvent.getValue());
-        assertEquals(PNRN012, caturedSendEvent.getValue().getStatusDetail());
-        assertEquals(StatusCodeEnum.PROGRESS, caturedSendEvent.getValue().getStatusCode());
-
-    }
-
-
-
-    @Test
+    @DirtiesContext
     void Test_AR_Save_MetaData__RECRN004C() {
         String RECRN004C_STATUS_CODE = "RECRN004C";
 
@@ -247,8 +205,104 @@ class PaperPNRN012IT extends BaseTest {
 
         Mockito.when(eventMetaDAO.getDeliveryEventMeta(metaRequestId, buildMetaStatusCode(RECRN011_STATUS_CODE)))
                 .thenReturn(Mono.just(new PnEventMeta()));
-
     }
+
+    @Test
+    @DirtiesContext
+    void Test_AR_SendPNRN012ToDeliveryPush__RECRN00XC_GreaterEquals10(){
+        String RECRN004C = "RECRN004C";
+
+        /* BODY OF EXTERNAL CHANNEL QUEUE */
+        SingleStatusUpdateDto extChannelMessage = new SingleStatusUpdateDto();
+        PaperProgressStatusEventDto analog = createSimpleAnalogMail(RECRN004C, StatusCodeEnum.OK.getValue(), PRODUCT_TYPE);
+        analog.setAttachments(List.of(
+                new AttachmentDetailsDto()
+                        .documentType("Plico")
+                        .date(OffsetDateTime.now())
+                        .uri("https://safestorage.it")));
+        extChannelMessage.setAnalogMail(analog);
+
+        /* ENTITY ALREADY EXISTED INTO DB */
+        PnDeliveryRequest entityFromDB = getDeliveryRequest(RECRN011_STATUS_CODE, StatusCodeEnum.PROGRESS.getValue(), RECRN011_STATUS_CODE.concat(StatusCodeEnum.PROGRESS.getValue()));
+
+        /* ENTITY FOR UPDATE WITH NEW STATUS ON DB */
+        PnDeliveryRequest entityForUpdated = getDeliveryRequest(RECRN011_STATUS_CODE, StatusCodeEnum.PROGRESS.getValue(), RECRN011_STATUS_CODE.concat(StatusCodeEnum.PROGRESS.getValue()));
+
+        /* MOCKS OF RESULT ASYNC SERVICE */
+        mockResultAsync(entityFromDB, entityForUpdated, extChannelMessage.getAnalogMail());
+
+        /* ENTITY FOR CALCULATED TIME DIFFERENCE */
+        PnEventMeta eventRECRN011 = getEventMeta(RECRN011_STATUS_CODE, Instant.now().minus(20, ChronoUnit.DAYS));
+        PnEventMeta eventRECRN004A = getEventMeta("RECRN004A", Instant.now().minus(5, ChronoUnit.DAYS));
+
+        /* START MOCKS OF RECRN00XCMESSAGEHANDLER */
+        Mockito.when(eventMetaDAO.getDeliveryEventMeta(eventRECRN011.getMetaRequestId(), eventRECRN011.getMetaStatusCode()))
+                .thenReturn(Mono.just(eventRECRN011));
+
+        Mockito.when(eventMetaDAO.getDeliveryEventMeta(eventRECRN004A.getMetaRequestId(), eventRECRN004A.getMetaStatusCode()))
+                .thenReturn(Mono.just(eventRECRN004A));
+
+        Mockito.doNothing().when(sqsSender).pushSendEvent(Mockito.any());
+
+        /* END OF MOCKS OF RECRN00XCMESSAGEHANDLER*/
+        Assertions.assertDoesNotThrow(() -> {
+            this.paperResultAsyncService.resultAsyncBackground(extChannelMessage, 15).block();
+        });
+
+        ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
+        verify(sqsSender).pushSendEvent(caturedSendEvent.capture());
+        assertNotNull(caturedSendEvent);
+        assertNotNull(caturedSendEvent.getValue());
+        assertEquals(PNRN012, caturedSendEvent.getValue().getStatusDetail());
+        assertEquals(StatusCodeEnum.PROGRESS, caturedSendEvent.getValue().getStatusCode());
+    }
+
+    @Test
+    @DirtiesContext
+    void Test_AR_SendPNRN012ToDeliveryPush__RECRN00XC_Minor10(){
+        String RECRN004C = "RECRN004C";
+
+        /* BODY OF EXTERNAL CHANNEL QUEUE */
+        SingleStatusUpdateDto extChannelMessage = new SingleStatusUpdateDto();
+        PaperProgressStatusEventDto analog = createSimpleAnalogMail(RECRN004C, StatusCodeEnum.OK.getValue(), PRODUCT_TYPE);
+        analog.setAttachments(List.of(
+                new AttachmentDetailsDto()
+                        .documentType("Plico")
+                        .date(OffsetDateTime.now())
+                        .uri("https://safestorage.it")));
+        extChannelMessage.setAnalogMail(analog);
+
+        /* ENTITY ALREADY EXISTED INTO DB */
+        PnDeliveryRequest entityFromDB = getDeliveryRequest(RECRN011_STATUS_CODE, StatusCodeEnum.PROGRESS.getValue(), RECRN011_STATUS_CODE.concat(StatusCodeEnum.PROGRESS.getValue()));
+
+        /* ENTITY FOR UPDATE WITH NEW STATUS ON DB */
+        PnDeliveryRequest entityForUpdated = getDeliveryRequest(RECRN011_STATUS_CODE, StatusCodeEnum.PROGRESS.getValue(), RECRN011_STATUS_CODE.concat(StatusCodeEnum.PROGRESS.getValue()));
+
+        /* MOCKS OF RESULT ASYNC SERVICE */
+        mockResultAsync(entityFromDB, entityForUpdated, extChannelMessage.getAnalogMail());
+
+        /* ENTITY FOR CALCULATED TIME DIFFERENCE */
+        PnEventMeta eventRECRN011 = getEventMeta(RECRN011_STATUS_CODE, Instant.now().minus(20, ChronoUnit.DAYS));
+        PnEventMeta eventRECRN004A = getEventMeta("RECRN004A", Instant.now().minus(15, ChronoUnit.DAYS));
+
+        /* START MOCKS OF RECRN00XCMESSAGEHANDLER */
+        Mockito.when(eventMetaDAO.getDeliveryEventMeta(eventRECRN011.getMetaRequestId(), eventRECRN011.getMetaStatusCode()))
+                .thenReturn(Mono.just(eventRECRN011));
+
+        Mockito.when(eventMetaDAO.getDeliveryEventMeta(eventRECRN004A.getMetaRequestId(), eventRECRN004A.getMetaStatusCode()))
+                .thenReturn(Mono.just(eventRECRN004A));
+
+        Mockito.when(metaDematCleaner.clean(REQUEST_ID))
+                .thenReturn(Mono.just("").then());
+
+        /* END OF MOCKS OF RECRN00XCMESSAGEHANDLER*/
+        Assertions.assertDoesNotThrow(() -> {
+            this.paperResultAsyncService.resultAsyncBackground(extChannelMessage, 15).block();
+        });
+
+        verify(metaDematCleaner, times(1)).clean(REQUEST_ID);
+    }
+
 
     private void mockResultAsync(PnDeliveryRequest deliveryRequest, PnDeliveryRequest forUpdate, PaperProgressStatusEventDto analogMail) {
         Mockito.when(requestDeliveryDAO.getByRequestId(REQUEST_ID))
