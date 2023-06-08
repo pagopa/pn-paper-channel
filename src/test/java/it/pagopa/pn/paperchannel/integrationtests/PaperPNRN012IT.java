@@ -2,8 +2,10 @@ package it.pagopa.pn.paperchannel.integrationtests;
 
 import it.pagopa.pn.paperchannel.config.BaseTest;
 import it.pagopa.pn.paperchannel.mapper.RequestDeliveryMapper;
+import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventDemat;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.StatusCodeEnum;
@@ -26,6 +28,8 @@ import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.RECRN011_STATUS_COD
 class PaperPNRN012IT extends BaseTest {
     private static final String REQUEST_ID = "abc-234-SDSS";
     private static final String PRODUCT_TYPE = "AR";
+
+
     @Autowired
     private PaperResultAsyncServiceImpl paperResultAsyncService;
 
@@ -33,6 +37,8 @@ class PaperPNRN012IT extends BaseTest {
     private SqsSender sqsSender;
     @MockBean
     private RequestDeliveryDAO requestDeliveryDAO;
+    @MockBean
+    private EventDematDAO eventDematDAO;
 
 
     @Test
@@ -69,6 +75,46 @@ class PaperPNRN012IT extends BaseTest {
     }
 
 
+    @Test
+    void Test_AR_SaveDemat__RECRN004B(){
+        String RECRN004B = "RECRN004B";
+
+        SingleStatusUpdateDto extChannelMessage = new SingleStatusUpdateDto();
+        extChannelMessage.setAnalogMail(createSimpleAnalogMail(RECRN004B, StatusCodeEnum.PROGRESS.getValue(), PRODUCT_TYPE));
+
+        PnDeliveryRequest requestHandler = getDeliveryRequest(RECRN011_STATUS_CODE, StatusCodeEnum.PROGRESS.getValue(), RECRN011_STATUS_CODE.concat(StatusCodeEnum.PROGRESS.getValue()));
+
+        Mockito.when(requestDeliveryDAO.getByRequestId(REQUEST_ID))
+                .thenReturn(Mono.just(requestHandler));
+
+        PnDeliveryRequest updatedIntoResultAsync = getDeliveryRequest(RECRN011_STATUS_CODE, StatusCodeEnum.PROGRESS.getValue(), RECRN011_STATUS_CODE.concat(StatusCodeEnum.PROGRESS.getValue()));
+        RequestDeliveryMapper.changeState(
+                updatedIntoResultAsync,
+                extChannelMessage.getAnalogMail().getStatusCode(),
+                extChannelMessage.getAnalogMail().getStatusDescription(),
+                ExternalChannelCodeEnum.getStatusCode(extChannelMessage.getAnalogMail().getStatusCode()),
+                updatedIntoResultAsync.getProductType(),
+                extChannelMessage.getAnalogMail().getStatusDateTime().toInstant()
+        );
+
+        Mockito.when(requestDeliveryDAO.updateData(Mockito.any()))
+                .thenReturn(Mono.just(updatedIntoResultAsync));
+
+
+        Mockito.when(eventDematDAO.createOrUpdate(Mockito.any()))
+                .thenReturn(Mono.just(new PnEventDemat()));
+
+
+
+        Mockito.doNothing().when(sqsSender).pushSendEvent(Mockito.any());
+
+        Assertions.assertDoesNotThrow(() -> {
+            this.paperResultAsyncService.resultAsyncBackground(extChannelMessage, 15).block();
+        });
+
+    }
+
+
 
     private PnDeliveryRequest getDeliveryRequest(String code, String detail, String description){
         var request = new PnDeliveryRequest();
@@ -88,6 +134,7 @@ class PaperPNRN012IT extends BaseTest {
         analogMail.setProductType(productType);
 
         analogMail.setStatusDescription(statusDetail);
+
 
         return analogMail;
     }
