@@ -138,7 +138,7 @@ Resources:
       BillingMode: "PAY_PER_REQUEST"
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: true
-
+      
   AddressDynamoTable:
     Type: AWS::DynamoDB::Table
     UpdateReplacePolicy: Retain
@@ -165,6 +165,10 @@ Resources:
       BillingMode: "PAY_PER_REQUEST"
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        KMSMasterKeyId: !Ref PCKmsEncDecDynamoDataKey
+        SSEEnabled: true
+        SSEType: KMS      
 
   TenderDynamoTable:
     Type: AWS::DynamoDB::Table
