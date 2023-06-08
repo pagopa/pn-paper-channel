@@ -6,6 +6,7 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventDemat;
+import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.AttachmentDetailsDto;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.paperchannel.rest.v1.dto.StatusCodeEnum;
@@ -20,6 +21,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import reactor.core.publisher.Mono;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 
 import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.TAKING_CHARGE;
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.RECRN011_STATUS_CODE;
@@ -80,7 +82,15 @@ class PaperPNRN012IT extends BaseTest {
         String RECRN004B = "RECRN004B";
 
         SingleStatusUpdateDto extChannelMessage = new SingleStatusUpdateDto();
-        extChannelMessage.setAnalogMail(createSimpleAnalogMail(RECRN004B, StatusCodeEnum.PROGRESS.getValue(), PRODUCT_TYPE));
+        PaperProgressStatusEventDto analog = createSimpleAnalogMail(RECRN004B, StatusCodeEnum.PROGRESS.getValue(), PRODUCT_TYPE);
+
+        analog.setAttachments(List.of(
+                new AttachmentDetailsDto()
+                        .documentType("Plico")
+                        .date(OffsetDateTime.now())
+                        .uri("https://safestorage.it")));
+
+        extChannelMessage.setAnalogMail(analog);
 
         PnDeliveryRequest requestHandler = getDeliveryRequest(RECRN011_STATUS_CODE, StatusCodeEnum.PROGRESS.getValue(), RECRN011_STATUS_CODE.concat(StatusCodeEnum.PROGRESS.getValue()));
 
