@@ -1,8 +1,8 @@
 package it.pagopa.pn.paperchannel.middleware.queue.model;
 
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
-import it.pagopa.pn.paperchannel.msclient.generated.pnextchannel.v1.dto.PaperProgressStatusEventDto;
-import it.pagopa.pn.paperchannel.rest.v1.dto.StatusCodeEnum;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -10,7 +10,8 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
-import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
+import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.PNRN012_STATUS_CODE;
+import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.PNRN012_STATUS_DESCRIPTION;
 
 
 @Getter
