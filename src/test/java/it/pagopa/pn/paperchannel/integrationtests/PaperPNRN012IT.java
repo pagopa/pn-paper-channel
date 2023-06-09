@@ -175,37 +175,6 @@ class PaperPNRN012IT extends BaseTest {
         assertNotNull(RECRN004B, capturedEventMetaDAO.getValue().getStatusCode());
     }
 
-    @Test
-    @DirtiesContext
-    void Test_AR_Save_MetaData__RECRN004C() {
-        String RECRN004C_STATUS_CODE = "RECRN004C";
-
-        SingleStatusUpdateDto extChannelMessage = new SingleStatusUpdateDto();
-        extChannelMessage.setAnalogMail(createSimpleAnalogMail(RECRN004C_STATUS_CODE, StatusCodeEnum.PROGRESS.getValue(), PRODUCT_TYPE));
-
-        PnDeliveryRequest requestHandler = getDeliveryRequest(TAKING_CHARGE.getCode(), TAKING_CHARGE.getDetail(), TAKING_CHARGE.getDescription());
-
-        Mockito.when(requestDeliveryDAO.getByRequestId(REQUEST_ID))
-                .thenReturn(Mono.just(requestHandler));
-
-        PnDeliveryRequest updatedIntoResultAsync = getDeliveryRequest(TAKING_CHARGE.getCode(), TAKING_CHARGE.getDetail(), TAKING_CHARGE.getDescription());
-        RequestDeliveryMapper.changeState(
-                updatedIntoResultAsync,
-                extChannelMessage.getAnalogMail().getStatusCode(),
-                extChannelMessage.getAnalogMail().getStatusDescription(),
-                ExternalChannelCodeEnum.getStatusCode(extChannelMessage.getAnalogMail().getStatusCode()),
-                updatedIntoResultAsync.getProductType(),
-                extChannelMessage.getAnalogMail().getStatusDateTime().toInstant()
-        );
-
-        Mockito.when(requestDeliveryDAO.updateData(Mockito.any()))
-                .thenReturn(Mono.just(updatedIntoResultAsync));
-
-        final String metaRequestId = buildMetaRequestId(requestHandler.getRequestId());
-
-        Mockito.when(eventMetaDAO.getDeliveryEventMeta(metaRequestId, buildMetaStatusCode(RECRN011_STATUS_CODE)))
-                .thenReturn(Mono.just(new PnEventMeta()));
-    }
 
     @Test
     @DirtiesContext

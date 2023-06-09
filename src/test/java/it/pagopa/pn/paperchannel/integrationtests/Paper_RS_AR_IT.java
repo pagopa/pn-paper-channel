@@ -21,7 +21,7 @@ import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum;
-import org.junit.jupiter.api.Disabled;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
@@ -29,15 +29,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 
+import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.RECRN011_STATUS_CODE;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
+@Slf4j
 class Paper_RS_AR_IT extends BaseTest {
 
     @Autowired
@@ -145,6 +151,34 @@ class Paper_RS_AR_IT extends BaseTest {
         } else {
             assertNull(caturedSendEvent.getValue().getDeliveryFailureCause());
         }
+    }
+
+    private void SaveMetaRECRN011Status(){
+        PnDeliveryRequest pnDeliveryRequest = CommonUtils.createPnDeliveryRequest();
+
+        PaperProgressStatusEventDto analogMail = CommonUtils.createSimpleAnalogMail();
+        analogMail.setStatusCode(RECRN011_STATUS_CODE);
+        analogMail.setProductType("RS");
+        SingleStatusUpdateDto extChannelMessage = new SingleStatusUpdateDto();
+        extChannelMessage.setAnalogMail(analogMail);
+
+
+        PnDeliveryRequest afterSetForUpdate = CommonUtils.createPnDeliveryRequest();
+        afterSetForUpdate.setStatusDetail(ExternalChannelCodeEnum.getStatusCode(extChannelMessage.getAnalogMail().getStatusCode()));
+        afterSetForUpdate.setStatusDescription(extChannelMessage.getAnalogMail().getProductType()
+                .concat(" - ").concat(pnDeliveryRequest.getStatusCode()).concat(" - ").concat(extChannelMessage.getAnalogMail().getStatusDescription()));
+        afterSetForUpdate.setStatusDate(DateUtils.formatDate(Date.from(extChannelMessage.getAnalogMail().getStatusDateTime().toInstant())));
+        afterSetForUpdate.setStatusCode(extChannelMessage.getAnalogMail().getStatusCode());
+        when(requestDeliveryDAO.getByRequestId(anyString())).thenReturn(Mono.just(pnDeliveryRequest));
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
+
+        // verifico che il flusso della Giacenza RECRN011 è terminato con successo
+        assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());
+        ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
+        verify(sqsSender).pushSendEvent(caturedSendEvent.capture());
+
+        assertNotNull(caturedSendEvent.getValue());
+        assertEquals(RECRN011_STATUS_CODE, caturedSendEvent.getValue().getStatusDetail());
     }
 
     private void CommonMetaDematAggregateSequenceTest(String event1, String event2, String event3, StatusCodeEnum expectedStatusCode, boolean checkDeliveryFailureCauseEnrichment, boolean checkDiscoveredAddress) {
@@ -399,42 +433,91 @@ class Paper_RS_AR_IT extends BaseTest {
         CommonMetaDematAggregateSequenceTest("RECRN002D", "RECRN002E", "RECRN002F", StatusCodeEnum.KO, true, true);
     }
 
-    /* Da eliminare perchè sono state implementati in PN-5972 */
     @Test
-    @Disabled
     void Test_AR_DeliveredToStorage__RECRN003A_RECRN003B_RECRN003C() {
         // meta, demat, final (send to delivery push)
         //
         //
         // demat PROGRESS -> send to delivery push
+        ArgumentCaptor<SendEvent> capturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
-        CommonMetaDematAggregateSequenceTest("RECRN003A", "RECRN003B", "RECRN003C", StatusCodeEnum.OK, false, false);
+        generateEvent(RECRN011_STATUS_CODE, null, null, null, Instant.now().minus(20, ChronoUnit.DAYS));
+
+        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(capturedSendEvent.capture());
+        log.info("Event: \n"+capturedSendEvent.getAllValues());
+        assertNotNull(capturedSendEvent.getValue());
+        assertEquals(StatusCodeEnum.PROGRESS, capturedSendEvent.getValue().getStatusCode());
+        assertEquals(RECRN011_STATUS_CODE, capturedSendEvent.getValue().getStatusDetail());
+
+        generateEvent("RECRN003A", null, null, null, Instant.now().minus(5, ChronoUnit.DAYS));
+        generateEvent("RECRN003B", null, null, List.of("safe-storage://123ABCDOC"), Instant.now().minus(5, ChronoUnit.DAYS));
+        generateEvent("RECRN003C", null, null, null, Instant.now().minus(5, ChronoUnit.DAYS));
+
+        ArgumentCaptor<SendEvent> captureSecond = ArgumentCaptor.forClass(SendEvent.class);
+        verify(sqsSender, times(2)).pushSendEvent(captureSecond.capture());
+        assertNotNull(captureSecond.getValue());
+        assertEquals(StatusCodeEnum.PROGRESS, captureSecond.getValue().getStatusCode());
+        assertEquals("PNRN012", captureSecond.getValue().getStatusDetail());
     }
 
 
-    /* Da eliminare perchè sono state implementati in PN-5972 */
     @Test
-    @Disabled
     void Test_AR_RefusedToStorage__RECRN004A_RECRN004B_RECRN004C() {
+        // meta RECRN011
+        //
         // meta, demat, final (send to delivery push)
         //
         //
         // demat PROGRESS -> send to delivery push
+        ArgumentCaptor<SendEvent> capturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
-        CommonMetaDematAggregateSequenceTest("RECRN004A", "RECRN004B", "RECRN004C", StatusCodeEnum.KO, false, false);
+        generateEvent(RECRN011_STATUS_CODE, null, null, null, Instant.now().minus(20, ChronoUnit.DAYS));
+
+        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(capturedSendEvent.capture());
+        log.info("Event: \n"+capturedSendEvent.getAllValues());
+        assertNotNull(capturedSendEvent.getValue());
+        assertEquals(StatusCodeEnum.PROGRESS, capturedSendEvent.getValue().getStatusCode());
+        assertEquals(RECRN011_STATUS_CODE, capturedSendEvent.getValue().getStatusDetail());
+
+        generateEvent("RECRN004A", null, null, null, Instant.now().minus(5, ChronoUnit.DAYS));
+        generateEvent("RECRN004B", null, null, List.of("safe-storage://123ABCDOC"), Instant.now().minus(5, ChronoUnit.DAYS));
+        generateEvent("RECRN004C", null, null, null, Instant.now().minus(5, ChronoUnit.DAYS));
+
+        ArgumentCaptor<SendEvent> captureSecond = ArgumentCaptor.forClass(SendEvent.class);
+        verify(sqsSender, times(2)).pushSendEvent(captureSecond.capture());
+        assertNotNull(captureSecond.getValue());
+        assertEquals(StatusCodeEnum.PROGRESS, captureSecond.getValue().getStatusCode());
+        assertEquals("PNRN012", captureSecond.getValue().getStatusDetail());
+
     }
 
 
-    /* Da eliminare perchè sono state implementati in PN-5972 */
     @Test
-    @Disabled
     void Test_AR_CompletedStorage__RECRN005A_RECRN005B_RECRN005C() {
         // meta, demat, final (send to delivery push)
         //
         //
         // demat PROGRESS -> send to delivery push
+        ArgumentCaptor<SendEvent> capturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
-        CommonMetaDematAggregateSequenceTest("RECRN005A", "RECRN005B", "RECRN005C", StatusCodeEnum.KO,false, false);
+        generateEvent(RECRN011_STATUS_CODE, null, null, null, Instant.now().minus(20, ChronoUnit.DAYS));
+
+        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(capturedSendEvent.capture());
+        log.info("Event: \n"+capturedSendEvent.getAllValues());
+        assertNotNull(capturedSendEvent.getValue());
+        assertEquals(StatusCodeEnum.PROGRESS, capturedSendEvent.getValue().getStatusCode());
+        assertEquals(RECRN011_STATUS_CODE, capturedSendEvent.getValue().getStatusDetail());
+
+        generateEvent("RECRN005A", "MA", null, null, Instant.now().minus(5, ChronoUnit.DAYS));
+        generateEvent("RECRN005B", "MA", null, List.of("safe-storage://123ABCDOC"), Instant.now().minus(5, ChronoUnit.DAYS));
+        generateEvent("RECRN005C", "MA", null, null, Instant.now().minus(5, ChronoUnit.DAYS));
+
+        ArgumentCaptor<SendEvent> captureSecond = ArgumentCaptor.forClass(SendEvent.class);
+        verify(sqsSender, times(2)).pushSendEvent(captureSecond.capture());
+        assertNotNull(captureSecond.getValue());
+        assertEquals(StatusCodeEnum.PROGRESS, captureSecond.getValue().getStatusCode());
+        assertEquals("PNRN012", captureSecond.getValue().getStatusDetail());
+
     }
 
     @Test
@@ -465,4 +548,69 @@ class Paper_RS_AR_IT extends BaseTest {
 
         CommonFinalOnlySequenceTest("RECRN015", StatusCodeEnum.PROGRESS);
     }
+
+
+
+    private void generateEvent(String statusCode, String deliveryFailureCause, String discoveredAddress, List<String> attach, Instant statusDateTimeToSet){
+        PnDeliveryRequest pnDeliveryRequest = CommonUtils.createPnDeliveryRequest();
+        PaperProgressStatusEventDto analogMail = CommonUtils.createSimpleAnalogMail();
+        analogMail.setRequestId(pnDeliveryRequest.getRequestId());
+        analogMail.setStatusCode(statusCode);
+        analogMail.setStatusDescription(ExternalChannelCodeEnum.getStatusCode(statusCode));
+        analogMail.setProductType("AR");
+
+        if (statusDateTimeToSet != null) {
+            analogMail.setStatusDateTime(OffsetDateTime.ofInstant(statusDateTimeToSet, ZoneOffset.UTC));
+        }
+
+        if(deliveryFailureCause != null && !deliveryFailureCause.trim().equalsIgnoreCase("")){
+            analogMail.setDeliveryFailureCause(deliveryFailureCause);
+        }
+
+        if(attach != null && attach.size() > 0){
+            List<AttachmentDetailsDto> attachments = new LinkedList<>();
+            for(String elem: attach){
+                attachments.add(
+                        new AttachmentDetailsDto()
+                                .documentType(elem)
+                                .date(OffsetDateTime.now())
+                                .uri("https://safestorage.it"));
+            }
+            analogMail.setAttachments(attachments);
+        }
+
+        if (discoveredAddress != null && !discoveredAddress.trim().equalsIgnoreCase("")) {
+            PnDiscoveredAddress address = new PnDiscoveredAddress();
+            address.setAddress(discoveredAddress);
+
+            DiscoveredAddressDto discoveredAddressDto =
+                    new BaseMapperImpl<>(PnDiscoveredAddress.class, DiscoveredAddressDto.class)
+                            .toDTO(address);
+
+            analogMail.setDiscoveredAddress(discoveredAddressDto);
+        }
+
+
+
+        SingleStatusUpdateDto extChannelMessage = new SingleStatusUpdateDto();
+        extChannelMessage.setAnalogMail(analogMail);
+
+        PnDeliveryRequest afterSetForUpdate = CommonUtils.createPnDeliveryRequest();
+        afterSetForUpdate.setStatusDetail(ExternalChannelCodeEnum.getStatusCode(extChannelMessage.getAnalogMail().getStatusCode()));
+        afterSetForUpdate.setStatusDescription(extChannelMessage.getAnalogMail().getProductType()
+                .concat(" - ").concat(extChannelMessage.getAnalogMail().getStatusCode()).concat(" - ").concat(extChannelMessage.getAnalogMail().getStatusDescription()));
+        afterSetForUpdate.setStatusDate(DateUtils.formatDate(Date.from(extChannelMessage.getAnalogMail().getStatusDateTime().toInstant())));
+
+        afterSetForUpdate.setStatusCode(extChannelMessage.getAnalogMail().getStatusCode());
+
+        when(requestDeliveryDAO.getByRequestId(anyString())).thenReturn(Mono.just(pnDeliveryRequest));
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
+
+        // verifico che il flusso è stato completato con successo
+        assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());
+
+
+    }
+
+
 }
