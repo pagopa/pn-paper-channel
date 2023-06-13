@@ -37,7 +37,7 @@ public enum ExternalChannelCodeEnum {
     RECAG006C(Constants.OK),
     RECAG007C(Constants.OK),
     RECAG008C(Constants.PROGRESS),
-    PNAG012(Constants.KO),
+    PNAG012(Constants.KO), // TODO check se il valore in output è usato o invece è frutto di un alogorimo
     RECRI001(Constants.PROGRESS),
     RECRI002(Constants.PROGRESS),
     RECRI003C(Constants.OK),

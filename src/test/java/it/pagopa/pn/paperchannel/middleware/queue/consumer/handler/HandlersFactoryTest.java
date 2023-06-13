@@ -35,9 +35,9 @@ class HandlersFactoryTest {
         MessageHandler recag006C = handlersFactory.getHandler("RECAG006C");
         MessageHandler recag007C = handlersFactory.getHandler("RECAG007C");
 
-        assertThat(con080Event).isInstanceOf(ForwardProgressMessageHandler.class);
-        assertThat(recri001Event).isInstanceOf(ForwardProgressMessageHandler.class);
-        assertThat(recri002Event).isInstanceOf(ForwardProgressMessageHandler.class);
+        assertThat(con080Event).isInstanceOf(DirectlySendMessageHandler.class);
+        assertThat(recri001Event).isInstanceOf(DirectlySendMessageHandler.class);
+        assertThat(recri002Event).isInstanceOf(DirectlySendMessageHandler.class);
         assertThat(preEsitoEvent).isInstanceOf(SaveMetadataMessageHandler.class);
         assertThat(dematEvent).isInstanceOf(SaveDematMessageHandler.class);
         assertThat(fascicoloChiuso).isInstanceOf(AggregatorMessageHandler.class);

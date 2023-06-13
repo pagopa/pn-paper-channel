@@ -16,16 +16,16 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.*;
 
-class ForwardProgressMessageHandlerTest {
+class DirectlySendMessageHandlerTest {
 
-    private ForwardProgressMessageHandler handler;
+    private DirectlySendMessageHandler handler;
 
     private SqsSender mockSqsSender;
 
     @BeforeEach
     public void init() {
         mockSqsSender = mock(SqsSender.class);
-        handler = new ForwardProgressMessageHandler(mockSqsSender);
+        handler = new DirectlySendMessageHandler(mockSqsSender);
     }
 
     @Test
