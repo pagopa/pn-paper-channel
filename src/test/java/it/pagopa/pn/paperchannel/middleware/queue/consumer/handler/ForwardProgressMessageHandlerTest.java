@@ -16,20 +16,20 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.*;
 
-class CON080MessageHandlerTest {
+class ForwardProgressMessageHandlerTest {
 
-    private CON080MessageHandler handler;
+    private ForwardProgressMessageHandler handler;
 
     private SqsSender mockSqsSender;
 
     @BeforeEach
     public void init() {
         mockSqsSender = mock(SqsSender.class);
-        handler = new CON080MessageHandler(mockSqsSender);
+        handler = new ForwardProgressMessageHandler(mockSqsSender);
     }
 
     @Test
-    void handleMessageTest() {
+    void handleMessageTest_CON080() {
         OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
         PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
                 .requestId("requestId")
@@ -41,6 +41,51 @@ class CON080MessageHandlerTest {
                         .date(instant)
                         .uri("https://safestorage.it"))
                 );
+
+        PnDeliveryRequest entity = new PnDeliveryRequest();
+        entity.setRequestId("requestId");
+        entity.setStatusCode("statusDetail");
+        entity.setStatusDetail(StatusCodeEnum.PROGRESS.getValue());
+
+        assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
+
+        //mi aspetto che mandi il messaggio a delivery-push
+        SendEvent sendEventExpected = SendEventMapper.createSendEventMessage(entity, paperRequest);
+        verify(mockSqsSender, times(1)).pushSendEvent(sendEventExpected);
+    }
+
+
+    @Test
+    void handleMessageTest_RECRI001() {
+        OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
+        PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
+                .requestId("requestId")
+                .statusCode("RECRI001")
+                .statusDateTime(instant)
+                .clientRequestTimeStamp(instant)
+                ;
+
+        PnDeliveryRequest entity = new PnDeliveryRequest();
+        entity.setRequestId("requestId");
+        entity.setStatusCode("statusDetail");
+        entity.setStatusDetail(StatusCodeEnum.PROGRESS.getValue());
+
+        assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
+
+        //mi aspetto che mandi il messaggio a delivery-push
+        SendEvent sendEventExpected = SendEventMapper.createSendEventMessage(entity, paperRequest);
+        verify(mockSqsSender, times(1)).pushSendEvent(sendEventExpected);
+    }
+
+    @Test
+    void handleMessageTest_RECRI002() {
+        OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
+        PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
+                .requestId("requestId")
+                .statusCode("RECRI002")
+                .statusDateTime(instant)
+                .clientRequestTimeStamp(instant)
+                ;
 
         PnDeliveryRequest entity = new PnDeliveryRequest();
         entity.setRequestId("requestId");

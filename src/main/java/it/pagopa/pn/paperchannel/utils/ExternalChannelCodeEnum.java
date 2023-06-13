@@ -38,6 +38,8 @@ public enum ExternalChannelCodeEnum {
     RECAG007C(Constants.OK),
     RECAG008C(Constants.PROGRESS),
     PNAG012(Constants.KO),
+    RECRI001(Constants.PROGRESS),
+    RECRI002(Constants.PROGRESS),
     RECRI003C(Constants.OK),
     RECRI004C(Constants.OK),
     RECRSI003C(Constants.OK),

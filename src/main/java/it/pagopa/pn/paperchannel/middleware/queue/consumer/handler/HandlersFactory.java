@@ -43,7 +43,7 @@ public class HandlersFactory {
 
     @PostConstruct
     public void initializeHandlers() {
-        var con080MessageHandler = new CON080MessageHandler(sqsSender);
+        var forwardProgressMessageHandler = new ForwardProgressMessageHandler(sqsSender);
         var saveMetadataMessageHandler = new SaveMetadataMessageHandler(eventMetaDAO, pnPaperChannelConfig.getTtlExecutionDaysMeta());
         var saveDematMessageHandler = new SaveDematMessageHandler(sqsSender, eventDematDAO, pnPaperChannelConfig.getTtlExecutionDaysDemat());
         var retryableErrorExtChannelsMessageHandler = new RetryableErrorMessageHandler(sqsSender, externalChannelClient, addressDAO, paperRequestErrorDAO, pnPaperChannelConfig);
@@ -68,7 +68,9 @@ public class HandlersFactory {
         addDirectlySendStatusCodes(map, directlySendMessageHandler);
 
         //caso CON080
-        map.put(ExternalChannelCodeEnum.CON080.name(), con080MessageHandler);
+        map.put(ExternalChannelCodeEnum.CON080.name(), forwardProgressMessageHandler);
+        map.put(ExternalChannelCodeEnum.RECRI001.name(), forwardProgressMessageHandler);
+        map.put(ExternalChannelCodeEnum.RECRI002.name(), forwardProgressMessageHandler);
 
         //casi 890
         map.put("RECAG012", recag012MessageHandler);
