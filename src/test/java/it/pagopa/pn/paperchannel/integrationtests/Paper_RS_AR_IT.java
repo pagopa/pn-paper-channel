@@ -418,7 +418,7 @@ class Paper_RS_AR_IT extends BaseTest {
         //
         // demat PROGRESS -> send to delivery push
 
-        CommonMetaDematAggregateSequenceTest("RECRN002A", "RECRN002B", "RECRN002C", StatusCodeEnum.KO, true, false);
+        CommonMetaDematAggregateSequenceTest("RECRN002A", "RECRN002B", "RECRN002C", StatusCodeEnum.OK, true, false);
     }
 
     @Test
@@ -459,7 +459,6 @@ class Paper_RS_AR_IT extends BaseTest {
         assertEquals(StatusCodeEnum.PROGRESS, captureSecond.getValue().getStatusCode());
         assertEquals("PNRN012", captureSecond.getValue().getStatusDetail());
     }
-
 
     @Test
     void Test_AR_RefusedToStorage__RECRN004A_RECRN004B_RECRN004C() {

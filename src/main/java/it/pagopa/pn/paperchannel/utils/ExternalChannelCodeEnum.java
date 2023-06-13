@@ -7,82 +7,84 @@ import org.apache.commons.lang3.StringUtils;
 @Getter
 @Slf4j
 public enum ExternalChannelCodeEnum {
-    CON080("PROGRESS"),
-    RECRS001C("OK"),
-    RECRS002C("KO"),
-    RECRS002F("KO"),
-    RECRS003C("OK"),
-    RECRS004C("KO"),
-    RECRS005C("KO"),
-    RECRN006("PROGRESS"), // furto o smarrimento o rapinato
-    RECRS006("PROGRESS"), // furto o smarrimento o rapinato
-    RECRS013("PROGRESS"), // furto o smarrimento o rapinato
-    RECRN013("PROGRESS"), // furto o smarrimento o rapinato
-    RECRS015("PROGRESS"),
-    RECRN015("PROGRESS"),
-    RECAG015("PROGRESS"),
-    RECAG001C("OK"),
-    RECRN001C("OK"),
-    RECRN002C("KO"),
-    RECRN002F("KO"),
-    RECRN003C("OK"),
-    RECRN004C("KO"),
-    RECRN005C("KO"),
-    RECAG002C("OK"),
-    RECAG003C("KO"),
-    RECAG003F("KO"),
-    RECAG004("PROGRESS"), // furto o smarrimento
-    RECAG013("PROGRESS"),
-    RECAG005C("OK"),
-    RECAG006C("OK"),
-    RECAG007C("KO"),
-    RECAG008C("PROGRESS"),
-    PNAG012("KO"),
-    RECRI003C("OK"),
-    RECRI004C("KO"),
-    RECRSI003C("OK"),
-    RECRSI004C("KO"),
-    RECRSI005("PROGRESS"), // furto o smarrimento
-    RECRI005("PROGRESS"), // furto o smarrimento
-    CON998("KO"),
-    CON997("KO"),
-    CON996("KO"),
-    CON995("KO"),
-    CON993("KO"),
+    CON080(Constants.PROGRESS),
+    RECRS001C(Constants.OK),
+    RECRS002C(Constants.KO),
+    RECRS002F(Constants.KO),
+    RECRS003C(Constants.OK),
+    RECRS004C(Constants.KO),
+    RECRS005C(Constants.KO),
+    RECRN006(Constants.PROGRESS), // furto o smarrimento o rapinato
+    RECRS006(Constants.PROGRESS), // furto o smarrimento o rapinato
+    RECRS013(Constants.PROGRESS), // furto o smarrimento o rapinato
+    RECRN013(Constants.PROGRESS), // furto o smarrimento o rapinato
+    RECRS015(Constants.PROGRESS),
+    RECRN015(Constants.PROGRESS),
+    RECAG015(Constants.PROGRESS),
+    RECAG001C(Constants.OK),
+    RECRN001C(Constants.OK),
+    RECRN002C(Constants.OK),
+    RECRN002F(Constants.KO),
+    RECRN003C(Constants.OK),
+    RECRN004C(Constants.OK),
+    RECRN005C(Constants.KO),
+    RECAG002C(Constants.OK),
+    RECAG003C(Constants.OK),
+    RECAG003F(Constants.KO),
+    RECAG004(Constants.PROGRESS), // furto o smarrimento
+    RECAG013(Constants.PROGRESS),
+    RECAG005C(Constants.OK),
+    RECAG006C(Constants.OK),
+    RECAG007C(Constants.OK),
+    RECAG008C(Constants.PROGRESS),
+    PNAG012(Constants.KO), // TODO check se il valore in output è usato o invece è frutto di un alogorimo
+    RECRI001(Constants.PROGRESS),
+    RECRI002(Constants.PROGRESS),
+    RECRI003C(Constants.OK),
+    RECRI004C(Constants.OK),
+    RECRSI003C(Constants.OK),
+    RECRSI004C(Constants.KO),
+    RECRSI005(Constants.PROGRESS), // furto o smarrimento
+    RECRI005(Constants.PROGRESS), // furto o smarrimento
+    CON998(Constants.KO),
+    CON997(Constants.KO),
+    CON996(Constants.KO),
+    CON995(Constants.KO),
+    CON993(Constants.KO),
 
-    RECRN011("PROGRESS"),
+    RECRN011(Constants.PROGRESS),
 
     //META STATUS CODE
-    RECRN003A("PROGRESS"),
-    RECRN004A("PROGRESS"),
-    RECRN005A("PROGRESS"),
+    RECRN003A(Constants.PROGRESS),
+    RECRN004A(Constants.PROGRESS),
+    RECRN005A(Constants.PROGRESS),
 
 
     //DEMAT STATUS CODE
-    RECRS002B("PROGRESS"),
-    RECRS002E("PROGRESS"),
-    RECRS004B("PROGRESS"),
-    RECRS005B("PROGRESS"),
-    RECRN001B("PROGRESS"),
-    RECRN002B("PROGRESS"),
-    RECRN002E("PROGRESS"),
-    RECRN003B("PROGRESS"),
-    RECRN004B("PROGRESS"),
-    RECRN005B("PROGRESS"),
-    RECAG001B("PROGRESS"),
-    RECAG002B("PROGRESS"),
-    RECAG003B("PROGRESS"),
-    RECAG003E("PROGRESS"),
-    RECRI003B("PROGRESS"),
-    RECRI004B("PROGRESS"),
-    RECRSI004B("PROGRESS"),
-    RECAG005B("PROGRESS"),
-    RECAG006B("PROGRESS"),
-    RECAG007B("PROGRESS"),
-    RECAG008B("PROGRESS"),
+    RECRS002B(Constants.PROGRESS),
+    RECRS002E(Constants.PROGRESS),
+    RECRS004B(Constants.PROGRESS),
+    RECRS005B(Constants.PROGRESS),
+    RECRN001B(Constants.PROGRESS),
+    RECRN002B(Constants.PROGRESS),
+    RECRN002E(Constants.PROGRESS),
+    RECRN003B(Constants.PROGRESS),
+    RECRN004B(Constants.PROGRESS),
+    RECRN005B(Constants.PROGRESS),
+    RECAG001B(Constants.PROGRESS),
+    RECAG002B(Constants.PROGRESS),
+    RECAG003B(Constants.PROGRESS),
+    RECAG003E(Constants.PROGRESS),
+    RECRI003B(Constants.PROGRESS),
+    RECRI004B(Constants.PROGRESS),
+    RECRSI004B(Constants.PROGRESS),
+    RECAG005B(Constants.PROGRESS),
+    RECAG006B(Constants.PROGRESS),
+    RECAG007B(Constants.PROGRESS),
+    RECAG008B(Constants.PROGRESS),
 
     //890
-    RECAG011B("PROGRESS");
+    RECAG011B(Constants.PROGRESS);
 
     private final String message;
 
@@ -91,26 +93,22 @@ public enum ExternalChannelCodeEnum {
     }
 
     public static boolean isRetryStatusCode(String code) {
-        if (StringUtils.equalsIgnoreCase(code, RECRS006.name())
+        return StringUtils.equalsIgnoreCase(code, RECRS006.name())
                 || StringUtils.equalsIgnoreCase(code, RECRN006.name())
                 || StringUtils.equalsIgnoreCase(code, RECAG004.name())
                 || StringUtils.equalsIgnoreCase(code, RECRI005.name())
                 || StringUtils.equalsIgnoreCase(code, RECRSI005.name())
                 || StringUtils.equalsIgnoreCase(code, RECRS013.name())
                 || StringUtils.equalsIgnoreCase(code, RECRN013.name())
-                || StringUtils.equalsIgnoreCase(code, RECAG013.name())
-        ) return true;
-        return false;
+                || StringUtils.equalsIgnoreCase(code, RECAG013.name());
     }
 
     public static boolean isErrorStatusCode(String code) {
-        if (StringUtils.equalsIgnoreCase(code, CON998.name())
+        return StringUtils.equalsIgnoreCase(code, CON998.name())
                 || StringUtils.equalsIgnoreCase(code, CON997.name())
                 || StringUtils.equalsIgnoreCase(code, CON996.name())
                 || StringUtils.equalsIgnoreCase(code, CON995.name())
-                || StringUtils.equalsIgnoreCase(code, CON993.name())
-        ) return true;
-        return false;
+                || StringUtils.equalsIgnoreCase(code, CON993.name());
     }
 
     public static String getStatusCode(String statusCode) {
@@ -121,5 +119,11 @@ public enum ExternalChannelCodeEnum {
             log.info("no code found "+statusCode);
         }
         return code;
+    }
+
+    private static class Constants {
+        private static final String PROGRESS = "PROGRESS";
+        private static final String OK = "OK";
+        private static final String KO = "KO";
     }
 }
