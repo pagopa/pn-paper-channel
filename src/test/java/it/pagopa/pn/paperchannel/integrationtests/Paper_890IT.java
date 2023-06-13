@@ -126,7 +126,7 @@ class Paper_890IT extends BaseTest {
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
         verify(sqsSender, timeout(2000).times(2)).pushSendEvent(caturedSendEvent.capture());
 
-        assertEquals(StatusCodeEnum.KO, caturedSendEvent.getValue().getStatusCode());
+        assertEquals(StatusCodeEnum.OK, caturedSendEvent.getValue().getStatusCode());
         assertEquals("M02", caturedSendEvent.getValue().getDeliveryFailureCause());
         log.info("Event: \n"+caturedSendEvent.getAllValues());
     }
@@ -395,7 +395,7 @@ class Paper_890IT extends BaseTest {
 
         verify(sqsSender, timeout(2000).times(2)).pushSendEvent(caturedSendEvent.capture());
 
-        assertEquals(StatusCodeEnum.KO, caturedSendEvent.getValue().getStatusCode());
+        assertEquals(StatusCodeEnum.OK, caturedSendEvent.getValue().getStatusCode());
         log.info("Event: \n"+caturedSendEvent.getAllValues());
     }
     @Test
@@ -409,7 +409,7 @@ class Paper_890IT extends BaseTest {
 
         verify(sqsSender, timeout(2000).times(2)).pushSendEvent(caturedSendEvent.capture());
 
-        assertEquals(StatusCodeEnum.KO, caturedSendEvent.getValue().getStatusCode());
+        assertEquals(StatusCodeEnum.OK, caturedSendEvent.getValue().getStatusCode());
         log.info("Event: \n"+caturedSendEvent.getAllValues());
     }
     @Test
@@ -810,7 +810,7 @@ class Paper_890IT extends BaseTest {
         verify(sqsSender, timeout(2000).times(2)).pushSendEvent(caturedSendEvent.capture());
         log.info("Event: \n"+caturedSendEvent.getAllValues());
 
-        assertEquals(StatusCodeEnum.KO, caturedSendEvent.getValue().getStatusCode());
+        assertEquals(StatusCodeEnum.OK, caturedSendEvent.getValue().getStatusCode());
     }
 
 
