@@ -43,7 +43,6 @@ public class HandlersFactory {
 
     @PostConstruct
     public void initializeHandlers() {
-        var con080MessageHandler = new CON080MessageHandler(sqsSender);
         var saveMetadataMessageHandler = new SaveMetadataMessageHandler(eventMetaDAO, pnPaperChannelConfig.getTtlExecutionDaysMeta());
         var saveDematMessageHandler = new SaveDematMessageHandler(sqsSender, eventDematDAO, pnPaperChannelConfig.getTtlExecutionDaysDemat());
         var retryableErrorExtChannelsMessageHandler = new RetryableErrorMessageHandler(sqsSender, externalChannelClient, addressDAO, paperRequestErrorDAO, pnPaperChannelConfig);
@@ -67,8 +66,6 @@ public class HandlersFactory {
         addAggregatorStatusCodes(map, aggregatorMessageHandler);
         addDirectlySendStatusCodes(map, directlySendMessageHandler);
 
-        //caso CON080
-        map.put(ExternalChannelCodeEnum.CON080.name(), con080MessageHandler);
 
         //casi 890
         map.put("RECAG012", recag012MessageHandler);
@@ -186,6 +183,13 @@ public class HandlersFactory {
     }
 
     private void addDirectlySendStatusCodes(ConcurrentHashMap<String, MessageHandler> map, DirectlySendMessageHandler handler) {
+
+
+        //caso CON080, RECRI001, RECRI002
+        map.put(ExternalChannelCodeEnum.CON080.name(), handler); // progress
+        map.put(ExternalChannelCodeEnum.RECRI001.name(), handler); // progress
+        map.put(ExternalChannelCodeEnum.RECRI002.name(), handler); // progress
+
         // casi particolari di addAggregatorStatusCodes, in cui non c'è un meta precedente e vanno direttamente inviati
         map.put(ExternalChannelCodeEnum.RECRS001C.name(), handler); // iniziale e finale, no meta e demat prima; ok
         map.put(ExternalChannelCodeEnum.RECRS003C.name(), handler); // iniziale e finale, no meta e demat prima; ok
