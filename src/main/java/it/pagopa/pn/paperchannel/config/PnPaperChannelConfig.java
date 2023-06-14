@@ -9,6 +9,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
+import java.time.Duration;
+
 @Getter
 @Setter
 @ToString
@@ -48,6 +50,7 @@ public class PnPaperChannelConfig {
     private Integer letterWeight;
     private String chargeCalculationMode;
     private String originalPostmanAddressUsageMode;
+    private Duration refinementDuration;
 
     public String getOriginalPostmanAddressUsageMode() {
         if (StringUtils.isBlank(originalPostmanAddressUsageMode)){

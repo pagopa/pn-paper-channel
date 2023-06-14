@@ -24,11 +24,15 @@ import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
 public class RECRN00XCMessageHandler extends SendToDeliveryPushHandler {
     private final EventMetaDAO eventMetaDAO;
     private final MetaDematCleaner metaDematCleaner;
+    private final Duration refinementDuration;
 
-    public RECRN00XCMessageHandler(SqsSender sqsSender, EventMetaDAO eventMetaDAO, MetaDematCleaner metaDematCleaner) {
+    public RECRN00XCMessageHandler(SqsSender sqsSender, EventMetaDAO eventMetaDAO, MetaDematCleaner metaDematCleaner, Duration refinementDuration) {
         super(sqsSender);
         this.eventMetaDAO = eventMetaDAO;
         this.metaDematCleaner = metaDematCleaner;
+        this.refinementDuration = refinementDuration;
+
+        log.info("Refinement duration is {}", refinementDuration);
     }
 
 
@@ -87,8 +91,8 @@ public class RECRN00XCMessageHandler extends SendToDeliveryPushHandler {
 
 
     private boolean isThenGratherOrEquals10Days(Instant recrn00XTimestamp, Instant recrn011Timestamp){
-        long duration = Duration.between(recrn011Timestamp, recrn00XTimestamp).toDays();
-        return duration >= 10;
+        // sebbene 10gg sia il termine di esercizio, per collaudo fa comodo avere un tempo più contenuto
+        return Duration.between(recrn011Timestamp, recrn00XTimestamp).compareTo(refinementDuration) > 0;
     }
 
 }

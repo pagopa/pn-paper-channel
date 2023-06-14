@@ -62,10 +62,15 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
 
     private final MetaDematCleaner metaDematCleaner;
 
-    public Complex890MessageHandler(SqsSender sqsSender, EventMetaDAO eventMetaDAO, MetaDematCleaner metaDematCleaner) {
+    private final Duration refinementDuration;
+
+    public Complex890MessageHandler(SqsSender sqsSender, EventMetaDAO eventMetaDAO, MetaDematCleaner metaDematCleaner, Duration refinementDuration) {
         super(sqsSender);
         this.eventMetaDAO = eventMetaDAO;
         this.metaDematCleaner = metaDematCleaner;
+        this.refinementDuration = refinementDuration;
+
+        log.info("Refinement duration is {}", refinementDuration);
     }
 
     @Override
@@ -82,7 +87,6 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
                                                       PaperProgressStatusEventDto paperRequest) {
         boolean containsPNAG012 = false;
         boolean containsRECAG012 = false;
-        //PnEventMeta pnEventMetaRECAG012 = null;
 
         Instant recag011ADateTime = null;
         Instant recag00XADateTime = null;
@@ -94,7 +98,6 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
             }
             else if (META_RECAG012_STATUS_CODE.equals(pnEventMeta.getMetaStatusCode())) {
                 containsRECAG012 = true;
-                //pnEventMetaRECAG012 = pnEventMeta;
             }
             else if (META_RECAG011A_STATUS_CODE.equals(pnEventMeta.getMetaStatusCode())) {
                 recag011ADateTime = pnEventMeta.getStatusDateTime();
@@ -168,8 +171,8 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
     }
 
     boolean lessThanTenDaysBetweenRECAG00XAAndRECAG011A(Instant recag011ADateTime, Instant recag00XADateTime) {
-        // (statusDateTime[META##RECAG00_A] - statusDateTime[META##RECAG011A]) < 10
-        return Duration.between(recag011ADateTime, recag00XADateTime).toDays() < 10;
+        // sebbene 10gg sia il termine di esercizio, per collaudo fa comodo avere un tempo più contenuto
+        return Duration.between(recag011ADateTime, recag00XADateTime).compareTo(refinementDuration) < 0;
     }
 
     boolean missingRequiredDateTimes(Instant recag011ADateTime, Instant recag00XADateTime) {

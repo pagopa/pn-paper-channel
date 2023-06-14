@@ -11,11 +11,13 @@ import it.pagopa.pn.paperchannel.middleware.queue.consumer.MetaDematCleaner;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
@@ -34,6 +36,8 @@ class RECRN00XCMessageHandlerTest {
     private EventMetaDAO eventMetaDAO;
     private MetaDematCleaner metaDematCleaner;
 
+    private int DAYS_REFINEMENT = 10;
+
     @BeforeEach
     void setUp(){
         sqsSender = mock(SqsSender.class);
@@ -42,7 +46,7 @@ class RECRN00XCMessageHandlerTest {
 
         when(metaDematCleaner.clean(requestId)).thenReturn(Mono.empty());
 
-        handler = new RECRN00XCMessageHandler(sqsSender, eventMetaDAO, metaDematCleaner);
+        handler = new RECRN00XCMessageHandler(sqsSender, eventMetaDAO, metaDematCleaner, Duration.of(DAYS_REFINEMENT, ChronoUnit.DAYS));
     }
 
     @Test
@@ -72,8 +76,8 @@ class RECRN00XCMessageHandlerTest {
         entity.setStatusDetail(statusRECRN003C);
         entity.setStatusCode(ExternalChannelCodeEnum.getStatusCode(paperRequest.getStatusCode()));
 
-        this.handler.handleMessage(entity, paperRequest).block();
-
+        Mono<Void> mono = this.handler.handleMessage(entity, paperRequest);
+        Assertions.assertDoesNotThrow(() -> mono.block());
     }
 
 
@@ -81,8 +85,8 @@ class RECRN00XCMessageHandlerTest {
     void whenRECRN00XALessThenRECRN011Of10DaysThenPushOnQueue(){
         String statusRECRN003A = "RECRN003A";
 
-        PnEventMeta eventMetaRECRN011 = getEventMeta(statusRECRN011, Instant.now().minus(10, ChronoUnit.DAYS));
-        PnEventMeta eventMetaRECRN003A = getEventMeta(statusRECRN003A, Instant.now().minus(5, ChronoUnit.DAYS));
+        PnEventMeta eventMetaRECRN011 = getEventMeta(statusRECRN011, Instant.now().minus(DAYS_REFINEMENT, ChronoUnit.DAYS));
+        PnEventMeta eventMetaRECRN003A = getEventMeta(statusRECRN003A, Instant.now().minus(DAYS_REFINEMENT / 2, ChronoUnit.DAYS));
 
         when(eventMetaDAO.getDeliveryEventMeta(META_STRING.concat(requestId), META_STRING.concat(statusRECRN011)))
                 .thenReturn(Mono.just(eventMetaRECRN011));
@@ -104,8 +108,8 @@ class RECRN00XCMessageHandlerTest {
         entity.setStatusDetail(StatusCodeEnum.PROGRESS.getValue());
         entity.setStatusCode(ExternalChannelCodeEnum.getStatusCode(paperRequest.getStatusCode()));
 
-        this.handler.handleMessage(entity, paperRequest).block();
-
+        Mono<Void> mono = this.handler.handleMessage(entity, paperRequest);
+        Assertions.assertDoesNotThrow(() -> mono.block());
     }
 
 
