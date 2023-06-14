@@ -144,6 +144,10 @@ Parameters:
     Type: String
     Description: 'Time to live execution days Event Meta'
 
+  RefinementDuration:
+    Type: String
+    Description: 'Duration for refinement'
+
   PaperWeight:
     Type: String
     Description: 'Weight single paper'
