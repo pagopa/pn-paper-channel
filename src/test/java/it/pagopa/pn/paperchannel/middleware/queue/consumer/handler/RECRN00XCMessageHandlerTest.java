@@ -2,6 +2,7 @@ package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
 
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
@@ -14,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import reactor.core.publisher.Mono;
 
@@ -22,6 +24,7 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 
+import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.PNRN012_STATUS_CODE;
 import static org.mockito.Mockito.*;
 
 
@@ -84,6 +87,7 @@ class RECRN00XCMessageHandlerTest {
     @Test
     void whenRECRN00XALessThenRECRN011Of10DaysThenPushOnQueue(){
         String statusRECRN003A = "RECRN003A";
+        String statusRECRN003C = "RECRN003C";
 
         PnEventMeta eventMetaRECRN011 = getEventMeta(statusRECRN011, Instant.now().minus(DAYS_REFINEMENT, ChronoUnit.DAYS));
         PnEventMeta eventMetaRECRN003A = getEventMeta(statusRECRN003A, Instant.now().minus(DAYS_REFINEMENT / 2, ChronoUnit.DAYS));
@@ -94,7 +98,11 @@ class RECRN00XCMessageHandlerTest {
         when(eventMetaDAO.getDeliveryEventMeta(META_STRING.concat(requestId), META_STRING.concat(statusRECRN003A)))
                 .thenReturn(Mono.just(eventMetaRECRN003A));
 
-        doNothing().when(sqsSender).pushSendEvent(Mockito.any());
+        //doNothing().when(sqsSender).pushSendEvent(Mockito.any());
+
+        ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
+
+
 
         PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
                 .requestId(requestId)
@@ -110,8 +118,54 @@ class RECRN00XCMessageHandlerTest {
 
         Mono<Void> mono = this.handler.handleMessage(entity, paperRequest);
         Assertions.assertDoesNotThrow(() -> mono.block());
+
+        verify(sqsSender).pushSendEvent(caturedSendEvent.capture());
+        SendEvent sendEvent = caturedSendEvent.getValue();
+        Assertions.assertEquals(StatusCodeEnum.PROGRESS, sendEvent.getStatusCode());
+        Assertions.assertEquals(statusRECRN003C, sendEvent.getStatusDetail());
     }
 
+
+    @Test
+    void whenRECRN00XAMoreThenRECRN011Of10DaysThenPushOnQueue(){
+        String statusRECRN003A = "RECRN003A";
+        String statusRECRN003C = "RECRN003C";
+
+        PnEventMeta eventMetaRECRN011 = getEventMeta(statusRECRN011, Instant.now().minus(DAYS_REFINEMENT * 2, ChronoUnit.DAYS));
+        PnEventMeta eventMetaRECRN003A = getEventMeta(statusRECRN003A, Instant.now().minus(0, ChronoUnit.DAYS));
+
+        when(eventMetaDAO.getDeliveryEventMeta(META_STRING.concat(requestId), META_STRING.concat(statusRECRN011)))
+                .thenReturn(Mono.just(eventMetaRECRN011));
+
+        when(eventMetaDAO.getDeliveryEventMeta(META_STRING.concat(requestId), META_STRING.concat(statusRECRN003A)))
+                .thenReturn(Mono.just(eventMetaRECRN003A));
+
+        //doNothing().when(sqsSender).pushSendEvent(Mockito.any());
+
+        ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
+
+
+
+        PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
+                .requestId(requestId)
+                .statusCode(statusRECRN003C)
+                .statusDateTime(OffsetDateTime.now())
+                .clientRequestTimeStamp(OffsetDateTime.now())
+                .deliveryFailureCause("M02");
+
+        PnDeliveryRequest entity = new PnDeliveryRequest();
+        entity.setRequestId(requestId);
+        entity.setStatusDetail(StatusCodeEnum.PROGRESS.getValue());
+        entity.setStatusCode(ExternalChannelCodeEnum.getStatusCode(paperRequest.getStatusCode()));
+
+        Mono<Void> mono = this.handler.handleMessage(entity, paperRequest);
+        Assertions.assertDoesNotThrow(() -> mono.block());
+
+        verify(sqsSender).pushSendEvent(caturedSendEvent.capture());
+        SendEvent sendEvent = caturedSendEvent.getValue();
+        Assertions.assertEquals(StatusCodeEnum.PROGRESS, sendEvent.getStatusCode());
+        Assertions.assertEquals(PNRN012_STATUS_CODE, sendEvent.getStatusDetail());
+    }
 
     private PnEventMeta getEventMeta(String statusCode, Instant time){
         final int ttlOffsetDays = 365;
