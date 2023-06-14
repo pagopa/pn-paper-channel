@@ -83,7 +83,7 @@ class CustomAggregatorMessageHandlerTest {
 
         // check invocations: verify
         // getDeliveryEventMeta call
-        verify(mockMetaDao, timeout(2000).times(1)).getDeliveryEventMeta(any(String.class), any(String.class));
+        verify(mockMetaDao, timeout(2000).times(2)).getDeliveryEventMeta(any(String.class), any(String.class));
         // deleteEventMeta call
         verify(mockMetaDao, timeout(2000).times(1)).deleteBatch(any(String.class), any(String.class));
         // deleteEventDemat call
@@ -132,7 +132,7 @@ class CustomAggregatorMessageHandlerTest {
 
         // check invocations: verify
         // getDeliveryEventMeta call
-        verify(mockMetaDao, timeout(2000).times(1)).getDeliveryEventMeta(any(String.class), any(String.class));
+        verify(mockMetaDao, timeout(2000).times(2)).getDeliveryEventMeta(any(String.class), any(String.class));
         // DeliveryPush send via SQS verification
         verify(mockSqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
 
@@ -179,7 +179,7 @@ class CustomAggregatorMessageHandlerTest {
 
         // check invocations: verify
         // getDeliveryEventMeta call
-        verify(mockMetaDao, timeout(2000).times(1)).getDeliveryEventMeta(any(String.class), any(String.class));
+        verify(mockMetaDao, timeout(2000).times(2)).getDeliveryEventMeta(any(String.class), any(String.class));
         // DeliveryPush send via SQS verification
         verify(mockSqsSender, timeout(2000).times(1)).pushSendEvent(any(SendEvent.class));
         // deleteEventMeta call
