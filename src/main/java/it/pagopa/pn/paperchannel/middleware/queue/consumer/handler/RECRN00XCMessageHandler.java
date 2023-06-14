@@ -92,7 +92,7 @@ public class RECRN00XCMessageHandler extends SendToDeliveryPushHandler {
 
     private boolean isThenGratherOrEquals10Days(Instant recrn00XTimestamp, Instant recrn011Timestamp){
         // sebbene 10gg sia il termine di esercizio, per collaudo fa comodo avere un tempo più contenuto
-        return Duration.between(recrn011Timestamp, recrn00XTimestamp).compareTo(refinementDuration) > 0;
+        return Duration.between(recrn011Timestamp, recrn00XTimestamp).compareTo(refinementDuration) >= 0;
     }
 
 }
