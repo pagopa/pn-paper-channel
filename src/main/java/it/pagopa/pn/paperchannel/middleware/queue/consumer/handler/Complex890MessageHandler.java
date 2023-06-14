@@ -130,17 +130,17 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
 
             if (lessThanTenDaysBetweenRECAG00XAAndRECAG011A(recag011ADateTime, recag00XADateTime)) {
                 // 3 a
-                log.info("[{}] (statusDateTime[META##RECAG00_A] - statusDateTime[META##RECAG011A]) < 10", paperRequest.getRequestId());
+                log.info("[{}] (statusDateTime[META##RECAG00_A] - statusDateTime[META##RECAG011A]) < {}", paperRequest.getRequestId(), refinementDuration);
 
                 return super.handleMessage(entity, paperRequest) // original event sent as final
                         .then(Mono.just(pnEventMetas));
             } else if (recag011ADateTime != null) { // if check only for not having a warning when calling .plus
                 // 3 b
-                log.info("[{}] (statusDateTime[META##RECAG00_A] - statusDateTime[META##RECAG011A]) >= 10", paperRequest.getRequestId());
+                log.info("[{}] (statusDateTime[META##RECAG00_A] - statusDateTime[META##RECAG011A]) >= {}", paperRequest.getRequestId(), refinementDuration);
 
                 PnAuditLogBuilder auditLogBuilder = new PnAuditLogBuilder();
                 PnLogAudit pnLogAudit = new PnLogAudit(auditLogBuilder);
-                PNAG012Wrapper pnag012Wrapper = PNAG012Wrapper.buildPNAG012Wrapper(entity, paperRequest, recag011ADateTime.plus(10, ChronoUnit.DAYS));
+                PNAG012Wrapper pnag012Wrapper = PNAG012Wrapper.buildPNAG012Wrapper(entity, paperRequest, recag011ADateTime.plus(refinementDuration));
                 var pnag012PaperRequest = pnag012Wrapper.getPaperProgressStatusEventDtoPNAG012();
                 var pnag012DeliveryRequest = pnag012Wrapper.getPnDeliveryRequestPNAG012();
 
