@@ -42,7 +42,7 @@ public class RECRN00XCMessageHandler extends SendToDeliveryPushHandler {
                 .substring(0,paperRequest.getStatusCode().length()-1)
                 .concat("A");
 
-        final String metaRequestId = buildMetaRequestId(entity.getRequestId());
+        final String metaRequestId = buildMetaRequestId(paperRequest.getRequestId());
 
         return this.eventMetaDAO.getDeliveryEventMeta(metaRequestId, buildMetaStatusCode(RECRN011_STATUS_CODE))
                 .switchIfEmpty(Mono.defer(() -> {
