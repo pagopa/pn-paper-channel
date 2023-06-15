@@ -9,6 +9,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+
 @Getter
 @Setter
 @ToString
@@ -48,11 +51,22 @@ public class PnPaperChannelConfig {
     private Integer letterWeight;
     private String chargeCalculationMode;
     private String originalPostmanAddressUsageMode;
+    private Duration refinementDuration;
 
     public String getOriginalPostmanAddressUsageMode() {
         if (StringUtils.isBlank(originalPostmanAddressUsageMode)){
             return "PAPERSEND";
         }
         return this.originalPostmanAddressUsageMode;
+    }
+
+
+    public Duration getRefinementDuration() {
+        if (this.refinementDuration == null)
+        {
+            this.refinementDuration = Duration.of(10, ChronoUnit.DAYS);
+        }
+
+        return this.refinementDuration;
     }
 }

@@ -17,6 +17,7 @@ import org.mockito.ArgumentCaptor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
@@ -37,6 +38,8 @@ class Complex890MessageHandlerTest {
 
     private Complex890MessageHandler handler;
 
+    private int DAYS_REFINEMENT = 10;
+
     @BeforeEach
     public void init() {
         sqsSender = mock(SqsSender.class);
@@ -45,7 +48,7 @@ class Complex890MessageHandlerTest {
 
         when(metaDematCleaner.clean(anyString())).thenReturn(Mono.empty());
 
-        handler = new Complex890MessageHandler(sqsSender, eventMetaDAO, metaDematCleaner);
+        handler = new Complex890MessageHandler(sqsSender, eventMetaDAO, metaDematCleaner, Duration.of(DAYS_REFINEMENT, ChronoUnit.DAYS));
     }
 
 
@@ -234,7 +237,7 @@ class Complex890MessageHandlerTest {
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
 
         //verifico che viene inviato a delivery-push l'evento finale PNAG012
-        PNAG012Wrapper pnag012Wrapper = PNAG012Wrapper.buildPNAG012Wrapper(entity, paperRequest, pnEventMetaRECAG011A.getStatusDateTime().plus(10, ChronoUnit.DAYS));
+        PNAG012Wrapper pnag012Wrapper = PNAG012Wrapper.buildPNAG012Wrapper(entity, paperRequest, pnEventMetaRECAG011A.getStatusDateTime().plus(DAYS_REFINEMENT, ChronoUnit.DAYS));
         PnDeliveryRequest pnDeliveryRequestPNAG012 = pnag012Wrapper.getPnDeliveryRequestPNAG012();
         PaperProgressStatusEventDto paperProgressStatusEventDtoPNAG012 = pnag012Wrapper.getPaperProgressStatusEventDtoPNAG012();
         SendEvent sendPNAG012Event = SendEventMapper.createSendEventMessage(pnDeliveryRequestPNAG012, paperProgressStatusEventDtoPNAG012);

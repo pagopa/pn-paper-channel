@@ -6,6 +6,9 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+
 
 @Slf4j
 class PnPaperChannelConfigTest {
@@ -40,6 +43,7 @@ class PnPaperChannelConfigTest {
     private Integer letterWeight;
     private String chargeCalculationMode;
     private String originalPostmanAddressUsageMode;
+    private Duration refinementDuration;
 
 
     @BeforeEach
@@ -156,6 +160,9 @@ class PnPaperChannelConfigTest {
         stringBuilder.append(", ");
         stringBuilder.append("originalPostmanAddressUsageMode=");
         stringBuilder.append(originalPostmanAddressUsageMode);
+        stringBuilder.append(", ");
+        stringBuilder.append("refinementDuration=");
+        stringBuilder.append(refinementDuration);
         stringBuilder.append(")");
         String toTest = stringBuilder.toString();
         Assertions.assertEquals(toTest, pnPaperChannelConfig.toString());
@@ -190,6 +197,7 @@ class PnPaperChannelConfigTest {
         pnPaperChannelConfig.setPaperWeight(paperWeight);
         pnPaperChannelConfig.setLetterWeight(letterWeight);
         pnPaperChannelConfig.setChargeCalculationMode(chargeCalculationMode);
+        pnPaperChannelConfig.setRefinementDuration(refinementDuration);
         return pnPaperChannelConfig;
     }
 
@@ -221,5 +229,6 @@ class PnPaperChannelConfigTest {
         letterWeight = 6;
         chargeCalculationMode = "AAR";
         originalPostmanAddressUsageMode= "PAPERSEND";
+        refinementDuration = Duration.of(10, ChronoUnit.DAYS);
     }
 }

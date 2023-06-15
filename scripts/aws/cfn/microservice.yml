@@ -144,6 +144,10 @@ Parameters:
     Type: String
     Description: 'Time to live execution days Event Meta'
 
+  RefinementDuration:
+    Type: String
+    Description: 'Duration for refinement'
+
   PaperWeight:
     Type: String
     Description: 'Weight single paper'
@@ -465,6 +469,7 @@ Resources:
         ContainerEnvEntry44: !Sub 'PN_PAPERCHANNEL_CHARGECALCULATIONMODE=${ChargeCalculationMode}'
         ContainerEnvEntry45: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUEADDRESSMANAGER=${AttemptQueueAddressManager}'
         ContainerEnvEntry46: !Sub 'PN_PAPERCHANNEL_ORIGINALPOSTAMNADDRESSUSAGEMODE=${OriginalPostmanAddressUsageMode}'
+        ContainerEnvEntry47: !Sub 'PN_PAPERCHANNEL_REFINEMENTDURATION=${RefinementDuration}'
         ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-PaperChannel-Secrets
         MappedPaths: '/paper-channel-bo/*,/paper-channel-private/*'
