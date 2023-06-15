@@ -30,11 +30,7 @@ public class RECRN00XCMessageHandler extends SendToDeliveryPushHandler {
         super(sqsSender);
         this.eventMetaDAO = eventMetaDAO;
         this.metaDematCleaner = metaDematCleaner;
-
-        if (refinementDuration == null)
-            this.refinementDuration = Duration.of(10, ChronoUnit.DAYS);
-        else
-            this.refinementDuration = refinementDuration;
+        this.refinementDuration = refinementDuration;
 
         log.info("Refinement duration is {}", this.refinementDuration);
     }

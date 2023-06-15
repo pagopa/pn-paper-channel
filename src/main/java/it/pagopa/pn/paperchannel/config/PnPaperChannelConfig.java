@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
 import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 
 @Getter
 @Setter
@@ -57,5 +58,15 @@ public class PnPaperChannelConfig {
             return "PAPERSEND";
         }
         return this.originalPostmanAddressUsageMode;
+    }
+
+
+    public Duration getRefinementDuration() {
+        if (this.refinementDuration == null)
+        {
+            this.refinementDuration = Duration.of(10, ChronoUnit.DAYS);
+        }
+
+        return this.refinementDuration;
     }
 }
