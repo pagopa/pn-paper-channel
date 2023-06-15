@@ -418,7 +418,7 @@ class Paper_RS_AR_IT extends BaseTest {
         //
         // demat PROGRESS -> send to delivery push
 
-        CommonMetaDematAggregateSequenceTest("RECRN002A", "RECRN002B", "RECRN002C", StatusCodeEnum.OK, true, false);
+        CommonMetaDematAggregateSequenceTest("RECRN002A", "RECRN002B", "RECRN002C", StatusCodeEnum.KO, true, false);
     }
 
     @Test

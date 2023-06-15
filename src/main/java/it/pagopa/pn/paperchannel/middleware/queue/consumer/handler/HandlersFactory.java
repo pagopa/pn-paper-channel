@@ -47,6 +47,7 @@ public class HandlersFactory {
         var saveDematMessageHandler = new SaveDematMessageHandler(sqsSender, eventDematDAO, pnPaperChannelConfig.getTtlExecutionDaysDemat());
         var retryableErrorExtChannelsMessageHandler = new RetryableErrorMessageHandler(sqsSender, externalChannelClient, addressDAO, paperRequestErrorDAO, pnPaperChannelConfig);
         var notRetryableErrorMessageHandler = new NotRetryableErrorMessageHandler(paperRequestErrorDAO);
+        var customAggregatorMessageHandler = new CustomAggregatorMessageHandler(sqsSender, eventMetaDAO, metaDematCleaner);
         var aggregatorMessageHandler = new AggregatorMessageHandler(sqsSender, eventMetaDAO, metaDematCleaner);
         var directlySendMessageHandler = new DirectlySendMessageHandler(sqsSender);
         var recag012MessageHandler = new RECAG012MessageHandler(eventMetaDAO, pnPaperChannelConfig.getTtlExecutionDaysMeta());
@@ -65,6 +66,7 @@ public class HandlersFactory {
         addSaveDematStatusCodes(map, saveDematMessageHandler);
         addAggregatorStatusCodes(map, aggregatorMessageHandler);
         addDirectlySendStatusCodes(map, directlySendMessageHandler);
+        addCustomAggregatorStatusCodes(map, customAggregatorMessageHandler);
 
 
         //casi 890
@@ -206,19 +208,22 @@ public class HandlersFactory {
         map.put(ExternalChannelCodeEnum.RECRS004C.name(), handler);
         map.put(ExternalChannelCodeEnum.RECRS005C.name(), handler);
         map.put(ExternalChannelCodeEnum.RECRN001C.name(), handler);
-        map.put(ExternalChannelCodeEnum.RECRN002C.name(), handler);
         map.put(ExternalChannelCodeEnum.RECRN002F.name(), handler);
         map.put(ExternalChannelCodeEnum.RECRN003C.name(), handler);
         map.put(ExternalChannelCodeEnum.RECRN004C.name(), handler);
         map.put(ExternalChannelCodeEnum.RECRN005C.name(), handler);
         map.put(ExternalChannelCodeEnum.RECAG001C.name(), handler);
         map.put(ExternalChannelCodeEnum.RECAG002C.name(), handler);
-        map.put(ExternalChannelCodeEnum.RECAG003C.name(), handler);
         map.put(ExternalChannelCodeEnum.RECAG003F.name(), handler);
         map.put(ExternalChannelCodeEnum.RECRI003C.name(), handler);
         map.put(ExternalChannelCodeEnum.RECRI004C.name(), handler);
         map.put(ExternalChannelCodeEnum.RECRSI003C.name(), handler); //L’evento potrebbe non essere mai generato in quanto non garantito su tutte i diversi paesi internazionali
         map.put(ExternalChannelCodeEnum.RECRSI004C.name(), handler);
+    }
+
+    private void addCustomAggregatorStatusCodes(ConcurrentHashMap<String, MessageHandler> map, CustomAggregatorMessageHandler handler){
+        map.put(ExternalChannelCodeEnum.RECRN002C.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECAG003C.name(), handler);
     }
 
     public MessageHandler getHandler(@NotNull String code) {

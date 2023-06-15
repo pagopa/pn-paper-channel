@@ -122,12 +122,30 @@ class Paper_890IT extends BaseTest {
         generateEvent("RECAG003A","M02","",null,"", null);
         generateEvent("RECAG003B","","",List.of("Plico"),"", null);
         generateEvent("RECAG003C","","",null,"", null);
-
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
         verify(sqsSender, timeout(2000).times(2)).pushSendEvent(caturedSendEvent.capture());
 
+        // M02 -> Status OK
+        assertEquals("RECAG003C", caturedSendEvent.getValue().getStatusDetail());
+        assertEquals("890 - RECAG003C - OK", caturedSendEvent.getValue().getStatusDescription());
         assertEquals(StatusCodeEnum.OK, caturedSendEvent.getValue().getStatusCode());
         assertEquals("M02", caturedSendEvent.getValue().getDeliveryFailureCause());
+        log.info("Event: \n"+caturedSendEvent.getAllValues());
+    }
+
+    @Test
+    void test_890_OtherReason_RECAG003A_RECAG003C(){
+        generateEvent("RECAG003A","M06","",null,"", null);
+        generateEvent("RECAG003B","","",List.of("Plico"),"", null);
+        generateEvent("RECAG003C","","",null,"", null);
+        ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
+        verify(sqsSender, timeout(2000).times(2)).pushSendEvent(caturedSendEvent.capture());
+
+        // M06 -> Status KO
+        assertEquals("RECAG003C", caturedSendEvent.getValue().getStatusDetail());
+        assertEquals("890 - RECAG003C - KO", caturedSendEvent.getValue().getStatusDescription());
+        assertEquals(StatusCodeEnum.KO, caturedSendEvent.getValue().getStatusCode());
+        assertEquals("M06", caturedSendEvent.getValue().getDeliveryFailureCause());
         log.info("Event: \n"+caturedSendEvent.getAllValues());
     }
 
@@ -872,7 +890,7 @@ class Paper_890IT extends BaseTest {
 
         afterSetForUpdate.setStatusDetail(ExternalChannelCodeEnum.getStatusCode(extChannelMessage.getAnalogMail().getStatusCode()));
         afterSetForUpdate.setStatusDescription(extChannelMessage.getAnalogMail().getProductType()
-                .concat(" - ").concat(pnDeliveryRequest.getStatusCode()).concat(" - ").concat(extChannelMessage.getAnalogMail().getStatusDescription()));
+                .concat(" - ").concat(extChannelMessage.getAnalogMail().getStatusCode()).concat(" - ").concat(extChannelMessage.getAnalogMail().getStatusDescription()));
         afterSetForUpdate.setStatusDate(DateUtils.formatDate(Date.from(extChannelMessage.getAnalogMail().getStatusDateTime().toInstant())));
 
         afterSetForUpdate.setStatusCode(extChannelMessage.getAnalogMail().getStatusCode());
