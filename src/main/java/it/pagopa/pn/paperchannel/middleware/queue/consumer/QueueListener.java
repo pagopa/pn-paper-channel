@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.awspring.cloud.messaging.listener.SqsMessageDeletionPolicy;
 import io.awspring.cloud.messaging.listener.annotation.SqsListener;
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
+import it.pagopa.pn.commons.utils.MDCUtils;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.SingleStatusUpdateDto;
@@ -19,6 +20,7 @@ import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.PnLogAudit;
 import it.pagopa.pn.paperchannel.utils.Utility;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
 import org.springframework.messaging.handler.annotation.Headers;
@@ -31,6 +33,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 
 import static it.pagopa.pn.api.dto.events.GenericEventHeader.PN_EVENT_HEADER_EVENT_TYPE;
@@ -60,6 +63,22 @@ public class QueueListener {
         log.info("Headers : {}", headers);
         InternalEventHeader internalEventHeader = toInternalEventHeader(headers);
         if (internalEventHeader == null) return;
+
+        MDCUtils.clearMDCKeys();
+
+        if (headers.containsKey("id")){
+            String awsMessageId = headers.get("id").toString();
+            MDC.put(MDCUtils.MDC_PN_CTX_MESSAGE_ID, awsMessageId);
+        }
+
+        if (headers.containsKey("AWSTraceHeader")){
+            String traceId = headers.get("AWSTraceHeader").toString();
+            MDC.put(MDCUtils.MDC_TRACE_ID_KEY, traceId);
+        } else {
+            MDC.put(MDCUtils.MDC_TRACE_ID_KEY, String.valueOf(UUID.randomUUID()));
+        }
+
+
 
         if (internalEventHeader.getEventType().equals(EventTypeEnum.NATIONAL_REGISTRIES_ERROR.name())){
 
