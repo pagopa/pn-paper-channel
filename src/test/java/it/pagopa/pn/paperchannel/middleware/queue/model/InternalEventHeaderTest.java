@@ -1,9 +1,9 @@
 package it.pagopa.pn.paperchannel.middleware.queue.model;
 
-import it.pagopa.pn.paperchannel.middleware.queue.model.InternalEventHeader;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 import java.time.Instant;
 
 
@@ -11,6 +11,7 @@ class InternalEventHeaderTest {
 
     private Integer attempt;
     private Instant expired;
+    private String requestId;
 
     @BeforeEach
     void setUp(){
@@ -19,15 +20,15 @@ class InternalEventHeaderTest {
 
     @Test
     void toStringTest() {
-        InternalEventHeader internalEventHeader = new InternalEventHeader();
-        Assertions.assertNotNull(internalEventHeader);
-
-        internalEventHeader = initInternalEventHeader();
+        InternalEventHeader internalEventHeader = initInternalEventHeader();
         Assertions.assertNotNull(internalEventHeader);
 
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(internalEventHeader.getClass().getSimpleName());
         stringBuilder.append("(");
+        stringBuilder.append("requestId=");
+        stringBuilder.append(requestId);
+        stringBuilder.append(", ");
         stringBuilder.append("attempt=");
         stringBuilder.append(attempt);
         stringBuilder.append(", ");
@@ -45,7 +46,7 @@ class InternalEventHeaderTest {
         InternalEventHeader internalEventHeaderB = initInternalEventHeader();
         Assertions.assertTrue(internalEventHeaderA.equals(internalEventHeaderB) && internalEventHeaderB.equals(internalEventHeaderA));
 
-        InternalEventHeader internalEventHeaderC = new InternalEventHeader(1, Instant.now());
+        InternalEventHeader internalEventHeaderC = new InternalEventHeader("1234", 1, Instant.now());
         Assertions.assertNotEquals(internalEventHeaderA, internalEventHeaderC);
         Assertions.assertNotEquals(internalEventHeaderB, internalEventHeaderC);
     }
@@ -59,11 +60,12 @@ class InternalEventHeaderTest {
     }
 
     private InternalEventHeader initInternalEventHeader() {
-        InternalEventHeader internalEventHeader = new InternalEventHeader(attempt, expired);
+        InternalEventHeader internalEventHeader = new InternalEventHeader("1234", attempt, expired);
         return internalEventHeader;
     }
 
     private void initialize() {
+        requestId = "1234";
         attempt = 0;
         expired = null;
     }

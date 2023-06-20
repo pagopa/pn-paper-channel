@@ -1,6 +1,7 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
+import it.pagopa.pn.commons.utils.MDCUtils;
 import it.pagopa.pn.paperchannel.exception.PnAddressFlowException;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.SingleStatusUpdateDto;
@@ -21,6 +22,7 @@ import it.pagopa.pn.paperchannel.service.QueueListenerService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import lombok.CustomLog;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -53,7 +55,7 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
     public void internalListener(PrepareAsyncRequest body, int attempt) {
         String PROCESS_NAME = "InternalListener";
         log.logStartingProcess(PROCESS_NAME);
-        Mono.just(body)
+        MDCUtils.addMDCToContextAndExecute(Mono.just(body)
                 .flatMap(prepareRequest -> {
                     prepareRequest.setAttemptRetry(attempt);
                     return this.paperAsyncService.prepareAsync(prepareRequest);
@@ -67,7 +69,7 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                     log.error(throwable.getMessage());
                     if (throwable instanceof PnAddressFlowException) return;
                     throw new PnGenericException(PREPARE_ASYNC_LISTENER_EXCEPTION, PREPARE_ASYNC_LISTENER_EXCEPTION.getMessage());
-                })
+                }))
                 .block();
     }
 
@@ -76,7 +78,7 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
         String PROCESS_NAME = "National Registries Response Listener";
         log.logStartingProcess(PROCESS_NAME);
         log.info("Received message from National Registry queue");
-        Mono.just(body)
+        MDCUtils.addMDCToContextAndExecute(Mono.just(body)
                 .map(msg -> {
                     if (msg==null || StringUtils.isBlank(msg.getCorrelationId())) throw new PnGenericException(CORRELATION_ID_NOT_FOUND, CORRELATION_ID_NOT_FOUND.getMessage());
                     else return msg;
@@ -110,7 +112,7 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                     this.sqsSender.pushToInternalQueue(prepareRequest);
                     log.logEndingProcess(PROCESS_NAME);
                     return Mono.empty();
-                })
+                }))
                 .block();
     }
 
@@ -118,7 +120,7 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
     public void nationalRegistriesErrorListener(NationalRegistryError data, int attempt) {
         String PROCESS_NAME = "National Registries Error Listener";
         log.logStartingProcess(PROCESS_NAME);
-        Mono.just(data)
+        MDCUtils.addMDCToContextAndExecute(Mono.just(data)
                 .doOnSuccess(nationalRegistryError -> {
                     log.info("Called national Registries");
                     log.logInvokingAsyncExternalService(PN_NATIONAL_REGISTRIES,NATIONAL_REGISTRY_DESCRIPTION, nationalRegistryError.getRequestId());
@@ -136,24 +138,30 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                 .doOnError(throwable -> {
                     log.error(throwable.getMessage());
                     throw new PnGenericException(NATIONAL_REGISTRY_LISTENER_EXCEPTION, NATIONAL_REGISTRY_LISTENER_EXCEPTION.getMessage());
-                })
+                }))
                 .block();
     }
 
     @Override
     public void externalChannelListener(SingleStatusUpdateDto data, int attempt) {
         String PROCESS_NAME = "External Channel Listener";
+        if (data.getAnalogMail() != null) {
+            MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, data.getAnalogMail().getRequestId());
+        }
+
         log.logStartingProcess(PROCESS_NAME);
-        Mono.just(data)
-                .flatMap(request -> this.paperResultAsyncService.resultAsyncBackground(request, attempt))
-                .doOnSuccess(resultFromAsync -> {
-                    log.info("End of external Channel result");
-                    log.logEndingProcess(PROCESS_NAME);
-                })
-                .onErrorResume(ex -> {
-                    log.error(ex.getMessage());
-                    throw new PnGenericException(EXTERNAL_CHANNEL_LISTENER_EXCEPTION, EXTERNAL_CHANNEL_LISTENER_EXCEPTION.getMessage());
-                })
+
+
+        MDCUtils.addMDCToContextAndExecute(Mono.just(data)
+                        .flatMap(request -> this.paperResultAsyncService.resultAsyncBackground(request, attempt))
+                        .doOnSuccess(resultFromAsync -> {
+                            log.info("End of external Channel result");
+                            log.logEndingProcess(PROCESS_NAME);
+                        })
+                        .onErrorResume(ex -> {
+                            log.error(ex.getMessage());
+                            throw new PnGenericException(EXTERNAL_CHANNEL_LISTENER_EXCEPTION, EXTERNAL_CHANNEL_LISTENER_EXCEPTION.getMessage());
+                        }))
                 .block();
     }
 

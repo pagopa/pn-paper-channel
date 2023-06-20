@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.awspring.cloud.messaging.listener.SqsMessageDeletionPolicy;
 import io.awspring.cloud.messaging.listener.annotation.SqsListener;
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
+import it.pagopa.pn.commons.utils.MDCUtils;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.SingleStatusUpdateDto;
@@ -19,6 +20,7 @@ import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.PnLogAudit;
 import it.pagopa.pn.paperchannel.utils.Utility;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
 import org.springframework.messaging.handler.annotation.Headers;
@@ -31,12 +33,12 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 
 import static it.pagopa.pn.api.dto.events.GenericEventHeader.PN_EVENT_HEADER_EVENT_TYPE;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
-import static it.pagopa.pn.paperchannel.middleware.queue.model.InternalEventHeader.PN_EVENT_HEADER_ATTEMPT;
-import static it.pagopa.pn.paperchannel.middleware.queue.model.InternalEventHeader.PN_EVENT_HEADER_EXPIRED;
+import static it.pagopa.pn.paperchannel.middleware.queue.model.InternalEventHeader.*;
 
 @Component
 @Slf4j
@@ -51,15 +53,16 @@ public class QueueListener {
     private ObjectMapper objectMapper;
     @Autowired
     private PaperRequestErrorDAO paperRequestErrorDAO;
-
     @Autowired
     private PnAuditLogBuilder pnAuditLogBuilder;
 
     @SqsListener(value = "${pn.paper-channel.queue-internal}", deletionPolicy = SqsMessageDeletionPolicy.ALWAYS)
     public void pullFromInternalQueue(@Payload String node, @Headers Map<String, Object> headers){
         log.info("Headers : {}", headers);
+        setMDCContext(headers);
         InternalEventHeader internalEventHeader = toInternalEventHeader(headers);
         if (internalEventHeader == null) return;
+
 
         if (internalEventHeader.getEventType().equals(EventTypeEnum.NATIONAL_REGISTRIES_ERROR.name())){
 
@@ -157,20 +160,27 @@ public class QueueListener {
     @SqsListener(value = "${pn.paper-channel.queue-national-registries}", deletionPolicy = SqsMessageDeletionPolicy.ALWAYS)
     public void pullNationalRegistries(@Payload String node, @Headers Map<String, Object> headers){
         AddressSQSMessageDto dto = convertToObject(node, AddressSQSMessageDto.class);
+        setMDCContext(headers);
         this.queueListenerService.nationalRegistriesResponseListener(dto);
     }
 
     @SqsListener(value = "${pn.paper-channel.queue-external-channel}", deletionPolicy = SqsMessageDeletionPolicy.ALWAYS)
     public void pullExternalChannel(@Payload String node, @Headers Map<String,Object> headers){
         SingleStatusUpdateDto body = convertToObject(node, SingleStatusUpdateDto.class);
+        setMDCContext(headers);
         this.queueListenerService.externalChannelListener(body, 0);
     }
 
     private InternalEventHeader toInternalEventHeader(Map<String, Object> headers){
+        String headerRequestId = "";
+        if (headers.containsKey(PN_EVENT_REQUEST_ID)){
+            headerRequestId = headers.get(PN_EVENT_REQUEST_ID) instanceof String ? (String) headers.get(PN_EVENT_REQUEST_ID) : "";
+        }
         if (headers.containsKey(PN_EVENT_HEADER_EVENT_TYPE) &&
                 headers.containsKey(PN_EVENT_HEADER_EXPIRED) &&
                 headers.containsKey(PN_EVENT_HEADER_ATTEMPT)){
             String headerEventType = headers.get(PN_EVENT_HEADER_EVENT_TYPE) instanceof String ? (String) headers.get(PN_EVENT_HEADER_EVENT_TYPE) : "";
+
             int headerAttempt = 0;
             Instant headerExpired = null;
             try {
@@ -182,6 +192,7 @@ public class QueueListener {
             return InternalEventHeader.builder()
                     .expired(headerExpired)
                     .attempt(headerAttempt)
+                    .requestId(headerRequestId)
                     .eventType(headerEventType)
                     .build();
 
@@ -214,6 +225,20 @@ public class QueueListener {
         return entity;
     }
 
+    private void setMDCContext(Map<String, Object> headers){
+        MDCUtils.clearMDCKeys();
 
+        if (headers.containsKey("id")){
+            String awsMessageId = headers.get("id").toString();
+            MDC.put(MDCUtils.MDC_PN_CTX_MESSAGE_ID, awsMessageId);
+        }
+
+        if (headers.containsKey("AWSTraceHeader")){
+            String traceId = headers.get("AWSTraceHeader").toString();
+            MDC.put(MDCUtils.MDC_TRACE_ID_KEY, traceId);
+        } else {
+            MDC.put(MDCUtils.MDC_TRACE_ID_KEY, String.valueOf(UUID.randomUUID()));
+        }
+    }
 
 }
