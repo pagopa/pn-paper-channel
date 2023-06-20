@@ -11,6 +11,7 @@ class InternalEventHeaderTest {
 
     private Integer attempt;
     private Instant expired;
+    private String requestId;
 
     @BeforeEach
     void setUp(){
@@ -19,15 +20,15 @@ class InternalEventHeaderTest {
 
     @Test
     void toStringTest() {
-        InternalEventHeader internalEventHeader = new InternalEventHeader();
-        Assertions.assertNotNull(internalEventHeader);
-
-        internalEventHeader = initInternalEventHeader();
+        InternalEventHeader internalEventHeader = initInternalEventHeader();
         Assertions.assertNotNull(internalEventHeader);
 
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(internalEventHeader.getClass().getSimpleName());
         stringBuilder.append("(");
+        stringBuilder.append("requestId=");
+        stringBuilder.append(requestId);
+        stringBuilder.append(", ");
         stringBuilder.append("attempt=");
         stringBuilder.append(attempt);
         stringBuilder.append(", ");
@@ -59,11 +60,12 @@ class InternalEventHeaderTest {
     }
 
     private InternalEventHeader initInternalEventHeader() {
-        InternalEventHeader internalEventHeader = new InternalEventHeader("1234",attempt, expired);
+        InternalEventHeader internalEventHeader = new InternalEventHeader("1234", attempt, expired);
         return internalEventHeader;
     }
 
     private void initialize() {
+        requestId = "1234";
         attempt = 0;
         expired = null;
     }

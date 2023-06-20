@@ -172,12 +172,15 @@ public class QueueListener {
     }
 
     private InternalEventHeader toInternalEventHeader(Map<String, Object> headers){
+        String headerRequestId = "";
+        if (headers.containsKey(PN_EVENT_REQUEST_ID)){
+            headerRequestId = headers.get(PN_EVENT_REQUEST_ID) instanceof String ? (String) headers.get(PN_EVENT_REQUEST_ID) : "";
+        }
         if (headers.containsKey(PN_EVENT_HEADER_EVENT_TYPE) &&
                 headers.containsKey(PN_EVENT_HEADER_EXPIRED) &&
-                headers.containsKey(PN_EVENT_HEADER_ATTEMPT) &&
-                headers.containsKey(PN_EVENT_REQUEST_ID)){
+                headers.containsKey(PN_EVENT_HEADER_ATTEMPT)){
             String headerEventType = headers.get(PN_EVENT_HEADER_EVENT_TYPE) instanceof String ? (String) headers.get(PN_EVENT_HEADER_EVENT_TYPE) : "";
-            String headerRequestId = headers.get(PN_EVENT_REQUEST_ID) instanceof String ? (String) headers.get(PN_EVENT_REQUEST_ID) : "";
+
             int headerAttempt = 0;
             Instant headerExpired = null;
             try {

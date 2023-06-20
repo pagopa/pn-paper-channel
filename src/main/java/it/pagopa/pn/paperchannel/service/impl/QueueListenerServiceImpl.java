@@ -145,7 +145,9 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
     @Override
     public void externalChannelListener(SingleStatusUpdateDto data, int attempt) {
         String PROCESS_NAME = "External Channel Listener";
-        MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, data.getAnalogMail().getRequestId());
+        if (data.getAnalogMail() != null) {
+            MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, data.getAnalogMail().getRequestId());
+        }
 
         log.logStartingProcess(PROCESS_NAME);
 
