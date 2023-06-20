@@ -83,6 +83,7 @@ public class SqsQueueSender implements SqsSender {
                 .publisher(PUBLISHER_PREPARE)
                 .eventId(UUID.randomUUID().toString())
                 .createdAt(Instant.now())
+                .requestId(prepareAsyncRequest.getRequestId())
                 .eventType(EventTypeEnum.PREPARE_ASYNC_FLOW.name())
                 .attempt(0)
                 .expired(Instant.now())
