@@ -18,7 +18,6 @@ import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
 
@@ -58,7 +57,7 @@ public class RECRN00XCMessageHandler extends SendToDeliveryPushHandler {
                                     return Mono.empty();
                                 }))
                 )
-                .doOnNext(recrn011AndRecrn00X -> {
+                .flatMap(recrn011AndRecrn00X -> {
                     PnEventMeta eventrecrn011 = recrn011AndRecrn00X.getT1();
                     PnEventMeta eventrecrn00X = recrn011AndRecrn00X.getT2();
 
@@ -72,16 +71,16 @@ public class RECRN00XCMessageHandler extends SendToDeliveryPushHandler {
                         pnLogAudit.addsBeforeReceive(entity.getIun(), String.format("prepare requestId = %s Response from external-channel",pnrn012DeliveryRequest.getRequestId()));
                         logSuccessAuditLog(pnrn012PaperRequest, pnrn012DeliveryRequest, pnLogAudit);
 
-                        super.handleMessage(pnrn012DeliveryRequest, pnrn012PaperRequest);
+                        var enrichEvent = enrichEvent(paperRequest, eventrecrn011);
+
+                        entity.setStatusDetail(StatusCodeEnum.PROGRESS.getValue());
+                        return super.handleMessage(pnrn012DeliveryRequest, pnrn012PaperRequest)
+                                .then(super.handleMessage(entity, enrichEvent))
+                                .then(metaDematCleaner.clean(paperRequest.getRequestId()));
                     }
-                })
-                .flatMap(recrn011AndRecrn00X -> {
-                    PnEventMeta eventrecrn011 = recrn011AndRecrn00X.getT1();
-                    return Mono.just(enrichEvent(paperRequest, eventrecrn011))
-                            .flatMap(enrichedRequest -> {
-                                entity.setStatusDetail(StatusCodeEnum.PROGRESS.getValue());
-                                return super.handleMessage(entity, enrichedRequest);
-                            })
+
+                    return Mono.just(enrichEvent(paperRequest, eventrecrn00X))
+                            .flatMap(enrichedRequest -> super.handleMessage(entity, enrichedRequest))
                             .then(metaDematCleaner.clean(paperRequest.getRequestId()));
                 });
     }

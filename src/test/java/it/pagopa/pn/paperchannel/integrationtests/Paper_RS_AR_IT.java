@@ -454,10 +454,14 @@ class Paper_RS_AR_IT extends BaseTest {
         generateEvent("RECRN003C", null, null, null, Instant.now().minus(5, ChronoUnit.DAYS));
 
         ArgumentCaptor<SendEvent> captureSecond = ArgumentCaptor.forClass(SendEvent.class);
-        verify(sqsSender, times(2)).pushSendEvent(captureSecond.capture());
-        assertNotNull(captureSecond.getValue());
-        assertEquals(StatusCodeEnum.PROGRESS, captureSecond.getValue().getStatusCode());
-        assertEquals("PNRN012", captureSecond.getValue().getStatusDetail());
+        verify(sqsSender, times(3)).pushSendEvent(captureSecond.capture());
+        assertNotNull(captureSecond.getAllValues());
+        assertEquals(3, captureSecond.getAllValues().size());
+
+        assertEquals("PNRN012", captureSecond.getAllValues().get(1).getStatusDetail());
+        assertEquals(StatusCodeEnum.OK, captureSecond.getAllValues().get(1).getStatusCode());
+        assertEquals("RECRN003C", captureSecond.getAllValues().get(2).getStatusDetail());
+        assertEquals(StatusCodeEnum.PROGRESS, captureSecond.getAllValues().get(2).getStatusCode());
     }
 
     @Test
@@ -483,10 +487,14 @@ class Paper_RS_AR_IT extends BaseTest {
         generateEvent("RECRN004C", null, null, null, Instant.now().minus(5, ChronoUnit.DAYS));
 
         ArgumentCaptor<SendEvent> captureSecond = ArgumentCaptor.forClass(SendEvent.class);
-        verify(sqsSender, times(2)).pushSendEvent(captureSecond.capture());
-        assertNotNull(captureSecond.getValue());
-        assertEquals(StatusCodeEnum.PROGRESS, captureSecond.getValue().getStatusCode());
-        assertEquals("PNRN012", captureSecond.getValue().getStatusDetail());
+        verify(sqsSender, times(3)).pushSendEvent(captureSecond.capture());
+        assertNotNull(captureSecond.getAllValues());
+        assertEquals(3, captureSecond.getAllValues().size());
+
+        assertEquals("PNRN012", captureSecond.getAllValues().get(1).getStatusDetail());
+        assertEquals(StatusCodeEnum.OK, captureSecond.getAllValues().get(1).getStatusCode());
+        assertEquals("RECRN004C", captureSecond.getAllValues().get(2).getStatusDetail());
+        assertEquals(StatusCodeEnum.PROGRESS, captureSecond.getAllValues().get(2).getStatusCode());
 
     }
 
@@ -512,10 +520,14 @@ class Paper_RS_AR_IT extends BaseTest {
         generateEvent("RECRN005C", "MA", null, null, Instant.now().minus(5, ChronoUnit.DAYS));
 
         ArgumentCaptor<SendEvent> captureSecond = ArgumentCaptor.forClass(SendEvent.class);
-        verify(sqsSender, times(2)).pushSendEvent(captureSecond.capture());
-        assertNotNull(captureSecond.getValue());
-        assertEquals(StatusCodeEnum.PROGRESS, captureSecond.getValue().getStatusCode());
-        assertEquals("PNRN012", captureSecond.getValue().getStatusDetail());
+        verify(sqsSender, times(3)).pushSendEvent(captureSecond.capture());
+        assertNotNull(captureSecond.getAllValues());
+        assertEquals(3, captureSecond.getAllValues().size());
+
+        assertEquals("PNRN012", captureSecond.getAllValues().get(1).getStatusDetail());
+        assertEquals(StatusCodeEnum.OK, captureSecond.getAllValues().get(1).getStatusCode());
+        assertEquals("RECRN005C", captureSecond.getAllValues().get(2).getStatusDetail());
+        assertEquals(StatusCodeEnum.PROGRESS, captureSecond.getAllValues().get(2).getStatusCode());
 
     }
 
