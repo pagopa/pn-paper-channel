@@ -142,7 +142,9 @@ public class SqsQueueSender implements SqsSender {
         if (tClass == ExternalChannelError.class &&  ((ExternalChannelError) entity).getAnalogMail() != null)
             return ((ExternalChannelError) entity).getAnalogMail().getIun() ;
 
-        if (tClass == PrepareAsyncRequest.class) return ((PrepareAsyncRequest) entity).getIun();
+        if ((tClass == PrepareAsyncRequest.class) && (entity instanceof PrepareAsyncRequest)) {
+            return ((PrepareAsyncRequest) entity).getIun();
+        }
 
         return UUID.randomUUID().toString();
     }
