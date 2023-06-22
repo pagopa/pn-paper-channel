@@ -29,7 +29,7 @@ public class InternalQueueMomProducer extends AbstractSqsMomProducer<InternalPus
                 .build());
         map.put("id", MessageAttributeValue.builder()
                 .dataType("String")
-                .stringValue(headerCustom.getRequestId())
+                .stringValue(headerCustom.getIun())
                 .build());
         map.put("expired", MessageAttributeValue.builder()
                 .dataType("String")

@@ -83,7 +83,7 @@ public class SqsQueueSender implements SqsSender {
                 .publisher(PUBLISHER_PREPARE)
                 .eventId(UUID.randomUUID().toString())
                 .createdAt(Instant.now())
-                .requestId(prepareAsyncRequest.getRequestId())
+                .iun(prepareAsyncRequest.getIun())
                 .eventType(EventTypeEnum.PREPARE_ASYNC_FLOW.name())
                 .attempt(0)
                 .expired(Instant.now())
@@ -102,6 +102,7 @@ public class SqsQueueSender implements SqsSender {
                 .eventId(UUID.randomUUID().toString())
                 .createdAt(Instant.now())
                 .attempt(attempt+1)
+                .iun(getIun(entity, tClass))
                 .eventType(eventTypeEnum.name())
                 .expired(DateUtils.addedTime(attempt+1, 1))
                 .build();
@@ -117,6 +118,7 @@ public class SqsQueueSender implements SqsSender {
                 .eventId(UUID.randomUUID().toString())
                 .createdAt(Instant.now())
                 .attempt(attempt)
+                .iun(getIun(entity, tClass))
                 .eventType(eventTypeEnum.name())
                 .expired(expired)
                 .build();
@@ -131,6 +133,20 @@ public class SqsQueueSender implements SqsSender {
         if (tClass == PrepareAsyncRequest.class && ((PrepareAsyncRequest) entity).isAddressRetry()) typeEnum = ADDRESS_MANAGER_ERROR;
 
         return typeEnum;
+    }
+
+    private <T> String getIun(T entity, Class<T> tClass){
+        if (tClass == NationalRegistryError.class)
+            return ((NationalRegistryError) entity).getIun();
+
+        if (tClass == ExternalChannelError.class &&  ((ExternalChannelError) entity).getAnalogMail() != null)
+            return ((ExternalChannelError) entity).getAnalogMail().getIun() ;
+
+        if ((tClass == PrepareAsyncRequest.class) && (entity instanceof PrepareAsyncRequest)) {
+            return ((PrepareAsyncRequest) entity).getIun();
+        }
+
+        return UUID.randomUUID().toString();
     }
 
 

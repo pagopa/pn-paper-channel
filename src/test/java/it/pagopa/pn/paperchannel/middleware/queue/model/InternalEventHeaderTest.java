@@ -11,7 +11,7 @@ class InternalEventHeaderTest {
 
     private Integer attempt;
     private Instant expired;
-    private String requestId;
+    private String iun;
 
     @BeforeEach
     void setUp(){
@@ -26,8 +26,8 @@ class InternalEventHeaderTest {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(internalEventHeader.getClass().getSimpleName());
         stringBuilder.append("(");
-        stringBuilder.append("requestId=");
-        stringBuilder.append(requestId);
+        stringBuilder.append("iun=");
+        stringBuilder.append(iun);
         stringBuilder.append(", ");
         stringBuilder.append("attempt=");
         stringBuilder.append(attempt);
@@ -65,7 +65,7 @@ class InternalEventHeaderTest {
     }
 
     private void initialize() {
-        requestId = "1234";
+        iun = "1234";
         attempt = 0;
         expired = null;
     }
