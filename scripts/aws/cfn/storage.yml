@@ -368,6 +368,15 @@ Resources:
           KeyType: "HASH"
         - AttributeName: "created"
           KeyType: "RANGE"
+      GlobalSecondaryIndexes:
+        - IndexName: "author-index"
+          KeySchema:
+            - AttributeName: "author"
+              KeyType: "HASH"
+            - AttributeName: "created"
+              KeyType: "RANGE"
+          Projection:
+            ProjectionType: "ALL"
       KinesisStreamSpecification:
         StreamArn: !Ref CdcKinesisSourceStreamArn
       StreamSpecification:
