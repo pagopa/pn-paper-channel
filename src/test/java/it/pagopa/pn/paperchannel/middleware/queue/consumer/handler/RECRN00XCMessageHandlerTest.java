@@ -24,7 +24,8 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 
-import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.PNRN012_STATUS_CODE;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 
 
@@ -37,15 +38,14 @@ class RECRN00XCMessageHandlerTest {
     private RECRN00XCMessageHandler handler;
     private SqsSender sqsSender;
     private EventMetaDAO eventMetaDAO;
-    private MetaDematCleaner metaDematCleaner;
 
-    private int DAYS_REFINEMENT = 10;
+    private final int DAYS_REFINEMENT = 10;
 
     @BeforeEach
     void setUp(){
         sqsSender = mock(SqsSender.class);
         eventMetaDAO = mock(EventMetaDAO.class);
-        metaDematCleaner = mock(MetaDematCleaner.class);
+        MetaDematCleaner metaDematCleaner = mock(MetaDematCleaner.class);
 
         when(metaDematCleaner.clean(requestId)).thenReturn(Mono.empty());
 
@@ -161,10 +161,14 @@ class RECRN00XCMessageHandlerTest {
         Mono<Void> mono = this.handler.handleMessage(entity, paperRequest);
         Assertions.assertDoesNotThrow(() -> mono.block());
 
-        verify(sqsSender).pushSendEvent(caturedSendEvent.capture());
-        SendEvent sendEvent = caturedSendEvent.getValue();
-        Assertions.assertEquals(StatusCodeEnum.PROGRESS, sendEvent.getStatusCode());
-        Assertions.assertEquals(PNRN012_STATUS_CODE, sendEvent.getStatusDetail());
+        verify(sqsSender, times(2)).pushSendEvent(caturedSendEvent.capture());
+        assertNotNull(caturedSendEvent.getAllValues());
+        assertEquals(2, caturedSendEvent.getAllValues().size());
+
+        assertEquals("PNRN012", caturedSendEvent.getAllValues().get(0).getStatusDetail());
+        assertEquals(StatusCodeEnum.OK, caturedSendEvent.getAllValues().get(0).getStatusCode());
+        assertEquals("RECRN003C", caturedSendEvent.getAllValues().get(1).getStatusDetail());
+        assertEquals(StatusCodeEnum.PROGRESS, caturedSendEvent.getAllValues().get(1).getStatusCode());
     }
 
     private PnEventMeta getEventMeta(String statusCode, Instant time){

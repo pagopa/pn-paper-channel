@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
+import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.DiscoveredAddressDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
@@ -11,12 +12,12 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
 import it.pagopa.pn.paperchannel.middleware.queue.consumer.MetaDematCleaner;
 import it.pagopa.pn.paperchannel.middleware.queue.model.PNRN012Wrapper;
 import it.pagopa.pn.paperchannel.service.SqsSender;
+import it.pagopa.pn.paperchannel.utils.PnLogAudit;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
 
@@ -64,8 +65,18 @@ public class RECRN00XCMessageHandler extends SendToDeliveryPushHandler {
                         PNRN012Wrapper pnrn012Wrapper = PNRN012Wrapper.buildPNRN012Wrapper(entity, paperRequest, eventrecrn011.getStatusDateTime().plus(refinementDuration));
                         var pnrn012PaperRequest = pnrn012Wrapper.getPaperProgressStatusEventDtoPNRN012();
                         var pnrn012DeliveryRequest = pnrn012Wrapper.getPnDeliveryRequestPNRN012();
-                        pnrn012DeliveryRequest.setStatusDetail(StatusCodeEnum.PROGRESS.getValue());
-                        return super.handleMessage(pnrn012DeliveryRequest, pnrn012PaperRequest);
+
+                        PnAuditLogBuilder auditLogBuilder = new PnAuditLogBuilder();
+                        PnLogAudit pnLogAudit = new PnLogAudit(auditLogBuilder);
+                        pnLogAudit.addsBeforeReceive(entity.getIun(), String.format("prepare requestId = %s Response from external-channel",pnrn012DeliveryRequest.getRequestId()));
+                        logSuccessAuditLog(pnrn012PaperRequest, pnrn012DeliveryRequest, pnLogAudit);
+
+                        var enrichEvent = enrichEvent(paperRequest, eventrecrn011);
+
+                        entity.setStatusDetail(StatusCodeEnum.PROGRESS.getValue());
+                        return super.handleMessage(pnrn012DeliveryRequest, pnrn012PaperRequest)
+                                .then(super.handleMessage(entity, enrichEvent))
+                                .then(metaDematCleaner.clean(paperRequest.getRequestId()));
                     }
 
                     return Mono.just(enrichEvent(paperRequest, eventrecrn00X))
@@ -78,7 +89,7 @@ public class RECRN00XCMessageHandler extends SendToDeliveryPushHandler {
 
         if (pnEventMeta.getDiscoveredAddress() != null) {
             DiscoveredAddressDto discoveredAddressDto = new BaseMapperImpl<>(PnDiscoveredAddress.class, DiscoveredAddressDto.class)
-                                                                .toDTO(pnEventMeta.getDiscoveredAddress());
+                    .toDTO(pnEventMeta.getDiscoveredAddress());
             paperRequest.setDiscoveredAddress(discoveredAddressDto);
 
             log.info("[{}] Discovered Address in EventMeta for {}", paperRequest.getRequestId(), pnEventMeta);

@@ -213,17 +213,24 @@ class PaperPNRN012IT extends BaseTest {
 
         Mockito.doNothing().when(sqsSender).pushSendEvent(Mockito.any());
 
+        Mockito.when(metaDematCleaner.clean(REQUEST_ID))
+                .thenReturn(Mono.just("").then());
+
         /* END OF MOCKS OF RECRN00XCMESSAGEHANDLER*/
         Assertions.assertDoesNotThrow(() -> {
             this.paperResultAsyncService.resultAsyncBackground(extChannelMessage, 15).block();
         });
 
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
-        verify(sqsSender).pushSendEvent(caturedSendEvent.capture());
+        verify(sqsSender , times(2)).pushSendEvent(caturedSendEvent.capture());
         assertNotNull(caturedSendEvent);
-        assertNotNull(caturedSendEvent.getValue());
-        assertEquals(PNRN012, caturedSendEvent.getValue().getStatusDetail());
-        assertEquals(StatusCodeEnum.PROGRESS, caturedSendEvent.getValue().getStatusCode());
+        assertNotNull(caturedSendEvent.getAllValues());
+        assertEquals(2, caturedSendEvent.getAllValues().size());
+
+        assertEquals(PNRN012, caturedSendEvent.getAllValues().get(0).getStatusDetail());
+        assertEquals(StatusCodeEnum.OK, caturedSendEvent.getAllValues().get(0).getStatusCode());
+        assertEquals(RECRN004C, caturedSendEvent.getAllValues().get(1).getStatusDetail());
+        assertEquals(StatusCodeEnum.PROGRESS, caturedSendEvent.getAllValues().get(1).getStatusCode());
     }
 
     @Test
