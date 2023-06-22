@@ -18,10 +18,7 @@ public class InternalEventHeader extends GenericEventHeader {
 
     public static final String PN_EVENT_HEADER_ATTEMPT = "attempt";
     public static final String PN_EVENT_HEADER_EXPIRED = "expired";
-    public static final String PN_EVENT_IUN = "id";
 
-    @JsonProperty("id")
-    private String iun;
     @JsonProperty("attempt")
     private Integer attempt = 0;
     @JsonProperty("expired")

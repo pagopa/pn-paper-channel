@@ -11,7 +11,6 @@ class InternalEventHeaderTest {
 
     private Integer attempt;
     private Instant expired;
-    private String iun;
 
     @BeforeEach
     void setUp(){
@@ -26,9 +25,6 @@ class InternalEventHeaderTest {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(internalEventHeader.getClass().getSimpleName());
         stringBuilder.append("(");
-        stringBuilder.append("iun=");
-        stringBuilder.append(iun);
-        stringBuilder.append(", ");
         stringBuilder.append("attempt=");
         stringBuilder.append(attempt);
         stringBuilder.append(", ");
@@ -46,7 +42,7 @@ class InternalEventHeaderTest {
         InternalEventHeader internalEventHeaderB = initInternalEventHeader();
         Assertions.assertTrue(internalEventHeaderA.equals(internalEventHeaderB) && internalEventHeaderB.equals(internalEventHeaderA));
 
-        InternalEventHeader internalEventHeaderC = new InternalEventHeader("1234", 1, Instant.now());
+        InternalEventHeader internalEventHeaderC = new InternalEventHeader(1, Instant.now());
         Assertions.assertNotEquals(internalEventHeaderA, internalEventHeaderC);
         Assertions.assertNotEquals(internalEventHeaderB, internalEventHeaderC);
     }
@@ -60,12 +56,11 @@ class InternalEventHeaderTest {
     }
 
     private InternalEventHeader initInternalEventHeader() {
-        InternalEventHeader internalEventHeader = new InternalEventHeader("1234", attempt, expired);
+        InternalEventHeader internalEventHeader = new InternalEventHeader(attempt, expired);
         return internalEventHeader;
     }
 
     private void initialize() {
-        iun = "1234";
         attempt = 0;
         expired = null;
     }
