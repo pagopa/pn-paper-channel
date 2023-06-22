@@ -27,10 +27,6 @@ public class InternalQueueMomProducer extends AbstractSqsMomProducer<InternalPus
                 .dataType("String")
                 .stringValue(headerCustom.getAttempt().toString())
                 .build());
-        map.put("id", MessageAttributeValue.builder()
-                .dataType("String")
-                .stringValue(headerCustom.getIun())
-                .build());
         map.put("expired", MessageAttributeValue.builder()
                 .dataType("String")
                 .stringValue(headerCustom.getExpired().toString())

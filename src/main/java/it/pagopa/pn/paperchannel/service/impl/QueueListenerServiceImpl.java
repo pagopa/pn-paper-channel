@@ -33,6 +33,8 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 @Service
 @CustomLog
 public class QueueListenerServiceImpl extends BaseService implements QueueListenerService {
+    private static final String NATIONAL_REGISTRY_DESCRIPTION = "Retrieve the address.";
+
     @Autowired
     private PaperResultAsyncService paperResultAsyncService;
     @Autowired
@@ -41,7 +43,6 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
     private AddressDAO addressDAO;
     @Autowired
     private PaperRequestErrorDAO paperRequestErrorDAO;
-    String NATIONAL_REGISTRY_DESCRIPTION = "Retrieve the address.";
 
     public QueueListenerServiceImpl(PnAuditLogBuilder auditLogBuilder,
                                     RequestDeliveryDAO requestDeliveryDAO,
@@ -54,6 +55,7 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
     @Override
     public void internalListener(PrepareAsyncRequest body, int attempt) {
         String PROCESS_NAME = "InternalListener";
+        MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, body.getRequestId());
         log.logStartingProcess(PROCESS_NAME);
         MDCUtils.addMDCToContextAndExecute(Mono.just(body)
                 .flatMap(prepareRequest -> {
@@ -75,7 +77,9 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
 
     @Override
     public void nationalRegistriesResponseListener(AddressSQSMessageDto body) {
-        String PROCESS_NAME = "National Registries Response Listener";
+        final String PROCESS_NAME = "National Registries Response Listener";
+        MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, body.getCorrelationId());
+
         log.logStartingProcess(PROCESS_NAME);
         log.info("Received message from National Registry queue");
         MDCUtils.addMDCToContextAndExecute(Mono.just(body)
@@ -118,7 +122,8 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
 
     @Override
     public void nationalRegistriesErrorListener(NationalRegistryError data, int attempt) {
-        String PROCESS_NAME = "National Registries Error Listener";
+        MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, data.getRequestId());
+        final String PROCESS_NAME = "National Registries Error Listener";
         log.logStartingProcess(PROCESS_NAME);
         MDCUtils.addMDCToContextAndExecute(Mono.just(data)
                 .doOnSuccess(nationalRegistryError -> {
@@ -144,7 +149,7 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
 
     @Override
     public void externalChannelListener(SingleStatusUpdateDto data, int attempt) {
-        String PROCESS_NAME = "External Channel Listener";
+        final String PROCESS_NAME = "External Channel Listener";
         if (data.getAnalogMail() != null) {
             MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, data.getAnalogMail().getRequestId());
         }
