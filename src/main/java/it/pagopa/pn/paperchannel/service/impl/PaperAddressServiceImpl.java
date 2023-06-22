@@ -6,8 +6,13 @@ import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.PnAddressFlowException;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.dto.AnalogAddressDto;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PrepareEvent;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
+import it.pagopa.pn.paperchannel.mapper.PrepareEventMapper;
 import it.pagopa.pn.paperchannel.mapper.RequestDeliveryMapper;
+import it.pagopa.pn.paperchannel.mapper.SendEventMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
@@ -135,17 +140,25 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
 
         return this.addressManagerClient.deduplicates(UUID.randomUUID().toString(), firstAttempt, discovered)
                 .flatMap(deduplicatesResponse -> {
+                    logAuditBefore("prepare requestId = %s, relatedRequestId = %s Deduplicates service has DeduplicatesResponse.error empty ?", deliveryRequest);
                     if (StringUtils.isNotBlank(deduplicatesResponse.getError())){
                         if (StringUtils.equalsIgnoreCase(paperProperties.getOriginalPostmanAddressUsageMode(), Const.PAPERSEND)){
+                            pushDeduplicatesErrorEvent(deliveryRequest, discovered);
+
                             logAuditSuccess("prepare requestId = %s, relatedRequestId = %s Deduplicate response have an error and send discovered",deliveryRequest);
                             return Mono.just(discovered);
                         } else if (StringUtils.equalsIgnoreCase(paperProperties.getOriginalPostmanAddressUsageMode(), Const.DISCARDNOTIFICATION)) {
+                            pushDeduplicatesErrorEvent(deliveryRequest, null);
+
                             logAuditSuccess("prepare requestId = %s, relatedRequestId = %s Deduplicate response have an error and discard notification",deliveryRequest);
                             return Mono.error(new PnAddressFlowException(DISCARD_NOTIFICATION));
                         }
                         logAuditSuccess("prepare requestId = %s, relatedRequestId = %s Deduplicate response have a error and properties usage mode incompatible type",deliveryRequest);
                         return Mono.error(new PnInternalException(INVALID_VALUE_FROM_PROPS.getTitle(), "ERROR_POSTMAN_ADDRESS_USAGE_MODE"));
                     }
+
+                    logAuditSuccess("prepare requestId = %s, relatedRequestId = %s Deduplicate service has DeduplicatesResponse.error is empty",deliveryRequest);
+
                     if (Boolean.TRUE.equals(deduplicatesResponse.getEqualityResult())) {
                         logAuditSuccess("prepare requestId = %s, relatedRequestId = %s Discovered address is equals previous address",deliveryRequest);
                         return Mono.error(new PnAddressFlowException(ATTEMPT_ADDRESS_NATIONAL_REGISTRY));
@@ -155,12 +168,13 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
                 });
     }
 
-
-
     private Mono<Address> flowNationalRegistry(PnDeliveryRequest pnDeliveryRequest, Address fromNationalRegistries, Address firstAttempt){
         return addressManagerClient.deduplicates(pnDeliveryRequest.getCorrelationId(), firstAttempt, fromNationalRegistries)
                 .flatMap(deduplicateResponse -> {
+                    logAuditBefore("prepare requestId = %s, relatedRequestId = %s Deduplicates service has DeduplicatesResponse.error empty ?", pnDeliveryRequest);
                     if (Boolean.TRUE.equals(deduplicateResponse.getEqualityResult())) {
+                        logAuditSuccess("prepare requestId = %s, relatedRequestId = %s Deduplicate service has DeduplicatesResponse.error is empty",pnDeliveryRequest);
+
                         pnLogAudit.addsSuccessResolveLogic(
                                 pnDeliveryRequest.getIun(),
                                 String.format("prepare requestId = %s, relatedRequestId = %s National Registry Address is equals previous address",
@@ -170,9 +184,13 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
                         return Mono.error(new PnGenericException(UNTRACEABLE_ADDRESS, UNTRACEABLE_ADDRESS.getMessage()));
                     }
                     if (deduplicateResponse.getError() != null){
+                        pushDeduplicatesErrorEvent(pnDeliveryRequest, null);
+
                         log.error("Response from address manager {} with request id {}", deduplicateResponse.getError(), pnDeliveryRequest.getRequestId());
                         return Mono.error(new PnGenericException(ADDRESS_MANAGER_ERROR, deduplicateResponse.getError()));
                     }
+                    logAuditSuccess("prepare requestId = %s, relatedRequestId = %s Deduplicate service has DeduplicatesResponse.error is empty",pnDeliveryRequest);
+
                     pnLogAudit.addsSuccessResolveLogic(
                             pnDeliveryRequest.getIun(),
                             String.format("prepare requestId = %s, relatedRequestId = %s National Registry Address is not equals previous address",
@@ -231,6 +249,14 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
                     );
                     return this.requestDeliveryDAO.updateData(entity);
                 });
+    }
+
+    private void pushDeduplicatesErrorEvent (PnDeliveryRequest deliveryRequest, Address address) {
+        logAuditSuccess("prepare requestId = %s, relatedRequestId = %s Deduplicate service has DeduplicatesResponse.error is not empty",deliveryRequest);
+
+        PrepareEvent prepareEvent = PrepareEventMapper.toPrepareEvent(deliveryRequest, address, StatusCodeEnum.PROGRESS);
+        prepareEvent.setStatusDetail(StatusDeliveryEnum.DEDUPLICATES_ERROR_RESPONSE.getCode());
+        this.sqsSender.pushPrepareEvent(prepareEvent);
     }
 
 }

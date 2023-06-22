@@ -24,7 +24,8 @@ public enum StatusDeliveryEnum {
     PAPER_CHANNEL_DEFAULT_ERROR("PC011", "Notifica in errore", "KO"),
     PAPER_CHANNEL_ASYNC_ERROR("PC012", "Errore nella fase di prepare", "KO"),
     SAFE_STORAGE_IN_ERROR("PC013", "Errore durante il recupero degli allegati", "KO"),
-    DEFAULT_ERROR("PC014", "Errore", "KO");
+    DEFAULT_ERROR("PC014", "Errore", "KO"),
+    DEDUPLICATES_ERROR_RESPONSE("PNALL001", "Normalizzazione con errore", "PROGRESS");
 
     private final String code;
     private final String description;
