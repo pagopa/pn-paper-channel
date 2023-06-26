@@ -35,6 +35,7 @@ public class CloudWatchMetricJob {
 
     private final PaperRequestErrorDAO paperRequestErrorDAO;
 
+
     @Scheduled(cron = "${pn.data-vault.cloudwatch-metric-cron}")
     public void sendMetricToCloudWatch() {
 
@@ -49,6 +50,9 @@ public class CloudWatchMetricJob {
                     MetricDatum metricDatum = MetricDatum.builder()
                             .metricName(metricName)
                             .unit(StandardUnit.COUNT)
+                            .dimensions(Collections.singletonList(Dimension.builder()
+                                    .name("Environment")
+                                    .build()))
                             .timestamp(Instant.now())
                             .build();
 

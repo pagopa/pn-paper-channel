@@ -248,6 +248,12 @@ aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
 
 	]"
 
+aws  --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
+    dynamodb put-item \
+    --table-name PaperRequestErrorDynamoTable  \
+    --item '{"requestId": {"S": "PAPER-CHANNEL"}, "created": {"S": "2023-01-22T10:15:30Z"}, "author": {"S": "PN-PAPER-CHANNEL"}, "error": {"S": "Errore per invio Metrica"}, "flowThrow": {"S": "flowThrow"}}'
+
+
 aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     dynamodb create-table \
     --table-name PaperEventsDynamoTable  \
