@@ -19,7 +19,6 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.UUID;
 
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.TENDER_NOT_EXISTED;
 
 @Component
 @Profile("!test")
@@ -29,7 +28,6 @@ public class CloudWatchMetricJob {
 
     private static final UUID UUID_FOR_CLOUDWATCH_METRIC = UUID.randomUUID();
     private static final String NAMESPACE_CW_PDV = "pn-paper-channel-" + UUID_FOR_CLOUDWATCH_METRIC;
-    private static final String NAMESPACE_CW_SELC = "selc-" + UUID_FOR_CLOUDWATCH_METRIC;
 
     private final CloudWatchAsyncClient cloudWatchAsyncClient;
 
