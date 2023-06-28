@@ -48,6 +48,7 @@ public class PnDeliveryRequest {
     private static final String COL_STATUS_DATE = "statusDate";
 
     private static final String COL_PROPOSAL_PRODUCT_TYPE = "proposalProductType";
+
     private static final String COL_PRINT_TYPE = "printType";
 
     private static final String COL_START_DATE = "startDate";
@@ -61,6 +62,8 @@ public class PnDeliveryRequest {
     private static final String COL_HASH_OLD_ADDRESS = "hashOldAddress";
 
     public static final String COL_REQUEST_PA_ID = "requestPaId";
+
+    public static final String COL_EVENT_TO_SEND = "eventToSend";
 
     @Getter(onMethod = @__({@DynamoDbPartitionKey,@DynamoDbAttribute(COL_REQUEST_ID)}))
     private String requestId;
@@ -119,5 +122,8 @@ public class PnDeliveryRequest {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_REQUEST_PA_ID)}))
     private String requestPaId;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_EVENT_TO_SEND)}))
+    private String eventToSend;
 
 }

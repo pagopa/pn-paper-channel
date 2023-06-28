@@ -1,7 +1,6 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
-import it.pagopa.pn.commons.log.PnLogger;
 import it.pagopa.pn.commons.utils.LogUtils;
 import it.pagopa.pn.commons.utils.MDCUtils;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
@@ -234,13 +233,14 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                             StringUtils.equals(sendRequest.getPrintType(), Const.BN_FRONTE_RETRO)
                     ).map(response -> {
                         log.logCheckingOutcome(VALIDATION_NAME, true);
-                        return Tuples.of(response, pnDeliveryRequest, attachments);
+                        return Tuples.of(response, pnDeliveryRequest, attachments, address);
                     });
                 })
                 .flatMap(tuple -> {
                     SendResponse sendResponse = tuple.getT1();
                     PnDeliveryRequest pnDeliveryRequest = tuple.getT2();
                     List<AttachmentInfo> attachments = tuple.getT3();
+                    Address address = tuple.getT4();
 
                     if (StringUtils.equals(pnDeliveryRequest.getStatusCode(), StatusDeliveryEnum.TAKING_CHARGE.getCode())) {
                         RequestDeliveryMapper.changeState(
@@ -270,6 +270,7 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                                 }))
                                 .map(updated -> {
                                     log.info("Updated data in DynamoDb table {}", "RequestDeliveryDynamoTable");
+                                    pushDeduplicatesErrorEvent(pnDeliveryRequest, address);
                                     return sendResponse;
                                 })
                                 .onErrorResume(ex -> {
