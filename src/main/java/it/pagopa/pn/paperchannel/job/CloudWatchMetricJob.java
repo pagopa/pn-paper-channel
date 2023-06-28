@@ -26,8 +26,7 @@ import java.util.UUID;
 @Slf4j
 public class CloudWatchMetricJob {
 
-    private static final UUID UUID_FOR_CLOUDWATCH_METRIC = UUID.randomUUID();
-    private static final String NAMESPACE_CW_PDV = "pn-paper-channel-" + UUID_FOR_CLOUDWATCH_METRIC;
+    private static final String NAMESPACE_CW_PDV = "pn-paper-channel";
 
     private final CloudWatchAsyncClient cloudWatchAsyncClient;
 
@@ -37,7 +36,7 @@ public class CloudWatchMetricJob {
     @Scheduled(cron = "${pn.data-vault.cloudwatch-metric-cron}")
     public void sendMetricToCloudWatch() {
 
-        createAndSendMetric( NAMESPACE_CW_PDV, "PDVNumberOfWaitingRequests");
+        createAndSendMetric( NAMESPACE_CW_PDV, "PNPaperErrorRequest");
 
     }
 
