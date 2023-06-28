@@ -89,14 +89,14 @@ echo ${aws_command_base_args}
 
 lines=$( cat $csv_file | wc -l )
 
-i=2
+i=1
 while [ $i -lt $lines ]
 do
   next_i=$(($i+25))
   echo "From $i to $next_i"
 
   tail -n +1 $csv_file \
-      | sed -e 's/\([^,]*\),\([^,]*\),\(.*\)/ { "zone":"\1", "countryIt":"\2", "countryEn":"\3"} /' \
+      | sed -e 's/\([^;]*\);\([^;]*\);\(.*\)/ { "zone":"\1", "countryIt":"\2", "countryEn":"\3"} /' \
       | jq -cs ".[$i:$next_i] " | jq 'map({
         "PutRequest": {
           "Item": {
