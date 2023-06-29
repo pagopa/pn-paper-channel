@@ -4,6 +4,7 @@ import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.
 import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnRequestError;
+import it.pagopa.pn.paperchannel.service.SqsSender;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
@@ -16,12 +17,13 @@ class NotRetryableErrorMessageHandlerTest {
     private NotRetryableErrorMessageHandler handler;
 
     private PaperRequestErrorDAO paperRequestErrorDAOMock;
-
+    private SqsSender mockSqsSender;
 
     @BeforeEach
     public void init() {
+        mockSqsSender = mock(SqsSender.class);
         paperRequestErrorDAOMock = mock(PaperRequestErrorDAO.class);
-        handler = new NotRetryableErrorMessageHandler(paperRequestErrorDAOMock);
+        handler = new NotRetryableErrorMessageHandler(mockSqsSender, paperRequestErrorDAOMock);
     }
 
     @Test
