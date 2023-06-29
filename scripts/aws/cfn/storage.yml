@@ -363,6 +363,8 @@ Resources:
           AttributeType: "S"
         - AttributeName: "created"
           AttributeType: "S"
+        - AttributeName: "author"
+          AttributeType: "S"
       KeySchema:
         - AttributeName: "requestId"
           KeyType: "HASH"
