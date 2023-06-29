@@ -29,5 +29,4 @@ public abstract class SendToDeliveryPushHandler implements MessageHandler {
     }
 
 
-
 }
