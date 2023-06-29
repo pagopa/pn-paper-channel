@@ -35,7 +35,6 @@ public class CloudWatchMetricJob {
 
     @Scheduled(cron = "${pn.paper-channel.cloudwatch-metric-cron}")
     public void sendMetricToCloudWatch() {
-
         createAndSendMetric( NAMESPACE_CW_PDV, "PNPaperErrorRequest");
 
     }
