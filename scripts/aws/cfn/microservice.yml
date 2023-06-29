@@ -565,7 +565,7 @@ Resources:
               - cloudwatch:GetMetricStream
               - cloudwatch:GetMetricData
             Resource:
-              - *
+              - "*"
 
   # Dashboard
   PaperChannelMicroserviceCloudWatchDashboard:
