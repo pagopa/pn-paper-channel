@@ -68,7 +68,6 @@ public class HandlersFactory {
         addDirectlySendStatusCodes(map, directlySendMessageHandler);
         addCustomAggregatorStatusCodes(map, customAggregatorMessageHandler);
 
-
         //casi 890
         map.put("RECAG012", recag012MessageHandler);
         map.put("RECAG011A", recag011AMessageHandler);
