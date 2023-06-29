@@ -6,13 +6,8 @@ import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.PnAddressFlowException;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.dto.AnalogAddressDto;
-import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PrepareEvent;
-import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
-import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
-import it.pagopa.pn.paperchannel.mapper.PrepareEventMapper;
 import it.pagopa.pn.paperchannel.mapper.RequestDeliveryMapper;
-import it.pagopa.pn.paperchannel.mapper.SendEventMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
@@ -143,12 +138,12 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
                     logAuditBefore("prepare requestId = %s, relatedRequestId = %s Deduplicates service has DeduplicatesResponse.error empty ?", deliveryRequest);
                     if (StringUtils.isNotBlank(deduplicatesResponse.getError())){
                         if (StringUtils.equalsIgnoreCase(paperProperties.getOriginalPostmanAddressUsageMode(), Const.PAPERSEND)){
-                            pushDeduplicatesErrorEvent(deliveryRequest, discovered);
+                            saveDeduplicatesErrorEvent(deliveryRequest);
 
                             logAuditSuccess("prepare requestId = %s, relatedRequestId = %s Deduplicate response have an error and send discovered",deliveryRequest);
                             return Mono.just(discovered);
                         } else if (StringUtils.equalsIgnoreCase(paperProperties.getOriginalPostmanAddressUsageMode(), Const.DISCARDNOTIFICATION)) {
-                            pushDeduplicatesErrorEvent(deliveryRequest, null);
+                            saveDeduplicatesErrorEvent(deliveryRequest);
 
                             logAuditSuccess("prepare requestId = %s, relatedRequestId = %s Deduplicate response have an error and discard notification",deliveryRequest);
                             return Mono.error(new PnAddressFlowException(DISCARD_NOTIFICATION));
@@ -184,7 +179,7 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
                         return Mono.error(new PnGenericException(UNTRACEABLE_ADDRESS, UNTRACEABLE_ADDRESS.getMessage()));
                     }
                     if (deduplicateResponse.getError() != null){
-                        pushDeduplicatesErrorEvent(pnDeliveryRequest, null);
+                        saveDeduplicatesErrorEvent(pnDeliveryRequest);
 
                         log.error("Response from address manager {} with request id {}", deduplicateResponse.getError(), pnDeliveryRequest.getRequestId());
                         return Mono.error(new PnGenericException(ADDRESS_MANAGER_ERROR, deduplicateResponse.getError()));
@@ -251,12 +246,10 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
                 });
     }
 
-    private void pushDeduplicatesErrorEvent (PnDeliveryRequest deliveryRequest, Address address) {
+    private void saveDeduplicatesErrorEvent(PnDeliveryRequest deliveryRequest) {
         logAuditSuccess("prepare requestId = %s, relatedRequestId = %s Deduplicate service has DeduplicatesResponse.error is not empty",deliveryRequest);
-
-        PrepareEvent prepareEvent = PrepareEventMapper.toPrepareEvent(deliveryRequest, address, StatusCodeEnum.PROGRESS);
-        prepareEvent.setStatusDetail(StatusDeliveryEnum.DEDUPLICATES_ERROR_RESPONSE.getCode());
-        this.sqsSender.pushPrepareEvent(prepareEvent);
+        deliveryRequest.setEventToSend(StatusDeliveryEnum.DEDUPLICATES_ERROR_RESPONSE.getCode());
+        this.requestDeliveryDAO.updateData(deliveryRequest);
     }
 
 }

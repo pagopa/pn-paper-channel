@@ -3,7 +3,10 @@ package it.pagopa.pn.paperchannel.service.impl;
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.commons.utils.MDCUtils;
 import it.pagopa.pn.paperchannel.encryption.DataEncryption;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PrepareEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ProductTypeEnum;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
+import it.pagopa.pn.paperchannel.mapper.PrepareEventMapper;
 import it.pagopa.pn.paperchannel.mapper.RequestDeliveryMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
@@ -92,6 +95,25 @@ public class BaseService {
                     return Mono.empty();
 
                 }).subscribeOn(Schedulers.boundedElastic())).subscribe();
+    }
+
+    protected void pushDeduplicatesErrorEvent(PnDeliveryRequest deliveryRequest, Address address){
+        if (StringUtils.equalsIgnoreCase(deliveryRequest.getEventToSend(), StatusDeliveryEnum.DEDUPLICATES_ERROR_RESPONSE.getCode())) {
+            MDC.put(MDCUtils.MDC_TRACE_ID_KEY, MDC.get(MDCUtils.MDC_TRACE_ID_KEY));
+            MDCUtils.addMDCToContextAndExecute(Mono.delay(Duration.ofMillis(40)).publishOn(Schedulers.boundedElastic())
+                    .flatMap(i -> {
+                        PrepareEvent prepareEvent = PrepareEventMapper.toPrepareEvent(deliveryRequest, address, StatusCodeEnum.PROGRESS);
+                        prepareEvent.setStatusDetail(StatusDeliveryEnum.DEDUPLICATES_ERROR_RESPONSE.getCode());
+
+                        // send event to delivery-push
+                        this.sqsSender.pushPrepareEvent(prepareEvent);
+                        // eventToSend set to blank
+                        deliveryRequest.setEventToSend(null);
+                        return this.requestDeliveryDAO.updateData(deliveryRequest);
+                    })
+                    .subscribeOn(Schedulers.boundedElastic())).subscribe();
+        }
+
     }
 
 
