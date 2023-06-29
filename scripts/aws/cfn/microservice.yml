@@ -561,9 +561,11 @@ Resources:
               - !Sub "${PaperEventsTableArn}/*"
           - Effect: Allow
             Action:
-               - cloudwatch:PutMetricData
-               - cloudwatch:GetMetricStream
-               - cloudwatch:GetMetricData
+              - cloudwatch:PutMetricData
+              - cloudwatch:GetMetricStream
+              - cloudwatch:GetMetricData
+            Resource:
+              - *
 
   # Dashboard
   PaperChannelMicroserviceCloudWatchDashboard:
