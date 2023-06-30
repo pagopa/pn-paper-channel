@@ -1,10 +1,8 @@
 package it.pagopa.pn.paperchannel.job;
 
-import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -17,8 +15,6 @@ import software.amazon.awssdk.services.cloudwatch.model.StandardUnit;
 
 import java.time.Instant;
 import java.util.Collections;
-import java.util.UUID;
-
 
 @Component
 @Profile("!test")
@@ -33,34 +29,33 @@ public class CloudWatchMetricJob {
     private final PaperRequestErrorDAO paperRequestErrorDAO;
 
 
-    @Scheduled(cron = "${pn.data-vault.cloudwatch-metric-cron}")
+    @Scheduled(cron = "${pn.paper-channel.cloudwatch-metric-cron}")
     public void sendMetricToCloudWatch() {
-
-        createAndSendMetric( NAMESPACE_CW_PDV, "PNPaperErrorRequest");
-
+        createAndSendMetric(NAMESPACE_CW_PDV, "PNPaperErrorRequest");
     }
 
     private void createAndSendMetric(String namespace, String metricName) {
         this.paperRequestErrorDAO.findAll()
                 .flatMap(result -> {
-                    // Operazioni da eseguire quando il flusso non è vuoto
                     MetricDatum metricDatum = MetricDatum.builder()
                             .metricName(metricName)
+                            .value((double) 1)
                             .unit(StandardUnit.COUNT)
                             .dimensions(Collections.singletonList(Dimension.builder()
-                                    .name("Environment")
+                                    .name("NumberErrorNotification")
+                                    .value(String.valueOf(result.size()))
                                     .build()))
                             .timestamp(Instant.now())
                             .build();
-
+                    log.debug("createAndSendMetric metricDatanum created");
                     PutMetricDataRequest metricDataRequest = PutMetricDataRequest.builder()
                             .namespace(namespace)
                             .metricData(Collections.singletonList(metricDatum))
                             .build();
-
+                    log.debug("createAndSendMetric metricDataRequest created");
                     return  Mono.fromFuture(cloudWatchAsyncClient.putMetricData(metricDataRequest));
                 })
-                .subscribe(putMetricDataResponse -> log.trace("[{}] PutMetricDataResponse: {}", namespace, putMetricDataResponse),
+                .subscribe(putMetricDataResponse -> log.debug("[{}] PutMetricDataResponse: {}", namespace, putMetricDataResponse),
                         throwable -> log.warn(String.format("[%s] Error sending metric", namespace), throwable));
     }
 }

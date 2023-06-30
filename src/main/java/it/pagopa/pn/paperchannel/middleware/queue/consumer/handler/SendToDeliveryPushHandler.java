@@ -28,6 +28,4 @@ public abstract class SendToDeliveryPushHandler implements MessageHandler {
         return Mono.empty();
     }
 
-
-
 }
