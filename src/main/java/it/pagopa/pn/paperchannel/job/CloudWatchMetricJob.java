@@ -32,7 +32,6 @@ public class CloudWatchMetricJob {
     @Scheduled(cron = "${pn.paper-channel.cloudwatch-metric-cron}")
     public void sendMetricToCloudWatch() {
         createAndSendMetric( NAMESPACE_CW_PDV, "PNPaperErrorRequest");
-
     }
 
     private void createAndSendMetric(String namespace, String metricName) {
@@ -43,7 +42,8 @@ public class CloudWatchMetricJob {
                             .metricName(metricName)
                             .unit(StandardUnit.COUNT)
                             .dimensions(Collections.singletonList(Dimension.builder()
-                                    .name("Environment")
+                                    .name("Number Error Notification")
+                                    .value(String.valueOf(result.size()))
                                     .build()))
                             .timestamp(Instant.now())
                             .build();
@@ -55,7 +55,7 @@ public class CloudWatchMetricJob {
 
                     return  Mono.fromFuture(cloudWatchAsyncClient.putMetricData(metricDataRequest));
                 })
-                .subscribe(putMetricDataResponse -> log.trace("[{}] PutMetricDataResponse: {}", namespace, putMetricDataResponse),
+                .subscribe(putMetricDataResponse -> log.debug("[{}] PutMetricDataResponse: {}", namespace, putMetricDataResponse),
                         throwable -> log.warn(String.format("[%s] Error sending metric", namespace), throwable));
     }
 }
