@@ -47,12 +47,10 @@ public class CloudWatchMetricJob {
                                     .build()))
                             .timestamp(Instant.now())
                             .build();
-                    log.debug("createAndSendMetric metricDatanum created");
                     PutMetricDataRequest metricDataRequest = PutMetricDataRequest.builder()
                             .namespace(namespace)
                             .metricData(Collections.singletonList(metricDatum))
                             .build();
-                    log.debug("createAndSendMetric metricDataRequest created");
                     return  Mono.fromFuture(cloudWatchAsyncClient.putMetricData(metricDataRequest));
                 })
                 .subscribe(putMetricDataResponse -> log.debug("[{}] PutMetricDataResponse: {}", namespace, putMetricDataResponse),
