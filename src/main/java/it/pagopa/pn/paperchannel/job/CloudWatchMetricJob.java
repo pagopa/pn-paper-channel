@@ -39,6 +39,7 @@ public class CloudWatchMetricJob {
                 .flatMap(result -> {
                     MetricDatum metricDatum = MetricDatum.builder()
                             .metricName(metricName)
+                            .value((double) 1)
                             .unit(StandardUnit.COUNT)
                             .dimensions(Collections.singletonList(Dimension.builder()
                                     .name("Number Error Notification")
