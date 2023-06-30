@@ -31,7 +31,7 @@ public class CloudWatchMetricJob {
 
     @Scheduled(cron = "${pn.paper-channel.cloudwatch-metric-cron}")
     public void sendMetricToCloudWatch() {
-        createAndSendMetric( NAMESPACE_CW_PDV, "PNPaperErrorRequest");
+        createAndSendMetric(NAMESPACE_CW_PDV, "PNPaperErrorRequest");
     }
 
     private void createAndSendMetric(String namespace, String metricName) {
@@ -42,7 +42,7 @@ public class CloudWatchMetricJob {
                             .value((double) 1)
                             .unit(StandardUnit.COUNT)
                             .dimensions(Collections.singletonList(Dimension.builder()
-                                    .name("Number Error Notification")
+                                    .name("NumberErrorNotification")
                                     .value(String.valueOf(result.size()))
                                     .build()))
                             .timestamp(Instant.now())
