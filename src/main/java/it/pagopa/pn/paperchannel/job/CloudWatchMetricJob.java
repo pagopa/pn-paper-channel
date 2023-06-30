@@ -37,7 +37,6 @@ public class CloudWatchMetricJob {
     private void createAndSendMetric(String namespace, String metricName) {
         this.paperRequestErrorDAO.findAll()
                 .flatMap(result -> {
-                    // Operazioni da eseguire quando il flusso non è vuoto
                     MetricDatum metricDatum = MetricDatum.builder()
                             .metricName(metricName)
                             .unit(StandardUnit.COUNT)
