@@ -31,7 +31,7 @@ public class CloudWatchMetricJob {
 
     @Scheduled(cron = "${pn.paper-channel.cloudwatch-metric-cron}")
     public void sendMetricToCloudWatch() {
-        createAndSendMetric( NAMESPACE_CW_PDV, "PNPaperErrorRequest");
+        createAndSendMetric(NAMESPACE_CW_PDV, "PNPaperErrorRequest");
     }
 
     private void createAndSendMetric(String namespace, String metricName) {
@@ -39,19 +39,20 @@ public class CloudWatchMetricJob {
                 .flatMap(result -> {
                     MetricDatum metricDatum = MetricDatum.builder()
                             .metricName(metricName)
+                            .value((double) 1)
                             .unit(StandardUnit.COUNT)
                             .dimensions(Collections.singletonList(Dimension.builder()
-                                    .name("Number Error Notification")
+                                    .name("NumberErrorNotification")
                                     .value(String.valueOf(result.size()))
                                     .build()))
                             .timestamp(Instant.now())
                             .build();
-
+                    log.debug("createAndSendMetric metricDatanum created");
                     PutMetricDataRequest metricDataRequest = PutMetricDataRequest.builder()
                             .namespace(namespace)
                             .metricData(Collections.singletonList(metricDatum))
                             .build();
-
+                    log.debug("createAndSendMetric metricDataRequest created");
                     return  Mono.fromFuture(cloudWatchAsyncClient.putMetricData(metricDataRequest));
                 })
                 .subscribe(putMetricDataResponse -> log.debug("[{}] PutMetricDataResponse: {}", namespace, putMetricDataResponse),
