@@ -1,0 +1,625 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: 'Example microservice deploy'
+
+Parameters:
+  ProjectName:
+    Type: String
+    Description: 'Usually pn can be pnXYZ where XYZ are the feature number, useful to create
+      experimental environments without crash official development environment'
+
+  AlarmSNSTopicArn:
+    Type: String
+    Description: ARN of alarm topic
+
+   #ApiDnsName:
+   #  Type: String
+   #  Description: 'The DNS name used for B2B rest API.'
+
+  WebApiDnsName:
+    Type: String
+    Description: 'The DNS name used for WEB rest API.'
+  
+  CorsAllowedDomains:
+    Type: String
+    Description: 'Comma separated list of domains allowed to make cross origin request'
+
+  ContainerImageUri:
+    Type: String
+    Description: 'Exact container image URI with full repository and image digest'
+
+  MicroserviceNumber:
+    Type: Number
+    Description: 'Disambiguation useful for load balancer rules'
+
+  TemplateBucketBaseUrl:
+    Type: String
+    Description: 'The S3 bucket from which to fetch the templates used by this stack.'
+
+  ECSClusterName:
+    Type: String
+    Description: 'The name of the ECS cluster where the microservice is going to be deployed'
+
+  SubnetsIds:
+    Type: String
+    Description: 'subnets ids comma separated list. Where to deploy the microservice'
+
+  VpcId:
+    Type: String
+    Description: 'VpcId where the microservice is going to be deployed'
+  
+  EcsDefaultSecurityGroup:
+    Type: String
+    Description: 'Default security group required by infrastructure'
+
+  ApplicationLoadBalancerListenerArn:
+    Type: String
+    Description: 'Load balancer listener where HTTP endpoints is going to be registered'
+
+  ApplicationLoadBalancerDomain:
+    Type: String
+    Description: 'Base URL of the load balancer where the service is going to be reachable'
+
+  SandboxSafeStorageBaseUrl:
+    Type: String
+    Description: 'Url to the SafeStorage microservice'
+
+  ExternalChannelBaseUrl:
+    Type: String
+    Description: 'Url to the External Channel microservice'
+
+  AttemptSafeStorage:
+    Type: Number
+    Description: 'Number of attempts for retrieve file on safe storage'
+
+  AttemptQueueExternalChannel:
+    Type: Number
+    Description: 'Number of attempts for called external channel'
+
+  AttemptQueueNationalRegistries:
+    Type: Number
+    Description: 'Number of attempts for called national registries'
+
+  AttemptQueueSafeStorage:
+    Type: Number
+    Description: 'Number of attempts for called prepare async for retry retrieve file'
+
+  AttemptQueueAddressManager:
+    Type: Number
+    Description: 'Number of attempts for called prepare async for retry address manager'
+
+  OriginalPostmanAddressUsageMode:
+    Type: String
+    Description: 'Address usage modo for postman flow'
+
+  SafeStorageCxId:
+    Type: String
+    Description: 'SafeStorage cx-id'
+
+  AddressManagerCxId:
+    Type: String
+    Description: 'AddressManager cx-id'
+
+  AddressManagerApiKey:
+    Type: String
+    Description: 'AddressManager api-key'
+
+  AddressManagerBaseUrl:
+    Type: String
+    Description: 'Address Manager BaseUrl'
+
+  DataVaultBaseUrl:
+    Type: String
+    Description: 'DataVault BaseUrl'
+
+  XPagopaExtchCxId:
+    Type: String
+    Description: 'SafeStorage cx-id'
+
+  NationalRegistryCxId:
+    Type: String
+    Description: 'National Registry cx-id'
+  TtlPrepare:
+      Type: String
+      Description: 'Time to live prepare'
+  TtlExecutionRNAR:
+      Type: String
+      Description: 'Time to live execution RN AR'
+  TtlExecutionRN890:
+      Type: String
+      Description: 'Time to live execution RN 890'
+  TtlExecutionRNRS:
+      Type: String
+      Description: 'Time to live execution RN RS'
+  TtlExecutionRIAR:
+    Type: String
+    Description: 'Time to live execution Ri AR'
+  TtlExecutionRIRS:
+    Type: String
+    Description: 'Time to live execution RI RS'
+
+  TtlExecutionDaysDemat:
+    Type: String
+    Description: 'Time to live execution days Event Demat'
+  TtlExecutionDaysMeta:
+    Type: String
+    Description: 'Time to live execution days Event Meta'
+
+  RefinementDuration:
+    Type: String
+    Description: 'Duration for refinement'
+
+  CloudwatchMetricCron:
+    Type: String
+    Description: 'Time before send metric'
+
+  PaperWeight:
+    Type: String
+    Description: 'Weight single paper'
+
+  LetterWeight:
+    Type: String
+    Description: 'Weight letter'
+
+  RetryStatus:
+    Type: String
+    Description: 'Retry status code'
+
+  NetworkLoadBalancerLink:
+    Type: String
+    Description: 'network load balancer link for API-GW'
+  
+  LogsKinesisSourceStreamArn:
+    Type: String
+    Description: 'Kinesis stream that receive logs'
+  
+  Version:
+    Type: String
+    Description: 'keep track of used projects commitIds'
+
+  PCKmsEncDecDynamoDataKeyARN:
+    Type: String
+    Description: 'Name of KMS Key for Dynamo encode/decode data'
+
+  PaperDeliveryDriversBucketName:
+    Type: String
+    Description: 'Name of S3 bucket'
+
+  RequestDeliveryDynamoTableName:
+    Type: String
+    Description: 'Name of dynamodb table containing request'
+
+  RequestDeliveryDynamoTableArn:
+    Type: String
+    Description: 'ARN of dynamodb table containing request'
+
+  DeliveryFileDynamoTableName:
+    Type: String
+    Description: 'Name of dynamodb table containing file request'
+
+  DeliveryFileDynamoTableArn:
+    Type: String
+    Description: 'ARN of dynamodb table containing file request'
+
+  AddressDynamoTableName:
+    Type: String
+    Description: 'Name of dynamodb table containing address of request delivery'
+
+  AddressDynamoTableArn:
+    Type: String
+    Description: 'ARN of dynamodb table containing address of request delivery'
+
+  TenderDynamoTableName:
+    Type: String
+    Description: 'Name of dynamodb table containing tenders'
+
+  TenderDynamoTableArn:
+    Type: String
+    Description: 'ARN of dynamodb table containing tenders'
+
+  DeliveryDriverDynamoTableName:
+    Type: String
+    Description: 'Name of dynamodb table containing delivery drivers'
+
+  DeliveryDriverDynamoTableArn:
+    Type: String
+    Description: 'ARN of dynamodb table containing delivery drivers'
+
+  CostDynamoTableName:
+    Type: String
+    Description: 'Name of dynamodb table containing cost'
+
+  CostDynamoTableArn:
+    Type: String
+    Description: 'ARN of dynamodb table containing cost'
+
+  ZoneDynamoTableName:
+    Type: String
+    Description: 'Name of dynamodb table containing zone'
+
+  ZoneDynamoTableArn:
+    Type: String
+    Description: 'ARN of dynamodb table containing zone'
+
+  CapDynamoTableName:
+    Type: String
+    Description: 'Name of dynamodb table containing cap'
+
+  CapDynamoTableArn:
+    Type: String
+    Description: 'ARN of dynamodb table containing cap'
+
+  PaperRequestErrorTableName:
+    Type: String
+    Description: 'Name of dynamodb table containing request error'
+
+  PaperRequestErrorTableArn:
+    Type: String
+    Description: 'ARN of dynamodb table containing request error'
+
+  PaperEventsTableName:
+    Type: String
+    Description: 'Name of dynamodb table containing events'
+
+  PaperEventsTableArn:
+    Type: String
+    Description: 'ARN of dynamodb table containing events'
+
+  ExternalChannelsOutputsQueueName:
+    Type: String
+    Description: 'Push delivery-push messages to this Queue'
+
+  ExternalChannelsOutputsQueueARN:
+    Type: String
+    Description: 'Push delivery-push messages to this Queue'
+
+  NationalRegistries2PaperChannelQueueName:
+    Type: String
+    Description: 'Pull national-registry messages to this Queue'
+
+  NationalRegistries2PaperChannelQueueARN:
+    Type: String
+    Description: 'Pull national-registry messages to this Queue'
+
+  ExternalChannels2PaperChannelQueueName:
+    Type: String
+    Description: 'Pull external-channel messages from this Queue'
+
+  ExternalChannels2PaperChannelQueueARN:
+    Type: String
+    Description: 'Pull external-channel messages from this Queue'
+
+  ScheduledRequestsQueueName:
+    Type: String
+    Description: 'Send and pull requests in this queue'
+
+  ScheduledRequestsQueueARN:
+    Type: String
+    Description: 'Send and pull requests in this queue'
+
+  #ChargeCalculationMode
+  ChargeCalculationMode:
+    Type: String
+    Description: 'Variable that determines the amount. It can be AAR or ALL'
+
+  # OpenApi Bucket params
+  MicroserviceBucketName:
+    Type: String
+    Default: ''
+    Description: 'Name of the bucket where the microservice files are copied during deploy'
+
+  MicroserviceBucketBaseKey:
+    Type: String
+    Default: ''
+    Description: 'Base key of the microservice in the s3 bucket'
+
+  # Heath Check parameters
+  HealthCheckInterval:
+    Description: Seconds between two health check
+    Type: Number
+    Default: 60
+
+  HealthCheckTimeout:
+    Description: health check timeout seconds
+    Type: Number
+    Default: 5
+  
+  HealthyThresholdCount:
+    Description: |
+      The number of consecutive health checks successes required before considering 
+      an unhealthy target healthy. 
+    Type: Number
+    Default: 5
+  
+  UnhealthyThresholdCount:
+    Description: |
+      The number of consecutive health check failures required before considering a target unhealthy. 
+    Type: Number
+    Default: 2
+
+  # Instance parameters
+  # 256 (.25 vCPU) - Available memory values: 0.5GB, 1GB, 2GB
+  # 512 (.5 vCPU) - Available memory values: 1GB, 2GB, 3GB, 4GB
+  # 1024 (1 vCPU) - Available memory values: 2GB, 3GB, 4GB, 5GB, 6GB, 7GB, 8GB
+  # 2048 (2 vCPU) - Available memory values: Between 4GB and 16GB in 1GB increments
+  # 4096 (4 vCPU) - Available memory values: Between 8GB and 30GB in 1GB increments
+  CpuValue:
+    Type: Number
+    Default: 1024
+    Description: Fargate virtual CPU quantity 1024 equals one vCPU
+
+  # 0.5GB, 1GB, 2GB - Available cpu values: 256 (.25 vCPU)
+  # 1GB, 2GB, 3GB, 4GB - Available cpu values: 512 (.5 vCPU)
+  # 2GB, 3GB, 4GB, 5GB, 6GB, 7GB, 8GB - Available cpu values: 1024 (1 vCPU)
+  # Between 4GB and 16GB in 1GB increments - Available cpu values: 2048 (2 vCPU)
+  # Between 8GB and 30GB in 1GB increments - Available cpu values: 4096 (4 vCPU)
+  MemoryAmount:
+    Type: String
+    Default: 2GB
+    Description: memory amount reserved to the task pod.
+    AllowedValues: [ 2GB, 4GB, 6GB, 8GB ]
+
+  # Autoscaling parameters
+  AutoscalingCheckPeriod:
+    Default: 60
+    Type: Number
+    Description: minimum autoscaling number of tasks\
+
+  AutoscalingDataPointN:
+    Default: 1
+    Type: Number
+    Description: activate when N datapoint on M
+
+  AutoscalingDataPointM:
+    Default: 1
+    Type: Number
+    Description: activate when N datapoint on M
+
+  AutoscalingThreshold:
+    Default: 70
+    Type: String
+  
+  MinTasksNumber:
+    Default: 1
+    Type: Number
+    Description: minimum autoscaling number of tasks
+
+  MaxTasksNumber:
+    Default: 6
+    Type: Number
+    Description: maximum autoscaling number of tasks
+
+  # Log group parameters
+  EcsLogGroup:
+    Type: String
+    Description: 'Ecs log group name'
+
+  LogAlarmStrategy:
+    Type: String
+    Default: 'FATAL'
+
+Conditions:
+  UseExternalChannelMock: !Equals [ !Ref ExternalChannelBaseUrl, "Mock" ]
+
+Resources:
+  # PN-Paper-Channel microservice
+  PaperChannelMicroservice:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/ecs-service.yaml"
+      Parameters:
+        MicroServiceUniqueName: !Sub '${ProjectName}-paper-channel'
+        CpuValue: !Ref CpuValue
+        MemoryAmount: !Ref MemoryAmount
+        HealthCheckTimeout: !Ref HealthCheckTimeout
+        HealthCheckInterval: !Ref HealthCheckInterval
+        HealthyThresholdCount: !Ref HealthyThresholdCount
+        UnhealthyThresholdCount: !Ref UnhealthyThresholdCount
+        AutoscalingStrategy: REST-API
+        AutoscalingThreshold: !Ref AutoscalingThreshold
+        AutoscalingCheckPeriod: !Ref AutoscalingCheckPeriod
+        MinTasksNumber: !Ref MinTasksNumber
+        MaxTasksNumber: !Ref MaxTasksNumber
+        AutoscalingDataPointN: !Ref AutoscalingDataPointN
+        AutoscalingDataPointM: !Ref AutoscalingDataPointM
+        AlarmSNSTopicArn: !Ref AlarmSNSTopicArn
+        ContainerImageURI: !Sub '${ContainerImageUri}'
+        ContainerEnvEntry1: !Sub 'AWS_REGIONCODE=${AWS::Region}'
+        ContainerEnvEntry2: !Sub 'CORS_ALLOWED_DOMAINS=${CorsAllowedDomains}, http://localhost:3000'
+        ContainerEnvEntry3: !Sub 'PN_PAPERCHANNEL_CLIENTSAFESTORAGEBASEPATH=${SandboxSafeStorageBaseUrl}'
+        ContainerEnvEntry4: !Sub 'PN_PAPERCHANNEL_CLIENTNATIONALREGISTRIESBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
+        ContainerEnvEntry5:
+          Fn::If:
+            - UseExternalChannelMock
+            - !Sub 'PN_PAPERCHANNEL_CLIENTEXTERNALCHANNELBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
+            - !Sub 'PN_PAPERCHANNEL_CLIENTEXTERNALCHANNELBASEPATH=${ExternalChannelBaseUrl}'
+        ContainerEnvEntry6: !Sub 'PN_PAPERCHANNEL_SAFESTORAGECXID=${SafeStorageCxId}'
+        ContainerEnvEntry7: !Sub 'PN_PAPERCHANNEL_XPAGOPAEXTCHCXID=${XPagopaExtchCxId}'
+        ContainerEnvEntry8: !Sub 'AWS_DYNAMODBREQUESTDELIVERYTABLE=${RequestDeliveryDynamoTableName}'
+        ContainerEnvEntry9: !Sub 'AWS_DYNAMODBADDRESSTABLE=${AddressDynamoTableName}'
+        ContainerEnvEntry10: !Sub 'AWS_DYNAMODBTENDERTABLE=${TenderDynamoTableName}'
+        ContainerEnvEntry11: !Sub 'AWS_DYNAMODBDELIVERYDRIVERTABLE=${DeliveryDriverDynamoTableName}'
+        ContainerEnvEntry12: !Sub 'AWS_DYNAMODBCOSTTABLE=${CostDynamoTableName}'
+        ContainerEnvEntry13: !Sub 'AWS_DYNAMODBZONETABLE=${ZoneDynamoTableName}'
+        ContainerEnvEntry14: !Sub 'AWS_DYNAMODBCAPTABLE=${CapDynamoTableName}'
+        ContainerEnvEntry15: !Sub 'AWS_DYNAMODBDELIVERYFILETABLE=${DeliveryFileDynamoTableName}'
+        ContainerEnvEntry16: !Sub 'AWS_DYNAMODBPAPERREQUESTERRORTABLE=${PaperRequestErrorTableName}'
+        ContainerEnvEntry17: !Sub 'AWS_DYNAMODBPAPEREVENTSTABLE=${PaperEventsTableName}'
+        ContainerEnvEntry18: !Sub 'AWS_KMS_KEYID=${PCKmsEncDecDynamoDataKeyARN}'
+        ContainerEnvEntry19: !Sub 'AWS_KMS_REGION=${AWS::Region}'
+        ContainerEnvEntry20: !Sub 'PN_PAPERCHANNEL_QUEUEDELIVERYPUSH=${ExternalChannelsOutputsQueueName}'
+        ContainerEnvEntry21: !Sub 'PN_PAPERCHANNEL_QUEUEEXTERNALCHANNEL=${ExternalChannels2PaperChannelQueueName}'
+        ContainerEnvEntry22: !Sub 'PN_PAPERCHANNEL_QUEUENATIONALREGISTRIES=${NationalRegistries2PaperChannelQueueName}'
+        ContainerEnvEntry23: !Sub 'PN_PAPERCHANNEL_QUEUEINTERNAL=${ScheduledRequestsQueueName}'
+        ContainerEnvEntry24: !Sub 'PN_PAPERCHANNEL_ATTEMPTSAFESTORAGE=${AttemptSafeStorage}'
+        ContainerEnvEntry25: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUESAFESTORAGE=${AttemptQueueSafeStorage}'
+        ContainerEnvEntry26: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUENATIONALREGISTRIES=${AttemptQueueNationalRegistries}'
+        ContainerEnvEntry27: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUEEXTERNALCHANNEL=${AttemptQueueExternalChannel}'
+        ContainerEnvEntry28: !Sub 'AWS_BUCKET_NAME=${PaperDeliveryDriversBucketName}'
+        ContainerEnvEntry29: !Sub 'PN_PAPERCHANNEL_NATIONALREGISTRYCXID=${NationalRegistryCxId}'
+        ContainerEnvEntry30: !Sub 'PN_PAPERCHANNEL_TTLPREPARE=${TtlPrepare}'
+        ContainerEnvEntry31: !Sub 'PN_PAPERCHANNEL_TTLEXECUTIONNAR=${TtlExecutionRNAR}'
+        ContainerEnvEntry32: !Sub 'PN_PAPERCHANNEL_TTLEXECUTIONN890=${TtlExecutionRN890}'
+        ContainerEnvEntry33: !Sub 'PN_PAPERCHANNEL_TTLEXECUTIONNRS=${TtlExecutionRNRS}'
+        ContainerEnvEntry34: !Sub 'PN_PAPERCHANNEL_TTLEXECUTIONIAR=${TtlExecutionRIAR}'
+        ContainerEnvEntry35: !Sub 'PN_PAPERCHANNEL_TTLEXECUTIONIRS=${TtlExecutionRIRS}'
+        ContainerEnvEntry36: !Sub 'PN_PAPERCHANNEL_TTLEXECUTIONDAYSDEMAT=${TtlExecutionDaysDemat}'
+        ContainerEnvEntry37: !Sub 'PN_PAPERCHANNEL_TTLEXECUTIONDAYSMETA=${TtlExecutionDaysMeta}'
+        ContainerEnvEntry38: !Sub 'PN_PAPERCHANNEL_RETRYSTATUS=${RetryStatus}'
+        ContainerEnvEntry39: !Sub 'PN_PAPERCHANNEL_CLIENTDATAVAULTBASEPATH=${DataVaultBaseUrl}'
+        ContainerEnvEntry40: !Sub 'PN_PAPERCHANNEL_PAPERWEIGHT=${PaperWeight}'
+        ContainerEnvEntry41: !Sub 'PN_PAPERCHANNEL_LETTERWEIGHT=${LetterWeight}'
+        ContainerEnvEntry42: !Sub 'PN_PAPERCHANNEL_CLIENTADDRESSMANAGERBASEPATH=${AddressManagerBaseUrl}'
+        ContainerEnvEntry43: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERCXID=${AddressManagerCxId}'
+        ContainerEnvEntry44: !Sub 'PN_PAPERCHANNEL_CHARGECALCULATIONMODE=${ChargeCalculationMode}'
+        ContainerEnvEntry45: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUEADDRESSMANAGER=${AttemptQueueAddressManager}'
+        ContainerEnvEntry46: !Sub 'PN_PAPERCHANNEL_ORIGINALPOSTAMNADDRESSUSAGEMODE=${OriginalPostmanAddressUsageMode}'
+        ContainerEnvEntry47: !Sub 'PN_PAPERCHANNEL_REFINEMENTDURATION=${RefinementDuration}'
+        ContainerEnvEntry48: !Sub 'PN_PAPERCHANNEL_CLOUDWATCHMETRICCRON=${CloudwatchMetricCron}'
+        ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
+        MicroServiceSecretPrefix: pn-PaperChannel-Secrets
+        MappedPaths: '/paper-channel-bo/*,/paper-channel-private/*'
+        ECSClusterName: !Ref ECSClusterName
+        Subnets: !Ref SubnetsIds
+        VpcId: !Ref VpcId
+        EcsDefaultSecurityGroup: !Ref EcsDefaultSecurityGroup
+        LoadBalancerListenerArn: !Ref ApplicationLoadBalancerListenerArn
+        LoadbalancerRulePriority: !Ref MicroserviceNumber
+        TaskRoleManagedPolicyArn: !Ref PaperChannelMicroserviceTaskPolicy
+        EcsLogGroup: !Ref EcsLogGroup
+        LogAlarmStrategyV1: !Ref LogAlarmStrategy
+
+  PaperChannelMicroserviceTaskPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      #PolicyName: !Sub '${ProjectName}-paper-channel-CustomTaskPolicy'
+      #Roles:
+      #  - !GetAtt PaperChannelMicroservice.Outputs.TaskRoleName
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - s3:*
+            Resource:
+              - !Sub arn:aws:s3:::${PaperDeliveryDriversBucketName}
+              - !Sub arn:aws:s3:::${PaperDeliveryDriversBucketName}/*
+          - Effect: Allow
+            Action:
+              - sqs:ChangeMessageVisibility
+              - sqs:ChangeMessageVisibilityBatch
+              - sqs:DeleteMessage
+              - sqs:DeleteMessageBatch
+              - sqs:GetQueueAttributes
+              - sqs:GetQueueUrl
+              - sqs:ReceiveMessage
+              - sqs:SendMessage
+              - sqs:SendMessageBatch
+            Resource:
+              - !Ref ExternalChannelsOutputsQueueARN
+              - !Ref ExternalChannels2PaperChannelQueueARN
+              - !Ref ScheduledRequestsQueueARN
+              - !Ref NationalRegistries2PaperChannelQueueARN
+          - Effect: Allow
+            Action:
+              - kms:Encrypt
+              - kms:Decrypt
+              - kms:ReEncrypt*
+            Resource:
+              - !Ref PCKmsEncDecDynamoDataKeyARN
+          - Effect: Allow
+            Action:
+              - dynamodb:BatchGetItem
+              - dynamodb:BatchWriteItem
+              - dynamodb:ExecuteTransaction
+              - dynamodb:GetItem
+              - dynamodb:PutItem
+              - dynamodb:DeleteItem
+              - dynamodb:Query
+              - dynamodb:TransactGetItems
+              - dynamodb:TransactWriteItems
+              - dynamodb:UpdateItem
+            Resource:
+              - !Sub "${RequestDeliveryDynamoTableArn}"
+              - !Sub "${RequestDeliveryDynamoTableArn}/*"
+              - !Sub "${DeliveryFileDynamoTableArn}"
+              - !Sub "${DeliveryFileDynamoTableArn}/*"
+              - !Sub "${AddressDynamoTableArn}"
+              - !Sub "${AddressDynamoTableArn}/*"
+              - !Sub "${TenderDynamoTableArn}"
+              - !Sub "${TenderDynamoTableArn}/*"
+              - !Sub "${DeliveryDriverDynamoTableArn}"
+              - !Sub "${DeliveryDriverDynamoTableArn}/*"
+              - !Sub "${CostDynamoTableArn}"
+              - !Sub "${CostDynamoTableArn}/*"
+              - !Sub "${ZoneDynamoTableArn}"
+              - !Sub "${ZoneDynamoTableArn}/*"
+              - !Sub "${CapDynamoTableArn}"
+              - !Sub "${CapDynamoTableArn}/*"
+              - !Sub "${PaperRequestErrorTableArn}"
+              - !Sub "${PaperRequestErrorTableArn}/*"
+              - !Sub "${PaperEventsTableArn}"
+              - !Sub "${PaperEventsTableArn}/*"
+          - Effect: Allow
+            Action:
+              - cloudwatch:PutMetricData
+              - cloudwatch:GetMetricStream
+              - cloudwatch:GetMetricData
+            Resource:
+              - "*"
+
+  # Dashboard
+  PaperChannelMicroserviceCloudWatchDashboard:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/microservice-cloudwatch-dashboard.yaml"
+      Parameters:
+        DashboardName: !Sub "${ProjectName}-paper-channel"
+        DynamoDBTableNames: !Join
+          - ','
+          - - !Ref PaperEventsTableName
+            - !Ref PaperRequestErrorTableName
+            - !Ref CapDynamoTableName
+            - !Ref ZoneDynamoTableName
+            - !Ref CapDynamoTableName
+            - !Ref CostDynamoTableName
+            - !Ref DeliveryDriverDynamoTableName
+            - !Ref TenderDynamoTableName
+            - !Ref DeliveryFileDynamoTableName
+            - !Ref RequestDeliveryDynamoTableName
+        RestApiStageArns: !Join
+          - ','
+          - - !GetAtt PaperChannelGatewayDeliveryDriver.Outputs.RestApiStageArn
+        RestApiNames: !Join
+          - ','
+          - - !GetAtt PaperChannelGatewayDeliveryDriver.Outputs.RestApiName
+        AlarmArns: !Join
+          - ','
+          - - !GetAtt PaperChannelMicroservice.Outputs.FatalLogsMetricAlarmArn
+            - !GetAtt PaperChannelGatewayDeliveryDriver.Outputs.RestApiErrorAlarmArn
+            - !GetAtt PaperChannelGatewayDeliveryDriver.Outputs.RestApiLatencyAlarmArn
+        QueueArns: !Join
+          - ','
+          - - !Ref ExternalChannelsOutputsQueueARN
+            - !Ref ExternalChannels2PaperChannelQueueARN
+            - !Ref ScheduledRequestsQueueARN
+            - !Ref NationalRegistries2PaperChannelQueueARN
+        LogGroupsNames: !Join
+          - ','
+          - - !Sub '/aws/ecs/${ProjectName}-paper-channel'   
+
+  PaperChannelGatewayDeliveryDriver:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/api-gw-expose-service.yaml"
+      Parameters:
+        MicroServiceUniqueName: !Sub '${ProjectName}-paper-channel-bo'
+        IntendedUsage: BACKOFFICE
+        DnsName: !Ref WebApiDnsName
+        ProjectName: !Ref ProjectName
+        ServiceApiPath: 'paper-channel-bo'
+        NetworkLoadBalancerLink: !Ref NetworkLoadBalancerLink
+        ApplicationLoadBalancerDomain: !Ref ApplicationLoadBalancerDomain
+        AlarmSNSTopicArn: !Ref AlarmSNSTopicArn
+        CloudwatchLogKinesisStreamArn: !Ref LogsKinesisSourceStreamArn
+        OpenApiBucketName: !Ref MicroserviceBucketName
+        OpenApiBucketKey: !Sub ${MicroserviceBucketBaseKey}/docs/openapi/pn-paper-channel-v1.yaml

@@ -1,0 +1,1066 @@
+openapi: 3.0.3
+info:
+  title: API Paper Channel
+  description: |
+    # Interface definition for Paper Channel
+  version: 1.0.0
+  contact:
+    name: API Support
+    url: http://www.pagopa.com/support
+    email: support@pagopa.com
+  termsOfService: termsOfService
+  x-api-id: ppr-chnnl
+  x-summary: summary
+
+servers:
+  - url: 'https://.*'
+    description: Server url
+
+security:
+  - ApiKeyAuth: []
+
+tags:
+  - name: HealthCheck
+    description: metodo di health
+  - name: DeliveryDriver
+    description: operazioni legate ai recapitisti
+  - name: SelectList
+    description: operazioni per il recupero delle liste di valori
+
+paths:
+  /status:
+    get:
+      tags:
+        - HealthCheck
+      operationId: takeHealth
+      x-api-permissions:
+        - 'tender-read'
+      summary: Info health.
+      description: Ritorna lo status di salute dell'API.
+      responses:
+        '200':
+          description: JSON contenente lo stato.
+
+  /paper-channel-bo/v1/tenders:
+    get:
+      tags:
+        - DeliveryDriver
+      operationId: takeTender
+      x-api-permissions:
+        - 'tender-read'
+      summary: Elenco gare d'appalto.
+      description: API che consente il recupero di tutte le gare
+      parameters:
+        - $ref: '#/components/parameters/queryNumberPage'
+        - $ref: '#/components/parameters/querySizePage'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageableTenderResponseDto'
+        '400':
+          $ref: '#/components/responses/Invalid'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/NotAllowed'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /paper-channel-bo/v1/tenders/{tenderCode}:
+    get:
+      tags:
+        - DeliveryDriver
+      operationId: getTenderDetails
+      x-api-permissions:
+        - 'tender-read'
+      summary: Recupero della gara.
+      description: API che consente il recupero dei dettagli di una gara
+      parameters:
+        - $ref: '#/components/parameters/pathTenderCode'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenderDetailResponseDTO'
+        '400':
+          $ref: '#/components/responses/Invalid'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/NotAllowed'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /paper-channel-bo/v1/deliveries-drivers/{tenderCode}/detail/{deliveryDriverId}:
+    get:
+      tags:
+        - DeliveryDriver
+      operationId: getDriverDetails
+      x-api-permissions:
+        - 'tender-read'
+      summary: Recupero di un recapitista.
+      description: API che consente il recupero dei dettagli di uno specifico recapitista
+      parameters:
+        - $ref: '#/components/parameters/pathTenderCode'
+        - $ref: '#/components/parameters/pathDeliveryDriverId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeliveryDriverResponseDTO'
+        '400':
+          $ref: '#/components/responses/Invalid'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/NotAllowed'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /paper-channel-bo/v1/deliveries-drivers/{tenderCode}:
+    get:
+      tags:
+        - DeliveryDriver
+      operationId: takeDeliveriesDrivers
+      x-api-permissions:
+        - 'tender-read'
+      summary: Elenco dei recapitisti di una gara
+      description: API che consente il recupero di tutti i recapitisti di una gara
+      parameters:
+        - $ref: '#/components/parameters/pathTenderCode'
+        - $ref: '#/components/parameters/queryNumberPage'
+        - $ref: '#/components/parameters/querySizePage'
+        - $ref: '#/components/parameters/queryFSU'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageableDeliveryDriverResponseDto'
+        '400':
+          $ref: '#/components/responses/Invalid'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/NotAllowed'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /paper-channel-bo/v1/deliveries-drivers/{tenderCode}/fsu:
+    get:
+      tags:
+        - DeliveryDriver
+      operationId: getDetailFSU
+      x-api-permissions:
+        - 'tender-read'
+      summary: Recupero del FSU di una gara
+      description: API che consente il recupero dei dettagli di un FSU
+      parameters:
+        - $ref: '#/components/parameters/pathTenderCode'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FSUResponseDTO'
+        '400':
+          $ref: '#/components/responses/Invalid'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/NotAllowed'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /paper-channel-bo/v1/delivery-tender/file-download:
+    get:
+      tags:
+        - DeliveryDriver
+      operationId: downloadTenderFile
+      x-api-permissions:
+        - 'tender-read'
+      summary: Download Gare
+      description: API che consente il download dell'elenco delle gare d'appalto.
+      parameters:
+        - $ref: '#/components/parameters/queryTenderCode'
+        - $ref: '#/components/parameters/queryUuid'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InfoDownloadDTO'
+        '400':
+          $ref: '#/components/responses/Invalid'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/NotAllowed'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /paper-channel-bo/v1/tender:
+    post:
+      tags:
+        - DeliveryDriver
+      operationId: createUpdateTender
+      x-api-permissions:
+        - 'tender-write'
+      summary: Inserimento o modifica Gara.
+      description: API che consente di aggiungere o modificare i dettagli di una gara
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TenderCreateRequestDTO'
+
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenderCreateResponseDTO'
+        '400':
+          $ref: '#/components/responses/Invalid'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/NotAllowed'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /paper-channel-bo/v1/tender/{tenderCode}:
+    put:
+      tags:
+        - DeliveryDriver
+      operationId: updateStatusTender
+      x-api-permissions:
+        - 'tender-write'
+      summary: Aggiorna stato Gara.
+      description: API che consente di aggiornare lo stato della gara
+      parameters:
+        - $ref: '#/components/parameters/pathTenderCode'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Status'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenderCreateResponseDTO'
+        '400':
+          $ref: '#/components/responses/Invalid'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/NotAllowed'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      tags:
+        - DeliveryDriver
+      operationId: deleteTender
+      x-api-permissions:
+        - 'tender-write'
+      summary: Eliminazione gara.
+      description: API che consente di eliminare i dettagli di una gara.
+      parameters:
+        - $ref: '#/components/parameters/pathTenderCode'
+      responses:
+        '200':
+          description: Eliminazione gara effettuata
+
+
+  /paper-channel-bo/v1/delivery-driver/{tenderCode}:
+    post:
+      tags:
+        - DeliveryDriver
+      operationId: createUpdateDriver
+      x-api-permissions:
+        - 'tender-write'
+      summary: Inserimento o modifica Recapitista.
+      description: API che consente di aggiungere o modificare i dettagli di un recapitista
+      parameters:
+        - $ref: '#/components/parameters/pathTenderCode'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeliveryDriverDTO'
+      responses:
+        '200':
+          description: OK
+        '400':
+          $ref: '#/components/responses/Invalid'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/NotAllowed'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /paper-channel-bo/v1/{tenderCode}/delivery-driver/{deliveryDriverId}:
+    delete:
+      tags:
+        - DeliveryDriver
+      operationId: deleteDriver
+      x-api-permissions:
+        - 'tender-write'
+      summary: Eliminazione recapitista.
+      description: API che consente di eliminare i dettagli di un recapitista.
+      parameters:
+        - $ref: '#/components/parameters/pathTenderCode'
+        - $ref: '#/components/parameters/pathDeliveryDriverId'
+      responses:
+        '200':
+          description: Eliminazione recapitista effettuata
+
+
+  /paper-channel-bo/v1/{tenderCode}/delivery-driver/{deliveryDriverId}/cost:
+    post:
+      tags:
+        - DeliveryDriver
+      operationId: createUpdateCost
+      x-api-permissions:
+        - 'tender-write'
+      summary: Inserimento o modifica di un costo legato al deliveryDriver.
+      description: API che consente di aggiungere o modificare i dettagli di un costo legato al deliveryDriver
+      parameters:
+        - $ref: '#/components/parameters/pathTenderCode'
+        - $ref: '#/components/parameters/pathDeliveryDriverId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CostDTO'
+      responses:
+        '200':
+          description: OK
+        '400':
+          $ref: '#/components/responses/Invalid'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/NotAllowed'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+
+  /paper-channel-bo/v1/{tenderCode}/delivery-driver/{deliveryDriverId}/cost/{uuid}:
+    delete:
+      tags:
+        - DeliveryDriver
+      operationId: deleteCost
+      x-api-permissions:
+        - 'tender-write'
+      summary: Eliminazione di un costo legato al deliveryDriver.
+      description: API che consente di eliminare i dettagli di un costo legato al deliveryDriver.
+      parameters:
+        - $ref: '#/components/parameters/pathTenderCode'
+        - $ref: '#/components/parameters/pathDeliveryDriverId'
+        - $ref: '#/components/parameters/pathCostUuid'
+
+      responses:
+        '200':
+          description: Eliminazione costo legato al deliveryDriver effettuata.
+
+
+  /paper-channel-bo/v1/{tenderCode}/delivery-driver/{deliveryDriverId}/get-cost:
+    get:
+      tags:
+        - DeliveryDriver
+      operationId: getAllCostOfDriverAndTender
+      x-api-permissions:
+        - 'tender-read'
+      summary: Recupero dei costi di una recapitista e di una specifica gara
+      description: API che consente di recuperare e paginare tutti i costi di un recapitista che partecipa ad una specifica gara
+      parameters:
+        - $ref: '#/components/parameters/pathTenderCode'
+        - $ref: '#/components/parameters/pathDeliveryDriverId'
+        - $ref: '#/components/parameters/queryNumberPage'
+        - $ref: '#/components/parameters/querySizePage'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageableCostResponseDto'
+        '400':
+          $ref: '#/components/responses/Invalid'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/NotAllowed'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /paper-channel-bo/v1/delivery-tender/{tenderCode}/notify-upload:
+    post:
+      tags:
+        - DeliveryDriver
+      operationId: notifyUpload
+      x-api-permissions:
+        - 'tender-write'
+      summary: Notifica di avvenuto caricamento file.
+      description: API che consente di notificare l'avvenuto caricamento del file e avvio del flusso di salvataggio
+      parameters:
+        - $ref: '#/components/parameters/pathTenderCode'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotifyUploadRequestDto'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotifyResponseDto'
+        '400':
+          $ref: '#/components/responses/Invalid'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/NotAllowed'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /paper-channel-bo/v1/delivery-tender/file-upload:
+    get:
+      tags:
+        - DeliveryDriver
+      operationId: addTenderFromFile
+      x-api-permissions:
+        - 'tender-read'
+      summary: Genera la preseigned url
+      description: API che consente di ottenere la presigned url necessaria al caricamento del file
+
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PresignedUrlResponseDto'
+        '400':
+          $ref: '#/components/responses/Invalid'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/NotAllowed'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /paper-channel-bo/v1/cap:
+    get:
+      tags:
+        - SelectList
+      operationId: getAllCap
+      x-api-permissions:
+        - 'tender-read'
+      summary: Elenco di tutti i cap.
+      description: API che consente il recupero di tutti i cap
+      parameters:
+        - name: value
+          in: query
+          description: Cap
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CapResponseDto'
+        '400':
+          $ref: '#/components/responses/Invalid'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/NotAllowed'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  schemas:
+    InfoDownloadDTO:
+      type: object
+      properties:
+        data:
+          type: string
+          format: byte
+        retryAfter:
+          type: integer
+          format: int64
+          maximum: 999999999
+          minimum: 1
+        uuid:
+          type: string
+          example: 'A12C34D56789E0'
+          format: '/[^A-Za-z0-9]+/'
+          maxLength: 32
+        status:
+          type: string
+          enum:
+            - UPLOADING
+            - UPLOADED
+
+    TenderCreateRequestDTO:
+      type: object
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+      additionalProperties: false
+      required:
+        - name
+        - startDate
+        - endDate
+
+    TenderCreateResponseDTO:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+      type: object
+      properties:
+        tender:
+          $ref: '#/components/schemas/TenderDTO'
+      required:
+        - tender
+
+    DeliveryDriverResponseDTO:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+      type: object
+      properties:
+        driver:
+          $ref: '#/components/schemas/DeliveryDriverDTO'
+      required:
+        - driver
+
+    NotifyUploadRequestDto:
+      type: object
+      properties:
+        uuid:
+          type: string
+
+    FSUResponseDTO:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+      type: object
+      properties:
+        fsu:
+          $ref: '#/components/schemas/DeliveryDriverDTO'
+      required:
+        - tender
+
+    CostDTO:
+      type: object
+      properties:
+        uid:
+          type: string
+        tenderCode:
+          type: string
+        driverCode:
+          type: string
+        price:
+          type: number
+          format: float
+          maximum: 999999
+          minimum: 1
+        priceAdditional:
+          type: number
+          format: float
+          maximum: 999999
+          minimum: 1
+        productType:
+          $ref: '#/components/schemas/ProductTypeEnumDto'
+        cap:
+          type: array
+          items:
+            type: string
+            format: '/^[0-9]{5}$/'
+        zone:
+          $ref: '#/components/schemas/InternationalZoneEnum'
+      required:
+        - productType
+        - price
+        - priceAdditional
+      additionalProperties: false
+
+
+    PresignedUrlResponseDto:
+      type: object
+      properties:
+        presignedUrl:
+          type: string
+        uuid:
+          type: string
+          example: 'A12C34D56789E0'
+          format: '/[^A-Za-z0-9]+/'
+          maxLength: 32
+      additionalProperties: false
+
+    ProductTypeEnumDto:
+      type: string
+      enum:
+        - "AR"
+        - '890'
+        - "RS"
+
+    InternationalZoneEnum:
+      type: string
+      enum:
+        - ZONE_1
+        - ZONE_2
+        - ZONE_3
+
+    PageableDeliveryDriverResponseDto:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Page'
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeliveryDriverDTO'
+          maxItems: 999999999
+          minItems: 1
+      additionalProperties: false
+
+    PageableCostResponseDto:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Page'
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/CostDTO'
+          maxItems: 999999999
+          minItems: 1
+      additionalProperties: false
+      required:
+        - content
+
+    TenderDetailResponseDTO:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+      type: object
+      properties:
+        tender:
+          $ref: '#/components/schemas/TenderDTO'
+      required:
+        - tender
+
+    PageableTenderResponseDto:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Page'
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/TenderDTO'
+          maxItems: 999999999
+          minItems: 1
+      additionalProperties: false
+      required:
+        - content
+
+    TenderDTO:
+      type: object
+      properties:
+        code:
+          type: string
+          example: "AGD-2023-TE"
+          maxLength: 128
+        name:
+          type: string
+          example: "Gara 2023"
+          format: '/^([a-zA-Z ]*)$/'
+          maxLength: 128
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        status:
+          type: string
+          enum: [CREATED, VALIDATED, IN_PROGRESS, ENDED]
+      required:
+        - code
+        - name
+        - startDate
+        - endDate
+        - status
+
+    DeliveryDriverDTO:
+      type: object
+      properties:
+        denomination:
+          type: string
+          example: 'Denominazione'
+          format: '/^([a-zA-Z ]*)$/'
+          maxLength: 128
+        businessName:
+          type: string
+          example: 'Ragione sociale'
+          format: '/^([a-zA-Z ]*)$/'
+          maxLength: 128
+        registeredOffice:
+          type: string
+          example: 'Sede legale'
+          format: '/^([a-zA-Z ]*)$/'
+          maxLength: 128
+        pec:
+          type: string
+          example: 'email.example@pec.com'
+          format: '/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/'
+          maxLength: 64
+        fiscalCode:
+          type: string
+          example: 'ABCDEF22G12H345K'
+          format: '/^[A-Za-z]{6}[0-9]{2}[A-Za-z]{1}[0-9]{2}[A-Za-z]{1}[0-9]{3}[A-Za-z]{1}$/'
+          maxLength: 16
+        taxId:
+          type: string
+          example: '12345678900'
+          format: '/^[0-9]{11}$/'
+          maxLength: 32
+        phoneNumber:
+          type: string
+          example: '+39012345678'
+          format: '/^(([\+]?)[0-9]{1,}([\/]?)[0-9]*([\-]?)[0-9]*)$/'
+          maxLength: 32
+        uniqueCode:
+          type: string
+          example: 'A12C34D56789E0'
+          format: '/[^A-Za-z0-9]+/'
+          maxLength: 32
+        fsu:
+          type: boolean
+      additionalProperties: false
+      required:
+        - businessName
+        - taxId
+        - fsu
+
+    Pageable:
+      type: object
+      properties:
+        offset:
+          type: integer
+          format: int64
+          maximum: 999999999
+          minimum: 1
+        pageNumber:
+          type: integer
+          format: int32
+          maximum: 999999999
+          minimum: 1
+        pageSize:
+          type: integer
+          format: int32
+          maximum: 999999999
+          minimum: 1
+        paged:
+          type: boolean
+        sort:
+          $ref: '#/components/schemas/Sort'
+        unpaged:
+          type: boolean
+      additionalProperties: false
+
+    Sort:
+      type: object
+      properties:
+        empty:
+          type: boolean
+        sorted:
+          type: boolean
+        unsorted:
+          type: boolean
+      additionalProperties: false
+
+    Page:
+      type: object
+      properties:
+        empty:
+          type: boolean
+        first:
+          type: boolean
+        last:
+          type: boolean
+        number:
+          type: integer
+          format: int32
+          maximum: 999999999
+          minimum: 1
+        numberOfElements:
+          type: integer
+          format: int32
+          maximum: 999999999
+          minimum: 1
+        pageable:
+          $ref: '#/components/schemas/Pageable'
+        size:
+          type: integer
+          format: int32
+          maximum: 1024
+          minimum: 1
+        sort:
+          $ref: '#/components/schemas/Sort'
+        totalElements:
+          type: integer
+          format: int64
+          maximum: 1
+          minimum: 1
+        totalPages:
+          type: integer
+          format: int64
+          maximum: 999999999
+          minimum: 1
+      additionalProperties: false
+      required:
+        - number
+        - numberOfElements
+        - size
+        - totalElements
+        - totalPages
+
+    NotifyResponseDto:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - IN_PROGRESS
+            - COMPLETE
+            - ERROR
+        uuid:
+          type: string
+        retryAfter:
+          type: number
+          format: int64
+      required:
+        - status
+        - uuid
+
+    BaseResponse:
+      type: object
+      properties:
+        result:
+          type: boolean
+        code:
+          description: |
+            Return code.
+            * 0 -> OK 
+            * 1 -> Other error
+            * 2 -> Other error
+            * 99 -> KO
+          type: number
+          format: decimal32
+          enum: [0,1,2,3,99]
+          maximum: 999999999
+          minimum: 1
+      additionalProperties: false
+
+    CapResponseDto:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/CapDto'
+          maxItems: 999999999
+          minItems: 1
+      additionalProperties: false
+      required:
+        - content
+
+    CapDto:
+      type: object
+      properties:
+        cap:
+          type: string
+      required:
+        - cap
+
+    Status:
+      type: object
+      properties:
+        statusCode:
+          type: string
+          enum:
+          - CREATED
+          - VALIDATED
+
+
+  responses:
+    Forbidden:
+      description: Forbidden
+    NotFound:
+      description: Not found
+    Invalid:
+      description: Bad Request
+    NotAllowed:
+      description: Method not allowed
+    InternalError:
+      description: Internal Server Error
+    Unauthorized:
+      description: Unauthorized
+
+  parameters:
+    queryTenderCode:
+      name: tenderCode
+      in: query
+      required: false
+      schema:
+        type: string
+    queryUuid:
+      name: uuid
+      in: query
+      required: false
+      schema:
+        type: string
+
+    querySizePage:
+      name: size
+      in: query
+      description: Numero di elementi per pagina.
+      required: false
+      schema:
+        type: integer
+        default: 5
+        format: int32
+        maximum: 999999999
+        minimum: 1
+    queryNumberPage:
+      name: page
+      in: query
+      description: Risultati di pagina che si vuole ottenere (0..N)
+      required: false
+      schema:
+        type: integer
+        default: 0
+        format: int32
+        maximum: 999999999
+        minimum: 0
+
+    queryFSU:
+      name: fsu
+      in: query
+      description: Risultati filtrati in base al valore di FSU
+      required: false
+      schema:
+        type: boolean
+
+    pathTenderCode:
+      name: tenderCode
+      in: path
+      required: true
+      schema:
+        type: string
+
+    pathDeliveryDriverId:
+      name: deliveryDriverId
+      in: path
+      required: true
+      schema:
+        type: string
+
+    pathCostUuid:
+      name: uuid
+      in: path
+      required: true
+      schema:
+        type: string
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key      

@@ -1,0 +1,530 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Some storage with input and output
+
+Parameters:
+  ProjectName:
+    Type: String
+    Description: Nome dell'ambiente destinazione
+
+  # Unused but required by CD pipeline
+  MicroserviceNumber:
+    Type: Number
+    Description: An unique number that identify the microservice inside the ECS cluster.
+
+  # Unused but required by CD pipeline
+  TemplateBucketBaseUrl:
+    Type: String
+    Description: URL da cui caricare i frammenti di template di infrastruttura
+
+  Version:
+    Type: String
+    Description: 'keep track of used projects commitIds'
+
+  CdcKinesisSourceStreamArn:
+    Type: String
+    Description: 'Where to send CDC'
+
+  AlarmSNSTopicName:
+    Type: String
+    Description: "Topic alarm"
+    
+  LogsKinesisSourceStreamArn:
+    Type: String
+    Description: 'Where to send Logs'
+
+  LogRetention:
+    Type: Number
+    Default: 14
+
+Resources:
+  PaperDeliveryDriversBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      ObjectLockEnabled: true
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders:
+              - "*"
+            AllowedMethods:
+              - GET
+              - PUT
+              - POST
+              - DELETE
+              - HEAD
+            AllowedOrigins:
+              - "*"
+            ExposedHeaders:
+              - "x-amz-version-id"
+
+  PCKmsEncDecDynamoDataKey:
+    Type: 'AWS::KMS::Key'
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      Description: A symmetric encryption KMS key AES-256-GCM
+      KeySpec: SYMMETRIC_DEFAULT
+      KeyUsage: ENCRYPT_DECRYPT
+      KeyPolicy:
+        Version: 2012-10-17
+        Statement:
+          - Sid: Enable IAM User Permissions
+            Effect: Allow
+            Principal:
+              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
+            Action: 'kms:*'
+            Resource: '*'
+
+  # Application use this alias to access the public key
+  PCKmsEncDecDynamoDataKeyAlias:
+    Type: 'AWS::KMS::Alias'
+    Properties:
+      AliasName: !Sub 'alias/${ProjectName}-paper-channel-dynamo'
+      TargetKeyId: !Ref PCKmsEncDecDynamoDataKey
+
+  # Internal queues
+  ScheduledRequestsQueue:
+    Type: AWS::CloudFormation::Stack
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain 
+    Properties:
+      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/sqs-queue.yaml"
+      Parameters:
+        QueueName: !Sub '${ProjectName}-paper_channel_requests'
+        AlarmSNSTopicName: !Ref AlarmSNSTopicName
+        DelaySeconds: 1
+
+  RequestDeliveryDynamoTable:
+    Type: AWS::DynamoDB::Table
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain 
+    Properties:
+      TableName: !Sub '${ProjectName}-PaperRequestDelivery'
+      AttributeDefinitions:
+        - AttributeName: "requestId"
+          AttributeType: "S"
+        - AttributeName: "fiscalCode"
+          AttributeType: "S"
+        - AttributeName: "correlationId"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "requestId"
+          KeyType: "HASH"
+      GlobalSecondaryIndexes:
+        - IndexName: "fiscal-code-index"
+          KeySchema:
+            - AttributeName: "fiscalCode"
+              KeyType: "HASH"
+          Projection:
+            ProjectionType: "ALL"
+        - IndexName: "correlation-index"
+          KeySchema:
+            - AttributeName: "correlationId"
+              KeyType: "HASH"
+          Projection:
+            ProjectionType: "ALL"
+      KinesisStreamSpecification:
+        StreamArn: !Ref CdcKinesisSourceStreamArn
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+      BillingMode: "PAY_PER_REQUEST"
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      
+  AddressDynamoTable:
+    Type: AWS::DynamoDB::Table
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain 
+    Properties:
+      TableName: !Sub '${ProjectName}-PaperAddress'
+      AttributeDefinitions:
+        - AttributeName: "requestId"
+          AttributeType: "S"
+        - AttributeName: "addressType"
+          AttributeType: "S"
+      TimeToLiveSpecification:
+        AttributeName: "ttl"
+        Enabled: true
+      KeySchema:
+        - AttributeName: "requestId"
+          KeyType: "HASH"
+        - AttributeName: "addressType"
+          KeyType: "RANGE"
+      KinesisStreamSpecification:
+        StreamArn: !Ref CdcKinesisSourceStreamArn
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+      BillingMode: "PAY_PER_REQUEST"
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        KMSMasterKeyId: !Ref PCKmsEncDecDynamoDataKey
+        SSEEnabled: true
+        SSEType: KMS      
+
+  TenderDynamoTable:
+    Type: AWS::DynamoDB::Table
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain 
+    Properties:
+      TableName: !Sub '${ProjectName}-PaperTender'
+      AttributeDefinitions:
+        - AttributeName: "tenderCode"
+          AttributeType: "S"
+        - AttributeName: "author"
+          AttributeType: "S"
+        - AttributeName: "date"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "tenderCode"
+          KeyType: "HASH"
+      GlobalSecondaryIndexes:
+        - IndexName: "author-index"
+          KeySchema:
+            - AttributeName: "author"
+              KeyType: "HASH"
+            - AttributeName: "date"
+              KeyType: "RANGE"
+          Projection:
+            ProjectionType: "ALL"
+      KinesisStreamSpecification:
+        StreamArn: !Ref CdcKinesisSourceStreamArn
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+      BillingMode: "PAY_PER_REQUEST"
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
+  DeliveryDriverDynamoTable:
+    Type: AWS::DynamoDB::Table
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain 
+    Properties:
+      TableName: !Sub '${ProjectName}-PaperDeliveryDriver'
+      AttributeDefinitions:
+        - AttributeName: "taxId"
+          AttributeType: "S"
+        - AttributeName: "tenderCode"
+          AttributeType: "S"
+        - AttributeName: "author"
+          AttributeType: "S"
+        - AttributeName: "startDate"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "tenderCode"
+          KeyType: "HASH"
+        - AttributeName: "taxId"
+          KeyType: "RANGE"
+      GlobalSecondaryIndexes:
+        - IndexName: "author-index"
+          KeySchema:
+            - AttributeName: "author"
+              KeyType: "HASH"
+            - AttributeName: "startDate"
+              KeyType: "RANGE"
+          Projection:
+            ProjectionType: "ALL"
+        - IndexName: "tender-index"
+          KeySchema:
+            - AttributeName: "tenderCode"
+              KeyType: "HASH"
+          Projection:
+            ProjectionType: "ALL"
+      KinesisStreamSpecification:
+        StreamArn: !Ref CdcKinesisSourceStreamArn
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+      BillingMode: "PAY_PER_REQUEST"
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
+  CostDynamoTable:
+    Type: AWS::DynamoDB::Table
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain 
+    Properties:
+      TableName: !Sub '${ProjectName}-PaperCost'
+      AttributeDefinitions:
+        - AttributeName: "driverCode"
+          AttributeType: "S"
+        - AttributeName: "uuidCode"
+          AttributeType: "S"
+        - AttributeName: "tenderCode"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "driverCode"
+          KeyType: "HASH"
+        - AttributeName: "uuidCode"
+          KeyType: "RANGE"
+      GlobalSecondaryIndexes:
+        - IndexName: "tender-index"
+          KeySchema:
+            - AttributeName: "tenderCode"
+              KeyType: "HASH"
+          Projection:
+            ProjectionType: "ALL"
+      KinesisStreamSpecification:
+        StreamArn: !Ref CdcKinesisSourceStreamArn
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+      BillingMode: "PAY_PER_REQUEST"
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
+  ZoneDynamoTable:
+    Type: AWS::DynamoDB::Table
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain 
+    Properties:
+      TableName: !Sub '${ProjectName}-PaperZone'
+      AttributeDefinitions:
+        - AttributeName: "countryIt"
+          AttributeType: "S"
+        - AttributeName: "countryEn"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "countryIt"
+          KeyType: "HASH"
+      GlobalSecondaryIndexes:
+        - IndexName: "countryEn-index"
+          KeySchema:
+            - AttributeName: "countryEn"
+              KeyType: "HASH"
+          Projection:
+            ProjectionType: "ALL"
+      KinesisStreamSpecification:
+        StreamArn: !Ref CdcKinesisSourceStreamArn
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+      BillingMode: "PAY_PER_REQUEST"
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
+  CapDynamoTable:
+    Type: AWS::DynamoDB::Table
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain 
+    Properties:
+      TableName: !Sub '${ProjectName}-PaperCap'
+      AttributeDefinitions:
+        - AttributeName: "author"
+          AttributeType: "S"
+        - AttributeName: "cap"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "author"
+          KeyType: "HASH"
+        - AttributeName: "cap"
+          KeyType: "RANGE"
+      KinesisStreamSpecification:
+        StreamArn: !Ref CdcKinesisSourceStreamArn
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+      BillingMode: "PAY_PER_REQUEST"
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
+  DeliveryFileDynamoTable:
+    Type: AWS::DynamoDB::Table
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain 
+    Properties:
+      TableName: !Sub '${ProjectName}-PaperDeliveryFile'
+      AttributeDefinitions:
+        - AttributeName: "uuid"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "uuid"
+          KeyType: "HASH"
+      KinesisStreamSpecification:
+        StreamArn: !Ref CdcKinesisSourceStreamArn
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+      BillingMode: "PAY_PER_REQUEST"
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
+  PaperRequestErrorDynamoTable:
+    Type: AWS::DynamoDB::Table
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain 
+    Properties:
+      TableName: !Sub '${ProjectName}-PaperRequestError'
+      AttributeDefinitions:
+        - AttributeName: "requestId"
+          AttributeType: "S"
+        - AttributeName: "created"
+          AttributeType: "S"
+        - AttributeName: "author"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "requestId"
+          KeyType: "HASH"
+        - AttributeName: "created"
+          KeyType: "RANGE"
+      GlobalSecondaryIndexes:
+        - IndexName: "author-index"
+          KeySchema:
+            - AttributeName: "author"
+              KeyType: "HASH"
+            - AttributeName: "created"
+              KeyType: "RANGE"
+          Projection:
+            ProjectionType: "ALL"
+      KinesisStreamSpecification:
+        StreamArn: !Ref CdcKinesisSourceStreamArn
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+      BillingMode: "PAY_PER_REQUEST"
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
+  PaperEventsDynamoTable:
+    Type: AWS::DynamoDB::Table
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain     
+    Properties:
+      TableName: !Sub '${ProjectName}-PaperEvents'
+      AttributeDefinitions:
+        - AttributeName: "pk"
+          AttributeType: "S"
+        - AttributeName: "sk"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "pk"
+          KeyType: "HASH"
+        - AttributeName: "sk"
+          KeyType: "RANGE"
+      KinesisStreamSpecification:
+        StreamArn: !Ref CdcKinesisSourceStreamArn
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+      BillingMode: "PAY_PER_REQUEST"
+      TimeToLiveSpecification:
+        AttributeName: "ttl"
+        Enabled: true
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
+  PnPaperChannelLogGroup:
+    Type: AWS::CloudFormation::Stack
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain 
+    Properties:
+      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/log-group.yaml"
+      Parameters:
+        LogGroupName: !Sub '${ProjectName}-paper-channel'
+        LogGroupRetention: !Ref LogRetention
+        LogsKinesisSourceStreamArn: !Ref LogsKinesisSourceStreamArn
+
+Outputs:
+  PaperDeliveryDriversBucketName:
+    Description: Name of s3 bucket
+    Value: !Ref PaperDeliveryDriversBucket
+
+  # Scheduled Requests
+  ScheduledRequestsQueueName:
+    Value: !GetAtt ScheduledRequestsQueue.Outputs.QueueName
+    Description: pn-paper-channel input queue name
+  ScheduledRequestsQueueURL:
+    Value: !GetAtt ScheduledRequestsQueue.Outputs.QueueURL
+    Description: pn-paper-channel input queue URL
+  ScheduledRequestsQueueARN:
+    Value: !GetAtt ScheduledRequestsQueue.Outputs.QueueARN
+    Description: pn-paper-channel input queue ARN
+
+  PCKmsEncDecDynamoDataKeyARN:
+    Description: Name of KMS Key for Dynamo encode/decode data
+    Value: !Sub '${PCKmsEncDecDynamoDataKey.Arn}'
+
+  RequestDeliveryDynamoTableName:
+    Description: Name of dynamodb table containing request
+    Value: !Ref RequestDeliveryDynamoTable
+
+  RequestDeliveryDynamoTableArn:
+    Description: ARN of dynamodb table containing request
+    Value: !Sub '${RequestDeliveryDynamoTable.Arn}'
+
+  PaperRequestErrorTableName:
+    Description: Name of dynamodb table containing request error
+    Value: !Ref PaperRequestErrorDynamoTable
+
+  PaperRequestErrorTableArn:
+    Description: ARN of dynamodb table containing request error
+    Value: !Sub '${PaperRequestErrorDynamoTable.Arn}'
+
+  PaperEventsTableName:
+    Description: Name of dynamodb table containing events
+    Value: !Ref PaperEventsDynamoTable
+
+  PaperEventsTableArn:
+    Description: ARN of dynamodb table containing events
+    Value: !Sub '${PaperEventsDynamoTable.Arn}'
+
+  DeliveryFileDynamoTableName:
+    Description: Name of dynamodb table containing file request
+    Value: !Ref DeliveryFileDynamoTable
+
+  DeliveryFileDynamoTableArn:
+    Description: ARN of dynamodb table containing file request
+    Value: !Sub '${DeliveryFileDynamoTable.Arn}'
+
+  AddressDynamoTableName:
+    Description: Name of dynamodb table containing address of request delivery
+    Value: !Ref AddressDynamoTable
+
+  AddressDynamoTableArn:
+    Description: ARN of dynamodb table containing address of request delivery
+    Value: !Sub '${AddressDynamoTable.Arn}'
+
+  TenderDynamoTableName:
+    Description: Name of dynamodb table containing tenders
+    Value: !Ref TenderDynamoTable
+
+  TenderDynamoTableArn:
+    Description: ARN of dynamodb table containing tenders
+    Value: !Sub '${TenderDynamoTable.Arn}'
+
+  DeliveryDriverDynamoTableName:
+    Description: Name of dynamodb table containing delivery drivers
+    Value: !Ref DeliveryDriverDynamoTable
+
+  DeliveryDriverDynamoTableArn:
+    Description: ARN of dynamodb table containing delivery drivers
+    Value: !Sub '${DeliveryDriverDynamoTable.Arn}'
+
+  CostDynamoTableName:
+    Description: Name of dynamodb table containing cost
+    Value: !Ref CostDynamoTable
+
+  CostDynamoTableArn:
+    Description: ARN of dynamodb table containing cost
+    Value: !Sub '${CostDynamoTable.Arn}'
+
+  ZoneDynamoTableName:
+    Description: Name of dynamodb table containing zone
+    Value: !Ref ZoneDynamoTable
+
+  ZoneDynamoTableArn:
+    Description: ARN of dynamodb table containing zone
+    Value: !Sub '${ZoneDynamoTable.Arn}'
+
+  CapDynamoTableName:
+    Description: Name of dynamodb table containing cap
+    Value: !Ref CapDynamoTable
+
+  CapDynamoTableArn:
+    Description: ARN of dynamodb table containing cap
+    Value: !Sub '${CapDynamoTable.Arn}'
+
+  # Log group exports
+  EcsLogGroup:
+    Value: !GetAtt PnPaperChannelLogGroup.Outputs.LogGroupName
