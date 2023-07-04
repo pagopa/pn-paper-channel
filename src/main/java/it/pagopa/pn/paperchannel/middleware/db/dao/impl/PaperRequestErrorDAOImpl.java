@@ -46,7 +46,7 @@ public class PaperRequestErrorDAOImpl extends BaseDAO<PnRequestError> implements
 
     public Mono<List<PnRequestError>>  findAll(){
         QueryConditional conditional = CONDITION_EQUAL_TO.apply(keyBuild(Const.PN_PAPER_CHANNEL,null));
-        return this.getByFilter(conditional, null, null, null, null).collectList();
+        return this.getByFilter(conditional, PnRequestError.AUTHOR_INDEX, null, null, Const.maxErrorsElements).collectList();
     }
 
 }

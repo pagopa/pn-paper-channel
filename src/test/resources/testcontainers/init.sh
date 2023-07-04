@@ -226,7 +226,7 @@ aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     --attribute-definitions \
         AttributeName=requestId,AttributeType=S \
         AttributeName=created,AttributeType=S \
-		AttributeName=author,AttributeType=S \
+        AttributeName=author,AttributeType=S \
     --key-schema \
         AttributeName=requestId,KeyType=HASH \
         AttributeName=created,KeyType=RANGE \
@@ -251,7 +251,33 @@ aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
 aws  --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     dynamodb put-item \
     --table-name PaperRequestErrorDynamoTable  \
-    --item '{"requestId": {"S": "PAPER-CHANNEL"}, "created": {"S": "2023-01-22T10:15:30Z"}, "author": {"S": "PN-PAPER-CHANNEL"}, "error": {"S": "Errore per invio Metrica"}, "flowThrow": {"S": "flowThrow"}}'
+    --item '{"requestId": {"S": "PAPERCHANNEL1"}, "created": {"S": "2023-01-22T10:15:30Z"}, "author": {"S": "PN-PAPER-CHANNEL"}, "error": {"S": "Errore per invio Metrica"}, "flowThrow": {"S": "flowThrow"}}'
+
+aws  --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
+    dynamodb put-item \
+    --table-name PaperRequestErrorDynamoTable  \
+    --item '{"requestId": {"S": "PAPERCHANNEL2"}, "created": {"S": "2023-01-22T10:15:30Z"}, "author": {"S": "PN-PAPER-CHANNEL"}, "error": {"S": "Errore per invio Metrica"}, "flowThrow": {"S": "flowThrow"}}'
+
+aws  --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
+    dynamodb put-item \
+    --table-name PaperRequestErrorDynamoTable  \
+    --item '{"requestId": {"S": "PAPECHANNEL3"}, "created": {"S": "2023-01-12T10:15:30Z"}, "author": {"S": "PN-PAPER-CHANNEL"}, "error": {"S": "Errore per invio Metrica"}, "flowThrow": {"S": "flowThrow"}}'
+
+aws  --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
+    dynamodb put-item \
+    --table-name PaperRequestErrorDynamoTable  \
+    --item '{"requestId": {"S": "PAPERCHANNEL4"}, "created": {"S": "2023-01-02T10:15:30Z"}, "author": {"S": "PN-PAPER-CHANNEL"}, "error": {"S": "Errore per invio Metrica"}, "flowThrow": {"S": "flowThrow"}}'
+
+
+aws  --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
+    dynamodb put-item \
+    --table-name PaperRequestErrorDynamoTable  \
+    --item '{"requestId": {"S": "PAPERCHANNEL5"}, "created": {"S": "2023-01-10T10:15:30Z"}, "author": {"S": "PN-PAPER-CHANNEL"}, "error": {"S": "Errore per invio Metrica"}, "flowThrow": {"S": "flowThrow"}}'
+
+aws  --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
+    dynamodb put-item \
+    --table-name PaperRequestErrorDynamoTable  \
+    --item '{"requestId": {"S": "PAPERCHANNEL6"}, "created": {"S": "2023-01-21T10:15:30Z"}, "author": {"S": "PN-PAPER-CHANNEL"}, "error": {"S": "Errore per invio Metrica"}, "flowThrow": {"S": "flowThrow"}}'
 
 
 aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \

@@ -23,6 +23,7 @@ public class Const {
     public static final String phoneNumberRegex = "^[\\+]?[(]?[0-9]{1,3}[)]?[!@#$%&]{0,}[-\\s\\.]?[0-9]{3}[-\\s\\.]?[0-9]{3,7}$";
     public static final String fiscalCodeRegex = "^([A-Z]{6}[0-9LMNPQRSTUV]{2}[ABCDEHLMPRST]{1}[0-9LMNPQRSTUV]{2}[A-Z]{1}[0-9LMNPQRSTUV]{3}[A-Z]{1})$";
     public static final Integer maxElements = 10;
+    public static final Integer maxErrorsElements = 5;
 
     public static final String EXECUTION = "EXECUTION";
     public static final String PREPARE = "PREPARE";
