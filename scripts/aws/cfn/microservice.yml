@@ -623,3 +623,12 @@ Resources:
         CloudwatchLogKinesisStreamArn: !Ref LogsKinesisSourceStreamArn
         OpenApiBucketName: !Ref MicroserviceBucketName
         OpenApiBucketKey: !Sub ${MicroserviceBucketBaseKey}/docs/openapi/pn-paper-channel-v1.yaml
+
+  PaperChannelGatewayDeliveryDriverWaf:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/api-gw-waf-acl.yaml"
+      Parameters:
+        WAFName: !Sub '${ProjectName}-paper-channel-bo'
+        IntendedUsage: BACKOFFICE
+        APIGatewayARNs: !GetAtt PaperChannelGatewayDeliveryDriver.Outputs.APIGatewayARN
