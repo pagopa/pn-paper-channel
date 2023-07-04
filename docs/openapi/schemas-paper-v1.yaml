@@ -50,6 +50,7 @@ components:
           type: string
           description: Timestamp della richiesta in UTC
           format: date-time
+          x-field-extra-annotation: '@com.fasterxml.jackson.annotation.JsonFormat(shape = com.fasterxml.jackson.annotation.JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd''T''HH:mm:ss.SSS''Z''")'
         senderAddress:
           $ref: '#/components/schemas/AnalogAddress'
         arAddress:
@@ -159,8 +160,8 @@ components:
           example: Distacco d'ufficio 23L - Fascicolo Chiuso
         statusDateTime:
           type: string
-          description: Data di validità dello stato
           format: date-time
+          x-field-extra-annotation: '@com.fasterxml.jackson.annotation.JsonFormat(shape = com.fasterxml.jackson.annotation.JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd''T''HH:mm:ss.SSS''Z''")'
         deliveryFailureCause:
           type: string
           description: >-
@@ -186,8 +187,8 @@ components:
           $ref: '#/components/schemas/AnalogAddress'
         clientRequestTimeStamp:
           type: string
-          description: Timestamp della richiesta in UTC
           format: date-time
+          x-field-extra-annotation: '@com.fasterxml.jackson.annotation.JsonFormat(shape = com.fasterxml.jackson.annotation.JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd''T''HH:mm:ss.SSS''Z''")'
       allOf:
       - $ref: '#/components/schemas/PaperEvent'
     ProposalTypeEnum:
@@ -258,6 +259,8 @@ components:
           description: date and time referred to UTC
           format: date-time
           example: 2022-07-27T12:22:33.444Z
+          x-field-extra-annotation: '@com.fasterxml.jackson.annotation.JsonFormat(shape = com.fasterxml.jackson.annotation.JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd''T''HH:mm:ss.SSS''Z''")'
+
         errors:
           minItems: 1
           type: array
@@ -374,6 +377,8 @@ components:
           type: string
           description: Data stato con timezone
           format: date-time
+          x-field-extra-annotation: '@com.fasterxml.jackson.annotation.JsonFormat(shape = com.fasterxml.jackson.annotation.JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd''T''HH:mm:ss.SSS''Z''")'
+
     AttachmentDetails:
       title: dettagli allegato a un evento del processo postale
       required:
@@ -396,3 +401,4 @@ components:
           type: string
           description: Data di produzione del documento.
           format: date-time
+          x-field-extra-annotation: '@com.fasterxml.jackson.annotation.JsonFormat(shape = com.fasterxml.jackson.annotation.JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd''T''HH:mm:ss.SSS''Z''")'
