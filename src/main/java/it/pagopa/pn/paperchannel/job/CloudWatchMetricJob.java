@@ -8,7 +8,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient;
-import software.amazon.awssdk.services.cloudwatch.model.Dimension;
 import software.amazon.awssdk.services.cloudwatch.model.MetricDatum;
 import software.amazon.awssdk.services.cloudwatch.model.PutMetricDataRequest;
 import software.amazon.awssdk.services.cloudwatch.model.StandardUnit;
@@ -39,12 +38,8 @@ public class CloudWatchMetricJob {
                 .flatMap(result -> {
                     MetricDatum metricDatum = MetricDatum.builder()
                             .metricName(metricName)
-                            .value((double) 1)
+                            .value(result.size() > 0 ? (double) 1 : 0)
                             .unit(StandardUnit.COUNT)
-                            .dimensions(Collections.singletonList(Dimension.builder()
-                                    .name("NumberErrorNotification")
-                                    .value(String.valueOf(result.size()))
-                                    .build()))
                             .timestamp(Instant.now())
                             .build();
                     log.debug("createAndSendMetric metricDatanum created");
