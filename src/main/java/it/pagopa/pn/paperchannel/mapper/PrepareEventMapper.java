@@ -11,6 +11,7 @@ import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 
+import java.time.Instant;
 import java.util.Date;
 
 public class PrepareEventMapper {
@@ -32,7 +33,7 @@ public class PrepareEventMapper {
 
         entityEvent.setStatusDetail(request.getStatusCode());
         entityEvent.setProductType(request.getProductType());
-        entityEvent.setStatusDateTime((DateUtils.parseDateString(request.getStatusDate())));
+        entityEvent.setStatusDateTime((DateUtils.parseStringTOInstant(request.getStatusDate())));
         return entityEvent;
     }
 
@@ -45,7 +46,7 @@ public class PrepareEventMapper {
         }
         entityEvent.setStatusDetail(deliveryRequest.getStatusCode());
         entityEvent.setProductType(deliveryRequest.getProductType());
-        entityEvent.setStatusDateTime(new Date());
+        entityEvent.setStatusDateTime(Instant.now());
         return entityEvent;
     }
 

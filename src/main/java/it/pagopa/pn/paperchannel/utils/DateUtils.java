@@ -36,6 +36,7 @@ public class DateUtils {
     }
 
     public static Instant parseStringTOInstant(String date) {
+        if (StringUtils.isBlank(date)) return null;
         return Instant.parse(date);
     }
 
@@ -43,12 +44,12 @@ public class DateUtils {
         return time.toInstant(ZoneOffset.UTC).getEpochSecond();
     }
 
-    public static OffsetDateTime getOffsetDateTimeFromDate(Date date) {
-        return OffsetDateTime.ofInstant(date.toInstant(), ZoneOffset.UTC);
+    public static OffsetDateTime getOffsetDateTimeFromDate(Instant date) {
+        return OffsetDateTime.ofInstant(date, ZoneOffset.UTC);
     }
 
-    public static Date getDatefromOffsetDateTime(OffsetDateTime offsetDateTime) {
-        return Date.from(offsetDateTime.toInstant());
+    public static Instant getDatefromOffsetDateTime(OffsetDateTime offsetDateTime) {
+        return offsetDateTime.toInstant();
     }
 
     public static Pair<Instant, Instant> getStartAndEndTimestamp(Date startDate, Date endDate){

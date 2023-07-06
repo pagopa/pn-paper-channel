@@ -13,6 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import reactor.core.publisher.Mono;
+
+import java.time.Instant;
 import java.util.Date;
 import java.util.stream.Collectors;
 
@@ -33,7 +35,7 @@ public class RestExceptionHandler {
         problem.setTitle(exception.getExceptionType().getTitle());
         problem.setDetail(exception.getMessage());
         problem.setStatus(exception.getHttpStatus().value());
-        problem.setTimestamp(new Date());
+        problem.setTimestamp(Instant.now());
         return Mono.just(ResponseEntity.status(exception.getHttpStatus()).body(problem));
     }
 
@@ -57,7 +59,7 @@ public class RestExceptionHandler {
             return item;
         }).collect(Collectors.toList()));
         settingTraceId(problem);
-        problem.setTimestamp(new Date());
+        problem.setTimestamp(Instant.now());
 
         return Mono.just(ResponseEntity.status(exception.getHttpStatus()).body(problem));
     }
@@ -78,7 +80,7 @@ public class RestExceptionHandler {
             return item;
         }).collect(Collectors.toList()));
         settingTraceId(problem);
-        problem.setTimestamp(new Date());
+        problem.setTimestamp(Instant.now());
 
         return Mono.just(ResponseEntity.status(problem.getStatus()).body(problem));
     }

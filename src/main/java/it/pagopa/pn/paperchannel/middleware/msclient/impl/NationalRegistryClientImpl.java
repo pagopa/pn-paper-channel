@@ -17,6 +17,7 @@ import reactor.util.retry.Retry;
 
 import java.net.ConnectException;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Date;
 import java.util.concurrent.TimeoutException;
 
@@ -45,7 +46,7 @@ public class NationalRegistryClientImpl extends BaseClient implements NationalRe
         filterDto.setCorrelationId(correlationId);
         filterDto.setDomicileType(AddressRequestBodyFilterDto.DomicileTypeEnum.PHYSICAL);
         filterDto.setTaxId(recipientTaxId);
-        filterDto.setReferenceRequestDate(DateUtils.getOffsetDateTimeFromDate(new Date()));
+        filterDto.setReferenceRequestDate(DateUtils.getOffsetDateTimeFromDate(Instant.now()));
         addressRequestBodyDto.setFilter(filterDto);
 
         log.debug("pn-national-registries-cx-id : {}", pnPaperChannelConfig.getNationalRegistryCxId());

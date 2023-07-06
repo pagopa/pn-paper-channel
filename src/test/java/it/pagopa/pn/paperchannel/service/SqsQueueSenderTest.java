@@ -113,7 +113,7 @@ class SqsQueueSenderTest extends BaseTest {
         SendEvent event = new SendEvent();
         event.setRequestId("1234");
         event.setStatusCode(StatusCodeEnum.OK);
-        event.setStatusDateTime(new Date());
+        event.setStatusDateTime(Instant.now());
         event.setStatusDescription(StatusCodeEnum.OK.getValue());
         event.setRegisteredLetterCode("AR");
         return event;
@@ -131,7 +131,7 @@ class SqsQueueSenderTest extends BaseTest {
 
         event.setRequestId("1234");
         event.setStatusCode(StatusCodeEnum.OK);
-        event.setStatusDateTime(new Date());
+        event.setStatusDateTime(Instant.now());
         event.setStatusDetail(StatusCodeEnum.OK.getValue());
         event.setProductType("AR");
         event.setReceiverAddress(address);

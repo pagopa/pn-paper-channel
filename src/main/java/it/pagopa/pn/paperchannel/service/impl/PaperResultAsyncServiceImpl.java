@@ -243,7 +243,7 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
                 sendEvent.setRequestId(entity.getRequestId());
                 sendEvent.setStatusDateTime(DateUtils.getDatefromOffsetDateTime(request.getAnalogMail().getStatusDateTime()));
                 sendEvent.setRegisteredLetterCode(request.getAnalogMail().getRegisteredLetterCode());
-                sendEvent.setClientRequestTimeStamp(Date.from(request.getAnalogMail().getClientRequestTimeStamp().toInstant()));
+                sendEvent.setClientRequestTimeStamp(request.getAnalogMail().getClientRequestTimeStamp().toInstant());
                 sendEvent.setDeliveryFailureCause(request.getAnalogMail().getDeliveryFailureCause());
                 sendEvent.setDiscoveredAddress(AddressMapper.toPojo(request.getAnalogMail().getDiscoveredAddress()));
 
