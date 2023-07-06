@@ -25,6 +25,7 @@
     "AddressManagerBaseUrl": "http://alb.confidential.pn.internal:8080",
     "DataVaultBaseUrl": "http://alb.confidential.pn.internal:8080",
     "OriginalPostmanAddressUsageMode": "PAPERSEND",
-    "RefinementDuration": "1m"
+    "RefinementDuration": "1m",
+    "CloudwatchMetricCron": "0 0 */1 * * *"
   }
 }

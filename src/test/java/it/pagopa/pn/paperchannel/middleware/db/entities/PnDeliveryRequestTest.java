@@ -29,6 +29,7 @@ class PnDeliveryRequestTest {
     private String relatedRequestId;
     private List<PnAttachmentInfo> attachments;
     private String requestPaId;
+    private String eventToSend;
 
     @BeforeEach
     void setUp(){
@@ -94,6 +95,9 @@ class PnDeliveryRequestTest {
         stringBuilder.append(", ");
         stringBuilder.append("requestPaId=");
         stringBuilder.append(requestPaId);
+        stringBuilder.append(", ");
+        stringBuilder.append("eventToSend=");
+        stringBuilder.append(eventToSend);
         stringBuilder.append(")");
 
         String toTest = stringBuilder.toString();
