@@ -277,7 +277,14 @@
                             <generateModelTests>false</generateModelTests>
                             <templateDirectory>${project.build.directory}/dependency-resources/scripts/openapi/templates/5.4.0/server</templateDirectory>
                             <configOptions>
-                                <dateLibrary>java11</dateLibrary>
+                                <typeMappings>
+                                    <typeMapping>Date=Instant</typeMapping>
+                                </typeMappings>
+                                <importMappings>
+                                    <importMapping>java.util.Date=java.time.Instant</importMapping>
+                                    <importMapping>Date=java.time.Instant</importMapping>
+                                </importMappings>
+                                <dateLibrary>java8</dateLibrary>
                                 <delegatePattern>true</delegatePattern>
                                 <interfaceOnly>true</interfaceOnly>
                                 <annotationLibrary>none</annotationLibrary>
@@ -308,7 +315,7 @@
                             <generateModelTests>false</generateModelTests>
                             <templateDirectory>${project.build.directory}/dependency-resources/scripts/openapi/templates/5.4.0/server</templateDirectory>
                             <configOptions>
-                                <dateLibrary>java11</dateLibrary>
+                                <dateLibrary>java8</dateLibrary>
                                 <delegatePattern>true</delegatePattern>
                                 <interfaceOnly>true</interfaceOnly>
                                 <annotationLibrary>none</annotationLibrary>
