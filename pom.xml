@@ -269,6 +269,13 @@
                         </goals>
                         <phase>generate-resources</phase>
                         <configuration>
+                            <typeMappings>
+                                <typeMapping>Date=Instant</typeMapping>
+                            </typeMappings>
+                            <importMappings>
+                                <importMapping>java.util.Date=java.time.Instant</importMapping>
+                                <importMapping>Date=java.time.Instant</importMapping>
+                            </importMappings>
                             <inputSpec>${project.basedir}/docs/openapi/api-internal-v1.yaml</inputSpec>
                             <generatorName>spring</generatorName>
                             <library>spring-boot</library>
@@ -277,14 +284,7 @@
                             <generateModelTests>false</generateModelTests>
                             <templateDirectory>${project.build.directory}/dependency-resources/scripts/openapi/templates/5.4.0/server</templateDirectory>
                             <configOptions>
-                                <typeMappings>
-                                    <typeMapping>Date=Instant</typeMapping>
-                                </typeMappings>
-                                <importMappings>
-                                    <importMapping>java.util.Date=java.time.Instant</importMapping>
-                                    <importMapping>Date=java.time.Instant</importMapping>
-                                </importMappings>
-                                <dateLibrary>java8</dateLibrary>
+                                <dateLibrary>java11</dateLibrary>
                                 <delegatePattern>true</delegatePattern>
                                 <interfaceOnly>true</interfaceOnly>
                                 <annotationLibrary>none</annotationLibrary>
