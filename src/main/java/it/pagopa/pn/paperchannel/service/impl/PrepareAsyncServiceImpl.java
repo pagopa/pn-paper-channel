@@ -214,7 +214,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                             .map(pdDocument -> {
                                 try {
                                     if (pdDocument.getDocumentInformation() != null && pdDocument.getDocumentInformation().getCreationDate() != null) {
-                                        info.setDate(DateUtils.formatDate(pdDocument.getDocumentInformation().getCreationDate().getTime()));
+                                        info.setDate(DateUtils.formatDate(pdDocument.getDocumentInformation().getCreationDate().toInstant()));
                                     }
                                     info.setNumberOfPage(pdDocument.getNumberOfPages());
                                     pdDocument.close();

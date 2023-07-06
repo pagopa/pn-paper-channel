@@ -20,11 +20,9 @@ public class DateUtils {
 
     private DateUtils(){}
 
-    public static String formatDate(Date date)  {
+    public static String formatDate(Instant date)  {
         if (date == null) return null;
-        LocalDateTime dateTime =  LocalDateTime.ofInstant(date.toInstant(), italianZoneId);
-        DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
-        return dateTime.format(formatter);
+        return date.toString();
     }
 
     public static Date parseDateString(String date) {
