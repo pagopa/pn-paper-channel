@@ -34,7 +34,7 @@ public class DateUtils {
 
     public static Instant parseStringTOInstant(String date) {
         if (StringUtils.isBlank(date)) return null;
-        if (!StringUtils.contains("Z", date)) return parseOldStringToInstant(date);
+        if (!StringUtils.contains(date, "Z")) return parseOldStringToInstant(date);
         return Instant.parse(date);
     }
 

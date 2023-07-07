@@ -26,7 +26,7 @@ class PreparePaperResponseMapperTest {
         deliveryRequest = new PnDeliveryRequest();
         List<PnAttachmentInfo> attachmentUrls = new ArrayList<>();
         PnAttachmentInfo pnAttachmentInfo = new PnAttachmentInfo();
-        pnAttachmentInfo.setDate("");
+        pnAttachmentInfo.setDate("2023-07-07T08:43:00.764Z");
         pnAttachmentInfo.setFileKey("http://localhost:8080");
         pnAttachmentInfo.setId("id");
         pnAttachmentInfo.setNumberOfPage(3);
@@ -42,6 +42,8 @@ class PreparePaperResponseMapperTest {
         deliveryRequest.setPrintType("FRONTE-RETRO");
         deliveryRequest.setProposalProductType("AR");
         deliveryRequest.setProductType("AR");
+        deliveryRequest.setStatusDate("2023-07-07T08:43:00.764Z");
+        deliveryRequest.setStartDate("2023-07-07T08:43:00.764Z");
         deliveryRequest.setAttachments(attachmentUrls);
 
     }
@@ -51,8 +53,8 @@ class PreparePaperResponseMapperTest {
         Constructor<PreparePaperResponseMapper> constructor = PreparePaperResponseMapper.class.getDeclaredConstructor();
         Assertions.assertTrue(Modifier.isPrivate(constructor.getModifiers()));
         constructor.setAccessible(true);
-        Exception exception = Assertions.assertThrows(Exception.class, () -> constructor.newInstance());
-        Assertions.assertEquals(null, exception.getMessage());
+        Exception exception = Assertions.assertThrows(Exception.class, constructor::newInstance);
+        Assertions.assertNull(exception.getMessage());
     }
 
     @Test
@@ -62,6 +64,7 @@ class PreparePaperResponseMapperTest {
         Assertions.assertNotNull(response.getPrepareEvent());
         Assertions.assertEquals(response.getPrepareEvent().getStatusCode().getValue(),StatusDeliveryEnum.IN_PROCESSING.getDetail());
         Assertions.assertEquals(response.getPrepareEvent().getStatusDetail(), StatusDeliveryEnum.IN_PROCESSING.getCode());
+        Assertions.assertEquals("2023-07-07T08:43:00.764Z", response.getPrepareEvent().getStatusDateTime().toString());
     }
 
     @Test
@@ -71,6 +74,8 @@ class PreparePaperResponseMapperTest {
         Assertions.assertNotNull(response.getPrepareEvent());
         Assertions.assertEquals(response.getPrepareEvent().getStatusCode().getValue(),StatusDeliveryEnum.TAKING_CHARGE.getDetail());
         Assertions.assertEquals(response.getPrepareEvent().getStatusDetail(), StatusDeliveryEnum.TAKING_CHARGE.getCode());
+        Assertions.assertEquals("2023-07-07T08:43:00.764Z", response.getPrepareEvent().getStatusDateTime().toString());
+
     }
 
     @Test
@@ -80,6 +85,7 @@ class PreparePaperResponseMapperTest {
         Assertions.assertNotNull(response.getPrepareEvent());
         Assertions.assertEquals(response.getPrepareEvent().getStatusCode().getValue(),StatusDeliveryEnum.NATIONAL_REGISTRY_WAITING.getDetail());
         Assertions.assertEquals(response.getPrepareEvent().getStatusDetail(), StatusDeliveryEnum.NATIONAL_REGISTRY_WAITING.getCode());
+        Assertions.assertEquals("2023-07-07T08:43:00.764Z", response.getPrepareEvent().getStatusDateTime().toString());
     }
 
     @Test
@@ -89,6 +95,8 @@ class PreparePaperResponseMapperTest {
         Assertions.assertNotNull(response.getPrepareEvent());
         Assertions.assertEquals(response.getPrepareEvent().getStatusCode().getValue(),StatusDeliveryEnum.PAPER_CHANNEL_ASYNC_ERROR.getDetail());
         Assertions.assertEquals(response.getPrepareEvent().getStatusDetail(), StatusDeliveryEnum.PAPER_CHANNEL_ASYNC_ERROR.getCode());
+        Assertions.assertEquals("2023-07-07T08:43:00.764Z", response.getPrepareEvent().getStatusDateTime().toString());
+
     }
 
     @Test
@@ -98,6 +106,8 @@ class PreparePaperResponseMapperTest {
         Assertions.assertNotNull(response.getPrepareEvent());
         Assertions.assertEquals(response.getPrepareEvent().getStatusCode().getValue(),StatusDeliveryEnum.SAFE_STORAGE_IN_ERROR.getDetail());
         Assertions.assertEquals(response.getPrepareEvent().getStatusDetail(), StatusDeliveryEnum.SAFE_STORAGE_IN_ERROR.getCode());
+        Assertions.assertEquals("2023-07-07T08:43:00.764Z", response.getPrepareEvent().getStatusDateTime().toString());
+
     }
 
     @Test

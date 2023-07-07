@@ -31,8 +31,8 @@ class SendEventMapperTest {
         Constructor<SendEventMapper> constructor = SendEventMapper.class.getDeclaredConstructor();
         Assertions.assertTrue(Modifier.isPrivate(constructor.getModifiers()));
         constructor.setAccessible(true);
-        Exception exception = Assertions.assertThrows(Exception.class, () -> constructor.newInstance());
-        Assertions.assertEquals(null, exception.getMessage());
+        Exception exception = Assertions.assertThrows(Exception.class, constructor::newInstance);
+        Assertions.assertNull(exception.getMessage());
     }
 
     @Test
@@ -40,6 +40,8 @@ class SendEventMapperTest {
         response.setStatusCode(StatusCodeEnum.OK);
         response = SendEventMapper.fromResult(deliveryRequest ,getPnAddress());
         Assertions.assertNotNull(response);
+        Assertions.assertEquals("2023-07-07T08:43:00.764Z", response.getStatusDateTime().toString());
+        Assertions.assertEquals("2023-07-07T08:43:00.764Z", response.getStatusDateTime().toString());
     }
 
     private void initialize(){
@@ -47,7 +49,7 @@ class SendEventMapperTest {
         deliveryRequest = new PnDeliveryRequest();
         List<PnAttachmentInfo> attachmentUrls = new ArrayList<>();
         PnAttachmentInfo pnAttachmentInfo = new PnAttachmentInfo();
-        pnAttachmentInfo.setDate("");
+        pnAttachmentInfo.setDate("2023-07-07T08:43:00.764Z");
         pnAttachmentInfo.setFileKey("http://localhost:8080");
         pnAttachmentInfo.setId("");
         pnAttachmentInfo.setNumberOfPage(3);
@@ -74,10 +76,10 @@ class SendEventMapperTest {
         deliveryRequest.setCorrelationId("");
         deliveryRequest.setStatusCode(StatusCodeEnum.OK.getValue());
         deliveryRequest.setStatusDetail("");
-        deliveryRequest.setStatusDate("");
+        deliveryRequest.setStatusDate("2023-07-07T08:43:00.764Z");
         deliveryRequest.setProposalProductType("");
         deliveryRequest.setPrintType("PT");
-        deliveryRequest.setStartDate("");
+        deliveryRequest.setStartDate("2023-07-07T08:43:00.764Z");
         deliveryRequest.setProductType("RN_AR");
         deliveryRequest.setAttachments(attachmentUrls);
         List<PnAttachmentInfo> attachments;
