@@ -5,8 +5,9 @@ import it.pagopa.pn.paperchannel.utils.DateUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 class PnDeliveryRequestTest {
@@ -138,15 +139,15 @@ class PnDeliveryRequestTest {
         hashOldAddress = "pv84bfoij30chewdfhg0023jhnhofj0393ihif200ri4";
         statusCode = StatusDeliveryEnum.IN_PROCESSING.getCode();
         statusDetail = StatusDeliveryEnum.IN_PROCESSING.getDescription();
-        statusDate = DateUtils.formatDate(new Date());
+        statusDate = DateUtils.formatDate(Instant.now());
         proposalProductType = "AR";
         printType = "BN_FRONTE_RETRO";
-        startDate = DateUtils.formatDate(new Date());
+        startDate = DateUtils.formatDate(Instant.now());
         productType = "890";
         relatedRequestId = "MOCK-SUCC-WKHU-202209-P-1_send_digital_domicile0_source_PLATFORM_attempt_2";
         attachments = new ArrayList<>();
         PnAttachmentInfo pnAttachmentInfo = new PnAttachmentInfo();
-        pnAttachmentInfo.setDate("2022-12-20T16:17:35.02647+01:00");
+        pnAttachmentInfo.setDate("2022-12-20T16:17:35.026Z");
         pnAttachmentInfo.setFileKey("/safe-storage/v1/files/PDFURL");
         pnAttachmentInfo.setId("A1S2D3F4");
         pnAttachmentInfo.setDocumentType("PN_LEGALFACT");

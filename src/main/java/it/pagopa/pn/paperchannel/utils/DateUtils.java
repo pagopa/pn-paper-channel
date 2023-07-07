@@ -15,7 +15,6 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.BADLY_FILTER
 
 @Slf4j
 public class DateUtils {
-    private static final String START_DATE = "2020-01-01T10:15:30";
     private static final ZoneId italianZoneId =  ZoneId.of("Europe/Rome");
 
     private DateUtils(){}
@@ -25,16 +24,17 @@ public class DateUtils {
         return date.toString();
     }
 
-    public static Date parseDateString(String date) {
+    private static Instant parseOldStringToInstant(String date) {
         if (StringUtils.isBlank(date)) return null;
         DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
         LocalDateTime localDate = LocalDateTime.parse(date, formatter);
         ZonedDateTime time = localDate.atZone(italianZoneId);
-        return Date.from(time.toInstant());
+        return time.toInstant();
     }
 
     public static Instant parseStringTOInstant(String date) {
         if (StringUtils.isBlank(date)) return null;
+        if (!StringUtils.contains("Z", date)) return parseOldStringToInstant(date);
         return Instant.parse(date);
     }
 
@@ -83,9 +83,7 @@ public class DateUtils {
         cal.set(Calendar.MINUTE, min);
         cal.set(Calendar.SECOND, sec);
         cal.set(Calendar.MILLISECOND, 0);
-        Date dateTime = cal.getTime();
-
-        return dateTime;
+        return cal.getTime();
     }
 
 }
