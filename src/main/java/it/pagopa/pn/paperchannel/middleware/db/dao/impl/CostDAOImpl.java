@@ -69,24 +69,33 @@ public class CostDAOImpl extends BaseDAO<PnCost> implements CostDAO {
     @Override
     public Mono<PnCost> getByCapOrZoneAndProductType(String tenderCode, String cap, String zone, String productType) {
         QueryConditional conditionalKey = CONDITION_EQUAL_TO.apply(keyBuild(tenderCode, null));
-        String filterExpression = PnCost.COL_PRODUCT_TYPE + " = :productType ";
+        String filterExpression = PnCost.COL_PRODUCT_TYPE.concat(" = :productType ");
         Map<String, AttributeValue> values = new HashMap<>();
         values.put(":productType", AttributeValue.builder().s(productType).build());
 
         if (StringUtils.isNotBlank(cap)){
-            filterExpression += " AND (contains(" + PnCost.COL_CAP + ", :cap) OR contains("+ PnCost.COL_CAP + ", :defaultCap))";
+            filterExpression += " AND contains(" + PnCost.COL_CAP + ", :cap) ";
             values.put(":cap", AttributeValue.builder().s(cap).build());
-            values.put(":defaultCap", AttributeValue.builder().s("99999").build());
         } else {
             filterExpression += " AND :zoneAttr = " + PnCost.COL_ZONE;
             values.put(":zoneAttr", AttributeValue.builder().s(zone).build());
         }
 
         log.info("FILTER : {}", filterExpression);
+        final String finalFilters = filterExpression;
         return this.getByFilter( conditionalKey, PnCost.TENDER_INDEX, values, filterExpression)
                 .collectList()
                 .flatMap(items -> {
                     if (items.isEmpty()) {
+                        if (StringUtils.isNotBlank(cap)) {
+                            values.put(":cap", AttributeValue.builder().s("99999").build());
+                            return this.getByFilter(conditionalKey, PnCost.TENDER_INDEX, values, finalFilters)
+                                    .collectList()
+                                    .flatMap(defaultCost -> {
+                                        if (defaultCost.isEmpty()) return Mono.empty();
+                                        return Mono.just(defaultCost.get(0));
+                                    });
+                        }
                         return Mono.empty();
                     }
                     List<PnCost> driverCost = items.stream().filter(cost -> !cost.getFsu()).toList();
