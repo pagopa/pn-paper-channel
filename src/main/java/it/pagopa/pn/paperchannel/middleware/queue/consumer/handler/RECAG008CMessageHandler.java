@@ -58,6 +58,7 @@ public class RECAG008CMessageHandler extends SendToDeliveryPushHandler {
         // presence check and error log
         final boolean ok = elRECAG012.isPresent() && elPNAG012.isPresent();
         if (!ok) {
+            //FIXME - throw exception
             log.error("[{}] Problem with RECAG012 or PNAG012 presence!", requestId);
         }
 

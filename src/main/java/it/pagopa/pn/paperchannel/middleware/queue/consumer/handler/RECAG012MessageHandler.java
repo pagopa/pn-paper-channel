@@ -42,6 +42,7 @@ public class RECAG012MessageHandler extends SaveMetadataMessageHandler {
             // se mi arriva uno stesso evento (requestId, statusCode) più di una volta, ma con gli stessi campi,
             // semplicemente lo ignoro. Ma se arriva con valori diversi, loggo un error
             if(! pnEventMetaInDB.equals(pnEventMetaNew)) {
+                //FIXME: log FATAL
                 log.error("[{}] Entity RECAG012 already present. In DB: {}, received: {}", paperRequest.getRequestId(), pnEventMetaInDB, pnEventMetaNew);
             }
             return Mono.empty();

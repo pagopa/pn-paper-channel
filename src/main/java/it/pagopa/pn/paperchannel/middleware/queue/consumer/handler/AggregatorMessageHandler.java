@@ -44,6 +44,7 @@ public class AggregatorMessageHandler extends SendToDeliveryPushHandler {
                         preClosingMetaStatus)
                 .switchIfEmpty(Mono.defer(() -> {
                             log.warn("[{}] Missing EventMeta for {}", paperRequest.getRequestId(), paperRequest);
+                            //FIXME - throw exception
                             return Mono.just(new PnEventMeta());
                 }))
                 .map(relatedMeta -> enrichEvent(paperRequest, relatedMeta))

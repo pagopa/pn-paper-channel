@@ -32,6 +32,7 @@ public class CustomAggregatorMessageHandler extends AggregatorMessageHandler {
 
         return eventMetaDAO.getDeliveryEventMeta(buildMetaRequestId(paperRequest.getRequestId()), metaStatus)
                 .switchIfEmpty(Mono.defer(() -> {
+                    //FIXME - throw exception
                     log.warn("[{}] Missing EventMeta for {}", paperRequest.getRequestId(), paperRequest);
                     return Mono.just(new PnEventMeta());
                 }))

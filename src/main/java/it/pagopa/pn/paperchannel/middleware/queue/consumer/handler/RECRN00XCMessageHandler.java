@@ -47,12 +47,14 @@ public class RECRN00XCMessageHandler extends SendToDeliveryPushHandler {
 
         return this.eventMetaDAO.getDeliveryEventMeta(metaRequestId, buildMetaStatusCode(RECRN011_STATUS_CODE))
                 .switchIfEmpty(Mono.defer(() -> {
+                    //FIXME - throw exception
                     log.warn("[{}] Missing EventMeta RECRN011 for {}", paperRequest.getRequestId(), paperRequest);
                     return Mono.empty();
                 }))
                 .zipWhen(n011 ->
                         this.eventMetaDAO.getDeliveryEventMeta(metaRequestId, buildMetaStatusCode(status))
                                 .switchIfEmpty(Mono.defer(() -> {
+                                    //FIXME - throw exceptio
                                     log.warn("[{}] Missing EventMeta RECRN011 for {}", paperRequest.getRequestId(), paperRequest);
                                     return Mono.empty();
                                 }))

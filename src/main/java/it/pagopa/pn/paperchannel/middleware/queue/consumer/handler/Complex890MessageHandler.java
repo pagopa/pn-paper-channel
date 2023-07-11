@@ -110,6 +110,7 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
 
         if (containsPNAG012 && (!containsRECAG012)) {  // presente META##PNAG012 ma NON META##RECAG012
 //            CASO 1.ii
+            //FIXME: log FATAL
             log.error("[{}] META##PNAG012 is present but META##RECAG012 is not present", paperRequest.getRequestId());
             return Mono.empty();
         }
@@ -124,6 +125,7 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
             log.info("[{}] Result of query is: META##RECAG012 present, META##PNAG012 not present", paperRequest.getRequestId());
 
             if (missingRequiredDateTimes(recag011ADateTime, recag00XADateTime)) {
+                //FIXME - throw exception
                 log.error("[{}] needed META##RECAG00_A is present and/or META##RECAG011A not present", paperRequest.getRequestId());
                 return Mono.empty();
             }
