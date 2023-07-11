@@ -54,7 +54,8 @@ public enum ExceptionTypeEnum{
     ATTEMPT_ADDRESS_NATIONAL_REGISTRY("ATTEMPT_ADDRESS_NATIONAL_REGISTRY", "Discovered and first attempt are equals, find from national registry"),
     DISCARD_NOTIFICATION("DISCARD_NOTIFICATION", "Discard notification"),
     INVALID_VALUE_FROM_PROPS("INVALID_VALUE_FROM_PROPS", "Il valore della proprietà è diverso da quello atteso"),
-    INVALID_SAFE_STORAGE("INVALID_SAFE_STORAGE", "Il Safe Storage selezionato è inesistente.");
+    INVALID_SAFE_STORAGE("INVALID_SAFE_STORAGE", "Il Safe Storage selezionato è inesistente."),
+    WRONG_EVENT_ORDER("WRONG_EVENT_ORDER", "Uno o più eventi precedenti non sono stati trovati");
 
     private final String title;
     private final String message;
