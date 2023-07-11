@@ -49,7 +49,7 @@ public class AggregatorMessageHandler extends SendToDeliveryPushHandler {
                 }))
                 .map(relatedMeta -> enrichEvent(paperRequest, relatedMeta))
 
-                // invio dato su delivery-push, che ci sia stato arricchimento o meno)
+                // non invio a delivery push e non cancello i meta
                 .flatMap(enrichedRequest -> super.handleMessage(entity, enrichedRequest).then(metaDematCleaner.clean(paperRequest.getRequestId())));
     }
 
