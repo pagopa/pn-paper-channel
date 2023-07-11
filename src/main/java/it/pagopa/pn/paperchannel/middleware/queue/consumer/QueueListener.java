@@ -164,7 +164,7 @@ public class QueueListener {
         this.queueListenerService.nationalRegistriesResponseListener(dto);
     }
 
-    @SqsListener(value = "${pn.paper-channel.queue-external-channel}", deletionPolicy = SqsMessageDeletionPolicy.ALWAYS)
+    @SqsListener(value = "${pn.paper-channel.queue-external-channel}", deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)
     public void pullExternalChannel(@Payload String node, @Headers Map<String,Object> headers){
         SingleStatusUpdateDto body = convertToObject(node, SingleStatusUpdateDto.class);
         setMDCContext(headers);
