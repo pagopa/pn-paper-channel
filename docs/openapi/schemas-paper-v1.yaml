@@ -159,7 +159,6 @@ components:
           example: Distacco d'ufficio 23L - Fascicolo Chiuso
         statusDateTime:
           type: string
-          description: Data di validità dello stato
           format: date-time
         deliveryFailureCause:
           type: string
@@ -186,7 +185,6 @@ components:
           $ref: '#/components/schemas/AnalogAddress'
         clientRequestTimeStamp:
           type: string
-          description: Timestamp della richiesta in UTC
           format: date-time
       allOf:
       - $ref: '#/components/schemas/PaperEvent'

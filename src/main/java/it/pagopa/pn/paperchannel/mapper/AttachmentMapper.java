@@ -49,7 +49,7 @@ public class AttachmentMapper {
         attachmentDetails.setId(attachments.getId());
         attachmentDetails.setDocumentType(attachments.getDocumentType());
         attachmentDetails.setUrl(attachments.getUrl());
-        attachmentDetails.setDate(DateUtils.parseDateString(attachments.getDate()));
+        attachmentDetails.setDate(DateUtils.parseStringTOInstant(attachments.getDate()));
         return attachmentDetails;
     }
 

@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -65,7 +66,7 @@ class ExternalChannelClientTest  extends BaseTest.WithMockServer {
         sendRequest.setReceiverAddress(analogAddress);
         sendRequest.setSenderAddress(analogAddress);
         sendRequest.setArAddress(analogAddress);
-        sendRequest.setClientRequestTimeStamp(new Date());
+        sendRequest.setClientRequestTimeStamp(Instant.now());
         sendRequest.setProductType(ProductTypeEnum.RIR);
 
     }

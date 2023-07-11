@@ -44,11 +44,10 @@ class RestExceptionHandlerTest {
         String requestId = "MOCK-SUCC-WKHU-202209-P-1_send_digital_domicile0_source_PLATFORM_attempt_1";
         String statusCode = StatusDeliveryEnum.IN_PROCESSING.getCode();
         String statusDetail = StatusDeliveryEnum.IN_PROCESSING.getDescription();
-        Date statusDate = Date.from(Instant.now());
 
         PaperEvent paperEvent = new PaperEvent();
         paperEvent.setRequestId(requestId);
-        paperEvent.setStatusDateTime(statusDate);
+        paperEvent.setStatusDateTime(Instant.now());
         paperEvent.setStatusDetail(statusDetail);
         paperEvent.setStatusCode(statusCode);
 

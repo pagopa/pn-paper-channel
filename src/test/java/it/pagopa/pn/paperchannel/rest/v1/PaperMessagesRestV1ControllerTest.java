@@ -11,6 +11,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -96,7 +97,7 @@ class PaperMessagesRestV1ControllerTest {
         analogAddress.setFullname("Ettore Fieramosca");
 
         sendRequest.setRequestPaId("12345abcd");
-        sendRequest.setClientRequestTimeStamp(new Date());
+        sendRequest.setClientRequestTimeStamp(Instant.now());
         sendRequest.setSenderAddress(analogAddress);
         sendRequest.setArAddress(analogAddress);
         sendRequest.setProductType(ProductTypeEnum.RIR);

@@ -22,13 +22,13 @@ class PrepareEventMapperTest {
         Constructor<PrepareEventMapper> constructor = PrepareEventMapper.class.getDeclaredConstructor();
         Assertions.assertTrue(Modifier.isPrivate(constructor.getModifiers()));
         constructor.setAccessible(true);
-        Exception exception = Assertions.assertThrows(Exception.class, () -> constructor.newInstance());
-        Assertions.assertEquals(null, exception.getMessage());
+        Exception exception = Assertions.assertThrows(Exception.class, constructor::newInstance);
+        Assertions.assertNull(exception.getMessage());
     }
 
     @Test
     void prepareEventMapperProcessingTest () {
-        PrepareEvent response= PrepareEventMapper.fromResult(getDeliveryRequest("12345",StatusDeliveryEnum.IN_PROCESSING),getPnAddress());
+        PrepareEvent response= PrepareEventMapper.fromResult(getDeliveryRequest(StatusDeliveryEnum.IN_PROCESSING),getPnAddress());
         Assertions.assertNotNull(response);
         Assertions.assertEquals(response.getStatusCode().getValue(),StatusDeliveryEnum.IN_PROCESSING.getDetail());
         Assertions.assertEquals(response.getStatusDetail(), StatusDeliveryEnum.IN_PROCESSING.getCode());
@@ -36,7 +36,7 @@ class PrepareEventMapperTest {
 
     @Test
     void prepareEventMapperUntaceableTest () {
-        PrepareEvent response= PrepareEventMapper.fromResult(getDeliveryRequest("12345",StatusDeliveryEnum.UNTRACEABLE),getPnAddress());
+        PrepareEvent response= PrepareEventMapper.fromResult(getDeliveryRequest(StatusDeliveryEnum.UNTRACEABLE),getPnAddress());
         Assertions.assertNotNull(response);
         Assertions.assertEquals(response.getStatusCode().getValue(),StatusDeliveryEnum.UNTRACEABLE.getDetail());
         Assertions.assertEquals(response.getStatusDetail(), StatusDeliveryEnum.UNTRACEABLE.getCode());
@@ -44,16 +44,16 @@ class PrepareEventMapperTest {
 
     @Test
     void prepareEventMapperToPrepareEventTest () {
-        PrepareEvent response= PrepareEventMapper.toPrepareEvent(getDeliveryRequest("12345",StatusDeliveryEnum.UNTRACEABLE),getAddress(), StatusCodeEnum.OK);
+        PrepareEvent response= PrepareEventMapper.toPrepareEvent(getDeliveryRequest(StatusDeliveryEnum.UNTRACEABLE),getAddress(), StatusCodeEnum.OK);
         Assertions.assertNotNull(response);
     }
 
 
-    private PnDeliveryRequest getDeliveryRequest(String requestId, StatusDeliveryEnum status){
+    private PnDeliveryRequest getDeliveryRequest(StatusDeliveryEnum status){
         PnDeliveryRequest deliveryRequest= new PnDeliveryRequest();
         List<PnAttachmentInfo> attachmentUrls = new ArrayList<>();
         PnAttachmentInfo pnAttachmentInfo = new PnAttachmentInfo();
-        pnAttachmentInfo.setDate("");
+        pnAttachmentInfo.setDate("2023-07-07T08:43:00.764Z");
         pnAttachmentInfo.setFileKey("http://localhost:8080");
         pnAttachmentInfo.setId("");
         pnAttachmentInfo.setNumberOfPage(3);
@@ -74,7 +74,7 @@ class PrepareEventMapperTest {
         address.setFromNationalRegistry(true);
 
         deliveryRequest.setAddressHash(address.convertToHash());
-        deliveryRequest.setRequestId(requestId);
+        deliveryRequest.setRequestId("12345");
         deliveryRequest.setFiscalCode("ABCD123AB501");
         deliveryRequest.setReceiverType("PF");
         deliveryRequest.setIun("iun");
@@ -82,7 +82,7 @@ class PrepareEventMapperTest {
         deliveryRequest.setStatusCode(status.getCode());
         deliveryRequest.setStatusDescription(status.getDescription());
         deliveryRequest.setStatusDetail(status.getDetail());
-        deliveryRequest.setStatusDate("");
+        deliveryRequest.setStatusDate("2023-07-07T08:43:00.764Z");
         deliveryRequest.setProposalProductType("AR");
         deliveryRequest.setPrintType("PT");
         deliveryRequest.setStartDate("");

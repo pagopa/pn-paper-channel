@@ -35,7 +35,7 @@ public class SendEventMapper {
         entityEvent.setStatusDescription(request.getStatusDescription());
         entityEvent.setStatusDetail(request.getStatusCode());
         entityEvent.setRegisteredLetterCode(request.getProductType());
-        entityEvent.setStatusDateTime((DateUtils.parseDateString(request.getStatusDate())));
+        entityEvent.setStatusDateTime((DateUtils.parseStringTOInstant(request.getStatusDate())));
         entityEvent.setAttachments(request.getAttachments().stream().map(AttachmentMapper::toAttachmentDetails).toList());
         if (address != null && address.getTtl() != null) {
             entityEvent.setDiscoveredAddress(baseMapperAddress.toDTO(address));
@@ -58,7 +58,7 @@ public class SendEventMapper {
         sendEvent.setRequestId(entity.getRequestId());
         sendEvent.setStatusDateTime(DateUtils.getDatefromOffsetDateTime(paperRequest.getStatusDateTime()));
         sendEvent.setRegisteredLetterCode(paperRequest.getRegisteredLetterCode());
-        sendEvent.setClientRequestTimeStamp(Date.from(paperRequest.getClientRequestTimeStamp().toInstant()));
+        sendEvent.setClientRequestTimeStamp(paperRequest.getClientRequestTimeStamp().toInstant());
         sendEvent.setDeliveryFailureCause(paperRequest.getDeliveryFailureCause());
         sendEvent.setDiscoveredAddress(AddressMapper.toPojo(paperRequest.getDiscoveredAddress()));
 

@@ -51,8 +51,6 @@ class SendRequestMapperTest {
         Assertions.assertEquals(addressReceiverAddress.getTypology(), AddressTypeEnum.RECEIVER_ADDRESS.toString());
         Assertions.assertEquals(addressSenderAddress.getTypology(), AddressTypeEnum.SENDER_ADDRES.toString());
         Assertions.assertEquals(addressAr.getTypology(), AddressTypeEnum.AR_ADDRESS.toString());
-
-
     }
 
 

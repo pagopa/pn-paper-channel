@@ -15,27 +15,26 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.BADLY_FILTER
 
 @Slf4j
 public class DateUtils {
-    private static final String START_DATE = "2020-01-01T10:15:30";
     private static final ZoneId italianZoneId =  ZoneId.of("Europe/Rome");
 
     private DateUtils(){}
 
-    public static String formatDate(Date date)  {
+    public static String formatDate(Instant date)  {
         if (date == null) return null;
-        LocalDateTime dateTime =  LocalDateTime.ofInstant(date.toInstant(), italianZoneId);
-        DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
-        return dateTime.format(formatter);
+        return date.toString();
     }
 
-    public static Date parseDateString(String date) {
+    private static Instant parseOldStringToInstant(String date) {
         if (StringUtils.isBlank(date)) return null;
         DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
         LocalDateTime localDate = LocalDateTime.parse(date, formatter);
         ZonedDateTime time = localDate.atZone(italianZoneId);
-        return Date.from(time.toInstant());
+        return time.toInstant();
     }
 
     public static Instant parseStringTOInstant(String date) {
+        if (StringUtils.isBlank(date)) return null;
+        if (!StringUtils.contains(date, "Z")) return parseOldStringToInstant(date);
         return Instant.parse(date);
     }
 
@@ -43,12 +42,12 @@ public class DateUtils {
         return time.toInstant(ZoneOffset.UTC).getEpochSecond();
     }
 
-    public static OffsetDateTime getOffsetDateTimeFromDate(Date date) {
-        return OffsetDateTime.ofInstant(date.toInstant(), ZoneOffset.UTC);
+    public static OffsetDateTime getOffsetDateTimeFromDate(Instant date) {
+        return OffsetDateTime.ofInstant(date, ZoneOffset.UTC);
     }
 
-    public static Date getDatefromOffsetDateTime(OffsetDateTime offsetDateTime) {
-        return Date.from(offsetDateTime.toInstant());
+    public static Instant getDatefromOffsetDateTime(OffsetDateTime offsetDateTime) {
+        return offsetDateTime.toInstant();
     }
 
     public static Pair<Instant, Instant> getStartAndEndTimestamp(Date startDate, Date endDate){
@@ -84,9 +83,7 @@ public class DateUtils {
         cal.set(Calendar.MINUTE, min);
         cal.set(Calendar.SECOND, sec);
         cal.set(Calendar.MILLISECOND, 0);
-        Date dateTime = cal.getTime();
-
-        return dateTime;
+        return cal.getTime();
     }
 
 }
