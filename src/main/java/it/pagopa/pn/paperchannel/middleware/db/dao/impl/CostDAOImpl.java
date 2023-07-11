@@ -88,6 +88,7 @@ public class CostDAOImpl extends BaseDAO<PnCost> implements CostDAO {
                 .flatMap(items -> {
                     if (items.isEmpty()) {
                         if (StringUtils.isNotBlank(cap)) {
+                            log.error("Retrieve default cost for this {} cap", cap);
                             values.put(":cap", AttributeValue.builder().s("99999").build());
                             return this.getByFilter(conditionalKey, PnCost.TENDER_INDEX, values, finalFilters)
                                     .collectList()
