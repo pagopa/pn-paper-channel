@@ -117,8 +117,6 @@ class CustomAggregatorMessageHandlerTest {
         entity.setStatusCode("statusDetail");
         entity.setStatusDetail(StatusCodeEnum.OK.getValue());
 
-        ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
-
         when(mockMetaDao.getDeliveryEventMeta(any(String.class), any(String.class))).thenReturn(Mono.empty());
 
         //  For Delete
