@@ -50,10 +50,7 @@ public class AggregatorMessageHandler extends SendToDeliveryPushHandler {
                 .map(relatedMeta -> enrichEvent(paperRequest, relatedMeta))
 
                 // invio dato su delivery-push, che ci sia stato arricchimento o meno)
-                .flatMap(enrichedRequest -> super.handleMessage(entity, enrichedRequest))
-
-                // clean all related metas and demats (che sia stato trovato il meta o meno)
-                .flatMap(enrichedEvent -> metaDematCleaner.clean(paperRequest.getRequestId()));
+                .flatMap(enrichedRequest -> super.handleMessage(entity, enrichedRequest).then(metaDematCleaner.clean(paperRequest.getRequestId())));
     }
 
     private PaperProgressStatusEventDto enrichEvent(PaperProgressStatusEventDto paperRequest, PnEventMeta pnEventMeta) {

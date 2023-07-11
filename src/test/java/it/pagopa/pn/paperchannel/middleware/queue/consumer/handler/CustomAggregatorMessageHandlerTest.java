@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
+import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
@@ -128,17 +129,13 @@ class CustomAggregatorMessageHandlerTest {
         when(mockMetaDao.deleteEventMeta(any(String.class), any(String.class))).thenReturn(Mono.empty());
 
         // assertDoNotThrow with call
-        assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
+        assertThrows(PnGenericException.class, () -> handler.handleMessage(entity, paperRequest).block());
 
         // check invocations: verify
         // getDeliveryEventMeta call
-        verify(mockMetaDao, timeout(2000).times(2)).getDeliveryEventMeta(any(String.class), any(String.class));
+        verify(mockMetaDao, timeout(2000).times(1)).getDeliveryEventMeta(any(String.class), any(String.class));
         // DeliveryPush send via SQS verification
-        verify(mockSqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
-
-        // Controllo che non sia stato fatto l'arricchimento del send event
-        assertNull(caturedSendEvent.getValue().getDeliveryFailureCause());
-        assertNull(caturedSendEvent.getValue().getDiscoveredAddress());
+        verify(mockSqsSender, timeout(2000).times(0)).pushSendEvent(any());
     }
 
     @Test
