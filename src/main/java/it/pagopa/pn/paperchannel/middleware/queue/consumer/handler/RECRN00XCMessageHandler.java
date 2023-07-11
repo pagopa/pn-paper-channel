@@ -1,6 +1,7 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
+import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.DiscoveredAddressDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
@@ -19,6 +20,7 @@ import reactor.core.publisher.Mono;
 import java.time.Duration;
 import java.time.Instant;
 
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.WRONG_EVENT_ORDER;
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
 
 @Slf4j
@@ -47,16 +49,12 @@ public class RECRN00XCMessageHandler extends SendToDeliveryPushHandler {
 
         return this.eventMetaDAO.getDeliveryEventMeta(metaRequestId, buildMetaStatusCode(RECRN011_STATUS_CODE))
                 .switchIfEmpty(Mono.defer(() -> {
-                    //FIXME - throw exception
-                    log.warn("[{}] Missing EventMeta RECRN011 for {}", paperRequest.getRequestId(), paperRequest);
-                    return Mono.empty();
+                    throw new PnGenericException(WRONG_EVENT_ORDER, "[{" + paperRequest.getRequestId() + "}] Missing EventMeta RECRN011 for {" + paperRequest + "}");
                 }))
                 .zipWhen(n011 ->
                         this.eventMetaDAO.getDeliveryEventMeta(metaRequestId, buildMetaStatusCode(status))
                                 .switchIfEmpty(Mono.defer(() -> {
-                                    //FIXME - throw exceptio
-                                    log.warn("[{}] Missing EventMeta RECRN011 for {}", paperRequest.getRequestId(), paperRequest);
-                                    return Mono.empty();
+                                    throw new PnGenericException(WRONG_EVENT_ORDER, "[{" + paperRequest.getRequestId() + "}] Missing EventMeta RECRN011 for {" + paperRequest + "}");
                                 }))
                 )
                 .flatMap(recrn011AndRecrn00X -> {

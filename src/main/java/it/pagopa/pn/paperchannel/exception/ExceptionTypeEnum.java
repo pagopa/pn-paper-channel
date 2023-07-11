@@ -55,7 +55,8 @@ public enum ExceptionTypeEnum{
     DISCARD_NOTIFICATION("DISCARD_NOTIFICATION", "Discard notification"),
     INVALID_VALUE_FROM_PROPS("INVALID_VALUE_FROM_PROPS", "Il valore della proprietà è diverso da quello atteso"),
     INVALID_SAFE_STORAGE("INVALID_SAFE_STORAGE", "Il Safe Storage selezionato è inesistente."),
-    WRONG_EVENT_ORDER("WRONG_EVENT_ORDER", "Uno o più eventi precedenti non sono stati trovati");
+    WRONG_EVENT_ORDER("WRONG_EVENT_ORDER", "Uno o più eventi precedenti non sono stati trovati"),
+    WRONG_RECAG012_DATA("WRONG_RECAG012_DATA", "E' stato già trovato l'evento RECAG012 in precedenza, con dati differenti");
 
     private final String title;
     private final String message;
