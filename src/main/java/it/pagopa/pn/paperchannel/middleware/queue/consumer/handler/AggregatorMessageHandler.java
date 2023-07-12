@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
+import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.DiscoveredAddressDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
@@ -12,6 +13,7 @@ import it.pagopa.pn.paperchannel.service.SqsSender;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.WRONG_EVENT_ORDER;
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
 
 // Alla ricezione di questi tipi di eventi, che sono finali per lo specifico prodotto, paper-channel dovrà:
@@ -43,16 +45,12 @@ public class AggregatorMessageHandler extends SendToDeliveryPushHandler {
         return eventMetaDAO.getDeliveryEventMeta(buildMetaRequestId(paperRequest.getRequestId()),
                         preClosingMetaStatus)
                 .switchIfEmpty(Mono.defer(() -> {
-                            log.warn("[{}] Missing EventMeta for {}", paperRequest.getRequestId(), paperRequest);
-                            return Mono.just(new PnEventMeta());
+                    throw new PnGenericException(WRONG_EVENT_ORDER, "[{" + paperRequest.getRequestId() + "}] Missing EventMeta for {" + paperRequest + "}");
                 }))
                 .map(relatedMeta -> enrichEvent(paperRequest, relatedMeta))
 
-                // invio dato su delivery-push, che ci sia stato arricchimento o meno)
-                .flatMap(enrichedRequest -> super.handleMessage(entity, enrichedRequest))
-
-                // clean all related metas and demats (che sia stato trovato il meta o meno)
-                .then(metaDematCleaner.clean(paperRequest.getRequestId()));
+                // non invio a delivery push e non cancello i meta
+                .flatMap(enrichedRequest -> super.handleMessage(entity, enrichedRequest).then(metaDematCleaner.clean(paperRequest.getRequestId())));
     }
 
     private PaperProgressStatusEventDto enrichEvent(PaperProgressStatusEventDto paperRequest, PnEventMeta pnEventMeta) {

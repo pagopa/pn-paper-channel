@@ -1,6 +1,7 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
 
+import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.mapper.RequestDeliveryMapper;
@@ -13,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import reactor.core.publisher.Mono;
 
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.WRONG_EVENT_ORDER;
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.buildMetaRequestId;
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.buildMetaStatusCode;
 
@@ -32,12 +34,10 @@ public class CustomAggregatorMessageHandler extends AggregatorMessageHandler {
 
         return eventMetaDAO.getDeliveryEventMeta(buildMetaRequestId(paperRequest.getRequestId()), metaStatus)
                 .switchIfEmpty(Mono.defer(() -> {
-                    log.warn("[{}] Missing EventMeta for {}", paperRequest.getRequestId(), paperRequest);
-                    return Mono.just(new PnEventMeta());
+                    throw new PnGenericException(WRONG_EVENT_ORDER, "[{" + paperRequest.getRequestId() + "}] Missing EventMeta for {" + paperRequest + "}");
                 }))
                 .flatMap(relatedMeta -> settingStatus(entity, relatedMeta.getDeliveryFailureCause(), paperRequest))
                 .flatMap(newEntity -> super.handleMessage(newEntity, paperRequest));
-
     }
 
 

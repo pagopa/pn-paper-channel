@@ -2,6 +2,7 @@ package it.pagopa.pn.paperchannel.service;
 
 import it.pagopa.pn.paperchannel.config.BaseTest;
 import it.pagopa.pn.paperchannel.exception.PnDematNotValidException;
+import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.AttachmentDetailsDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.SingleStatusUpdateDto;
@@ -264,14 +265,14 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
         assertNotNull(eventDematFromDB);
 
         // verifico che il flusso è stato completato con successo
-        assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());
+        assertThrows(PnGenericException.class, () -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());
 
         // verifico che è stato inviato un evento a delivery-push
-        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(any(SendEvent.class));
+        verify(sqsSender, timeout(2000).times(0)).pushSendEvent(any(SendEvent.class));
 
-        // verifica cancellazione evento demat
+        // verifica non cancellazione evento demat
         eventDematFromDB = eventDematDAO.getDeliveryEventDemat(eventDemat.getDematRequestId(), eventDemat.getDocumentTypeStatusCode()).block();
-        assertNull(eventDematFromDB);
+        assertNotNull(eventDematFromDB);
     }
 
     @DirtiesContext
@@ -402,7 +403,7 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
         assertNotNull(eventDematFromDB);
 
         // verifico che il flusso è stato completato con successo
-        assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());
+        assertThrows(PnGenericException.class, () -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());
 
         // verifico che non è stato inviato un evento a delivery-push
         verify(sqsSender, timeout(2000).times(0)).pushSendEvent(any(SendEvent.class));
