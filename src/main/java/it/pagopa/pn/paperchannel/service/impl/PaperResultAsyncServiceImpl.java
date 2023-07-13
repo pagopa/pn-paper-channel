@@ -129,6 +129,11 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
             return Mono.error(new PnGenericException(DATA_NULL_OR_INVALID, DATA_NULL_OR_INVALID.getMessage()));
         }
 
+        if(singleStatusUpdateDto.getAnalogMail().getStatusCode().equals("P000") ){
+            log.debug("Received P000 from EC for {}", singleStatusUpdateDto.getAnalogMail().getRequestId());
+            return Mono.empty();
+        }
+
         MessageHandler handler = handlersFactory.getHandler(singleStatusUpdateDto.getAnalogMail().getStatusCode());
 
         String requestId = getPrefixRequestId(singleStatusUpdateDto.getAnalogMail().getRequestId());
