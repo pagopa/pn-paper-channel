@@ -24,7 +24,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.annotation.DirtiesContext;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
@@ -63,7 +62,6 @@ class PaperPNRN012IT extends BaseTest {
 
 
     @Test
-    @DirtiesContext
     void Test_AR_StartProcessing__RECRN011(){
         /* BODY OF EXTERNAL CHANNEL QUEUE */
         SingleStatusUpdateDto extChannelMessage = new SingleStatusUpdateDto();
@@ -101,7 +99,6 @@ class PaperPNRN012IT extends BaseTest {
     }
 
     @Test
-    @DirtiesContext
     void Test_AR_Save_MetaData__RECRN003A() {
         String RECRN003A_STATUS_CODE = "RECRN003A";
         /* BODY OF EXTERNAL CHANNEL QUEUE */
@@ -133,7 +130,6 @@ class PaperPNRN012IT extends BaseTest {
     }
 
     @Test
-    @DirtiesContext
     void Test_AR_SaveDemat__RECRN004B(){
         String RECRN004B = "RECRN004B";
         String RECRN004A = "RECRN004A";
@@ -177,7 +173,6 @@ class PaperPNRN012IT extends BaseTest {
 
 
     @Test
-    @DirtiesContext
     void Test_AR_SendPNRN012ToDeliveryPush__RECRN00XC_GreaterEquals10(){
         String RECRN004C = "RECRN004C";
 
@@ -234,7 +229,6 @@ class PaperPNRN012IT extends BaseTest {
     }
 
     @Test
-    @DirtiesContext
     void Test_AR_SendPNRN012ToDeliveryPush__RECRN00XC_Minor10(){
         String RECRN004C = "RECRN004C";
 
