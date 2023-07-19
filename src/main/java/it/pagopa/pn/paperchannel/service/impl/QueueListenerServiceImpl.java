@@ -23,7 +23,6 @@ import it.pagopa.pn.paperchannel.service.SqsSender;
 import lombok.CustomLog;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.MDC;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -35,21 +34,21 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 public class QueueListenerServiceImpl extends BaseService implements QueueListenerService {
     private static final String NATIONAL_REGISTRY_DESCRIPTION = "Retrieve the address.";
 
-    @Autowired
-    private PaperResultAsyncService paperResultAsyncService;
-    @Autowired
-    private PaperAsyncService paperAsyncService;
-    @Autowired
-    private AddressDAO addressDAO;
-    @Autowired
-    private PaperRequestErrorDAO paperRequestErrorDAO;
+    private final PaperResultAsyncService paperResultAsyncService;
+    private final PaperAsyncService paperAsyncService;
+    private final AddressDAO addressDAO;
+    private final PaperRequestErrorDAO paperRequestErrorDAO;
 
-    public QueueListenerServiceImpl(PnAuditLogBuilder auditLogBuilder,
-                                    RequestDeliveryDAO requestDeliveryDAO,
-                                    CostDAO costDAO,
-                                    NationalRegistryClient nationalRegistryClient,
-                                    SqsSender sqsSender) {
+    public QueueListenerServiceImpl(PnAuditLogBuilder auditLogBuilder, RequestDeliveryDAO requestDeliveryDAO,
+                                    CostDAO costDAO, NationalRegistryClient nationalRegistryClient,
+                                    SqsSender sqsSender, PaperResultAsyncService paperResultAsyncService,
+                                    PaperAsyncService paperAsyncService, AddressDAO addressDAO,
+                                    PaperRequestErrorDAO paperRequestErrorDAO) {
         super(auditLogBuilder, requestDeliveryDAO, costDAO, nationalRegistryClient, sqsSender);
+        this.paperResultAsyncService = paperResultAsyncService;
+        this.paperAsyncService = paperAsyncService;
+        this.addressDAO = addressDAO;
+        this.paperRequestErrorDAO = paperRequestErrorDAO;
     }
 
     @Override

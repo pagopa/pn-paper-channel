@@ -1,13 +1,10 @@
 package it.pagopa.pn.paperchannel.service;
 
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
-import it.pagopa.pn.commons.log.PnAuditLogEvent;
-import it.pagopa.pn.commons.log.PnAuditLogEventType;
-import it.pagopa.pn.paperchannel.config.BaseTest;
+import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.exception.PnInputValidatorException;
 import it.pagopa.pn.paperchannel.exception.PnPaperEventException;
-import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnnationalregistries.v1.dto.AddressOKDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
@@ -22,53 +19,52 @@ import it.pagopa.pn.paperchannel.service.impl.PaperMessagesServiceImpl;
 import it.pagopa.pn.paperchannel.utils.Utility;
 import it.pagopa.pn.paperchannel.validator.PrepareRequestValidator;
 import it.pagopa.pn.paperchannel.validator.SendRequestValidator;
-import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.*;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.HttpStatus;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-@Slf4j
-class PaperMessagesServiceTest extends BaseTest {
+@ExtendWith(MockitoExtension.class)
+class PaperMessagesServiceTest {
 
-    @Autowired
+    @InjectMocks
     private PaperMessagesServiceImpl paperMessagesService;
 
-    @MockBean
+    @Mock
     private RequestDeliveryDAO requestDeliveryDAO;
 
-    @MockBean
+    @Mock
     private AddressDAO addressDAO;
 
-    @MockBean
+    @Mock
     private PaperTenderService paperTenderService;
 
-    @MockBean
+    @Mock
     private NationalRegistryClient nationalRegistryClient;
 
-    @MockBean
+    @Mock
     private ExternalChannelClient externalChannelClient;
 
-    @MockBean
+    @Mock
     private SqsSender sqsSender;
 
-    @SpyBean
+    @Mock
+    private PnPaperChannelConfig pnPaperChannelConfig;
+
+    @Spy
     PnAuditLogBuilder auditLogBuilder;
 
 
@@ -300,12 +296,6 @@ class PaperMessagesServiceTest extends BaseTest {
         Mockito.when(requestDeliveryDAO.createWithAddress(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(deliveryRequest));
 
-        Mockito.when(this.requestDeliveryDAO.updateData(Mockito.any()))
-                .thenReturn(Mono.just(deliveryRequest));
-
-        Mockito.when(this.nationalRegistryClient.finderAddress(Mockito.any(), Mockito.any(), Mockito.any()))
-                        .thenReturn(Mono.just(new AddressOKDto()));
-
         StepVerifier.create(this.paperMessagesService.preparePaperSync("TST-IOR.2332", request))
                 .expectErrorMatches((ex) -> {
                     assertTrue(ex instanceof PnPaperEventException);
@@ -514,6 +504,8 @@ class PaperMessagesServiceTest extends BaseTest {
         Mockito.when(paperTenderService.getCostFrom(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(getNationalCost()));
 
+        Mockito.when(pnPaperChannelConfig.getChargeCalculationMode()).thenReturn("AAR");
+
         StepVerifier.create(paperMessagesService.executionPaper("TST-IOR.2332", sendRequest))
                 .expectNextMatches((response) -> {
                     // price 1 and additionalPrice 2 getNationalCost()
@@ -553,6 +545,8 @@ class PaperMessagesServiceTest extends BaseTest {
         //MOCK RETRIEVE NATIONAL COST
         Mockito.when(paperTenderService.getCostFrom(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(getNationalCost()));
+
+        Mockito.when(pnPaperChannelConfig.getChargeCalculationMode()).thenReturn("AAR");
 
         StepVerifier.create(paperMessagesService.executionPaper("TST-IOR.2332", sendRequest))
                 .expectErrorMatches((ex) -> {
@@ -606,6 +600,8 @@ class PaperMessagesServiceTest extends BaseTest {
         Mockito.when(paperTenderService.getCostFrom(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(getInternationalCost()));
 
+        Mockito.when(pnPaperChannelConfig.getChargeCalculationMode()).thenReturn("AAR");
+
         StepVerifier.create(paperMessagesService.executionPaper("TST-IOR.2332", sendRequest))
                 .expectNextMatches((response) -> {
                     // price 1 and additionalPrice 2 getNationalCost()
@@ -633,6 +629,8 @@ class PaperMessagesServiceTest extends BaseTest {
         Mockito.when(paperTenderService.getCostFrom(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(getNationalCost()));
 
+        Mockito.when(pnPaperChannelConfig.getChargeCalculationMode()).thenReturn("AAR");
+
         StepVerifier.create(paperMessagesService.executionPaper("TST-IOR.2332", getRequest("TST-IOR.2332")))
                 .expectNextMatches((response) -> {
                     // price 1 and additionalPrice 2 getNationalCost()
@@ -656,17 +654,8 @@ class PaperMessagesServiceTest extends BaseTest {
 
     @Test
     void paperAsyncEntityAndAddressSwitchIfEmptyTest() {
-        Mockito.when(auditLogBuilder.build())
-                .thenReturn(new PnAuditLogEvent(PnAuditLogEventType.AUD_FD_RESOLVE_LOGIC, new HashMap<>(), "", new Object()));
-        Mockito.when(auditLogBuilder.before(Mockito.any(), Mockito.any()))
-                .thenReturn(auditLogBuilder);
-        Mockito.when(auditLogBuilder.iun(Mockito.anyString()))
-                .thenReturn(auditLogBuilder);
 
-        PnAddress address = getPnAddress(deliveryRequestTakingCharge.getRequestId());
         Mockito.when(requestDeliveryDAO.getByRequestId(deliveryRequestTakingCharge.getRequestId())).thenReturn(Mono.empty());
-        Mockito.when(addressDAO.findByRequestId(deliveryRequestTakingCharge.getRequestId()))
-                .thenReturn(Mono.just(address));
         Mockito.when(requestDeliveryDAO.createWithAddress(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(deliveryRequestTakingCharge));
         Mockito.doNothing().when(sqsSender).pushToInternalQueue(Mockito.any());

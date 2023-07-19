@@ -1,6 +1,5 @@
 package it.pagopa.pn.paperchannel.service.tenders;
 
-import it.pagopa.pn.paperchannel.config.BaseTest;
 import it.pagopa.pn.paperchannel.config.InstanceCreator;
 import it.pagopa.pn.paperchannel.dao.ExcelDAO;
 import it.pagopa.pn.paperchannel.dao.model.DeliveriesData;
@@ -23,10 +22,12 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -39,19 +40,20 @@ import java.util.Map;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-class FileDownloadAndUploadFromServiceTest extends BaseTest {
+@ExtendWith(MockitoExtension.class)
+class FileDownloadAndUploadFromServiceTest {
 
-    @Autowired
+    @InjectMocks
     private PaperChannelServiceImpl paperChannelService;
-    @MockBean
+    @Mock
     private CostDAO costDAO;
-    @MockBean
+    @Mock
     private DeliveryDriverDAO deliveryDriverDAO;
-    @MockBean
+    @Mock
     private ExcelDAO<DeliveriesData> excelDAO;
-    @MockBean
+    @Mock
     private FileDownloadDAO fileDownloadDAO;
-    @MockBean
+    @Mock
     private S3Bucket s3Bucket;
     private MockedStatic<DeliveryDriverMapper> mockedStaticDelivery;
 
@@ -65,11 +67,11 @@ class FileDownloadAndUploadFromServiceTest extends BaseTest {
 
         fileUploading = InstanceCreator.getPnDeliveryFile(InfoDownloadDTO.StatusEnum.UPLOADING.toString());
 
-        Mockito.when(fileDownloadDAO.create(Mockito.any()))
-                .thenReturn(Mono.just(fileUploading));
+//        Mockito.when(fileDownloadDAO.create(Mockito.any()))
+//                .thenReturn(Mono.just(fileUploading));
 
-        Mockito.when(fileDownloadDAO.getUuid(Mockito.any()))
-                .thenReturn(Mono.just(fileUploading));
+//        Mockito.when(fileDownloadDAO.getUuid(Mockito.any()))
+//                .thenReturn(Mono.just(fileUploading));
 
     }
 
@@ -85,6 +87,7 @@ class FileDownloadAndUploadFromServiceTest extends BaseTest {
     void getPresignedUrlOK(){
         PresignedUrlResponseDto mocked = getPresignedDTO();
         Mockito.when(s3Bucket.presignedUrl()).thenReturn(Mono.just(mocked));
+        Mockito.when(fileDownloadDAO.create(Mockito.any())).thenReturn(Mono.just(fileUploading));
 
         PresignedUrlResponseDto response = this.paperChannelService.getPresignedUrl().block();
         assertNotNull(response);
@@ -95,6 +98,7 @@ class FileDownloadAndUploadFromServiceTest extends BaseTest {
     @Test
     @DisplayName("whenDownloadExcelFirstRequestAndFileNotReady")
     void downloadExcelTenderFirstRequestAndFileNotReady(){
+        Mockito.when(fileDownloadDAO.create(Mockito.any())).thenReturn(Mono.just(fileUploading));
         InfoDownloadDTO response = this.paperChannelService.downloadTenderFile("1234", null).block();
         assertNotNull(response);
         assertEquals(fileUploading.getStatus(), response.getStatus().getValue());
@@ -107,6 +111,7 @@ class FileDownloadAndUploadFromServiceTest extends BaseTest {
     @DisplayName("whenDownloadExcelSecondRequestAndFileNotReady")
     void downloadExcelTenderSecondRequestAndFileNotReady(){
         Mockito.when(s3Bucket.getObjectData(Mockito.any())).thenReturn(null);
+        Mockito.when(fileDownloadDAO.getUuid(Mockito.any())).thenReturn(Mono.just(fileUploading));
         InfoDownloadDTO response = this.paperChannelService.downloadTenderFile("1234", "UUID_FILE").block();
         assertNotNull(response);
         assertEquals(fileUploading.getStatus(), response.getStatus().getValue());
@@ -230,6 +235,9 @@ class FileDownloadAndUploadFromServiceTest extends BaseTest {
         Mockito.when(s3Bucket.getFileInputStream(Mockito.any()))
                 .thenReturn(null);
 
+        Mockito.when(fileDownloadDAO.getUuid(Mockito.any()))
+                .thenReturn(Mono.just(fileUploading));
+
         NotifyResponseDto dto = this.paperChannelService.notifyUpload("1234", notifyUploadRequestDto).block();
         assertNotNull(dto);
         assertNotNull(dto.getRetryAfter());
@@ -241,16 +249,10 @@ class FileDownloadAndUploadFromServiceTest extends BaseTest {
     void notifyUploadSyncWithFileStatusInUploadingAndS3haveFile(){
         PaperChannelServiceImpl spyPaperChannelService = Mockito.spy(this.paperChannelService);
 
-        Mockito.when(s3Bucket.getFileInputStream(Mockito.any()))
-                .thenReturn(getInputStream());
-
-        Mockito.when(spyPaperChannelService.notifyUploadAsync(Mockito.any(), Mockito.any(), Mockito.any()))
-                .thenReturn(Mono.empty());
+        Mockito.when(fileDownloadDAO.getUuid(Mockito.any()))
+                .thenReturn(Mono.just(fileUploading));
 
         fileUploading.setStatus(FileStatusCodeEnum.IN_PROGRESS.getCode());
-
-        Mockito.when(this.fileDownloadDAO.create(Mockito.any()))
-                .thenReturn(Mono.just(fileUploading));
 
         NotifyResponseDto dto = spyPaperChannelService.notifyUpload("1234", notifyUploadRequestDto).block();
         assertNotNull(dto);
