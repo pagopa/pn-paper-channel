@@ -39,6 +39,7 @@ public abstract class BaseTest {
         @MockBean
         private InternalQueueMomProducer internalQueueMomProducer;
 
+
         @BeforeEach
         public void init(){
             log.info(this.getClass().getSimpleName());
