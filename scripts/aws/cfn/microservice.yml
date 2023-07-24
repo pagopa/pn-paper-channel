@@ -639,17 +639,17 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Properties:
       AlarmName:  !Sub '${ProjectName}-paper-request-error-alarm'
-      AlarmDescription: "CloudWatch alarm for when PNPaperErrorRequest metric is 1"
+      AlarmDescription: "CloudWatch alarm for when PNPaperErrorRequest metric is 1 for 3 of 3 periods of 5 minutes"
       AlarmActions:
         - !Ref AlarmSNSTopicArn
       OKActions:
         - !Ref AlarmSNSTopicArn
-      DatapointsToAlarm: 1
+      DatapointsToAlarm: 3
       ComparisonOperator: GreaterThanOrEqualToThreshold
-      EvaluationPeriods: 1
+      EvaluationPeriods: 3
       Threshold: 1
       TreatMissingData: notBreaching
       Namespace: "pn-paper-channel"
-      Period: 60
+      Period: 300
       MetricName: "PNPaperErrorRequest"
       Statistic: "Maximum"
