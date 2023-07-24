@@ -597,6 +597,7 @@ Resources:
           - - !GetAtt PaperChannelMicroservice.Outputs.FatalLogsMetricAlarmArn
             - !GetAtt PaperChannelGatewayDeliveryDriver.Outputs.RestApiErrorAlarmArn
             - !GetAtt PaperChannelGatewayDeliveryDriver.Outputs.RestApiLatencyAlarmArn
+            - !GetAtt PaperRequestErrorAlarm.Arn
         QueueArns: !Join
           - ','
           - - !Ref ExternalChannelsOutputsQueueARN
@@ -632,3 +633,22 @@ Resources:
         WAFName: !Sub '${ProjectName}-paper-channel-bo'
         IntendedUsage: BACKOFFICE
         APIGatewayARNs: !GetAtt PaperChannelGatewayDeliveryDriver.Outputs.APIGatewayARN
+
+  PaperRequestErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName:  !Sub '${ProjectName}-paper-request-error-alarm'
+      AlarmDescription: "CloudWatch alarm for when PNPaperErrorRequest metric is 1"
+      AlarmActions:
+        - !Ref AlarmSNSTopicArn
+      OKActions:
+        - !Ref AlarmSNSTopicArn
+      DatapointsToAlarm: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods: 1
+      Threshold: 1
+      TreatMissingData: notBreaching
+      Namespace: "pn-paper-channel"
+      Period: 60
+      MetricName: "PNPaperErrorRequest"
+      Statistic: "Maximum"
