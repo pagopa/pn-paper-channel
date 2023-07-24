@@ -210,7 +210,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                     AttachmentInfo info = AttachmentMapper.fromSafeStorage(fileResponse);
                     if (info.getUrl() == null)
                         return Flux.error(new PnGenericException(INVALID_SAFE_STORAGE, INVALID_SAFE_STORAGE.getMessage()));
-                    return HttpConnector.downloadFile(info.getUrl())
+                    return HttpConnector.downloadFile(info.getUrl(), fileResponse.getContentLength())
                             .map(pdDocument -> {
                                 try {
                                     if (pdDocument.getDocumentInformation() != null && pdDocument.getDocumentInformation().getCreationDate() != null) {

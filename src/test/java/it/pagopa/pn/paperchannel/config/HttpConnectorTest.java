@@ -1,16 +1,10 @@
 package it.pagopa.pn.paperchannel.config;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.awspring.cloud.autoconfigure.messaging.SqsAutoConfiguration;
-import it.pagopa.pn.paperchannel.LocalStackTestConfig;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.DeliveryPushMomProducer;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.InternalQueueMomProducer;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mockserver.client.MockServerClient;
@@ -20,15 +14,14 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.cloud.function.context.config.ContextFunctionCatalogAutoConfiguration;
-import org.springframework.context.annotation.Import;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.context.ActiveProfiles;
-import reactor.core.publisher.Mono;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.file.Files;
+import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
@@ -61,11 +54,23 @@ class HttpConnectorTest {
 
 
     @Test
-    void getFile() throws IOException {
+    void getFileWithInMemoryProcess() throws IOException {
+        long sizeFile = 100 * 1024; //mock file size for in memory usage
+        testGetFile(sizeFile);
+    }
+
+    @Test
+    void getFileWithInTmpFileProcess() throws IOException {
+        long sizeFile = 2000 * 1024; //mock file size for tmp file usage
+        testGetFile(sizeFile);
+    }
+
+    void testGetFile(long sizeFile) throws IOException {
         //Given
         String url = "/safe-storage/v1/files/a-file";
         File pdfFile = new ClassPathResource("mock-pdf/pdf-500KB.pdf").getFile();
-        byte[] bytes = Files.readAllBytes(pdfFile.toPath());
+        Path path = pdfFile.toPath();
+        byte[] bytes = Files.readAllBytes(path);
 
         new MockServerClient("localhost", 9998)
                 .when(request()
@@ -78,7 +83,7 @@ class HttpConnectorTest {
                         .withStatusCode(200)
                 );
 
-        PDDocument actual = HttpConnector.downloadFile("http://localhost:9998" + url).block();
+        PDDocument actual = HttpConnector.downloadFile("http://localhost:9998" + url, BigDecimal.valueOf(sizeFile)).block();
 
         assertThat(actual).isNotNull();
         assertThat(actual.getNumberOfPages()).isNotZero();

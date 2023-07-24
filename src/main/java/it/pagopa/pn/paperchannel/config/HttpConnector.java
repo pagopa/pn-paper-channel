@@ -1,8 +1,7 @@
 package it.pagopa.pn.paperchannel.config;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.pdfbox.io.IOUtils;
-import org.apache.pdfbox.io.RandomAccessBuffer;
+import org.apache.pdfbox.io.*;
 import org.apache.pdfbox.pdfparser.PDFParser;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.core.io.buffer.DataBuffer;
@@ -13,15 +12,19 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 
 @Slf4j
 public class HttpConnector {
+
+    public static final long MAX_MAIN_MEMORY_BYTES = 1024L * 1024L;
 
     private HttpConnector(){
         throw new IllegalCallerException("the constructor must not called");
     }
 
-    public static Mono<PDDocument> downloadFile(String url) {
+    public static Mono<PDDocument> downloadFile(String url, BigDecimal contentLength) {
+        boolean tmpFile = contentLength != null && contentLength.longValue() > MAX_MAIN_MEMORY_BYTES;
         // DataBuffer and DataBufferUtils to stream our download in chunks so that the whole file doesn't get loaded
         // into memory
         Flux<DataBuffer> dataBufferFlux = WebClient.create()
@@ -36,26 +39,41 @@ public class HttpConnector {
                     byte[] bytes = new byte[dataBuffer.readableByteCount()];
                     dataBuffer.read(bytes);
                     DataBufferUtils.release(dataBuffer);
-                    return bytes;
+                    return new RandomAccessBuffer(bytes);
                 })
-                .map(HttpConnector::buildPDDocument);
+                .map(randomAccess -> HttpConnector.buildPDDocument(randomAccess, tmpFile));
     }
 
 
-    private static PDDocument buildPDDocument(byte[] pdfByteArray) {
+    private static PDDocument buildPDDocument(RandomAccessRead randomAccessRead, boolean tmpFile) {
         PDDocument pdDocument = null;
         try {
-            PDFParser parser = new PDFParser(new RandomAccessBuffer(pdfByteArray));
+            ScratchFile scratchFile = buildScratchFile(tmpFile);
+            PDFParser parser = new PDFParser(randomAccessRead, scratchFile);
             parser.parse();
             pdDocument = parser.getPDDocument();
             return pdDocument;
         }
         catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Error creating PDDocument file with ScratchFile", e);
         }
         finally {
             IOUtils.closeQuietly(pdDocument);
         }
+    }
 
+    private static ScratchFile buildScratchFile(boolean tmpFile) {
+        if(tmpFile) {
+            log.debug("File size exceeds the limit in memory allowed, I use a temporary file");
+            try {
+                return new ScratchFile(MemoryUsageSetting.setupMixed(MAX_MAIN_MEMORY_BYTES));
+            }
+            catch (IOException e) {
+                throw new RuntimeException("Error creating temporary file with ScratchFile", e);
+            }
+        }
+        else {
+            return ScratchFile.getMainMemoryOnlyInstance();
+        }
     }
 }
