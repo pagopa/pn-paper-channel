@@ -21,9 +21,8 @@ import org.springframework.boot.test.mock.mockito.SpyBean;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Date;
 
-class SqsQueueSenderTest extends BaseTest {
+class SqsQueueSenderTestIT extends BaseTest {
 
     @SpyBean
     private DeliveryPushMomProducer deliveryPushMomProducer;

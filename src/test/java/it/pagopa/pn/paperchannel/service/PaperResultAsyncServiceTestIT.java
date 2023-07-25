@@ -22,7 +22,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.annotation.DirtiesContext;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -30,6 +29,7 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.UUID;
 
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -55,17 +55,17 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
     @MockBean
     private RequestDeliveryDAO requestDeliveryDAO;
 
-    @DirtiesContext
+
     @Test
     void testMetadataEvent() {
-        final String metadataRequestExpected = "META##PREPARE_ANALOG_DOMICILE.IUN_MUMR-VQMP-LDNZ-202303-H-1.RECINDEX_0.SENTATTEMPTMADE_0";
+        final String metadataRequestExpected = "META##PREPARE_ANALOG_DOMICILE.IUN_MUMR-VQMP-LDNZ-202303-H-2.RECINDEX_0.SENTATTEMPTMADE_0";
         final String metadataStatusCodeExpected = "META##RECRS002A";
         PnEventMeta entity = eventMetaDAO.getDeliveryEventMeta(metadataRequestExpected, metadataStatusCodeExpected).block();
         assertThat(entity).isNull();
         PnDeliveryRequest pnDeliveryRequest = createPnDeliveryRequest();
 
         PaperProgressStatusEventDto analogMail = new PaperProgressStatusEventDto();
-        analogMail.requestId("PREPARE_ANALOG_DOMICILE.IUN_MUMR-VQMP-LDNZ-202303-H-1.RECINDEX_0.SENTATTEMPTMADE_0");
+        analogMail.requestId("PREPARE_ANALOG_DOMICILE.IUN_MUMR-VQMP-LDNZ-202303-H-2.RECINDEX_0.SENTATTEMPTMADE_0");
         analogMail.setClientRequestTimeStamp(OffsetDateTime.now());
         analogMail.setStatusDateTime(OffsetDateTime.now());
         analogMail.setStatusCode("RECRS002A");
@@ -93,10 +93,9 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
 
     }
 
-    @DirtiesContext
     @Test
     void testDematEvent() {
-        final String metadataRequestExpected = "DEMAT##PREPARE_ANALOG_DOMICILE.IUN_MUMR-VQMP-LDNZ-202303-H-1.RECINDEX_0.SENTATTEMPTMADE_0";
+        final String metadataRequestExpected = "DEMAT##PREPARE_ANALOG_DOMICILE.IUN_MUMR-VQMP-LDNZ-202303-H-3.RECINDEX_0.SENTATTEMPTMADE_0";
         final String metadataStatusCodeCADExpected = "CAD##RECRS002B";
         final String metadataStatusCode23LExpected = "23L##RECRS002B";
         PnEventDemat entityCAD = eventDematDAO.getDeliveryEventDemat(metadataRequestExpected, metadataStatusCodeCADExpected).block();
@@ -106,7 +105,7 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
         PnDeliveryRequest pnDeliveryRequest = createPnDeliveryRequest();
 
         PaperProgressStatusEventDto analogMail = new PaperProgressStatusEventDto();
-        analogMail.requestId("PREPARE_ANALOG_DOMICILE.IUN_MUMR-VQMP-LDNZ-202303-H-1.RECINDEX_0.SENTATTEMPTMADE_0");
+        analogMail.requestId("PREPARE_ANALOG_DOMICILE.IUN_MUMR-VQMP-LDNZ-202303-H-3.RECINDEX_0.SENTATTEMPTMADE_0");
         analogMail.setClientRequestTimeStamp(OffsetDateTime.now());
         analogMail.setStatusDateTime(OffsetDateTime.now());
         analogMail.setStatusCode("RECRS002B");
@@ -151,10 +150,9 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
 
     }
 
-    @DirtiesContext
     @Test
     void testDematEventWithoutAttachments() {
-        final String metadataRequestExpected = "DEMAT##PREPARE_ANALOG_DOMICILE.IUN_MUMR-VQMP-LDNZ-202303-H-1.RECINDEX_0.SENTATTEMPTMADE_0";
+        final String metadataRequestExpected = "DEMAT##PREPARE_ANALOG_DOMICILE.IUN_MUMR-VQMP-LDNZ-202303-H-4.RECINDEX_0.SENTATTEMPTMADE_0";
         final String metadataStatusCodeCADExpected = "CAD##RECRS002B";
         final String metadataStatusCode23LExpected = "23L##RECRS002B";
         PnEventDemat entityCAD = eventDematDAO.getDeliveryEventDemat(metadataRequestExpected, metadataStatusCodeCADExpected).block();
@@ -164,7 +162,7 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
         PnDeliveryRequest pnDeliveryRequest = createPnDeliveryRequest();
 
         PaperProgressStatusEventDto analogMail = new PaperProgressStatusEventDto();
-        analogMail.requestId("PREPARE_ANALOG_DOMICILE.IUN_MUMR-VQMP-LDNZ-202303-H-1.RECINDEX_0.SENTATTEMPTMADE_0");
+        analogMail.requestId("PREPARE_ANALOG_DOMICILE.IUN_MUMR-VQMP-LDNZ-202303-H-4.RECINDEX_0.SENTATTEMPTMADE_0");
         analogMail.setClientRequestTimeStamp(OffsetDateTime.now());
         analogMail.setStatusDateTime(OffsetDateTime.now());
         analogMail.setStatusCode("RECRS002B");
@@ -190,7 +188,6 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
 
     }
 
-    @DirtiesContext
     @Test
     void testEsitoFinalEvent() {
         PnDeliveryRequest pnDeliveryRequest = createPnDeliveryRequest();
@@ -238,7 +235,6 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
         assertNull(eventDematFromDB);
     }
 
-    @DirtiesContext
     @Test
     void testEsitoFinalEventSendWithoutFindingPreviousMetasDeletingDemats() {
         PnDeliveryRequest pnDeliveryRequest = createPnDeliveryRequest();
@@ -275,7 +271,6 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
         assertNotNull(eventDematFromDB);
     }
 
-    @DirtiesContext
     @Test
     void testEsitoFinalEvent_RECRS001C_RECRS003C() {
         PnDeliveryRequest pnDeliveryRequest = createPnDeliveryRequest();
@@ -302,7 +297,6 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
         verify(sqsSender, timeout(2000).times(1)).pushSendEvent(any(SendEvent.class));
     }
 
-    @DirtiesContext
     @Test
     void testEsitoFinal_890_RECAG008C() {
         PnDeliveryRequest pnDeliveryRequest = createPnDeliveryRequest();
@@ -366,7 +360,6 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
         assertEquals(StatusCodeEnum.PROGRESS, caturedSendEvent.getValue().getStatusCode());
     }
 
-    @DirtiesContext
     @Test
     void testEsitoFinal_890_RECAG008C_1MetaMissing() {
         PnDeliveryRequest pnDeliveryRequest = createPnDeliveryRequest();
@@ -417,7 +410,6 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
         assertNotNull(eventDematFromDB);
     }
 
-    @DirtiesContext
     @Test
     void testRECAG012Event() {
         final String metadataRequestExpected = "META##PREPARE_ANALOG_DOMICILE.IUN_MUMR-VQMP-LDNZ-202303-H-1.RECINDEX_0.SENTATTEMPTMADE_0";
@@ -455,7 +447,6 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
 
     }
 
-    @DirtiesContext
     @Test
     void testRECAG011BEvent() {
         final String requestId = "PREPARE_ANALOG_DOMICILE.IUN_MUMR-VQMP-LDNZ-202303-H-1.RECINDEX_0.SENTATTEMPTMADE_0";
@@ -536,7 +527,6 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
 
 
     // CASO 2
-    @DirtiesContext
     @Test
     void testRECAG005CorRECAG006CorRECAG007CCaseTwoEvent() {
         final String requestId = "PREPARE_ANALOG_DOMICILE.IUN_MUMR-VQMP-LDNZ-202303-H-1.RECINDEX_0.SENTATTEMPTMADE_0";
@@ -599,7 +589,6 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
     }
 
     // CASO 4
-    @DirtiesContext
     @Test
     void testRECAG005CorRECAG006CorRECAG007CCaseFourEvent() {
         final String requestId = "PREPARE_ANALOG_DOMICILE.IUN_MUMR-VQMP-LDNZ-202303-H-1.RECINDEX_0.SENTATTEMPTMADE_0";
@@ -641,7 +630,6 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
     }
 
     //CASO 3
-    @DirtiesContext
     @Test
     void testRECAG005CorRECAG006CorRECAG007CCaseThreeBEvent() {
         final String requestId = "PREPARE_ANALOG_DOMICILE.IUN_MUMR-VQMP-LDNZ-202303-H-1.RECINDEX_0.SENTATTEMPTMADE_0";
@@ -725,8 +713,9 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
 
 
     private PnDeliveryRequest createPnDeliveryRequest() {
+        String iun = UUID.randomUUID().toString();
         PnDeliveryRequest pnDeliveryRequest = new PnDeliveryRequest();
-        pnDeliveryRequest.setRequestId("PREPARE_ANALOG_DOMICILE.IUN_KREP-VHAD-TAQV-202302-P-1.RECINDEX_0.SENTATTEMPTMADE_1");
+        pnDeliveryRequest.setRequestId("PREPARE_ANALOG_DOMICILE.IUN_" + iun + ".RECINDEX_0.SENTATTEMPTMADE_1");
         pnDeliveryRequest.setCorrelationId("Self=1-63fe1166-09f74e174d4e13d26f7d08c0;Root=1-63fe1166-cdf14290b52666124be856be;Parent=a3bb560233ceb4ec;Sampled=1");
         pnDeliveryRequest.setFiscalCode("PF-a6c1350d-1d69-4209-8bf8-31de58c79d6e");
         pnDeliveryRequest.setHashedFiscalCode("81af12154dfaf8094715acadc8065fdde56c31fb52a9d1766f8f83470262c13a");
@@ -735,7 +724,7 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
         pnDeliveryRequest.setPrintType("BN_FRONTE_RETRO");
         pnDeliveryRequest.setProposalProductType("890");
         pnDeliveryRequest.setReceiverType("PF");
-        pnDeliveryRequest.setRelatedRequestId("PREPARE_ANALOG_DOMICILE.IUN_KREP-VHAD-TAQV-202302-P-1.RECINDEX_0.SENTATTEMPTMADE_0");
+        pnDeliveryRequest.setRelatedRequestId("PREPARE_ANALOG_DOMICILE.IUN_" + iun + ".RECINDEX_0.SENTATTEMPTMADE_0");
         pnDeliveryRequest.setStartDate("2023-02-28T15:36:22.225Z");
         pnDeliveryRequest.setStatusDetail("PROGRESS");
         pnDeliveryRequest.setStatusDate("2023-02-28T15:36:22.299Z");

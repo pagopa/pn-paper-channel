@@ -1,17 +1,25 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer;
 
-import it.pagopa.pn.paperchannel.config.BaseTest;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import it.pagopa.pn.commons.log.PnAuditLogBuilder;
+import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnRequestError;
 import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
 import it.pagopa.pn.paperchannel.service.QueueListenerService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
-import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.mockito.Spy;
+import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 
 
@@ -25,17 +33,33 @@ import static it.pagopa.pn.paperchannel.middleware.queue.model.InternalEventHead
 import static org.junit.jupiter.api.Assertions.*;
 
 
-@Slf4j
-class QueueListenerTest extends BaseTest {
+@ExtendWith(MockitoExtension.class)
+class QueueListenerTest {
 
-    @Autowired
+    @InjectMocks
     private QueueListener queueListener;
-    @MockBean
+    @Mock
     private QueueListenerService queueListenerService;
-    @MockBean
+    @Mock
     private PaperRequestErrorDAO paperRequestErrorDAO;
-    @MockBean
+    @Mock
     private SqsSender sender;
+    @Mock
+    private PnPaperChannelConfig pnPaperChannelConfig;
+
+    @Spy
+    private PnAuditLogBuilder pnAuditLogBuilder;
+
+    @Spy
+    private ObjectMapper objectMapper;
+
+    @BeforeEach
+    public void setUp() {
+        //setto lo stesso objectMapper di Spring
+        objectMapper.registerModule(new JavaTimeModule())
+                .configure(MapperFeature.DEFAULT_VIEW_INCLUSION, false)
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    }
 
     @Test
     void internalQueueOKTest(){
@@ -109,6 +133,8 @@ class QueueListenerTest extends BaseTest {
 
     @Test
     void internalQueueEventNationalRegExpiredTest(){
+        Mockito.when(paperRequestErrorDAO.created("NRTK-EWZL-KVPV-202212-Q-1124ds", "ERROR WITH RETRIEVE ADDRESS",
+                EventTypeEnum.NATIONAL_REGISTRIES_ERROR.name())).thenReturn(Mono.just(new PnRequestError()));
         String json = """
                 {
                     "correlationId": "abc",
@@ -119,7 +145,6 @@ class QueueListenerTest extends BaseTest {
         headers.put(PN_EVENT_HEADER_EVENT_TYPE, EventTypeEnum.NATIONAL_REGISTRIES_ERROR.name());
         headers.put(PN_EVENT_HEADER_EXPIRED, "2030-04-12T14:35:35.135725152Z");
         headers.put(PN_EVENT_HEADER_ATTEMPT, "0");
-        Mockito.doNothing().when(sender).rePushInternalError(Mockito.any(), Mockito.anyInt(), Mockito.any(), Mockito.any());
         queueListener.pullFromInternalQueue(json, headers);
         assertTrue(true);
     }
@@ -136,7 +161,7 @@ class QueueListenerTest extends BaseTest {
         headers.put(PN_EVENT_HEADER_EVENT_TYPE, EventTypeEnum.NATIONAL_REGISTRIES_ERROR.name());
         headers.put(PN_EVENT_HEADER_EXPIRED, "2023-02-12T14:35:35.135725152Z");
         headers.put(PN_EVENT_HEADER_ATTEMPT, "0");
-        Mockito.doNothing().when(queueListenerService).nationalRegistriesErrorListener(Mockito.any(), Mockito.anyInt());
+        Mockito.when(paperRequestErrorDAO.created(Mockito.any(),Mockito.any(),Mockito.any())).thenReturn(Mono.just(new PnRequestError()));
         queueListener.pullFromInternalQueue(json, headers);
         assertTrue(true);
     }
@@ -215,7 +240,7 @@ class QueueListenerTest extends BaseTest {
         headers.put(PN_EVENT_HEADER_EVENT_TYPE, EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name());
         headers.put(PN_EVENT_HEADER_EXPIRED, "2030-04-12T14:35:35.135725152Z");
         headers.put(PN_EVENT_HEADER_ATTEMPT, "0");
-        Mockito.doNothing().when(sender).rePushInternalError(Mockito.any(), Mockito.anyInt(), Mockito.any(), Mockito.any());
+        Mockito.when(paperRequestErrorDAO.created(Mockito.any(),Mockito.any(),Mockito.any())).thenReturn(Mono.just(new PnRequestError()));
         queueListener.pullFromInternalQueue(json, headers);
         assertTrue(true);
     }
@@ -245,7 +270,7 @@ class QueueListenerTest extends BaseTest {
         headers.put(PN_EVENT_HEADER_EVENT_TYPE, EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name());
         headers.put(PN_EVENT_HEADER_EXPIRED, "2023-02-12T14:35:35.135725152Z");
         headers.put(PN_EVENT_HEADER_ATTEMPT, "0");
-        Mockito.doNothing().when(queueListenerService).externalChannelListener(Mockito.any(), Mockito.anyInt());
+        Mockito.when(paperRequestErrorDAO.created(Mockito.any(),Mockito.any(),Mockito.any())).thenReturn(Mono.just(new PnRequestError()));
         queueListener.pullFromInternalQueue(json, headers);
         assertTrue(true);
     }
@@ -324,7 +349,7 @@ class QueueListenerTest extends BaseTest {
         headers.put(PN_EVENT_HEADER_EVENT_TYPE, EventTypeEnum.SAFE_STORAGE_ERROR.name());
         headers.put(PN_EVENT_HEADER_EXPIRED, "2030-04-12T14:35:35.135725152Z");
         headers.put(PN_EVENT_HEADER_ATTEMPT, "0");
-        Mockito.doNothing().when(sender).rePushInternalError(Mockito.any(), Mockito.anyInt(), Mockito.any(), Mockito.any());
+        Mockito.when(paperRequestErrorDAO.created(Mockito.any(),Mockito.any(),Mockito.any())).thenReturn(Mono.just(new PnRequestError()));
         queueListener.pullFromInternalQueue(json, headers);
         assertTrue(true);
     }
@@ -354,7 +379,7 @@ class QueueListenerTest extends BaseTest {
         headers.put(PN_EVENT_HEADER_EVENT_TYPE, EventTypeEnum.SAFE_STORAGE_ERROR.name());
         headers.put(PN_EVENT_HEADER_EXPIRED, "2023-02-12T14:35:35.135725152Z");
         headers.put(PN_EVENT_HEADER_ATTEMPT, "0");
-        Mockito.doNothing().when(queueListenerService).internalListener(Mockito.any(), Mockito.anyInt());
+        Mockito.when(paperRequestErrorDAO.created(Mockito.any(),Mockito.any(),Mockito.any())).thenReturn(Mono.just(new PnRequestError()));
         queueListener.pullFromInternalQueue(json, headers);
         assertTrue(true);
     }
@@ -379,7 +404,6 @@ class QueueListenerTest extends BaseTest {
                     }
                 }
                 """;
-        Mockito.doNothing().when(sender).pushToInternalQueue(Mockito.any());
         queueListener.pullNationalRegistries(json, new HashMap<>());
         assertTrue(true);
 
@@ -405,7 +429,6 @@ class QueueListenerTest extends BaseTest {
                 }
                 """;
         PnGenericException exception = assertThrows(PnGenericException.class, ()-> {
-            Mockito.doNothing().when(sender).pushToInternalQueue(Mockito.any());
             queueListener.pullNationalRegistries(json, new HashMap<>());
         });
         assertEquals(MAPPER_ERROR, exception.getExceptionType());

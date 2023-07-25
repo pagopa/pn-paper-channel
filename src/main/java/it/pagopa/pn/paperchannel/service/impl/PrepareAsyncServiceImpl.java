@@ -32,7 +32,6 @@ import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import lombok.CustomLog;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -49,20 +48,22 @@ import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.TAKING_CHARGE;
 @CustomLog
 public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncService {
 
-    @Autowired
-    private SafeStorageClient safeStorageClient;
-    @Autowired
-    private AddressDAO addressDAO;
-    @Autowired
-    private PnPaperChannelConfig paperChannelConfig;
-    @Autowired
-    private PaperRequestErrorDAO paperRequestErrorDAO;
-    @Autowired
-    private PaperAddressService paperAddressService;
+    private final SafeStorageClient safeStorageClient;
+    private final AddressDAO addressDAO;
+    private final PnPaperChannelConfig paperChannelConfig;
+    private final PaperRequestErrorDAO paperRequestErrorDAO;
+    private final PaperAddressService paperAddressService;
 
     public PrepareAsyncServiceImpl(PnAuditLogBuilder auditLogBuilder, NationalRegistryClient nationalRegistryClient,
-                                   RequestDeliveryDAO requestDeliveryDAO,SqsSender sqsQueueSender, CostDAO costDAO ) {
+                                   RequestDeliveryDAO requestDeliveryDAO,SqsSender sqsQueueSender, CostDAO costDAO,
+                                   SafeStorageClient safeStorageClient, AddressDAO addressDAO, PnPaperChannelConfig paperChannelConfig,
+                                   PaperRequestErrorDAO paperRequestErrorDAO, PaperAddressService paperAddressService) {
         super(auditLogBuilder, requestDeliveryDAO, costDAO, nationalRegistryClient, sqsQueueSender);
+        this.safeStorageClient = safeStorageClient;
+        this.addressDAO = addressDAO;
+        this.paperChannelConfig = paperChannelConfig;
+        this.paperRequestErrorDAO = paperRequestErrorDAO;
+        this.paperAddressService = paperAddressService;
     }
 
     @Override
