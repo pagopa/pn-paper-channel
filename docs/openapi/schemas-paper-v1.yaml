@@ -99,6 +99,11 @@ components:
         productType:
           type: string
           description: Il productType effettivo che da usare per l'invio
+        amount:
+          type: integer
+          format: int32
+          description: ammontare in eurocent del costo per l'invio della notifica
+            in forma cartacea
       allOf:
       - $ref: '#/components/schemas/PaperEvent'
 
@@ -208,6 +213,10 @@ components:
       - iun
       type: object
       properties:
+        dryRun:
+          type: boolean
+          description: Se true, si intende che tutto quanto salvato riferito a questa prepare può essere eliminata dopo aver ritornato >-
+            l'esito a delivery-push. Se non presente, si sottointende a false.
         relatedRequestId:
           type: string
           description: "Se presente, indica che questa seconda richiesta è successiva a quella passata nel relatedRequestId"
