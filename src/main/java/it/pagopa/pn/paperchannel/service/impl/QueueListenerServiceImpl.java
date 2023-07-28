@@ -6,16 +6,20 @@ import it.pagopa.pn.paperchannel.exception.PnAddressFlowException;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnnationalregistries.v1.dto.AddressSQSMessageDto;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendRequest;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
+import it.pagopa.pn.paperchannel.mapper.AttachmentMapper;
+import it.pagopa.pn.paperchannel.mapper.RequestDeliveryMapper;
+import it.pagopa.pn.paperchannel.mapper.SendRequestMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
+import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
-import it.pagopa.pn.paperchannel.model.Address;
-import it.pagopa.pn.paperchannel.model.NationalRegistryError;
-import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
+import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
+import it.pagopa.pn.paperchannel.model.*;
 import it.pagopa.pn.paperchannel.service.PaperAsyncService;
 import it.pagopa.pn.paperchannel.service.PaperResultAsyncService;
 import it.pagopa.pn.paperchannel.service.QueueListenerService;
@@ -27,8 +31,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
 import static it.pagopa.pn.commons.log.PnLogger.EXTERNAL_SERVICES.PN_NATIONAL_REGISTRIES;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
+import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.READY_TO_SEND;
 
 @Service
 @CustomLog
@@ -43,6 +50,8 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
     private AddressDAO addressDAO;
     @Autowired
     private PaperRequestErrorDAO paperRequestErrorDAO;
+    @Autowired
+    private ExternalChannelClient externalChannelClient;
 
     public QueueListenerServiceImpl(PnAuditLogBuilder auditLogBuilder,
                                     RequestDeliveryDAO requestDeliveryDAO,
@@ -51,6 +60,8 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                                     SqsSender sqsSender) {
         super(auditLogBuilder, requestDeliveryDAO, costDAO, nationalRegistryClient, sqsSender);
     }
+
+
 
     @Override
     public void internalListener(PrepareAsyncRequest body, int attempt) {
@@ -169,6 +180,45 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                         }))
                 .block();
 
+    }
+
+    @Override
+    public void manualRetryExternalChannel(String requestId) {
+        MDC.put(MDCUtils.MDC_TRACE_ID_KEY, MDC.get(MDCUtils.MDC_TRACE_ID_KEY));
+        this.requestDeliveryDAO.getByRequestId(requestId)
+                .switchIfEmpty(Mono.defer(() -> {
+                    log.debug("prepare requestId {} not existed", requestId);
+                    return Mono.empty();
+                }))
+                .zipWith(this.addressDAO.findAllByRequestId(requestId))
+                .flatMap(requestAndAddress ->  {
+                    PnDeliveryRequest request = requestAndAddress.getT1();
+                    SendRequest sendRequest = SendRequestMapper.toDto(requestAndAddress.getT2(),request);
+                    List<AttachmentInfo> attachments = request.getAttachments().stream().map(AttachmentMapper::fromEntity).toList();
+                    pnLogAudit.addsBeforeSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY)));
+                    return this.externalChannelClient.sendEngageRequest(sendRequest, attachments)
+                            .then(Mono.defer(() -> {
+                                pnLogAudit.addsSuccessSend(
+                                        request.getIun(),
+                                        String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY))
+                                );
+                                RequestDeliveryMapper.changeState(
+                                        request,
+                                        READY_TO_SEND.getCode(),
+                                        READY_TO_SEND.getDescription(),
+                                        READY_TO_SEND.getDetail(),
+                                        request.getProductType(),
+                                        null);
+                                return this.requestDeliveryDAO.updateData(request);
+                            }))
+                            .onErrorResume(ex -> {
+                                pnLogAudit.addsWarningSend(
+                                        request.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", request.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY)));
+                                return paperRequestErrorDAO.created(requestId, EXTERNAL_CHANNEL_API_EXCEPTION.getMessage(), EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name())
+                                        .flatMap(errorEntity -> Mono.error(ex));
+                            });
+                })
+                .block();
     }
 
 

@@ -8,11 +8,8 @@ import it.pagopa.pn.paperchannel.mapper.common.BaseMapper;
 import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
-
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.Date;
 
 
 @Slf4j
@@ -22,7 +19,7 @@ public class SendEventMapper {
         throw new IllegalCallerException();
     }
 
-    private static final BaseMapper<PnAddress, AnalogAddress> baseMapperAddress = new BaseMapperImpl(PnAddress.class, AnalogAddress.class);
+    private static final BaseMapper<PnAddress, AnalogAddress> baseMapperAddress = new BaseMapperImpl<>(PnAddress.class, AnalogAddress.class);
 
     public static SendEvent fromResult(PnDeliveryRequest request, PnAddress address){
         SendEvent entityEvent = new SendEvent();
@@ -58,7 +55,10 @@ public class SendEventMapper {
         sendEvent.setRequestId(entity.getRequestId());
         sendEvent.setStatusDateTime(DateUtils.getDatefromOffsetDateTime(paperRequest.getStatusDateTime()));
         sendEvent.setRegisteredLetterCode(paperRequest.getRegisteredLetterCode());
-        sendEvent.setClientRequestTimeStamp(paperRequest.getClientRequestTimeStamp().toInstant());
+        if (paperRequest.getClientRequestTimeStamp() != null) {
+            sendEvent.setClientRequestTimeStamp(paperRequest.getClientRequestTimeStamp().toInstant());
+        }
+
         sendEvent.setDeliveryFailureCause(paperRequest.getDeliveryFailureCause());
         sendEvent.setDiscoveredAddress(AddressMapper.toPojo(paperRequest.getDiscoveredAddress()));
 

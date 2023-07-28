@@ -46,7 +46,7 @@ import static it.pagopa.pn.paperchannel.utils.Const.AAR;
 
 @CustomLog
 @Service
-public class PaperMessagesServiceImpl extends BaseService implements PaperMessagesService {
+public class  PaperMessagesServiceImpl extends BaseService implements PaperMessagesService {
 
     @Autowired
     private AddressDAO addressDAO;

@@ -40,9 +40,12 @@ public class RequestDeliveryMapper {
 
     public static void changeState(@NotNull PnDeliveryRequest request, @NotNull String statusCode, @NotNull String statusDescription, @NotNull String statusDetail, String productType, Instant statusDate) {
         request.setStatusCode(statusCode);
-        String description = statusCode.concat(" - ").concat(statusDescription);
+        String description = statusCode;
+        if (StringUtils.isNotBlank(statusDescription)) {
+            description = description.concat(" - ").concat(statusDescription);
+        }
         if (StringUtils.isNotBlank(productType)){
-            description = productType.concat(" - ").concat(statusCode).concat(" - ").concat(statusDescription);
+            description = productType.concat(" - ").concat(description);
         }
         request.setStatusDescription(description);
         request.setStatusDetail(statusDetail);
