@@ -274,7 +274,9 @@ paths:
         all'invio
       description: "Questa operazione sottomette ad paper-channel una richiesta calcolo del costo\
         \ di invio di corrispondenza cartacea. Le attività da eseguire sono le stesse della prepare\
-        \ con la differenza che all'invio dell'esito di risposta asincrono, tutte le strutture dati possono essere eliminate"
+        \ con la differenza del fatto che alcuni documenti non vengono passati, ma al loro posto\
+        \ viene tornato il numero di pagine aggiuntive da stampare e che all'invio dell'esito \
+        \ di risposta asincrono, tutte le strutture dati possono essere eliminate"
       operationId: sendPaperRetrieveAmountRequest
       parameters:
         - name: requestId
@@ -290,7 +292,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PrepareRequest'
+              $ref: '#/components/schemas/RetrieveAmountRequest'
         required: true
       responses:
         "200":
@@ -446,6 +448,8 @@ components:
     SendEvent:
       $ref: 'schemas-paper-v1.yaml#/components/schemas/SendEvent'
     PrepareRequest:
+      $ref: 'schemas-paper-v1.yaml#/components/schemas/PrepareRequest'
+    RetrieveAmountRequest:
       $ref: 'schemas-paper-v1.yaml#/components/schemas/PrepareRequest'
 
 #  securitySchemes:        # ONLY EXTERNAL
