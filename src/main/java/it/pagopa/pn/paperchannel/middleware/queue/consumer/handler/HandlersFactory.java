@@ -102,6 +102,7 @@ public class HandlersFactory {
         map.put(ExternalChannelCodeEnum.CON996.name(), handler);
         map.put(ExternalChannelCodeEnum.CON995.name(), handler);
         map.put(ExternalChannelCodeEnum.CON993.name(), handler);
+        map.put(ExternalChannelCodeEnum.P010.name(), handler);
     }
 
     private void addSaveMetadataStatusCodes(ConcurrentHashMap<String, MessageHandler> map, SaveMetadataMessageHandler handler) {
