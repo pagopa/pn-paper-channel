@@ -36,7 +36,6 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.time.Duration;
-import java.util.Date;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DATA_NULL_OR_INVALID;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.EXTERNAL_CHANNEL_API_EXCEPTION;
@@ -94,9 +93,9 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
                                         sendEngageRequest(updatedEntity, setRetryRequestId(singleStatusUpdateDto.getAnalogMail().getRequestId()));
                                     } else {
                                         Mono.delay(Duration.ofMillis(1)).publishOn(Schedulers.boundedElastic())
-                                                        .flatMap( i-> paperRequestErrorDAO.created(entity.getRequestId(),
-                                                                EXTERNAL_CHANNEL_API_EXCEPTION.getMessage(),
-                                                                EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name()).map(item -> item));
+                                                .flatMap( i-> paperRequestErrorDAO.created(entity.getRequestId(),
+                                                        EXTERNAL_CHANNEL_API_EXCEPTION.getMessage(),
+                                                        EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name()).map(item -> item));
                                     }
 
                                 } else if (isTechnicalErrorStatusCode(singleStatusUpdateDto)) {
@@ -207,7 +206,6 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
                     SendRequest sendRequest = SendRequestMapper.toDto(pnAddresses, pnDeliveryRequest);
                     sendRequest.setRequestId(requestId);
                     pnLogAudit.addsBeforeSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY)));
-
                     return this.externalChannelClient.sendEngageRequest(sendRequest, pnDeliveryRequest.getAttachments().stream().map(AttachmentMapper::fromEntity).toList()).publishOn(Schedulers.boundedElastic())
                             .then(Mono.defer(() -> {
                                 pnLogAudit.addsSuccessSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY)));
