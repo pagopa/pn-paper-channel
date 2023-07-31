@@ -232,14 +232,8 @@ components:
       - receiverFiscalCode
       - receiverType
       - iun
-      - additionalPages
       type: object
       properties:
-        additionalPages:
-          type: integer
-          format: int32
-          nullable: true
-          description: numero di pagine aggiuntive da tenere in conto per il calcolo del costo dell'invio cartaceo.
         relatedRequestId:
           type: string
           description: "Se presente, indica che questa seconda richiesta è successiva a quella passata nel relatedRequestId"
