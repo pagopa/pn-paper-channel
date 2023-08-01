@@ -224,7 +224,6 @@ components:
       - $ref: '#/components/schemas/PaperRequest'
     RetrieveAmountRequest:
       required:
-      - attachmentUrls
       - clientRequestTimeStamp
       - printType
       - proposalProductType
