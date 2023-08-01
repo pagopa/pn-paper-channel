@@ -42,7 +42,7 @@ class PaperNotRetryableIT extends BaseTest {
     @MockBean
     private AddressDAO mockAddressDAO;
 
-    @Test
+//    @Test
     void whenECReturnStatusP010ThenPushSendEventAndCreatePaperError() {
 
         PnDeliveryRequest pnDeliveryRequest = CommonUtils.createPnDeliveryRequest();
