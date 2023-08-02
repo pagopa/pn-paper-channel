@@ -30,7 +30,6 @@ import it.pagopa.pn.paperchannel.validator.SendRequestValidator;
 import lombok.CustomLog;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.MDC;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -48,20 +47,22 @@ import static it.pagopa.pn.paperchannel.utils.Const.AAR;
 @Service
 public class  PaperMessagesServiceImpl extends BaseService implements PaperMessagesService {
 
-    @Autowired
-    private AddressDAO addressDAO;
-    @Autowired
-    private ExternalChannelClient externalChannelClient;
-    @Autowired
-    private PnPaperChannelConfig pnPaperChannelConfig;
-    @Autowired
-    private PaperTenderService paperTenderService;
+    private final AddressDAO addressDAO;
+    private final ExternalChannelClient externalChannelClient;
+    private final PnPaperChannelConfig pnPaperChannelConfig;
+    private final PaperTenderService paperTenderService;
 
     String EXTERNAL_CHANNEL_DESCRIPTION = "Shipment notification service";
 
     public PaperMessagesServiceImpl(PnAuditLogBuilder auditLogBuilder, RequestDeliveryDAO requestDeliveryDAO, CostDAO costDAO,
-                                    NationalRegistryClient nationalRegistryClient, SqsSender sqsSender) {
+                                    NationalRegistryClient nationalRegistryClient, SqsSender sqsSender, AddressDAO addressDAO,
+                                    ExternalChannelClient externalChannelClient, PnPaperChannelConfig pnPaperChannelConfig,
+                                    PaperTenderService paperTenderService) {
         super(auditLogBuilder, requestDeliveryDAO, costDAO, nationalRegistryClient, sqsSender);
+        this.addressDAO = addressDAO;
+        this.externalChannelClient = externalChannelClient;
+        this.pnPaperChannelConfig = pnPaperChannelConfig;
+        this.paperTenderService = paperTenderService;
     }
 
     @Override

@@ -1,6 +1,7 @@
 package it.pagopa.pn.paperchannel.service;
 
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
+import it.pagopa.pn.paperchannel.config.BaseTest;
 import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.SingleStatusUpdateDto;
@@ -28,7 +29,8 @@ import reactor.core.publisher.Mono;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 
 @ExtendWith(MockitoExtension.class)
-class QueueListenerServiceImplTest {
+class QueueListenerServiceImplTest extends BaseTest{
+
     @Mock
     private PaperResultAsyncService paperResultAsyncService;
     @Mock
@@ -40,15 +42,15 @@ class QueueListenerServiceImplTest {
     private PaperRequestErrorDAO paperRequestErrorDAO;
 
     @Spy
-    PnAuditLogBuilder auditLogBuilder;
+    private PnAuditLogBuilder auditLogBuilder;
     @Mock
-    RequestDeliveryDAO requestDeliveryDAO;
+    private RequestDeliveryDAO requestDeliveryDAO;
     @Mock
-    CostDAO costDAO;
+    private CostDAO costDAO;
     @Mock
-    NationalRegistryClient nationalRegistryClient;
+    private NationalRegistryClient nationalRegistryClient;
     @Mock
-    SqsSender sqsSender;
+    private SqsSender sqsSender;
     @InjectMocks
     QueueListenerServiceImpl queueListenerService;
 
@@ -72,10 +74,10 @@ class QueueListenerServiceImplTest {
 
     @Test
     void nationalRegistriesResponseListenerUntraceableAddressBecauseCorrelationIdIsNotFoundTest(){
-       try{
-           this.queueListenerService.nationalRegistriesResponseListener(new AddressSQSMessageDto());
-           Assertions.fail("Il metodo non è andato in eccezione");
-       }
+        try{
+            this.queueListenerService.nationalRegistriesResponseListener(new AddressSQSMessageDto());
+            Assertions.fail("Il metodo non è andato in eccezione");
+        }
         catch(PnGenericException ex){
             Assertions.assertEquals(CORRELATION_ID_NOT_FOUND, ex.getExceptionType());
         }
