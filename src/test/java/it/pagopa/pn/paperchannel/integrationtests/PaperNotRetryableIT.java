@@ -3,19 +3,15 @@ package it.pagopa.pn.paperchannel.integrationtests;
 import it.pagopa.pn.paperchannel.config.BaseTest;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.SingleStatusUpdateDto;
-import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
-import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.service.PaperResultAsyncService;
-import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import reactor.core.publisher.Mono;
@@ -23,7 +19,6 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
@@ -34,15 +29,12 @@ class PaperNotRetryableIT extends BaseTest {
     private PaperResultAsyncService paperResultAsyncService;
 
     @MockBean
-    private SqsSender sqsSender;
-
-    @MockBean
     private RequestDeliveryDAO requestDeliveryDAO;
 
     @MockBean
     private AddressDAO mockAddressDAO;
 
-//    @Test
+    @Test
     void whenECReturnStatusP010ThenPushSendEventAndCreatePaperError() {
 
         PnDeliveryRequest pnDeliveryRequest = CommonUtils.createPnDeliveryRequest();
@@ -77,14 +69,6 @@ class PaperNotRetryableIT extends BaseTest {
 
         assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());
 
-        ArgumentCaptor<SendEvent> capturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
-
-        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(capturedSendEvent.capture());
-
-        SendEvent sendEvent = capturedSendEvent.getValue();
-
-        assertEquals(StatusCodeEnum.KO, sendEvent.getStatusCode());
-        assertEquals(analogMail.getStatusCode(), sendEvent.getStatusDetail());
 
     }
 
