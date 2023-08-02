@@ -24,6 +24,7 @@ import it.pagopa.pn.paperchannel.service.PaperAsyncService;
 import it.pagopa.pn.paperchannel.service.PaperResultAsyncService;
 import it.pagopa.pn.paperchannel.service.QueueListenerService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
+import it.pagopa.pn.paperchannel.utils.Const;
 import lombok.CustomLog;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.MDC;
@@ -183,7 +184,7 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
     }
 
     @Override
-    public void manualRetryExternalChannel(String requestId) {
+    public void manualRetryExternalChannel(String requestId, String newPcRetry) {
         MDC.put(MDCUtils.MDC_TRACE_ID_KEY, MDC.get(MDCUtils.MDC_TRACE_ID_KEY));
         this.requestDeliveryDAO.getByRequestId(requestId)
                 .switchIfEmpty(Mono.defer(() -> {
@@ -195,6 +196,7 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                     PnDeliveryRequest request = requestAndAddress.getT1();
                     SendRequest sendRequest = SendRequestMapper.toDto(requestAndAddress.getT2(),request);
                     List<AttachmentInfo> attachments = request.getAttachments().stream().map(AttachmentMapper::fromEntity).toList();
+                    sendRequest.setRequestId(sendRequest.getRequestId().concat(Const.PCRETRY).concat(newPcRetry));
                     pnLogAudit.addsBeforeSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY)));
                     return this.externalChannelClient.sendEngageRequest(sendRequest, attachments)
                             .then(Mono.defer(() -> {

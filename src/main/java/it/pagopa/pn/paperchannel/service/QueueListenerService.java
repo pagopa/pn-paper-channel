@@ -11,6 +11,6 @@ public interface QueueListenerService {
     void nationalRegistriesResponseListener(AddressSQSMessageDto body);
     void nationalRegistriesErrorListener(NationalRegistryError data, int attempt);
     void externalChannelListener(SingleStatusUpdateDto data, int attempt);
-    void manualRetryExternalChannel(String requestId);
+    void manualRetryExternalChannel(String requestId, String newPcRetry);
 
 }

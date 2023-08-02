@@ -85,7 +85,7 @@ public class QueueListener {
 
         } else if (internalEventHeader.getEventType().equals(EventTypeEnum.MANUAL_RETRY_EXTERNAL_CHANNEL.name())){
             ManualRetryEvent manualRetryEvent = convertToObject(node, ManualRetryEvent.class);
-            this.queueListenerService.manualRetryExternalChannel(manualRetryEvent.getRequestId());
+            this.queueListenerService.manualRetryExternalChannel(manualRetryEvent.getRequestId(), manualRetryEvent.getNewPcRetry());
         } else if (internalEventHeader.getEventType().equals(EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name())){
 
             boolean noAttempt = (paperChannelConfig.getAttemptQueueExternalChannel()-1) < internalEventHeader.getAttempt();

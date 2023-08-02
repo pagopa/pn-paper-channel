@@ -494,13 +494,14 @@ class QueueListenerTest {
     void pullManualRetryExternalChannelOK(){
         String json = """
                 {
-                    "requestId": "1234RequestId"
+                    "requestId": "1234RequestId",
+                    "newPcRetry": "newPcRetry123"
                 }""";
         Map<String, Object> headers = new HashMap<>();
         headers.put(PN_EVENT_HEADER_EVENT_TYPE, EventTypeEnum.MANUAL_RETRY_EXTERNAL_CHANNEL.name());
         headers.put(PN_EVENT_HEADER_EXPIRED, Instant.now().minus(30, ChronoUnit.SECONDS).toString());
         headers.put(PN_EVENT_HEADER_ATTEMPT, "0");
-        doNothing().when(this.queueListenerService).manualRetryExternalChannel("1234RequestId");
+        doNothing().when(this.queueListenerService).manualRetryExternalChannel("1234RequestId", "newPcRetry123");
 
         assertDoesNotThrow(() -> {
             queueListener.pullFromInternalQueue(json, headers);

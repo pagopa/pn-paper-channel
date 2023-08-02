@@ -7,5 +7,7 @@ import lombok.Data;
 public class ManualRetryEvent {
 
     private String requestId;
+    //retry da concatenare
+    private String newPcRetry;
 
 }
