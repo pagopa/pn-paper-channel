@@ -18,10 +18,15 @@ public class HttpConnector {
     }
 
     public static Mono<PDDocument> downloadFile(String url) {
-        log.info("Url to download: "+url);
-
+        log.info("Url to download: {}", url);
         try {
-            return WebClient.create()
+            return WebClient
+                    .builder()
+                    .codecs(codecs ->
+                            codecs.defaultCodecs()
+                                    .maxInMemorySize(-1)
+                    )
+                    .build()
                     .get()
                     .uri(new URI(url))
                     .accept(MediaType.APPLICATION_PDF)

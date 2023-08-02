@@ -61,8 +61,6 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
         super(auditLogBuilder, requestDeliveryDAO, costDAO, nationalRegistryClient, sqsSender);
     }
 
-
-
     @Override
     public void internalListener(PrepareAsyncRequest body, int attempt) {
         String PROCESS_NAME = "InternalListener";

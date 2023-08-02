@@ -1,6 +1,6 @@
 package it.pagopa.pn.paperchannel.service.tenders;
 
-import it.pagopa.pn.paperchannel.config.BaseTest;
+import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.paperchannel.config.InstanceCreator;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.*;
@@ -14,14 +14,12 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnTender;
 import it.pagopa.pn.paperchannel.service.impl.PaperChannelServiceImpl;
 import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.validator.CostValidator;
-import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.*;
+import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -36,18 +34,21 @@ import java.util.UUID;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-@Slf4j
-class CreateAndUpdateFromServiceTest extends BaseTest {
+@ExtendWith(MockitoExtension.class)
+class CreateAndUpdateFromServiceTest {
 
 
-    @Autowired
+    @InjectMocks
     private PaperChannelServiceImpl paperChannelService;
-    @MockBean
+    @Mock
     private CostDAO costDAO;
-    @MockBean
+    @Mock
     private DeliveryDriverDAO deliveryDriverDAO;
-    @MockBean
+    @Mock
     private TenderDAO tenderDAO;
+
+    @Spy
+    private PnAuditLogBuilder pnAuditLogBuilder;
     private MockedStatic<CostMapper> costMapperMockedStatic;
     private MockedStatic<CostValidator> costValidatorMockedStatic;
 

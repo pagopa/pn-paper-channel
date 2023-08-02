@@ -422,6 +422,7 @@ Resources:
         AutoscalingDataPointN: !Ref AutoscalingDataPointN
         AutoscalingDataPointM: !Ref AutoscalingDataPointM
         AlarmSNSTopicArn: !Ref AlarmSNSTopicArn
+        JavaToolOptions: '-XX:MaxDirectMemorySize=256m'
         ContainerImageURI: !Sub '${ContainerImageUri}'
         ContainerEnvEntry1: !Sub 'AWS_REGIONCODE=${AWS::Region}'
         ContainerEnvEntry2: !Sub 'CORS_ALLOWED_DOMAINS=${CorsAllowedDomains}, http://localhost:3000'
@@ -597,6 +598,7 @@ Resources:
           - - !GetAtt PaperChannelMicroservice.Outputs.FatalLogsMetricAlarmArn
             - !GetAtt PaperChannelGatewayDeliveryDriver.Outputs.RestApiErrorAlarmArn
             - !GetAtt PaperChannelGatewayDeliveryDriver.Outputs.RestApiLatencyAlarmArn
+            - !GetAtt PaperRequestErrorAlarm.Arn
         QueueArns: !Join
           - ','
           - - !Ref ExternalChannelsOutputsQueueARN
@@ -632,3 +634,22 @@ Resources:
         WAFName: !Sub '${ProjectName}-paper-channel-bo'
         IntendedUsage: BACKOFFICE
         APIGatewayARNs: !GetAtt PaperChannelGatewayDeliveryDriver.Outputs.APIGatewayARN
+
+  PaperRequestErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName:  !Sub '${ProjectName}-paper-request-error-alarm'
+      AlarmDescription: "CloudWatch alarm for when PNPaperErrorRequest metric is 1 for 3 of 3 periods of 5 minutes"
+      AlarmActions:
+        - !Ref AlarmSNSTopicArn
+      OKActions:
+        - !Ref AlarmSNSTopicArn
+      DatapointsToAlarm: 3
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods: 3
+      Threshold: 1
+      TreatMissingData: notBreaching
+      Namespace: "pn-paper-channel"
+      Period: 300
+      MetricName: "PNPaperErrorRequest"
+      Statistic: "Maximum"
