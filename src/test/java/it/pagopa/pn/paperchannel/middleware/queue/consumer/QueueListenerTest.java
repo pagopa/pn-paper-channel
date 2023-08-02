@@ -23,6 +23,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,6 +33,8 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 import static it.pagopa.pn.paperchannel.middleware.queue.model.InternalEventHeader.PN_EVENT_HEADER_ATTEMPT;
 import static it.pagopa.pn.paperchannel.middleware.queue.model.InternalEventHeader.PN_EVENT_HEADER_EXPIRED;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
 
 
 @ExtendWith(MockitoExtension.class)
@@ -126,7 +130,7 @@ class QueueListenerTest {
         headers.put(PN_EVENT_HEADER_EXPIRED, "2023-04-12T14:35:35.135725152Z");
         headers.put(PN_EVENT_HEADER_ATTEMPT, "4");
         PnRequestError requestError = new PnRequestError();
-        Mockito.when(paperRequestErrorDAO.created(Mockito.any(),Mockito.any(),Mockito.any())).thenReturn(Mono.just(requestError));
+        when(paperRequestErrorDAO.created(Mockito.any(),Mockito.any(),Mockito.any())).thenReturn(Mono.just(requestError));
         queueListener.pullFromInternalQueue(json, headers);
         assertTrue(true);
     }
@@ -210,7 +214,7 @@ class QueueListenerTest {
         headers.put(PN_EVENT_HEADER_EXPIRED, "2023-04-12T14:35:35.135725152Z");
         headers.put(PN_EVENT_HEADER_ATTEMPT, "4");
         PnRequestError requestError = new PnRequestError();
-        Mockito.when(paperRequestErrorDAO.created(Mockito.any(),Mockito.any(),Mockito.any())).thenReturn(Mono.just(requestError));
+        when(paperRequestErrorDAO.created(Mockito.any(),Mockito.any(),Mockito.any())).thenReturn(Mono.just(requestError));
         queueListener.pullFromInternalQueue(json, headers);
         assertTrue(true);
     }
@@ -319,7 +323,7 @@ class QueueListenerTest {
         headers.put(PN_EVENT_HEADER_EXPIRED, "2023-04-12T14:35:35.135725152Z");
         headers.put(PN_EVENT_HEADER_ATTEMPT, "4");
         PnRequestError requestError = new PnRequestError();
-        Mockito.when(paperRequestErrorDAO.created(Mockito.any(),Mockito.any(),Mockito.any())).thenReturn(Mono.just(requestError));
+        when(paperRequestErrorDAO.created(Mockito.any(),Mockito.any(),Mockito.any())).thenReturn(Mono.just(requestError));
         queueListener.pullFromInternalQueue(json, headers);
         assertTrue(true);
     }
@@ -484,6 +488,24 @@ class QueueListenerTest {
             queueListener.pullExternalChannel(json, new HashMap<>());
         });
         assertEquals(MAPPER_ERROR, exception.getExceptionType());
+    }
+
+    @Test
+    void pullManualRetryExternalChannelOK(){
+        String json = """
+                {
+                    "requestId": "1234RequestId",
+                    "newPcRetry": "newPcRetry123"
+                }""";
+        Map<String, Object> headers = new HashMap<>();
+        headers.put(PN_EVENT_HEADER_EVENT_TYPE, EventTypeEnum.MANUAL_RETRY_EXTERNAL_CHANNEL.name());
+        headers.put(PN_EVENT_HEADER_EXPIRED, Instant.now().minus(30, ChronoUnit.SECONDS).toString());
+        headers.put(PN_EVENT_HEADER_ATTEMPT, "0");
+        doNothing().when(this.queueListenerService).manualRetryExternalChannel("1234RequestId", "newPcRetry123");
+
+        assertDoesNotThrow(() -> {
+            queueListener.pullFromInternalQueue(json, headers);
+        });
     }
 
 }
