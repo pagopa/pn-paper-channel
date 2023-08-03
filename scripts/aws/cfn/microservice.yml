@@ -318,6 +318,12 @@ Parameters:
     Type: Number
     Default: 60
 
+  #Request PaId Override
+  RequestPaIdOverride:
+    Description : Partita iva di default override RequestPAId
+    Type: String
+    Default:  '00414580183'
+
   HealthCheckTimeout:
     Description: health check timeout seconds
     Type: Number
@@ -476,6 +482,7 @@ Resources:
         ContainerEnvEntry46: !Sub 'PN_PAPERCHANNEL_ORIGINALPOSTAMNADDRESSUSAGEMODE=${OriginalPostmanAddressUsageMode}'
         ContainerEnvEntry47: !Sub 'PN_PAPERCHANNEL_REFINEMENTDURATION=${RefinementDuration}'
         ContainerEnvEntry48: !Sub 'PN_PAPERCHANNEL_CLOUDWATCHMETRICCRON=${CloudwatchMetricCron}'
+        ContainerEnvEntry49: !Sub 'PN_PAPERCHANNEL_REQUESTPAIDOVERRIDE=${RequestPaIdOverride}'
         ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-PaperChannel-Secrets
         MappedPaths: '/paper-channel-bo/*,/paper-channel-private/*'
