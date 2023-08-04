@@ -255,7 +255,7 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
     private boolean validateAddressFields(Address fromNationalRegistry) {
         return fromNationalRegistry.getFullName() == null
                 || fromNationalRegistry.getAddress() == null
-                || fromNationalRegistry.getCap() == null;
+                || fromNationalRegistry.getCity() == null;
     }
 
 }
