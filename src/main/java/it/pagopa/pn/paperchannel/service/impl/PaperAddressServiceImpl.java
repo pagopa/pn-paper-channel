@@ -69,7 +69,7 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
 
                     // Only discovered address is null and retrieved national registry address
                     if (StringUtils.isNotBlank(deliveryRequest.getCorrelationId())){
-                        if (fromNationalRegistry == null) {
+                        if (fromNationalRegistry == null || validateAddressFields(fromNationalRegistry)) {
                             logAuditSuccess("prepare requestId = %s, relatedRequestId = %s National Registry Address is null", deliveryRequest);
                             return Mono.error(new PnGenericException(UNTRACEABLE_ADDRESS, UNTRACEABLE_ADDRESS.getMessage()));
                         }
@@ -250,6 +250,12 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
         logAuditSuccess("prepare requestId = %s, relatedRequestId = %s Deduplicate service has DeduplicatesResponse.error is not empty",deliveryRequest);
         deliveryRequest.setEventToSend(StatusDeliveryEnum.DEDUPLICATES_ERROR_RESPONSE.getCode());
         this.requestDeliveryDAO.updateData(deliveryRequest);
+    }
+
+    private boolean validateAddressFields(Address fromNationalRegistry) {
+        return fromNationalRegistry.getFullName() == null
+                || fromNationalRegistry.getAddress() == null
+                || fromNationalRegistry.getCap() == null;
     }
 
 }
