@@ -419,7 +419,7 @@ Resources:
         HealthCheckInterval: !Ref HealthCheckInterval
         HealthyThresholdCount: !Ref HealthyThresholdCount
         UnhealthyThresholdCount: !Ref UnhealthyThresholdCount
-        AutoscalingStrategy: REST-API
+        AutoscalingStrategy: CUSTOM
         AutoscalingThreshold: !Ref AutoscalingThreshold
         AutoscalingCheckPeriod: !Ref AutoscalingCheckPeriod
         MinTasksNumber: !Ref MinTasksNumber
