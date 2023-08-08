@@ -322,7 +322,12 @@ Parameters:
     Description: health check timeout seconds
     Type: Number
     Default: 5
-  
+
+  ApplicationLoadBalancerMetricsDimensionName:
+    Type: String
+    Default: ''
+    Description: Application load balancer dimension name
+
   HealthyThresholdCount:
     Description: |
       The number of consecutive health checks successes required before considering 
