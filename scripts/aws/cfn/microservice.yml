@@ -322,6 +322,7 @@ Parameters:
   RequestPaIdOverride:
     Description : Partita iva di default override RequestPAId
     Type: String
+    Default: ''
 
   HealthCheckTimeout:
     Description: health check timeout seconds
