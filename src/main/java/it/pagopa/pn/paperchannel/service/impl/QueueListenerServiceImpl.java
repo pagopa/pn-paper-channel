@@ -196,7 +196,7 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                     PnDeliveryRequest request = requestAndAddress.getT1();
                     SendRequest sendRequest = SendRequestMapper.toDto(requestAndAddress.getT2(),request);
                     List<AttachmentInfo> attachments = request.getAttachments().stream().map(AttachmentMapper::fromEntity).toList();
-                    sendRequest.setRequestId(sendRequest.getRequestId().concat(Const.PCRETRY).concat(newPcRetry));
+                    sendRequest.setRequestId(sendRequest.getRequestId().concat(Const.RETRY).concat(newPcRetry));
                     pnLogAudit.addsBeforeSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY)));
                     return this.externalChannelClient.sendEngageRequest(sendRequest, attachments)
                             .then(Mono.defer(() -> {
