@@ -52,6 +52,7 @@ public class PnPaperChannelConfig {
     private String chargeCalculationMode;
     private String originalPostmanAddressUsageMode;
     private Duration refinementDuration;
+    private String requestPaIdOverride;
 
     public String getOriginalPostmanAddressUsageMode() {
         if (StringUtils.isBlank(originalPostmanAddressUsageMode)){
