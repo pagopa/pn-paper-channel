@@ -1,7 +1,7 @@
 package it.pagopa.pn.paperchannel.service.tenders;
 
 
-import it.pagopa.pn.paperchannel.config.BaseTest;
+import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.paperchannel.config.InstanceCreator;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.TenderDTO;
@@ -15,9 +15,12 @@ import it.pagopa.pn.paperchannel.service.impl.PaperChannelServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.mockito.Spy;
+import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -30,16 +33,20 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class AllDeleteFromServiceTest extends BaseTest {
+@ExtendWith(MockitoExtension.class)
+class AllDeleteFromServiceTest {
 
-    @Autowired
+    @InjectMocks
     private PaperChannelServiceImpl paperChannelService;
-    @MockBean
+    @Mock
     private CostDAO costDAO;
-    @MockBean
+    @Mock
     private DeliveryDriverDAO deliveryDriverDAO;
-    @MockBean
+    @Mock
     private TenderDAO tenderDAO;
+
+    @Spy
+    private PnAuditLogBuilder pnAuditLogBuilder;
     private PnTender pnTenderOK;
     private PnDeliveryDriver pnDeliveryDriver;
     private PnCost pnCostNational;
@@ -82,6 +89,9 @@ class AllDeleteFromServiceTest extends BaseTest {
 
         Mockito.when(this.deliveryDriverDAO.deleteDeliveryDriver(Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(pnDeliveryDriver));
+
+        Mockito.when(this.deliveryDriverDAO.getDeliveryDriverFromTender(Mockito.any(), Mockito.any()))
+                .thenReturn(Flux.just(pnDeliveryDriver));
 
         StepVerifier.create(this.paperChannelService.deleteTender(pnTenderOK.getTenderCode()))
                 .verifyComplete();
@@ -161,10 +171,6 @@ class AllDeleteFromServiceTest extends BaseTest {
                 .thenReturn(Mono.just(pnTenderOK));
 
         pnDeliveryDriver = InstanceCreator.getDriver(true);
-
-        Mockito.when(this.deliveryDriverDAO.getDeliveryDriverFromTender(Mockito.any(), Mockito.any()))
-                .thenReturn(Flux.just(pnDeliveryDriver));
-
 
         pnCostNational = InstanceCreator.getCost(pnTenderOK.getTenderCode(), null, List.of("21023"), "AR");
         pnCostInternational = InstanceCreator.getCost(pnTenderOK.getTenderCode(), "ZONE_1", null, "AR");

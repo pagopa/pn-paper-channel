@@ -30,7 +30,6 @@ import it.pagopa.pn.paperchannel.validator.SendRequestValidator;
 import lombok.CustomLog;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.MDC;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -46,22 +45,24 @@ import static it.pagopa.pn.paperchannel.utils.Const.AAR;
 
 @CustomLog
 @Service
-public class PaperMessagesServiceImpl extends BaseService implements PaperMessagesService {
+public class  PaperMessagesServiceImpl extends BaseService implements PaperMessagesService {
 
-    @Autowired
-    private AddressDAO addressDAO;
-    @Autowired
-    private ExternalChannelClient externalChannelClient;
-    @Autowired
-    private PnPaperChannelConfig pnPaperChannelConfig;
-    @Autowired
-    private PaperTenderService paperTenderService;
+    private final AddressDAO addressDAO;
+    private final ExternalChannelClient externalChannelClient;
+    private final PnPaperChannelConfig pnPaperChannelConfig;
+    private final PaperTenderService paperTenderService;
 
     String EXTERNAL_CHANNEL_DESCRIPTION = "Shipment notification service";
 
     public PaperMessagesServiceImpl(PnAuditLogBuilder auditLogBuilder, RequestDeliveryDAO requestDeliveryDAO, CostDAO costDAO,
-                                    NationalRegistryClient nationalRegistryClient, SqsSender sqsSender) {
+                                    NationalRegistryClient nationalRegistryClient, SqsSender sqsSender, AddressDAO addressDAO,
+                                    ExternalChannelClient externalChannelClient, PnPaperChannelConfig pnPaperChannelConfig,
+                                    PaperTenderService paperTenderService) {
         super(auditLogBuilder, requestDeliveryDAO, costDAO, nationalRegistryClient, sqsSender);
+        this.addressDAO = addressDAO;
+        this.externalChannelClient = externalChannelClient;
+        this.pnPaperChannelConfig = pnPaperChannelConfig;
+        this.paperTenderService = paperTenderService;
     }
 
     @Override
@@ -104,18 +105,18 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                 .zipWhen(oldEntity -> {
                     log.debug("Getting PnAddress with requestId {}, in DynamoDB table {}", oldEntity.getRequestId(), "AddressDynamoTable");
                     return addressDAO.findByRequestId(oldEntity.getRequestId())
-                                .map(address -> {
-                                    log.info("Founded data in DynamoDB table {}", "AddressDynamoTable");
-                                    log.debug("Address of the related request");
-                                    log.debug(
-                                            "name surname: {}, address: {}, zip: {}, foreign state: {}",
-                                            LogUtils.maskGeneric(address.getFullName()),
-                                            LogUtils.maskGeneric(address.getAddress()),
-                                            LogUtils.maskGeneric(address.getCap()),
-                                            LogUtils.maskGeneric(address.getCountry())
-                                    );
-                                    return address;
-                                });
+                            .map(address -> {
+                                log.info("Founded data in DynamoDB table {}", "AddressDynamoTable");
+                                log.debug("Address of the related request");
+                                log.debug(
+                                        "name surname: {}, address: {}, zip: {}, foreign state: {}",
+                                        LogUtils.maskGeneric(address.getFullName()),
+                                        LogUtils.maskGeneric(address.getAddress()),
+                                        LogUtils.maskGeneric(address.getCap()),
+                                        LogUtils.maskGeneric(address.getCountry())
+                                );
+                                return address;
+                            });
                 }, (entity, address) -> entity)
                 .flatMap(oldEntity -> {
                     prepareRequest.setRequestId(requestId);
@@ -183,13 +184,13 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
         log.debug("Getting PnDeliveryRequest with requestId {}, in DynamoDB table {}", requestId, "RequestDeliveryDynamoTable");
         return requestDeliveryDAO.getByRequestId(requestId)
                 .zipWhen(entity -> {
-                    log.info("Founded data in DynamoDB table {}", "RequestDeliveryDynamoTable");
-                    log.debug("Getting PnAddress with requestId {}, in DynamoDB table {}", requestId, "AddressDynamoTable");
-                    return addressDAO.findByRequestId(requestId).map(address -> {
-                        log.info("Founded data in DynamoDB table {}", "AddressDynamoTable");
-                        return address;
-                            })
-                            .switchIfEmpty(Mono.just(new PnAddress()));
+                            log.info("Founded data in DynamoDB table {}", "RequestDeliveryDynamoTable");
+                            log.debug("Getting PnAddress with requestId {}, in DynamoDB table {}", requestId, "AddressDynamoTable");
+                            return addressDAO.findByRequestId(requestId).map(address -> {
+                                        log.info("Founded data in DynamoDB table {}", "AddressDynamoTable");
+                                        return address;
+                                    })
+                                    .switchIfEmpty(Mono.just(new PnAddress()));
                         }
                 )
                 .map(entityAndAddress -> PrepareEventMapper.fromResult(entityAndAddress.getT1(), entityAndAddress.getT2()))
@@ -208,7 +209,7 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                     log.info("Founded data in DynamoDb table {}", "RequestDeliveryDynamoTable");
                     SendRequestValidator.compareRequestEntity(sendRequest,entity);
                     if (StringUtils.equals(entity.getStatusCode(), StatusDeliveryEnum.IN_PROCESSING.getCode())) {
-                       throw new PnGenericException(DELIVERY_REQUEST_IN_PROCESSING, DELIVERY_REQUEST_IN_PROCESSING.getMessage(), HttpStatus.CONFLICT);
+                        throw new PnGenericException(DELIVERY_REQUEST_IN_PROCESSING, DELIVERY_REQUEST_IN_PROCESSING.getMessage(), HttpStatus.CONFLICT);
                     }
                     log.info("RequestId - {}, Product type - {}",
                             entity.getRequestId(), entity.getProductType());
@@ -223,7 +224,7 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
                             LogUtils.maskGeneric(sendRequest.getReceiverAddress().getAddress()),
                             LogUtils.maskGeneric(sendRequest.getReceiverAddress().getCap()),
                             LogUtils.maskGeneric(sendRequest.getReceiverAddress().getCountry())
-                        );
+                    );
                     String VALIDATION_NAME = "Amount calculation process";
                     log.logChecking(VALIDATION_NAME);
                     return getSendResponse(
@@ -406,20 +407,20 @@ public class PaperMessagesServiceImpl extends BaseService implements PaperMessag
         PnAddress receiverAddressEntity = null;
         PnAddress discoveredAddressEntity = null;
 
-       if (prepareRequest.getReceiverAddress() != null) {
-           Address mapped = AddressMapper.fromAnalogToAddress(prepareRequest.getReceiverAddress(), null, Const.PREPARE);
-           pnDeliveryRequest.setAddressHash(mapped.convertToHash());
-           receiverAddressEntity = AddressMapper.toEntity(mapped, prepareRequest.getRequestId(), pnPaperChannelConfig);
-           pnDeliveryRequest.setProductType(getProposalProductType(mapped, pnDeliveryRequest.getProposalProductType()));
-           log.info("RequestId - {}, Proposal product type - {}, Product type - {}",
-                   pnDeliveryRequest.getRequestId(), pnDeliveryRequest.getProposalProductType(), pnDeliveryRequest.getProductType());
-       }
+        if (prepareRequest.getReceiverAddress() != null) {
+            Address mapped = AddressMapper.fromAnalogToAddress(prepareRequest.getReceiverAddress(), null, Const.PREPARE);
+            pnDeliveryRequest.setAddressHash(mapped.convertToHash());
+            receiverAddressEntity = AddressMapper.toEntity(mapped, prepareRequest.getRequestId(), pnPaperChannelConfig);
+            pnDeliveryRequest.setProductType(getProposalProductType(mapped, pnDeliveryRequest.getProposalProductType()));
+            log.info("RequestId - {}, Proposal product type - {}, Product type - {}",
+                    pnDeliveryRequest.getRequestId(), pnDeliveryRequest.getProposalProductType(), pnDeliveryRequest.getProductType());
+        }
 
-       if (prepareRequest.getDiscoveredAddress() != null) {
-           Address mapped = AddressMapper.fromAnalogToAddress(prepareRequest.getDiscoveredAddress(), null, Const.PREPARE);
-           pnDeliveryRequest.setHashOldAddress(mapped.convertToHash());
-           discoveredAddressEntity = AddressMapper.toEntity(mapped, prepareRequest.getRequestId(), AddressTypeEnum.DISCOVERED_ADDRESS, pnPaperChannelConfig);
-       }
+        if (prepareRequest.getDiscoveredAddress() != null) {
+            Address mapped = AddressMapper.fromAnalogToAddress(prepareRequest.getDiscoveredAddress(), null, Const.PREPARE);
+            pnDeliveryRequest.setHashOldAddress(mapped.convertToHash());
+            discoveredAddressEntity = AddressMapper.toEntity(mapped, prepareRequest.getRequestId(), AddressTypeEnum.DISCOVERED_ADDRESS, pnPaperChannelConfig);
+        }
         log.logEndingProcess(processName);
         return requestDeliveryDAO.createWithAddress(pnDeliveryRequest, receiverAddressEntity, discoveredAddressEntity);
     }

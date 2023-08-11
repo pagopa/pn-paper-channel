@@ -23,9 +23,9 @@ import it.pagopa.pn.paperchannel.utils.PnLogAudit;
 import it.pagopa.pn.paperchannel.utils.Utility;
 import it.pagopa.pn.paperchannel.validator.CostValidator;
 import lombok.CustomLog;
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -49,25 +49,16 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 
 @CustomLog
 @Service
+@RequiredArgsConstructor
 public class PaperChannelServiceImpl implements PaperChannelService {
-    @Autowired
-    private CostDAO costDAO;
-    @Autowired
-    private DeliveryDriverDAO deliveryDriverDAO;
-    @Autowired
-    private TenderDAO tenderDAO;
-    @Autowired
-    private ExcelDAO<DeliveriesData> excelDAO;
-    @Autowired
-    private FileDownloadDAO fileDownloadDAO;
-    @Autowired
-    private PnAuditLogBuilder pnAuditLogBuilder;
+    private final CostDAO costDAO;
+    private final DeliveryDriverDAO deliveryDriverDAO;
+    private final TenderDAO tenderDAO;
+    private final ExcelDAO<DeliveriesData> excelDAO;
+    private final FileDownloadDAO fileDownloadDAO;
+    private final PnAuditLogBuilder pnAuditLogBuilder;
     private final S3Bucket s3Bucket;
 
-
-    public PaperChannelServiceImpl(S3Bucket s3Bucket) {
-        this.s3Bucket = s3Bucket;
-    }
 
     @Override
     public Mono<PageableTenderResponseDto> getAllTender(Integer page, Integer size) {

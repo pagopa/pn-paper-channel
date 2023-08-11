@@ -12,6 +12,7 @@ import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnnationalregistries
 import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
 import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
 import it.pagopa.pn.paperchannel.middleware.queue.model.InternalEventHeader;
+import it.pagopa.pn.paperchannel.middleware.queue.model.ManualRetryEvent;
 import it.pagopa.pn.paperchannel.model.ExternalChannelError;
 import it.pagopa.pn.paperchannel.model.NationalRegistryError;
 import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
@@ -82,6 +83,9 @@ public class QueueListener {
                         return null;
                     });
 
+        } else if (internalEventHeader.getEventType().equals(EventTypeEnum.MANUAL_RETRY_EXTERNAL_CHANNEL.name())){
+            ManualRetryEvent manualRetryEvent = convertToObject(node, ManualRetryEvent.class);
+            this.queueListenerService.manualRetryExternalChannel(manualRetryEvent.getRequestId(), manualRetryEvent.getNewPcRetry());
         } else if (internalEventHeader.getEventType().equals(EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name())){
 
             boolean noAttempt = (paperChannelConfig.getAttemptQueueExternalChannel()-1) < internalEventHeader.getAttempt();
@@ -164,7 +168,7 @@ public class QueueListener {
         this.queueListenerService.nationalRegistriesResponseListener(dto);
     }
 
-    @SqsListener(value = "${pn.paper-channel.queue-external-channel}", deletionPolicy = SqsMessageDeletionPolicy.ALWAYS)
+    @SqsListener(value = "${pn.paper-channel.queue-external-channel}", deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)
     public void pullExternalChannel(@Payload String node, @Headers Map<String,Object> headers){
         SingleStatusUpdateDto body = convertToObject(node, SingleStatusUpdateDto.class);
         setMDCContext(headers);

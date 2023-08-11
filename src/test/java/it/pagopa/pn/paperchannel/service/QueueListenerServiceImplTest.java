@@ -4,12 +4,12 @@ import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.paperchannel.config.BaseTest;
 import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
-import it.pagopa.pn.paperchannel.exception.PnRetryStorageException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnnationalregistries.v1.dto.AddressSQSMessageDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnnationalregistries.v1.dto.AddressSQSMessagePhysicalAddressDto;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
@@ -17,45 +17,43 @@ import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
 import it.pagopa.pn.paperchannel.service.impl.QueueListenerServiceImpl;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.mockito.Spy;
+import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
-import reactor.test.StepVerifier;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 
+@ExtendWith(MockitoExtension.class)
+class QueueListenerServiceImplTest extends BaseTest{
 
-class QueueListenerServiceImplTest extends BaseTest {
-    @MockBean
+    @Mock
     private PaperResultAsyncService paperResultAsyncService;
-    @MockBean
+    @Mock
     private PaperAsyncService paperAsyncService;
-    @MockBean
+    @Mock
     private AddressDAO addressDAO;
 
-    @Autowired
-    @SpyBean
-    PnAuditLogBuilder auditLogBuilder;
-    @MockBean
-    RequestDeliveryDAO requestDeliveryDAO;
-    @MockBean
-    CostDAO costDAO;
-    @MockBean
-    NationalRegistryClient nationalRegistryClient;
-    @MockBean
-    SqsSender sqsSender;
-    @Autowired
+    @Mock
+    private PaperRequestErrorDAO paperRequestErrorDAO;
+
+    @Spy
+    private PnAuditLogBuilder auditLogBuilder;
+    @Mock
+    private RequestDeliveryDAO requestDeliveryDAO;
+    @Mock
+    private CostDAO costDAO;
+    @Mock
+    private NationalRegistryClient nationalRegistryClient;
+    @Mock
+    private SqsSender sqsSender;
+    @InjectMocks
     QueueListenerServiceImpl queueListenerService;
 
-    @BeforeEach
-    public void setUp(){
-        Mockito.when(this.requestDeliveryDAO.getByRequestId(Mockito.anyString())).thenReturn(Mono.just(new PnDeliveryRequest()));
-        Mockito.when(this.requestDeliveryDAO.updateData(Mockito.any())).thenReturn(Mono.just(new PnDeliveryRequest()));
-    }
 
     @Test
     void internalListenerTest(){
@@ -76,10 +74,10 @@ class QueueListenerServiceImplTest extends BaseTest {
 
     @Test
     void nationalRegistriesResponseListenerUntraceableAddressBecauseCorrelationIdIsNotFoundTest(){
-       try{
-           this.queueListenerService.nationalRegistriesResponseListener(new AddressSQSMessageDto());
-           Assertions.fail("Il metodo non è andato in eccezione");
-       }
+        try{
+            this.queueListenerService.nationalRegistriesResponseListener(new AddressSQSMessageDto());
+            Assertions.fail("Il metodo non è andato in eccezione");
+        }
         catch(PnGenericException ex){
             Assertions.assertEquals(CORRELATION_ID_NOT_FOUND, ex.getExceptionType());
         }
@@ -114,7 +112,6 @@ class QueueListenerServiceImplTest extends BaseTest {
         deliveryRequest.setRelatedRequestId("1234abc");
         deliveryRequest.setCorrelationId("9999");
         Mockito.when(this.requestDeliveryDAO.getByCorrelationId(Mockito.anyString())).thenReturn(Mono.just(deliveryRequest));
-        Mockito.when(this.addressDAO.findByRequestId(Mockito.anyString())).thenReturn(Mono.just(getRelatedAddress()));
         AddressSQSMessageDto addressSQSMessageDto = new AddressSQSMessageDto();
         addressSQSMessageDto.setCorrelationId("1234");
         addressSQSMessageDto.setError("ok");

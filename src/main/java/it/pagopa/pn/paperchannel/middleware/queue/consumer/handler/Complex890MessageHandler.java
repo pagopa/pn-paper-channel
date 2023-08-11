@@ -1,6 +1,7 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
+import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.mapper.SendEventMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
@@ -16,9 +17,9 @@ import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.WRONG_EVENT_ORDER;
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
 
 
@@ -80,7 +81,7 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
                 .collectList()
                 .doOnNext(pnEventMetas -> log.info("[{}] Result of findAllByRequestId: {}", paperRequest.getRequestId(), pnEventMetas))
                 .flatMap(pnEventMetas -> handleMetasResult(pnEventMetas, entity, paperRequest))
-                .then(metaDematCleaner.clean(paperRequest.getRequestId()));
+                .flatMap(pnEventMetas -> metaDematCleaner.clean(paperRequest.getRequestId()));
     }
 
     private Mono<List<PnEventMeta>> handleMetasResult(List<PnEventMeta> pnEventMetas, PnDeliveryRequest entity,
@@ -110,8 +111,7 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
 
         if (containsPNAG012 && (!containsRECAG012)) {  // presente META##PNAG012 ma NON META##RECAG012
 //            CASO 1.ii
-            log.error("[{}] META##PNAG012 is present but META##RECAG012 is not present", paperRequest.getRequestId());
-            return Mono.empty();
+            throw new PnGenericException(WRONG_EVENT_ORDER, "[{" + paperRequest.getRequestId() + "}] META##PNAG012 is present but META##RECAG012 is not present");
         }
         else if (containsPNAG012 /*&& containsRECAG012*/) { // presenti META##RECAG012  e META##PNAG012
 //            CASO 2
@@ -124,8 +124,7 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
             log.info("[{}] Result of query is: META##RECAG012 present, META##PNAG012 not present", paperRequest.getRequestId());
 
             if (missingRequiredDateTimes(recag011ADateTime, recag00XADateTime)) {
-                log.error("[{}] needed META##RECAG00_A is present and/or META##RECAG011A not present", paperRequest.getRequestId());
-                return Mono.empty();
+                throw new PnGenericException(WRONG_EVENT_ORDER, "[{" + paperRequest.getRequestId() + "}] needed META##RECAG00_A is present and/or META##RECAG011A not present");
             }
 
             if (lessThanTenDaysBetweenRECAG00XAAndRECAG011A(recag011ADateTime, recag00XADateTime)) {

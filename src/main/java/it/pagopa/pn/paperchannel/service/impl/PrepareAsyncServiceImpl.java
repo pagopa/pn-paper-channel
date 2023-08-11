@@ -3,10 +3,7 @@ package it.pagopa.pn.paperchannel.service.impl;
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.paperchannel.config.HttpConnector;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
-import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
-import it.pagopa.pn.paperchannel.exception.PnAddressFlowException;
-import it.pagopa.pn.paperchannel.exception.PnGenericException;
-import it.pagopa.pn.paperchannel.exception.PnRetryStorageException;
+import it.pagopa.pn.paperchannel.exception.*;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileDownloadResponseDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
@@ -32,7 +29,6 @@ import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import lombok.CustomLog;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -49,20 +45,22 @@ import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.TAKING_CHARGE;
 @CustomLog
 public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncService {
 
-    @Autowired
-    private SafeStorageClient safeStorageClient;
-    @Autowired
-    private AddressDAO addressDAO;
-    @Autowired
-    private PnPaperChannelConfig paperChannelConfig;
-    @Autowired
-    private PaperRequestErrorDAO paperRequestErrorDAO;
-    @Autowired
-    private PaperAddressService paperAddressService;
+    private final SafeStorageClient safeStorageClient;
+    private final AddressDAO addressDAO;
+    private final PnPaperChannelConfig paperChannelConfig;
+    private final PaperRequestErrorDAO paperRequestErrorDAO;
+    private final PaperAddressService paperAddressService;
 
     public PrepareAsyncServiceImpl(PnAuditLogBuilder auditLogBuilder, NationalRegistryClient nationalRegistryClient,
-                                   RequestDeliveryDAO requestDeliveryDAO,SqsSender sqsQueueSender, CostDAO costDAO ) {
+                                   RequestDeliveryDAO requestDeliveryDAO,SqsSender sqsQueueSender, CostDAO costDAO,
+                                   SafeStorageClient safeStorageClient, AddressDAO addressDAO, PnPaperChannelConfig paperChannelConfig,
+                                   PaperRequestErrorDAO paperRequestErrorDAO, PaperAddressService paperAddressService) {
         super(auditLogBuilder, requestDeliveryDAO, costDAO, nationalRegistryClient, sqsQueueSender);
+        this.safeStorageClient = safeStorageClient;
+        this.addressDAO = addressDAO;
+        this.paperChannelConfig = paperChannelConfig;
+        this.paperRequestErrorDAO = paperRequestErrorDAO;
+        this.paperAddressService = paperAddressService;
     }
 
     @Override
@@ -169,10 +167,16 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                     return addressDAO.create(AddressMapper.toEntity(newAddress, pnDeliveryRequest.getRequestId(), AddressTypeEnum.RECEIVER_ADDRESS, paperChannelConfig))
                             .map(item -> pnDeliveryRequest);
                 })
-                .onErrorResume(PnGenericException.class, ex ->
-                    traceError(pnDeliveryRequest.getRequestId(), ex.getMessage(), "CHECK_ADDRESS_FLOW" )
-                        .then(Mono.defer(() -> Mono.error(ex)))
-                );
+                .onErrorResume(PnGenericException.class, ex -> handleAndThrowAgainError(ex, pnDeliveryRequest.getRequestId()));
+    }
+
+    private Mono<PnDeliveryRequest> handleAndThrowAgainError(PnGenericException ex, String requestId) {
+        if(! (ex instanceof PnUntracebleException) ) {
+            return traceError(requestId, ex.getMessage(), "CHECK_ADDRESS_FLOW").then(Mono.error(ex));
+        }
+        else {
+            return Mono.error(ex);
+        }
     }
 
     public Mono<FileDownloadResponseDto> getFileRecursive(Integer n, String fileKey, BigDecimal millis){

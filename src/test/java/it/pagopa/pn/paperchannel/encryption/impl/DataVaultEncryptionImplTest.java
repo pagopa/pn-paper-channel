@@ -4,14 +4,8 @@ import it.pagopa.pn.paperchannel.config.BaseTest;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
-import reactor.core.publisher.Mono;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class DataVaultEncryptionImplTest extends BaseTest.WithMockServer {
 
@@ -29,7 +23,7 @@ class DataVaultEncryptionImplTest extends BaseTest.WithMockServer {
             String data = dataVaultEncryption.encode("FRMTTR76M06B715A","PF");
         }
         catch (PnGenericException ex) {
-            Assertions.assertEquals(ex.getHttpStatus(), HttpStatus.BAD_REQUEST);
+            Assertions.assertEquals(HttpStatus.BAD_REQUEST, ex.getHttpStatus());
         }
 
     }
@@ -46,7 +40,7 @@ class DataVaultEncryptionImplTest extends BaseTest.WithMockServer {
             String data = dataVaultEncryption.decode("123e4567-e89b-12d3-a456-426655440002");
         }
         catch (PnGenericException ex) {
-            Assertions.assertEquals(ex.getHttpStatus(), HttpStatus.BAD_REQUEST);
+            Assertions.assertEquals( HttpStatus.BAD_REQUEST, ex.getHttpStatus());
         }
     }
 

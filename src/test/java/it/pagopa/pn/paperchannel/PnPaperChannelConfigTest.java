@@ -44,6 +44,7 @@ class PnPaperChannelConfigTest {
     private String chargeCalculationMode;
     private String originalPostmanAddressUsageMode;
     private Duration refinementDuration;
+    private String requestPaIdOverride;
 
 
     @BeforeEach
@@ -163,6 +164,9 @@ class PnPaperChannelConfigTest {
         stringBuilder.append(", ");
         stringBuilder.append("refinementDuration=");
         stringBuilder.append(refinementDuration);
+        stringBuilder.append(", ");
+        stringBuilder.append("requestPaIdOverride=");
+        stringBuilder.append(requestPaIdOverride);
         stringBuilder.append(")");
         String toTest = stringBuilder.toString();
         Assertions.assertEquals(toTest, pnPaperChannelConfig.toString());

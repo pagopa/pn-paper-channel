@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
+import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
@@ -12,6 +13,7 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 import java.util.Optional;
 
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.WRONG_EVENT_ORDER;
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
 
 @Slf4j
@@ -58,9 +60,9 @@ public class RECAG008CMessageHandler extends SendToDeliveryPushHandler {
         // presence check and error log
         final boolean ok = elRECAG012.isPresent() && elPNAG012.isPresent();
         if (!ok) {
-            log.error("[{}] Problem with RECAG012 or PNAG012 presence!", requestId);
+            throw new PnGenericException(WRONG_EVENT_ORDER, "[{" + requestId + "}] Problem with RECAG012 or PNAG012 presence!");
         }
 
-        return ok;
+        return true;
     }
 }
