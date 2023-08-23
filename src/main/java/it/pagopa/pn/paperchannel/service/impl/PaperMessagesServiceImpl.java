@@ -313,13 +313,13 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
 
     private Mono<SendResponse> getSendResponse(Address address, List<AttachmentInfo> attachments, ProductTypeEnum productType, boolean isReversePrinter){
         return this.calculator(attachments, address, productType, isReversePrinter)
-                .map(amout -> {
+                .map(amount -> {
                     int totalPages = getNumberOfPages(attachments, isReversePrinter, true);
-                    float amoutPriceFormat = Utility.getPriceFormat(amout);
-                    log.debug("Amount : {}", amoutPriceFormat);
+                    Integer amoutPriceFormat = Utility.getPriceFormat(amount);
+                    log.debug("Amount : {}", amount);
                     log.debug("Total pages : {}", totalPages);
                     SendResponse response = new SendResponse();
-                    response.setAmount((int) (amoutPriceFormat*100));
+                    response.setAmount(amoutPriceFormat);
                     response.setNumberOfPages(totalPages);
                     response.setEnvelopeWeight(getLetterWeight(totalPages));
                     return response;
