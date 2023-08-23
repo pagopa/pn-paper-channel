@@ -37,6 +37,7 @@ public class Utility {
         fr.setParseBigDecimal(true);
         DecimalFormatSymbols symbols = new DecimalFormatSymbols();
         symbols.setDecimalSeparator('.');
+        fr.setDecimalFormatSymbols(symbols);
 
         return (BigDecimal) fr.parse(value);
     }

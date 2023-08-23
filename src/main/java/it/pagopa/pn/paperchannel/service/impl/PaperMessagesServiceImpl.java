@@ -316,11 +316,11 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
         return this.calculator(attachments, address, productType, isReversePrinter)
                 .map(amount -> {
                     int totalPages = getNumberOfPages(attachments, isReversePrinter, true);
-                    Integer amoutPriceFormat = Utility.toCentsFormat(amount);
+                    Integer amountPriceFormat = Utility.toCentsFormat(amount);
                     log.debug("Amount : {}", amount);
                     log.debug("Total pages : {}", totalPages);
                     SendResponse response = new SendResponse();
-                    response.setAmount(amoutPriceFormat);
+                    response.setAmount(amountPriceFormat);
                     response.setNumberOfPages(totalPages);
                     response.setEnvelopeWeight(getLetterWeight(totalPages));
                     return response;

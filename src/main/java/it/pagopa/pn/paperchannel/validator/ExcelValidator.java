@@ -148,15 +148,4 @@ public class ExcelValidator {
         }
         return number;
     }
-
-    private static Float getFloat(String value){
-        Float f = null;
-        try{
-            f = Float.valueOf(value);
-        }
-        catch(NumberFormatException ex){
-            log.error("Error NumberFormatException");
-        }
-        return f;
-    }
 }
