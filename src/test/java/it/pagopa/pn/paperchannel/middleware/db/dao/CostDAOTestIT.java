@@ -7,6 +7,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -98,8 +99,8 @@ class CostDAOTestIT extends BaseTest {
         costNational.setTenderCode("TENDER-1");
         costNational.setProductType("AR");
         costNational.setCap(List.of("21047", "21050", "81022", "13000"));
-        costNational.setBasePrice(2.2F);
-        costNational.setPagePrice(2.2F);
+        costNational.setBasePrice(BigDecimal.valueOf(2.2F));
+        costNational.setPagePrice(BigDecimal.valueOf(2.2F));
         costNational.setFsu(false);
         costDAO.createOrUpdate(costNational).block();
         log.info("COST NATIONAL CREATED");
@@ -109,8 +110,8 @@ class CostDAOTestIT extends BaseTest {
         costNationalFSU.setTenderCode("TENDER-1");
         costNationalFSU.setProductType("AR");
         costNationalFSU.setCap(List.of("99999", "10902", "000212", "34523"));
-        costNationalFSU.setBasePrice(2.2F);
-        costNationalFSU.setPagePrice(2.2F);
+        costNationalFSU.setBasePrice(BigDecimal.valueOf(2.2F));
+        costNationalFSU.setPagePrice(BigDecimal.valueOf(2.2F));
         costNationalFSU.setFsu(false);
         costDAO.createOrUpdate(costNationalFSU).block();
         log.info("COST NATIONAL CREATED");
@@ -121,8 +122,8 @@ class CostDAOTestIT extends BaseTest {
         c1.setTenderCode("TENDER-102");
         c1.setProductType("AR");
         c1.setCap(List.of("21047", "21050", "81022", "13000", "99999"));
-        c1.setBasePrice(2.2F);
-        c1.setPagePrice(2.2F);
+        c1.setBasePrice(BigDecimal.valueOf(2.2F));
+        c1.setPagePrice(BigDecimal.valueOf(2.2F));
         c1.setFsu(true);
         costDAO.createOrUpdate(c1).block();
         log.info("COST c1 CREATED");
@@ -132,8 +133,8 @@ class CostDAOTestIT extends BaseTest {
         costInternational.setTenderCode("TENDER-1");
         costInternational.setProductType("AR");
         costInternational.setZone("ZONE_1");
-        costInternational.setBasePrice(2.2F);
-        costInternational.setPagePrice(2.2F);
+        costInternational.setBasePrice(BigDecimal.valueOf(2.2F));
+        costInternational.setPagePrice(BigDecimal.valueOf(2.2F));
         costInternational.setFsu(false);
         costDAO.createOrUpdate(costInternational).block();
         log.info("COST INTERNATIONAL CREATED");
@@ -144,8 +145,8 @@ class CostDAOTestIT extends BaseTest {
         costInternationalFSU1.setTenderCode("TENDER-1");
         costInternationalFSU1.setProductType("AR");
         costInternationalFSU1.setZone("ZONE_1");
-        costInternationalFSU1.setBasePrice(2.2F);
-        costInternationalFSU1.setPagePrice(2.2F);
+        costInternationalFSU1.setBasePrice(BigDecimal.valueOf(2.2F));
+        costInternationalFSU1.setPagePrice(BigDecimal.valueOf(2.2F));
         costInternationalFSU1.setFsu(true);
         costDAO.createOrUpdate(costInternationalFSU1).block();
         log.info("COST INTERNATIONAL FSU 1 CREATED");
@@ -156,8 +157,8 @@ class CostDAOTestIT extends BaseTest {
         costInternationalFSU2.setTenderCode("TENDER-1");
         costInternationalFSU2.setProductType("AR");
         costInternationalFSU2.setZone("ZONE_2");
-        costInternationalFSU2.setBasePrice(2.2F);
-        costInternationalFSU2.setPagePrice(2.2F);
+        costInternationalFSU2.setBasePrice(BigDecimal.valueOf(2.2F));
+        costInternationalFSU2.setPagePrice(BigDecimal.valueOf(2.2F));
         costInternationalFSU2.setFsu(true);
         costDAO.createOrUpdate(costInternationalFSU2).block();
         log.info("COST INTERNATIONAL FSU 2 CREATED");

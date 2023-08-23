@@ -31,6 +31,7 @@ import org.springframework.http.HttpStatus;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -779,15 +780,15 @@ class PaperMessagesServiceTest {
 
     private CostDTO getNationalCost() {
         CostDTO dto = new CostDTO();
-        dto.setPrice(1.00F);
-        dto.setPriceAdditional(2.00F);
+        dto.setPrice(BigDecimal.valueOf(1.00F));
+        dto.setPriceAdditional(BigDecimal.valueOf(2.00F));
         return dto;
     }
 
     private CostDTO getInternationalCost() {
         CostDTO dto = new CostDTO();
-        dto.setPrice(2.00F);
-        dto.setPriceAdditional(2.00F);
+        dto.setPrice(BigDecimal.valueOf(2.00F));
+        dto.setPriceAdditional(BigDecimal.valueOf(2.00F));
         return dto;
     }
 

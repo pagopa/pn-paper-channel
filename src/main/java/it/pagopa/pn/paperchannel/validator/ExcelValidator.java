@@ -8,6 +8,8 @@ import it.pagopa.pn.paperchannel.utils.Utility;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
+import java.math.BigDecimal;
+import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
 
@@ -113,7 +115,7 @@ public class ExcelValidator {
         if (StringUtils.isBlank(basePrice.getValue())){
             errors.add(new PnExcelValidatorException.ErrorCell(basePrice.getRow(), basePrice.getCol(), "BASE_PRICE", "Il campo base price deve essere valorizzato"));
         } else{
-            deliveryAndCost.setBasePrice(getFloat(basePrice.getValue()));
+            deliveryAndCost.setBasePrice(getBigDecimal(basePrice.getValue()));
             if (deliveryAndCost.getBasePrice() == null) {
                 errors.add(new PnExcelValidatorException.ErrorCell(basePrice.getRow(), basePrice.getCol(),"BASE_PRICE",  "Formato non valido."));
             }
@@ -121,11 +123,10 @@ public class ExcelValidator {
 
         //pagePrice check
         ExcelEngine.ExcelCell pagePrice = data.get("PAGE_PRICE");
-        deliveryAndCost.setPagePrice(pagePrice.getRow().floatValue());
         if (StringUtils.isBlank(pagePrice.getValue())){
             errors.add(new PnExcelValidatorException.ErrorCell(pagePrice.getRow(), pagePrice.getCol(), "PAGE_PRICE", "Il campo page price deve essere valorizzato"));
         } else{
-            deliveryAndCost.setPagePrice(getFloat(pagePrice.getValue()));
+            deliveryAndCost.setPagePrice(getBigDecimal(pagePrice.getValue()));
             if (deliveryAndCost.getPagePrice() == null) {
                 errors.add(new PnExcelValidatorException.ErrorCell(pagePrice.getRow(), pagePrice.getCol(), "PAGE_PRICE", "Formato non valido."));
             }
@@ -136,6 +137,16 @@ public class ExcelValidator {
     private static boolean checkBoolean(String val){
         val = val.toLowerCase();
         return (val.equals("true") || val.equals("false"));
+    }
+
+    private static BigDecimal getBigDecimal(String value) {
+        BigDecimal number = null;
+        try {
+            number = Utility.toBigDecimal(value);
+        } catch (ParseException ex) {
+            log.error("Error ParseException cost");
+        }
+        return number;
     }
 
     private static Float getFloat(String value){

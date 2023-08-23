@@ -11,6 +11,9 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.text.ParseException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -22,11 +25,20 @@ public class Utility {
         throw new IllegalCallerException();
     }
 
-    public static Integer getPriceFormat(float value) {
-        BigDecimal decimalCost = BigDecimal.valueOf(value);
-        BigDecimal centsDecimalCost = decimalCost.multiply(BigDecimal.valueOf(100));
-        centsDecimalCost = centsDecimalCost.setScale(0, RoundingMode.HALF_UP);
-        return centsDecimalCost.intValue();
+    public static Integer toCentsFormat(BigDecimal value) {
+        value = value.multiply(BigDecimal.valueOf(100));
+        value = value.setScale(0, RoundingMode.HALF_UP);
+        return value.intValue();
+    }
+
+    public static BigDecimal toBigDecimal(String value) throws ParseException {
+        DecimalFormat fr = new DecimalFormat("#######.##");
+        fr.setRoundingMode(RoundingMode.HALF_UP);
+        fr.setParseBigDecimal(true);
+        DecimalFormatSymbols symbols = new DecimalFormatSymbols();
+        symbols.setDecimalSeparator('.');
+
+        return (BigDecimal) fr.parse(value);
     }
 
     public static String convertToHash(String string) {

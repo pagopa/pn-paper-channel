@@ -3,12 +3,14 @@ package it.pagopa.pn.paperchannel.validator;
 import it.pagopa.pn.paperchannel.dao.common.ExcelEngine;
 import it.pagopa.pn.paperchannel.dao.model.DeliveryAndCost;
 import it.pagopa.pn.paperchannel.exception.PnExcelValidatorException;
+import it.pagopa.pn.paperchannel.utils.Utility;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -51,7 +53,7 @@ class ExcelValidatorTest {
     }
 
     @Test
-    void whenDataExcelOKThenReturnEmptyErrorsAndDeliveryData(){
+    void whenDataExcelOKThenReturnEmptyErrorsAndDeliveryData() throws ParseException {
         List<PnExcelValidatorException.ErrorCell> errors = new ArrayList<>();
         DeliveryAndCost deliveryAndCost = ExcelValidator.validateExcel(errors, dataExcelOk);
         Assertions.assertTrue(errors.isEmpty());
@@ -65,8 +67,8 @@ class ExcelValidatorTest {
         Assertions.assertTrue(deliveryAndCost.getFsu());
         Assertions.assertNull(deliveryAndCost.getCaps());
         Assertions.assertEquals(dataExcelOk.get("ZONE").getValue(), deliveryAndCost.getZone());
-        Assertions.assertEquals(Float.valueOf(dataExcelOk.get("BASE_PRICE").getValue()),deliveryAndCost.getBasePrice());
-        Assertions.assertEquals(Float.valueOf(dataExcelOk.get("PAGE_PRICE").getValue()),deliveryAndCost.getPagePrice());
+        Assertions.assertEquals(Utility.toBigDecimal(dataExcelOk.get("BASE_PRICE").getValue()),deliveryAndCost.getBasePrice());
+        Assertions.assertEquals(Utility.toBigDecimal(dataExcelOk.get("PAGE_PRICE").getValue()),deliveryAndCost.getPagePrice());
     }
 
     @Test

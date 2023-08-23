@@ -24,6 +24,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -537,8 +538,8 @@ class CreateAndUpdateFromServiceTest {
         cost.setZone(zone);
         cost.setCap(cap);
         cost.setUuid(UUID.randomUUID().toString());
-        cost.setBasePrice(1.23F);
-        cost.setPagePrice(1.23F);
+        cost.setBasePrice(BigDecimal.valueOf(1.23F));
+        cost.setPagePrice(BigDecimal.valueOf(1.23F));
         cost.setProductType(productType);
         return cost;
     }
@@ -587,8 +588,8 @@ class CreateAndUpdateFromServiceTest {
 
     private CostDTO getCostDTO(){
         CostDTO dto = new CostDTO();
-        dto.setPrice(1.23F);
-        dto.setPriceAdditional(1.23F);
+        dto.setPrice(BigDecimal.valueOf(1.23F));
+        dto.setPriceAdditional(BigDecimal.valueOf(1.23F));
         dto.setDriverCode("1223444");
         dto.setTenderCode("1233344");
         return dto;

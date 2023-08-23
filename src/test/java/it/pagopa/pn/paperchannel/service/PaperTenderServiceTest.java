@@ -18,6 +18,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.math.BigDecimal;
+
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.ACTIVE_TENDER_NOT_FOUND;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.COST_DRIVER_OR_FSU_NOT_FOUND;
 import static org.junit.jupiter.api.Assertions.*;
@@ -104,10 +106,10 @@ class PaperTenderServiceTest {
         cost.setFsu(false);
         cost.setCap(null);
         cost.setProductType("AR");
-        cost.setPagePrice(1.23F);
+        cost.setPagePrice(BigDecimal.valueOf(1.23F));
         cost.setUuid("COST_UUID");
         cost.setZone("ZONE_1");
-        cost.setBasePrice(1.43F);
+        cost.setBasePrice(BigDecimal.valueOf(1.43F));
         cost.setDeliveryDriverCode("DRIVER");
         cost.setTenderCode(tender.getTenderCode());
         Mockito.when(costDAO.getByCapOrZoneAndProductType(tender.getTenderCode(),  null, cost.getZone(), cost.getProductType()))

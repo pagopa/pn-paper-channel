@@ -3,6 +3,8 @@ package it.pagopa.pn.paperchannel.middleware.db.entities;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 
@@ -16,8 +18,8 @@ class PnCostTest {
     private String zone;
     private String tenderCode;
     private String productType;
-    private Float basePrice;
-    private Float pagePrice;
+    private BigDecimal basePrice;
+    private BigDecimal pagePrice;
     private Boolean fsu;
 
 
@@ -125,8 +127,8 @@ class PnCostTest {
         zone = "ZONE_1";
         tenderCode = "ZAXSCDVFBGNH";
         productType = "890";
-        basePrice = 12.3F;
-        pagePrice = 1.8F;
+        basePrice = BigDecimal.valueOf(12.3F);
+        pagePrice = BigDecimal.valueOf(1.8F);
         fsu = true;;
     }
 }
