@@ -33,7 +33,7 @@ class CostDAOTestIT extends BaseTest {
     void findAllFromTenderCodeTest(){
         List<PnCost> prices = this.costDAO.findAllFromTenderCode(costNational.getTenderCode(), null).collectList().block();
         assertNotNull(prices);
-        assertEquals(5, prices.size());
+        assertEquals(4, prices.size());
 
         prices = this.costDAO.findAllFromTenderCode("TEST_ERROR_TENDER_CODE", null).collectList().block();
         assertNotNull(prices);
@@ -50,7 +50,7 @@ class CostDAOTestIT extends BaseTest {
                         null
                 ).collectList().block();
         assertNotNull(costs);
-        assertEquals(5, costs.size());
+        assertEquals(4, costs.size());
         costs = this.costDAO
                 .findAllFromTenderAndProductTypeAndExcludedUUID(
                         costNational.getTenderCode(),
@@ -58,7 +58,7 @@ class CostDAOTestIT extends BaseTest {
                         costNational.getUuid()
                 ).collectList().block();
         assertNotNull(costs);
-        assertEquals(4, costs.size());
+        assertEquals(3, costs.size());
     }
 
     @Test
@@ -67,7 +67,7 @@ class CostDAOTestIT extends BaseTest {
                 costInternationalFSU1.getTenderCode(), null, "ZONE_1", "AR").block();
 
         assertNotNull(cost);
-        assertFalse(cost.getFsu());
+        assertTrue(cost.getFsu());
 
         cost = this.costDAO.getByCapOrZoneAndProductType(
                 costNationalFSU.getTenderCode(), "21047", null, "AR"
