@@ -9,9 +9,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.text.ParseException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -23,13 +25,21 @@ public class Utility {
         throw new IllegalCallerException();
     }
 
-    public static Float getPriceFormat(float value) {
+    public static Integer toCentsFormat(BigDecimal value) {
+        value = value.multiply(BigDecimal.valueOf(100));
+        value = value.setScale(0, RoundingMode.HALF_UP);
+        return value.intValue();
+    }
+
+    public static BigDecimal toBigDecimal(String value) throws ParseException {
         DecimalFormat fr = new DecimalFormat("#######.##");
         fr.setRoundingMode(RoundingMode.HALF_UP);
+        fr.setParseBigDecimal(true);
         DecimalFormatSymbols symbols = new DecimalFormatSymbols();
         symbols.setDecimalSeparator('.');
         fr.setDecimalFormatSymbols(symbols);
-        return Float.valueOf(fr.format(value));
+
+        return (BigDecimal) fr.parse(value);
     }
 
     public static String convertToHash(String string) {

@@ -35,6 +35,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuples;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -313,13 +314,13 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
 
     private Mono<SendResponse> getSendResponse(Address address, List<AttachmentInfo> attachments, ProductTypeEnum productType, boolean isReversePrinter){
         return this.calculator(attachments, address, productType, isReversePrinter)
-                .map(amout -> {
+                .map(amount -> {
                     int totalPages = getNumberOfPages(attachments, isReversePrinter, true);
-                    float amoutPriceFormat = Utility.getPriceFormat(amout);
-                    log.debug("Amount : {}", amoutPriceFormat);
+                    Integer amountPriceFormat = Utility.toCentsFormat(amount);
+                    log.debug("Amount : {}", amount);
                     log.debug("Total pages : {}", totalPages);
                     SendResponse response = new SendResponse();
-                    response.setAmount((int) (amoutPriceFormat*100));
+                    response.setAmount(amountPriceFormat);
                     response.setNumberOfPages(totalPages);
                     response.setEnvelopeWeight(getLetterWeight(totalPages));
                     return response;
@@ -333,7 +334,7 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
         return (weightPaper * numberOfPages) + weightLetter;
     }
 
-    private Mono<Float> calculator(List<AttachmentInfo> attachments, Address address, ProductTypeEnum productType, boolean isReversePrinter){
+    private Mono<BigDecimal> calculator(List<AttachmentInfo> attachments, Address address, ProductTypeEnum productType, boolean isReversePrinter){
         boolean isNational = StringUtils.isBlank(address.getCountry()) ||
                 StringUtils.equalsIgnoreCase(address.getCountry(), "it") ||
                 StringUtils.equalsIgnoreCase(address.getCountry(), "italia") ||
@@ -348,16 +349,16 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
 
     }
 
-    private Mono<Float> getAmount(List<AttachmentInfo> attachments, String cap, String zone, String productType, boolean isReversePrinter){
+    private Mono<BigDecimal> getAmount(List<AttachmentInfo> attachments, String cap, String zone, String productType, boolean isReversePrinter){
         String processName = "Get Amount";
         log.logStartingProcess(processName);
         return paperTenderService.getCostFrom(cap, zone, productType)
                 .map(contract ->{
                     if (!pnPaperChannelConfig.getChargeCalculationMode().equalsIgnoreCase(AAR)){
                         Integer totPages = getNumberOfPages(attachments, isReversePrinter, false);
-                        float priceTotPages = totPages * contract.getPriceAdditional();
+                        BigDecimal priceTotPages = contract.getPriceAdditional().multiply(BigDecimal.valueOf(totPages));
                         log.logEndingProcess(processName);
-                        return Float.sum(contract.getPrice(), priceTotPages);
+                        return contract.getPrice().add(priceTotPages);
                     }else{
                         log.logEndingProcess(processName);
                         return contract.getPrice();

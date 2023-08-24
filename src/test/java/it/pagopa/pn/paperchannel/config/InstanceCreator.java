@@ -7,6 +7,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryFile;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnTender;
 import it.pagopa.pn.paperchannel.utils.Const;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -96,8 +97,8 @@ public class InstanceCreator {
         cost.setZone(zone);
         cost.setCap(cap);
         cost.setUuid(UUID.randomUUID().toString());
-        cost.setBasePrice(1.23F);
-        cost.setPagePrice(1.23F);
+        cost.setBasePrice(BigDecimal.valueOf(1.23F));
+        cost.setPagePrice(BigDecimal.valueOf(1.23F));
         cost.setProductType(productType);
         return cost;
     }

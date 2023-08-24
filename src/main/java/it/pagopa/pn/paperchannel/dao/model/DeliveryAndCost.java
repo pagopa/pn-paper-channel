@@ -5,6 +5,7 @@ import lombok.Setter;
 import lombok.ToString;
 import org.apache.commons.lang3.StringUtils;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
 
@@ -44,9 +45,9 @@ public class DeliveryAndCost {
     @ColumnExcel("PRODUCT_TYPE")
     private String productType;
     @ColumnExcel("BASE_PRICE")
-    private Float basePrice;
+    private BigDecimal basePrice;
     @ColumnExcel("PAGE_PRICE")
-    private Float pagePrice;
+    private BigDecimal pagePrice;
 
     @Override
     public boolean equals(Object o) {
