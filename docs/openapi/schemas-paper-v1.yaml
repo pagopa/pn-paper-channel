@@ -226,6 +226,11 @@ components:
           $ref: '#/components/schemas/AnalogAddress'
         proposalProductType:
           $ref: '#/components/schemas/ProposalTypeEnum'
+        amount:
+          type: integer
+          format: int32
+          description: ammontare in eurocent del costo per l'invio della notifica
+            in forma cartacea fino escluso l'invio cartaceo corrente.
       allOf:
       - $ref: '#/components/schemas/PaperRequest'
     Problem:
