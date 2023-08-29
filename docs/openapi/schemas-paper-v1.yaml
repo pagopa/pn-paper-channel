@@ -230,7 +230,8 @@ components:
           type: integer
           format: int32
           description: ammontare in eurocent del costo per l'invio della notifica
-            in forma cartacea fino escluso l'invio cartaceo corrente.
+            in forma cartacea fino escluso l'invio cartaceo corrente. Può essere null nel caso in cui
+            la notifica sia di tipo FLAT_RATE e quindi non serve passare il costo a pn-f24
       allOf:
       - $ref: '#/components/schemas/PaperRequest'
     Problem:
