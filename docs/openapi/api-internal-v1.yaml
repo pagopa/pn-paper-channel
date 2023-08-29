@@ -198,7 +198,10 @@ paths:
         \ ma stessi parametri passati, si può tornare il codice 200 se la richiesta\
         \ è già stata elaborata (o si conosce già l'esito), o il 204 se è ancora in\
         \ fase di elaborazione. I dati relativi alla richiesta vanno mantenuti in\
-        \ forma anonima tramite opportuno hash."
+        \ forma anonima tramite opportuno hash. \
+        \ E' possibile riceve al più un url relativo a f24, relativo ad un set di\
+        \ documenti f24 da generare. La risposta alla prepare, conterrà la lista\
+        \ delle fileKey di safestorage generate da pn-f24"
       operationId: sendPaperPrepareRequest
       parameters:
         - name: requestId
@@ -229,84 +232,6 @@ paths:
                 $ref: '#/components/schemas/PaperChannelUpdate'
         "204":
           description: Risposta positiva di un invio cartaceo con un nuovo requestID, 
-            lo status code indica che servizio ha preso in carico la richiesta
-        "400":
-          description: Errore di validazione sintattica della richiesta
-          content:
-            application/problem+json:
-              schema:
-                $ref: 'remote-refs.yaml#/components/schemas/Problem'
-        "409":
-          description: Indica che la richiesta è già stata effettuata e non può essere
-            sovrascritta.
-          content:
-            application/problem+json:
-              schema:
-                $ref: 'remote-refs.yaml#/components/schemas/Problem'
-      callbacks:
-        deliveryStatusPushUpdates:
-          indirizzo_webhook_oppure_coda_sqs_legato_al_valore_header_xPagopaExtchCxId:
-            post:
-              summary: Eventi avanzamento spediti ad SQS
-              requestBody:
-                content:
-                  application/json:
-                    schema:
-                      maxItems: 1000
-                      minItems: 1
-                      type: array
-                      items:
-                        $ref: '#/components/schemas/PaperChannelUpdate'
-                required: true
-              responses:
-                default:
-                  description: "Error processing the update, the update must be re-sended"
-                "200":
-                  description: Update correctly received
-                "400":
-                  description: Malformed update status
-
-  /paper-channel-private/v1/b2b/paper-deliveries-retrieve-amount/{requestId}:
-    post:
-      tags:
-        - PaperMessages
-      summary: Invio di corrispondenza cartacea - richiesta di calcolo del costo
-        all'invio
-      description: "Questa operazione sottomette ad paper-channel una richiesta calcolo del costo\
-        \ di invio di corrispondenza cartacea. Le attività da eseguire sono le stesse della prepare\
-        \ con la differenza del fatto che alcuni documenti non vengono passati, ma al loro posto\
-        \ viene tornato il numero di pagine aggiuntive da stampare e che all'invio dell'esito \
-        \ di risposta asincrono, tutte le strutture dati possono essere eliminate"
-      operationId: sendPaperRetrieveAmountRequest
-      parameters:
-        - name: requestId
-          in: path
-          required: true
-          style: simple
-          explode: false
-          schema:
-            maxLength: 100
-            minLength: 5
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RetrieveAmountRequest'
-        required: true
-      responses:
-        "200":
-          description: Risposta positiva ad una ulteriore chiamata di invio cartaceo
-            con stesso requestId e body della prima. Questo è il caso in cui il client effettua
-            una nuova richiesta del tutto identica alla prima.
-            In questo scenario il componente risponderà con l'ultimo evento di aggiornamento
-            sullo stato di lavorazione della richiesta.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaperChannelUpdate'
-        "204":
-          description: Risposta positiva di un invio cartaceo con un nuovo requestID,
             lo status code indica che servizio ha preso in carico la richiesta
         "400":
           description: Errore di validazione sintattica della richiesta
@@ -448,8 +373,6 @@ components:
     SendEvent:
       $ref: 'schemas-paper-v1.yaml#/components/schemas/SendEvent'
     PrepareRequest:
-      $ref: 'schemas-paper-v1.yaml#/components/schemas/PrepareRequest'
-    RetrieveAmountRequest:
       $ref: 'schemas-paper-v1.yaml#/components/schemas/PrepareRequest'
 
 #  securitySchemes:        # ONLY EXTERNAL

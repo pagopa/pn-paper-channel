@@ -99,6 +99,12 @@ components:
         productType:
           type: string
           description: Il productType effettivo che da usare per l'invio
+        replacedF24AttachmentUrls:
+          type: array
+          description: lista di url di fileKey safestorage in sostituzione all'eventuale url f24 passato
+          items:
+            type: string
+            description: url con fileKey di safestorage
         amount:
           type: integer
           format: int32
@@ -204,26 +210,6 @@ components:
     PrepareRequest:
       required:
       - attachmentUrls
-      - clientRequestTimeStamp
-      - printType
-      - proposalProductType
-      - requestId
-      - receiverFiscalCode
-      - receiverType
-      - iun
-      type: object
-      properties:
-        relatedRequestId:
-          type: string
-          description: "Se presente, indica che questa seconda richiesta è successiva a quella passata nel relatedRequestId"
-        discoveredAddress:
-          $ref: '#/components/schemas/AnalogAddress'
-        proposalProductType:
-          $ref: '#/components/schemas/ProposalTypeEnum'
-      allOf:
-      - $ref: '#/components/schemas/PaperRequest'
-    RetrieveAmountRequest:
-      required:
       - clientRequestTimeStamp
       - printType
       - proposalProductType
