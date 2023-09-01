@@ -414,6 +414,26 @@ Resources:
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: true
 
+  ClientDynamoTable:
+    Type: AWS::DynamoDB::Table
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Properties:
+      TableName: !Sub '${ProjectName}-Clients'
+      AttributeDefinitions:
+        - AttributeName: "clientId"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "clientId"
+          KeyType: "HASH"
+      KinesisStreamSpecification:
+        StreamArn: !Ref CdcKinesisSourceStreamArn
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+      BillingMode: "PAY_PER_REQUEST"
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
   PnPaperChannelLogGroup:
     Type: AWS::CloudFormation::Stack
     UpdateReplacePolicy: Retain
@@ -468,6 +488,14 @@ Outputs:
   PaperEventsTableArn:
     Description: ARN of dynamodb table containing events
     Value: !Sub '${PaperEventsDynamoTable.Arn}'
+
+  ClientDynamoTableName:
+    Description: Name of dynamodb table containing clientid and relative value
+    Value: !Ref ClientDynamoTable
+
+  ClientDynamoTableArn:
+    Description: ARN of dynamodb table containing clientid and relative value
+    Value: !Sub '${ClientDynamoTable.Arn}'
 
   DeliveryFileDynamoTableName:
     Description: Name of dynamodb table containing file request
