@@ -30,4 +30,6 @@ public class Const {
     public static final String RETRY = ".PCRETRY_";
     public static final String PAPERSEND = "PAPERSEND";
     public static final String DISCARDNOTIFICATION = "DISCARDNOTIFICATION";
+    public static final String HEADER_CLIENT_ID = "x-pagopa-paperchannel-cx-id";
+    public static final String CONTEXT_KEY_CLIENT_ID = "CLIENT_ID";
 }
