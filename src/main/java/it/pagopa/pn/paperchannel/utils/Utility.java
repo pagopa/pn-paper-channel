@@ -25,6 +25,13 @@ public class Utility {
         throw new IllegalCallerException();
     }
 
+    public static String getRequestIdWithParams(String requestId, String attempt, String clientId){
+        String finalRequestId = requestId.concat(Const.RETRY).concat(attempt);
+        if (StringUtils.isNotBlank(clientId))
+            finalRequestId = clientId.concat(".").concat(finalRequestId);
+        return finalRequestId;
+    }
+
     public static Integer toCentsFormat(BigDecimal value) {
         value = value.multiply(BigDecimal.valueOf(100));
         value = value.setScale(0, RoundingMode.HALF_UP);

@@ -43,6 +43,7 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQ
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_NOT_EXIST;
 import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.READY_TO_SEND;
 import static it.pagopa.pn.paperchannel.utils.Const.AAR;
+import static it.pagopa.pn.paperchannel.utils.Const.CONTEXT_KEY_CLIENT_ID;
 
 @CustomLog
 @Service
@@ -255,36 +256,44 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
                         pnDeliveryRequest.setRequestPaId(sendRequest.getRequestPaId());
                         pnDeliveryRequest.setPrintType(sendRequest.getPrintType());
 
-                        sendRequest.setRequestId(requestId.concat(Const.RETRY).concat("0"));
-                        pnLogAudit.addsBeforeSend(
-                                sendRequest.getIun(),
-                                String.format("prepare requestId = %s, trace_id = %s  request to External Channel",
-                                        sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY))
-                        );
-                        return this.externalChannelClient.sendEngageRequest(sendRequest, attachments)
+                        return sendEngageExternalChannel(sendRequest, attachments)
                                 .then(Mono.defer(() -> {
-                                    pnLogAudit.addsSuccessSend(sendRequest.getIun(),
-                                            String.format("prepare requestId = %s, trace_id = %s  request to External Channel",
-                                                    sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY))
-                                    );
                                     log.debug("Updating data {} with requestId {} in DynamoDb table {}", "PnDeliveryRequest", requestId, "RequestDeliveryDynamoTable");
                                     return this.requestDeliveryDAO.updateData(pnDeliveryRequest);
                                 }))
-                                .map(updated -> {
-                                    log.info("Updated data in DynamoDb table {}", "RequestDeliveryDynamoTable");
-                                    pushDeduplicatesErrorEvent(pnDeliveryRequest, address);
-                                    return sendResponse;
-                                })
-                                .onErrorResume(ex -> {
-                                    pnLogAudit.addsFailSend(sendRequest.getIun(),
-                                            String.format("prepare requestId = %s, trace_id = %s  request to External Channel",
-                                                    sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY))
-                                    );
-                                    return Mono.error(ex);
+                                .doOnNext(requestUpdated -> log.info("Updated data in DynamoDb table {}", "RequestDeliveryDynamoTable"))
+                                .doOnNext(requestUpdated -> pushDeduplicatesErrorEvent(pnDeliveryRequest, address))
+                                .map(requestUpdated -> sendResponse)
+                                .doOnError(ex -> {
+                                    String logString = "prepare requestId = %s, trace_id = %s  request to External Channel";
+                                    logString = String.format(logString, sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY));
+                                    pnLogAudit.addsFailSend(sendRequest.getIun(), logString);
                                 });
 
                     }
                     return Mono.just(sendResponse);
+                });
+    }
+
+
+    private Mono<Void> sendEngageExternalChannel(SendRequest sendRequest, List<AttachmentInfo> attachments){
+        return Mono.deferContextual(ctx -> {
+                    String prefixClientId = ctx.getOrDefault(CONTEXT_KEY_CLIENT_ID, "");
+                    if (prefixClientId == null) return Mono.just("");
+                    return Mono.just(prefixClientId);
+                })
+                .map(clientIdPrefix -> Utility.getRequestIdWithParams(sendRequest.getRequestId(), "0", clientIdPrefix))
+                .map(sendRequest::requestId)
+                .doOnNext(newSendRequest -> {
+                    String logString = "prepare requestId = %s, trace_id = %s  request to External Channel";
+                    logString = String.format(logString, sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY));
+                    pnLogAudit.addsBeforeSend(sendRequest.getIun(), logString);
+                })
+                .flatMap(newSendRequest -> this.externalChannelClient.sendEngageRequest(newSendRequest, attachments))
+                .doOnSuccess(response -> {
+                    String logString = "prepare requestId = %s, trace_id = %s  request to External Channel";
+                    logString = String.format(logString, sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY));
+                    pnLogAudit.addsSuccessSend(sendRequest.getIun(),logString);
                 });
     }
 
