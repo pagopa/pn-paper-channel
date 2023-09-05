@@ -56,15 +56,6 @@ components:
           $ref: '#/components/schemas/AnalogAddress'
         productType:
           $ref: '#/components/schemas/ProductTypeEnum'
-        f24SetId:
-          type: string
-          description: Set id di eventuali documenti f24 da generare. Se null, non saranno generati documenti
-        paId:
-          type: string
-          description: id della PA cha ha richiesto la notifica
-        recIndex:
-          type: integer
-          description: indice del destinatario a cui inviare la raccomandata
       allOf:
       - $ref: '#/components/schemas/PaperRequest'
     SendResponse:
@@ -114,11 +105,6 @@ components:
           items:
             type: string
             description: url con fileKey di safestorage
-        amount:
-          type: integer
-          format: int32
-          description: ammontare in eurocent del costo per l'invio della notifica
-            in forma cartacea
       allOf:
       - $ref: '#/components/schemas/PaperEvent'
 
@@ -235,21 +221,6 @@ components:
           $ref: '#/components/schemas/AnalogAddress'
         proposalProductType:
           $ref: '#/components/schemas/ProposalTypeEnum'
-        f24SetId:
-          type: string
-          description: Set id di eventuali documenti f24 da generare. Se null, non saranno generati documenti
-        paId:
-          type: string
-          description: id della PA cha ha richiesto la notifica
-        recIndex:
-          type: integer
-          description: indice del destinatario a cui inviare la raccomandata
-        amount:
-          type: integer
-          format: int32
-          description: ammontare in eurocent del costo per l'invio della notifica
-            in forma cartacea fino escluso l'invio cartaceo corrente. Può essere null nel caso in cui
-            la notifica sia di tipo FLAT_RATE e quindi non serve passare il costo a pn-f24
       allOf:
       - $ref: '#/components/schemas/PaperRequest'
     Problem:
