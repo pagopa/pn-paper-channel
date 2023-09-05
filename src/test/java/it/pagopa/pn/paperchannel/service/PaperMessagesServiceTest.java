@@ -475,14 +475,11 @@ class PaperMessagesServiceTest {
                 }).verify();
     }
 
-    @Test
-    void executionPaperWithStatusTakingChargeTest() {
+    private void mocksExecutionPaperOK() {
         PnDeliveryRequest request = getPnDeliveryRequest();
         request.setStatusCode(StatusDeliveryEnum.TAKING_CHARGE.getCode());
 
-        SendRequest sendRequest = getRequest("TST-IOR.2332");
-        sendRequest.setRequestPaId("request-pad-id");
-        sendRequest.setPrintType("FRONTE-RETRO");
+
 
         //MOCK GET DELIVERY REQUEST
         Mockito.when(requestDeliveryDAO.getByRequestId("TST-IOR.2332"))
@@ -509,6 +506,15 @@ class PaperMessagesServiceTest {
                 .thenReturn(Mono.just(getNationalCost()));
 
         Mockito.when(pnPaperChannelConfig.getChargeCalculationMode()).thenReturn("AAR");
+    }
+
+    @Test
+    void executionPaperWithoutContextAndWithStatusTakingChargeTest() {
+        mocksExecutionPaperOK();
+
+        SendRequest sendRequest = getRequest("TST-IOR.2332");
+        sendRequest.setRequestPaId("request-pad-id");
+        sendRequest.setPrintType("FRONTE-RETRO");
 
         /* TEST WITHOUT CONTEXT SETTING */
         SendResponse response = paperMessagesService.executionPaper("TST-IOR.2332", sendRequest)
@@ -517,7 +523,7 @@ class PaperMessagesServiceTest {
         ArgumentCaptor<SendRequest> captureSendRequest = ArgumentCaptor.forClass(SendRequest.class);
 
         // verifico che è stato invocato externalChannel
-        verify(externalChannelClient, timeout(2000).times(1)).sendEngageRequest(captureSendRequest.capture(), Mockito.any());
+        Mockito.verify(externalChannelClient, timeout(2000).times(1)).sendEngageRequest(captureSendRequest.capture(), Mockito.any());
 
         // verifico il requestID da inviare ad ExtChannel
         assertNotNull(captureSendRequest.getValue());
@@ -526,13 +532,21 @@ class PaperMessagesServiceTest {
         assertEquals(100,response.getAmount());
         assertEquals(3, response.getNumberOfPages());
         /* -----------------------------  */
+    }
+    @Test
+    void executionPaperWithContextAndWithStatusTakingChargeTest() {
+        mocksExecutionPaperOK();
+
+        SendRequest sendRequest = getRequest("TST-IOR.2332");
+        sendRequest.setRequestPaId("request-pad-id");
+        sendRequest.setPrintType("FRONTE-RETRO");
 
         /* TEST WITH CONTEXT SETTING */
-        response = paperMessagesService.executionPaper("TST-IOR.2332", sendRequest)
-                        .contextWrite(ctx -> ctx.put(Const.CONTEXT_KEY_CLIENT_ID, "001"))
-                        .block();
+        SendResponse response = paperMessagesService.executionPaper("TST-IOR.2332", sendRequest)
+                .contextWrite(ctx -> ctx.put(Const.CONTEXT_KEY_CLIENT_ID, "001"))
+                .block();
 
-       captureSendRequest = ArgumentCaptor.forClass(SendRequest.class);
+        ArgumentCaptor<SendRequest> captureSendRequest = ArgumentCaptor.forClass(SendRequest.class);
 
         // verifico che è stato invocato externalChannel
         verify(externalChannelClient, timeout(2000).times(1)).sendEngageRequest(captureSendRequest.capture(), Mockito.any());
