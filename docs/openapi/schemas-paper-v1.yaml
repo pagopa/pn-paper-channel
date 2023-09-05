@@ -226,6 +226,12 @@ components:
           $ref: '#/components/schemas/AnalogAddress'
         proposalProductType:
           $ref: '#/components/schemas/ProposalTypeEnum'
+        paId:
+          type: string
+          description: id della PA cha ha richiesto la notifica
+        recIndex:
+          type: integer
+          description: indice del destinatario a cui inviare la raccomandata
         amount:
           type: integer
           format: int32
