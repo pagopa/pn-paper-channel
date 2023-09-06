@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import it.pagopa.pn.api.dto.events.GenericEventHeader;
 import it.pagopa.pn.commons.utils.LogUtils;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PaperChannelUpdate;
@@ -10,12 +11,14 @@ import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
 import it.pagopa.pn.paperchannel.middleware.queue.model.InternalEventHeader;
 import it.pagopa.pn.paperchannel.middleware.queue.model.InternalPushEvent;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.DeliveryPushMomProducer;
+import it.pagopa.pn.paperchannel.middleware.queue.producer.EventBridgeProducer;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.InternalQueueMomProducer;
 import it.pagopa.pn.paperchannel.model.ExternalChannelError;
 import it.pagopa.pn.paperchannel.model.NationalRegistryError;
 import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
+import it.pagopa.pn.paperchannel.utils.Utility;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -36,6 +39,10 @@ public class SqsQueueSender implements SqsSender {
     private DeliveryPushMomProducer deliveryPushMomProducer;
     @Autowired
     private InternalQueueMomProducer internalQueueMomProducer;
+    @Autowired
+    private ObjectMapper objectMapper;
+    @Autowired
+    private EventBridgeProducer eventBridgeProducer;
 
     @Override
     public void pushSendEvent(SendEvent event) {
@@ -49,31 +56,7 @@ public class SqsQueueSender implements SqsSender {
 
     private void push(SendEvent sendEvent, PrepareEvent prepareEvent){
         log.info("Push event to queue {}", (sendEvent != null ? sendEvent.getRequestId() : prepareEvent.getRequestId()));
-        GenericEventHeader deliveryHeader= GenericEventHeader.builder()
-                .publisher(PUBLISHER_UPDATE)
-                .eventId(UUID.randomUUID().toString())
-                .createdAt(Instant.now())
-                .eventType((sendEvent == null) ? EventTypeEnum.PREPARE_ANALOG_RESPONSE.name(): EventTypeEnum.SEND_ANALOG_RESPONSE.name())
-                .build();
-
-        PaperChannelUpdate paperChannelUpdate = new PaperChannelUpdate();
-        paperChannelUpdate.setPrepareEvent(prepareEvent);
-        paperChannelUpdate.setSendEvent(sendEvent);
-
-        DeliveryPushEvent deliveryPushEvent = new DeliveryPushEvent(deliveryHeader, paperChannelUpdate);
-        if (prepareEvent != null && prepareEvent.getReceiverAddress() != null){
-            log.debug(
-                    "name surname: {}, address: {}, zip: {},city:{}, pr:{},foreign state: {}",
-                    LogUtils.maskGeneric(prepareEvent.getReceiverAddress().getFullname()),
-                    LogUtils.maskGeneric(prepareEvent.getReceiverAddress().getAddress()),
-                    LogUtils.maskGeneric(prepareEvent.getReceiverAddress().getCap()),
-                    LogUtils.maskGeneric(prepareEvent.getReceiverAddress().getCity()),
-                    LogUtils.maskGeneric(prepareEvent.getReceiverAddress().getPr()),
-                    LogUtils.maskGeneric(prepareEvent.getReceiverAddress().getCountry())
-        );
-        }
-
-        this.deliveryPushMomProducer.push(deliveryPushEvent);
+        this.deliveryPushMomProducer.push(getDeliveryPushEvent(prepareEvent, sendEvent));
     }
 
 
@@ -84,12 +67,25 @@ public class SqsQueueSender implements SqsSender {
                 .eventId(UUID.randomUUID().toString())
                 .createdAt(Instant.now())
                 .eventType(EventTypeEnum.PREPARE_ASYNC_FLOW.name())
+                .clientId(prepareAsyncRequest.getClientId())
                 .attempt(0)
                 .expired(Instant.now())
                 .build();
 
         InternalPushEvent<PrepareAsyncRequest> internalPushEvent = new InternalPushEvent<>(prepareHeader, prepareAsyncRequest);
         this.internalQueueMomProducer.push(internalPushEvent);
+    }
+
+    @Override
+    public void pushSendEventOnEventBridge(SendEvent event) {
+        String jsonMessage = Utility.objectToJson(getDeliveryPushEvent(null, event));
+        this.eventBridgeProducer.sendEvent(jsonMessage, event.getRequestId());
+    }
+
+    @Override
+    public void pushPrepareEventOnEventBridge(PrepareEvent event) {
+        String jsonMessage = Utility.objectToJson(getDeliveryPushEvent(event, null));
+        this.eventBridgeProducer.sendEvent(jsonMessage, event.getRequestId());
     }
 
     @Override
@@ -132,6 +128,32 @@ public class SqsQueueSender implements SqsSender {
         return typeEnum;
     }
 
+    private DeliveryPushEvent getDeliveryPushEvent(PrepareEvent prepareEvent, SendEvent sendEvent){
+        GenericEventHeader deliveryHeader= GenericEventHeader.builder()
+                .publisher(PUBLISHER_UPDATE)
+                .eventId(UUID.randomUUID().toString())
+                .createdAt(Instant.now())
+                .eventType((sendEvent == null) ? EventTypeEnum.PREPARE_ANALOG_RESPONSE.name(): EventTypeEnum.SEND_ANALOG_RESPONSE.name())
+                .build();
+
+        PaperChannelUpdate paperChannelUpdate = new PaperChannelUpdate();
+        paperChannelUpdate.setPrepareEvent(prepareEvent);
+        paperChannelUpdate.setSendEvent(sendEvent);
+
+        DeliveryPushEvent deliveryPushEvent = new DeliveryPushEvent(deliveryHeader, paperChannelUpdate);
+        if (prepareEvent != null && prepareEvent.getReceiverAddress() != null){
+            log.debug(
+                    "name surname: {}, address: {}, zip: {},city:{}, pr:{},foreign state: {}",
+                    LogUtils.maskGeneric(prepareEvent.getReceiverAddress().getFullname()),
+                    LogUtils.maskGeneric(prepareEvent.getReceiverAddress().getAddress()),
+                    LogUtils.maskGeneric(prepareEvent.getReceiverAddress().getCap()),
+                    LogUtils.maskGeneric(prepareEvent.getReceiverAddress().getCity()),
+                    LogUtils.maskGeneric(prepareEvent.getReceiverAddress().getPr()),
+                    LogUtils.maskGeneric(prepareEvent.getReceiverAddress().getCountry())
+            );
+        }
+        return deliveryPushEvent;
+    }
 
 
 }

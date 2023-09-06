@@ -296,6 +296,13 @@ Parameters:
     Type: String
     Description: 'Pull external-channel messages from this Queue'
 
+  PaperChannelEventBusArn:
+    Type: String
+    Description: 'ARN paper channel event bus'
+  PaperChannelEventBusName:
+    Type: String
+    Description: 'Name paper channel event bus'
+
   ScheduledRequestsQueueName:
     Type: String
     Description: 'Send and pull requests in this queue'
@@ -502,6 +509,8 @@ Resources:
         ContainerEnvEntry48: !Sub 'PN_PAPERCHANNEL_REFINEMENTDURATION=${RefinementDuration}'
         ContainerEnvEntry49: !Sub 'PN_PAPERCHANNEL_CLOUDWATCHMETRICCRON=${CloudwatchMetricCron}'
         ContainerEnvEntry50: !Sub 'PN_PAPERCHANNEL_REQUESTPAIDOVERRIDE=${RequestPaIdOverride}'
+        ContainerEnvEntry51: !Sub 'PN_PAPERCHANNEL_EVENTBUS_NAME=${PaperChannelEventBusName}'
+
         ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-PaperChannel-Secrets
         MappedPaths: '/paper-channel-bo/*,/paper-channel-private/*'
@@ -546,6 +555,11 @@ Resources:
               - !Ref ExternalChannels2PaperChannelQueueARN
               - !Ref ScheduledRequestsQueueARN
               - !Ref NationalRegistries2PaperChannelQueueARN
+          - Effect: Allow
+            Action:
+              - events:PutEvents
+            Resource:
+              - !Ref PaperChannelEventBusArn
           - Effect: Allow
             Action:
               - kms:Encrypt

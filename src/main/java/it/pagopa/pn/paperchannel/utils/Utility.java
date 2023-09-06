@@ -8,6 +8,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
+import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -25,11 +26,27 @@ public class Utility {
         throw new IllegalCallerException();
     }
 
+
+    public static Mono<String> getFromContext(String key, String defaultValue){
+        return Mono.deferContextual(ctx -> {
+            String value = ctx.getOrDefault(key, defaultValue);
+            if (value == null) return Mono.empty();
+            return Mono.just(value);
+        });
+    }
+
     public static String getRequestIdWithParams(String requestId, String attempt, String clientId){
         String finalRequestId = requestId.concat(Const.RETRY).concat(attempt);
         if (StringUtils.isNotBlank(clientId))
             finalRequestId = clientId.concat(".").concat(finalRequestId);
         return finalRequestId;
+    }
+
+    public static String getRequestIdWithoutPrefixClientId(String requestId){
+        Pattern pattern = Pattern.compile("^\\d{3}\\.");
+        Matcher matcher = pattern.matcher(requestId);
+        if (matcher.find()) return matcher.group(0);
+        return requestId;
     }
 
     public static Integer toCentsFormat(BigDecimal value) {

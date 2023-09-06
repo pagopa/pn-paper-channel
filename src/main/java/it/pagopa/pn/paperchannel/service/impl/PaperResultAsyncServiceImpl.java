@@ -24,10 +24,7 @@ import it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.MessageHandle
 import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
 import it.pagopa.pn.paperchannel.service.PaperResultAsyncService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
-import it.pagopa.pn.paperchannel.utils.Const;
-import it.pagopa.pn.paperchannel.utils.DateUtils;
-import it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum;
-import it.pagopa.pn.paperchannel.utils.PnLogAudit;
+import it.pagopa.pn.paperchannel.utils.*;
 import lombok.CustomLog;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.MDC;
@@ -155,6 +152,7 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
     }
 
     private String getPrefixRequestId(String requestId) {
+        requestId = Utility.getRequestIdWithoutPrefixClientId(requestId);
         if (requestId.contains(Const.RETRY)) {
             requestId = requestId.substring(0, requestId.indexOf(Const.RETRY));
         }

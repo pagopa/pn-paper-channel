@@ -2,6 +2,7 @@ package it.pagopa.pn.paperchannel.rest.v1;
 
 
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.*;
+import it.pagopa.pn.paperchannel.middleware.db.dao.PnClientDAO;
 import it.pagopa.pn.paperchannel.service.PaperChannelService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -22,6 +23,8 @@ class PaperChannelRestV1ControllerTest {
     private WebTestClient webTestClient;
     @MockBean
     private PaperChannelService paperChannelService;
+    @MockBean
+    private PnClientDAO pnClientDAO;
 
     @Test
     void takeTenderTest(){
