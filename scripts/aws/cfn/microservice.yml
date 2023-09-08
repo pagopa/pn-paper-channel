@@ -299,9 +299,6 @@ Parameters:
   PaperChannelEventBusArn:
     Type: String
     Description: 'ARN paper channel event bus'
-  PaperChannelEventBusName:
-    Type: String
-    Description: 'Name paper channel event bus'
 
   ScheduledRequestsQueueName:
     Type: String
@@ -478,7 +475,7 @@ Resources:
         ContainerEnvEntry17: !Sub 'AWS_DYNAMODBPAPEREVENTSTABLE=${PaperEventsTableName}'
         ContainerEnvEntry18: !Sub 'AWS_DYNAMODBCLIENTTABLE=${ClientDynamoTableName}'
         ContainerEnvEntry19: !Sub 'AWS_KMS_KEYID=${PCKmsEncDecDynamoDataKeyARN}'
-        ContainerEnvEntry20: !Sub 'AWS_KMS_REGION=${AWS::Region}'
+        ContainerEnvEntry20: !Sub 'PN_PAPERCHANNEL_EVENTBUS_NAME=arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/${ProjectName}-CoreEventBus'
         ContainerEnvEntry21: !Sub 'PN_PAPERCHANNEL_QUEUEDELIVERYPUSH=${ExternalChannelsOutputsQueueName}'
         ContainerEnvEntry22: !Sub 'PN_PAPERCHANNEL_QUEUEEXTERNALCHANNEL=${ExternalChannels2PaperChannelQueueName}'
         ContainerEnvEntry23: !Sub 'PN_PAPERCHANNEL_QUEUENATIONALREGISTRIES=${NationalRegistries2PaperChannelQueueName}'
@@ -509,7 +506,6 @@ Resources:
         ContainerEnvEntry48: !Sub 'PN_PAPERCHANNEL_REFINEMENTDURATION=${RefinementDuration}'
         ContainerEnvEntry49: !Sub 'PN_PAPERCHANNEL_CLOUDWATCHMETRICCRON=${CloudwatchMetricCron}'
         ContainerEnvEntry50: !Sub 'PN_PAPERCHANNEL_REQUESTPAIDOVERRIDE=${RequestPaIdOverride}'
-        ContainerEnvEntry51: !Sub 'PN_PAPERCHANNEL_EVENTBUS_NAME=${PaperChannelEventBusName}'
 
         ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-PaperChannel-Secrets
@@ -559,7 +555,7 @@ Resources:
             Action:
               - events:PutEvents
             Resource:
-              - !Ref PaperChannelEventBusArn
+              - !Sub arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/${ProjectName}-CoreEventBus'
           - Effect: Allow
             Action:
               - kms:Encrypt
