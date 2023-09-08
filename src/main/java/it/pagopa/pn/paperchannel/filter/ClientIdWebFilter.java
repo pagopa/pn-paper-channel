@@ -41,7 +41,7 @@ public class ClientIdWebFilter implements WebFilter {
 
         return pnClientDAO.getByClientId(clientId)
                 .switchIfEmpty(Mono.error(new PnFilterClientIdException(CLIENT_ID_NOT_PRESENT.getTitle(),
-                                                                CLIENT_ID_NOT_PRESENT.getMessage(),
+                                                                CLIENT_ID_NOT_PRESENT.getMessage().concat(" ClientId = ").concat(clientId),
                                                                 HttpStatus.UNAUTHORIZED.value(),
                                                                 HttpStatus.UNAUTHORIZED.toString()))
                 )

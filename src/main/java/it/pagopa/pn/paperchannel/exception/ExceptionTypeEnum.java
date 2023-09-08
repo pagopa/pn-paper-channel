@@ -4,7 +4,7 @@ import lombok.Getter;
 
 @Getter
 public enum ExceptionTypeEnum{
-    CLIENT_ID_NOT_PRESENT("CLIENT_ID_NOT_PRESENT", "Non è stato inserito il clientID nell'header"),
+    CLIENT_ID_NOT_PRESENT("CLIENT_ID_NOT_PRESENT", "Client non censito."),
     CLIENT_ID_EMPTY("CLIENT_ID_EMPTY", "Non è stato inserito alcun valore per l'header clientID"),
     CLIENT_ID_NOT_IN_CONTEXT("CLIENT_ID_NOT_IN_CONTEXT", "Non è stato possibile recuperare il valore del client id nel contesto"),
     DELIVERY_REQUEST_NOT_EXIST("DELIVERY_REQUEST_NOT_EXIST", "La richiesta non esiste"),
