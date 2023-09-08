@@ -177,7 +177,7 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
                                         pnDeliveryRequest.getRequestId(),
                                         pnDeliveryRequest.getRelatedRequestId())
                         );
-                        return Mono.error(new PnGenericException(UNTRACEABLE_ADDRESS, UNTRACEABLE_ADDRESS.getMessage()));
+                        return Mono.error(new PnUntracebleException());
                     }
                     if (deduplicateResponse.getError() != null){
                         saveDeduplicatesErrorEvent(pnDeliveryRequest);
@@ -201,7 +201,7 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
     private Mono<Address> checkAndParseNormalizedAddress(AnalogAddressDto normalizedAddress, Address older, String requestId){
         if (normalizedAddress == null) {
             log.error("Response from address manager have a address null {}", requestId);
-            return Mono.error(new PnGenericException(UNTRACEABLE_ADDRESS, UNTRACEABLE_ADDRESS.getMessage()));
+            return Mono.error(new PnUntracebleException());
         }
         Address address = AddressMapper.fromAnalogAddressManager(normalizedAddress) ;
         address.setFullName(older.getFullName());
