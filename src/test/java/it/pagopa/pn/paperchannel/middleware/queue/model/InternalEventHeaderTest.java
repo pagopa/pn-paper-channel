@@ -11,6 +11,7 @@ class InternalEventHeaderTest {
 
     private Integer attempt;
     private Instant expired;
+    private String clientId;
 
     @BeforeEach
     void setUp(){
@@ -30,6 +31,9 @@ class InternalEventHeaderTest {
         stringBuilder.append(", ");
         stringBuilder.append("expired=");
         stringBuilder.append(expired);
+        stringBuilder.append(", ");
+        stringBuilder.append("clientId=");
+        stringBuilder.append(clientId);
         stringBuilder.append(")");
 
         String toTest = stringBuilder.toString();
@@ -56,12 +60,12 @@ class InternalEventHeaderTest {
     }
 
     private InternalEventHeader initInternalEventHeader() {
-        InternalEventHeader internalEventHeader = new InternalEventHeader(attempt, expired);
-        return internalEventHeader;
+       return new InternalEventHeader(attempt, expired, clientId);
     }
 
     private void initialize() {
         attempt = 0;
         expired = null;
+        clientId = "ABC";
     }
 }

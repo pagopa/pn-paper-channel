@@ -14,6 +14,9 @@ public interface SqsSender {
     void pushPrepareEvent(PrepareEvent event);
     void pushToInternalQueue(PrepareAsyncRequest prepareAsyncRequest);
 
+    void pushSendEventOnEventBridge(String clientId, SendEvent event);
+    void pushPrepareEventOnEventBridge(String clientId, PrepareEvent event);
+
     <T> void pushInternalError(T entity, int attempt, Class<T> tClass);
     <T> void rePushInternalError(T entity, int attempt, Instant expired, Class<T> tClass);
 }

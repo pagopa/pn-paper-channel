@@ -8,6 +8,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
+import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -20,9 +21,39 @@ import java.util.regex.Pattern;
 
 @Slf4j
 public class Utility {
-
+    private final static Pattern PATTERN_PREFIX_CLIENT_ID = Pattern.compile("^\\d{3}\\.");
     private Utility() {
         throw new IllegalCallerException();
+    }
+
+
+    public static Mono<String> getFromContext(String key, String defaultValue){
+        return Mono.deferContextual(ctx -> {
+            String value = ctx.getOrDefault(key, defaultValue);
+            if (value == null) return Mono.empty();
+            return Mono.just(value);
+        });
+    }
+
+    public static String getRequestIdWithParams(String requestId, String attempt, String clientId){
+        String finalRequestId = requestId.concat(Const.RETRY).concat(attempt);
+        if (StringUtils.isNotBlank(clientId))
+            finalRequestId = clientId.concat(".").concat(finalRequestId);
+        return finalRequestId;
+    }
+
+    public static String getRequestIdWithoutPrefixClientId(String requestId){
+        Matcher matcher = PATTERN_PREFIX_CLIENT_ID.matcher(requestId);
+        if (matcher.find()) {
+            return requestId.substring(matcher.end());
+        }
+        return requestId;
+    }
+
+    public static String getClientIdFromRequestId(String requestId){
+        Matcher matcher = PATTERN_PREFIX_CLIENT_ID.matcher(requestId);
+        if (matcher.find()) return matcher.group(0).substring(0, matcher.group(0).length()-1);
+        return null;
     }
 
     public static Integer toCentsFormat(BigDecimal value) {
