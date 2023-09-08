@@ -18,8 +18,7 @@ import java.util.List;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.CLIENT_ID_EMPTY;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.CLIENT_ID_NOT_PRESENT;
-import static it.pagopa.pn.paperchannel.utils.Const.CONTEXT_KEY_CLIENT_ID;
-import static it.pagopa.pn.paperchannel.utils.Const.HEADER_CLIENT_ID;
+import static it.pagopa.pn.paperchannel.utils.Const.*;
 
 @CustomLog
 @Component
@@ -49,7 +48,11 @@ public class ClientIdWebFilter implements WebFilter {
                 .flatMap(pnClientID ->
                     chain.filter(exchange)
                             .doFirst(() -> log.logStartingProcess("START PROCESS FROM WEB FILTER"))
-                            .contextWrite(ctx -> ctx.put(CONTEXT_KEY_CLIENT_ID, pnClientID.getClientId()))
+                            .contextWrite(ctx -> {
+                                ctx.put(CONTEXT_KEY_CLIENT_ID, pnClientID.getClientId());
+                                ctx.put(CONTEXT_KEY_PREFIX_CLIENT_ID, pnClientID.getPrefix());
+                                return ctx;
+                            })
                             .doFinally(ignored -> log.logEndingProcess("ENDING PROCESS FROM WEB FILTER"))
                 );
 

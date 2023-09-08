@@ -99,7 +99,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                 .flatMap(pnDeliveryRequest ->
                      this.addressDAO.findByRequestId(pnDeliveryRequest.getRequestId())
                             .flatMap(address -> {
-                                this.pushPrepareEvent(pnDeliveryRequest, AddressMapper.toDTO(address), StatusCodeEnum.OK);
+                                this.pushPrepareEvent(pnDeliveryRequest, AddressMapper.toDTO(address), request.getClientId(), StatusCodeEnum.OK);
                                 return this.requestDeliveryDAO.updateData(pnDeliveryRequest);
                             })
                 )
@@ -114,7 +114,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                     return updateStatus(requestId, correlationId, statusDeliveryEnum)
                             .doOnNext(entity -> {
                                 if (entity.getStatusCode().equals(StatusDeliveryEnum.UNTRACEABLE.getCode())){
-                                    sendUnreachableEvent(entity);
+                                    sendUnreachableEvent(entity, request.getClientId());
                                     log.logEndingProcess(PROCESS_NAME);
                                 }
                             })
@@ -246,9 +246,9 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
     }
 
 
-    private void sendUnreachableEvent(PnDeliveryRequest request){
+    private void sendUnreachableEvent(PnDeliveryRequest request, String clientId){
         log.debug("Send Unreachable Event request id - {}, iun - {}", request.getRequestId(), request.getIun());
-        this.pushPrepareEvent(request, null, StatusCodeEnum.KOUNREACHABLE);
+        this.pushPrepareEvent(request, null, clientId, StatusCodeEnum.KOUNREACHABLE);
     }
 
     private Mono<Void> traceError(String requestId, String error, String flowType){
@@ -256,10 +256,10 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                 .then();
     }
 
-    private void pushPrepareEvent(PnDeliveryRequest request, Address address, StatusCodeEnum statusCode){
+    private void pushPrepareEvent(PnDeliveryRequest request, Address address, String clientId, StatusCodeEnum statusCode){
         PrepareEvent prepareEvent = PrepareEventMapper.toPrepareEvent(request, address, statusCode);
         if (request.getRequestId().contains(PREFIX_REQUEST_ID_SERVICE_DESK)){
-            this.sqsSender.pushPrepareEventOnEventBridge(prepareEvent);
+            this.sqsSender.pushPrepareEventOnEventBridge(clientId, prepareEvent);
             return;
         }
         this.sqsSender.pushPrepareEvent(prepareEvent);

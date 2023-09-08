@@ -298,10 +298,26 @@ aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     --table-name ClientDynamoTable  \
     --attribute-definitions \
         AttributeName=clientId,AttributeType=S \
+        AttributeName=prefixValue,AttributeType=S \
     --key-schema \
         AttributeName=clientId,KeyType=HASH \
     --provisioned-throughput \
-        ReadCapacityUnits=10,WriteCapacityUnits=5
+        ReadCapacityUnits=10,WriteCapacityUnits=5 \
+    --global-secondary-indexes \
+        "[
+    		{
+                \"IndexName\": \"prefix-value-index\",
+                \"KeySchema\": [{\"AttributeName\":\"prefixValue\",\"KeyType\":\"HASH\"}],
+                \"Projection\":{
+                    \"ProjectionType\":\"ALL\"
+                },
+                \"ProvisionedThroughput\": {
+                    \"ReadCapacityUnits\": 5,
+                    \"WriteCapacityUnits\": 5
+                }
+            }
+
+        ]"
 
 aws  --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     dynamodb put-item \

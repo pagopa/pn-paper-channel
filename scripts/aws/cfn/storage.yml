@@ -423,9 +423,18 @@ Resources:
       AttributeDefinitions:
         - AttributeName: "clientId"
           AttributeType: "S"
+        - AttributeName: "prefixValue"
+          AttributeType: "S"
       KeySchema:
         - AttributeName: "clientId"
           KeyType: "HASH"
+      GlobalSecondaryIndexes:
+        - IndexName: "prefix-value-index"
+          KeySchema:
+            - AttributeName: "prefixValue"
+              KeyType: "HASH"
+          Projection:
+            ProjectionType: "ALL"
       KinesisStreamSpecification:
         StreamArn: !Ref CdcKinesisSourceStreamArn
       StreamSpecification:

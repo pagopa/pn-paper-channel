@@ -543,7 +543,7 @@ class PaperMessagesServiceTest {
 
         /* TEST WITH CONTEXT SETTING */
         SendResponse response = paperMessagesService.executionPaper("TST-IOR.2332", sendRequest)
-                .contextWrite(ctx -> ctx.put(Const.CONTEXT_KEY_CLIENT_ID, "001"))
+                .contextWrite(ctx -> ctx.put(Const.CONTEXT_KEY_PREFIX_CLIENT_ID, "001"))
                 .block();
 
         ArgumentCaptor<SendRequest> captureSendRequest = ArgumentCaptor.forClass(SendRequest.class);

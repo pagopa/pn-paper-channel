@@ -7,4 +7,6 @@ public interface PnClientDAO {
 
     Mono<PnClientID> getByClientId(String clientId);
 
+    Mono<PnClientID> getByPrefix(String prefixValue);
+
 }

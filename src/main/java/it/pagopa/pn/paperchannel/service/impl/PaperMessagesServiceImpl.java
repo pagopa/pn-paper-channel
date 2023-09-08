@@ -42,8 +42,7 @@ import java.util.UUID;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_IN_PROCESSING;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_NOT_EXIST;
 import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.READY_TO_SEND;
-import static it.pagopa.pn.paperchannel.utils.Const.AAR;
-import static it.pagopa.pn.paperchannel.utils.Const.CONTEXT_KEY_CLIENT_ID;
+import static it.pagopa.pn.paperchannel.utils.Const.*;
 
 @CustomLog
 @Service
@@ -267,7 +266,7 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
 
 
     private Mono<Void> sendEngageExternalChannel(SendRequest sendRequest, List<AttachmentInfo> attachments){
-        return Utility.getFromContext(CONTEXT_KEY_CLIENT_ID, "")
+        return Utility.getFromContext(CONTEXT_KEY_PREFIX_CLIENT_ID, "")
                 .switchIfEmpty(Mono.just(""))
                 .map(clientIdPrefix -> Utility.getRequestIdWithParams(sendRequest.getRequestId(), "0", clientIdPrefix))
                 .map(sendRequest::requestId)

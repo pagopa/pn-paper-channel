@@ -29,6 +29,7 @@ class RequestDeliveryDAOTestIT extends BaseTest {
     public void setUp(){
         initialize();
     }
+
     @Test
     void createWithAddressTest(){
         Mockito.when(dataVaultEncryption.encode(Mockito.any(), Mockito.any())).thenReturn("returnOk");
@@ -36,6 +37,7 @@ class RequestDeliveryDAOTestIT extends BaseTest {
         PnDeliveryRequest createRequest = this.requestDeliveryDAO.createWithAddress(request, address).block();
         assertNotNull(createRequest);
     }
+
     @Test
     void createWithoutAddressTest(){
         Mockito.when(dataVaultEncryption.encode(Mockito.any(), Mockito.any())).thenReturn("returnOk");

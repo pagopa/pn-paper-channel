@@ -1,6 +1,5 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import it.pagopa.pn.api.dto.events.GenericEventHeader;
 import it.pagopa.pn.commons.utils.LogUtils;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PaperChannelUpdate;
@@ -40,8 +39,6 @@ public class SqsQueueSender implements SqsSender {
     @Autowired
     private InternalQueueMomProducer internalQueueMomProducer;
     @Autowired
-    private ObjectMapper objectMapper;
-    @Autowired
     private EventBridgeProducer eventBridgeProducer;
 
     @Override
@@ -77,14 +74,18 @@ public class SqsQueueSender implements SqsSender {
     }
 
     @Override
-    public void pushSendEventOnEventBridge(SendEvent event) {
-        String jsonMessage = Utility.objectToJson(getDeliveryPushEvent(null, event));
+    public void pushSendEventOnEventBridge(String clientId, SendEvent event) {
+        DeliveryPushEvent pushEvent = getDeliveryPushEvent(null, event);
+        pushEvent.getPayload().setClientId(clientId);
+        String jsonMessage = Utility.objectToJson(pushEvent);
         this.eventBridgeProducer.sendEvent(jsonMessage, event.getRequestId());
     }
 
     @Override
-    public void pushPrepareEventOnEventBridge(PrepareEvent event) {
-        String jsonMessage = Utility.objectToJson(getDeliveryPushEvent(event, null));
+    public void pushPrepareEventOnEventBridge(String clientId, PrepareEvent event) {
+        DeliveryPushEvent pushEvent = getDeliveryPushEvent(event, null);
+        pushEvent.getPayload().setClientId(clientId);
+        String jsonMessage = Utility.objectToJson(pushEvent);
         this.eventBridgeProducer.sendEvent(jsonMessage, event.getRequestId());
     }
 

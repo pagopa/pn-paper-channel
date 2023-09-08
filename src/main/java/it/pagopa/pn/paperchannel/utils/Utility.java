@@ -21,7 +21,7 @@ import java.util.regex.Pattern;
 
 @Slf4j
 public class Utility {
-
+    private final static Pattern PATTERN_PREFIX_CLIENT_ID = Pattern.compile("^\\d{3}\\.");
     private Utility() {
         throw new IllegalCallerException();
     }
@@ -43,10 +43,17 @@ public class Utility {
     }
 
     public static String getRequestIdWithoutPrefixClientId(String requestId){
-        Pattern pattern = Pattern.compile("^\\d{3}\\.");
-        Matcher matcher = pattern.matcher(requestId);
-        if (matcher.find()) return matcher.group(0);
+        Matcher matcher = PATTERN_PREFIX_CLIENT_ID.matcher(requestId);
+        if (matcher.find()) {
+            return requestId.substring(matcher.end());
+        }
         return requestId;
+    }
+
+    public static String getClientIdFromRequestId(String requestId){
+        Matcher matcher = PATTERN_PREFIX_CLIENT_ID.matcher(requestId);
+        if (matcher.find()) return matcher.group(0).substring(0, matcher.group(0).length()-1);
+        return null;
     }
 
     public static Integer toCentsFormat(BigDecimal value) {
