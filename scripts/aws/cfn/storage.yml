@@ -454,31 +454,7 @@ Resources:
         LogGroupRetention: !Ref LogRetention
         LogsKinesisSourceStreamArn: !Ref LogsKinesisSourceStreamArn
 
-  # Event Bus
-  PaperChannelEventBus:
-    Type: AWS::Events::EventBus
-    Properties:
-      Name: !Sub '${ProjectName}-PaperChannelBus'
-
-  # Event Bus Dead Letter Queue
-  PaperChannelEventBusDLQ:
-    Type: AWS::SQS::Queue
-    Properties:
-      MessageRetentionPeriod: 1209600
-      QueueName: !Sub '${ProjectName}-PaperChannelBus-DLQ'
-
 Outputs:
-
-  PaperChannelEventBusArn:
-    Value: !GetAtt PaperChannelEventBus.Arn
-  PaperChannelEventBusName:
-    Value: !GetAtt PaperChannelEventBus.Name
-  PaperChannelEventBusDLQArn:
-    Value: !GetAtt PaperChannelEventBusDLQ.Arn
-  PaperChannelEventBusDLQName:
-    Value: !GetAtt PaperChannelEventBusDLQ.QueueName
-  PaperChannelEventBusDLQUrl:
-    Value: !GetAtt PaperChannelEventBusDLQ.QueueUrl
 
   PaperDeliveryDriversBucketName:
     Description: Name of s3 bucket
