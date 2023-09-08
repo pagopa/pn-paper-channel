@@ -296,10 +296,6 @@ Parameters:
     Type: String
     Description: 'Pull external-channel messages from this Queue'
 
-  PaperChannelEventBusArn:
-    Type: String
-    Description: 'ARN paper channel event bus'
-
   ScheduledRequestsQueueName:
     Type: String
     Description: 'Send and pull requests in this queue'
