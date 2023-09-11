@@ -49,8 +49,8 @@ public class ClientIdWebFilter implements WebFilter {
                     chain.filter(exchange)
                             .doFirst(() -> log.logStartingProcess("START PROCESS FROM WEB FILTER"))
                             .contextWrite(ctx -> {
-                                ctx.put(CONTEXT_KEY_CLIENT_ID, pnClientID.getClientId());
-                                ctx.put(CONTEXT_KEY_PREFIX_CLIENT_ID, pnClientID.getPrefix());
+                                ctx = ctx.put(CONTEXT_KEY_CLIENT_ID, pnClientID.getClientId());
+                                ctx = ctx.put(CONTEXT_KEY_PREFIX_CLIENT_ID, pnClientID.getPrefix());
                                 return ctx;
                             })
                             .doFinally(ignored -> log.logEndingProcess("ENDING PROCESS FROM WEB FILTER"))
