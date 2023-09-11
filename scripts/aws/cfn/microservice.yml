@@ -551,7 +551,7 @@ Resources:
             Action:
               - events:PutEvents
             Resource:
-              - !Sub arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/${ProjectName}-CoreEventBus'
+              - !Sub arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/${ProjectName}-CoreEventBus
           - Effect: Allow
             Action:
               - kms:Encrypt
