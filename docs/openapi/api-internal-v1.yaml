@@ -351,12 +351,15 @@ components:
     PaperChannelUpdate:
       description: oggetto usato per ricevere un evento nella coda. >-
         Prevede di valorizzare solo uno dei tipi di eventi possibili
+        A questi si aggiunge il clientId che ha generato la richiesta, quando disponibile
       type: object
       properties:
         prepareEvent:
           $ref: '#/components/schemas/PrepareEvent'
         sendEvent:
           $ref: '#/components/schemas/SendEvent'
+        clientId:
+          type: string
 
 
     ### - RIFERIMENTI AD ALTRI FILE
