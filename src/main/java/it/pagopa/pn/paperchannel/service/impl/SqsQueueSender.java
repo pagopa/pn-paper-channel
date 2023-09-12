@@ -72,19 +72,19 @@ public class SqsQueueSender implements SqsSender {
 
     @Override
     public void pushSendEventOnEventBridge(String clientId, SendEvent event) {
-        DeliveryPushEvent deliveryPushEvent = getDeliveryPushEvent(null, event);
-        PaperClientEvent pushEvent = new PaperClientEvent(deliveryPushEvent.getHeader(), deliveryPushEvent.getPayload());
-        pushEvent.setClientId(clientId);
-        String jsonMessage = Utility.objectToJson(pushEvent);
+        PaperChannelUpdate update = new PaperChannelUpdate();
+        update.setSendEvent(event);
+        update.setClientId(clientId);
+        String jsonMessage = Utility.objectToJson(update);
         this.eventBridgeProducer.sendEvent(jsonMessage, event.getRequestId());
     }
 
     @Override
     public void pushPrepareEventOnEventBridge(String clientId, PrepareEvent event) {
-        DeliveryPushEvent deliveryPushEvent = getDeliveryPushEvent(event, null);
-        PaperClientEvent pushEvent = new PaperClientEvent(deliveryPushEvent.getHeader(), deliveryPushEvent.getPayload());
-        pushEvent.setClientId(clientId);
-        String jsonMessage = Utility.objectToJson(pushEvent);
+        PaperChannelUpdate update = new PaperChannelUpdate();
+        update.setPrepareEvent(event);
+        update.setClientId(clientId);
+        String jsonMessage = Utility.objectToJson(update);
         this.eventBridgeProducer.sendEvent(jsonMessage, event.getRequestId());
     }
 
