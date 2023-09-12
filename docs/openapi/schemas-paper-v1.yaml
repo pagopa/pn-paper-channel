@@ -86,6 +86,11 @@ components:
       enum: [ PROGRESS, OK, KO ]
       example: OK
 
+    FailureDetailCodeEnum:
+      type: string
+      enum: [ D00, D01, D02 ]
+      example: D00
+
     PrepareEvent:
       type: object
       properties:
@@ -97,14 +102,12 @@ components:
                   - OK : nel caso di indirizzo valido e allegati recuperati correttamente. Prevede la presenza del receiverAddress
                   - KO : nel caso in cui non sia disponibile un indirizzo per l'utente in base alle informazioni passate.
         failureDetailCode:
-          type: string
-          enum: [ D00, D01, D02 ]
+          $ref: '#/components/schemas/FailureDetailCodeEnum'
           description: >
             __Motivazione fallimento prepare
               - __D00__ Indirizzo non trovato
               - __D01__ Indirizzo non valido
               - __D02__ Indirizzo coincidente con quello del primo tentativo
-          example: D00
         receiverAddress:
           $ref: '#/components/schemas/AnalogAddress'
         productType:

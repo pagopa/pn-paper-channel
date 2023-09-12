@@ -151,7 +151,7 @@ class PrepareAsyncServiceTest {
         RequestDeliveryMapper.changeState(pnDeliveryRequest, StatusDeliveryEnum.UNTRACEABLE.getCode(),
                 StatusDeliveryEnum.PAPER_CHANNEL_ASYNC_ERROR.getDescription(), StatusDeliveryEnum.UNTRACEABLE.getDetail(),
                 null, null);
-        PrepareEvent prepareEventExpected = PrepareEventMapper.toPrepareEvent(deliveryRequest, null, StatusCodeEnum.KOUNREACHABLE);
+        PrepareEvent prepareEventExpected = PrepareEventMapper.toPrepareEvent(deliveryRequest, null, StatusCodeEnum.KO);
         ArgumentCaptor<PrepareEvent> prepareEventArgumentCaptor = ArgumentCaptor.forClass(PrepareEvent.class);
 
         Mockito.verify(this.sqsSender).pushPrepareEvent(prepareEventArgumentCaptor.capture());

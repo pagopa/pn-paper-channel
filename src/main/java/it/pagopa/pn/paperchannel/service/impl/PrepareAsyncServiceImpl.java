@@ -248,7 +248,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
 
     private void sendUnreachableEvent(PnDeliveryRequest request, String clientId){
         log.debug("Send Unreachable Event request id - {}, iun - {}", request.getRequestId(), request.getIun());
-        this.pushPrepareEvent(request, null, clientId, StatusCodeEnum.KOUNREACHABLE);
+        this.pushPrepareEvent(request, null, clientId, StatusCodeEnum.KO);
     }
 
     private Mono<Void> traceError(String requestId, String error, String flowType){
