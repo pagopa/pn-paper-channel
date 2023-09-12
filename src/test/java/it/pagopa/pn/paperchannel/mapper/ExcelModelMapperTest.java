@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -48,8 +49,8 @@ class ExcelModelMapperTest {
         //cost.setCap("00061");
         cost.setZone("roma");
         cost.setTenderCode("GARA-2022");
-        cost.setPagePrice(0.5F);
-        cost.setBasePrice(0.1F);
+        cost.setPagePrice(BigDecimal.valueOf(0.5F));
+        cost.setBasePrice(BigDecimal.valueOf(0.1F));
         paperCostList.add(cost);
         return paperCostList;
     }

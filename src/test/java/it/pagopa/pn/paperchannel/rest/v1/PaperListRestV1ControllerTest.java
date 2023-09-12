@@ -2,6 +2,7 @@ package it.pagopa.pn.paperchannel.rest.v1;
 
 
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.CapResponseDto;
+import it.pagopa.pn.paperchannel.middleware.db.dao.PnClientDAO;
 import it.pagopa.pn.paperchannel.service.PaperListService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -17,6 +18,8 @@ class PaperListRestV1ControllerTest {
     private WebTestClient webTestClient;
     @MockBean
     private PaperListService paperListService;
+    @MockBean
+    private PnClientDAO pnClientDAO;
 
     @Test
     void testGetAllCap() {

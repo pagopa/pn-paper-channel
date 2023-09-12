@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,16 +54,16 @@ class CostMapperTest {
         CostDTO contractDto = new CostDTO();
         //contractDto.setCap("00061");
         contractDto.setZone(InternationalZoneEnum._1);
-        contractDto.setPrice(0.1F);
-        contractDto.setPriceAdditional(0.2F);
+        contractDto.setPrice(BigDecimal.valueOf(0.1F));
+        contractDto.setPriceAdditional(BigDecimal.valueOf(0.2F));
         contractDto.setProductType(ProductTypeEnumDto.AR);
         return contractDto;
     }
     private PnCost getPnPaperCost(String str){
         PnCost pnCost = new PnCost();
         //pnCost.setCap("00061");
-        pnCost.setPagePrice(0.1F);
-        pnCost.setBasePrice(0.5F);
+        pnCost.setPagePrice(BigDecimal.valueOf(0.1F));
+        pnCost.setBasePrice(BigDecimal.valueOf(0.5F));
         pnCost.setTenderCode("GARA-2022");
         pnCost.setZone("ZONE_1");
         pnCost.setProductType(str);

@@ -6,6 +6,7 @@ import lombok.Setter;
 import lombok.ToString;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
 
@@ -47,10 +48,10 @@ public class PnCost {
     private String productType;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_BASE_PRICE)}))
-    private Float basePrice;
+    private BigDecimal basePrice;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_PAGE_PRICE)}))
-    private Float pagePrice;
+    private BigDecimal pagePrice;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_FSU)}))
     private Boolean fsu;

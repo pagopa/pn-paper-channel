@@ -10,6 +10,8 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 @Slf4j
 class UtilityTest {
     private String capListDuplicate;
@@ -34,8 +36,8 @@ class UtilityTest {
         String hashResult = Utility.convertToHash(testString);
         String hashResult1 = Utility.convertToHash(testString1);
 
-        Assertions.assertNotNull(hashResult);
-        Assertions.assertNotNull(hashResult1);
+        assertNotNull(hashResult);
+        assertNotNull(hashResult1);
 
         // check removed white space and string is lowercase
         Assertions.assertEquals(hashResult1, hashResult);
@@ -66,7 +68,7 @@ class UtilityTest {
     @Test
     void isValidCapOkTest(){
         List<String> caps = Utility.isValidCap(capListOk);
-        Assertions.assertNotNull(caps);
+        assertNotNull(caps);
         Assertions.assertEquals(17,caps.size());
     }
 
@@ -77,4 +79,32 @@ class UtilityTest {
         String json = Utility.objectToJson(cap);
         log.info(json);
     }
+
+
+    @Test
+    void getRequestIdWithoutPrefixClientIdTest(){
+        String requestIdTest = ".lll-222333.001-000";
+        String result = Utility.getRequestIdWithoutPrefixClientId(requestIdTest);
+        assertNotNull(result);
+        assertEquals(requestIdTest, result);
+
+        requestIdTest = "001.pippoABC-0033";
+        result = Utility.getRequestIdWithoutPrefixClientId(requestIdTest);
+        assertNotNull(requestIdTest);
+        assertEquals("pippoABC-0033", result);
+    }
+
+
+    @Test
+    void getClientIdFromRequestIdTest(){
+        String requestIdTest = ".lll-222333.001-000";
+        String result = Utility.getClientIdFromRequestId(requestIdTest);
+        assertNull(result);
+
+        requestIdTest = "001.pippoABC-0033";
+        result = Utility.getClientIdFromRequestId(requestIdTest);
+        assertNotNull(requestIdTest);
+        assertEquals("001", result);
+    }
+
 }

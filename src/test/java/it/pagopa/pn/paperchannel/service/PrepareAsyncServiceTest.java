@@ -219,6 +219,7 @@ class PrepareAsyncServiceTest {
     }
 
     private PnDeliveryRequest getDeliveryRequest(){
+        pnDeliveryRequest.setRequestId("FATY-FATY-2023041520230302");
         pnDeliveryRequest.setIun("FATY-FATY-2023041520230302-101111");
         pnDeliveryRequest.setProposalProductType(RACCOMANDATA_SEMPLICE);
         List<PnAttachmentInfo> attachmentInfoList = new ArrayList<>();

@@ -14,6 +14,7 @@ class PrepareAsyncRequestTest {
     private Address address;
     private boolean isAddressRetry = false;
     private Integer attemptRetry;
+    private String clientId;
 
 
     @BeforeEach
@@ -24,6 +25,7 @@ class PrepareAsyncRequestTest {
     @Test
     void setGetTest() {
         PrepareAsyncRequest prepareAsyncRequest = new PrepareAsyncRequest(requestId, iun, correlationId, address, false, attemptRetry);
+        prepareAsyncRequest.setClientId(clientId);
         Assertions.assertNotNull(prepareAsyncRequest);
     }
 
@@ -50,6 +52,9 @@ class PrepareAsyncRequestTest {
         stringBuilder.append(", ");
         stringBuilder.append("attemptRetry=");
         stringBuilder.append(attemptRetry);
+        stringBuilder.append(", ");
+        stringBuilder.append("clientId=");
+        stringBuilder.append(clientId);
         stringBuilder.append(")");
 
         String toTest = stringBuilder.toString();
@@ -65,6 +70,7 @@ class PrepareAsyncRequestTest {
         prepareAsyncRequest.setCorrelationId(correlationId);
         prepareAsyncRequest.setAddress(address);
         prepareAsyncRequest.setAttemptRetry(attemptRetry);
+        prepareAsyncRequest.setClientId(clientId);
         return prepareAsyncRequest;
     }
 
@@ -87,5 +93,6 @@ class PrepareAsyncRequestTest {
         address.setProductType("890");
         isAddressRetry = false;
         attemptRetry = 3;
+        clientId = "ABC";
     }
 }

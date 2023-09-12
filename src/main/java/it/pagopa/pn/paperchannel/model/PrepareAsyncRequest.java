@@ -28,6 +28,8 @@ public class PrepareAsyncRequest {
 
     @JsonProperty("attempt")
     private Integer attemptRetry;
+    @JsonProperty("clientId")
+    private String clientId;
 
 
     // Constructor used only national registry listener
@@ -43,4 +45,14 @@ public class PrepareAsyncRequest {
         this.isAddressRetry = isAddressRetry;
         this.attemptRetry = attemptRetry;
     }
+
+    public PrepareAsyncRequest(String requestId, String iun, String correlationId, Address address, boolean isAddressRetry, Integer attemptRetry){
+        this.requestId = requestId;
+        this.iun = iun;
+        this.correlationId = correlationId;
+        this.address = address;
+        this.isAddressRetry = isAddressRetry;
+        this.attemptRetry = attemptRetry;
+    }
+
 }

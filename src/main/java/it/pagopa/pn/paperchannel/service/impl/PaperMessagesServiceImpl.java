@@ -35,13 +35,14 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuples;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_IN_PROCESSING;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_NOT_EXIST;
 import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.READY_TO_SEND;
-import static it.pagopa.pn.paperchannel.utils.Const.AAR;
+import static it.pagopa.pn.paperchannel.utils.Const.*;
 
 @CustomLog
 @Service
@@ -52,7 +53,6 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
     private final PnPaperChannelConfig pnPaperChannelConfig;
     private final PaperTenderService paperTenderService;
 
-    String EXTERNAL_CHANNEL_DESCRIPTION = "Shipment notification service";
 
     public PaperMessagesServiceImpl(PnAuditLogBuilder auditLogBuilder, RequestDeliveryDAO requestDeliveryDAO, CostDAO costDAO,
                                     NationalRegistryClient nationalRegistryClient, SqsSender sqsSender, AddressDAO addressDAO,
@@ -72,69 +72,59 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
             log.info("First attempt requestId {}", requestId);
 
             //case of 204
-            log.debug("Getting PnDeliveryRequest with requestId {}, in DynamoDB table {}", requestId, "RequestDeliveryDynamoTable");
+            log.debug("Getting PnDeliveryRequest with requestId {}, in DynamoDB table RequestDeliveryDynamoTable", requestId);
             return this.requestDeliveryDAO.getByRequestId(prepareRequest.getRequestId())
-                    .flatMap(entity -> {
-                        log.info("Founded data in DynamoDB table {}", "RequestDeliveryDynamoTable");
-                        PrepareRequestValidator.compareRequestEntity(prepareRequest, entity, true);
-                        log.debug("Getting PnAddress with requestId {}, in DynamoDB table {}", requestId, "AddressDynamoTable");
-                        return addressDAO.findByRequestId(requestId)
-                                .map(address-> {
-                                    log.info("Founded data in DynamoDB table {}", "AddressDynamoTable");
-                                    return PreparePaperResponseMapper.fromResult(entity, address);
-                                })
-                                .switchIfEmpty(Mono.just(PreparePaperResponseMapper.fromResult(entity,null)));
-                    })
-                    .switchIfEmpty(Mono.defer(() -> saveRequestAndAddress(prepareRequest)
-                            .flatMap(response -> {
-                                PrepareAsyncRequest request = new PrepareAsyncRequest(requestId, response.getIun(), false, 0);
-                                this.sqsSender.pushToInternalQueue(request);
-                                return Mono.empty();
-                            }))
+                    .doOnNext(entity -> log.info("Founded data in DynamoDB table RequestDeliveryDynamoTable"))
+                    .doOnNext(entity -> PrepareRequestValidator.compareRequestEntity(prepareRequest, entity, true))
+                    .doOnNext(entity -> log.debug("Getting PnAddress with requestId {}, in DynamoDB table AddressDynamoTable", requestId))
+                    .flatMap(entity -> addressDAO.findByRequestId(requestId)
+                                            .doOnNext(address -> log.info("Founded data in DynamoDB table AddressDynamoTable"))
+                                            .map(address-> PreparePaperResponseMapper.fromResult(entity, address))
+                                            .switchIfEmpty(Mono.just(PreparePaperResponseMapper.fromResult(entity,null)))
+                    )
+                    .switchIfEmpty(
+                            Mono.defer(() -> saveRequestAndAddress(prepareRequest)
+                                                        .flatMap(this::createAndPushPrepareEvent)
+                                                        .then(Mono.empty()))
                     );
         }
 
         log.info("Second attempt requestId {}", requestId);
-        log.debug("Getting PnDeliveryRequest with requestId {}, in DynamoDB table {}", requestId, "RequestDeliveryDynamoTable");
+        log.debug("Getting PnDeliveryRequest with requestId {}, in DynamoDB table RequestDeliveryDynamoTable", requestId);
         return this.requestDeliveryDAO.getByRequestId(prepareRequest.getRelatedRequestId())
                 .doOnNext(oldEntity -> {
-                    log.info("Founded data in DynamoDB table {}", "RequestDeliveryDynamoTable");
+                    log.info("Founded data in DynamoDB table RequestDeliveryDynamoTable");
                     prepareRequest.setRequestId(oldEntity.getRequestId());
                     PrepareRequestValidator.compareRequestEntity(prepareRequest, oldEntity, false);
                 })
                 .zipWhen(oldEntity -> {
-                    log.debug("Getting PnAddress with requestId {}, in DynamoDB table {}", oldEntity.getRequestId(), "AddressDynamoTable");
+                    log.debug("Getting PnAddress with requestId {}, in DynamoDB table AddressDynamoTable", oldEntity.getRequestId());
                     return addressDAO.findByRequestId(oldEntity.getRequestId())
-                            .map(address -> {
-                                log.info("Founded data in DynamoDB table {}", "AddressDynamoTable");
-                                log.debug("Address of the related request");
-                                log.debug(
-                                        "name surname: {}, address: {}, zip: {}, foreign state: {}",
-                                        LogUtils.maskGeneric(address.getFullName()),
-                                        LogUtils.maskGeneric(address.getAddress()),
-                                        LogUtils.maskGeneric(address.getCap()),
-                                        LogUtils.maskGeneric(address.getCountry())
-                                );
-                                return address;
-                            });
+                            .doOnNext(address -> log.info("Founded data in DynamoDB table AddressDynamoTable"))
+                            .doOnNext(address -> log.debug("Address of the related request"))
+                            .doOnNext(address -> log.debug(
+                                    "name surname: {}, address: {}, zip: {}, foreign state: {}",
+                                    LogUtils.maskGeneric(address.getFullName()),
+                                    LogUtils.maskGeneric(address.getAddress()),
+                                    LogUtils.maskGeneric(address.getCap()),
+                                    LogUtils.maskGeneric(address.getCountry())
+                            ));
                 }, (entity, address) -> entity)
                 .flatMap(oldEntity -> {
                     prepareRequest.setRequestId(requestId);
-                    log.debug("Getting PnDeliveryRequest with requestId {}, in DynamoDB table {}", requestId, "RequestDeliveryDynamoTable");
+                    log.debug("Getting PnDeliveryRequest with requestId {}, in DynamoDB table RequestDeliveryDynamoTable", requestId);
                     return this.requestDeliveryDAO.getByRequestId(prepareRequest.getRequestId())
+                            .doOnNext(secondDeliveryRequest -> log.info("Attempt already exist for request id : {}", secondDeliveryRequest.getRequestId()))
+                            .doOnNext(secondDeliveryRequest -> log.info("Founded data in DynamoDB table RequestDeliveryDynamoTable"))
+                            .doOnNext(secondDeliveryRequest -> PrepareRequestValidator.compareRequestEntity(prepareRequest, secondDeliveryRequest, false))
                             .flatMap(newEntity -> {
-                                log.info("Attempt already exist for request id : {}", prepareRequest.getRequestId());
-                                log.info("Founded data in DynamoDB table {}", "RequestDeliveryDynamoTable");
-                                PrepareRequestValidator.compareRequestEntity(prepareRequest, newEntity, false);
-                                log.debug("Getting PnAddress with requestId {}, in DynamoDB table {}", newEntity.getRequestId(), "AddressDynamoTable");
+                                log.debug("Getting PnAddress with requestId {}, in DynamoDB table AddressDynamoTable", newEntity.getRequestId());
                                 return addressDAO.findByRequestId(newEntity.getRequestId())
-                                        .map(address-> {
-                                            log.info("Founded data in DynamoDB table {}", "AddressDynamoTable");
-                                            return PreparePaperResponseMapper.fromResult(newEntity, address);
-                                        })
+                                        .doOnNext(address -> log.info("Founded data in DynamoDB table AddressDynamoTable"))
+                                        .map(address-> PreparePaperResponseMapper.fromResult(newEntity, address))
                                         .switchIfEmpty(Mono.just(PreparePaperResponseMapper.fromResult(newEntity,null)));
                             })
-                            .switchIfEmpty(Mono.defer(() ->
+                            .switchIfEmpty(Mono.deferContextual(cxt ->
                                     saveRequestAndAddress(prepareRequest)
                                             .flatMap(response -> {
                                                 pnLogAudit.addsBeforeResolveLogic(
@@ -157,6 +147,7 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
                                                     );
 
                                                     PrepareAsyncRequest request = new PrepareAsyncRequest(response.getRequestId(), response.getIun(), false, 0);
+                                                    request.setClientId(cxt.getOrDefault(CONTEXT_KEY_CLIENT_ID, ""));
                                                     this.sqsSender.pushToInternalQueue(request);
                                                 } else {
                                                     pnLogAudit.addsSuccessResolveLogic(
@@ -254,36 +245,41 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
                         pnDeliveryRequest.setRequestPaId(sendRequest.getRequestPaId());
                         pnDeliveryRequest.setPrintType(sendRequest.getPrintType());
 
-                        sendRequest.setRequestId(requestId.concat(Const.RETRY).concat("0"));
-                        pnLogAudit.addsBeforeSend(
-                                sendRequest.getIun(),
-                                String.format("prepare requestId = %s, trace_id = %s  request to External Channel",
-                                        sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY))
-                        );
-                        return this.externalChannelClient.sendEngageRequest(sendRequest, attachments)
+                        return sendEngageExternalChannel(sendRequest, attachments)
                                 .then(Mono.defer(() -> {
-                                    pnLogAudit.addsSuccessSend(sendRequest.getIun(),
-                                            String.format("prepare requestId = %s, trace_id = %s  request to External Channel",
-                                                    sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY))
-                                    );
                                     log.debug("Updating data {} with requestId {} in DynamoDb table {}", "PnDeliveryRequest", requestId, "RequestDeliveryDynamoTable");
                                     return this.requestDeliveryDAO.updateData(pnDeliveryRequest);
                                 }))
-                                .map(updated -> {
-                                    log.info("Updated data in DynamoDb table {}", "RequestDeliveryDynamoTable");
-                                    pushDeduplicatesErrorEvent(pnDeliveryRequest, address);
-                                    return sendResponse;
-                                })
-                                .onErrorResume(ex -> {
-                                    pnLogAudit.addsFailSend(sendRequest.getIun(),
-                                            String.format("prepare requestId = %s, trace_id = %s  request to External Channel",
-                                                    sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY))
-                                    );
-                                    return Mono.error(ex);
+                                .doOnNext(requestUpdated -> log.info("Updated data in DynamoDb table {}", "RequestDeliveryDynamoTable"))
+                                .doOnNext(requestUpdated -> pushDeduplicatesErrorEvent(pnDeliveryRequest, address))
+                                .map(requestUpdated -> sendResponse)
+                                .doOnError(ex -> {
+                                    String logString = "prepare requestId = %s, trace_id = %s  request to External Channel";
+                                    logString = String.format(logString, sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY));
+                                    pnLogAudit.addsFailSend(sendRequest.getIun(), logString);
                                 });
 
                     }
                     return Mono.just(sendResponse);
+                });
+    }
+
+
+    private Mono<Void> sendEngageExternalChannel(SendRequest sendRequest, List<AttachmentInfo> attachments){
+        return Utility.getFromContext(CONTEXT_KEY_PREFIX_CLIENT_ID, "")
+                .switchIfEmpty(Mono.just(""))
+                .map(clientIdPrefix -> Utility.getRequestIdWithParams(sendRequest.getRequestId(), "0", clientIdPrefix))
+                .map(sendRequest::requestId)
+                .doOnNext(newSendRequest -> {
+                    String logString = "prepare requestId = %s, trace_id = %s  request to External Channel";
+                    logString = String.format(logString, sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY));
+                    pnLogAudit.addsBeforeSend(sendRequest.getIun(), logString);
+                })
+                .flatMap(newSendRequest -> this.externalChannelClient.sendEngageRequest(newSendRequest, attachments))
+                .doOnSuccess(response -> {
+                    String logString = "prepare requestId = %s, trace_id = %s  request to External Channel";
+                    logString = String.format(logString, sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY));
+                    pnLogAudit.addsSuccessSend(sendRequest.getIun(),logString);
                 });
     }
 
@@ -313,13 +309,13 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
 
     private Mono<SendResponse> getSendResponse(Address address, List<AttachmentInfo> attachments, ProductTypeEnum productType, boolean isReversePrinter){
         return this.calculator(attachments, address, productType, isReversePrinter)
-                .map(amout -> {
+                .map(amount -> {
                     int totalPages = getNumberOfPages(attachments, isReversePrinter, true);
-                    float amoutPriceFormat = Utility.getPriceFormat(amout);
-                    log.debug("Amount : {}", amoutPriceFormat);
+                    Integer amountPriceFormat = Utility.toCentsFormat(amount);
+                    log.debug("Amount : {}", amount);
                     log.debug("Total pages : {}", totalPages);
                     SendResponse response = new SendResponse();
-                    response.setAmount((int) (amoutPriceFormat*100));
+                    response.setAmount(amountPriceFormat);
                     response.setNumberOfPages(totalPages);
                     response.setEnvelopeWeight(getLetterWeight(totalPages));
                     return response;
@@ -333,7 +329,7 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
         return (weightPaper * numberOfPages) + weightLetter;
     }
 
-    private Mono<Float> calculator(List<AttachmentInfo> attachments, Address address, ProductTypeEnum productType, boolean isReversePrinter){
+    private Mono<BigDecimal> calculator(List<AttachmentInfo> attachments, Address address, ProductTypeEnum productType, boolean isReversePrinter){
         boolean isNational = StringUtils.isBlank(address.getCountry()) ||
                 StringUtils.equalsIgnoreCase(address.getCountry(), "it") ||
                 StringUtils.equalsIgnoreCase(address.getCountry(), "italia") ||
@@ -348,16 +344,16 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
 
     }
 
-    private Mono<Float> getAmount(List<AttachmentInfo> attachments, String cap, String zone, String productType, boolean isReversePrinter){
+    private Mono<BigDecimal> getAmount(List<AttachmentInfo> attachments, String cap, String zone, String productType, boolean isReversePrinter){
         String processName = "Get Amount";
         log.logStartingProcess(processName);
         return paperTenderService.getCostFrom(cap, zone, productType)
                 .map(contract ->{
                     if (!pnPaperChannelConfig.getChargeCalculationMode().equalsIgnoreCase(AAR)){
                         Integer totPages = getNumberOfPages(attachments, isReversePrinter, false);
-                        float priceTotPages = totPages * contract.getPriceAdditional();
+                        BigDecimal priceTotPages = contract.getPriceAdditional().multiply(BigDecimal.valueOf(totPages));
                         log.logEndingProcess(processName);
-                        return Float.sum(contract.getPrice(), priceTotPages);
+                        return contract.getPrice().add(priceTotPages);
                     }else{
                         log.logEndingProcess(processName);
                         return contract.getPrice();
@@ -424,4 +420,18 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
         log.logEndingProcess(processName);
         return requestDeliveryDAO.createWithAddress(pnDeliveryRequest, receiverAddressEntity, discoveredAddressEntity);
     }
+
+    private Mono<Void> createAndPushPrepareEvent(PnDeliveryRequest deliveryRequest){
+        return Utility.getFromContext(CONTEXT_KEY_CLIENT_ID, "")
+                .switchIfEmpty(Mono.just(""))
+                .map(clientId -> {
+                    PrepareAsyncRequest request = new PrepareAsyncRequest(deliveryRequest.getRequestId(), deliveryRequest.getIun(), false, 0);
+                    request.setClientId(clientId);
+                    return request;
+                })
+                .doOnNext(this.sqsSender::pushToInternalQueue)
+                .then();
+
+    }
+
 }
