@@ -5,10 +5,7 @@ import it.pagopa.pn.commons.utils.LogUtils;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PaperChannelUpdate;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PrepareEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
-import it.pagopa.pn.paperchannel.middleware.queue.model.DeliveryPushEvent;
-import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
-import it.pagopa.pn.paperchannel.middleware.queue.model.InternalEventHeader;
-import it.pagopa.pn.paperchannel.middleware.queue.model.InternalPushEvent;
+import it.pagopa.pn.paperchannel.middleware.queue.model.*;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.DeliveryPushMomProducer;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.EventBridgeProducer;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.InternalQueueMomProducer;
@@ -75,16 +72,18 @@ public class SqsQueueSender implements SqsSender {
 
     @Override
     public void pushSendEventOnEventBridge(String clientId, SendEvent event) {
-        DeliveryPushEvent pushEvent = getDeliveryPushEvent(null, event);
-        pushEvent.getPayload().setClientId(clientId);
+        DeliveryPushEvent deliveryPushEvent = getDeliveryPushEvent(null, event);
+        PaperClientEvent pushEvent = new PaperClientEvent(deliveryPushEvent.getHeader(), deliveryPushEvent.getPayload());
+        pushEvent.setClientId(clientId);
         String jsonMessage = Utility.objectToJson(pushEvent);
         this.eventBridgeProducer.sendEvent(jsonMessage, event.getRequestId());
     }
 
     @Override
     public void pushPrepareEventOnEventBridge(String clientId, PrepareEvent event) {
-        DeliveryPushEvent pushEvent = getDeliveryPushEvent(event, null);
-        pushEvent.getPayload().setClientId(clientId);
+        DeliveryPushEvent deliveryPushEvent = getDeliveryPushEvent(event, null);
+        PaperClientEvent pushEvent = new PaperClientEvent(deliveryPushEvent.getHeader(), deliveryPushEvent.getPayload());
+        pushEvent.setClientId(clientId);
         String jsonMessage = Utility.objectToJson(pushEvent);
         this.eventBridgeProducer.sendEvent(jsonMessage, event.getRequestId());
     }
