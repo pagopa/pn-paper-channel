@@ -489,7 +489,7 @@ Resources:
         ContainerEnvEntry43: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERCXID=${AddressManagerCxId}'
         ContainerEnvEntry44: !Sub 'PN_PAPERCHANNEL_CHARGECALCULATIONMODE=${ChargeCalculationMode}'
         ContainerEnvEntry45: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUEADDRESSMANAGER=${AttemptQueueAddressManager}'
-        ContainerEnvEntry46: !Sub 'PN_PAPERCHANNEL_ORIGINALPOSTAMNADDRESSUSAGEMODE=${OriginalPostmanAddressUsageMode}'
+        ContainerEnvEntry46: !Sub 'PN_PAPERCHANNEL_ORIGINALPOSTMANADDRESSUSAGEMODE=${OriginalPostmanAddressUsageMode}'
         ContainerEnvEntry47: !Sub 'PN_PAPERCHANNEL_REFINEMENTDURATION=${RefinementDuration}'
         ContainerEnvEntry48: !Sub 'PN_PAPERCHANNEL_CLOUDWATCHMETRICCRON=${CloudwatchMetricCron}'
         ContainerEnvEntry49: !Sub 'PN_PAPERCHANNEL_REQUESTPAIDOVERRIDE=${RequestPaIdOverride}'
