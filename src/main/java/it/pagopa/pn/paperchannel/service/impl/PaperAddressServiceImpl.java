@@ -76,7 +76,7 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
                             //Indirizzo non trovato = D00 - da verificare in un caso reale
                         }
                         logAuditSuccess("prepare requestId = %s, relatedRequestId = %s National Registry Address is present", deliveryRequest);
-                        return flowNationalRegistry(deliveryRequest, fromNationalRegistry, receiverAddress); //3a
+                        return flowNationalRegistry(deliveryRequest, fromNationalRegistry, receiverAddress);
                     }
                     logAuditSuccess("prepare requestId = %s, relatedRequestId = %s National Registry not present", deliveryRequest);
 
@@ -94,7 +94,7 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
                                 }))
                                 .doOnNext(pnAddress -> logAuditSuccess("prepare requestId = %s, relatedRequestId = %s discovered address is present on DB", deliveryRequest))
                                 .map(AddressMapper::toDTO)
-                                .flatMap(discoveredAddress -> flowPostmanAddress(deliveryRequest, discoveredAddress, receiverAddress)); //3b
+                                .flatMap(discoveredAddress -> flowPostmanAddress(deliveryRequest, discoveredAddress, receiverAddress));
                     }
 
 
