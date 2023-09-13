@@ -9,6 +9,7 @@ import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.model.Address;
+import it.pagopa.pn.paperchannel.model.KOReason;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 
 import java.time.Instant;
@@ -19,7 +20,7 @@ public class PrepareEventMapper {
         throw new IllegalCallerException();
     }
 
-    private static final BaseMapper <PnAddress, AnalogAddress> baseMapperAddress = new BaseMapperImpl(PnAddress.class, AnalogAddress.class);
+    private static final BaseMapper <PnAddress, AnalogAddress> baseMapperAddress = new BaseMapperImpl<>(PnAddress.class, AnalogAddress.class);
 
     public static PrepareEvent fromResult(PnDeliveryRequest request, PnAddress address){
         PrepareEvent entityEvent = new PrepareEvent();
@@ -36,11 +37,16 @@ public class PrepareEventMapper {
         return entityEvent;
     }
 
-    public static PrepareEvent toPrepareEvent(PnDeliveryRequest deliveryRequest, Address address, StatusCodeEnum status, FailureDetailCodeEnum failureDetailCode){
+    public static PrepareEvent toPrepareEvent(PnDeliveryRequest deliveryRequest, Address address, StatusCodeEnum status, KOReason koReason){
+        FailureDetailCodeEnum failureDetailCode = koReason != null ? koReason.failureDetailCode() : null;
+        Address addressFailed = koReason != null ? koReason.addressFailed() : null;
         PrepareEvent entityEvent = new PrepareEvent();
         entityEvent.setRequestId(deliveryRequest.getRequestId());
         entityEvent.setStatusCode(status);
-        if (address != null){
+        if(addressFailed != null) {
+            entityEvent.setReceiverAddress(AddressMapper.toPojo(koReason.addressFailed()));
+        }
+        else if (address != null){
             entityEvent.setReceiverAddress(AddressMapper.toPojo(address));
         }
         entityEvent.setStatusDetail(deliveryRequest.getStatusCode());

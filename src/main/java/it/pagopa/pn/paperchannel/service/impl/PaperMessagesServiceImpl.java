@@ -251,7 +251,6 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
                                     return this.requestDeliveryDAO.updateData(pnDeliveryRequest);
                                 }))
                                 .doOnNext(requestUpdated -> log.info("Updated data in DynamoDb table {}", "RequestDeliveryDynamoTable"))
-                                .doOnNext(requestUpdated -> pushDeduplicatesErrorEvent(pnDeliveryRequest, address))
                                 .map(requestUpdated -> sendResponse)
                                 .doOnError(ex -> {
                                     String logString = "prepare requestId = %s, trace_id = %s  request to External Channel";

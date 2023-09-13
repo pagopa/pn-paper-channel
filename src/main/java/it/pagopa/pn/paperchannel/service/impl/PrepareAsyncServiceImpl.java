@@ -5,7 +5,6 @@ import it.pagopa.pn.paperchannel.config.HttpConnector;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.*;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileDownloadResponseDto;
-import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.FailureDetailCodeEnum;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PrepareEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
@@ -19,10 +18,7 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.SafeStorageClient;
-import it.pagopa.pn.paperchannel.model.Address;
-import it.pagopa.pn.paperchannel.model.AttachmentInfo;
-import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
-import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
+import it.pagopa.pn.paperchannel.model.*;
 import it.pagopa.pn.paperchannel.service.PaperAddressService;
 import it.pagopa.pn.paperchannel.service.PaperAsyncService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
@@ -109,13 +105,18 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                     if (ex instanceof PnAddressFlowException) return Mono.error(ex);
 
                     StatusDeliveryEnum statusDeliveryEnum = StatusDeliveryEnum.PAPER_CHANNEL_ASYNC_ERROR;
-                    if(ex instanceof PnGenericException) {
-                        statusDeliveryEnum = mapper(((PnGenericException) ex).getExceptionType());
+                    final KOReason koReason;
+                    if(ex instanceof PnGenericException genEx) {
+                        statusDeliveryEnum = mapper(genEx.getExceptionType());
+                        koReason = genEx.getKoReason();
+                    }
+                    else {
+                        koReason = null;
                     }
                     return updateStatus(requestId, correlationId, statusDeliveryEnum)
                             .doOnNext(entity -> {
                                 if (entity.getStatusCode().equals(StatusDeliveryEnum.UNTRACEABLE.getCode())){
-                                    sendUnreachableEvent(entity, request.getClientId());
+                                    sendUnreachableEvent(entity, request.getClientId(), koReason);
                                     log.logEndingProcess(PROCESS_NAME);
                                 }
                             })
@@ -174,7 +175,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
     }
 
     private Mono<PnDeliveryRequest> handleAndThrowAgainError(PnGenericException ex, String requestId) {
-        if(! (ex instanceof PnUntracebleException) ) {
+        if(! (ex instanceof PnErrorNotSavedInDBException) ) {
             return traceError(requestId, ex.getMessage(), "CHECK_ADDRESS_FLOW").then(Mono.error(ex));
         }
         else {
@@ -247,9 +248,9 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
     }
 
 
-    private void sendUnreachableEvent(PnDeliveryRequest request, String clientId, FailureDetailCodeEnum failureDetailCode){
+    private void sendUnreachableEvent(PnDeliveryRequest request, String clientId, KOReason koReason){
         log.debug("Send Unreachable Event request id - {}, iun - {}", request.getRequestId(), request.getIun());
-        this.pushPrepareEvent(request, null, clientId, StatusCodeEnum.KO, failureDetailCode);
+        this.pushPrepareEvent(request, null, clientId, StatusCodeEnum.KO, koReason);
     }
 
     private Mono<Void> traceError(String requestId, String error, String flowType){
@@ -257,8 +258,8 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                 .then();
     }
 
-    private void pushPrepareEvent(PnDeliveryRequest request, Address address, String clientId, StatusCodeEnum statusCode, FailureDetailCodeEnum failureDetailCode){
-        PrepareEvent prepareEvent = PrepareEventMapper.toPrepareEvent(request, address, statusCode, failureDetailCode);
+    private void pushPrepareEvent(PnDeliveryRequest request, Address address, String clientId, StatusCodeEnum statusCode, KOReason koReason){
+        PrepareEvent prepareEvent = PrepareEventMapper.toPrepareEvent(request, address, statusCode, koReason);
         if (request.getRequestId().contains(PREFIX_REQUEST_ID_SERVICE_DESK)){
             this.sqsSender.pushPrepareEventOnEventBridge(clientId, prepareEvent);
             return;

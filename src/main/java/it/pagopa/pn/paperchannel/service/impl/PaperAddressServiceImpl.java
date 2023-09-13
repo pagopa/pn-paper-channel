@@ -3,10 +3,9 @@ package it.pagopa.pn.paperchannel.service.impl;
 import it.pagopa.pn.commons.exceptions.PnInternalException;
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
-import it.pagopa.pn.paperchannel.exception.PnAddressFlowException;
-import it.pagopa.pn.paperchannel.exception.PnGenericException;
-import it.pagopa.pn.paperchannel.exception.PnUntracebleException;
+import it.pagopa.pn.paperchannel.exception.*;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.dto.AnalogAddressDto;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.FailureDetailCodeEnum;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
 import it.pagopa.pn.paperchannel.mapper.RequestDeliveryMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
@@ -17,12 +16,12 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.AddressManagerClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.model.Address;
+import it.pagopa.pn.paperchannel.model.KOReason;
 import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.service.PaperAddressService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
-import it.pagopa.pn.paperchannel.utils.Const;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.MDC;
@@ -72,7 +71,9 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
                     if (StringUtils.isNotBlank(deliveryRequest.getCorrelationId())){
                         if (fromNationalRegistry == null) {
                             logAuditSuccess("prepare requestId = %s, relatedRequestId = %s National Registry Address is null", deliveryRequest);
-                            return Mono.error(new PnUntracebleException());
+                            KOReason koReason = new KOReason(FailureDetailCodeEnum.D00, null);
+                            return Mono.error(new PnUntracebleException(koReason));
+                            //Indirizzo non trovato = D00 - da verificare in un caso reale
                         }
                         logAuditSuccess("prepare requestId = %s, relatedRequestId = %s National Registry Address is present", deliveryRequest);
                         return flowNationalRegistry(deliveryRequest, fromNationalRegistry, receiverAddress); //3a
@@ -134,24 +135,13 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
     private Mono<Address> flowPostmanAddress(PnDeliveryRequest deliveryRequest, Address discovered, Address firstAttempt){
         logAuditBefore("prepare requestId = %s, relatedRequestId = %s Discovered and First address is Equals ?", deliveryRequest);
 
-        return this.addressManagerClient.deduplicates(UUID.randomUUID().toString(), firstAttempt, discovered) //1d
+        return this.addressManagerClient.deduplicates(UUID.randomUUID().toString(), firstAttempt, discovered)
                 .flatMap(deduplicatesResponse -> {
                     logAuditBefore("prepare requestId = %s, relatedRequestId = %s Deduplicates service has DeduplicatesResponse.error empty ?", deliveryRequest);
                     if (StringUtils.isNotBlank(deduplicatesResponse.getError())){
-//                        if (StringUtils.equalsIgnoreCase(paperProperties.getOriginalPostmanAddressUsageMode(), Const.PAPERSEND)){
-//                            saveDeduplicatesErrorEvent(deliveryRequest);
-//
-//                            logAuditSuccess("prepare requestId = %s, relatedRequestId = %s Deduplicate response have an error and send discovered",deliveryRequest);
-//                            return Mono.just(discovered);
-//                        } else if (StringUtils.equalsIgnoreCase(paperProperties.getOriginalPostmanAddressUsageMode(), Const.DISCARDNOTIFICATION)) {
-//                            saveDeduplicatesErrorEvent(deliveryRequest);
-//
-//                            logAuditSuccess("prepare requestId = %s, relatedRequestId = %s Deduplicate response have an error and discard notification",deliveryRequest);
-//                            return Mono.error(new PnAddressFlowException(DISCARD_NOTIFICATION));
-//                        }
                         logAuditSuccess("prepare requestId = %s, relatedRequestId = %s Deduplicate response have a error and properties usage mode incompatible type",deliveryRequest);
-                        return Mono.error(new PnInternalException(INVALID_VALUE_FROM_PROPS.getTitle(), "ERROR_POSTMAN_ADDRESS_USAGE_MODE"));
-                        //Indirizzo diverso - Normalizzazione KO = D01
+                        return Mono.error(manageErrorD001FlowPostmanAddress(paperProperties, INVALID_VALUE_FROM_PROPS.getTitle(), "ERROR_POSTMAN_ADDRESS_USAGE_MODE", discovered));
+                        //Indirizzo diverso - Normalizzazione KO = D01 (fare configurazione)
                     }
 
                     logAuditSuccess("prepare requestId = %s, relatedRequestId = %s Deduplicate service has DeduplicatesResponse.error is empty",deliveryRequest);
@@ -159,7 +149,7 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
                     if (Boolean.TRUE.equals(deduplicatesResponse.getEqualityResult())) {
                         logAuditSuccess("prepare requestId = %s, relatedRequestId = %s Discovered address is equals previous address",deliveryRequest);
                         return Mono.error(new PnAddressFlowException(ATTEMPT_ADDRESS_NATIONAL_REGISTRY));
-                        //Indirizzo coincidente con quello del primo tentativo (normalizzato con successo) = D02
+                        // questa eccezione attiva il flusso di NR
                     }
                     logAuditSuccess("prepare requestId = %s, relatedRequestId = %s Discovered address is not equals previous address", deliveryRequest);
                     return checkAndParseNormalizedAddress(deduplicatesResponse.getNormalizedAddress(), discovered, deliveryRequest.getRequestId());
@@ -179,15 +169,14 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
                                         pnDeliveryRequest.getRequestId(),
                                         pnDeliveryRequest.getRelatedRequestId())
                         );
-                        return Mono.error(new PnUntracebleException());
+                        KOReason koReason = new KOReason(FailureDetailCodeEnum.D02, null);
+                        return Mono.error(new PnGenericException(UNTRACEABLE_ADDRESS, UNTRACEABLE_ADDRESS.getMessage(), koReason));
                         //Indirizzo coincidenti = D02
                     }
                     if (deduplicateResponse.getError() != null){
-                        saveDeduplicatesErrorEvent(pnDeliveryRequest);
-
                         log.error("Response from address manager {} with request id {}", deduplicateResponse.getError(), pnDeliveryRequest.getRequestId());
-                        return Mono.error(new PnGenericException(ADDRESS_MANAGER_ERROR, deduplicateResponse.getError()));
-                        //Indirizzo diverso - Normalizzazione KO = D01
+                        return Mono.error(manageErrorD001FlowNationalRegistry(paperProperties, ADDRESS_MANAGER_ERROR, deduplicateResponse.getError(), fromNationalRegistries));
+                        //Indirizzo diverso - Normalizzazione KO = D01 (con configurazione)
                     }
                     logAuditSuccess("prepare requestId = %s, relatedRequestId = %s Deduplicate service has DeduplicatesResponse.error is empty",pnDeliveryRequest);
 
@@ -205,8 +194,9 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
     private Mono<Address> checkAndParseNormalizedAddress(AnalogAddressDto normalizedAddress, Address older, String requestId){
         if (normalizedAddress == null) {
             log.error("Response from address manager have a address null {}", requestId);
-            return Mono.error(new PnUntracebleException());
-            //Indirizzo non trovato = D00
+            KOReason koReason = new KOReason(FailureDetailCodeEnum.D00, null);
+            return Mono.error(new PnGenericException(UNTRACEABLE_ADDRESS, UNTRACEABLE_ADDRESS.getMessage(), koReason));
+            //Indirizzo non trovato = D00 - da verificare in un caso reale
         }
         Address address = AddressMapper.fromAnalogAddressManager(normalizedAddress) ;
         address.setFullName(older.getFullName());
@@ -252,10 +242,25 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
                 });
     }
 
-    private void saveDeduplicatesErrorEvent(PnDeliveryRequest deliveryRequest) {
-        logAuditSuccess("prepare requestId = %s, relatedRequestId = %s Deduplicate service has DeduplicatesResponse.error is not empty",deliveryRequest);
-        deliveryRequest.setEventToSend(StatusDeliveryEnum.DEDUPLICATES_ERROR_RESPONSE.getCode());
-        this.requestDeliveryDAO.updateData(deliveryRequest);
+    private Throwable manageErrorD001FlowNationalRegistry(PnPaperChannelConfig config, ExceptionTypeEnum exceptionType, String message, Address addressFailed) {
+        if(config.isManageD01()) {
+            KOReason koReason = new KOReason(FailureDetailCodeEnum.D01, addressFailed);
+            return new PnErrorNotSavedInDBException(exceptionType, message, koReason);
+        }
+        else {
+            return new PnGenericException(exceptionType, message);
+        }
     }
+
+    private Throwable manageErrorD001FlowPostmanAddress(PnPaperChannelConfig config, String message, String errorCode, Address addressFailed) {
+        if(config.isManageD01()) {
+            KOReason koReason = new KOReason(FailureDetailCodeEnum.D01, addressFailed);
+            return new PnErrorNotSavedInDBException(null, message, koReason);
+        }
+        else {
+            return new PnInternalException(message, errorCode);
+        }
+    }
+
 
 }
