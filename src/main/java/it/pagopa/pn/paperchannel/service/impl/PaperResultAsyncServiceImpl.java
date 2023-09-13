@@ -19,6 +19,7 @@ import it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum;
 import it.pagopa.pn.paperchannel.utils.Utility;
 import lombok.CustomLog;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -74,11 +75,11 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
 
         return this.pnClientDAO.getByPrefix(prefixClientId)
                 .switchIfEmpty(Mono.just(new PnClientID()))
-                .flatMap(pnClientID -> {
-                    if (StringUtils.isBlank(pnClientID.getClientId())) return Mono.just(entity);
-                    return Mono.just(entity)
-                            .contextWrite(cxt -> cxt.put(Const.CONTEXT_KEY_CLIENT_ID, pnClientID.getClientId()))
-                            .doOnNext(response -> log.debug("Set clientId [{}] into context ", pnClientID.getClientId()));
+                .map(pnClientID -> {
+                    log.debug("[{}] clientId finded from prefix {}", pnClientID, prefixClientId);
+                    if (StringUtils.isBlank(pnClientID.getClientId())) return entity;
+                    MDC.put(Const.CONTEXT_KEY_CLIENT_ID, pnClientID.getClientId());
+                    return entity;
                 });
     }
 
