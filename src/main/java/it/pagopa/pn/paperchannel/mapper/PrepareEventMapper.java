@@ -1,6 +1,7 @@
 package it.pagopa.pn.paperchannel.mapper;
 
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.AnalogAddress;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.FailureDetailCodeEnum;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PrepareEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.mapper.common.BaseMapper;
@@ -35,7 +36,7 @@ public class PrepareEventMapper {
         return entityEvent;
     }
 
-    public static PrepareEvent toPrepareEvent(PnDeliveryRequest deliveryRequest, Address address, StatusCodeEnum status){
+    public static PrepareEvent toPrepareEvent(PnDeliveryRequest deliveryRequest, Address address, StatusCodeEnum status, FailureDetailCodeEnum failureDetailCode){
         PrepareEvent entityEvent = new PrepareEvent();
         entityEvent.setRequestId(deliveryRequest.getRequestId());
         entityEvent.setStatusCode(status);
@@ -45,6 +46,7 @@ public class PrepareEventMapper {
         entityEvent.setStatusDetail(deliveryRequest.getStatusCode());
         entityEvent.setProductType(deliveryRequest.getProductType());
         entityEvent.setStatusDateTime(Instant.now());
+        entityEvent.setFailureDetailCode(failureDetailCode);
         return entityEvent;
     }
 

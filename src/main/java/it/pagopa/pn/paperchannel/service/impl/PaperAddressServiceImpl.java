@@ -75,7 +75,7 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
                             return Mono.error(new PnUntracebleException());
                         }
                         logAuditSuccess("prepare requestId = %s, relatedRequestId = %s National Registry Address is present", deliveryRequest);
-                        return flowNationalRegistry(deliveryRequest, fromNationalRegistry, receiverAddress);
+                        return flowNationalRegistry(deliveryRequest, fromNationalRegistry, receiverAddress); //3a
                     }
                     logAuditSuccess("prepare requestId = %s, relatedRequestId = %s National Registry not present", deliveryRequest);
 
@@ -93,7 +93,7 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
                                 }))
                                 .doOnNext(pnAddress -> logAuditSuccess("prepare requestId = %s, relatedRequestId = %s discovered address is present on DB", deliveryRequest))
                                 .map(AddressMapper::toDTO)
-                                .flatMap(discoveredAddress -> flowPostmanAddress(deliveryRequest, discoveredAddress, receiverAddress));
+                                .flatMap(discoveredAddress -> flowPostmanAddress(deliveryRequest, discoveredAddress, receiverAddress)); //3b
                     }
 
 
@@ -134,23 +134,24 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
     private Mono<Address> flowPostmanAddress(PnDeliveryRequest deliveryRequest, Address discovered, Address firstAttempt){
         logAuditBefore("prepare requestId = %s, relatedRequestId = %s Discovered and First address is Equals ?", deliveryRequest);
 
-        return this.addressManagerClient.deduplicates(UUID.randomUUID().toString(), firstAttempt, discovered)
+        return this.addressManagerClient.deduplicates(UUID.randomUUID().toString(), firstAttempt, discovered) //1d
                 .flatMap(deduplicatesResponse -> {
                     logAuditBefore("prepare requestId = %s, relatedRequestId = %s Deduplicates service has DeduplicatesResponse.error empty ?", deliveryRequest);
                     if (StringUtils.isNotBlank(deduplicatesResponse.getError())){
-                        if (StringUtils.equalsIgnoreCase(paperProperties.getOriginalPostmanAddressUsageMode(), Const.PAPERSEND)){
-                            saveDeduplicatesErrorEvent(deliveryRequest);
-
-                            logAuditSuccess("prepare requestId = %s, relatedRequestId = %s Deduplicate response have an error and send discovered",deliveryRequest);
-                            return Mono.just(discovered);
-                        } else if (StringUtils.equalsIgnoreCase(paperProperties.getOriginalPostmanAddressUsageMode(), Const.DISCARDNOTIFICATION)) {
-                            saveDeduplicatesErrorEvent(deliveryRequest);
-
-                            logAuditSuccess("prepare requestId = %s, relatedRequestId = %s Deduplicate response have an error and discard notification",deliveryRequest);
-                            return Mono.error(new PnAddressFlowException(DISCARD_NOTIFICATION));
-                        }
+//                        if (StringUtils.equalsIgnoreCase(paperProperties.getOriginalPostmanAddressUsageMode(), Const.PAPERSEND)){
+//                            saveDeduplicatesErrorEvent(deliveryRequest);
+//
+//                            logAuditSuccess("prepare requestId = %s, relatedRequestId = %s Deduplicate response have an error and send discovered",deliveryRequest);
+//                            return Mono.just(discovered);
+//                        } else if (StringUtils.equalsIgnoreCase(paperProperties.getOriginalPostmanAddressUsageMode(), Const.DISCARDNOTIFICATION)) {
+//                            saveDeduplicatesErrorEvent(deliveryRequest);
+//
+//                            logAuditSuccess("prepare requestId = %s, relatedRequestId = %s Deduplicate response have an error and discard notification",deliveryRequest);
+//                            return Mono.error(new PnAddressFlowException(DISCARD_NOTIFICATION));
+//                        }
                         logAuditSuccess("prepare requestId = %s, relatedRequestId = %s Deduplicate response have a error and properties usage mode incompatible type",deliveryRequest);
                         return Mono.error(new PnInternalException(INVALID_VALUE_FROM_PROPS.getTitle(), "ERROR_POSTMAN_ADDRESS_USAGE_MODE"));
+                        //Indirizzo diverso - Normalizzazione KO = D01
                     }
 
                     logAuditSuccess("prepare requestId = %s, relatedRequestId = %s Deduplicate service has DeduplicatesResponse.error is empty",deliveryRequest);
@@ -158,6 +159,7 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
                     if (Boolean.TRUE.equals(deduplicatesResponse.getEqualityResult())) {
                         logAuditSuccess("prepare requestId = %s, relatedRequestId = %s Discovered address is equals previous address",deliveryRequest);
                         return Mono.error(new PnAddressFlowException(ATTEMPT_ADDRESS_NATIONAL_REGISTRY));
+                        //Indirizzo coincidente con quello del primo tentativo (normalizzato con successo) = D02
                     }
                     logAuditSuccess("prepare requestId = %s, relatedRequestId = %s Discovered address is not equals previous address", deliveryRequest);
                     return checkAndParseNormalizedAddress(deduplicatesResponse.getNormalizedAddress(), discovered, deliveryRequest.getRequestId());
@@ -177,13 +179,15 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
                                         pnDeliveryRequest.getRequestId(),
                                         pnDeliveryRequest.getRelatedRequestId())
                         );
-                        return Mono.error(new PnGenericException(UNTRACEABLE_ADDRESS, UNTRACEABLE_ADDRESS.getMessage()));
+                        return Mono.error(new PnUntracebleException());
+                        //Indirizzo coincidenti = D02
                     }
                     if (deduplicateResponse.getError() != null){
                         saveDeduplicatesErrorEvent(pnDeliveryRequest);
 
                         log.error("Response from address manager {} with request id {}", deduplicateResponse.getError(), pnDeliveryRequest.getRequestId());
                         return Mono.error(new PnGenericException(ADDRESS_MANAGER_ERROR, deduplicateResponse.getError()));
+                        //Indirizzo diverso - Normalizzazione KO = D01
                     }
                     logAuditSuccess("prepare requestId = %s, relatedRequestId = %s Deduplicate service has DeduplicatesResponse.error is empty",pnDeliveryRequest);
 
@@ -201,7 +205,8 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
     private Mono<Address> checkAndParseNormalizedAddress(AnalogAddressDto normalizedAddress, Address older, String requestId){
         if (normalizedAddress == null) {
             log.error("Response from address manager have a address null {}", requestId);
-            return Mono.error(new PnGenericException(UNTRACEABLE_ADDRESS, UNTRACEABLE_ADDRESS.getMessage()));
+            return Mono.error(new PnUntracebleException());
+            //Indirizzo non trovato = D00
         }
         Address address = AddressMapper.fromAnalogAddressManager(normalizedAddress) ;
         address.setFullName(older.getFullName());

@@ -5,6 +5,7 @@ import it.pagopa.pn.paperchannel.config.HttpConnector;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.*;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileDownloadResponseDto;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.FailureDetailCodeEnum;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PrepareEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
@@ -83,7 +84,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
             requestDeliveryEntityMono = requestDeliveryDAO.getByRequestId(requestId, true);
         }
         return requestDeliveryEntityMono
-                .flatMap(deliveryRequest -> checkAndUpdateAddress(deliveryRequest, addressFromNationalRegistry, request))
+                .flatMap(deliveryRequest -> checkAndUpdateAddress(deliveryRequest, addressFromNationalRegistry, request)) //1
                 .map(pnDeliveryRequest -> {
                     RequestDeliveryMapper.changeState(
                             pnDeliveryRequest,
@@ -99,7 +100,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                 .flatMap(pnDeliveryRequest ->
                      this.addressDAO.findByRequestId(pnDeliveryRequest.getRequestId())
                             .flatMap(address -> {
-                                this.pushPrepareEvent(pnDeliveryRequest, AddressMapper.toDTO(address), request.getClientId(), StatusCodeEnum.OK);
+                                this.pushPrepareEvent(pnDeliveryRequest, AddressMapper.toDTO(address), request.getClientId(), StatusCodeEnum.OK, null);
                                 return this.requestDeliveryDAO.updateData(pnDeliveryRequest);
                             })
                 )
@@ -158,7 +159,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
 
     private Mono<PnDeliveryRequest> checkAndUpdateAddress(PnDeliveryRequest pnDeliveryRequest, Address fromNationalRegistries, PrepareAsyncRequest queueModel){
         String VALIDATION_NAME = "Check and update address";
-        return this.paperAddressService.getCorrectAddress(pnDeliveryRequest, fromNationalRegistries, queueModel)
+        return this.paperAddressService.getCorrectAddress(pnDeliveryRequest, fromNationalRegistries, queueModel) //2
                 .flatMap(newAddress -> {
                     log.logCheckingOutcome(VALIDATION_NAME, true);
                     pnDeliveryRequest.setAddressHash(newAddress.convertToHash());
@@ -246,9 +247,9 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
     }
 
 
-    private void sendUnreachableEvent(PnDeliveryRequest request, String clientId){
+    private void sendUnreachableEvent(PnDeliveryRequest request, String clientId, FailureDetailCodeEnum failureDetailCode){
         log.debug("Send Unreachable Event request id - {}, iun - {}", request.getRequestId(), request.getIun());
-        this.pushPrepareEvent(request, null, clientId, StatusCodeEnum.KO);
+        this.pushPrepareEvent(request, null, clientId, StatusCodeEnum.KO, failureDetailCode);
     }
 
     private Mono<Void> traceError(String requestId, String error, String flowType){
@@ -256,8 +257,8 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                 .then();
     }
 
-    private void pushPrepareEvent(PnDeliveryRequest request, Address address, String clientId, StatusCodeEnum statusCode){
-        PrepareEvent prepareEvent = PrepareEventMapper.toPrepareEvent(request, address, statusCode);
+    private void pushPrepareEvent(PnDeliveryRequest request, Address address, String clientId, StatusCodeEnum statusCode, FailureDetailCodeEnum failureDetailCode){
+        PrepareEvent prepareEvent = PrepareEventMapper.toPrepareEvent(request, address, statusCode, failureDetailCode);
         if (request.getRequestId().contains(PREFIX_REQUEST_ID_SERVICE_DESK)){
             this.sqsSender.pushPrepareEventOnEventBridge(clientId, prepareEvent);
             return;
