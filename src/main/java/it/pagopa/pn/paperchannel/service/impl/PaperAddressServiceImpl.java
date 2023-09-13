@@ -132,12 +132,15 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
 
 
     private Mono<Address> flowPostmanAddress(PnDeliveryRequest deliveryRequest, Address discovered, Address firstAttempt){
+        log.info("flowPostmanAddress for requestId {}", deliveryRequest.getRequestId());
         logAuditBefore("prepare requestId = %s, relatedRequestId = %s Discovered and First address is Equals ?", deliveryRequest);
 
         return this.addressManagerClient.deduplicates(UUID.randomUUID().toString(), firstAttempt, discovered)
                 .flatMap(deduplicatesResponse -> {
                     logAuditBefore("prepare requestId = %s, relatedRequestId = %s Deduplicates service has DeduplicatesResponse.error empty ?", deliveryRequest);
                     if (StringUtils.isNotBlank(deduplicatesResponse.getError())){
+                        log.debug("OriginalPostmanAddressUsageMode is {}", paperProperties.getOriginalPostmanAddressUsageMode());
+
                         if (StringUtils.equalsIgnoreCase(paperProperties.getOriginalPostmanAddressUsageMode(), Const.PAPERSEND)){
                             saveDeduplicatesErrorEvent(deliveryRequest);
 
@@ -165,6 +168,8 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
     }
 
     private Mono<Address> flowNationalRegistry(PnDeliveryRequest pnDeliveryRequest, Address fromNationalRegistries, Address firstAttempt){
+        log.info("flowNationalRegistry for requestId {}", pnDeliveryRequest.getRequestId());
+
         return addressManagerClient.deduplicates(pnDeliveryRequest.getCorrelationId(), firstAttempt, fromNationalRegistries)
                 .flatMap(deduplicateResponse -> {
                     logAuditBefore("prepare requestId = %s, relatedRequestId = %s Deduplicates service has DeduplicatesResponse.error empty ?", pnDeliveryRequest);
