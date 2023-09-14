@@ -73,6 +73,7 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
         logAuditBefore("prepare requestId = %s, relatedRequestId = %s Is National Registry Address present ?", deliveryRequest);
         // Only discovered address is null and retrieved national registry address
         if (StringUtils.isNotBlank(deliveryRequest.getCorrelationId())){
+            log.debug("[{}] getAddressFromNationalRegistry flow", deliveryRequest.getRequestId());
             return getAddressFromNationalRegistry(deliveryRequest, fromNationalRegistry, addressFromFirstAttempt);
         }
         else {
@@ -80,6 +81,7 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
             // Only discovered address is present and check discovered address
             logAuditBefore("prepare requestId = %s, relatedRequestId = %s Is Second attempt ?", deliveryRequest);
             if (StringUtils.isNotBlank(deliveryRequest.getRelatedRequestId())){
+                log.debug("[{}] getAddressFromDiscoveredAddress flow", deliveryRequest.getRequestId());
                 return getAddressFromDiscoveredAddress(deliveryRequest, addressFromFirstAttempt);
             }
             else {
@@ -126,7 +128,7 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
                     logAuditBefore("prepare requestId = %s, relatedRequestId = %s Deduplicates service has DeduplicatesResponse.error empty ?", deliveryRequest);
                     if (StringUtils.isNotBlank(deduplicatesResponse.getError())){
                         logAuditSuccess("prepare requestId = %s, relatedRequestId = %s Deduplicate response have a error and properties usage mode incompatible type",deliveryRequest);
-                        return Mono.error(manageErrorD001FlowPostmanAddress(paperProperties, INVALID_VALUE_FROM_PROPS.getTitle(), "ERROR_POSTMAN_ADDRESS_USAGE_MODE", discovered));
+                        return Mono.error(manageErrorD001FlowPostmanAddress(paperProperties, INVALID_VALUE_FROM_PROPS.getTitle(), "ERROR_POSTMAN_ADDRESS_USAGE_MODE", discovered, deliveryRequest.getRequestId()));
                         //Indirizzo diverso - Normalizzazione KO = D01 (fare configurazione)
                     }
 
@@ -161,7 +163,7 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
                     }
                     if (deduplicateResponse.getError() != null){
                         log.error("Response from address manager {} with request id {}", deduplicateResponse.getError(), pnDeliveryRequest.getRequestId());
-                        return Mono.error(manageErrorD001FlowNationalRegistry(paperProperties, ADDRESS_MANAGER_ERROR, deduplicateResponse.getError(), fromNationalRegistries));
+                        return Mono.error(manageErrorD001FlowNationalRegistry(paperProperties, ADDRESS_MANAGER_ERROR, deduplicateResponse.getError(), fromNationalRegistries, pnDeliveryRequest.getRequestId()));
                         //Indirizzo diverso - Normalizzazione KO = D01 (con configurazione)
                     }
                     logAuditSuccess("prepare requestId = %s, relatedRequestId = %s Deduplicate service has DeduplicatesResponse.error is empty",pnDeliveryRequest);
@@ -256,8 +258,10 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
                 });
     }
 
-    private Throwable manageErrorD001FlowNationalRegistry(PnPaperChannelConfig config, ExceptionTypeEnum exceptionType, String message, Address addressFailed) {
+    private Throwable manageErrorD001FlowNationalRegistry(PnPaperChannelConfig config, ExceptionTypeEnum exceptionType,
+                                                          String message, Address addressFailed, String requestId) {
         if(config.isD01SendToDeliveryPush()) {
+            log.debug("[{}] isD01SendToDeliveryPush is enabled from FlowNationalRegistry, D01 flow running", requestId);
             KOReason koReason = new KOReason(FailureDetailCodeEnum.D01, addressFailed);
             return new PnUntracebleException(koReason);
         }
@@ -266,8 +270,10 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
         }
     }
 
-    private Throwable manageErrorD001FlowPostmanAddress(PnPaperChannelConfig config, String message, String errorCode, Address addressFailed) {
+    private Throwable manageErrorD001FlowPostmanAddress(PnPaperChannelConfig config, String message, String errorCode,
+                                                        Address addressFailed, String requestId) {
         if(config.isD01SendToDeliveryPush()) {
+            log.debug("[{}] isD01SendToDeliveryPush is enabled from FlowPostmanAddress, D01 flow running", requestId);
             KOReason koReason = new KOReason(FailureDetailCodeEnum.D01, addressFailed);
             return new PnUntracebleException(koReason);
         }
