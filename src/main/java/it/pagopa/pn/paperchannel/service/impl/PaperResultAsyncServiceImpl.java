@@ -5,9 +5,7 @@ import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.DiscoveredAddressDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.paperchannel.mapper.RequestDeliveryMapper;
-import it.pagopa.pn.paperchannel.middleware.db.dao.PnClientDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnClientID;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.HandlersFactory;
@@ -19,7 +17,6 @@ import it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum;
 import it.pagopa.pn.paperchannel.utils.Utility;
 import lombok.CustomLog;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -29,19 +26,15 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DATA_NULL_OR
 @Service
 public class PaperResultAsyncServiceImpl extends BaseService implements PaperResultAsyncService {
 
-
-    private final PnClientDAO pnClientDAO;
-
     private final HandlersFactory handlersFactory;
 
     private final String processName = "Result Async Background";
 
     public PaperResultAsyncServiceImpl(PnAuditLogBuilder auditLogBuilder, RequestDeliveryDAO requestDeliveryDAO,
                                        NationalRegistryClient nationalRegistryClient, SqsSender sqsSender,
-                                       HandlersFactory handlersFactory,PnClientDAO pnClientDAO) {
+                                       HandlersFactory handlersFactory) {
         super(auditLogBuilder, requestDeliveryDAO, null, nationalRegistryClient, sqsSender);
         this.handlersFactory = handlersFactory;
-        this.pnClientDAO = pnClientDAO;
     }
 
     @Override
