@@ -5,6 +5,7 @@ import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.PnClientDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDiscoveredAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
@@ -29,8 +30,8 @@ public class AggregatorMessageHandler extends SendToDeliveryPushHandler {
     private final MetaDematCleaner metaDematCleaner;
 
 
-    public AggregatorMessageHandler(SqsSender sqsSender, EventMetaDAO eventMetaDAO, MetaDematCleaner metaDematCleaner) {
-        super(sqsSender);
+    public AggregatorMessageHandler(SqsSender sqsSender, EventMetaDAO eventMetaDAO, MetaDematCleaner metaDematCleaner, PnClientDAO pnClientDAO) {
+        super(sqsSender, pnClientDAO);
 
         this.eventMetaDAO = eventMetaDAO;
         this.metaDematCleaner = metaDematCleaner;

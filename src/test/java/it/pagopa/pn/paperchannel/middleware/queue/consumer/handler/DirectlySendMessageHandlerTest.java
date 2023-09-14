@@ -5,6 +5,7 @@ import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.mapper.SendEventMapper;
+import it.pagopa.pn.paperchannel.middleware.db.dao.PnClientDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,10 +23,13 @@ class DirectlySendMessageHandlerTest {
 
     private SqsSender mockSqsSender;
 
+    private PnClientDAO pnClientDAO;
+
     @BeforeEach
     public void init() {
         mockSqsSender = mock(SqsSender.class);
-        handler = new DirectlySendMessageHandler(mockSqsSender);
+        pnClientDAO = mock(PnClientDAO.class);
+        handler = new DirectlySendMessageHandler(mockSqsSender, pnClientDAO);
     }
 
     @Test

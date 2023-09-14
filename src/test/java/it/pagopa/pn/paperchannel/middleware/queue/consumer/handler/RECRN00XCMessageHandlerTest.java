@@ -5,6 +5,7 @@ import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.PnClientDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDiscoveredAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
@@ -39,17 +40,20 @@ class RECRN00XCMessageHandlerTest {
     private SqsSender sqsSender;
     private EventMetaDAO eventMetaDAO;
 
+    private PnClientDAO pnClientDAO;
+
     private final int DAYS_REFINEMENT = 10;
 
     @BeforeEach
     void setUp(){
         sqsSender = mock(SqsSender.class);
         eventMetaDAO = mock(EventMetaDAO.class);
+        pnClientDAO = mock(PnClientDAO.class);
         MetaDematCleaner metaDematCleaner = mock(MetaDematCleaner.class);
 
         when(metaDematCleaner.clean(requestId)).thenReturn(Mono.empty());
 
-        handler = new RECRN00XCMessageHandler(sqsSender, eventMetaDAO, metaDematCleaner, Duration.of(DAYS_REFINEMENT, ChronoUnit.DAYS));
+        handler = new RECRN00XCMessageHandler(sqsSender, eventMetaDAO, metaDematCleaner, Duration.of(DAYS_REFINEMENT, ChronoUnit.DAYS), pnClientDAO);
     }
 
     @Test

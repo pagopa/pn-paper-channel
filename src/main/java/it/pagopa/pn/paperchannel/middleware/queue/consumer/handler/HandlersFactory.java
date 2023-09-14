@@ -1,10 +1,7 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
-import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
-import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
-import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
-import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.*;
 import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
 import it.pagopa.pn.paperchannel.middleware.queue.consumer.MetaDematCleaner;
 import it.pagopa.pn.paperchannel.service.SqsSender;
@@ -36,6 +33,8 @@ public class HandlersFactory {
 
     private final MetaDematCleaner metaDematCleaner;
 
+    private final PnClientDAO pnClientDAO;
+
     private ConcurrentHashMap<String, MessageHandler> map;
 
 
@@ -44,19 +43,19 @@ public class HandlersFactory {
     @PostConstruct
     public void initializeHandlers() {
         var saveMetadataMessageHandler = new SaveMetadataMessageHandler(eventMetaDAO, pnPaperChannelConfig.getTtlExecutionDaysMeta());
-        var saveDematMessageHandler = new SaveDematMessageHandler(sqsSender, eventDematDAO, pnPaperChannelConfig.getTtlExecutionDaysDemat());
-        var retryableErrorExtChannelsMessageHandler = new RetryableErrorMessageHandler(sqsSender, externalChannelClient, addressDAO, paperRequestErrorDAO, pnPaperChannelConfig);
-        var notRetryableErrorMessageHandler = new NotRetryableErrorMessageHandler(sqsSender, paperRequestErrorDAO);
+        var saveDematMessageHandler = new SaveDematMessageHandler(sqsSender, eventDematDAO, pnPaperChannelConfig.getTtlExecutionDaysDemat(), pnClientDAO);
+        var retryableErrorExtChannelsMessageHandler = new RetryableErrorMessageHandler(sqsSender, externalChannelClient, addressDAO, paperRequestErrorDAO, pnPaperChannelConfig, pnClientDAO);
+        var notRetryableErrorMessageHandler = new NotRetryableErrorMessageHandler(sqsSender, paperRequestErrorDAO, pnClientDAO);
         var notRetriableWithoutSendErrorMessageHandler = new NotRetriableWithoutSendErrorMessageHandler(paperRequestErrorDAO);
-        var customAggregatorMessageHandler = new CustomAggregatorMessageHandler(sqsSender, eventMetaDAO, metaDematCleaner);
-        var aggregatorMessageHandler = new AggregatorMessageHandler(sqsSender, eventMetaDAO, metaDematCleaner);
-        var directlySendMessageHandler = new DirectlySendMessageHandler(sqsSender);
+        var customAggregatorMessageHandler = new CustomAggregatorMessageHandler(sqsSender, eventMetaDAO, metaDematCleaner, pnClientDAO);
+        var aggregatorMessageHandler = new AggregatorMessageHandler(sqsSender, eventMetaDAO, metaDematCleaner, pnClientDAO);
+        var directlySendMessageHandler = new DirectlySendMessageHandler(sqsSender, pnClientDAO);
         var recag012MessageHandler = new RECAG012MessageHandler(eventMetaDAO, pnPaperChannelConfig.getTtlExecutionDaysMeta());
         var recag011AMessageHandler =  new RECAG011AMessageHandler(sqsSender, eventMetaDAO, pnPaperChannelConfig.getTtlExecutionDaysMeta());
-        var recag011BMessageHandler = new RECAG011BMessageHandler(sqsSender, eventDematDAO, pnPaperChannelConfig.getTtlExecutionDaysDemat(), eventMetaDAO, pnPaperChannelConfig.getTtlExecutionDaysMeta());
-        var recag008CMessageHandler = new RECAG008CMessageHandler(sqsSender, eventMetaDAO, metaDematCleaner);
-        var complex890MessageHandler = new Complex890MessageHandler(sqsSender, eventMetaDAO, metaDematCleaner, pnPaperChannelConfig.getRefinementDuration() );
-        var recrn00xcMessageHandler = new RECRN00XCMessageHandler(sqsSender, eventMetaDAO, metaDematCleaner, pnPaperChannelConfig.getRefinementDuration());
+        var recag011BMessageHandler = new RECAG011BMessageHandler(sqsSender, eventDematDAO, pnPaperChannelConfig.getTtlExecutionDaysDemat(), eventMetaDAO, pnPaperChannelConfig.getTtlExecutionDaysMeta(), pnClientDAO);
+        var recag008CMessageHandler = new RECAG008CMessageHandler(sqsSender, eventMetaDAO, metaDematCleaner, pnClientDAO);
+        var complex890MessageHandler = new Complex890MessageHandler(sqsSender, eventMetaDAO, metaDematCleaner, pnPaperChannelConfig.getRefinementDuration(), pnClientDAO );
+        var recrn00xcMessageHandler = new RECRN00XCMessageHandler(sqsSender, eventMetaDAO, metaDematCleaner, pnPaperChannelConfig.getRefinementDuration(), pnClientDAO);
         var recrn011cMessageHandler = new RECRN011MessageHandler(sqsSender, eventMetaDAO, pnPaperChannelConfig.getTtlExecutionDaysMeta());
 
         map = new ConcurrentHashMap<>();

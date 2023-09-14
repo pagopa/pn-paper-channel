@@ -3,6 +3,7 @@ package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.PnClientDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.PnLogAudit;
@@ -12,8 +13,8 @@ public class NotRetryableErrorMessageHandler extends SendToDeliveryPushHandler {
 
     private final PaperRequestErrorDAO paperRequestErrorDAO;
 
-    public NotRetryableErrorMessageHandler(SqsSender sqsSender, PaperRequestErrorDAO paperRequestErrorDAO) {
-        super(sqsSender);
+    public NotRetryableErrorMessageHandler(SqsSender sqsSender, PaperRequestErrorDAO paperRequestErrorDAO, PnClientDAO pnClientDAO) {
+        super(sqsSender, pnClientDAO);
         this.paperRequestErrorDAO = paperRequestErrorDAO;
     }
 

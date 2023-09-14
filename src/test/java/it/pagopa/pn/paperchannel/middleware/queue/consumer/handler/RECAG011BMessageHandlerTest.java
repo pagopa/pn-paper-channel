@@ -6,6 +6,7 @@ import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.mapper.SendEventMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.PnClientDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventDemat;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
@@ -39,14 +40,17 @@ class RECAG011BMessageHandlerTest {
 
     private RECAG011BMessageHandler handler;
 
+    private PnClientDAO pnClientDAO;
+
     @BeforeEach
     public void init() {
         long ttlDays = 365;
         eventDematDAO = mock(EventDematDAO.class);
         eventMetaDAO = mock(EventMetaDAO.class);
         mockSqsSender = mock(SqsSender.class);
+        pnClientDAO = mock(PnClientDAO.class);
 
-        handler = new RECAG011BMessageHandler(mockSqsSender, eventDematDAO, ttlDays, eventMetaDAO, ttlDays);
+        handler = new RECAG011BMessageHandler(mockSqsSender, eventDematDAO, ttlDays, eventMetaDAO, ttlDays, pnClientDAO);
     }
 
     @Test

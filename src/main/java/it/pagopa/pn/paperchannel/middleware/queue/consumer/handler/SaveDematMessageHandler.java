@@ -4,6 +4,7 @@ import it.pagopa.pn.paperchannel.exception.PnDematNotValidException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.AttachmentDetailsDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.PnClientDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventDemat;
 import it.pagopa.pn.paperchannel.service.SqsSender;
@@ -35,8 +36,8 @@ public class SaveDematMessageHandler extends SendToDeliveryPushHandler {
 
     private final Long ttlDays;
 
-    public SaveDematMessageHandler(SqsSender sqsSender, EventDematDAO eventDematDAO, Long ttlDays) {
-        super(sqsSender);
+    public SaveDematMessageHandler(SqsSender sqsSender, EventDematDAO eventDematDAO, Long ttlDays, PnClientDAO pnClientDAO) {
+        super(sqsSender, pnClientDAO);
         this.eventDematDAO = eventDematDAO;
         this.ttlDays = ttlDays;
     }

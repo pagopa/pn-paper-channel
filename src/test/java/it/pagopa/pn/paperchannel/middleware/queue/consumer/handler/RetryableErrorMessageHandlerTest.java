@@ -8,6 +8,7 @@ import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendRequest;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.PnClientDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnRequestError;
@@ -41,6 +42,8 @@ class RetryableErrorMessageHandlerTest {
 
     private AddressDAO mockAddressDAO;
 
+    private PnClientDAO pnClientDAO;
+
 
     @BeforeEach
     public void init() {
@@ -49,8 +52,9 @@ class RetryableErrorMessageHandlerTest {
         mockAddressDAO = mock(AddressDAO.class);
         mockRequestError = mock(PaperRequestErrorDAO.class);
         mockConfig = mock(PnPaperChannelConfig.class);
+        pnClientDAO = mock(PnClientDAO.class);
 
-        handler = new RetryableErrorMessageHandler(mockSqsSender, mockExtChannel, mockAddressDAO, mockRequestError, mockConfig);
+        handler = new RetryableErrorMessageHandler(mockSqsSender, mockExtChannel, mockAddressDAO, mockRequestError, mockConfig, pnClientDAO);
     }
 
     @Test

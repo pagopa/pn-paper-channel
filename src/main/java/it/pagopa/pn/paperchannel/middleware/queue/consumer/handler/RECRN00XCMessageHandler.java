@@ -7,6 +7,7 @@ import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.PnClientDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDiscoveredAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
@@ -29,8 +30,8 @@ public class RECRN00XCMessageHandler extends SendToDeliveryPushHandler {
     private final MetaDematCleaner metaDematCleaner;
     private final Duration refinementDuration;
 
-    public RECRN00XCMessageHandler(SqsSender sqsSender, EventMetaDAO eventMetaDAO, MetaDematCleaner metaDematCleaner, Duration refinementDuration) {
-        super(sqsSender);
+    public RECRN00XCMessageHandler(SqsSender sqsSender, EventMetaDAO eventMetaDAO, MetaDematCleaner metaDematCleaner, Duration refinementDuration, PnClientDAO pnClientDAO) {
+        super(sqsSender, pnClientDAO);
         this.eventMetaDAO = eventMetaDAO;
         this.metaDematCleaner = metaDematCleaner;
         this.refinementDuration = refinementDuration;

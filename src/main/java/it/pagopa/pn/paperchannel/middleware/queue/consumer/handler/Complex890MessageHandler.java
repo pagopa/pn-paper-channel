@@ -5,6 +5,7 @@ import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.mapper.SendEventMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.PnClientDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
 import it.pagopa.pn.paperchannel.middleware.queue.consumer.MetaDematCleaner;
@@ -65,8 +66,8 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
 
     private final Duration refinementDuration;
 
-    public Complex890MessageHandler(SqsSender sqsSender, EventMetaDAO eventMetaDAO, MetaDematCleaner metaDematCleaner, Duration refinementDuration) {
-        super(sqsSender);
+    public Complex890MessageHandler(SqsSender sqsSender, EventMetaDAO eventMetaDAO, MetaDematCleaner metaDematCleaner, Duration refinementDuration, PnClientDAO pnClientDAO) {
+        super(sqsSender, pnClientDAO);
         this.eventMetaDAO = eventMetaDAO;
         this.metaDematCleaner = metaDematCleaner;
         this.refinementDuration = refinementDuration;

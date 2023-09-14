@@ -6,6 +6,7 @@ import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.PnClientDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDiscoveredAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventDemat;
@@ -35,15 +36,18 @@ class CustomAggregatorMessageHandlerTest {
     private EventDematDAO mockDematDao;
     private EventMetaDAO mockMetaDao;
 
+    private PnClientDAO pnClientDAO;
+
     @BeforeEach
     public void init() {
         mockSqsSender = mock(SqsSender.class);
         mockMetaDao = mock(EventMetaDAO.class);
         mockDematDao = mock(EventDematDAO.class);
+        pnClientDAO = mock(PnClientDAO.class);
 
         MetaDematCleaner metaDematCleaner = new MetaDematCleaner(mockDematDao, mockMetaDao);
 
-        handler = new CustomAggregatorMessageHandler(mockSqsSender, mockMetaDao, metaDematCleaner);
+        handler = new CustomAggregatorMessageHandler(mockSqsSender, mockMetaDao, metaDematCleaner, pnClientDAO);
     }
 
     @Test

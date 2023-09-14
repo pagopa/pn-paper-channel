@@ -7,6 +7,7 @@ import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.mapper.SendEventMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.PnClientDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventDemat;
 import it.pagopa.pn.paperchannel.service.SqsSender;
@@ -29,13 +30,16 @@ class SaveDematMessageHandlerTest {
 
     private SaveDematMessageHandler handler;
 
+    private PnClientDAO pnClientDAO;
+
 
     @BeforeEach
     public void init() {
         mockDao = mock(EventDematDAO.class);
         mockSqsSender = mock(SqsSender.class);
+        pnClientDAO = mock(PnClientDAO.class);
         long ttlDays = 365;
-        handler = new SaveDematMessageHandler(mockSqsSender, mockDao, ttlDays);
+        handler = new SaveDematMessageHandler(mockSqsSender, mockDao, ttlDays, pnClientDAO);
     }
 
     @Test

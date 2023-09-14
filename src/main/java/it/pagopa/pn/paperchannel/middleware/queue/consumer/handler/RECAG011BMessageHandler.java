@@ -4,6 +4,7 @@ import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.PnClientDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventDemat;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
@@ -51,8 +52,8 @@ public class RECAG011BMessageHandler extends SaveDematMessageHandler {
 
     private final Long ttlDaysMeta;
 
-    public RECAG011BMessageHandler(SqsSender sqsSender, EventDematDAO eventDematDAO, Long ttlDaysDemat, EventMetaDAO eventMetaDAO, Long ttlDaysMeta) {
-        super(sqsSender, eventDematDAO, ttlDaysDemat);
+    public RECAG011BMessageHandler(SqsSender sqsSender, EventDematDAO eventDematDAO, Long ttlDaysDemat, EventMetaDAO eventMetaDAO, Long ttlDaysMeta, PnClientDAO pnClientDAO) {
+        super(sqsSender, eventDematDAO, ttlDaysDemat, pnClientDAO);
         this.eventMetaDAO = eventMetaDAO;
         this.ttlDaysMeta = ttlDaysMeta;
     }

@@ -9,6 +9,7 @@ import it.pagopa.pn.paperchannel.mapper.AttachmentMapper;
 import it.pagopa.pn.paperchannel.mapper.SendRequestMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.PnClientDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
@@ -43,8 +44,8 @@ public class RetryableErrorMessageHandler extends SendToDeliveryPushHandler {
 
     public RetryableErrorMessageHandler(SqsSender sqsSender, ExternalChannelClient externalChannelClient,
                                         AddressDAO addressDAO, PaperRequestErrorDAO paperRequestErrorDAO,
-                                        PnPaperChannelConfig pnPaperChannelConfig) {
-        super(sqsSender);
+                                        PnPaperChannelConfig pnPaperChannelConfig, PnClientDAO pnClientDAO) {
+        super(sqsSender, pnClientDAO);
         this.externalChannelClient = externalChannelClient;
         this.addressDAO = addressDAO;
         this.paperRequestErrorDAO = paperRequestErrorDAO;

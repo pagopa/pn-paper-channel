@@ -6,6 +6,7 @@ import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.mapper.SendEventMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.PnClientDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
 import it.pagopa.pn.paperchannel.middleware.queue.consumer.MetaDematCleaner;
@@ -40,6 +41,8 @@ class Complex890MessageHandlerTest {
 
     private Complex890MessageHandler handler;
 
+    private PnClientDAO pnClientDAO;
+
     private int DAYS_REFINEMENT = 10;
 
     @BeforeEach
@@ -47,10 +50,11 @@ class Complex890MessageHandlerTest {
         sqsSender = mock(SqsSender.class);
         eventMetaDAO = mock(EventMetaDAO.class);
         metaDematCleaner = mock(MetaDematCleaner.class);
+        pnClientDAO = mock(PnClientDAO.class);
 
         when(metaDematCleaner.clean(anyString())).thenReturn(Mono.empty());
 
-        handler = new Complex890MessageHandler(sqsSender, eventMetaDAO, metaDematCleaner, Duration.of(DAYS_REFINEMENT, ChronoUnit.DAYS));
+        handler = new Complex890MessageHandler(sqsSender, eventMetaDAO, metaDematCleaner, Duration.of(DAYS_REFINEMENT, ChronoUnit.DAYS), pnClientDAO);
     }
 
 

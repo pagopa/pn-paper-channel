@@ -3,6 +3,7 @@ package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.PnClientDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
 import it.pagopa.pn.paperchannel.middleware.queue.consumer.MetaDematCleaner;
@@ -25,8 +26,8 @@ public class RECAG008CMessageHandler extends SendToDeliveryPushHandler {
     private final EventMetaDAO eventMetaDAO;
     private final MetaDematCleaner metaDematCleaner;
 
-    public RECAG008CMessageHandler(SqsSender sqsSender, EventMetaDAO eventMetaDAO, MetaDematCleaner metaDematCleaner) {
-        super(sqsSender);
+    public RECAG008CMessageHandler(SqsSender sqsSender, EventMetaDAO eventMetaDAO, MetaDematCleaner metaDematCleaner, PnClientDAO pnClientDAO) {
+        super(sqsSender, pnClientDAO);
         this.eventMetaDAO = eventMetaDAO;
         this.metaDematCleaner = metaDematCleaner;
     }

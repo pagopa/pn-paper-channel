@@ -6,6 +6,7 @@ import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.mapper.RequestDeliveryMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.PnClientDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
 import it.pagopa.pn.paperchannel.middleware.queue.consumer.MetaDematCleaner;
@@ -22,8 +23,8 @@ import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.buildMetaStatusCode
 public class CustomAggregatorMessageHandler extends AggregatorMessageHandler {
     private final EventMetaDAO eventMetaDAO;
 
-    public CustomAggregatorMessageHandler(SqsSender sqsSender, EventMetaDAO eventMetaDAO, MetaDematCleaner metaDematCleaner) {
-        super(sqsSender, eventMetaDAO, metaDematCleaner);
+    public CustomAggregatorMessageHandler(SqsSender sqsSender, EventMetaDAO eventMetaDAO, MetaDematCleaner metaDematCleaner, PnClientDAO pnClientDAO) {
+        super(sqsSender, eventMetaDAO, metaDematCleaner, pnClientDAO);
         this.eventMetaDAO = eventMetaDAO;
     }
 

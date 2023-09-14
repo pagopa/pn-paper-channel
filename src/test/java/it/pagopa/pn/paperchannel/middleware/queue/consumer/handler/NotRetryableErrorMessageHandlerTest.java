@@ -3,6 +3,7 @@ package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.PnClientDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnRequestError;
 import it.pagopa.pn.paperchannel.service.SqsSender;
@@ -22,11 +23,14 @@ class NotRetryableErrorMessageHandlerTest {
     private PaperRequestErrorDAO paperRequestErrorDAOMock;
     private SqsSender mockSqsSender;
 
+    private PnClientDAO pnClientDAO;
+
     @BeforeEach
     public void init() {
         mockSqsSender = mock(SqsSender.class);
         paperRequestErrorDAOMock = mock(PaperRequestErrorDAO.class);
-        handler = new NotRetryableErrorMessageHandler(mockSqsSender, paperRequestErrorDAOMock);
+        pnClientDAO = mock(PnClientDAO.class);
+        handler = new NotRetryableErrorMessageHandler(mockSqsSender, paperRequestErrorDAOMock, pnClientDAO);
     }
 
     @Test
