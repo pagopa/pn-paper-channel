@@ -25,7 +25,6 @@ import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.MDC;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -37,18 +36,20 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 @Slf4j
 @Service
 public class PaperAddressServiceImpl extends BaseService implements PaperAddressService {
-    @Autowired
-    private PnPaperChannelConfig paperProperties;
-    @Autowired
-    private AddressDAO addressDAO;
-    @Autowired
-    private AddressManagerClient addressManagerClient;
-    @Autowired
-    private PaperRequestErrorDAO paperRequestErrorDAO;
+    private final PnPaperChannelConfig paperProperties;
+    private final AddressDAO addressDAO;
+    private final AddressManagerClient addressManagerClient;
+    private final PaperRequestErrorDAO paperRequestErrorDAO;
 
     public PaperAddressServiceImpl(PnAuditLogBuilder auditLogBuilder, NationalRegistryClient nationalRegistryClient,
-                                   RequestDeliveryDAO requestDeliveryDAO, SqsSender sqsQueueSender, CostDAO costDAO ) {
+                                   RequestDeliveryDAO requestDeliveryDAO, SqsSender sqsQueueSender, CostDAO costDAO,
+                                   PnPaperChannelConfig paperProperties, AddressDAO addressDAO, AddressManagerClient addressManagerClient,
+                                   PaperRequestErrorDAO paperRequestErrorDAO) {
         super(auditLogBuilder, requestDeliveryDAO, costDAO, nationalRegistryClient, sqsQueueSender);
+        this.paperProperties = paperProperties;
+        this.addressDAO = addressDAO;
+        this.addressManagerClient = addressManagerClient;
+        this.paperRequestErrorDAO = paperRequestErrorDAO;
     }
 
 
@@ -155,7 +156,7 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
                                         pnDeliveryRequest.getRelatedRequestId())
                         );
                         KOReason koReason = new KOReason(FailureDetailCodeEnum.D02, null);
-                        return Mono.error(new PnGenericException(UNTRACEABLE_ADDRESS, UNTRACEABLE_ADDRESS.getMessage(), koReason));
+                        return Mono.error(new PnUntracebleException(koReason));
                         //Indirizzo coincidenti = D02
                     }
                     if (deduplicateResponse.getError() != null){
@@ -180,7 +181,7 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
         if (normalizedAddress == null) {
             log.error("Response from address manager have a address null {}", requestId);
             KOReason koReason = new KOReason(FailureDetailCodeEnum.D00, null);
-            return Mono.error(new PnGenericException(UNTRACEABLE_ADDRESS, UNTRACEABLE_ADDRESS.getMessage(), koReason));
+            return Mono.error(new PnUntracebleException(koReason));
             //Indirizzo non trovato = D00 - da verificare in un caso reale
         }
         Address address = AddressMapper.fromAnalogAddressManager(normalizedAddress) ;
@@ -258,7 +259,7 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
     private Throwable manageErrorD001FlowNationalRegistry(PnPaperChannelConfig config, ExceptionTypeEnum exceptionType, String message, Address addressFailed) {
         if(config.isD01SendToDeliveryPush()) {
             KOReason koReason = new KOReason(FailureDetailCodeEnum.D01, addressFailed);
-            return new PnErrorNotSavedInDBException(exceptionType, message, koReason);
+            return new PnUntracebleException(koReason);
         }
         else {
             return new PnGenericException(exceptionType, message);
@@ -268,7 +269,7 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
     private Throwable manageErrorD001FlowPostmanAddress(PnPaperChannelConfig config, String message, String errorCode, Address addressFailed) {
         if(config.isD01SendToDeliveryPush()) {
             KOReason koReason = new KOReason(FailureDetailCodeEnum.D01, addressFailed);
-            return new PnErrorNotSavedInDBException(null, message, koReason);
+            return new PnUntracebleException(koReason);
         }
         else {
             return new PnInternalException(message, errorCode);

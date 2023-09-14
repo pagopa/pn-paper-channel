@@ -162,6 +162,7 @@ class PrepareAsyncServiceTest {
         assertThat(prepareEventActual.getRequestId()).isEqualTo(prepareEventExpected.getRequestId());
         assertThat(prepareEventActual.getStatusCode()).isEqualTo(prepareEventExpected.getStatusCode());
         assertThat(prepareEventActual.getStatusDetail()).isEqualTo(prepareEventExpected.getStatusDetail());
+        assertThat(prepareEventActual.getFailureDetailCode()).isEqualTo(FailureDetailCodeEnum.D00);
     }
 
     @Test

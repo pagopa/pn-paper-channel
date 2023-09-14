@@ -105,23 +105,27 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                     if (ex instanceof PnAddressFlowException) return Mono.error(ex);
 
                     StatusDeliveryEnum statusDeliveryEnum = StatusDeliveryEnum.PAPER_CHANNEL_ASYNC_ERROR;
-                    final KOReason koReason;
-                    if(ex instanceof PnGenericException genEx) {
-                        statusDeliveryEnum = mapper(genEx.getExceptionType());
-                        koReason = genEx.getKoReason();
-                    }
-                    else {
-                        koReason = null;
+                    if(ex instanceof PnGenericException) {
+                        statusDeliveryEnum = mapper(((PnGenericException) ex).getExceptionType());
                     }
                     return updateStatus(requestId, correlationId, statusDeliveryEnum)
                             .doOnNext(entity -> {
                                 if (entity.getStatusCode().equals(StatusDeliveryEnum.UNTRACEABLE.getCode())){
-                                    sendUnreachableEvent(entity, request.getClientId(), koReason);
+                                    sendUnreachableEvent(entity, request.getClientId(), getKOReason(ex));
                                     log.logEndingProcess(PROCESS_NAME);
                                 }
                             })
                             .flatMap(entity -> Mono.error(ex));
                 });
+    }
+
+    private KOReason getKOReason(Throwable ex) {
+        if(ex instanceof PnUntracebleException untEx) {
+            return untEx.getKoReason();
+        }
+        else {
+            return null;
+        }
     }
 
     private StatusDeliveryEnum mapper(ExceptionTypeEnum ex){
@@ -175,7 +179,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
     }
 
     private Mono<PnDeliveryRequest> handleAndThrowAgainError(PnGenericException ex, String requestId) {
-        if(! (ex instanceof PnErrorNotSavedInDBException) ) {
+        if(! (ex instanceof PnUntracebleException) ) {
             return traceError(requestId, ex.getMessage(), "CHECK_ADDRESS_FLOW").then(Mono.error(ex));
         }
         else {
