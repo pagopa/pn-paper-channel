@@ -62,25 +62,10 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
         String requestId = getPrefixRequestId(singleStatusUpdateDto.getAnalogMail().getRequestId());
         return requestDeliveryDAO.getByRequestId(requestId)
                 .doOnNext(entity -> logEntity(entity, singleStatusUpdateDto))
-                .flatMap(entity -> checkAndSetClientIdIntoContext(entity, singleStatusUpdateDto.getAnalogMail().getRequestId()))
                 .flatMap(entity -> updateEntityResult(singleStatusUpdateDto, entity))
                 .flatMap(entity -> handler.handleMessage(entity, singleStatusUpdateDto.getAnalogMail()))
                 .doOnError(ex ->  log.error("Error in retrieve EC from queue", ex));
 
-    }
-
-    private Mono<PnDeliveryRequest> checkAndSetClientIdIntoContext(PnDeliveryRequest entity,String requestIdExtChannel) {
-        String prefixClientId = Utility.getClientIdFromRequestId(requestIdExtChannel);
-        if (prefixClientId == null) return Mono.just(entity);
-
-        return this.pnClientDAO.getByPrefix(prefixClientId)
-                .switchIfEmpty(Mono.just(new PnClientID()))
-                .map(pnClientID -> {
-                    log.debug("[{}] clientId finded from prefix {}", pnClientID, prefixClientId);
-                    if (StringUtils.isBlank(pnClientID.getClientId())) return entity;
-                    MDC.put(Const.CONTEXT_KEY_CLIENT_ID, pnClientID.getClientId());
-                    return entity;
-                });
     }
 
     private void logEntity(PnDeliveryRequest entity, SingleStatusUpdateDto singleStatusUpdateDto) {
