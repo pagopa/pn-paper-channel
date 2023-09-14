@@ -58,7 +58,7 @@ public class PnPaperChannelConfig {
      * True se il failureDetailCode D01 deve essere mandato a delivery push (specificando anche l'indirizzo),
      * false se invece viene salvato l'errore sulla tabella degli errori (as-is)
      */
-    private boolean manageD01;
+    private boolean d01SendToDeliveryPush;
 
     public String getOriginalPostmanAddressUsageMode() {
         if (StringUtils.isBlank(originalPostmanAddressUsageMode)){

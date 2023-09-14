@@ -64,7 +64,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
 
     @Override
     public Mono<PnDeliveryRequest> prepareAsync(PrepareAsyncRequest request){
-        String PROCESS_NAME = "Prepare Async";
+        final String PROCESS_NAME = "Prepare Async";
         log.logStartingProcess(PROCESS_NAME);
 
         String correlationId = request.getCorrelationId();
@@ -159,7 +159,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
     }
 
     private Mono<PnDeliveryRequest> checkAndUpdateAddress(PnDeliveryRequest pnDeliveryRequest, Address fromNationalRegistries, PrepareAsyncRequest queueModel){
-        String VALIDATION_NAME = "Check and update address";
+        final String VALIDATION_NAME = "Check and update address";
         return this.paperAddressService.getCorrectAddress(pnDeliveryRequest, fromNationalRegistries, queueModel)
                 .flatMap(newAddress -> {
                     log.logCheckingOutcome(VALIDATION_NAME, true);

@@ -64,70 +64,55 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
                 }))
                 .doOnNext(pnAddress -> logAuditSuccess("prepare requestId = %s, relatedRequestId = %s Receiver address is present on DB", deliveryRequest))
                 .map(AddressMapper::toDTO)
-                .flatMap(receiverAddress -> {
-                    logAuditBefore("prepare requestId = %s, relatedRequestId = %s Is National Registry Address present ?", deliveryRequest);
+                .flatMap(receiverAddress -> chooseAddress(deliveryRequest, fromNationalRegistry, receiverAddress))
+                .onErrorResume(PnAddressFlowException.class, ex -> handlePnAddressFlowException(ex, deliveryRequest, queueModel));
+    }
 
-                    // Only discovered address is null and retrieved national registry address
-                    if (StringUtils.isNotBlank(deliveryRequest.getCorrelationId())){
-                        if (fromNationalRegistry == null) {
-                            logAuditSuccess("prepare requestId = %s, relatedRequestId = %s National Registry Address is null", deliveryRequest);
-                            KOReason koReason = new KOReason(FailureDetailCodeEnum.D00, null);
-                            return Mono.error(new PnUntracebleException(koReason));
-                            //Indirizzo non trovato = D00 - da verificare in un caso reale
-                        }
-                        logAuditSuccess("prepare requestId = %s, relatedRequestId = %s National Registry Address is present", deliveryRequest);
-                        return flowNationalRegistry(deliveryRequest, fromNationalRegistry, receiverAddress);
-                    }
-                    logAuditSuccess("prepare requestId = %s, relatedRequestId = %s National Registry not present", deliveryRequest);
+    private Mono<Address> chooseAddress(PnDeliveryRequest deliveryRequest, Address fromNationalRegistry, Address addressFromFirstAttempt) {
+        logAuditBefore("prepare requestId = %s, relatedRequestId = %s Is National Registry Address present ?", deliveryRequest);
+        // Only discovered address is null and retrieved national registry address
+        if (StringUtils.isNotBlank(deliveryRequest.getCorrelationId())){
+            return getAddressFromNationalRegistry(deliveryRequest, fromNationalRegistry, addressFromFirstAttempt);
+        }
+        else {
+            logAuditSuccess("prepare requestId = %s, relatedRequestId = %s National Registry not present", deliveryRequest);
+            // Only discovered address is present and check discovered address
+            logAuditBefore("prepare requestId = %s, relatedRequestId = %s Is Second attempt ?", deliveryRequest);
+            if (StringUtils.isNotBlank(deliveryRequest.getRelatedRequestId())){
+                return getAddressFromDiscoveredAddress(deliveryRequest, addressFromFirstAttempt);
+            }
+            else {
+                //primo tentativo
+                logAuditSuccess("prepare requestId = %s, relatedRequestId = %s Is not second attempt and use receiver address", deliveryRequest);
+                return Mono.just(addressFromFirstAttempt);
+            }
+        }
+    }
 
-                    // Only discovered address is present and check discovered address
-                    logAuditBefore("prepare requestId = %s, relatedRequestId = %s Is Second attempt ?", deliveryRequest);
-                    if (StringUtils.isNotBlank(deliveryRequest.getRelatedRequestId())){
-                        logAuditSuccess("prepare requestId = %s, relatedRequestId = %s Is Second attempt check discovered address", deliveryRequest);
+    private Mono<Address> getAddressFromNationalRegistry(PnDeliveryRequest deliveryRequest, Address fromNationalRegistry, Address addressFromFirstAttempt) {
+        if (fromNationalRegistry == null) {
+            logAuditSuccess("prepare requestId = %s, relatedRequestId = %s National Registry Address is null", deliveryRequest);
+            KOReason koReason = new KOReason(FailureDetailCodeEnum.D00, null);
+            return Mono.error(new PnUntracebleException(koReason));
+            //Indirizzo non trovato = D00 - da verificare in un caso reale
+        }
+        logAuditSuccess("prepare requestId = %s, relatedRequestId = %s National Registry Address is present", deliveryRequest);
+        return flowNationalRegistry(deliveryRequest, fromNationalRegistry, addressFromFirstAttempt);
+    }
 
-                        logAuditBefore("prepare requestId = %s, relatedRequestId = %s Is Discovered address present ?", deliveryRequest);
-                        return this.addressDAO.findByRequestId(deliveryRequest.getRequestId(), AddressTypeEnum.DISCOVERED_ADDRESS)
-                                .switchIfEmpty(Mono.defer(() -> {
-                                    logAuditSuccess("prepare requestId = %s, relatedRequestId = %s discovered address is not present on DB", deliveryRequest);
-                                    log.error("Discovered Address for {} request id not found on DB", deliveryRequest.getRequestId());
-                                    throw new PnGenericException(ADDRESS_NOT_EXIST, ADDRESS_NOT_EXIST.getMessage());
-                                }))
-                                .doOnNext(pnAddress -> logAuditSuccess("prepare requestId = %s, relatedRequestId = %s discovered address is present on DB", deliveryRequest))
-                                .map(AddressMapper::toDTO)
-                                .flatMap(discoveredAddress -> flowPostmanAddress(deliveryRequest, discoveredAddress, receiverAddress));
-                    }
+    private Mono<Address> getAddressFromDiscoveredAddress(PnDeliveryRequest deliveryRequest, Address addressFromFirstAttempt) {
+        logAuditSuccess("prepare requestId = %s, relatedRequestId = %s Is Second attempt check discovered address", deliveryRequest);
+        logAuditBefore("prepare requestId = %s, relatedRequestId = %s Is Discovered address present ?", deliveryRequest);
+        return this.addressDAO.findByRequestId(deliveryRequest.getRequestId(), AddressTypeEnum.DISCOVERED_ADDRESS)
+                .switchIfEmpty(Mono.defer(() -> {
+                    logAuditSuccess("prepare requestId = %s, relatedRequestId = %s discovered address is not present on DB", deliveryRequest);
+                    log.error("Discovered Address for {} request id not found on DB", deliveryRequest.getRequestId());
+                    throw new PnGenericException(ADDRESS_NOT_EXIST, ADDRESS_NOT_EXIST.getMessage());
+                }))
+                .doOnNext(pnAddress -> logAuditSuccess("prepare requestId = %s, relatedRequestId = %s discovered address is present on DB", deliveryRequest))
+                .map(AddressMapper::toDTO)
+                .flatMap(discoveredAddress -> flowPostmanAddress(deliveryRequest, discoveredAddress, addressFromFirstAttempt));
 
-
-                    logAuditSuccess("prepare requestId = %s, relatedRequestId = %s Is not second attempt and use receiver address", deliveryRequest);
-                    return Mono.just(receiverAddress);
-                })
-                .onErrorResume(PnAddressFlowException.class, ex -> {
-                    if (ex.getExceptionType() == ATTEMPT_ADDRESS_NATIONAL_REGISTRY){
-                        this.finderAddressFromNationalRegistries(
-                                (MDC.get(MDC_TRACE_ID_KEY) == null ? UUID.randomUUID().toString() : MDC.get(MDC_TRACE_ID_KEY)),
-                                deliveryRequest.getRequestId(),
-                                deliveryRequest.getRelatedRequestId(),
-                                deliveryRequest.getFiscalCode(),
-                                deliveryRequest.getReceiverType(),
-                                deliveryRequest.getIun(), 0);
-                        return Mono.error(ex);
-                    }
-                    if (ex.getExceptionType() == DISCARD_NOTIFICATION){
-                        return changeStateDeliveryRequest(deliveryRequest, StatusDeliveryEnum.DISCARD_NOTIFICATION)
-                                .flatMap(entity ->
-                                        traceError(deliveryRequest.getRequestId(), ex.getMessage(), ex.getExceptionType().getTitle())
-                                            .then(Mono.defer(() -> Mono.error(ex)))
-                                );
-                    }
-                    if (ex.getExceptionType() == ADDRESS_MANAGER_ERROR){
-                        queueModel.setIun(deliveryRequest.getIun());
-                        queueModel.setRequestId(deliveryRequest.getRequestId());
-                        queueModel.setCorrelationId(deliveryRequest.getCorrelationId());
-                        queueModel.setAddressRetry(true);
-                        this.sqsSender.pushInternalError(queueModel, queueModel.getAttemptRetry(), PrepareAsyncRequest.class);
-                    }
-                    return Mono.error(ex);
-                });
     }
 
 
@@ -204,6 +189,34 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
         return Mono.just(address);
     }
 
+    private <T> Mono<T> handlePnAddressFlowException(PnAddressFlowException ex, PnDeliveryRequest deliveryRequest, PrepareAsyncRequest queueModel) {
+        if (ex.getExceptionType() == ATTEMPT_ADDRESS_NATIONAL_REGISTRY){
+            this.finderAddressFromNationalRegistries(
+                    (MDC.get(MDC_TRACE_ID_KEY) == null ? UUID.randomUUID().toString() : MDC.get(MDC_TRACE_ID_KEY)),
+                    deliveryRequest.getRequestId(),
+                    deliveryRequest.getRelatedRequestId(),
+                    deliveryRequest.getFiscalCode(),
+                    deliveryRequest.getReceiverType(),
+                    deliveryRequest.getIun(), 0);
+            return Mono.error(ex);
+        }
+        if (ex.getExceptionType() == DISCARD_NOTIFICATION){
+            return changeStateDeliveryRequest(deliveryRequest, StatusDeliveryEnum.DISCARD_NOTIFICATION)
+                    .flatMap(entity ->
+                            traceError(deliveryRequest.getRequestId(), ex.getMessage(), ex.getExceptionType().getTitle())
+                                    .then(Mono.defer(() -> Mono.error(ex)))
+                    );
+        }
+        if (ex.getExceptionType() == ADDRESS_MANAGER_ERROR){
+            queueModel.setIun(deliveryRequest.getIun());
+            queueModel.setRequestId(deliveryRequest.getRequestId());
+            queueModel.setCorrelationId(deliveryRequest.getCorrelationId());
+            queueModel.setAddressRetry(true);
+            this.sqsSender.pushInternalError(queueModel, queueModel.getAttemptRetry(), PrepareAsyncRequest.class);
+        }
+        return Mono.error(ex);
+    }
+
     private void logAuditSuccess(String message, PnDeliveryRequest deliveryRequest){
         pnLogAudit.addsSuccessResolveLogic(
                 deliveryRequest.getIun(),
@@ -243,7 +256,7 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
     }
 
     private Throwable manageErrorD001FlowNationalRegistry(PnPaperChannelConfig config, ExceptionTypeEnum exceptionType, String message, Address addressFailed) {
-        if(config.isManageD01()) {
+        if(config.isD01SendToDeliveryPush()) {
             KOReason koReason = new KOReason(FailureDetailCodeEnum.D01, addressFailed);
             return new PnErrorNotSavedInDBException(exceptionType, message, koReason);
         }
@@ -253,7 +266,7 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
     }
 
     private Throwable manageErrorD001FlowPostmanAddress(PnPaperChannelConfig config, String message, String errorCode, Address addressFailed) {
-        if(config.isManageD01()) {
+        if(config.isD01SendToDeliveryPush()) {
             KOReason koReason = new KOReason(FailureDetailCodeEnum.D01, addressFailed);
             return new PnErrorNotSavedInDBException(null, message, koReason);
         }
