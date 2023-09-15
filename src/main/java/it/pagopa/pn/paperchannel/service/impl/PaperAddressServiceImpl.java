@@ -262,8 +262,7 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
                                                           String message, Address addressFailed, String requestId) {
         if(config.isD01SendToDeliveryPush()) {
             log.debug("[{}] isD01SendToDeliveryPush is enabled from FlowNationalRegistry, D01 flow running", requestId);
-            KOReason koReason = new KOReason(FailureDetailCodeEnum.D01, addressFailed);
-            return new PnUntracebleException(koReason);
+            return throwD001(addressFailed);
         }
         else {
             return new PnGenericException(exceptionType, message);
@@ -274,12 +273,16 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
                                                         Address addressFailed, String requestId) {
         if(config.isD01SendToDeliveryPush()) {
             log.debug("[{}] isD01SendToDeliveryPush is enabled from FlowPostmanAddress, D01 flow running", requestId);
-            KOReason koReason = new KOReason(FailureDetailCodeEnum.D01, addressFailed);
-            return new PnUntracebleException(koReason);
+            return throwD001(addressFailed);
         }
         else {
             return new PnInternalException(message, errorCode);
         }
+    }
+
+    private Throwable throwD001(Address addressFailed) {
+        KOReason koReason = new KOReason(FailureDetailCodeEnum.D01, addressFailed);
+        return new PnUntracebleException(koReason);
     }
 
 
