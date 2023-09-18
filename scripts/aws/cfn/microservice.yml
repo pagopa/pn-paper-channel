@@ -453,7 +453,7 @@ Resources:
         AlarmSNSTopicArn: !Ref AlarmSNSTopicArn
         JavaToolOptions: '-XX:MaxDirectMemorySize=256m'
         ContainerImageURI: !Sub '${ContainerImageUri}'
-        ContainerEnvEntry1: !Sub 'PN_PAPERCHANNEL_D01SENDTODELIVERYPUSH=${SendToDeliveryPush}'
+        ContainerEnvEntry1: !Sub 'AWS_REGIONCODE=${AWS::Region}'
         ContainerEnvEntry2: !Sub 'CORS_ALLOWED_DOMAINS=${CorsAllowedDomains}, http://localhost:3000'
         ContainerEnvEntry3: !Sub 'PN_PAPERCHANNEL_CLIENTSAFESTORAGEBASEPATH=${SandboxSafeStorageBaseUrl}'
         ContainerEnvEntry4: !Sub 'PN_PAPERCHANNEL_CLIENTNATIONALREGISTRIESBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
@@ -507,6 +507,7 @@ Resources:
         ContainerEnvEntry48: !Sub 'PN_PAPERCHANNEL_REFINEMENTDURATION=${RefinementDuration}'
         ContainerEnvEntry49: !Sub 'PN_PAPERCHANNEL_CLOUDWATCHMETRICCRON=${CloudwatchMetricCron}'
         ContainerEnvEntry50: !Sub 'PN_PAPERCHANNEL_REQUESTPAIDOVERRIDE=${RequestPaIdOverride}'
+#TODO elimionare qualche parametro        ContainerEnvEntry51: !Sub 'PN_PAPERCHANNEL_D01SENDTODELIVERYPUSH=${SendToDeliveryPush}'
         ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-PaperChannel-Secrets
         MappedPaths: '/paper-channel-bo/*,/paper-channel-private/*'
