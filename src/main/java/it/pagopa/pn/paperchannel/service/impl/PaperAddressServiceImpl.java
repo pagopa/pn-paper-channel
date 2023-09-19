@@ -116,6 +116,7 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
 
 
     private Mono<Address> flowPostmanAddress(PnDeliveryRequest deliveryRequest, Address discovered, Address firstAttempt){
+        log.info("flowPostmanAddress for requestId {}", deliveryRequest.getRequestId());
         logAuditBefore("prepare requestId = %s, relatedRequestId = %s Discovered and First address is Equals ?", deliveryRequest);
 
         return this.addressManagerClient.deduplicates(UUID.randomUUID().toString(), firstAttempt, discovered)
@@ -140,6 +141,8 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
     }
 
     private Mono<Address> flowNationalRegistry(PnDeliveryRequest pnDeliveryRequest, Address fromNationalRegistries, Address firstAttempt){
+        log.info("flowNationalRegistry for requestId {}", pnDeliveryRequest.getRequestId());
+
         return addressManagerClient.deduplicates(pnDeliveryRequest.getCorrelationId(), firstAttempt, fromNationalRegistries)
                 .flatMap(deduplicateResponse -> {
                     logAuditBefore("prepare requestId = %s, relatedRequestId = %s Deduplicates service has DeduplicatesResponse.error empty ?", pnDeliveryRequest);

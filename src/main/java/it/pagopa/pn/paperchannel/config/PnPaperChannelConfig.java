@@ -4,11 +4,13 @@ import it.pagopa.pn.commons.conf.SharedAutoConfiguration;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
+import javax.annotation.PostConstruct;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 
@@ -18,6 +20,7 @@ import java.time.temporal.ChronoUnit;
 @Configuration
 @ConfigurationProperties(prefix = "pn.paper-channel")
 @Import(SharedAutoConfiguration.class)
+@Slf4j
 public class PnPaperChannelConfig {
 
     private String clientSafeStorageBasepath;
@@ -58,6 +61,11 @@ public class PnPaperChannelConfig {
      * false se invece viene salvato l'errore sulla tabella degli errori (as-is)
      */
     private boolean sendD001ToDeliveryPush;
+
+    @PostConstruct
+    public void init() {
+        log.info("CONFIGURATIONS: {}", this);
+    }
 
 
     public Duration getRefinementDuration() {
