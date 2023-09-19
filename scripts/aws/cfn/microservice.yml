@@ -87,10 +87,6 @@ Parameters:
     Type: Number
     Description: 'Number of attempts for called prepare async for retry address manager'
 
-  OriginalPostmanAddressUsageMode:
-    Type: String
-    Description: 'Address usage modo for postman flow'
-
   SafeStorageCxId:
     Type: String
     Description: 'SafeStorage cx-id'
