@@ -179,11 +179,14 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
     }
 
     private Mono<PnDeliveryRequest> handleAndThrowAgainError(PnGenericException ex, String requestId) {
-        if(! (ex instanceof PnUntracebleException) ) {
-            return traceError(requestId, ex.getMessage(), "CHECK_ADDRESS_FLOW").then(Mono.error(ex));
+        if(ex instanceof PnUntracebleException) {
+            // se l'eccezione PnGenericException è di tipo UNTRACEABLE, ALLORA NON SCRIVO L'ERRORE SU DB
+            return Mono.error(ex);
+
         }
         else {
-            return Mono.error(ex);
+            // ALTRIMENTI SCRIVO L'ERRORE SU DB
+            return traceError(requestId, ex.getMessage(), "CHECK_ADDRESS_FLOW").then(Mono.error(ex));
         }
     }
 

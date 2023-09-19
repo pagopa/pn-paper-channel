@@ -180,7 +180,7 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
     private Mono<Address> checkAndParseNormalizedAddress(AnalogAddressDto normalizedAddress, Address older, String requestId){
         if (normalizedAddress == null) {
             log.fatal("Response from address manager have a address null, requestId: {}", requestId);
-            return Mono.error(new PnInternalException("Response from address manager have a address null, requestId: " + requestId, RESPONSE_NULL_FROM_DEDUPLICATION.getTitle()));
+            return Mono.error(new PnGenericException(RESPONSE_NULL_FROM_DEDUPLICATION, "Response from address manager have a address null, requestId: " + requestId));
             //Indirizzo non trovato = D00 - da verificare in un caso reale
         }
         Address address = AddressMapper.fromAnalogAddressManager(normalizedAddress) ;
