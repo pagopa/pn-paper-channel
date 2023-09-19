@@ -3,6 +3,7 @@ package it.pagopa.pn.paperchannel.service;
 import it.pagopa.pn.commons.exceptions.PnInternalException;
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
+import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.exception.PnUntracebleException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.dto.AnalogAddressDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.dto.DeduplicatesResponseDto;
@@ -211,7 +212,7 @@ class PaperAddressServiceImplTest {
                 .thenReturn(Mono.just(mockDeduplicationResponse));
 
         StepVerifier.create(paperAddressService.getCorrectAddress(deliveryRequest, fromNationalRegistry, prepareAsyncRequest))
-                .expectErrorMatches(throwable -> throwable instanceof PnInternalException)
+                .expectErrorMatches(throwable -> throwable instanceof PnGenericException)
                 .verify();
 
     }
