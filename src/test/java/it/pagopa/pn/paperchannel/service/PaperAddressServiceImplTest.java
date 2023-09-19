@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.service;
 
+import it.pagopa.pn.commons.exceptions.PnInternalException;
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.PnUntracebleException;
@@ -8,7 +9,6 @@ import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.FailureDetailCodeEnum;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
-import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.AddressManagerClient;
@@ -39,8 +39,6 @@ class PaperAddressServiceImplTest {
     private AddressDAO addressDAO;
     @Mock
     private AddressManagerClient addressManagerClient;
-    @Mock
-    private PaperRequestErrorDAO paperRequestErrorDAO;
 
     @Spy
     private PnAuditLogBuilder auditLogBuilder;
@@ -49,7 +47,7 @@ class PaperAddressServiceImplTest {
     public void init() {
         paperProperties = new PnPaperChannelConfig();
         paperAddressService = new PaperAddressServiceImpl(auditLogBuilder, null, null,
-                null, null, paperProperties, addressDAO, addressManagerClient, paperRequestErrorDAO);
+                null, null, paperProperties, addressDAO, addressManagerClient);
     }
 
     @Test
@@ -142,7 +140,7 @@ class PaperAddressServiceImplTest {
         when(addressManagerClient.deduplicates(correlationId, addressFirstAttempt, fromNationalRegistry))
                 .thenReturn(Mono.just(mockDeduplicationResponse));
 
-        paperProperties.setD01SendToDeliveryPush(true);
+        paperProperties.setSendD001ToDeliveryPush(true);
 
         StepVerifier.create(paperAddressService.getCorrectAddress(deliveryRequest, fromNationalRegistry, prepareAsyncRequest))
                 .expectErrorMatches(throwable -> {
@@ -180,7 +178,7 @@ class PaperAddressServiceImplTest {
         when(addressManagerClient.deduplicates(correlationId, addressFirstAttempt, fromNationalRegistry))
                 .thenReturn(Mono.just(mockDeduplicationResponse));
 
-        paperProperties.setD01SendToDeliveryPush(false);
+        paperProperties.setSendD001ToDeliveryPush(false);
 
         StepVerifier.create(paperAddressService.getCorrectAddress(deliveryRequest, fromNationalRegistry, prepareAsyncRequest))
                 .expectErrorMatches(throwable -> !(throwable instanceof PnUntracebleException))
@@ -213,12 +211,7 @@ class PaperAddressServiceImplTest {
                 .thenReturn(Mono.just(mockDeduplicationResponse));
 
         StepVerifier.create(paperAddressService.getCorrectAddress(deliveryRequest, fromNationalRegistry, prepareAsyncRequest))
-                .expectErrorMatches(throwable -> {
-                    boolean isPnUntracebleException = throwable instanceof PnUntracebleException;
-                    PnUntracebleException pnUntracebleException = (PnUntracebleException) throwable;
-                    boolean isD00 = pnUntracebleException.getKoReason().failureDetailCode() == FailureDetailCodeEnum.D00;
-                    return isPnUntracebleException && isD00;
-                })
+                .expectErrorMatches(throwable -> throwable instanceof PnInternalException)
                 .verify();
 
     }
@@ -255,7 +248,7 @@ class PaperAddressServiceImplTest {
         when(addressManagerClient.deduplicates(any(), eq(addressFirstAttempt), eq(addressDiscovered)))
                 .thenReturn(Mono.just(mockDeduplicationResponse));
 
-        paperProperties.setD01SendToDeliveryPush(true);
+        paperProperties.setSendD001ToDeliveryPush(true);
 
         StepVerifier.create(paperAddressService.getCorrectAddress(deliveryRequest, null, prepareAsyncRequest))
                 .expectErrorMatches(throwable -> {

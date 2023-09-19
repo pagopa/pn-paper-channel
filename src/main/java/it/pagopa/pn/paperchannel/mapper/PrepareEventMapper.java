@@ -1,7 +1,6 @@
 package it.pagopa.pn.paperchannel.mapper;
 
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.AnalogAddress;
-import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.FailureDetailCodeEnum;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PrepareEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.mapper.common.BaseMapper;
@@ -37,23 +36,28 @@ public class PrepareEventMapper {
         return entityEvent;
     }
 
-    public static PrepareEvent toPrepareEvent(PnDeliveryRequest deliveryRequest, Address address, StatusCodeEnum status, KOReason koReason){
-        FailureDetailCodeEnum failureDetailCode = koReason != null ? koReason.failureDetailCode() : null;
-        Address addressFailed = koReason != null ? koReason.addressFailed() : null;
+    public static PrepareEvent toPrepareEvent(PnDeliveryRequest deliveryRequest, Address address, StatusCodeEnum status){
         PrepareEvent entityEvent = new PrepareEvent();
         entityEvent.setRequestId(deliveryRequest.getRequestId());
         entityEvent.setStatusCode(status);
-        if(addressFailed != null) {
-            entityEvent.setReceiverAddress(AddressMapper.toPojo(koReason.addressFailed()));
-        }
-        else if (address != null){
+        if (address != null){
             entityEvent.setReceiverAddress(AddressMapper.toPojo(address));
         }
         entityEvent.setStatusDetail(deliveryRequest.getStatusCode());
         entityEvent.setProductType(deliveryRequest.getProductType());
         entityEvent.setStatusDateTime(Instant.now());
-        entityEvent.setFailureDetailCode(failureDetailCode);
         return entityEvent;
+    }
+
+    public static PrepareEvent toPrepareEvent(PnDeliveryRequest deliveryRequest, Address address, StatusCodeEnum status, KOReason koReason){
+        PrepareEvent prepareEvent = toPrepareEvent(deliveryRequest, address, status);
+        if(koReason != null) {
+            prepareEvent.setFailureDetailCode(koReason.failureDetailCode());
+            if(koReason.addressFailed() != null) {
+                prepareEvent.setReceiverAddress(AddressMapper.toPojo(koReason.addressFailed()));
+            }
+        }
+        return prepareEvent;
     }
 
 }

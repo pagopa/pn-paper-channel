@@ -332,10 +332,14 @@ Parameters:
     Type: String
     Default: ''
 
-  #Override send-to-delivery-push
-  SendToDeliveryPush:
+  #Override send-d001-to-delivery-push
+  SendD001ToDeliveryPush:
     Description: True se il failureDetailCode D01 deve essere mandato a delivery push
     Type: String
+    Default: true
+    AllowedValues:
+      - true
+      - false
 
   HealthCheckTimeout:
     Description: health check timeout seconds
@@ -503,11 +507,10 @@ Resources:
         ContainerEnvEntry44: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERCXID=${AddressManagerCxId}'
         ContainerEnvEntry45: !Sub 'PN_PAPERCHANNEL_CHARGECALCULATIONMODE=${ChargeCalculationMode}'
         ContainerEnvEntry46: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUEADDRESSMANAGER=${AttemptQueueAddressManager}'
-        ContainerEnvEntry47: !Sub 'PN_PAPERCHANNEL_ORIGINALPOSTAMNADDRESSUSAGEMODE=${OriginalPostmanAddressUsageMode}'
+        ContainerEnvEntry47: !Sub 'PN_PAPERCHANNEL_SENDD001TODELIVERYPUSH=${SendD001ToDeliveryPush}'
         ContainerEnvEntry48: !Sub 'PN_PAPERCHANNEL_REFINEMENTDURATION=${RefinementDuration}'
         ContainerEnvEntry49: !Sub 'PN_PAPERCHANNEL_CLOUDWATCHMETRICCRON=${CloudwatchMetricCron}'
         ContainerEnvEntry50: !Sub 'PN_PAPERCHANNEL_REQUESTPAIDOVERRIDE=${RequestPaIdOverride}'
-#TODO elimionare qualche parametro        ContainerEnvEntry51: !Sub 'PN_PAPERCHANNEL_D01SENDTODELIVERYPUSH=${SendToDeliveryPush}'
         ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-PaperChannel-Secrets
         MappedPaths: '/paper-channel-bo/*,/paper-channel-private/*'
