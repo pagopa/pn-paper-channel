@@ -1,6 +1,5 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
-import it.pagopa.pn.commons.exceptions.PnInternalException;
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.*;
@@ -123,7 +122,7 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
                 .flatMap(deduplicatesResponse -> {
                     logAuditBefore("prepare requestId = %s, relatedRequestId = %s Deduplicates service has DeduplicatesResponse.error empty ?", deliveryRequest);
                     if (StringUtils.isNotBlank(deduplicatesResponse.getError())){
-                        logAuditSuccess("prepare requestId = %s, relatedRequestId = %s Deduplicate response have an error and discard notification",deliveryRequest);
+                        logAuditSuccess("prepare requestId = %s, relatedRequestId = %s Deduplicate response have an error", deliveryRequest);
                         return Mono.error(manageErrorD001(paperProperties, DISCARD_NOTIFICATION, deduplicatesResponse.getError(), discovered, deliveryRequest.getRequestId()));
                         //Indirizzo diverso - Normalizzazione KO = D01 (fare configurazione)
                     }
@@ -179,7 +178,7 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
 
     private Mono<Address> checkAndParseNormalizedAddress(AnalogAddressDto normalizedAddress, Address older, String requestId){
         if (normalizedAddress == null) {
-            log.fatal("Response from address manager have a address null, requestId: {}", requestId);
+            log.error("Response from address manager have a address null, requestId: {}", requestId);
             return Mono.error(new PnGenericException(RESPONSE_NULL_FROM_DEDUPLICATION, "Response from address manager have a address null, requestId: " + requestId));
             //Indirizzo non trovato = D00 - da verificare in un caso reale
         }
@@ -235,6 +234,7 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
             return throwD001(addressFailed);
         }
         else {
+            log.warn("[{}] D001 Event discarded ", requestId);
             return new PnGenericException(exceptionType, message);
         }
     }
