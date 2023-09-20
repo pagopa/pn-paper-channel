@@ -44,7 +44,7 @@ class PrepareEventMapperTest {
 
     @Test
     void prepareEventMapperToPrepareEventTest () {
-        PrepareEvent response= PrepareEventMapper.toPrepareEvent(getDeliveryRequest(StatusDeliveryEnum.UNTRACEABLE),getAddress(), StatusCodeEnum.OK);
+        PrepareEvent response= PrepareEventMapper.toPrepareEvent(getDeliveryRequest(StatusDeliveryEnum.UNTRACEABLE),getAddress(), StatusCodeEnum.OK, null);
         Assertions.assertNotNull(response);
     }
 

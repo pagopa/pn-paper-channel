@@ -8,6 +8,7 @@ import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.model.Address;
+import it.pagopa.pn.paperchannel.model.KOReason;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 
 import java.time.Instant;
@@ -18,7 +19,7 @@ public class PrepareEventMapper {
         throw new IllegalCallerException();
     }
 
-    private static final BaseMapper <PnAddress, AnalogAddress> baseMapperAddress = new BaseMapperImpl(PnAddress.class, AnalogAddress.class);
+    private static final BaseMapper <PnAddress, AnalogAddress> baseMapperAddress = new BaseMapperImpl<>(PnAddress.class, AnalogAddress.class);
 
     public static PrepareEvent fromResult(PnDeliveryRequest request, PnAddress address){
         PrepareEvent entityEvent = new PrepareEvent();
@@ -46,6 +47,17 @@ public class PrepareEventMapper {
         entityEvent.setProductType(deliveryRequest.getProductType());
         entityEvent.setStatusDateTime(Instant.now());
         return entityEvent;
+    }
+
+    public static PrepareEvent toPrepareEvent(PnDeliveryRequest deliveryRequest, Address address, StatusCodeEnum status, KOReason koReason){
+        PrepareEvent prepareEvent = toPrepareEvent(deliveryRequest, address, status);
+        if(koReason != null) {
+            prepareEvent.setFailureDetailCode(koReason.failureDetailCode());
+            if(koReason.addressFailed() != null) {
+                prepareEvent.setReceiverAddress(AddressMapper.toPojo(koReason.addressFailed()));
+            }
+        }
+        return prepareEvent;
     }
 
 }

@@ -13,7 +13,5 @@ import org.springframework.context.annotation.Configuration;
 public class AwsKmsProperties {
 
     private String keyId;
-    private String endpoint;
-    private String region;
 
 }
