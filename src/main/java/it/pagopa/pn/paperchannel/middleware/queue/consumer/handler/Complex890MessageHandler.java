@@ -127,6 +127,14 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
                 throw new PnGenericException(WRONG_EVENT_ORDER, "[{" + paperRequest.getRequestId() + "}] needed META##RECAG00_A is present and/or META##RECAG011A not present");
             }
 
+            /**
+             * FIXME: deve essere verificata anche la validità dell'evento
+             * Le DEMAT devono contenere
+             * (23L && (ARCAD || CAD)) in caso di CONSEGNA
+             * (23L && (ARCAD || CAD)) && PLICO in caso di MANCATA CONSEGNA
+             * In caso cotrario WRONG_EVENT_ORDER: siamo arrivati ad uno stato finale senza i corretti prerequisiti
+             */
+
             if (lessThanTenDaysBetweenRECAG00XAAndRECAG011A(recag011ADateTime, recag00XADateTime)) {
                 // 3 a
                 log.info("[{}] (statusDateTime[META##RECAG00_A] - statusDateTime[META##RECAG011A]) < {}", paperRequest.getRequestId(), refinementDuration);
@@ -151,10 +159,18 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
                         .then(Mono.just(pnEventMetas));
             }
         }
+
         // RECAG012 sarà sempre presente: lasciato quest'ultimo caso solo per esaurire le casistiche e fare comunque la return
 //            CASO 4
         log.info("[{}] Result of query has no PNAG012 and no RECAG012", paperRequest.getRequestId());
         // qui lo status è OK o KO in base alla trasformazione fatta nel passo di update entity
+        /**
+         * FIXME: deve essere verificata anche la validità dell'evento
+         * Le DEMAT devono contenere
+         * (23L && (ARCAD || CAD)) in caso di CONSEGNA
+         * (PLICO && (ARCAD || CAD)) caso di Mancata CONSEGNA
+         * In caso cotrario WRONG_EVENT_ORDER: siamo arrivati ad uno stato finale senza i corretti prerequisiti
+         */
         return super.handleMessage(entity, paperRequest)
                 .then(Mono.just(pnEventMetas));
     }

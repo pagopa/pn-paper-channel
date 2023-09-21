@@ -71,6 +71,11 @@ public class RECAG011BMessageHandler extends SaveDematMessageHandler {
                 .filter(this::canCreatePNAG012Event)
                 .doOnNext(pnEventDemats -> log.info("[{}] CanCreatePNAG012Event Filter success", paperRequest.getRequestId()))
                 .flatMap(pnEventDemats ->  eventMetaDAO.getDeliveryEventMeta(metadataRequestIdFilter, META_SORT_KEY_FILTER ))
+        /**
+         * FIXME: se l'ordinamento è errato questo metodo può tornare null
+         * in questo caso va lanciata un eccezione di WRONG ORDER
+         */
+
                 .doOnNext(pnEventMeta -> log.info("[{}] PnEventMeta found: {}", paperRequest.getRequestId(), pnEventMeta))
                 .map(pnEventMetaRECAG012 -> createMETAForPNAG012Event(paperRequest, pnEventMetaRECAG012, ttlDaysMeta))
                 .flatMap(pnEventMetaPNAG012 -> this.pnag012Flow(pnEventMetaPNAG012, entity, paperRequest, pnLogAudit))

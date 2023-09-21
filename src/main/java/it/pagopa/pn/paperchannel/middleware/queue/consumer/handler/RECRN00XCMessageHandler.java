@@ -57,6 +57,13 @@ public class RECRN00XCMessageHandler extends SendToDeliveryPushHandler {
                                     throw new PnGenericException(WRONG_EVENT_ORDER, "[{" + paperRequest.getRequestId() + "}] Missing EventMeta RECRN011 for {" + paperRequest + "}");
                                 }))
                 )
+                /**
+                 * FIXME: deve essere verificata anche la validità dell'evento
+                 * Le DEMAT devono contenere
+                 *  AR in caso di CONSEGNA
+                 *  PLICO in caso di MANCATA CONSEGNA
+                 * In caso cotrario WRONG_EVENT_ORDER: siamo arrivati ad uno stato finale senza i corretti prerequisiti
+                 */
                 .flatMap(recrn011AndRecrn00X -> {
                     PnEventMeta eventrecrn011 = recrn011AndRecrn00X.getT1();
                     PnEventMeta eventrecrn00X = recrn011AndRecrn00X.getT2();
