@@ -328,8 +328,8 @@ Parameters:
     Type: String
     Default: ''
 
-  #Override send-d001-to-delivery-push
-  SendD001ToDeliveryPush:
+  #Override send-d01-to-delivery-push
+  SendD01ToDeliveryPush:
     Description: True se il failureDetailCode D01 deve essere mandato a delivery push
     Type: String
     Default: true
@@ -503,7 +503,7 @@ Resources:
         ContainerEnvEntry44: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERCXID=${AddressManagerCxId}'
         ContainerEnvEntry45: !Sub 'PN_PAPERCHANNEL_CHARGECALCULATIONMODE=${ChargeCalculationMode}'
         ContainerEnvEntry46: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUEADDRESSMANAGER=${AttemptQueueAddressManager}'
-        ContainerEnvEntry47: !Sub 'PN_PAPERCHANNEL_SENDD001TODELIVERYPUSH=${SendD001ToDeliveryPush}'
+        ContainerEnvEntry47: !Sub 'PN_PAPERCHANNEL_SENDD01TODELIVERYPUSH=${SendD01ToDeliveryPush}'
         ContainerEnvEntry48: !Sub 'PN_PAPERCHANNEL_REFINEMENTDURATION=${RefinementDuration}'
         ContainerEnvEntry49: !Sub 'PN_PAPERCHANNEL_CLOUDWATCHMETRICCRON=${CloudwatchMetricCron}'
         ContainerEnvEntry50: !Sub 'PN_PAPERCHANNEL_REQUESTPAIDOVERRIDE=${RequestPaIdOverride}'

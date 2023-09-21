@@ -60,7 +60,7 @@ public class PnPaperChannelConfig {
      * True se il failureDetailCode D01 deve essere mandato a delivery push (specificando anche l'indirizzo),
      * false se invece viene salvato l'errore sulla tabella degli errori (as-is)
      */
-    private boolean sendD001ToDeliveryPush;
+    private boolean sendD01ToDeliveryPush;
 
     @PostConstruct
     public void init() {
