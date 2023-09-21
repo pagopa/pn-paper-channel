@@ -229,8 +229,8 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
 
     private Throwable manageErrorD001(PnPaperChannelConfig config, ExceptionTypeEnum exceptionType,
                                                           String message, Address addressFailed, String requestId) {
-        if(config.isSendD001ToDeliveryPush()) {
-            log.debug("[{}] SendD001ToDeliveryPush is enabled, send D001 event to delivery push", requestId);
+        if(config.isSendD01ToDeliveryPush()) {
+            log.debug("[{}] SendD01ToDeliveryPush is enabled, send D001 event to delivery push", requestId);
             return throwD001(addressFailed);
         }
         else {

@@ -141,7 +141,7 @@ class PaperAddressServiceImplTest {
         when(addressManagerClient.deduplicates(correlationId, addressFirstAttempt, fromNationalRegistry))
                 .thenReturn(Mono.just(mockDeduplicationResponse));
 
-        paperProperties.setSendD001ToDeliveryPush(true);
+        paperProperties.setSendD01ToDeliveryPush(true);
 
         StepVerifier.create(paperAddressService.getCorrectAddress(deliveryRequest, fromNationalRegistry, prepareAsyncRequest))
                 .expectErrorMatches(throwable -> {
@@ -179,7 +179,7 @@ class PaperAddressServiceImplTest {
         when(addressManagerClient.deduplicates(correlationId, addressFirstAttempt, fromNationalRegistry))
                 .thenReturn(Mono.just(mockDeduplicationResponse));
 
-        paperProperties.setSendD001ToDeliveryPush(false);
+        paperProperties.setSendD01ToDeliveryPush(false);
 
         StepVerifier.create(paperAddressService.getCorrectAddress(deliveryRequest, fromNationalRegistry, prepareAsyncRequest))
                 .expectErrorMatches(throwable -> !(throwable instanceof PnUntracebleException))
@@ -249,7 +249,7 @@ class PaperAddressServiceImplTest {
         when(addressManagerClient.deduplicates(any(), eq(addressFirstAttempt), eq(addressDiscovered)))
                 .thenReturn(Mono.just(mockDeduplicationResponse));
 
-        paperProperties.setSendD001ToDeliveryPush(true);
+        paperProperties.setSendD01ToDeliveryPush(true);
 
         StepVerifier.create(paperAddressService.getCorrectAddress(deliveryRequest, null, prepareAsyncRequest))
                 .expectErrorMatches(throwable -> {

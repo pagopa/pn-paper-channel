@@ -268,9 +268,11 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
     private void pushPrepareEvent(PnDeliveryRequest request, Address address, String clientId, StatusCodeEnum statusCode, KOReason koReason){
         PrepareEvent prepareEvent = PrepareEventMapper.toPrepareEvent(request, address, statusCode, koReason);
         if (request.getRequestId().contains(PREFIX_REQUEST_ID_SERVICE_DESK)){
+            log.info("Sending event to EventBridge: {}", prepareEvent);
             this.sqsSender.pushPrepareEventOnEventBridge(clientId, prepareEvent);
             return;
         }
+        log.info("Sending event to delivery-push: {}", prepareEvent);
         this.sqsSender.pushPrepareEvent(prepareEvent);
     }
 
