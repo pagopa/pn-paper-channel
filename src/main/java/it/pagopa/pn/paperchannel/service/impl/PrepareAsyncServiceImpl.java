@@ -18,10 +18,7 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.SafeStorageClient;
-import it.pagopa.pn.paperchannel.model.Address;
-import it.pagopa.pn.paperchannel.model.AttachmentInfo;
-import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
-import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
+import it.pagopa.pn.paperchannel.model.*;
 import it.pagopa.pn.paperchannel.service.PaperAddressService;
 import it.pagopa.pn.paperchannel.service.PaperAsyncService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
@@ -67,7 +64,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
 
     @Override
     public Mono<PnDeliveryRequest> prepareAsync(PrepareAsyncRequest request){
-        String PROCESS_NAME = "Prepare Async";
+        final String PROCESS_NAME = "Prepare Async";
         log.logStartingProcess(PROCESS_NAME);
 
         String correlationId = request.getCorrelationId();
@@ -99,7 +96,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                 .flatMap(pnDeliveryRequest ->
                      this.addressDAO.findByRequestId(pnDeliveryRequest.getRequestId())
                             .flatMap(address -> {
-                                this.pushPrepareEvent(pnDeliveryRequest, AddressMapper.toDTO(address), request.getClientId(), StatusCodeEnum.OK);
+                                this.pushPrepareEvent(pnDeliveryRequest, AddressMapper.toDTO(address), request.getClientId(), StatusCodeEnum.OK, null);
                                 return this.requestDeliveryDAO.updateData(pnDeliveryRequest);
                             })
                 )
@@ -114,12 +111,21 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                     return updateStatus(requestId, correlationId, statusDeliveryEnum)
                             .doOnNext(entity -> {
                                 if (entity.getStatusCode().equals(StatusDeliveryEnum.UNTRACEABLE.getCode())){
-                                    sendUnreachableEvent(entity, request.getClientId());
+                                    sendUnreachableEvent(entity, request.getClientId(), getKOReason(ex));
                                     log.logEndingProcess(PROCESS_NAME);
                                 }
                             })
                             .flatMap(entity -> Mono.error(ex));
                 });
+    }
+
+    private KOReason getKOReason(Throwable ex) {
+        if(ex instanceof PnUntracebleException untEx) {
+            return untEx.getKoReason();
+        }
+        else {
+            return null;
+        }
     }
 
     private StatusDeliveryEnum mapper(ExceptionTypeEnum ex){
@@ -157,7 +163,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
     }
 
     private Mono<PnDeliveryRequest> checkAndUpdateAddress(PnDeliveryRequest pnDeliveryRequest, Address fromNationalRegistries, PrepareAsyncRequest queueModel){
-        String VALIDATION_NAME = "Check and update address";
+        final String VALIDATION_NAME = "Check and update address";
         return this.paperAddressService.getCorrectAddress(pnDeliveryRequest, fromNationalRegistries, queueModel)
                 .flatMap(newAddress -> {
                     log.logCheckingOutcome(VALIDATION_NAME, true);
@@ -173,11 +179,14 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
     }
 
     private Mono<PnDeliveryRequest> handleAndThrowAgainError(PnGenericException ex, String requestId) {
-        if(! (ex instanceof PnUntracebleException) ) {
-            return traceError(requestId, ex.getMessage(), "CHECK_ADDRESS_FLOW").then(Mono.error(ex));
+        if(ex instanceof PnUntracebleException) {
+            // se l'eccezione PnGenericException è di tipo UNTRACEABLE, ALLORA NON SCRIVO L'ERRORE SU DB
+            return Mono.error(ex);
+
         }
         else {
-            return Mono.error(ex);
+            // ALTRIMENTI SCRIVO L'ERRORE SU DB
+            return traceError(requestId, ex.getMessage(), "CHECK_ADDRESS_FLOW").then(Mono.error(ex));
         }
     }
 
@@ -246,9 +255,9 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
     }
 
 
-    private void sendUnreachableEvent(PnDeliveryRequest request, String clientId){
+    private void sendUnreachableEvent(PnDeliveryRequest request, String clientId, KOReason koReason){
         log.debug("Send Unreachable Event request id - {}, iun - {}", request.getRequestId(), request.getIun());
-        this.pushPrepareEvent(request, null, clientId, StatusCodeEnum.KOUNREACHABLE);
+        this.pushPrepareEvent(request, null, clientId, StatusCodeEnum.KO, koReason);
     }
 
     private Mono<Void> traceError(String requestId, String error, String flowType){
@@ -256,12 +265,14 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                 .then();
     }
 
-    private void pushPrepareEvent(PnDeliveryRequest request, Address address, String clientId, StatusCodeEnum statusCode){
-        PrepareEvent prepareEvent = PrepareEventMapper.toPrepareEvent(request, address, statusCode);
+    private void pushPrepareEvent(PnDeliveryRequest request, Address address, String clientId, StatusCodeEnum statusCode, KOReason koReason){
+        PrepareEvent prepareEvent = PrepareEventMapper.toPrepareEvent(request, address, statusCode, koReason);
         if (request.getRequestId().contains(PREFIX_REQUEST_ID_SERVICE_DESK)){
+            log.info("Sending event to EventBridge: {}", prepareEvent);
             this.sqsSender.pushPrepareEventOnEventBridge(clientId, prepareEvent);
             return;
         }
+        log.info("Sending event to delivery-push: {}", prepareEvent);
         this.sqsSender.pushPrepareEvent(prepareEvent);
     }
 

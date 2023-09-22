@@ -83,17 +83,31 @@ components:
 
     StatusCodeEnum:
       type: string
-      enum: [ PROGRESS, OK, KOUNREACHABLE, KO ]
-      description: "Codici di stato: <br />
-                                \ - PROGRESS :  stato iniziale che indica che la richiesta è in fase di elaborazione <br />
-                                \ - OK : nel caso di indirizzo valido e allegati recuperati correttamente. Prevede la presenza del receiverAddress <br /> \
-                                \ - KOUNREACHABLE : nel caso in cui non sia disponibile un indirizzo per l'utente in base alle informazioni passate."
+      enum: [ PROGRESS, OK, KO ]
       example: OK
+
+    FailureDetailCodeEnum:
+      type: string
+      enum: [ D00, D01, D02 ]
+      example: D00
+
     PrepareEvent:
       type: object
       properties:
         statusCode:
           $ref: '#/components/schemas/StatusCodeEnum'
+          description: > 
+                  Codici di stato:
+                  - PROGRESS :  stato iniziale che indica che la richiesta è in fase di elaborazione 
+                  - OK : nel caso di indirizzo valido e allegati recuperati correttamente. Prevede la presenza del receiverAddress
+                  - KO : nel caso in cui non sia disponibile un indirizzo per l'utente in base alle informazioni passate.
+        failureDetailCode:
+          $ref: '#/components/schemas/FailureDetailCodeEnum'
+          description: >
+            __Motivazione fallimento prepare
+              - __D00__ Indirizzo non trovato
+              - __D01__ Indirizzo non valido
+              - __D02__ Indirizzo coincidente con quello del primo tentativo
         receiverAddress:
           $ref: '#/components/schemas/AnalogAddress'
         productType:
@@ -117,6 +131,11 @@ components:
           example: 123456789abc
         statusCode:
           $ref: '#/components/schemas/StatusCodeEnum'
+          description: > 
+                  Codici di stato:
+                  - PROGRESS :  rappresenta un aggiornamento sullo stato della postalizzazione 
+                  - OK : indica che la postalizzazione si è conclusa con un successo
+                  - KO : indica che la postalizzazione si è conclusa con un fallimento
         statusDetail:
           type: string
           description: "Vengono ribattuti gli esiti di ext-channel, più eventuali eventi interni a paper-channel codici PNXXX) 

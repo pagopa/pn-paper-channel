@@ -10,7 +10,7 @@ public enum StatusDeliveryEnum {
     NATIONAL_REGISTRY_WAITING("PC002", "In attesa di indirizzo da National Registry", "PROGRESS"),
     NATIONAL_REGISTRY_ERROR("PC005", "Errore con il recupero indirizzo da National Registry", "PROGRESS"),
     READY_TO_SEND("PC003","Pronto per l'invio", "PROGRESS"),
-    UNTRACEABLE("PC010", "Irreperibile totale", "KOUNREACHABLE"),
+    UNTRACEABLE("PC010", "Irreperibile totale", "KO"),
     PRINTED("001", "Stampato", "PROGRESS"),
     DELIVERY_DRIVER_AVAILABLE("002", "Disponibile al recapitista", "PROGRESS"),
     DELIVERY_DRIVER_IN_CHARGE("003", "Preso in carico dal recapitista", "PROGRESS"),

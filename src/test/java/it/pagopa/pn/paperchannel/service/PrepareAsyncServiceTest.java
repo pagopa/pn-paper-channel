@@ -8,6 +8,7 @@ import it.pagopa.pn.paperchannel.exception.PnUntracebleException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.dto.AnalogAddressDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.dto.DeduplicatesResponseDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileDownloadResponseDto;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.FailureDetailCodeEnum;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PrepareEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.mapper.PrepareEventMapper;
@@ -21,6 +22,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.AddressManagerClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.paperchannel.model.Address;
+import it.pagopa.pn.paperchannel.model.KOReason;
 import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.service.impl.PrepareAsyncServiceImpl;
@@ -126,7 +128,7 @@ class PrepareAsyncServiceTest {
                 .thenReturn(Mono.just(deliveryRequest));
 
         Mockito.when(this.paperAddressService.getCorrectAddress(Mockito.any(), Mockito.any(), Mockito.any()))
-                .thenReturn(Mono.error(new PnUntracebleException()));
+                .thenReturn(Mono.error(new PnUntracebleException(new KOReason(FailureDetailCodeEnum.D00, null))));
 
 
         Mockito.when(this.requestDeliveryDAO.getByCorrelationId(Mockito.any()))
@@ -151,7 +153,7 @@ class PrepareAsyncServiceTest {
         RequestDeliveryMapper.changeState(pnDeliveryRequest, StatusDeliveryEnum.UNTRACEABLE.getCode(),
                 StatusDeliveryEnum.PAPER_CHANNEL_ASYNC_ERROR.getDescription(), StatusDeliveryEnum.UNTRACEABLE.getDetail(),
                 null, null);
-        PrepareEvent prepareEventExpected = PrepareEventMapper.toPrepareEvent(deliveryRequest, null, StatusCodeEnum.KOUNREACHABLE);
+        PrepareEvent prepareEventExpected = PrepareEventMapper.toPrepareEvent(deliveryRequest, null, StatusCodeEnum.KO, new KOReason(FailureDetailCodeEnum.D00, null));
         ArgumentCaptor<PrepareEvent> prepareEventArgumentCaptor = ArgumentCaptor.forClass(PrepareEvent.class);
 
         Mockito.verify(this.sqsSender).pushPrepareEvent(prepareEventArgumentCaptor.capture());
@@ -160,6 +162,7 @@ class PrepareAsyncServiceTest {
         assertThat(prepareEventActual.getRequestId()).isEqualTo(prepareEventExpected.getRequestId());
         assertThat(prepareEventActual.getStatusCode()).isEqualTo(prepareEventExpected.getStatusCode());
         assertThat(prepareEventActual.getStatusDetail()).isEqualTo(prepareEventExpected.getStatusDetail());
+        assertThat(prepareEventActual.getFailureDetailCode()).isEqualTo(FailureDetailCodeEnum.D00);
     }
 
     @Test

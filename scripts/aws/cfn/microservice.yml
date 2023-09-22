@@ -87,10 +87,6 @@ Parameters:
     Type: Number
     Description: 'Number of attempts for called prepare async for retry address manager'
 
-  OriginalPostmanAddressUsageMode:
-    Type: String
-    Description: 'Address usage modo for postman flow'
-
   SafeStorageCxId:
     Type: String
     Description: 'SafeStorage cx-id'
@@ -332,6 +328,15 @@ Parameters:
     Type: String
     Default: ''
 
+  #Override send-d01-to-delivery-push
+  SendD01ToDeliveryPush:
+    Description: True se il failureDetailCode D01 deve essere mandato a delivery push
+    Type: String
+    Default: true
+    AllowedValues:
+      - true
+      - false
+
   HealthCheckTimeout:
     Description: health check timeout seconds
     Type: Number
@@ -498,7 +503,7 @@ Resources:
         ContainerEnvEntry44: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERCXID=${AddressManagerCxId}'
         ContainerEnvEntry45: !Sub 'PN_PAPERCHANNEL_CHARGECALCULATIONMODE=${ChargeCalculationMode}'
         ContainerEnvEntry46: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUEADDRESSMANAGER=${AttemptQueueAddressManager}'
-        ContainerEnvEntry47: !Sub 'PN_PAPERCHANNEL_ORIGINALPOSTMANADDRESSUSAGEMODE=${OriginalPostmanAddressUsageMode}'
+        ContainerEnvEntry47: !Sub 'PN_PAPERCHANNEL_SENDD01TODELIVERYPUSH=${SendD01ToDeliveryPush}'
         ContainerEnvEntry48: !Sub 'PN_PAPERCHANNEL_REFINEMENTDURATION=${RefinementDuration}'
         ContainerEnvEntry49: !Sub 'PN_PAPERCHANNEL_CLOUDWATCHMETRICCRON=${CloudwatchMetricCron}'
         ContainerEnvEntry50: !Sub 'PN_PAPERCHANNEL_REQUESTPAIDOVERRIDE=${RequestPaIdOverride}'

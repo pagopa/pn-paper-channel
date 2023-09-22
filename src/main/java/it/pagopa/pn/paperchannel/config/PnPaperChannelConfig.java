@@ -53,20 +53,18 @@ public class PnPaperChannelConfig {
     private Integer paperWeight;
     private Integer letterWeight;
     private String chargeCalculationMode;
-    private String originalPostmanAddressUsageMode;
     private Duration refinementDuration;
     private String requestPaIdOverride;
+
+    /**
+     * True se il failureDetailCode D01 deve essere mandato a delivery push (specificando anche l'indirizzo),
+     * false se invece viene salvato l'errore sulla tabella degli errori (as-is)
+     */
+    private boolean sendD01ToDeliveryPush;
 
     @PostConstruct
     public void init() {
         log.info("CONFIGURATIONS: {}", this);
-    }
-
-    public String getOriginalPostmanAddressUsageMode() {
-        if (StringUtils.isBlank(originalPostmanAddressUsageMode)){
-            return "PAPERSEND";
-        }
-        return this.originalPostmanAddressUsageMode;
     }
 
 
