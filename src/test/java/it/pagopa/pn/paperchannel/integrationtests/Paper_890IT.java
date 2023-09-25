@@ -346,7 +346,7 @@ class Paper_890IT extends BaseTest {
         log.info("Event: \n"+caturedSendEvent.getAllValues());
     }
 
-    @Test
+    @Test //FIXME dopo modifica a RECAG011BMessageHandler
     void test_890_deliverStockDossierClose_RECAG006C_BIS(){
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
@@ -430,7 +430,7 @@ class Paper_890IT extends BaseTest {
         assertEquals(StatusCodeEnum.OK, caturedSendEvent.getValue().getStatusCode());
         log.info("Event: \n"+caturedSendEvent.getAllValues());
     }
-    @Test
+    @Test //FIXME dopo modifica a RECAG011BMessageHandler
     void test_890_deliverStockDossierClose_RECAG007C_BIS(){
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
@@ -779,7 +779,7 @@ class Paper_890IT extends BaseTest {
     }
 
 
-    @Test
+    @Test //FIXME dopo modifica a RECAG011BMessageHandler
     void test_890_deliverStockDossierClose_RECAG011B_RECAG005C(){
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
@@ -796,7 +796,7 @@ class Paper_890IT extends BaseTest {
         assertEquals(StatusCodeEnum.OK, caturedSendEvent.getValue().getStatusCode());
     }
 
-    @Test
+    @Test //FIXME dopo modifica a RECAG011BMessageHandler
     void test_890_deliverStockDossierClose_RECAG011B_RECAG006C(){
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
@@ -814,7 +814,7 @@ class Paper_890IT extends BaseTest {
     }
 
 
-    @Test
+    @Test //FIXME dopo modifica a RECAG011BMessageHandler
     void test_890_refusedDossierClose_RECAG011B_RECAG007C(){
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
