@@ -646,12 +646,10 @@ components:
           type: string
         price:
           type: number
-          format: float
           maximum: 999999
           minimum: 0
         priceAdditional:
           type: number
-          format: float
           maximum: 999999
           minimum: 0
         productType:

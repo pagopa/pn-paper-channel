@@ -13,6 +13,7 @@ import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import lombok.CustomLog;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
@@ -37,6 +38,7 @@ public class ExternalChannelClientImpl extends BaseClient implements ExternalCha
     private final PaperMessagesApi paperMessagesApi;
 
 
+
     public ExternalChannelClientImpl(PnPaperChannelConfig pnPaperChannelConfig, PaperMessagesApi paperMessagesApi) {
         this.pnPaperChannelConfig = pnPaperChannelConfig;
         this.paperMessagesApi = paperMessagesApi;
@@ -50,6 +52,9 @@ public class ExternalChannelClientImpl extends BaseClient implements ExternalCha
         PaperEngageRequestDto dto = new PaperEngageRequestDto();
         dto.setRequestId(sendRequest.getRequestId());
         dto.setRequestPaId(sendRequest.getRequestPaId());
+        if(!(pnPaperChannelConfig.getRequestPaIdOverride().isBlank()) && pnPaperChannelConfig.getRequestPaIdOverride()!=null ){
+            dto.setRequestPaId(pnPaperChannelConfig.getRequestPaIdOverride());
+        }
         dto.setClientRequestTimeStamp(OffsetDateTime.now());
         if (sendRequest.getClientRequestTimeStamp() != null){
             dto.setClientRequestTimeStamp(DateUtils.getOffsetDateTimeFromDate(sendRequest.getClientRequestTimeStamp()));

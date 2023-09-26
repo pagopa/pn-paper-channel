@@ -3,11 +3,9 @@ package it.pagopa.pn.paperchannel.service.impl;
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.paperchannel.config.HttpConnector;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
-import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
-import it.pagopa.pn.paperchannel.exception.PnAddressFlowException;
-import it.pagopa.pn.paperchannel.exception.PnGenericException;
-import it.pagopa.pn.paperchannel.exception.PnRetryStorageException;
+import it.pagopa.pn.paperchannel.exception.*;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileDownloadResponseDto;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PrepareEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
 import it.pagopa.pn.paperchannel.mapper.AttachmentMapper;
@@ -20,10 +18,7 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.SafeStorageClient;
-import it.pagopa.pn.paperchannel.model.Address;
-import it.pagopa.pn.paperchannel.model.AttachmentInfo;
-import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
-import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
+import it.pagopa.pn.paperchannel.model.*;
 import it.pagopa.pn.paperchannel.service.PaperAddressService;
 import it.pagopa.pn.paperchannel.service.PaperAsyncService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
@@ -43,6 +38,7 @@ import java.time.Duration;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DOCUMENT_URL_NOT_FOUND;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.INVALID_SAFE_STORAGE;
 import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.TAKING_CHARGE;
+import static it.pagopa.pn.paperchannel.utils.Const.PREFIX_REQUEST_ID_SERVICE_DESK;
 
 @Service
 @CustomLog
@@ -68,7 +64,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
 
     @Override
     public Mono<PnDeliveryRequest> prepareAsync(PrepareAsyncRequest request){
-        String PROCESS_NAME = "Prepare Async";
+        final String PROCESS_NAME = "Prepare Async";
         log.logStartingProcess(PROCESS_NAME);
 
         String correlationId = request.getCorrelationId();
@@ -100,7 +96,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                 .flatMap(pnDeliveryRequest ->
                      this.addressDAO.findByRequestId(pnDeliveryRequest.getRequestId())
                             .flatMap(address -> {
-                                this.sqsSender.pushPrepareEvent(PrepareEventMapper.toPrepareEvent(pnDeliveryRequest, AddressMapper.toDTO(address), StatusCodeEnum.OK));
+                                this.pushPrepareEvent(pnDeliveryRequest, AddressMapper.toDTO(address), request.getClientId(), StatusCodeEnum.OK, null);
                                 return this.requestDeliveryDAO.updateData(pnDeliveryRequest);
                             })
                 )
@@ -115,12 +111,21 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                     return updateStatus(requestId, correlationId, statusDeliveryEnum)
                             .doOnNext(entity -> {
                                 if (entity.getStatusCode().equals(StatusDeliveryEnum.UNTRACEABLE.getCode())){
-                                    sendUnreachableEvent(entity);
+                                    sendUnreachableEvent(entity, request.getClientId(), getKOReason(ex));
                                     log.logEndingProcess(PROCESS_NAME);
                                 }
                             })
                             .flatMap(entity -> Mono.error(ex));
                 });
+    }
+
+    private KOReason getKOReason(Throwable ex) {
+        if(ex instanceof PnUntracebleException untEx) {
+            return untEx.getKoReason();
+        }
+        else {
+            return null;
+        }
     }
 
     private StatusDeliveryEnum mapper(ExceptionTypeEnum ex){
@@ -158,7 +163,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
     }
 
     private Mono<PnDeliveryRequest> checkAndUpdateAddress(PnDeliveryRequest pnDeliveryRequest, Address fromNationalRegistries, PrepareAsyncRequest queueModel){
-        String VALIDATION_NAME = "Check and update address";
+        final String VALIDATION_NAME = "Check and update address";
         return this.paperAddressService.getCorrectAddress(pnDeliveryRequest, fromNationalRegistries, queueModel)
                 .flatMap(newAddress -> {
                     log.logCheckingOutcome(VALIDATION_NAME, true);
@@ -170,10 +175,19 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                     return addressDAO.create(AddressMapper.toEntity(newAddress, pnDeliveryRequest.getRequestId(), AddressTypeEnum.RECEIVER_ADDRESS, paperChannelConfig))
                             .map(item -> pnDeliveryRequest);
                 })
-                .onErrorResume(PnGenericException.class, ex ->
-                    traceError(pnDeliveryRequest.getRequestId(), ex.getMessage(), "CHECK_ADDRESS_FLOW" )
-                        .then(Mono.defer(() -> Mono.error(ex)))
-                );
+                .onErrorResume(PnGenericException.class, ex -> handleAndThrowAgainError(ex, pnDeliveryRequest.getRequestId()));
+    }
+
+    private Mono<PnDeliveryRequest> handleAndThrowAgainError(PnGenericException ex, String requestId) {
+        if(ex instanceof PnUntracebleException) {
+            // se l'eccezione PnGenericException è di tipo UNTRACEABLE, ALLORA NON SCRIVO L'ERRORE SU DB
+            return Mono.error(ex);
+
+        }
+        else {
+            // ALTRIMENTI SCRIVO L'ERRORE SU DB
+            return traceError(requestId, ex.getMessage(), "CHECK_ADDRESS_FLOW").then(Mono.error(ex));
+        }
     }
 
     public Mono<FileDownloadResponseDto> getFileRecursive(Integer n, String fileKey, BigDecimal millis){
@@ -241,14 +255,25 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
     }
 
 
-    private void sendUnreachableEvent(PnDeliveryRequest request){
+    private void sendUnreachableEvent(PnDeliveryRequest request, String clientId, KOReason koReason){
         log.debug("Send Unreachable Event request id - {}, iun - {}", request.getRequestId(), request.getIun());
-        this.sqsSender.pushPrepareEvent(PrepareEventMapper.toPrepareEvent(request, null, StatusCodeEnum.KOUNREACHABLE));
+        this.pushPrepareEvent(request, null, clientId, StatusCodeEnum.KO, koReason);
     }
 
     private Mono<Void> traceError(String requestId, String error, String flowType){
         return this.paperRequestErrorDAO.created(requestId, error, flowType)
                 .then();
+    }
+
+    private void pushPrepareEvent(PnDeliveryRequest request, Address address, String clientId, StatusCodeEnum statusCode, KOReason koReason){
+        PrepareEvent prepareEvent = PrepareEventMapper.toPrepareEvent(request, address, statusCode, koReason);
+        if (request.getRequestId().contains(PREFIX_REQUEST_ID_SERVICE_DESK)){
+            log.info("Sending event to EventBridge: {}", prepareEvent);
+            this.sqsSender.pushPrepareEventOnEventBridge(clientId, prepareEvent);
+            return;
+        }
+        log.info("Sending event to delivery-push: {}", prepareEvent);
+        this.sqsSender.pushPrepareEvent(prepareEvent);
     }
 
 }

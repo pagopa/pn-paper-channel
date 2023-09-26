@@ -4,6 +4,9 @@ import lombok.Getter;
 
 @Getter
 public enum ExceptionTypeEnum{
+    CLIENT_ID_NOT_PRESENT("CLIENT_ID_NOT_PRESENT", "Client non censito."),
+    CLIENT_ID_EMPTY("CLIENT_ID_EMPTY", "Non è stato inserito alcun valore per l'header clientID"),
+    CLIENT_ID_NOT_IN_CONTEXT("CLIENT_ID_NOT_IN_CONTEXT", "Non è stato possibile recuperare il valore del client id nel contesto"),
     DELIVERY_REQUEST_NOT_EXIST("DELIVERY_REQUEST_NOT_EXIST", "La richiesta non esiste"),
     ADDRESS_NOT_EXIST("ADDRESS_NOT_EXIST", "L'indirizzo non è presente a DB"),
     ADDRESS_MANAGER_ERROR("ADDRESS_MANAGER_ERROR", "Problemi con l'indirizzo"),
@@ -56,7 +59,8 @@ public enum ExceptionTypeEnum{
     INVALID_VALUE_FROM_PROPS("INVALID_VALUE_FROM_PROPS", "Il valore della proprietà è diverso da quello atteso"),
     INVALID_SAFE_STORAGE("INVALID_SAFE_STORAGE", "Il Safe Storage selezionato è inesistente."),
     WRONG_EVENT_ORDER("WRONG_EVENT_ORDER", "Uno o più eventi precedenti non sono stati trovati"),
-    WRONG_RECAG012_DATA("WRONG_RECAG012_DATA", "E' stato già trovato l'evento RECAG012 in precedenza, con dati differenti");
+    WRONG_RECAG012_DATA("WRONG_RECAG012_DATA", "E' stato già trovato l'evento RECAG012 in precedenza, con dati differenti"),
+    RESPONSE_NULL_FROM_DEDUPLICATION("RESPONSE_NULL_FROM_DEDUPLICATION", "La deduplication ha risposto con normalizedAddress null");
 
     private final String title;
     private final String message;

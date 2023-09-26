@@ -16,6 +16,7 @@ import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.service.impl.PaperMessagesServiceImpl;
+import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.Utility;
 import it.pagopa.pn.paperchannel.validator.PrepareRequestValidator;
 import it.pagopa.pn.paperchannel.validator.SendRequestValidator;
@@ -31,11 +32,14 @@ import org.springframework.http.HttpStatus;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.timeout;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class PaperMessagesServiceTest {
@@ -471,14 +475,11 @@ class PaperMessagesServiceTest {
                 }).verify();
     }
 
-    @Test
-    void executionPaperWithStatusTakingChargeTest() {
+    private void mocksExecutionPaperOK() {
         PnDeliveryRequest request = getPnDeliveryRequest();
         request.setStatusCode(StatusDeliveryEnum.TAKING_CHARGE.getCode());
 
-        SendRequest sendRequest = getRequest("TST-IOR.2332");
-        sendRequest.setRequestPaId("request-pad-id");
-        sendRequest.setPrintType("FRONTE-RETRO");
+
 
         //MOCK GET DELIVERY REQUEST
         Mockito.when(requestDeliveryDAO.getByRequestId("TST-IOR.2332"))
@@ -505,16 +506,58 @@ class PaperMessagesServiceTest {
                 .thenReturn(Mono.just(getNationalCost()));
 
         Mockito.when(pnPaperChannelConfig.getChargeCalculationMode()).thenReturn("AAR");
+    }
 
-        StepVerifier.create(paperMessagesService.executionPaper("TST-IOR.2332", sendRequest))
-                .expectNextMatches((response) -> {
-                    // price 1 and additionalPrice 2 getNationalCost()
-                    // attachments 1 and number of page 3
-                    assertEquals(100,response.getAmount());
-                    assertEquals(3, response.getNumberOfPages());
-                    return true;
-                }).verifyComplete();
+    @Test
+    void executionPaperWithoutContextAndWithStatusTakingChargeTest() {
+        mocksExecutionPaperOK();
 
+        SendRequest sendRequest = getRequest("TST-IOR.2332");
+        sendRequest.setRequestPaId("request-pad-id");
+        sendRequest.setPrintType("FRONTE-RETRO");
+
+        /* TEST WITHOUT CONTEXT SETTING */
+        SendResponse response = paperMessagesService.executionPaper("TST-IOR.2332", sendRequest)
+                .block();
+
+        ArgumentCaptor<SendRequest> captureSendRequest = ArgumentCaptor.forClass(SendRequest.class);
+
+        // verifico che è stato invocato externalChannel
+        Mockito.verify(externalChannelClient, timeout(2000).times(1)).sendEngageRequest(captureSendRequest.capture(), Mockito.any());
+
+        // verifico il requestID da inviare ad ExtChannel
+        assertNotNull(captureSendRequest.getValue());
+        assertEquals("TST-IOR.2332.PCRETRY_0", captureSendRequest.getValue().getRequestId());
+
+        assertEquals(100,response.getAmount());
+        assertEquals(3, response.getNumberOfPages());
+        /* -----------------------------  */
+    }
+    @Test
+    void executionPaperWithContextAndWithStatusTakingChargeTest() {
+        mocksExecutionPaperOK();
+
+        SendRequest sendRequest = getRequest("TST-IOR.2332");
+        sendRequest.setRequestPaId("request-pad-id");
+        sendRequest.setPrintType("FRONTE-RETRO");
+
+        /* TEST WITH CONTEXT SETTING */
+        SendResponse response = paperMessagesService.executionPaper("TST-IOR.2332", sendRequest)
+                .contextWrite(ctx -> ctx.put(Const.CONTEXT_KEY_PREFIX_CLIENT_ID, "001"))
+                .block();
+
+        ArgumentCaptor<SendRequest> captureSendRequest = ArgumentCaptor.forClass(SendRequest.class);
+
+        // verifico che è stato invocato externalChannel
+        verify(externalChannelClient, timeout(2000).times(1)).sendEngageRequest(captureSendRequest.capture(), Mockito.any());
+
+        // verifico il nuovo requestID da inviare ad ExtChannel - {CLIENTID}.{REQUESTID}.PCRETRY_{ATTEMPT}
+        assertNotNull(captureSendRequest.getValue());
+        assertEquals("001.TST-IOR.2332.PCRETRY_0", captureSendRequest.getValue().getRequestId());
+
+        assertEquals(100,response.getAmount());
+        assertEquals(3, response.getNumberOfPages());
+        /* ----------------------------- */
     }
 
     @Test
@@ -606,7 +649,7 @@ class PaperMessagesServiceTest {
                 .expectNextMatches((response) -> {
                     // price 1 and additionalPrice 2 getNationalCost()
                     // attachments 1 and number of page 3
-                    assertEquals(200,response.getAmount());
+                    assertEquals(223,response.getAmount());
                     assertEquals(3, response.getNumberOfPages());
                     return true;
                 }).verifyComplete();
@@ -680,6 +723,7 @@ class PaperMessagesServiceTest {
         sendRequest.setReceiverAddress(getAnalogAddress());
         return sendRequest;
     }
+
     private PnDeliveryRequest getPnDeliveryRequest(){
         PnDeliveryRequest deliveryRequest= new PnDeliveryRequest();
         List<PnAttachmentInfo> attachmentUrls = new ArrayList<>();
@@ -779,15 +823,15 @@ class PaperMessagesServiceTest {
 
     private CostDTO getNationalCost() {
         CostDTO dto = new CostDTO();
-        dto.setPrice(1.00F);
-        dto.setPriceAdditional(2.00F);
+        dto.setPrice(BigDecimal.valueOf(1.00));
+        dto.setPriceAdditional(BigDecimal.valueOf(2.00));
         return dto;
     }
 
     private CostDTO getInternationalCost() {
         CostDTO dto = new CostDTO();
-        dto.setPrice(2.00F);
-        dto.setPriceAdditional(2.00F);
+        dto.setPrice(BigDecimal.valueOf(2.23));
+        dto.setPriceAdditional(BigDecimal.valueOf(1.97));
         return dto;
     }
 
@@ -833,6 +877,4 @@ class PaperMessagesServiceTest {
         pnAddress.setNameRow2("Ettore");
         return pnAddress;
     }
-
-
 }

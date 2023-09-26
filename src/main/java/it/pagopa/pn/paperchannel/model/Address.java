@@ -1,13 +1,9 @@
 package it.pagopa.pn.paperchannel.model;
 
 import it.pagopa.pn.paperchannel.utils.Utility;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
-@Getter
-@Setter
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class Address {

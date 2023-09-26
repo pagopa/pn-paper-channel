@@ -48,7 +48,6 @@ public class LocalStackTestConfig {
     static {
         localStack.start();
         System.setProperty("aws.kms.keyId", kmsKeyCreation(localStack));
-        System.setProperty("aws.kms.endpoint", localStack.getEndpointOverride(KMS).toString());
         System.setProperty("aws.endpoint-url", localStack.getEndpointOverride(DYNAMODB).toString());
 
         try {
