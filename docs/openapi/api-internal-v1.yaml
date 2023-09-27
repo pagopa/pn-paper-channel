@@ -198,7 +198,10 @@ paths:
         \ ma stessi parametri passati, si può tornare il codice 200 se la richiesta\
         \ è già stata elaborata (o si conosce già l'esito), o il 204 se è ancora in\
         \ fase di elaborazione. I dati relativi alla richiesta vanno mantenuti in\
-        \ forma anonima tramite opportuno hash."
+        \ forma anonima tramite opportuno hash. \
+        \ E' possibile riceve al più un url relativo a f24, relativo ad un set di\
+        \ documenti f24 da generare. La risposta alla prepare, conterrà la lista\
+        \ delle fileKey di safestorage generate da pn-f24"
       operationId: sendPaperPrepareRequest
       parameters:
         - name: requestId

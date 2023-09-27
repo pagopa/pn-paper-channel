@@ -113,6 +113,12 @@ components:
         productType:
           type: string
           description: Il productType effettivo che da usare per l'invio
+        replacedF24AttachmentUrls:
+          type: array
+          description: lista di url di fileKey safestorage in sostituzione all'eventuale url f24 passato
+          items:
+            type: string
+            description: url con fileKey di safestorage
       allOf:
       - $ref: '#/components/schemas/PaperEvent'
 
