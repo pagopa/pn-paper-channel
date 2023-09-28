@@ -26,11 +26,13 @@ public class PnPaperChannelConfig {
     private String clientSafeStorageBasepath;
     private String clientNationalRegistriesBasepath;
     private String clientExternalChannelBasepath;
+    private String clientF24Basepath;
     private String clientDataVaultBasepath;
     private String clientAddressManagerBasepath;
     private String addressManagerCxId;
     private String addressManagerApiKey;
     private String safeStorageCxId;
+    private String f24CxId;
     private String xPagopaExtchCxId;
     private String nationalRegistryCxId;
     private String queueDeliveryPush;

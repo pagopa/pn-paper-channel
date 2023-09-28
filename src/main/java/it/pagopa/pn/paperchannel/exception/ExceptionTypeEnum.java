@@ -60,7 +60,8 @@ public enum ExceptionTypeEnum{
     INVALID_SAFE_STORAGE("INVALID_SAFE_STORAGE", "Il Safe Storage selezionato è inesistente."),
     WRONG_EVENT_ORDER("WRONG_EVENT_ORDER", "Uno o più eventi precedenti non sono stati trovati"),
     WRONG_RECAG012_DATA("WRONG_RECAG012_DATA", "E' stato già trovato l'evento RECAG012 in precedenza, con dati differenti"),
-    RESPONSE_NULL_FROM_DEDUPLICATION("RESPONSE_NULL_FROM_DEDUPLICATION", "La deduplication ha risposto con normalizedAddress null");
+    RESPONSE_NULL_FROM_DEDUPLICATION("RESPONSE_NULL_FROM_DEDUPLICATION", "La deduplication ha risposto con normalizedAddress null"),
+    F24_ERROR("F24_ERROR", "Problemi con la generazione dei PDF F24");
 
     private final String title;
     private final String message;
