@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -53,38 +54,6 @@ class Complex890MessageHandlerTest {
         handler = new Complex890MessageHandler(sqsSender, eventMetaDAO, metaDematCleaner, Duration.of(DAYS_REFINEMENT, ChronoUnit.DAYS));
     }
 
-
-    //CASO 4
-    @Test
-    void handleMessageCollectionEmptyTest() {
-        OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
-        String requestId = "requestId";
-        String metadataRequestid = buildMetaRequestId(requestId);
-        PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
-                .requestId(requestId)
-                .statusCode("RECAG005C")
-                .statusDateTime(instant)
-                .clientRequestTimeStamp(instant)
-                .deliveryFailureCause("M02");
-
-        PnDeliveryRequest entity = new PnDeliveryRequest();
-        entity.setRequestId("requestId");
-        entity.setStatusCode("statusDetail");
-        entity.setStatusDetail(ExternalChannelCodeEnum.getStatusCode(paperRequest.getStatusCode()));
-
-        when(eventMetaDAO.findAllByRequestId(metadataRequestid)).thenReturn(Flux.empty());
-
-        assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
-
-        verify(eventMetaDAO, times(0)).createOrUpdate(any(PnEventMeta.class));
-
-        //lo statusCode dell'entity è uguale a quello della trasformazione fatta dall' ExternalChannelCodeEnum nella fase di update Entity
-        assertThat(entity.getStatusDetail()).isEqualTo(StatusCodeEnum.OK.getValue());
-        SendEvent sendEvent = SendEventMapper.createSendEventMessage(entity, paperRequest);
-
-        verify(sqsSender, times(1)).pushSendEvent(sendEvent);
-    }
-
     //CASO 1.ii
     @Test
     void handleMessageMETAPNAG012PresentMETARECAG012NotPresentTest() {
@@ -109,7 +78,9 @@ class Complex890MessageHandlerTest {
 
         when(eventMetaDAO.findAllByRequestId(metadataRequestid)).thenReturn(Flux.just(pnEventMetaPNAG012));
 
-        assertThrows(PnGenericException.class, () -> handler.handleMessage(entity, paperRequest).block());
+        StepVerifier.create(handler.handleMessage(entity, paperRequest))
+                        .expectError(PnGenericException.class)
+                                .verify();
 
         verify(eventMetaDAO, times(0)).createOrUpdate(any(PnEventMeta.class));
 

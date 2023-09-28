@@ -261,7 +261,9 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
         assertNotNull(eventDematFromDB);
 
         // verifico che il flusso è stato completato con successo
-        assertThrows(PnGenericException.class, () -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());
+        StepVerifier.create(paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0))
+                        .expectError(PnGenericException.class)
+                                .verify();
 
         // verifico che è stato inviato un evento a delivery-push
         verify(sqsSender, timeout(2000).times(0)).pushSendEvent(any(SendEvent.class));
@@ -396,7 +398,9 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
         assertNotNull(eventDematFromDB);
 
         // verifico che il flusso è stato completato con successo
-        assertThrows(PnGenericException.class, () -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());
+        StepVerifier.create(paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0))
+                        .expectError(PnGenericException.class)
+                                .verify();
 
         // verifico che non è stato inviato un evento a delivery-push
         verify(sqsSender, timeout(2000).times(0)).pushSendEvent(any(SendEvent.class));
@@ -585,47 +589,6 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
         assertThat(resultMeta).isEmpty();
         assertThat(resultDemat).isEmpty();
 
-
-    }
-
-    // CASO 4
-    @Test
-    void testRECAG005CorRECAG006CorRECAG007CCaseFourEvent() {
-        final String requestId = "PREPARE_ANALOG_DOMICILE.IUN_MUMR-VQMP-LDNZ-202303-H-1.RECINDEX_0.SENTATTEMPTMADE_0";
-        PnDeliveryRequest pnDeliveryRequest = createPnDeliveryRequest();
-
-
-
-        PaperProgressStatusEventDto analogMail = new PaperProgressStatusEventDto();
-        analogMail.requestId(requestId);
-        analogMail.setClientRequestTimeStamp(OffsetDateTime.now());
-        analogMail.setStatusDateTime(OffsetDateTime.now());
-        analogMail.setStatusCode("RECAG005C");
-        analogMail.setProductType("RS");
-        analogMail.setStatusDescription("In progress");
-
-
-        SingleStatusUpdateDto extChannelMessage = new SingleStatusUpdateDto();
-        extChannelMessage.setAnalogMail(analogMail);
-
-        PnDeliveryRequest afterSetForUpdate = createPnDeliveryRequest();
-        afterSetForUpdate.setStatusDetail(ExternalChannelCodeEnum.getStatusCode(extChannelMessage.getAnalogMail().getStatusCode()));
-        afterSetForUpdate.setStatusDescription(extChannelMessage.getAnalogMail().getProductType()
-                .concat(" - ").concat(pnDeliveryRequest.getStatusCode()).concat(" - ").concat(extChannelMessage.getAnalogMail().getStatusDescription()));
-        afterSetForUpdate.setStatusDate(DateUtils.formatDate(extChannelMessage.getAnalogMail().getStatusDateTime().toInstant()));
-        afterSetForUpdate.setStatusCode(extChannelMessage.getAnalogMail().getStatusCode());
-        when(requestDeliveryDAO.getByRequestId(anyString())).thenReturn(Mono.just(pnDeliveryRequest));
-        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
-
-        // verifico che il flusso è stato completato con successo
-        assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());
-
-        //verifico che venga mandato a delivery push lo status mappato dal ExternalChannelCodeEnum
-        ArgumentCaptor<SendEvent> sendEventArgumentCaptor = ArgumentCaptor.forClass(SendEvent.class);
-        verify(sqsSender, times(1)).pushSendEvent(sendEventArgumentCaptor.capture());
-
-        SendEvent sendEvent = sendEventArgumentCaptor.getValue();
-        assertThat(sendEvent.getStatusCode().getValue()).isEqualTo(ExternalChannelCodeEnum.getStatusCode(analogMail.getStatusCode()));
 
     }
 

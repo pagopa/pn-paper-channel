@@ -247,19 +247,24 @@ class Paper_890IT extends BaseTest {
 
     @Test
     void test_890_deliverStockDossierClose_RECAG005C(){
+        StackWalker walker = StackWalker.getInstance();
+        String methodName = walker.walk(frames -> frames
+                .findFirst()
+                .map(StackWalker.StackFrame::getMethodName)).orElse("");
         String iun = UUID.randomUUID().toString();
+        generateEvent("RECAG011A","","",null,"", Instant.parse("2023-03-05T17:07:00.000Z"), iun);
         generateEvent("RECAG011B","","", List.of("ARCAD"),"", null, iun);
 
-        generateEvent("RECAG005A","","",null,"", null, iun);
-        generateEvent("RECAG005B","","",List.of("23L"),"", null, iun);
+        generateEvent("RECAG005A","","",null,"", Instant.parse("2023-03-07T17:07:00.000Z"), iun);
+        generateEvent("RECAG005B","","",List.of("23L"),"", Instant.parse("2023-03-07T17:07:00.000Z"), iun);
 
-        generateEvent("RECAG005C","","",null,"", null, iun);
+        generateEvent("RECAG005C","","",null,"", Instant.parse("2023-03-07T17:07:00.000Z"), iun);
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
-        verify(sqsSender, timeout(2000).times(2)).pushSendEvent(caturedSendEvent.capture());
+        verify(sqsSender, timeout(2000).times(3)).pushSendEvent(caturedSendEvent.capture());
 
+        log.info(methodName + " - Event: \n"+caturedSendEvent.getAllValues());
         assertEquals(StatusCodeEnum.OK, caturedSendEvent.getValue().getStatusCode());
-        log.info("Event: \n"+caturedSendEvent.getAllValues());
     }
 
     @Test
@@ -325,38 +330,72 @@ class Paper_890IT extends BaseTest {
 
     @Test
     void test_890_deliverStockDossierClose_RECAG006C_no11B(){
+        StackWalker walker = StackWalker.getInstance();
+        String methodName = walker.walk(frames -> frames
+                .findFirst()
+                .map(StackWalker.StackFrame::getMethodName)).orElseGet(() -> "");
+
         String iun = UUID.randomUUID().toString();
-        generateEvent("RECAG006A","","",null,"", null, iun);
-        generateEvent("RECAG006B","","", List.of("ARCAD","23L"),"", null, iun);
-        generateEvent("RECAG006C","","",null,"", null, iun);
+        generateEvent("RECAG011A","","",null,"", Instant.parse("2023-03-05T17:07:00.000Z"), iun);
+        generateEvent("RECAG006A","","",null,"", Instant.parse("2023-03-07T17:07:00.000Z"), iun);
+        generateEvent("RECAG006B","","", List.of("ARCAD","23L"),"", Instant.parse("2023-03-07T17:07:00.000Z"), iun);
+        generateEvent("RECAG006C","","",null,"", Instant.parse("2023-03-07T17:07:00.000Z"), iun);
 
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
-        verify(sqsSender, timeout(2000).times(2)).pushSendEvent(caturedSendEvent.capture());
+        verify(sqsSender, timeout(2000).times(3)).pushSendEvent(caturedSendEvent.capture());
 
+        log.info(methodName + " - Event: \n"+caturedSendEvent.getAllValues());
         assertEquals(StatusCodeEnum.OK, caturedSendEvent.getValue().getStatusCode());
-        log.info("Event: \n"+caturedSendEvent.getAllValues());
+    }
+
+    @Test
+    void test_890_deliverStockDossierClose_RECAG006C_no11B_After10Days(){
+        StackWalker walker = StackWalker.getInstance();
+        String methodName = walker.walk(frames -> frames
+                .findFirst()
+                .map(StackWalker.StackFrame::getMethodName)).orElseGet(() -> "");
+
+        String iun = UUID.randomUUID().toString();
+        generateEvent("RECAG011A","","",null,"", Instant.parse("2023-03-05T17:07:00.000Z"), iun);
+        generateEvent("RECAG006A","","",null,"", Instant.parse("2023-03-17T17:07:00.000Z"), iun);
+        generateEvent("RECAG006B","","", List.of("ARCAD","23L"),"", Instant.parse("2023-03-17T17:07:00.000Z"), iun);
+        generateEvent("RECAG006C","","",null,"", Instant.parse("2023-03-17T17:07:00.000Z"), iun);
+
+        ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
+
+        verify(sqsSender, timeout(2000).times(4)).pushSendEvent(caturedSendEvent.capture());
+
+        log.info(methodName + " - Event: \n"+caturedSendEvent.getAllValues());
+        assertEquals("PNAG012", caturedSendEvent.getAllValues().get(caturedSendEvent.getAllValues().size() - 2).getStatusDetail());
+        assertEquals(StatusCodeEnum.OK, caturedSendEvent.getAllValues().get(caturedSendEvent.getAllValues().size() - 2).getStatusCode());
+        assertEquals(StatusCodeEnum.PROGRESS, caturedSendEvent.getValue().getStatusCode());
     }
 
 
     @Test
     void test_890_deliverStockDossierClose_RECAG006C(){
+        StackWalker walker = StackWalker.getInstance();
+        String methodName = walker.walk(frames -> frames
+                .findFirst()
+                .map(StackWalker.StackFrame::getMethodName)).orElse("");
         String iun = UUID.randomUUID().toString();
+        generateEvent("RECAG011A","","",null,"", Instant.parse("2023-03-05T17:07:00.000Z"), iun);
         generateEvent("RECAG011B","","", List.of("ARCAD"),"", null, iun);
         //DA RITESTARE SENZA 11B con RECAG006B con ARCAD/CAD
-        generateEvent("RECAG006A","","",null,"", null, iun);
-        generateEvent("RECAG006B","","", List.of("23L"),"", null, iun);
-        generateEvent("RECAG006C","","",null,"", null, iun);
+        generateEvent("RECAG006A","","",null,"", Instant.parse("2023-03-07T17:07:00.000Z"), iun);
+        generateEvent("RECAG006B","","", List.of("23L"),"", Instant.parse("2023-03-07T17:07:00.000Z"), iun);
+        generateEvent("RECAG006C","","",null,"", Instant.parse("2023-03-07T17:07:00.000Z"), iun);
 
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
-        verify(sqsSender, timeout(2000).times(2)).pushSendEvent(caturedSendEvent.capture());
+        verify(sqsSender, timeout(2000).times(3)).pushSendEvent(caturedSendEvent.capture());
 
+        log.info(methodName + " - Event: \n"+caturedSendEvent.getAllValues());
         assertEquals(StatusCodeEnum.OK, caturedSendEvent.getValue().getStatusCode());
-        log.info("Event: \n"+caturedSendEvent.getAllValues());
     }
 
-    @Test //FIXME dopo modifica a RECAG011BMessageHandler
+    @Test
     void test_890_deliverStockDossierClose_RECAG006C_BIS(){
         String iun = UUID.randomUUID().toString();
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
@@ -418,12 +457,13 @@ class Paper_890IT extends BaseTest {
     @Test
     void test_890_refusedDossierClose_RECAG007C_no11B(){
         String iun = UUID.randomUUID().toString();
-        generateEvent("RECAG007A","","",null,"", null, iun);
-        generateEvent("RECAG007B","","", List.of("Plico","ARCAD"),"", null, iun);
-        generateEvent("RECAG007C","","",null,"", null, iun);
+        generateEvent("RECAG011A","","",null,"", Instant.parse("2023-03-05T17:07:00.000Z"), iun);
+        generateEvent("RECAG007A","","",null,"", Instant.parse("2023-03-07T17:07:00.000Z"), iun);
+        generateEvent("RECAG007B","","", List.of("Plico","ARCAD"),"", Instant.parse("2023-03-07T17:07:00.000Z"), iun);
+        generateEvent("RECAG007C","","",null,"", Instant.parse("2023-03-07T17:07:00.000Z"), iun);
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
-        verify(sqsSender, timeout(2000).times(2)).pushSendEvent(caturedSendEvent.capture());
+        verify(sqsSender, timeout(2000).times(3)).pushSendEvent(caturedSendEvent.capture());
 
         assertEquals(StatusCodeEnum.OK, caturedSendEvent.getValue().getStatusCode());
         log.info("Event: \n"+caturedSendEvent.getAllValues());
@@ -431,19 +471,20 @@ class Paper_890IT extends BaseTest {
     @Test
     void test_890_refusedDossierClose_RECAG007C(){
         String iun = UUID.randomUUID().toString();
+        generateEvent("RECAG011A","","",null,"", Instant.parse("2023-03-05T17:07:00.000Z"), iun);
         generateEvent("RECAG011B","","", List.of("ARCAD"),"", null, iun);
 
-        generateEvent("RECAG007A","","",null,"", null, iun);
-        generateEvent("RECAG007B","","", List.of("Plico"),"", null, iun);
-        generateEvent("RECAG007C","","",null,"", null, iun);
+        generateEvent("RECAG007A","","",null,"", Instant.parse("2023-03-07T17:07:00.000Z"), iun);
+        generateEvent("RECAG007B","","", List.of("Plico"),"", Instant.parse("2023-03-07T17:07:00.000Z"), iun);
+        generateEvent("RECAG007C","","",null,"", Instant.parse("2023-03-07T17:07:00.000Z"), iun);
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
-        verify(sqsSender, timeout(2000).times(2)).pushSendEvent(caturedSendEvent.capture());
+        verify(sqsSender, timeout(2000).times(3)).pushSendEvent(caturedSendEvent.capture());
 
         assertEquals(StatusCodeEnum.OK, caturedSendEvent.getValue().getStatusCode());
         log.info("Event: \n"+caturedSendEvent.getAllValues());
     }
-    @Test //FIXME dopo modifica a RECAG011BMessageHandler
+    @Test
     void test_890_deliverStockDossierClose_RECAG007C_BIS(){
         String iun = UUID.randomUUID().toString();
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
@@ -451,11 +492,11 @@ class Paper_890IT extends BaseTest {
         generateEvent("RECAG011A","","",null,"", Instant.parse("2023-03-05T17:07:00.000Z"), iun);
 
         generateEvent("RECAG011B","","", List.of("ARCAD"),"", null, iun);
-        generateEvent("RECAG012","","", null,"", null, iun);
+//        generateEvent("RECAG012","","", null,"", null, iun); resiliente al wrong order
 
         generateEvent("RECAG007A","","",null,"", Instant.parse("2023-03-16T17:07:00.000Z"), iun);
-        generateEvent("RECAG007B","","",List.of("23L"),"", null, iun);
-        generateEvent("RECAG007C","","",null,"", null, iun);
+        generateEvent("RECAG007B","","",List.of("23L"),"", Instant.parse("2023-03-16T17:07:00.000Z"), iun);
+        generateEvent("RECAG007C","","",null,"", Instant.parse("2023-03-16T17:07:00.000Z"), iun);
 
         verify(sqsSender, timeout(2000).times(4)).pushSendEvent(caturedSendEvent.capture());
         List<SendEvent> allValues = caturedSendEvent.getAllValues();
@@ -807,57 +848,67 @@ class Paper_890IT extends BaseTest {
     }
 
 
-    @Test //FIXME dopo modifica a RECAG011BMessageHandler
+    @Test
     void test_890_deliverStockDossierClose_RECAG011B_RECAG005C(){
+        StackWalker walker = StackWalker.getInstance();
+        String methodName = walker.walk(frames -> frames
+                .findFirst()
+                .map(StackWalker.StackFrame::getMethodName)).orElse("");
+
         String iun = UUID.randomUUID().toString();
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
-        generateEvent("RECAG011B","","", Arrays.asList("23L","CAD"),"", null, iun);
+        generateEvent("RECAG011A","","",null,"", Instant.parse("2023-03-05T17:07:00.000Z"), iun);
+        generateEvent("RECAG011B","","", List.of("ARCAD"),"", null, iun);
+        generateEvent("RECAG005A","","",null,"", Instant.parse("2023-03-07T17:07:00.000Z"), iun);
+        generateEvent("RECAG005B","","", List.of("23L"),"", Instant.parse("2023-03-07T17:07:00.000Z"), iun);
+        generateEvent("RECAG005C","","",null,"", Instant.parse("2023-03-07T17:07:00.000Z"), iun);
 
-        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
-        log.info("Event: \n"+caturedSendEvent.getAllValues());
-
-        generateEvent("RECAG005C","","",null,"", null, iun);
-
-        verify(sqsSender, timeout(2000).times(2)).pushSendEvent(caturedSendEvent.capture());
-        log.info("Event: \n"+caturedSendEvent.getAllValues());
+        verify(sqsSender, timeout(2000).times(3)).pushSendEvent(caturedSendEvent.capture());
+        log.info(methodName + "- Event: \n"+caturedSendEvent.getAllValues());
 
         assertEquals(StatusCodeEnum.OK, caturedSendEvent.getValue().getStatusCode());
     }
 
-    @Test //FIXME dopo modifica a RECAG011BMessageHandler
+    @Test
     void test_890_deliverStockDossierClose_RECAG011B_RECAG006C(){
+        StackWalker walker = StackWalker.getInstance();
+        String methodName = walker.walk(frames -> frames
+                .findFirst()
+                .map(StackWalker.StackFrame::getMethodName)).orElse("");
         String iun = UUID.randomUUID().toString();
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
-        generateEvent("RECAG011B","","", Arrays.asList("23L","CAD"),"", null, iun);
+        generateEvent("RECAG011A","","",null,"", Instant.parse("2023-03-05T17:07:00.000Z"), iun);
+        generateEvent("RECAG011B","","", List.of("CAD"),"", null, iun);
+        generateEvent("RECAG006A","","",null,"", Instant.parse("2023-03-07T17:07:00.000Z"), iun);
+        generateEvent("RECAG006B","","", List.of("23L"),"", Instant.parse("2023-03-07T17:07:00.000Z"), iun);
+        generateEvent("RECAG006C","","",null,"", Instant.parse("2023-03-07T17:07:00.000Z"), iun);
 
-        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
-        log.info("Event: \n"+caturedSendEvent.getAllValues());
-
-        generateEvent("RECAG006C","","",null,"", null, iun);
-
-        verify(sqsSender, timeout(2000).times(2)).pushSendEvent(caturedSendEvent.capture());
-        log.info("Event: \n"+caturedSendEvent.getAllValues());
+        verify(sqsSender, timeout(2000).times(3)).pushSendEvent(caturedSendEvent.capture());
+        log.info(methodName + " - Event: \n"+caturedSendEvent.getAllValues());
 
         assertEquals(StatusCodeEnum.OK, caturedSendEvent.getValue().getStatusCode());
     }
 
 
-    @Test //FIXME dopo modifica a RECAG011BMessageHandler
+    @Test
     void test_890_refusedDossierClose_RECAG011B_RECAG007C(){
+        StackWalker walker = StackWalker.getInstance();
+        String methodName = walker.walk(frames -> frames
+                .findFirst()
+                .map(StackWalker.StackFrame::getMethodName)).orElse("");
         String iun = UUID.randomUUID().toString();
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
-        generateEvent("RECAG011B","","",Arrays.asList("23L","CAD"),"", null, iun);
+        generateEvent("RECAG011A","","",null,"", Instant.parse("2023-03-05T17:07:00.000Z"), iun);
+        generateEvent("RECAG011B","","",Arrays.asList("CAD"),"", null, iun);
+        generateEvent("RECAG007A","","",null,"", Instant.parse("2023-03-07T17:07:00.000Z"), iun);
+        generateEvent("RECAG007B","","", List.of("23L"),"", Instant.parse("2023-03-07T17:07:00.000Z"), iun);
+        generateEvent("RECAG007C","","",null,"", Instant.parse("2023-03-07T17:07:00.000Z"), iun);
 
-        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
-        log.info("Event: \n"+caturedSendEvent.getAllValues());
-
-        generateEvent("RECAG007C","","",null,"", null, iun);
-
-        verify(sqsSender, timeout(2000).times(2)).pushSendEvent(caturedSendEvent.capture());
-        log.info("Event: \n"+caturedSendEvent.getAllValues());
+        verify(sqsSender, timeout(2000).times(3)).pushSendEvent(caturedSendEvent.capture());
+        log.info(methodName + " - Event: \n"+caturedSendEvent.getAllValues());
 
         assertEquals(StatusCodeEnum.OK, caturedSendEvent.getValue().getStatusCode());
     }
