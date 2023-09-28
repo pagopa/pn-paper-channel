@@ -5,6 +5,5 @@ import reactor.core.publisher.Mono;
 
 public interface F24Client {
 
-    Mono<RequestAcceptedDto> preparePDF(String requestId, String setId, int recipientIndex, Integer cost );
-
+    Mono<RequestAcceptedDto> preparePDF(String requestId, String setId, String recipientIndex, Integer cost);
 }
