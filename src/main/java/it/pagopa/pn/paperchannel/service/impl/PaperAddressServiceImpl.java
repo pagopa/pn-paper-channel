@@ -28,6 +28,7 @@ import java.util.UUID;
 
 import static it.pagopa.pn.commons.utils.MDCUtils.MDC_TRACE_ID_KEY;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
+import static it.pagopa.pn.paperchannel.utils.Utility.DEDUPLICATION_REQUEST_PREFIX;
 
 @Slf4j
 @Service
@@ -117,8 +118,8 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
     private Mono<Address> flowPostmanAddress(PnDeliveryRequest deliveryRequest, Address discovered, Address firstAttempt){
         log.info("flowPostmanAddress for requestId {}", deliveryRequest.getRequestId());
         logAuditBefore("prepare requestId = %s, relatedRequestId = %s Discovered and First address is Equals ?", deliveryRequest);
-
-        return this.addressManagerClient.deduplicates(UUID.randomUUID().toString(), firstAttempt, discovered)
+        var deduplicationRequestId = DEDUPLICATION_REQUEST_PREFIX + deliveryRequest.getRequestId();
+        return this.addressManagerClient.deduplicates(deduplicationRequestId, firstAttempt, discovered)
                 .flatMap(deduplicatesResponse -> {
                     logAuditBefore("prepare requestId = %s, relatedRequestId = %s Deduplicates service has DeduplicatesResponse.error empty ?", deliveryRequest);
                     if (StringUtils.isNotBlank(deduplicatesResponse.getError())){
