@@ -26,6 +26,7 @@ import it.pagopa.pn.paperchannel.model.KOReason;
 import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.service.impl.PrepareAsyncServiceImpl;
+import it.pagopa.pn.paperchannel.utils.PaperCalculatorUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -35,6 +36,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -55,6 +57,10 @@ class PrepareAsyncServiceTest {
     @InjectMocks
     private PrepareAsyncServiceImpl prepareAsyncService;
     @Mock
+    private PaperCalculatorUtils paperCalculatorUtils;
+    @Mock
+    private PaperTenderService paperTenderService;
+    @Mock
     private AddressDAO addressDAO;
     @Mock
     private RequestDeliveryDAO requestDeliveryDAO;
@@ -68,6 +74,8 @@ class PrepareAsyncServiceTest {
     private PaperAddressService paperAddressService;
     @Mock
     private PaperRequestErrorDAO paperRequestErrorDAO;
+    @Mock
+    private F24Service f24Service;
 
     @Mock
     private PnPaperChannelConfig pnPaperChannelConfig;
@@ -89,7 +97,8 @@ class PrepareAsyncServiceTest {
         Mockito.when(this.paperAddressService.getCorrectAddress(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenThrow(new PnAddressFlowException(ExceptionTypeEnum.ADDRESS_NOT_EXIST));
 
-        assertThrows(PnAddressFlowException.class, () -> this.prepareAsyncService.prepareAsync(request).block());
+        Mono<PnDeliveryRequest> mono = this.prepareAsyncService.prepareAsync(request);
+        assertThrows(PnAddressFlowException.class, () -> mono.block());
 
     }
 
@@ -108,6 +117,9 @@ class PrepareAsyncServiceTest {
 
         Mockito.when(this.addressDAO.findByRequestId(Mockito.any()))
                 .thenReturn(Mono.just(getAddress()));
+
+        Mockito.when(this.f24Service.checkDeliveryRequestAttachmentForF24(Mockito.any()))
+                .thenReturn(false);
 
         Mockito.doNothing().when(this.sqsSender).pushPrepareEvent(Mockito.any());
 
@@ -188,6 +200,9 @@ class PrepareAsyncServiceTest {
                     .thenReturn(Mono.just(getDeliveryRequest()));
 
         Mockito.when(this.requestDeliveryDAO.updateData(Mockito.any())).thenReturn(Mono.just(getDeliveryRequest()));
+
+        Mockito.when(this.f24Service.checkDeliveryRequestAttachmentForF24(Mockito.any()))
+                .thenReturn(false);
 
         request.setCorrelationId("FFPAPERTEST.IUN_FATY");
         pnDeliveryRequest.setAttachments(attachmentInfoList());

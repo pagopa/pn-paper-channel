@@ -8,6 +8,7 @@ import it.pagopa.pn.paperchannel.service.PaperTenderService;
 import lombok.AllArgsConstructor;
 import lombok.CustomLog;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
@@ -15,6 +16,7 @@ import java.util.List;
 
 import static it.pagopa.pn.paperchannel.utils.Const.*;
 
+@Component
 @CustomLog
 @AllArgsConstructor
 public class PaperCalculatorUtils {

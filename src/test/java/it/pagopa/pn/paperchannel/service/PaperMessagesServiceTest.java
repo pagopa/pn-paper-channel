@@ -2,11 +2,14 @@ package it.pagopa.pn.paperchannel.service;
 
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
+import it.pagopa.pn.paperchannel.encryption.DataEncryption;
+import it.pagopa.pn.paperchannel.encryption.impl.DataVaultEncryptionImpl;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.exception.PnInputValidatorException;
 import it.pagopa.pn.paperchannel.exception.PnPaperEventException;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
@@ -17,6 +20,7 @@ import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.service.impl.PaperMessagesServiceImpl;
 import it.pagopa.pn.paperchannel.utils.Const;
+import it.pagopa.pn.paperchannel.utils.PaperCalculatorUtils;
 import it.pagopa.pn.paperchannel.utils.Utility;
 import it.pagopa.pn.paperchannel.validator.PrepareRequestValidator;
 import it.pagopa.pn.paperchannel.validator.SendRequestValidator;
@@ -28,6 +32,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -42,31 +50,41 @@ import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
+@SpringBootTest(classes = {PaperCalculatorUtils.class, PaperMessagesServiceImpl.class, PnAuditLogBuilder.class, DataVaultEncryptionImpl.class})
 class PaperMessagesServiceTest {
 
-    @InjectMocks
-    private PaperMessagesServiceImpl paperMessagesService;
+    @Autowired
+    private PaperMessagesService paperMessagesService;
 
-    @Mock
+    @MockBean
     private RequestDeliveryDAO requestDeliveryDAO;
 
-    @Mock
+    @MockBean
+    private CostDAO costDAO;
+
+    @MockBean
+    private DataEncryption dataEncryption;
+
+    @MockBean
     private AddressDAO addressDAO;
 
-    @Mock
+    @MockBean
     private PaperTenderService paperTenderService;
 
-    @Mock
+    @MockBean
     private NationalRegistryClient nationalRegistryClient;
 
-    @Mock
+    @MockBean
     private ExternalChannelClient externalChannelClient;
 
-    @Mock
+    @MockBean
     private SqsSender sqsSender;
 
-    @Mock
+    @MockBean
     private PnPaperChannelConfig pnPaperChannelConfig;
+
+    @Autowired
+    private PaperCalculatorUtils paperCalculatorUtils;
 
     @Spy
     PnAuditLogBuilder auditLogBuilder;
