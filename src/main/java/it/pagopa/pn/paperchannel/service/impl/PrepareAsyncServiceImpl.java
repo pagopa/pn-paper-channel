@@ -90,7 +90,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                 .flatMap(pnDeliveryRequest -> {
                     if (f24Service.checkDeliveryRequestAttachmentForF24(pnDeliveryRequest))
                     {
-                        return f24Service.preparePDF(pnDeliveryRequest, request);
+                        return f24Service.preparePDF(pnDeliveryRequest);
                     }
                     else
                     {
@@ -103,8 +103,8 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                         || ex instanceof PnF24FlowException) return Mono.error(ex);
 
                     StatusDeliveryEnum statusDeliveryEnum = StatusDeliveryEnum.PAPER_CHANNEL_ASYNC_ERROR;
-                    if(ex instanceof PnGenericException) {
-                        statusDeliveryEnum = mapper(((PnGenericException) ex).getExceptionType());
+                    if(ex instanceof PnGenericException pnGenericException) {
+                        statusDeliveryEnum = mapper(pnGenericException.getExceptionType());
                     }
                     return updateStatus(requestId, correlationId, statusDeliveryEnum)
                             .doOnNext(entity -> {

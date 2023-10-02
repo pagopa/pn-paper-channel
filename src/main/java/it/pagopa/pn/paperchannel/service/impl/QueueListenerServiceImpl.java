@@ -3,6 +3,7 @@ package it.pagopa.pn.paperchannel.service.impl;
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.commons.utils.MDCUtils;
 import it.pagopa.pn.paperchannel.exception.PnAddressFlowException;
+import it.pagopa.pn.paperchannel.exception.PnF24FlowException;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnnationalregistries.v1.dto.AddressSQSMessageDto;
@@ -20,10 +21,7 @@ import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
 import it.pagopa.pn.paperchannel.model.*;
-import it.pagopa.pn.paperchannel.service.PaperAsyncService;
-import it.pagopa.pn.paperchannel.service.PaperResultAsyncService;
-import it.pagopa.pn.paperchannel.service.QueueListenerService;
-import it.pagopa.pn.paperchannel.service.SqsSender;
+import it.pagopa.pn.paperchannel.service.*;
 import it.pagopa.pn.paperchannel.utils.Const;
 import lombok.CustomLog;
 import org.apache.commons.lang3.StringUtils;
@@ -53,6 +51,8 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
     private PaperRequestErrorDAO paperRequestErrorDAO;
     @Autowired
     private ExternalChannelClient externalChannelClient;
+    @Autowired
+    private F24Service f24Service;
 
     public QueueListenerServiceImpl(PnAuditLogBuilder auditLogBuilder,
                                     RequestDeliveryDAO requestDeliveryDAO,
@@ -82,8 +82,36 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                         .doOnError(throwable -> {
                             log.error(throwable.getMessage());
                             if (throwable instanceof PnAddressFlowException) return;
+                            if (throwable instanceof PnF24FlowException pnF24FlowException) f24ErrorListener(pnF24FlowException.getF24Error(), pnF24FlowException.getF24Error().getAttempt());
+
                             throw new PnGenericException(PREPARE_ASYNC_LISTENER_EXCEPTION, PREPARE_ASYNC_LISTENER_EXCEPTION.getMessage());
                         }))
+                .block();
+    }
+
+
+    public void f24ErrorListener(F24Error entity, Integer attempt) {
+        log.info("Start async for {} request id", entity.getRequestId());
+
+        String PROCESS_NAME = "F24 retry listener logic";
+        MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, entity.getRequestId());
+        log.logStartingProcess(PROCESS_NAME);
+        MDCUtils.addMDCToContextAndExecute(requestDeliveryDAO.getByRequestId(entity.getRequestId(), true)
+                        .flatMap(f24Service::preparePDF)
+                        .doOnSuccess(pnRequestError -> log.logEndingProcess(PROCESS_NAME))
+                        .doOnError(throwable ->  log.logEndingProcess(PROCESS_NAME, false, throwable.getMessage()))
+                        .onErrorResume(ex -> {
+                            log.error(ex.getMessage(), ex);
+
+                            entity.setAttempt(attempt+1);
+                            saveErrorAndPushError(entity.getRequestId(), StatusDeliveryEnum.F24_ERROR, entity, payload -> {
+                                log.info("attempting to pushing to internal payload={}", payload);
+                                sqsSender.pushInternalError(payload, entity.getAttempt(), F24Error.class);
+                                return null;
+                            });
+                            return Mono.error(new PnF24FlowException(F24_ERROR, entity, ex));
+                        })
+                        .then())
                 .block();
     }
 

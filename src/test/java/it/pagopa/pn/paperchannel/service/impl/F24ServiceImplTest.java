@@ -77,7 +77,6 @@ class F24ServiceImplTest {
     void preparePDF() {
         String requestid = "REQUESTID";
         PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest(requestid, StatusDeliveryEnum.IN_PROCESSING);
-        PrepareAsyncRequest prepareAsyncRequest = getPrepareAsyncRequest();
 
         Mockito.when(pnPaperChannelConfig.getChargeCalculationMode()).thenReturn("AAR");
         Mockito.when(addressDAO.findByRequestId(requestid)).thenReturn(Mono.just(getPnAddress(requestid)));
@@ -87,7 +86,7 @@ class F24ServiceImplTest {
         Mockito.when(paperTenderService.getCostFrom(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(getNationalCost()));
 
-        PnDeliveryRequest res = f24Service.preparePDF(pnDeliveryRequest, prepareAsyncRequest).block();
+        PnDeliveryRequest res = f24Service.preparePDF(pnDeliveryRequest).block();
 
         assertEquals(F24_WAITING.getCode(), res.getStatusCode());
     }
@@ -97,14 +96,13 @@ class F24ServiceImplTest {
         String requestid = "REQUESTID";
         PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest(requestid, StatusDeliveryEnum.IN_PROCESSING);
         pnDeliveryRequest.getAttachments().get(0).setUrl("f24set://IUN123/1");
-        PrepareAsyncRequest prepareAsyncRequest = getPrepareAsyncRequest();
 
         Mockito.when(addressDAO.findByRequestId(requestid)).thenReturn(Mono.just(getPnAddress(requestid)));
         Mockito.when(requestDeliveryDAO.updateData(Mockito.any())).thenAnswer(i -> Mono.just(i.getArguments()[0]));
         Mockito.when(f24Client.preparePDF(requestid, pnDeliveryRequest.getIun(), "1", null)).thenReturn(Mono.just(new RequestAcceptedDto()));
 
 
-        PnDeliveryRequest res = f24Service.preparePDF(pnDeliveryRequest, prepareAsyncRequest).block();
+        PnDeliveryRequest res = f24Service.preparePDF(pnDeliveryRequest).block();
 
         assertEquals(F24_WAITING.getCode(), res.getStatusCode());
     }
@@ -114,14 +112,13 @@ class F24ServiceImplTest {
         String requestid = "REQUESTID";
         PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest(requestid, StatusDeliveryEnum.IN_PROCESSING);
         pnDeliveryRequest.getAttachments().get(0).setUrl("f24set://IUN123/1?cost=0");
-        PrepareAsyncRequest prepareAsyncRequest = getPrepareAsyncRequest();
 
         Mockito.when(addressDAO.findByRequestId(requestid)).thenReturn(Mono.just(getPnAddress(requestid)));
         Mockito.when(requestDeliveryDAO.updateData(Mockito.any())).thenAnswer(i -> Mono.just(i.getArguments()[0]));
         Mockito.when(f24Client.preparePDF(requestid, pnDeliveryRequest.getIun(), "1", 0)).thenReturn(Mono.just(new RequestAcceptedDto()));
 
 
-        PnDeliveryRequest res = f24Service.preparePDF(pnDeliveryRequest, prepareAsyncRequest).block();
+        PnDeliveryRequest res = f24Service.preparePDF(pnDeliveryRequest).block();
 
         assertEquals(F24_WAITING.getCode(), res.getStatusCode());
     }

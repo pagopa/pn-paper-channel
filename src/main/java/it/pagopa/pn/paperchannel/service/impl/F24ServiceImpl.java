@@ -3,9 +3,8 @@ package it.pagopa.pn.paperchannel.service.impl;
 import it.pagopa.pn.commons.exceptions.PnExceptionsCodes;
 import it.pagopa.pn.commons.exceptions.PnInternalException;
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
-import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
+import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnF24FlowException;
-import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ProductTypeEnum;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
 import it.pagopa.pn.paperchannel.mapper.AttachmentMapper;
@@ -15,7 +14,7 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.F24Client;
-import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
+import it.pagopa.pn.paperchannel.model.F24Error;
 import it.pagopa.pn.paperchannel.service.F24Service;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.Const;
@@ -72,7 +71,7 @@ public class F24ServiceImpl extends GenericService implements F24Service {
     }
 
     @Override
-    public Mono<PnDeliveryRequest> preparePDF(PnDeliveryRequest deliveryRequest, PrepareAsyncRequest queueModel) {
+    public Mono<PnDeliveryRequest> preparePDF(PnDeliveryRequest deliveryRequest) {
         Optional<PnAttachmentInfo> optF24Attachment = getF24PnAttachmentInfo(deliveryRequest);
 
         return optF24Attachment.map(pnAttachmentInfo -> parseF24URL(pnAttachmentInfo.getUrl())
@@ -96,7 +95,7 @@ public class F24ServiceImpl extends GenericService implements F24Service {
                         return deliveryRequest;
                     })
                     .flatMap(this.requestDeliveryDAO::updateData)
-                    .onErrorResume(PnF24FlowException.class, ex -> handlePnF24FlowException(ex, queueModel)))
+                    .onErrorResume(ex -> catchThrowableAndThrowPnF24FlowException(ex, deliveryRequest.getIun(), deliveryRequest.getRequestId(), deliveryRequest.getRelatedRequestId())))
                 .orElseGet(() -> {
                     log.fatal("URL f24set is required and should exist");
                     return Mono.error(new PnInternalException("missing URL f24set on f24serviceImpl", PnExceptionsCodes.ERROR_CODE_PN_GENERIC_ERROR));
@@ -154,6 +153,7 @@ public class F24ServiceImpl extends GenericService implements F24Service {
         }
     }
 
+
     @Builder
     @Getter
     @Setter
@@ -165,9 +165,16 @@ public class F24ServiceImpl extends GenericService implements F24Service {
     }
 
 
-    private <T> Mono<T> handlePnF24FlowException(PnF24FlowException ex, PrepareAsyncRequest queueModel) {
-        this.sqsSender.pushInternalError(queueModel, queueModel.getAttemptRetry(), PrepareAsyncRequest.class);
-        return Mono.error(ex);
+    private <T> Mono<T> catchThrowableAndThrowPnF24FlowException(Throwable ex, String iun, String requestId, String correlationId) {
+        F24Error error = new F24Error();
+        error.setIun(iun);
+        error.setMessage(ex.getMessage());
+        error.setRequestId(requestId);
+        error.setRelatedRequestId(correlationId);
+        error.setAttempt(0);
+
+        PnF24FlowException pnF24FlowException = new PnF24FlowException(ExceptionTypeEnum.F24_ERROR, error, ex);
+        return Mono.error(pnF24FlowException);
     }
 
     private void logAuditSuccess(String message, PnDeliveryRequest deliveryRequest){

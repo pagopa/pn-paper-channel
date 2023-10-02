@@ -1,7 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.msclient.impl;
 
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
-import it.pagopa.pn.paperchannel.exception.PnF24FlowException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnf24.v1.api.F24ControllerApi;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnf24.v1.dto.PrepareF24RequestDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnf24.v1.dto.RequestAcceptedDto;
@@ -15,8 +14,6 @@ import java.net.ConnectException;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
-
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.F24_ERROR;
 
 
 @Component
@@ -57,7 +54,7 @@ public class F24ClientImpl implements F24Client {
                 })
                 .onErrorResume(ex -> {
                     log.error("Error with Preparing F24 attachments  correlationId={}", requestId, ex);
-                    return Mono.error(new PnF24FlowException(F24_ERROR));
+                    return Mono.error(ex);
                 });
     }
 }

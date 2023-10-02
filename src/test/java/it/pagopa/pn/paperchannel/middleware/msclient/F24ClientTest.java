@@ -27,6 +27,6 @@ class F24ClientTest extends BaseTest.WithMockServer {
     @Test
     void testKO(){
         Mono<RequestAcceptedDto> mono = f24Client.preparePDF("REQUESTIDCONFLICT", "SETID", "0", 100);
-        Assertions.assertThrows(PnF24FlowException.class, mono::block);
+        Assertions.assertThrows(WebClientResponseException.class, mono::block);
     }
 }
