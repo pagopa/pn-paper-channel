@@ -66,7 +66,7 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
 
     @Override
     public void internalListener(PrepareAsyncRequest body, int attempt) {
-        String PROCESS_NAME = "InternalListener";
+        final String PROCESS_NAME = "InternalListener";
         MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, body.getRequestId());
         log.logStartingProcess(PROCESS_NAME);
         MDCUtils.addMDCToContextAndExecute(Mono.just(body)
@@ -191,6 +191,7 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                     log.debug("prepare requestId {} not existed", requestId);
                     return Mono.empty();
                 }))
+                .doOnNext(deliveryRequest -> deliveryRequest.setManualRetry(true))
                 .zipWith(this.addressDAO.findAllByRequestId(requestId))
                 .flatMap(requestAndAddress ->  {
                     PnDeliveryRequest request = requestAndAddress.getT1();
