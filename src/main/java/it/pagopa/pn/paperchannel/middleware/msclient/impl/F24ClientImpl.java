@@ -8,12 +8,8 @@ import it.pagopa.pn.paperchannel.middleware.msclient.F24Client;
 import lombok.CustomLog;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
-import reactor.util.retry.Retry;
 
-import java.net.ConnectException;
-import java.time.Duration;
 import java.util.List;
-import java.util.concurrent.TimeoutException;
 
 
 @Component
@@ -42,13 +38,9 @@ public class F24ClientImpl implements F24Client {
         prepareF24RequestDto.setPathTokens(List.of(recipientIndex));
 
         return this.apiService.preparePDF(pnPaperChannelConfig.getF24CxId(),
-                requestId,
-                prepareF24RequestDto
-                )
-                .retryWhen(
-                Retry.backoff(2, Duration.ofMillis(500))
-                        .filter(throwable -> throwable instanceof TimeoutException || throwable instanceof ConnectException)
-        ).map(response -> {
+                    requestId,
+                    prepareF24RequestDto)
+                .map(response -> {
                     log.info("Preparing F24 attachments response successful correlationId={} status={}", requestId, response.getStatus());
                     return response;
                 })

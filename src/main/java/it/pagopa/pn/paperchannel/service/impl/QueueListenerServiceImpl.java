@@ -66,9 +66,9 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
 
     @Override
     public void internalListener(PrepareAsyncRequest body, int attempt) {
-        String PROCESS_NAME = "InternalListener";
+        String processName = "InternalListener";
         MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, body.getRequestId());
-        log.logStartingProcess(PROCESS_NAME);
+        log.logStartingProcess(processName);
         MDCUtils.addMDCToContextAndExecute(Mono.just(body)
                         .flatMap(prepareRequest -> {
                             prepareRequest.setAttemptRetry(attempt);
@@ -76,13 +76,13 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                         })
                         .doOnSuccess(resultFromAsync ->{
                                     log.info("End of prepare async internal");
-                                    log.logEndingProcess(PROCESS_NAME);
+                                    log.logEndingProcess(processName);
                                 }
                         )
                         .doOnError(throwable -> {
                             log.error(throwable.getMessage());
                             if (throwable instanceof PnAddressFlowException) return;
-                            if (throwable instanceof PnF24FlowException pnF24FlowException) f24ErrorListener(pnF24FlowException.getF24Error(), pnF24FlowException.getF24Error().getAttempt());
+                            if (throwable instanceof PnF24FlowException pnF24FlowException) manageF24Exception(pnF24FlowException.getF24Error(), pnF24FlowException.getF24Error().getAttempt(), pnF24FlowException);
 
                             throw new PnGenericException(PREPARE_ASYNC_LISTENER_EXCEPTION, PREPARE_ASYNC_LISTENER_EXCEPTION.getMessage());
                         }))
@@ -93,26 +93,30 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
     public void f24ErrorListener(F24Error entity, Integer attempt) {
         log.info("Start async for {} request id", entity.getRequestId());
 
-        String PROCESS_NAME = "F24 retry listener logic";
+        String processName = "F24 retry listener logic";
         MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, entity.getRequestId());
-        log.logStartingProcess(PROCESS_NAME);
+        log.logStartingProcess(processName);
         MDCUtils.addMDCToContextAndExecute(requestDeliveryDAO.getByRequestId(entity.getRequestId(), true)
                         .flatMap(f24Service::preparePDF)
-                        .doOnSuccess(pnRequestError -> log.logEndingProcess(PROCESS_NAME))
-                        .doOnError(throwable ->  log.logEndingProcess(PROCESS_NAME, false, throwable.getMessage()))
+                        .doOnSuccess(pnRequestError -> log.logEndingProcess(processName))
+                        .doOnError(throwable ->  log.logEndingProcess(processName, false, throwable.getMessage()))
                         .onErrorResume(ex -> {
-                            log.error(ex.getMessage(), ex);
-
-                            entity.setAttempt(attempt+1);
-                            saveErrorAndPushError(entity.getRequestId(), StatusDeliveryEnum.F24_ERROR, entity, payload -> {
-                                log.info("attempting to pushing to internal payload={}", payload);
-                                sqsSender.pushInternalError(payload, entity.getAttempt(), F24Error.class);
-                                return null;
-                            });
+                            manageF24Exception(entity, attempt, ex);
                             return Mono.error(new PnF24FlowException(F24_ERROR, entity, ex));
                         })
                         .then())
                 .block();
+    }
+
+    private void manageF24Exception(F24Error entity, Integer attempt, Throwable ex) {
+        log.error(ex.getMessage(), ex);
+
+        entity.setAttempt(attempt +1);
+        saveErrorAndPushError(entity.getRequestId(), StatusDeliveryEnum.F24_ERROR, entity, payload -> {
+            log.info("attempting to pushing to internal payload={}", payload);
+            sqsSender.pushInternalError(payload, entity.getAttempt(), F24Error.class);
+            return null;
+        });
     }
 
     @Override
@@ -225,12 +229,12 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                     SendRequest sendRequest = SendRequestMapper.toDto(requestAndAddress.getT2(),request);
                     List<AttachmentInfo> attachments = request.getAttachments().stream().map(AttachmentMapper::fromEntity).toList();
                     sendRequest.setRequestId(sendRequest.getRequestId().concat(Const.RETRY).concat(newPcRetry));
-                    pnLogAudit.addsBeforeSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY)));
+                    pnLogAudit.addsBeforeSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request  to External Channel", sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY)));
                     return this.externalChannelClient.sendEngageRequest(sendRequest, attachments)
                             .then(Mono.defer(() -> {
                                 pnLogAudit.addsSuccessSend(
                                         request.getIun(),
-                                        String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY))
+                                        String.format("prepare requestId = %s, trace_id = %s  request  to External Channel", sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY))
                                 );
                                 RequestDeliveryMapper.changeState(
                                         request,
