@@ -43,23 +43,29 @@ import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.READY_TO_SEND;
 public class QueueListenerServiceImpl extends BaseService implements QueueListenerService {
     private static final String NATIONAL_REGISTRY_DESCRIPTION = "Retrieve the address.";
 
-    @Autowired
-    private PaperResultAsyncService paperResultAsyncService;
-    @Autowired
-    private PaperAsyncService paperAsyncService;
-    @Autowired
-    private AddressDAO addressDAO;
-    @Autowired
-    private PaperRequestErrorDAO paperRequestErrorDAO;
-    @Autowired
-    private ExternalChannelClient externalChannelClient;
+    private final PaperResultAsyncService paperResultAsyncService;
+    private final PaperAsyncService paperAsyncService;
+    private final AddressDAO addressDAO;
+    private final PaperRequestErrorDAO paperRequestErrorDAO;
+    private final ExternalChannelClient externalChannelClient;
 
     public QueueListenerServiceImpl(PnAuditLogBuilder auditLogBuilder,
                                     RequestDeliveryDAO requestDeliveryDAO,
                                     CostDAO costDAO,
                                     NationalRegistryClient nationalRegistryClient,
-                                    SqsSender sqsSender) {
+                                    SqsSender sqsSender,
+                                    PaperResultAsyncService paperResultAsyncService,
+                                    PaperAsyncService paperAsyncService,
+                                    AddressDAO addressDAO,
+                                    PaperRequestErrorDAO paperRequestErrorDAO,
+                                    ExternalChannelClient externalChannelClient) {
         super(auditLogBuilder, requestDeliveryDAO, costDAO, nationalRegistryClient, sqsSender);
+
+        this.paperResultAsyncService = paperResultAsyncService;
+        this.paperAsyncService = paperAsyncService;
+        this.addressDAO = addressDAO;
+        this.paperRequestErrorDAO = paperRequestErrorDAO;
+        this.externalChannelClient = externalChannelClient;
     }
 
 
