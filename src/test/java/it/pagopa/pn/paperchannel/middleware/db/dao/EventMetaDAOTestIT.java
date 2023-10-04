@@ -6,6 +6,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import reactor.core.publisher.Mono;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -103,6 +104,20 @@ class EventMetaDAOTestIT extends BaseTest {
 
         eventMetaFromDb = eventMetaDAO.getDeliveryEventMeta(eventMeta3.getMetaRequestId(), eventMeta3.getMetaStatusCode()).block();
         assertNull(eventMetaFromDb);
+    }
+
+    @Test
+    void getDeliveryEventMetaEmpty() {
+        PnEventMeta mockEmpty = eventMetaDAO.getDeliveryEventMeta("not-exists-request-id", eventMeta3.getMetaStatusCode())
+                .switchIfEmpty(Mono.defer(() -> {
+                    PnEventMeta data = new PnEventMeta();
+                    data.setRequestId("PROVA");
+                    return Mono.just(data);
+                })).block();
+
+        //TESTO CHE EFFETTIVAMENTE SE NON VIENE TROVATO NESSUN RISULTATO, il getDeliveryEventMeta restituisce Mono.empty
+        assertThat(mockEmpty).isNotNull();
+        assertThat(mockEmpty.getRequestId()).isEqualTo("PROVA");
     }
 
     @Test
