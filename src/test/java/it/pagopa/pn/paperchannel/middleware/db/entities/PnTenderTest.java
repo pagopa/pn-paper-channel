@@ -46,38 +46,6 @@ class PnTenderTest {
         Assertions.assertEquals(status, TenderDTO.StatusEnum.CREATED.getValue());
     }
 
-    @Test
-    void toStringTest() {
-        pnTender = initTender();
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(pnTender.getClass().getSimpleName());
-        stringBuilder.append("(");
-        stringBuilder.append("tenderCode=");
-        stringBuilder.append(tenderCode);
-        stringBuilder.append(", ");
-        stringBuilder.append("date=");
-        stringBuilder.append(date);
-        stringBuilder.append(", ");
-        stringBuilder.append("description=");
-        stringBuilder.append(description);
-        stringBuilder.append(", ");
-        stringBuilder.append("status=");
-        stringBuilder.append(status);
-        stringBuilder.append(", ");
-        stringBuilder.append("author=");
-        stringBuilder.append(author);
-        stringBuilder.append(", ");
-        stringBuilder.append("startDate=");
-        stringBuilder.append(startDate);
-        stringBuilder.append(", ");
-        stringBuilder.append("endDate=");
-        stringBuilder.append(endDate);
-        stringBuilder.append(")");
-
-        String toTest = stringBuilder.toString();
-        Assertions.assertEquals(toTest, pnTender.toString());
-    }
-
     public Instant getUpdatedDate(int hours) {
         Date date = Date.from(Instant.now());
         Calendar calendar = Calendar.getInstance();

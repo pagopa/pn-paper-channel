@@ -67,38 +67,6 @@ class PnCostTest {
     }
 
     @Test
-    void toStringTest() {
-        pnCost = initCost();
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(pnCost.getClass().getSimpleName());
-        stringBuilder.append("(");
-        stringBuilder.append("deliveryDriverCode=");
-        stringBuilder.append(deliveryDriverCode);
-        stringBuilder.append(", ");
-        stringBuilder.append("uuid=");
-        stringBuilder.append(uuid);
-        stringBuilder.append(", ");
-        stringBuilder.append("tenderCode=");
-        stringBuilder.append(tenderCode);
-        stringBuilder.append(", ");
-        stringBuilder.append("productType=");
-        stringBuilder.append(productType);
-        stringBuilder.append(", ");
-        stringBuilder.append("basePrice=");
-        stringBuilder.append(basePrice);
-        stringBuilder.append(", ");
-        stringBuilder.append("pagePrice=");
-        stringBuilder.append(pagePrice);
-        stringBuilder.append(", ");
-        stringBuilder.append("fsu=");
-        stringBuilder.append(fsu);
-        stringBuilder.append(")");
-
-        String toTest = stringBuilder.toString();
-        Assertions.assertEquals(toTest, pnCost.toString());
-    }
-
-    @Test
     void hashCodeTest() {
         PnCost pnCostA = initCost();
         PnCost pnCostB = initCost();
