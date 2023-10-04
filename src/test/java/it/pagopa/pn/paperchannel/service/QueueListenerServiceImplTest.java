@@ -7,15 +7,20 @@ import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnnationalregistries.v1.dto.AddressSQSMessageDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnnationalregistries.v1.dto.AddressSQSMessagePhysicalAddressDto;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ProductTypeEnum;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
+import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
+import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
 import it.pagopa.pn.paperchannel.service.impl.QueueListenerServiceImpl;
+import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,10 +31,14 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 @ExtendWith(MockitoExtension.class)
-class QueueListenerServiceImplTest extends BaseTest{
+class QueueListenerServiceImplTest {
 
     @Mock
     private PaperResultAsyncService paperResultAsyncService;
@@ -51,6 +60,8 @@ class QueueListenerServiceImplTest extends BaseTest{
     private NationalRegistryClient nationalRegistryClient;
     @Mock
     private SqsSender sqsSender;
+    @Mock
+    private ExternalChannelClient externalChannelClient;
     @InjectMocks
     QueueListenerServiceImpl queueListenerService;
 
@@ -189,6 +200,30 @@ class QueueListenerServiceImplTest extends BaseTest{
         catch(PnGenericException ex){
             Assertions.assertEquals(EXTERNAL_CHANNEL_LISTENER_EXCEPTION, ex.getExceptionType());
         }
+    }
+
+    @Test
+    void manualRetryExternalChannelOK() {
+        String iun = "GJWA-HMEK-RGUJ-202307-H-1";
+        var requestId = "PREPARE_ANALOG_DOMICILE.IUN_GJWA-HMEK-RGUJ-202307-H-1.RECINDEX_0.ATTEMPT_0";
+        var att = new PnAttachmentInfo();
+        att.setUrl("safestorage://url.it");
+        var deliveryRequest = new PnDeliveryRequest();
+        deliveryRequest.setRequestId(requestId);
+        deliveryRequest.setIun(iun);
+        deliveryRequest.setProductType(ProductTypeEnum.AR.getValue());
+        deliveryRequest.setAttachments(List.of(att));
+        deliveryRequest.setManualRetry(false);
+        PnAddress address = new PnAddress();
+        address.setTypology(AddressTypeEnum.RECEIVER_ADDRESS.toString());
+        var addresses = List.of(address);
+        Mockito.when(requestDeliveryDAO.getByRequestId(requestId)).thenReturn(Mono.just(deliveryRequest));
+        Mockito.when(addressDAO.findAllByRequestId(requestId)).thenReturn(Mono.just(addresses));
+        Mockito.when(externalChannelClient.sendEngageRequest(Mockito.any(), Mockito.any())).thenReturn(Mono.empty());
+
+        Mockito.when(requestDeliveryDAO.updateData(deliveryRequest)).thenReturn(Mono.just(deliveryRequest));
+        assertDoesNotThrow(() -> queueListenerService.manualRetryExternalChannel(requestId, "1"));
+        assertThat(deliveryRequest.getManualRetry()).isTrue();
     }
 
     private PnAddress getRelatedAddress(){

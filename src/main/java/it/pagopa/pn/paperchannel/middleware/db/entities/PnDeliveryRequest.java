@@ -65,6 +65,8 @@ public class PnDeliveryRequest {
 
     public static final String COL_EVENT_TO_SEND = "eventToSend";
 
+    private static final String COL_MANUAL_RETRY = "manualRetry";
+
     @Getter(onMethod = @__({@DynamoDbPartitionKey,@DynamoDbAttribute(COL_REQUEST_ID)}))
     private String requestId;
 
@@ -125,5 +127,8 @@ public class PnDeliveryRequest {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_EVENT_TO_SEND)}))
     private String eventToSend;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_MANUAL_RETRY)}))
+    private Boolean manualRetry;
 
 }

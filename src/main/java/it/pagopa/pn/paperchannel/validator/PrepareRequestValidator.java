@@ -11,7 +11,6 @@ import org.springframework.http.HttpStatus;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DIFFERENT_DATA_REQUEST;
 import static it.pagopa.pn.paperchannel.mapper.AddressMapper.fromAnalogToAddress;
@@ -20,13 +19,19 @@ import static it.pagopa.pn.paperchannel.mapper.AddressMapper.fromAnalogToAddress
 @CustomLog
 public class PrepareRequestValidator {
 
-    static String VALIDATION_NAME = "Prepare Request Validator";
+    static final String VALIDATION_NAME = "Prepare Request Validator";
 
     private PrepareRequestValidator(){
         throw new IllegalCallerException("the constructor must not called");
     }
 
     public static void compareRequestEntity(PrepareRequest prepareRequest, PnDeliveryRequest pnDeliveryEntity, boolean firstAttempt) {
+        if(Boolean.TRUE.equals(pnDeliveryEntity.getManualRetry())) {
+            log.debug("Validation request skipped because isManualRetry true for requestId: {}", pnDeliveryEntity.getRequestId());
+            //se è stato effettuato un retry manuale, allora skippo le varie validazioni
+            return;
+        }
+
         List<String> errors = new ArrayList<>();
         log.logChecking(VALIDATION_NAME);
 
@@ -62,7 +67,7 @@ public class PrepareRequestValidator {
 
         if (pnDeliveryEntity.getAttachments() != null) {
             List<String> fromDb = pnDeliveryEntity.getAttachments().stream()
-                    .map(PnAttachmentInfo::getFileKey).collect(Collectors.toList());
+                    .map(PnAttachmentInfo::getFileKey).toList();
             if (!AttachmentValidator.checkBetweenLists(prepareRequest.getAttachmentUrls(), fromDb)) {
                 errors.add("Attachments");
                 log.debug("Comparison between request and entity failed, different data: Attachments");

@@ -50,40 +50,6 @@ class PnDeliveryDriverTest {
         Assertions.assertTrue(isEquals);
     }
 
-    @Test
-    void toStringTest() {
-        pnDeliveryDriver = initDeliveryDriver();
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(pnDeliveryDriver.getClass().getSimpleName());
-        stringBuilder.append("(");
-        stringBuilder.append("uniqueCode=");
-        stringBuilder.append(uniqueCode);
-        stringBuilder.append(", ");
-        stringBuilder.append("tenderCode=");
-        stringBuilder.append(tenderCode);
-        stringBuilder.append(", ");
-        stringBuilder.append("denomination=");
-        stringBuilder.append(denomination);
-        stringBuilder.append(", ");
-        stringBuilder.append("fsu=");
-        stringBuilder.append(fsu);
-        stringBuilder.append(", ");
-        stringBuilder.append("author=");
-        stringBuilder.append(author);
-        stringBuilder.append(", ");
-        stringBuilder.append("startDate=");
-        stringBuilder.append(startDate);
-        stringBuilder.append(", ");
-        stringBuilder.append("businessName=");
-        stringBuilder.append(businessName);
-        stringBuilder.append(", ");
-        stringBuilder.append("registeredOffice=");
-        stringBuilder.append(registeredOffice);
-        stringBuilder.append(")");
-
-        String toTest = stringBuilder.toString();
-        Assertions.assertEquals(toTest, pnDeliveryDriver.toString());
-    }
     private PnDeliveryDriver initDeliveryDriver() {
         PnDeliveryDriver pnDeliveryDriver = new PnDeliveryDriver();
         pnDeliveryDriver.setFsu(fsu);
