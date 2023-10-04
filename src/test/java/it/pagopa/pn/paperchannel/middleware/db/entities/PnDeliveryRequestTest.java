@@ -31,6 +31,7 @@ class PnDeliveryRequestTest {
     private List<PnAttachmentInfo> attachments;
     private String requestPaId;
     private String eventToSend;
+    private int cost;
 
     @BeforeEach
     void setUp(){
@@ -99,6 +100,9 @@ class PnDeliveryRequestTest {
         stringBuilder.append(", ");
         stringBuilder.append("eventToSend=");
         stringBuilder.append(eventToSend);
+        stringBuilder.append(", ");
+        stringBuilder.append("cost=");
+        stringBuilder.append(cost);
         stringBuilder.append(")");
 
         String toTest = stringBuilder.toString();
@@ -125,6 +129,7 @@ class PnDeliveryRequestTest {
         pnDeliveryRequest.setRelatedRequestId(relatedRequestId);
         pnDeliveryRequest.setAttachments(attachments);
         pnDeliveryRequest.setRequestPaId(requestPaId);
+        pnDeliveryRequest.setCost(cost);
         return pnDeliveryRequest;
     }
 
@@ -144,6 +149,7 @@ class PnDeliveryRequestTest {
         printType = "BN_FRONTE_RETRO";
         startDate = DateUtils.formatDate(Instant.now());
         productType = "890";
+        cost= 100;
         relatedRequestId = "MOCK-SUCC-WKHU-202209-P-1_send_digital_domicile0_source_PLATFORM_attempt_2";
         attachments = new ArrayList<>();
         PnAttachmentInfo pnAttachmentInfo = new PnAttachmentInfo();

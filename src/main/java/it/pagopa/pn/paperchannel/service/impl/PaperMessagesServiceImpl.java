@@ -20,10 +20,10 @@ import it.pagopa.pn.paperchannel.model.AttachmentInfo;
 import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.service.PaperMessagesService;
-import it.pagopa.pn.paperchannel.service.PaperTenderService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
 import it.pagopa.pn.paperchannel.utils.Const;
+import it.pagopa.pn.paperchannel.utils.PaperCalculatorUtils;
 import it.pagopa.pn.paperchannel.utils.Utility;
 import it.pagopa.pn.paperchannel.validator.PrepareRequestValidator;
 import it.pagopa.pn.paperchannel.validator.SendRequestValidator;
@@ -35,14 +35,14 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuples;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_IN_PROCESSING;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_NOT_EXIST;
 import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.READY_TO_SEND;
-import static it.pagopa.pn.paperchannel.utils.Const.*;
+import static it.pagopa.pn.paperchannel.utils.Const.CONTEXT_KEY_CLIENT_ID;
+import static it.pagopa.pn.paperchannel.utils.Const.CONTEXT_KEY_PREFIX_CLIENT_ID;
 
 @CustomLog
 @Service
@@ -51,18 +51,18 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
     private final AddressDAO addressDAO;
     private final ExternalChannelClient externalChannelClient;
     private final PnPaperChannelConfig pnPaperChannelConfig;
-    private final PaperTenderService paperTenderService;
+    private final PaperCalculatorUtils paperCalculatorUtils;
 
 
     public PaperMessagesServiceImpl(PnAuditLogBuilder auditLogBuilder, RequestDeliveryDAO requestDeliveryDAO, CostDAO costDAO,
                                     NationalRegistryClient nationalRegistryClient, SqsSender sqsSender, AddressDAO addressDAO,
                                     ExternalChannelClient externalChannelClient, PnPaperChannelConfig pnPaperChannelConfig,
-                                    PaperTenderService paperTenderService) {
+                                    PaperCalculatorUtils paperCalculatorUtils) {
         super(auditLogBuilder, requestDeliveryDAO, costDAO, nationalRegistryClient, sqsSender);
         this.addressDAO = addressDAO;
         this.externalChannelClient = externalChannelClient;
         this.pnPaperChannelConfig = pnPaperChannelConfig;
-        this.paperTenderService = paperTenderService;
+        this.paperCalculatorUtils = paperCalculatorUtils;
     }
 
     @Override
@@ -307,67 +307,21 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
     }
 
     private Mono<SendResponse> getSendResponse(Address address, List<AttachmentInfo> attachments, ProductTypeEnum productType, boolean isReversePrinter){
-        return this.calculator(attachments, address, productType, isReversePrinter)
+        return this.paperCalculatorUtils.calculator(attachments, address, productType, isReversePrinter)
                 .map(amount -> {
-                    int totalPages = getNumberOfPages(attachments, isReversePrinter, true);
+                    int totalPages = this.paperCalculatorUtils.getNumberOfPages(attachments, isReversePrinter, true);
                     Integer amountPriceFormat = Utility.toCentsFormat(amount);
                     log.debug("Amount : {}", amount);
                     log.debug("Total pages : {}", totalPages);
                     SendResponse response = new SendResponse();
                     response.setAmount(amountPriceFormat);
                     response.setNumberOfPages(totalPages);
-                    response.setEnvelopeWeight(getLetterWeight(totalPages));
+                    response.setEnvelopeWeight(this.paperCalculatorUtils.getLetterWeight(totalPages));
                     return response;
                 });
 
     }
 
-    private int getLetterWeight(int  numberOfPages){
-        int weightPaper = this.pnPaperChannelConfig.getPaperWeight();
-        int weightLetter = this.pnPaperChannelConfig.getLetterWeight();
-        return (weightPaper * numberOfPages) + weightLetter;
-    }
-
-    private Mono<BigDecimal> calculator(List<AttachmentInfo> attachments, Address address, ProductTypeEnum productType, boolean isReversePrinter){
-        boolean isNational = StringUtils.isBlank(address.getCountry()) ||
-                StringUtils.equalsIgnoreCase(address.getCountry(), "it") ||
-                StringUtils.equalsIgnoreCase(address.getCountry(), "italia") ||
-                StringUtils.equalsIgnoreCase(address.getCountry(), "italy");
-
-        if (StringUtils.isNotBlank(address.getCap()) && isNational) {
-            return getAmount(attachments, address.getCap(), null, getProductType(address, productType), isReversePrinter)
-                    .map(item -> item);
-        }
-        return paperTenderService.getZoneFromCountry(address.getCountry())
-                .flatMap(zone -> getAmount(attachments,null, zone, super.getProductType(address, productType), isReversePrinter).map(item -> item));
-
-    }
-
-    private Mono<BigDecimal> getAmount(List<AttachmentInfo> attachments, String cap, String zone, String productType, boolean isReversePrinter){
-        String processName = "Get Amount";
-        log.logStartingProcess(processName);
-        return paperTenderService.getCostFrom(cap, zone, productType)
-                .map(contract ->{
-                    if (!pnPaperChannelConfig.getChargeCalculationMode().equalsIgnoreCase(AAR)){
-                        Integer totPages = getNumberOfPages(attachments, isReversePrinter, false);
-                        BigDecimal priceTotPages = contract.getPriceAdditional().multiply(BigDecimal.valueOf(totPages));
-                        log.logEndingProcess(processName);
-                        return contract.getPrice().add(priceTotPages);
-                    }else{
-                        log.logEndingProcess(processName);
-                        return contract.getPrice();
-                    }
-                });
-    }
-
-    private Integer getNumberOfPages(List<AttachmentInfo> attachments, boolean isReversePrinter, boolean ignoreAAR){
-        if (attachments == null || attachments.isEmpty()) return 0;
-        return attachments.stream().map(attachment -> {
-            int numberOfPages = attachment.getNumberOfPage();
-            if (isReversePrinter) numberOfPages = (int) Math.ceil(((double) attachment.getNumberOfPage())/2);
-            return (!ignoreAAR && StringUtils.equals(attachment.getDocumentType(), Const.PN_AAR)) ? numberOfPages-1 : numberOfPages;
-        }).reduce(0, Integer::sum);
-    }
 
     private Address saveAddresses(SendRequest sendRequest) {
         String processName = "Save Address";
@@ -406,7 +360,7 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
             Address mapped = AddressMapper.fromAnalogToAddress(prepareRequest.getReceiverAddress(), null, Const.PREPARE);
             pnDeliveryRequest.setAddressHash(mapped.convertToHash());
             receiverAddressEntity = AddressMapper.toEntity(mapped, prepareRequest.getRequestId(), pnPaperChannelConfig);
-            pnDeliveryRequest.setProductType(getProposalProductType(mapped, pnDeliveryRequest.getProposalProductType()));
+            pnDeliveryRequest.setProductType(this.paperCalculatorUtils.getProposalProductType(mapped, pnDeliveryRequest.getProposalProductType()));
             log.info("RequestId - {}, Proposal product type - {}, Product type - {}",
                     pnDeliveryRequest.getRequestId(), pnDeliveryRequest.getProposalProductType(), pnDeliveryRequest.getProductType());
         }

@@ -1,0 +1,45 @@
+[
+  {
+    "httpRequest": {
+      "path": "/f24-private/prepare/REQUESTID",
+      "method": "POST"
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "content-type": [
+          "application/json"
+        ]
+      },
+      "body": {
+        "status": "OK"
+      }
+    }
+  },{
+  "httpRequest": {
+    "path": "/f24-private/prepare/REQUESTIDCONFLICT",
+    "method": "POST"
+  },
+  "httpResponse": {
+    "statusCode": 409,
+    "headers": {
+      "content-type": [
+        "application/json"
+      ]
+    },
+    "body": {
+      "status": 409,
+      "title": "Conflict",
+      "detail": "Conflict",
+      "traceId": "123e4567-e89b-12d3-a456-426614174000",
+      "errors": [
+        {
+          "code": "123-4567",
+          "element": null,
+          "detail": "Conflict"
+        }
+      ]
+    }
+  }
+}
+]

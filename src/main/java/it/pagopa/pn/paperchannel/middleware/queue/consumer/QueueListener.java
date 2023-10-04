@@ -14,8 +14,10 @@ import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
 import it.pagopa.pn.paperchannel.middleware.queue.model.InternalEventHeader;
 import it.pagopa.pn.paperchannel.middleware.queue.model.ManualRetryEvent;
 import it.pagopa.pn.paperchannel.model.ExternalChannelError;
+import it.pagopa.pn.paperchannel.model.F24Error;
 import it.pagopa.pn.paperchannel.model.NationalRegistryError;
 import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
+import it.pagopa.pn.paperchannel.service.F24Service;
 import it.pagopa.pn.paperchannel.service.QueueListenerService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.PnLogAudit;
@@ -56,6 +58,8 @@ public class QueueListener {
     private PaperRequestErrorDAO paperRequestErrorDAO;
     @Autowired
     private PnAuditLogBuilder pnAuditLogBuilder;
+    @Autowired
+    private F24Service f24Service;
 
     @SqsListener(value = "${pn.paper-channel.queue-internal}", deletionPolicy = SqsMessageDeletionPolicy.ALWAYS)
     public void pullFromInternalQueue(@Payload String node, @Headers Map<String, Object> headers){
@@ -150,6 +154,28 @@ public class QueueListener {
                     },
                     entityAndAttempt -> {
                         this.queueListenerService.internalListener(entityAndAttempt.getFirst(), entityAndAttempt.getSecond());
+                        return null;
+                    });
+
+        } else if (internalEventHeader.getEventType().equals(EventTypeEnum.F24_ERROR.name())){
+
+            boolean noAttempt = (paperChannelConfig.getAttemptQueueF24()-1) < internalEventHeader.getAttempt();
+            F24Error error = convertToObject(node, F24Error.class);
+            execution(error, noAttempt, internalEventHeader.getAttempt(), internalEventHeader.getExpired(), F24Error.class,
+                    entity -> {
+                        PnLogAudit pnLogAudit = new PnLogAudit(pnAuditLogBuilder);
+                        pnLogAudit.addsBeforeDiscard(entity.getIun(), String.format("requestId = %s finish retry f24 error ?", entity.getRequestId()));
+
+                        paperRequestErrorDAO.created(
+                                        entity.getRequestId(),
+                                        F24_ERROR.getMessage(),
+                                        EventTypeEnum.F24_ERROR.name())
+                                .subscribe();
+                        pnLogAudit.addsSuccessDiscard(entity.getIun(), String.format("requestId = %s finish retry f24 error", entity.getRequestId()));
+                        return null;
+                    },
+                    entityAndAttempt -> {
+                        this.queueListenerService.f24ErrorListener(entityAndAttempt.getFirst(), entityAndAttempt.getSecond());
                         return null;
                     });
 
