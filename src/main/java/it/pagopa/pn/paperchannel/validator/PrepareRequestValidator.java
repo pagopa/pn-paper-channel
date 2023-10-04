@@ -26,7 +26,7 @@ public class PrepareRequestValidator {
     }
 
     public static void compareRequestEntity(PrepareRequest prepareRequest, PnDeliveryRequest pnDeliveryEntity, boolean firstAttempt) {
-        if(pnDeliveryEntity.isManualRetry()) {
+        if(Boolean.TRUE.equals(pnDeliveryEntity.getManualRetry())) {
             log.debug("Validation request skipped because isManualRetry true for requestId: {}", pnDeliveryEntity.getRequestId());
             //se è stato effettuato un retry manuale, allora skippo le varie validazioni
             return;

@@ -129,6 +129,6 @@ public class PnDeliveryRequest {
     private String eventToSend;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_MANUAL_RETRY)}))
-    private boolean manualRetry;
+    private Boolean manualRetry;
 
 }

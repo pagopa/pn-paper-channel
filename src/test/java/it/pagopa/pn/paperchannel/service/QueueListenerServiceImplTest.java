@@ -223,7 +223,7 @@ class QueueListenerServiceImplTest {
 
         Mockito.when(requestDeliveryDAO.updateData(deliveryRequest)).thenReturn(Mono.just(deliveryRequest));
         assertDoesNotThrow(() -> queueListenerService.manualRetryExternalChannel(requestId, "1"));
-        assertThat(deliveryRequest.isManualRetry()).isTrue();
+        assertThat(deliveryRequest.getManualRetry()).isTrue();
     }
 
     private PnAddress getRelatedAddress(){
