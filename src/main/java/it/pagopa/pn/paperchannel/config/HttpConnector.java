@@ -13,6 +13,8 @@ import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 @Slf4j
 public class HttpConnector {
@@ -27,9 +29,10 @@ public class HttpConnector {
         boolean tmpFile = contentLength != null && contentLength.longValue() > MAX_MAIN_MEMORY_BYTES;
         // DataBuffer and DataBufferUtils to stream our download in chunks so that the whole file doesn't get loaded
         // into memory
+        URI uri = createURI(url);
         Flux<DataBuffer> dataBufferFlux = WebClient.create()
                 .get()
-                .uri(url)
+                .uri(uri)
                 .accept(MediaType.APPLICATION_PDF)
                 .retrieve()
                 .bodyToFlux(DataBuffer.class);
@@ -42,6 +45,15 @@ public class HttpConnector {
                     return new RandomAccessBuffer(bytes);
                 })
                 .map(randomAccess -> HttpConnector.buildPDDocument(randomAccess, tmpFile));
+    }
+
+    private static URI createURI(String url) {
+        try {
+            return new URI(url);
+        }
+        catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 
