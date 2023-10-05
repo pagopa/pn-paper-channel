@@ -131,6 +131,9 @@ class F24ServiceImplTest {
         PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest(requestid, F24_WAITING);
         pnDeliveryRequest.getAttachments().get(0).setUrl("f24set://IUN123/1?cost=0");
         pnDeliveryRequest.getAttachments().get(0).setDocumentType("PN_F24_SET");
+        PnAttachmentInfo aar = new PnAttachmentInfo();
+        aar.setUrl("safestorage://77777");
+        pnDeliveryRequest.getAttachments().add(aar);
 
         Mockito.when(requestDeliveryDAO.getByRequestId(requestid)).thenReturn(Mono.just(pnDeliveryRequest));
         Mockito.when(requestDeliveryDAO.updateData(Mockito.any())).thenAnswer(i -> Mono.just(i.getArguments()[0]));
@@ -138,7 +141,7 @@ class F24ServiceImplTest {
         PnDeliveryRequest res = f24Service.arrangeF24AttachmentsAndReschedulePrepare(requestid, urls).block();
 
         assertEquals(F24_WAITING.getCode(), res.getStatusCode());
-        assertEquals(2, res.getAttachments().size());
+        assertEquals(3, res.getAttachments().size());
         Mockito.verify(this.sqsSender).pushToInternalQueue(Mockito.any());
     }
 
