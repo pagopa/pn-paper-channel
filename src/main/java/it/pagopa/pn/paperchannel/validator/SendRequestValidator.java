@@ -1,5 +1,7 @@
 package it.pagopa.pn.paperchannel.validator;
 
+import it.pagopa.pn.commons.exceptions.PnInternalException;
+import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.exception.PnInputValidatorException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.AttachmentDetailsDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
@@ -15,8 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DIFFERENT_DATA_REQUEST;
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DIFFERENT_DATA_RESULT;
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 import static it.pagopa.pn.paperchannel.mapper.AddressMapper.fromAnalogToAddress;
 
 
@@ -73,6 +74,14 @@ public class SendRequestValidator {
             throw new PnInputValidatorException(DIFFERENT_DATA_REQUEST, DIFFERENT_DATA_REQUEST.getMessage(), HttpStatus.CONFLICT, errors);
         }
         log.logCheckingOutcome(VALIDATION_NAME, true);
+    }
+
+    public static void compareRequestCostEntity(Integer sendCost, Integer prepareCost){
+        // solo se avevo un costo di prepare, devo eseguire il confronto (e i 2 costi devono essere uguali)
+        if (prepareCost != null && prepareCost.intValue() != sendCost.intValue()) {
+            log.error("Comparison between cost used for f24 and cost computed on send is different, throw exception because this anomaly must be resolved manually");
+            throw new PnGenericException(DIFFERENT_SEND_COST, DIFFERENT_SEND_COST.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     public static void compareProgressStatusRequestEntity(PaperProgressStatusEventDto paperProgressStatusEventDto, PnDeliveryRequest pnDeliveryEntity) {
