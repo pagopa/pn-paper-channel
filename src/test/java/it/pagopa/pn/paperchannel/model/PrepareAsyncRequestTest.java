@@ -15,6 +15,7 @@ class PrepareAsyncRequestTest {
     private boolean isAddressRetry = false;
     private Integer attemptRetry;
     private String clientId;
+    private boolean isF24flow = false;
 
 
     @BeforeEach
@@ -49,6 +50,9 @@ class PrepareAsyncRequestTest {
         stringBuilder.append(", ");
         stringBuilder.append("isAddressRetry=");
         stringBuilder.append(isAddressRetry);
+        stringBuilder.append(", ");
+        stringBuilder.append("isF24ResponseFlow=");
+        stringBuilder.append(isF24flow);
         stringBuilder.append(", ");
         stringBuilder.append("attemptRetry=");
         stringBuilder.append(attemptRetry);
@@ -94,5 +98,6 @@ class PrepareAsyncRequestTest {
         isAddressRetry = false;
         attemptRetry = 3;
         clientId = "ABC";
+        isF24flow = false;
     }
 }

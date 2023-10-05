@@ -27,6 +27,8 @@ public class PnAttachmentInfo {
 
     private static final String COL_CHECKSUM = "checksum";
 
+    private static final String COL_GENERATEDFROM = "generatedFrom";
+
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_ID)}))
     private String id;
 
@@ -47,4 +49,7 @@ public class PnAttachmentInfo {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_CHECKSUM)}))
     private String checksum;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_GENERATEDFROM)}))
+    private String generatedFrom;
 }

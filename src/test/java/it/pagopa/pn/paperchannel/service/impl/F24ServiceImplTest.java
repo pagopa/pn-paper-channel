@@ -123,6 +123,25 @@ class F24ServiceImplTest {
         assertEquals(F24_WAITING.getCode(), res.getStatusCode());
     }
 
+
+    @Test
+    void arrangeF24AttachmentsAndReschedulePrepare() {
+        String requestid = "REQUESTID";
+        List<String> urls = List.of("safestorage://123456", "safestorage://9876543");
+        PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest(requestid, F24_WAITING);
+        pnDeliveryRequest.getAttachments().get(0).setUrl("f24set://IUN123/1?cost=0");
+        pnDeliveryRequest.getAttachments().get(0).setDocumentType("PN_F24_SET");
+
+        Mockito.when(requestDeliveryDAO.getByRequestId(requestid)).thenReturn(Mono.just(pnDeliveryRequest));
+        Mockito.when(requestDeliveryDAO.updateData(Mockito.any())).thenAnswer(i -> Mono.just(i.getArguments()[0]));
+
+        PnDeliveryRequest res = f24Service.arrangeF24AttachmentsAndReschedulePrepare(requestid, urls).block();
+
+        assertEquals(F24_WAITING.getCode(), res.getStatusCode());
+        assertEquals(2, res.getAttachments().size());
+        Mockito.verify(this.sqsSender).pushToInternalQueue(Mockito.any());
+    }
+
     @NotNull
     private PrepareAsyncRequest getPrepareAsyncRequest() {
         PrepareAsyncRequest prepareAsyncRequest = new PrepareAsyncRequest();
@@ -204,4 +223,5 @@ class F24ServiceImplTest {
         dto.setPriceAdditional(BigDecimal.valueOf(2.00));
         return dto;
     }
+
 }

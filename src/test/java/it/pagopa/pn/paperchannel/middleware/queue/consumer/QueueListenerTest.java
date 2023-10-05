@@ -171,6 +171,24 @@ class QueueListenerTest {
     }
 
     @Test
+    void internalQueueEventF24ErrorTest(){
+        String json = """
+                {
+                    "correlationId": "abc",
+                    "requestId": "NRTK-EWZL-KVPV-202212-Q-1124ds"
+                }
+                """;
+        Map<String, Object> headers = new HashMap<>();
+        headers.put(PN_EVENT_HEADER_EVENT_TYPE, EventTypeEnum.F24_ERROR.name());
+        headers.put(PN_EVENT_HEADER_EXPIRED, "2023-02-12T14:35:35.135725152Z");
+        headers.put(PN_EVENT_HEADER_ATTEMPT, "0");
+        Mockito.when(paperRequestErrorDAO.created(Mockito.any(),Mockito.any(),Mockito.any())).thenReturn(Mono.just(new PnRequestError()));
+        queueListener.pullFromInternalQueue(json, headers);
+        assertTrue(true);
+    }
+
+
+    @Test
     void internalQueueEventExternalChannelJsonBadlyTest(){
         String json = """
                 {

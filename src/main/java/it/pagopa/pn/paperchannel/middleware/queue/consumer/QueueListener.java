@@ -3,6 +3,7 @@ package it.pagopa.pn.paperchannel.middleware.queue.consumer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.awspring.cloud.messaging.listener.SqsMessageDeletionPolicy;
 import io.awspring.cloud.messaging.listener.annotation.SqsListener;
+import it.pagopa.pn.api.dto.events.PnF24PdfSetReadyEvent;
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.commons.utils.MDCUtils;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
@@ -199,6 +200,13 @@ public class QueueListener {
         SingleStatusUpdateDto body = convertToObject(node, SingleStatusUpdateDto.class);
         setMDCContext(headers);
         this.queueListenerService.externalChannelListener(body, 0);
+    }
+
+    @SqsListener(value = "${pn.paper-channel.queue-f24}", deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)
+    public void pullF24(@Payload String node, @Headers Map<String,Object> headers){
+        PnF24PdfSetReadyEvent body = convertToObject(node, PnF24PdfSetReadyEvent.class);
+        setMDCContext(headers);
+        this.queueListenerService.f24ResponseListener(body);
     }
 
     private InternalEventHeader toInternalEventHeader(Map<String, Object> headers){

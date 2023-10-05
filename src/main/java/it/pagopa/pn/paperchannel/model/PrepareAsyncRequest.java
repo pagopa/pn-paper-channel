@@ -26,6 +26,9 @@ public class PrepareAsyncRequest {
     @JsonProperty("isAddressRetry")
     private boolean isAddressRetry = false;
 
+    @JsonProperty("isF24Flow")
+    private boolean isF24ResponseFlow = false;
+
     @JsonProperty("attempt")
     private Integer attemptRetry;
     @JsonProperty("clientId")

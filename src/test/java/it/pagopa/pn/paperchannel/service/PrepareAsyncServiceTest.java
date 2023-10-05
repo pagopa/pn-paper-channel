@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.service;
 
+import it.pagopa.pn.paperchannel.config.HttpConnector;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnAddressFlowException;
@@ -7,6 +8,7 @@ import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.exception.PnUntracebleException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.dto.AnalogAddressDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.dto.DeduplicatesResponseDto;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileDownloadInfoDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileDownloadResponseDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.FailureDetailCodeEnum;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PrepareEvent;
@@ -27,19 +29,20 @@ import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.service.impl.PrepareAsyncServiceImpl;
 import it.pagopa.pn.paperchannel.utils.PaperCalculatorUtils;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
+import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.integration.ClientAndServer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -213,6 +216,72 @@ class PrepareAsyncServiceTest {
                 }).verify();
     }
 
+
+    @Test
+    @DisplayName("prepareAsyncTestF24Flow")
+    @Disabled("disabilitato finchè non sarà mockabile httpconnector")
+    void prepareAsyncTestF24Flow(){
+        PnDeliveryRequest deliveryRequest = getDeliveryRequest();
+
+        PnAttachmentInfo f24 = new PnAttachmentInfo();
+        f24.setUrl("safestorage://1");
+        f24.setFileKey("1");
+        f24.setGeneratedFrom("f24set://qualcosa");
+        deliveryRequest.getAttachments().add(f24);
+
+        f24 = new PnAttachmentInfo();
+        f24.setUrl("safestorage://2");
+        f24.setFileKey("2");
+        f24.setGeneratedFrom("f24set://qualcosa");
+        deliveryRequest.getAttachments().add(f24);
+
+
+        Mockito.when(this.requestDeliveryDAO.getByRequestId(Mockito.any(), Mockito.eq(true)))
+                .thenReturn(Mono.just(deliveryRequest));
+        Mockito.when(this.requestDeliveryDAO.getByRequestId(Mockito.any()))
+                .thenReturn(Mono.just(deliveryRequest));
+
+        Mockito.when(this.requestDeliveryDAO.updateData(Mockito.any())).thenReturn(Mono.just(deliveryRequest));
+
+        Mockito.when(this.addressDAO.findByRequestId(Mockito.anyString())).thenReturn(Mono.just(getAddress()));
+        FileDownloadResponseDto f = new FileDownloadResponseDto();
+        f.setKey("12345");
+        f.setChecksum("2345678");
+        f.setDocumentType("AAR");
+        f.setDownload(new FileDownloadInfoDto());
+        f.getDownload().setUrl("http://1234");
+        f.setContentLength(new BigDecimal(100));
+
+
+        Mockito.when(safeStorageClient.getFile(Mockito.anyString())).thenReturn(Mono.just(f));
+
+        request.setRequestId("REQUESTID");
+        request.setF24ResponseFlow(true);
+
+        try (MockedStatic<HttpConnector> utilities = Mockito.mockStatic(HttpConnector.class)) { // non sembra funzionare...
+            utilities.when(() -> HttpConnector.downloadFile("http://1234"))
+                    .thenReturn(Mono.just(PDDocument.load(readFakePdf())));
+
+
+            this.prepareAsyncService.prepareAsync(request).block();
+            ArgumentCaptor<PrepareEvent> prepareEventArgumentCaptor = ArgumentCaptor.forClass(PrepareEvent.class);
+            Mockito.verify(this.sqsSender).pushPrepareEvent(prepareEventArgumentCaptor.capture());
+
+            // VERIFICO CHE IN QUESTO CASO NON VENGA MAI CREATO IL RECORD DI ERRORE
+            Mockito.verify(paperRequestErrorDAO, Mockito.never()).created(Mockito.any(), Mockito.any(), Mockito.any());
+
+            PrepareEvent prepareEventActual = prepareEventArgumentCaptor.getValue();
+
+            assertThat(prepareEventActual.getRequestId()).isEqualTo(request.getRequestId());
+            assertThat(prepareEventActual.getStatusCode()).isEqualTo(StatusCodeEnum.OK);
+            assertThat(prepareEventActual.getReplacedF24AttachmentUrls()).hasSize(2);
+        } catch (IOException e) {
+            Assertions.fail(e);
+        }
+    }
+
+
+
     @Test
     @DisplayName("getFileRecursiveErrrorAttemptSaveStorage-1")
     void getFileRecursiveErrror(){
@@ -221,6 +290,16 @@ class PrepareAsyncServiceTest {
                     assertTrue(ex instanceof PnGenericException);
                     return true;
                 }).verify();;
+    }
+
+    public byte[] readFakePdf(){
+        Resource resource = new ClassPathResource("pdf/sample.pdf");
+        try {
+            String path = resource.getFile().getAbsolutePath();
+            return resource.getInputStream().readAllBytes();
+        } catch (IOException e) {
+        }
+        return null;
     }
 
     private void inizialize(){
