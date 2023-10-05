@@ -1,5 +1,8 @@
 package it.pagopa.pn.paperchannel.service;
 
+import it.pagopa.pn.api.dto.events.PnF24PdfSetReadyEvent;
+import it.pagopa.pn.api.dto.events.PnF24PdfSetReadyEventItem;
+import it.pagopa.pn.api.dto.events.PnF24PdfSetReadyEventPayload;
 import it.pagopa.pn.commons.exceptions.PnExceptionsCodes;
 import it.pagopa.pn.commons.exceptions.PnInternalException;
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
@@ -29,6 +32,8 @@ import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
+
+import java.util.List;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 
@@ -162,6 +167,52 @@ class QueueListenerServiceImplTest extends BaseTest{
         this.queueListenerService.nationalRegistriesResponseListener(addressSQSMessageDto);
     }
 
+
+    @Test
+    void f24ResponseListenerOKTest(){
+        PnF24PdfSetReadyEvent.Detail response = PnF24PdfSetReadyEvent.Detail.builder()
+                .clientId("cxid")
+                .pdfSetReady(PnF24PdfSetReadyEventPayload.builder()
+                        .requestId("requestid123")
+                        .generatedPdfsUrls(List.of(PnF24PdfSetReadyEventItem.builder()
+                                        .uri("safestorage://2345678")
+                                        .build(),
+                                PnF24PdfSetReadyEventItem.builder()
+                                        .uri("safestorage://876543")
+                                        .build()))
+                        .build())
+                .build();
+
+        PnDeliveryRequest deliveryRequest = new PnDeliveryRequest();
+        deliveryRequest.setIun("1223");
+        deliveryRequest.setRequestId("1234dc");
+        deliveryRequest.setRelatedRequestId("1234abc");
+        deliveryRequest.setCorrelationId("9999");
+
+        Mockito.when(this.f24Service.arrangeF24AttachmentsAndReschedulePrepare(Mockito.eq("requestid123"), Mockito.anyList())).thenReturn(Mono.just(deliveryRequest));
+
+        Assertions.assertDoesNotThrow(() -> this.queueListenerService.f24ResponseListener(response));
+
+    }
+
+
+    @Test
+    void f24ResponseListenerKOTest(){
+        PnF24PdfSetReadyEvent.Detail response = PnF24PdfSetReadyEvent.Detail.builder()
+                .clientId("cxid")
+                .pdfSetReady(PnF24PdfSetReadyEventPayload.builder()
+                        .generatedPdfsUrls(List.of(PnF24PdfSetReadyEventItem.builder()
+                                        .uri("safestorage://2345678")
+                                        .build(),
+                                PnF24PdfSetReadyEventItem.builder()
+                                        .uri("safestorage://876543")
+                                        .build()))
+                        .build())
+                .build();
+
+        Assertions.assertThrows(PnGenericException.class, () -> this.queueListenerService.f24ResponseListener(response));
+
+    }
 
     @Test
     void f24ErrorListenerOKTest(){

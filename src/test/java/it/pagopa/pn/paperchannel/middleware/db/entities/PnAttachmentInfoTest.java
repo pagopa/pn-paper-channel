@@ -13,6 +13,7 @@ class PnAttachmentInfoTest {
     private String fileKey;
     private Integer numberOfPage;
     private String checksum;
+    private String generatedFrom;
 
     @BeforeEach
     void setUp(){
@@ -45,6 +46,9 @@ class PnAttachmentInfoTest {
         stringBuilder.append(", ");
         stringBuilder.append("checksum=");
         stringBuilder.append(checksum);
+        stringBuilder.append(", ");
+        stringBuilder.append("generatedFrom=");
+        stringBuilder.append(generatedFrom);
         stringBuilder.append(")");
 
         String toTest = stringBuilder.toString();
@@ -60,6 +64,7 @@ class PnAttachmentInfoTest {
         pnAttachmentInfo.setFileKey(fileKey);
         pnAttachmentInfo.setNumberOfPage(numberOfPage);
         pnAttachmentInfo.setChecksum(checksum);
+        pnAttachmentInfo.setGeneratedFrom(generatedFrom);
         return pnAttachmentInfo;
     }
 
@@ -71,5 +76,6 @@ class PnAttachmentInfoTest {
         fileKey = "/safe-storage/v1/files/PDFURL";
         numberOfPage = 3;
         checksum = "j49fkldvnj4890efmeff433t2gvnr9rgmprm3g308jknbi3392llfm29fe8";
+        generatedFrom = "f24set://qualcosa";
     }
 }

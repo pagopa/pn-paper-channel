@@ -3,8 +3,10 @@ package it.pagopa.pn.paperchannel.service.impl;
 import it.pagopa.pn.commons.exceptions.PnExceptionsCodes;
 import it.pagopa.pn.commons.exceptions.PnInternalException;
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
+import it.pagopa.pn.commons.log.PnAuditLogEventType;
 import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnF24FlowException;
+import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ProductTypeEnum;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
 import it.pagopa.pn.paperchannel.mapper.AttachmentMapper;
@@ -15,6 +17,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.F24Client;
 import it.pagopa.pn.paperchannel.model.F24Error;
+import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
 import it.pagopa.pn.paperchannel.service.F24Service;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.Const;
@@ -32,9 +35,12 @@ import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.ADDRESS_NOT_EXIST;
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_NOT_EXIST;
 import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.F24_WAITING;
 
 @CustomLog
@@ -99,6 +105,46 @@ public class F24ServiceImpl extends GenericService implements F24Service {
                     log.fatal("URL f24set is required and should exist");
                     return Mono.error(new PnInternalException("missing URL f24set on f24serviceImpl", PnExceptionsCodes.ERROR_CODE_PN_GENERIC_ERROR));
                 });
+    }
+
+    @Override
+    public Mono<PnDeliveryRequest> arrangeF24AttachmentsAndReschedulePrepare(String requestId, List<String> generatedUrls) {
+        // sistemo gli allegati sostituendoli all'originale, salvo e faccio ripartire l'evento di prepare
+        return requestDeliveryDAO.getByRequestId(requestId)
+                        .map(pnDeliveryRequest -> arrangeAttachments(pnDeliveryRequest, generatedUrls))
+                        .flatMap(requestDeliveryDAO::updateData)
+                        .flatMap(deliveryRequest -> {
+                            PrepareAsyncRequest request = new PrepareAsyncRequest(deliveryRequest.getRequestId(), deliveryRequest.getIun(), false, 0);
+                            request.setF24ResponseFlow(true);
+                            this.sqsSender.pushToInternalQueue(request);
+                            return Mono.just(deliveryRequest);
+                        })
+                .doOnSuccess(deliveryRequest -> f24ResponseLogAuditSuccess(deliveryRequest, generatedUrls))
+                .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage())))
+                .doOnError(deliveryRequest -> f24ResponseLogAuditFailure(requestId, generatedUrls));
+
+    }
+
+    private PnDeliveryRequest arrangeAttachments(PnDeliveryRequest pnDeliveryRequest, List<String> generatedUrls){
+        List<PnAttachmentInfo> attachments = new ArrayList<>();
+        pnDeliveryRequest.getAttachments().forEach(pnAttachmentInfo -> {
+            if (pnAttachmentInfo.getDocumentType() != null && pnAttachmentInfo.getDocumentType().equals(DOCUMENT_TYPE_F24_SET))
+            {
+                // nel caso l'attachement fosse di tipo DOCUMENT_TYPE_F24_SET, vado a sovrascriverlo con la lista tornata da f24.
+                generatedUrls.forEach(url -> {
+                    PnAttachmentInfo newAttachment = new PnAttachmentInfo();
+                    newAttachment.setUrl(url);
+                    newAttachment.setFileKey(url);
+                    newAttachment.setGeneratedFrom(pnAttachmentInfo.getUrl()); // url originale f24
+                    attachments.add(newAttachment);
+                });
+            }
+            else
+                attachments.add(pnAttachmentInfo);
+
+        });
+        pnDeliveryRequest.setAttachments(attachments);
+        return pnDeliveryRequest;
     }
 
     private Integer sumCostAndAnalogCost(F24AttachmentInfo f24AttachmentInfo) {
@@ -195,6 +241,30 @@ public class F24ServiceImpl extends GenericService implements F24Service {
     }
 
 
+    private void f24ResponseLogAuditSuccess(PnDeliveryRequest entity, List<String> generatedUrls) {
+
+            String docs = String.join(",", generatedUrls);
+
+            pnLogAudit.addsSuccessResolveLogic(
+                    entity.getIun(),
+                    String.format("prepare requestId = %s, relatedRequestId = %s, traceId = %s generated f24 docs = %s Response OK from F24 service",
+                            entity.getRequestId(),
+                            entity.getRelatedRequestId(),
+                            entity.getCorrelationId(),
+                            docs));
+    }
+
+    private void f24ResponseLogAuditFailure(String requestId, List<String> generatedUrls) {
+
+            String docs = String.join(",", generatedUrls==null?List.of("null"):generatedUrls);
+
+            pnLogAudit.addsFailLog(
+                    PnAuditLogEventType.AUD_FD_RESOLVE_LOGIC,
+                    requestId,
+                    String.format("prepare requestId = %s generated f24 docs = %s error from F24 service",
+                            requestId, docs));
+
+    }
 
 
 }

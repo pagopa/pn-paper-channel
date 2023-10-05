@@ -49,6 +49,25 @@ class PrepareEventMapperTest {
     }
 
 
+    @Test
+    void prepareEventMapperToPrepareEventTest_withgenerated () {
+        PnDeliveryRequest req = getDeliveryRequest(StatusDeliveryEnum.IN_PROCESSING);
+
+        PnAttachmentInfo f24 = new PnAttachmentInfo();
+        f24.setUrl("safestorage://1");
+        f24.setGeneratedFrom("f24set://qualcosa");
+        req.getAttachments().add(f24);
+
+        f24 = new PnAttachmentInfo();
+        f24.setUrl("safestorage://2");
+        f24.setGeneratedFrom("f24set://qualcosa");
+        req.getAttachments().add(f24);
+
+        PrepareEvent response= PrepareEventMapper.toPrepareEvent(req,getAddress(), StatusCodeEnum.OK, null);
+        Assertions.assertNotNull(response);
+        Assertions.assertEquals(2, response.getReplacedF24AttachmentUrls().size());
+    }
+
     private PnDeliveryRequest getDeliveryRequest(StatusDeliveryEnum status){
         PnDeliveryRequest deliveryRequest= new PnDeliveryRequest();
         List<PnAttachmentInfo> attachmentUrls = new ArrayList<>();

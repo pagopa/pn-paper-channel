@@ -1,5 +1,8 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
+import it.pagopa.pn.api.dto.events.PnF24PdfSetReadyEvent;
+import it.pagopa.pn.api.dto.events.PnF24PdfSetReadyEventItem;
+import it.pagopa.pn.api.dto.events.PnF24PdfSetReadyEventPayload;
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.commons.utils.MDCUtils;
 import it.pagopa.pn.paperchannel.exception.PnAddressFlowException;
@@ -31,6 +34,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static it.pagopa.pn.commons.log.PnLogger.EXTERNAL_SERVICES.PN_NATIONAL_REGISTRIES;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
@@ -117,6 +121,27 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
             sqsSender.pushInternalError(payload, entity.getAttempt(), F24Error.class);
             return null;
         });
+    }
+
+
+    @Override
+    public void f24ResponseListener(PnF24PdfSetReadyEvent.Detail body) {
+        final String PROCESS_NAME = "F24 Response Listener";
+        String requestId = body.getPdfSetReady().getRequestId();
+        MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, requestId);
+
+        log.logStartingProcess(PROCESS_NAME);
+        log.info("Received message from F24 queue");
+        MDCUtils.addMDCToContextAndExecute(Mono.just(body)
+                        .map(msg -> {
+                            if (msg==null || StringUtils.isBlank(requestId)) throw new PnGenericException(CORRELATION_ID_NOT_FOUND, CORRELATION_ID_NOT_FOUND.getMessage());
+                            else return msg;
+                        })
+                        .map(PnF24PdfSetReadyEvent.Detail::getPdfSetReady)
+                        .flatMap(payload -> f24Service.arrangeF24AttachmentsAndReschedulePrepare(payload.getRequestId(),
+                                                payload.getGeneratedPdfsUrls().stream().map(PnF24PdfSetReadyEventItem::getUri).toList()))
+                )
+                .block();
     }
 
     @Override
