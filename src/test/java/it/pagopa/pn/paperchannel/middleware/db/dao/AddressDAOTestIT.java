@@ -3,7 +3,6 @@ package it.pagopa.pn.paperchannel.middleware.db.dao;
 import it.pagopa.pn.paperchannel.config.BaseTest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
-import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,8 +12,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@Slf4j
-class AddressDAOTest extends BaseTest {
+class AddressDAOTestIT extends BaseTest {
 
     @Autowired
     private AddressDAO addressDAO;

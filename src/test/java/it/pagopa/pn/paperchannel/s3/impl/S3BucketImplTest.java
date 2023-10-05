@@ -6,52 +6,35 @@ import com.amazonaws.services.s3.model.PutObjectResult;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import it.pagopa.pn.paperchannel.config.AwsBucketProperties;
-import it.pagopa.pn.paperchannel.config.BaseTest;
-import it.pagopa.pn.paperchannel.exception.PnGenericException;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
-import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
-import it.pagopa.pn.paperchannel.s3.S3Bucket;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.boot.test.mock.mockito.SpyBean;
-import reactor.core.publisher.Mono;
+import org.mockito.Spy;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.PREPARE_ASYNC_LISTENER_EXCEPTION;
-import static org.junit.jupiter.api.Assertions.*;
+@ExtendWith(MockitoExtension.class)
+class S3BucketImplTest {
 
-class S3BucketImplTest extends BaseTest {
-
-    @MockBean
+    @Mock
     AmazonS3 s3Client;
     @Mock
     S3Object s3Object;
     @Mock
     S3ObjectInputStream inputStream;
-    @Autowired
-    @SpyBean
+    @Spy
     AwsBucketProperties awsBucketProperties;
 
-    @Autowired
-    S3Bucket s3Bucket;
+    @InjectMocks
+    S3BucketImpl s3Bucket;
 
-    @BeforeEach
-    void setUp() throws IOException {
-        Mockito.when(this.s3Client.getObject(Mockito.any())).thenReturn(this.s3Object);
-        Mockito.when(this.s3Object.getObjectContent()).thenReturn(this.inputStream);
-        Mockito.when(this.inputStream.getDelegateStream()).thenReturn(null);
-        Mockito.when(this.inputStream.readAllBytes()).thenReturn(null);
-    }
 
     @Test
     void presignedUrlTest() throws MalformedURLException {
@@ -79,8 +62,7 @@ class S3BucketImplTest extends BaseTest {
     }
 
     @Test
-    void getObjectDataErrorTest() throws IOException {
-        Mockito.when(this.inputStream.readAllBytes()).thenThrow(new IOException());
+    void getObjectDataErrorTest() {
         this.s3Bucket.getObjectData("pippo.txt");
     }
 

@@ -2,6 +2,7 @@ package it.pagopa.pn.paperchannel.rest.v1;
 
 
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.*;
+import it.pagopa.pn.paperchannel.middleware.db.dao.PnClientDAO;
 import it.pagopa.pn.paperchannel.service.PaperChannelService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -11,6 +12,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -21,6 +23,8 @@ class PaperChannelRestV1ControllerTest {
     private WebTestClient webTestClient;
     @MockBean
     private PaperChannelService paperChannelService;
+    @MockBean
+    private PnClientDAO pnClientDAO;
 
     @Test
     void takeTenderTest(){
@@ -251,8 +255,8 @@ class PaperChannelRestV1ControllerTest {
         request.setUid("UUID");
         request.setTenderCode("tenderCode");
         request.setDriverCode("driverCode");
-        request.setPrice(10.3f);
-        request.setPriceAdditional(11.2f);
+        request.setPrice(BigDecimal.valueOf(10.3f));
+        request.setPriceAdditional(BigDecimal.valueOf(11.2f));
         request.setProductType(ProductTypeEnumDto.AR);
         request.setCap(caps);
         request.setZone(InternationalZoneEnum._1);

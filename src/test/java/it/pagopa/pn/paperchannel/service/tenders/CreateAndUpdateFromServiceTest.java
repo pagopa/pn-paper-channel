@@ -1,6 +1,6 @@
 package it.pagopa.pn.paperchannel.service.tenders;
 
-import it.pagopa.pn.paperchannel.config.BaseTest;
+import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.paperchannel.config.InstanceCreator;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.*;
@@ -14,18 +14,17 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnTender;
 import it.pagopa.pn.paperchannel.service.impl.PaperChannelServiceImpl;
 import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.validator.CostValidator;
-import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.*;
+import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -36,18 +35,21 @@ import java.util.UUID;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-@Slf4j
-class CreateAndUpdateFromServiceTest extends BaseTest {
+@ExtendWith(MockitoExtension.class)
+class CreateAndUpdateFromServiceTest {
 
 
-    @Autowired
+    @InjectMocks
     private PaperChannelServiceImpl paperChannelService;
-    @MockBean
+    @Mock
     private CostDAO costDAO;
-    @MockBean
+    @Mock
     private DeliveryDriverDAO deliveryDriverDAO;
-    @MockBean
+    @Mock
     private TenderDAO tenderDAO;
+
+    @Spy
+    private PnAuditLogBuilder pnAuditLogBuilder;
     private MockedStatic<CostMapper> costMapperMockedStatic;
     private MockedStatic<CostValidator> costValidatorMockedStatic;
 
@@ -536,8 +538,8 @@ class CreateAndUpdateFromServiceTest extends BaseTest {
         cost.setZone(zone);
         cost.setCap(cap);
         cost.setUuid(UUID.randomUUID().toString());
-        cost.setBasePrice(1.23F);
-        cost.setPagePrice(1.23F);
+        cost.setBasePrice(BigDecimal.valueOf(1.23F));
+        cost.setPagePrice(BigDecimal.valueOf(1.23F));
         cost.setProductType(productType);
         return cost;
     }
@@ -586,8 +588,8 @@ class CreateAndUpdateFromServiceTest extends BaseTest {
 
     private CostDTO getCostDTO(){
         CostDTO dto = new CostDTO();
-        dto.setPrice(1.23F);
-        dto.setPriceAdditional(1.23F);
+        dto.setPrice(BigDecimal.valueOf(1.23F));
+        dto.setPriceAdditional(BigDecimal.valueOf(1.23F));
         dto.setDriverCode("1223444");
         dto.setTenderCode("1233344");
         return dto;

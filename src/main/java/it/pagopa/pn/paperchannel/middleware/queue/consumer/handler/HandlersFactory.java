@@ -47,6 +47,7 @@ public class HandlersFactory {
         var saveDematMessageHandler = new SaveDematMessageHandler(sqsSender, eventDematDAO, pnPaperChannelConfig.getTtlExecutionDaysDemat());
         var retryableErrorExtChannelsMessageHandler = new RetryableErrorMessageHandler(sqsSender, externalChannelClient, addressDAO, paperRequestErrorDAO, pnPaperChannelConfig);
         var notRetryableErrorMessageHandler = new NotRetryableErrorMessageHandler(sqsSender, paperRequestErrorDAO);
+        var notRetriableWithoutSendErrorMessageHandler = new NotRetriableWithoutSendErrorMessageHandler(paperRequestErrorDAO);
         var customAggregatorMessageHandler = new CustomAggregatorMessageHandler(sqsSender, eventMetaDAO, metaDematCleaner);
         var aggregatorMessageHandler = new AggregatorMessageHandler(sqsSender, eventMetaDAO, metaDematCleaner);
         var directlySendMessageHandler = new DirectlySendMessageHandler(sqsSender);
@@ -62,6 +63,7 @@ public class HandlersFactory {
 
         addRetryableErrorStatusCodes(map, retryableErrorExtChannelsMessageHandler);
         addNotRetryableErrorStatusCodes(map, notRetryableErrorMessageHandler);
+        addNotRetryableErrorStatusCodeWithoutSend(map, notRetriableWithoutSendErrorMessageHandler);
         addSaveMetadataStatusCodes(map, saveMetadataMessageHandler);
         addSaveDematStatusCodes(map, saveDematMessageHandler);
         addAggregatorStatusCodes(map, aggregatorMessageHandler);
@@ -102,6 +104,10 @@ public class HandlersFactory {
         map.put(ExternalChannelCodeEnum.CON996.name(), handler);
         map.put(ExternalChannelCodeEnum.CON995.name(), handler);
         map.put(ExternalChannelCodeEnum.CON993.name(), handler);
+    }
+
+    private void addNotRetryableErrorStatusCodeWithoutSend(ConcurrentHashMap<String, MessageHandler> map, NotRetriableWithoutSendErrorMessageHandler handler){
+        map.put(ExternalChannelCodeEnum.P010.name(), handler);
     }
 
     private void addSaveMetadataStatusCodes(ConcurrentHashMap<String, MessageHandler> map, SaveMetadataMessageHandler handler) {

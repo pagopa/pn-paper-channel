@@ -4,8 +4,10 @@ import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.kms.AWSKMS;
 import com.amazonaws.services.kms.AWSKMSClient;
 import com.amazonaws.services.kms.AWSKMSClientBuilder;
+import it.pagopa.pn.commons.configs.aws.AwsConfigs;
 import it.pagopa.pn.paperchannel.encryption.DataEncryption;
 import it.pagopa.pn.paperchannel.encryption.impl.KmsEncryptionImpl;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,23 +15,21 @@ import org.springframework.context.annotation.Configuration;
 import java.util.Optional;
 
 @Configuration
+@RequiredArgsConstructor
 public class KmsConfiguration {
 
     private final AwsKmsProperties properties;
+    private final AwsConfigs awsConfigs;
 
-
-    public KmsConfiguration(AwsKmsProperties properties) {
-        this.properties = properties;
-    }
 
     @Bean
     public AWSKMS kms() {
         final AWSKMSClientBuilder builder = AWSKMSClient.builder();
 
-        if (Optional.ofNullable(properties.getEndpoint()).isPresent()) {
-            builder.withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(properties.getEndpoint(), properties.getRegion()));
+        if (Optional.ofNullable(awsConfigs.getEndpointUrl()).isPresent()) {
+            builder.withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(awsConfigs.getEndpointUrl(), awsConfigs.getRegionCode()));
         } else {
-            Optional.ofNullable(properties.getRegion()).ifPresent(builder::setRegion);
+            Optional.ofNullable(awsConfigs.getRegionCode()).ifPresent(builder::setRegion);
         }
 
         return builder.build();

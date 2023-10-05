@@ -1,6 +1,5 @@
 package it.pagopa.pn.paperchannel.service.tenders;
 
-import it.pagopa.pn.paperchannel.config.BaseTest;
 import it.pagopa.pn.paperchannel.config.InstanceCreator;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.*;
@@ -12,9 +11,11 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryDriver;
 import it.pagopa.pn.paperchannel.service.impl.PaperChannelServiceImpl;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -26,14 +27,15 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_DRI
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.TENDER_NOT_EXISTED;
 import static org.junit.jupiter.api.Assertions.*;
 
-class AllGetFromServiceTest extends BaseTest {
-    @Autowired
+@ExtendWith(MockitoExtension.class)
+class AllGetFromServiceTest {
+    @InjectMocks
     private PaperChannelServiceImpl paperChannelService;
-    @MockBean
+    @Mock
     private CostDAO costDAO;
-    @MockBean
+    @Mock
     private DeliveryDriverDAO deliveryDriverDAO;
-    @MockBean
+    @Mock
     private TenderDAO tenderDAO;
 
     @Test

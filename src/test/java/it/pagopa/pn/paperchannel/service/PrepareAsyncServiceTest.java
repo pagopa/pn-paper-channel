@@ -1,30 +1,40 @@
 package it.pagopa.pn.paperchannel.service;
 
-import it.pagopa.pn.paperchannel.config.BaseTest;
+import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnAddressFlowException;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
+import it.pagopa.pn.paperchannel.exception.PnUntracebleException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.dto.AnalogAddressDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.dto.DeduplicatesResponseDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileDownloadResponseDto;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.FailureDetailCodeEnum;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PrepareEvent;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
+import it.pagopa.pn.paperchannel.mapper.PrepareEventMapper;
+import it.pagopa.pn.paperchannel.mapper.RequestDeliveryMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnRequestError;
 import it.pagopa.pn.paperchannel.middleware.msclient.AddressManagerClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.paperchannel.model.Address;
+import it.pagopa.pn.paperchannel.model.KOReason;
 import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
+import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.service.impl.PrepareAsyncServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -34,29 +44,33 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static it.pagopa.pn.paperchannel.utils.Const.RACCOMANDATA_SEMPLICE;
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.UNTRACEABLE_ADDRESS;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-class PrepareAsyncServiceTest extends BaseTest {
+@ExtendWith(MockitoExtension.class)
+class PrepareAsyncServiceTest {
 
-    @Autowired
+    @InjectMocks
     private PrepareAsyncServiceImpl prepareAsyncService;
-    @MockBean
+    @Mock
     private AddressDAO addressDAO;
-    @MockBean
+    @Mock
     private RequestDeliveryDAO requestDeliveryDAO;
-    @MockBean
+    @Mock
     private SqsSender sqsSender;
-    @MockBean
+    @Mock
     private SafeStorageClient safeStorageClient;
-    @MockBean
+    @Mock
     private AddressManagerClient addressManagerClient;
-    @MockBean
+    @Mock
     private PaperAddressService paperAddressService;
-    @MockBean
+    @Mock
     private PaperRequestErrorDAO paperRequestErrorDAO;
+
+    @Mock
+    private PnPaperChannelConfig pnPaperChannelConfig;
 
     private final PrepareAsyncRequest request = new PrepareAsyncRequest();
     private final Address address = new Address();
@@ -108,23 +122,21 @@ class PrepareAsyncServiceTest extends BaseTest {
     @Test
     @DisplayName("prepareAsyncTestErrorUntraceableAddress")
     void prepareAsyncTestErrorUntraceableAddress(){
+        PnDeliveryRequest deliveryRequest = getDeliveryRequest();
 
         Mockito.when(this.requestDeliveryDAO.getByCorrelationId(Mockito.any(), Mockito.anyBoolean()))
-                .thenReturn(Mono.just(getDeliveryRequest()));
+                .thenReturn(Mono.just(deliveryRequest));
 
         Mockito.when(this.paperAddressService.getCorrectAddress(Mockito.any(), Mockito.any(), Mockito.any()))
-                .thenThrow(new PnGenericException(UNTRACEABLE_ADDRESS, UNTRACEABLE_ADDRESS.getMessage()));
+                .thenReturn(Mono.error(new PnUntracebleException(new KOReason(FailureDetailCodeEnum.D00, null))));
 
-        Mockito.when(this.paperRequestErrorDAO.created(Mockito.any(), Mockito.any(), Mockito.any()))
-                .thenReturn(Mono.just(new PnRequestError()));
 
         Mockito.when(this.requestDeliveryDAO.getByCorrelationId(Mockito.any()))
-            .thenReturn(Mono.just(getDeliveryRequest()));
+            .thenReturn(Mono.just(deliveryRequest));
 
-        Mockito.when(this.requestDeliveryDAO.updateData(Mockito.any())).thenReturn(Mono.just(getDeliveryRequest()));
+        Mockito.when(this.requestDeliveryDAO.updateData(Mockito.any())).thenReturn(Mono.just(deliveryRequest));
 
         Mockito.doNothing().when(this.sqsSender).pushPrepareEvent(Mockito.any());
-
 
         request.setCorrelationId("FFPAPERTEST.IUN_FATY");
 
@@ -133,6 +145,24 @@ class PrepareAsyncServiceTest extends BaseTest {
                     assertTrue(ex instanceof PnGenericException);
                     return true;
                 }).verify();
+
+        // VERIFICO CHE IN QUESTO CASO NON VENGA MAI CREATO IL RECORD DI ERRORE
+        Mockito.verify(paperRequestErrorDAO, Mockito.never()).created(Mockito.any(), Mockito.any(), Mockito.any());
+
+        // VERIFICO CHE È STATO INVIATO L'EVENTO DI KOUNREACHABLE A DELIVERY PUSH
+        RequestDeliveryMapper.changeState(pnDeliveryRequest, StatusDeliveryEnum.UNTRACEABLE.getCode(),
+                StatusDeliveryEnum.PAPER_CHANNEL_ASYNC_ERROR.getDescription(), StatusDeliveryEnum.UNTRACEABLE.getDetail(),
+                null, null);
+        PrepareEvent prepareEventExpected = PrepareEventMapper.toPrepareEvent(deliveryRequest, null, StatusCodeEnum.KO, new KOReason(FailureDetailCodeEnum.D00, null));
+        ArgumentCaptor<PrepareEvent> prepareEventArgumentCaptor = ArgumentCaptor.forClass(PrepareEvent.class);
+
+        Mockito.verify(this.sqsSender).pushPrepareEvent(prepareEventArgumentCaptor.capture());
+        PrepareEvent prepareEventActual = prepareEventArgumentCaptor.getValue();
+
+        assertThat(prepareEventActual.getRequestId()).isEqualTo(prepareEventExpected.getRequestId());
+        assertThat(prepareEventActual.getStatusCode()).isEqualTo(prepareEventExpected.getStatusCode());
+        assertThat(prepareEventActual.getStatusDetail()).isEqualTo(prepareEventExpected.getStatusDetail());
+        assertThat(prepareEventActual.getFailureDetailCode()).isEqualTo(FailureDetailCodeEnum.D00);
     }
 
     @Test
@@ -192,6 +222,7 @@ class PrepareAsyncServiceTest extends BaseTest {
     }
 
     private PnDeliveryRequest getDeliveryRequest(){
+        pnDeliveryRequest.setRequestId("FATY-FATY-2023041520230302");
         pnDeliveryRequest.setIun("FATY-FATY-2023041520230302-101111");
         pnDeliveryRequest.setProposalProductType(RACCOMANDATA_SEMPLICE);
         List<PnAttachmentInfo> attachmentInfoList = new ArrayList<>();
