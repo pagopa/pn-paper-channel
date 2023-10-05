@@ -204,7 +204,7 @@ public class QueueListener {
 
     @SqsListener(value = "${pn.paper-channel.queue-f24}", deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)
     public void pullF24(@Payload String node, @Headers Map<String,Object> headers){
-        PnF24PdfSetReadyEvent body = convertToObject(node, PnF24PdfSetReadyEvent.class);
+        PnF24PdfSetReadyEvent.Detail body = convertToObject(node, PnF24PdfSetReadyEvent.Detail.class);
         setMDCContext(headers);
         this.queueListenerService.f24ResponseListener(body);
     }

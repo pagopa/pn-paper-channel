@@ -12,6 +12,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnRequestError;
 import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
 import it.pagopa.pn.paperchannel.service.QueueListenerService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -168,6 +169,29 @@ class QueueListenerTest {
         Mockito.when(paperRequestErrorDAO.created(Mockito.any(),Mockito.any(),Mockito.any())).thenReturn(Mono.just(new PnRequestError()));
         queueListener.pullFromInternalQueue(json, headers);
         assertTrue(true);
+    }
+
+
+    @Test
+    void pullF24OkTest(){
+        String json = """
+                {
+                     "clientId": "123",
+                     "pdfSetReady":
+                     {
+                        "requestId": "AKUZ-AWPL-LTPX-20230415",
+                        "status": "OK",
+                        "generatedPdfsUrls": [{
+                            "pathTokens": "0/1",
+                            "uri": "safestorage://e4r56t78"
+                            },{
+                            "pathTokens": "0/2",
+                            "uri": "safestorage://e4dfgdfyhk8"
+                            }]
+                     }
+                }
+                """;
+        Assertions.assertDoesNotThrow(() -> queueListener.pullF24(json, new HashMap<>()));
     }
 
     @Test

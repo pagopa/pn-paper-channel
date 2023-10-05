@@ -170,18 +170,16 @@ class QueueListenerServiceImplTest extends BaseTest{
 
     @Test
     void f24ResponseListenerOKTest(){
-        PnF24PdfSetReadyEvent response = PnF24PdfSetReadyEvent.builder()
-                .detail(PnF24PdfSetReadyEvent.Detail.builder()
-                        .clientId("cxid")
-                        .pdfSetReady(PnF24PdfSetReadyEventPayload.builder()
-                                .requestId("requestid123")
-                                .generatedPdfsUrls(List.of(PnF24PdfSetReadyEventItem.builder()
-                                                .uri("safestorage://2345678")
+        PnF24PdfSetReadyEvent.Detail response = PnF24PdfSetReadyEvent.Detail.builder()
+                .clientId("cxid")
+                .pdfSetReady(PnF24PdfSetReadyEventPayload.builder()
+                        .requestId("requestid123")
+                        .generatedPdfsUrls(List.of(PnF24PdfSetReadyEventItem.builder()
+                                        .uri("safestorage://2345678")
                                         .build(),
-                                        PnF24PdfSetReadyEventItem.builder()
-                                                .uri("safestorage://876543")
-                                                .build()))
-                                .build())
+                                PnF24PdfSetReadyEventItem.builder()
+                                        .uri("safestorage://876543")
+                                        .build()))
                         .build())
                 .build();
 
@@ -200,17 +198,15 @@ class QueueListenerServiceImplTest extends BaseTest{
 
     @Test
     void f24ResponseListenerKOTest(){
-        PnF24PdfSetReadyEvent response = PnF24PdfSetReadyEvent.builder()
-                .detail(PnF24PdfSetReadyEvent.Detail.builder()
-                        .clientId("cxid")
-                        .pdfSetReady(PnF24PdfSetReadyEventPayload.builder()
-                                .generatedPdfsUrls(List.of(PnF24PdfSetReadyEventItem.builder()
-                                                .uri("safestorage://2345678")
-                                                .build(),
-                                        PnF24PdfSetReadyEventItem.builder()
-                                                .uri("safestorage://876543")
-                                                .build()))
-                                .build())
+        PnF24PdfSetReadyEvent.Detail response = PnF24PdfSetReadyEvent.Detail.builder()
+                .clientId("cxid")
+                .pdfSetReady(PnF24PdfSetReadyEventPayload.builder()
+                        .generatedPdfsUrls(List.of(PnF24PdfSetReadyEventItem.builder()
+                                        .uri("safestorage://2345678")
+                                        .build(),
+                                PnF24PdfSetReadyEventItem.builder()
+                                        .uri("safestorage://876543")
+                                        .build()))
                         .build())
                 .build();
 

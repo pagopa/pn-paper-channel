@@ -15,5 +15,5 @@ public interface QueueListenerService {
     void externalChannelListener(SingleStatusUpdateDto data, int attempt);
     void manualRetryExternalChannel(String requestId, String newPcRetry);
     void f24ErrorListener(F24Error entity, Integer attempt);
-    void f24ResponseListener(PnF24PdfSetReadyEvent body);
+    void f24ResponseListener(PnF24PdfSetReadyEvent.Detail body);
 }

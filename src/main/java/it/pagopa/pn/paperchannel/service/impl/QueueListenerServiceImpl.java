@@ -125,9 +125,9 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
 
 
     @Override
-    public void f24ResponseListener(PnF24PdfSetReadyEvent body) {
+    public void f24ResponseListener(PnF24PdfSetReadyEvent.Detail body) {
         final String PROCESS_NAME = "F24 Response Listener";
-        String requestId = body.getDetail().getPdfSetReady().getRequestId();
+        String requestId = body.getPdfSetReady().getRequestId();
         MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, requestId);
 
         log.logStartingProcess(PROCESS_NAME);
@@ -137,7 +137,7 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                             if (msg==null || StringUtils.isBlank(requestId)) throw new PnGenericException(CORRELATION_ID_NOT_FOUND, CORRELATION_ID_NOT_FOUND.getMessage());
                             else return msg;
                         })
-                        .map(msg -> msg.getDetail().getPdfSetReady())
+                        .map(PnF24PdfSetReadyEvent.Detail::getPdfSetReady)
                         .flatMap(payload -> f24Service.arrangeF24AttachmentsAndReschedulePrepare(payload.getRequestId(),
                                                 payload.getGeneratedPdfsUrls().stream().map(PnF24PdfSetReadyEventItem::getUri).toList()))
                 )
