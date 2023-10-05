@@ -21,7 +21,9 @@ import java.util.regex.Pattern;
 
 @Slf4j
 public class Utility {
-    private final static Pattern PATTERN_PREFIX_CLIENT_ID = Pattern.compile("^\\d{3}\\.");
+    private static final Pattern PATTERN_PREFIX_CLIENT_ID = Pattern.compile("^\\d{3}\\.");
+    public static final String DEDUPLICATION_REQUEST_PREFIX = "DEDUP_ADDRESS_";
+
     private Utility() {
         throw new IllegalCallerException();
     }

@@ -119,44 +119,46 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
             return super.handleMessage(SendEventMapper.changeToProgressStatus(entity), paperRequest)
                     .then(Mono.just(pnEventMetas));
         }
-        else if (/*(!containsPNAG012) &&*/ containsRECAG012) { // presente META##RECAG012  e non META##PNAG012
+        else { // non presente META##PNAG012
 //            CASO 3
-            log.info("[{}] Result of query is: META##RECAG012 present, META##PNAG012 not present", paperRequest.getRequestId());
-
-            if (missingRequiredDateTimes(recag011ADateTime, recag00XADateTime)) {
-                throw new PnGenericException(WRONG_EVENT_ORDER, "[{" + paperRequest.getRequestId() + "}] needed META##RECAG00_A is present and/or META##RECAG011A not present");
-            }
-
-            if (lessThanTenDaysBetweenRECAG00XAAndRECAG011A(recag011ADateTime, recag00XADateTime)) {
-                // 3 a
-                log.info("[{}] (statusDateTime[META##RECAG00_A] - statusDateTime[META##RECAG011A]) < {}", paperRequest.getRequestId(), refinementDuration);
-
-                return super.handleMessage(entity, paperRequest) // original event sent as final
-                        .then(Mono.just(pnEventMetas));
-            } else if (recag011ADateTime != null) { // if check only for not having a warning when calling .plus
-                // 3 b
-                log.info("[{}] (statusDateTime[META##RECAG00_A] - statusDateTime[META##RECAG011A]) >= {}", paperRequest.getRequestId(), refinementDuration);
-
-                PnAuditLogBuilder auditLogBuilder = new PnAuditLogBuilder();
-                PnLogAudit pnLogAudit = new PnLogAudit(auditLogBuilder);
-                PNAG012Wrapper pnag012Wrapper = PNAG012Wrapper.buildPNAG012Wrapper(entity, paperRequest, recag011ADateTime.plus(refinementDuration));
-                var pnag012PaperRequest = pnag012Wrapper.getPaperProgressStatusEventDtoPNAG012();
-                var pnag012DeliveryRequest = pnag012Wrapper.getPnDeliveryRequestPNAG012();
-
-                pnLogAudit.addsBeforeReceive(entity.getIun(), String.format("prepare requestId = %s Response from external-channel",pnag012DeliveryRequest.getRequestId()));
-                logSuccessAuditLog(pnag012PaperRequest, pnag012DeliveryRequest, pnLogAudit);
-
-                return super.handleMessage(pnag012DeliveryRequest, pnag012PaperRequest) // generated event sent as final
-                        .then(super.handleMessage(SendEventMapper.changeToProgressStatus(entity), paperRequest))  // original event sent as progress
-                        .then(Mono.just(pnEventMetas));
-            }
+            log.info("[{}] Result of query is: META##PNAG012 not present", paperRequest.getRequestId());
+            return handleNoPNAG012(pnEventMetas, entity, paperRequest, recag011ADateTime, recag00XADateTime);
         }
-        // RECAG012 sarà sempre presente: lasciato quest'ultimo caso solo per esaurire le casistiche e fare comunque la return
-//            CASO 4
-        log.info("[{}] Result of query has no PNAG012 and no RECAG012", paperRequest.getRequestId());
-        // qui lo status è OK o KO in base alla trasformazione fatta nel passo di update entity
-        return super.handleMessage(entity, paperRequest)
-                .then(Mono.just(pnEventMetas));
+    }
+
+    private Mono<List<PnEventMeta>> handleNoPNAG012(List<PnEventMeta> pnEventMetas, PnDeliveryRequest entity,
+                                                     PaperProgressStatusEventDto paperRequest, Instant recag011ADateTime,
+                                                     Instant recag00XADateTime) {
+        if (missingRequiredDateTimes(recag011ADateTime, recag00XADateTime)) {
+            throw new PnGenericException(WRONG_EVENT_ORDER, "[{" + paperRequest.getRequestId() + "}] needed META##RECAG00_A is present and/or META##RECAG011A not present");
+        }
+
+        if (lessThanTenDaysBetweenRECAG00XAAndRECAG011A(recag011ADateTime, recag00XADateTime)) {
+            // 3 a
+            log.info("[{}] (statusDateTime[META##RECAG00_A] - statusDateTime[META##RECAG011A]) < {}", paperRequest.getRequestId(), refinementDuration);
+
+            return super.handleMessage(entity, paperRequest) // original event sent as final
+                    .then(Mono.just(pnEventMetas));
+        } else if (recag011ADateTime != null) { // if check only for not having a warning when calling .plus
+            // 3 b
+            log.info("[{}] (statusDateTime[META##RECAG00_A] - statusDateTime[META##RECAG011A]) >= {}", paperRequest.getRequestId(), refinementDuration);
+
+            PnAuditLogBuilder auditLogBuilder = new PnAuditLogBuilder();
+            PnLogAudit pnLogAudit = new PnLogAudit(auditLogBuilder);
+            PNAG012Wrapper pnag012Wrapper = PNAG012Wrapper.buildPNAG012Wrapper(entity, paperRequest, recag011ADateTime.plus(refinementDuration));
+            var pnag012PaperRequest = pnag012Wrapper.getPaperProgressStatusEventDtoPNAG012();
+            var pnag012DeliveryRequest = pnag012Wrapper.getPnDeliveryRequestPNAG012();
+
+            pnLogAudit.addsBeforeReceive(entity.getIun(), String.format("prepare requestId = %s Response from external-channel",pnag012DeliveryRequest.getRequestId()));
+            logSuccessAuditLog(pnag012PaperRequest, pnag012DeliveryRequest, pnLogAudit);
+
+            return super.handleMessage(pnag012DeliveryRequest, pnag012PaperRequest) // generated event sent as final
+                    .then(super.handleMessage(SendEventMapper.changeToProgressStatus(entity), paperRequest))  // original event sent as progress
+                    .then(Mono.just(pnEventMetas));
+        }
+        else {
+            throw new PnGenericException(WRONG_EVENT_ORDER, "[{" + paperRequest.getRequestId() + "}] needed META##RECAG00_A is present and/or META##RECAG011A not present");
+        }
     }
 
     boolean checkForMetaCorrespondence(PaperProgressStatusEventDto paperRequest,  PnEventMeta pnEventMeta) {
@@ -164,9 +166,9 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
         var paperRequestStatusCode = paperRequest.getStatusCode();
         var metaStatusCode = pnEventMeta.getMetaStatusCode().replace(metaPrefix, "");
 
-        return paperRequestStatusCode.equals("RECAG005C") && metaStatusCode.equals("RECAG005A")
-                || paperRequestStatusCode.equals("RECAG006C") && metaStatusCode.equals("RECAG006A")
-                || paperRequestStatusCode.equals("RECAG007C") && metaStatusCode.equals("RECAG007A");
+        return (paperRequestStatusCode.equals("RECAG005C") && metaStatusCode.equals("RECAG005A"))
+                || (paperRequestStatusCode.equals("RECAG006C") && metaStatusCode.equals("RECAG006A"))
+                || (paperRequestStatusCode.equals("RECAG007C") && metaStatusCode.equals("RECAG007A"));
     }
 
     boolean lessThanTenDaysBetweenRECAG00XAAndRECAG011A(Instant recag011ADateTime, Instant recag00XADateTime) {
