@@ -31,7 +31,6 @@
     "AddressManagerBaseUrl": "http://alb.confidential.pn.internal:8080",
     "DataVaultBaseUrl": "http://alb.confidential.pn.internal:8080",
     "RefinementDuration": "1m",
-    "CloudwatchMetricCron": "0 */5 * * * *",
-    "F24CxId": "pn-paper-channel"
+    "CloudwatchMetricCron": "0 */5 * * * *"
   }
 }

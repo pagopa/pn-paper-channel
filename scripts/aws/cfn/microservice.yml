@@ -95,7 +95,7 @@ Parameters:
     Type: String
     Description: 'SafeStorage cx-id'
 
-  F24CxId:
+  F24PaperChannelUser:
     Type: String
     Description: 'F24 cx-id'
 
@@ -522,7 +522,7 @@ Resources:
         ContainerEnvEntry49: !Sub 'PN_PAPERCHANNEL_CLOUDWATCHMETRICCRON=${CloudwatchMetricCron}'
         ContainerEnvEntry50: !Sub 'PN_PAPERCHANNEL_REQUESTPAIDOVERRIDE=${RequestPaIdOverride}'
         ContainerEnvEntry51: !Sub 'PN_PAPERCHANNEL_CLIENTF24BASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
-        ContainerEnvEntry52: !Sub 'PN_PAPERCHANNEL_F24CXID=${F24CxId}'
+        ContainerEnvEntry52: !Sub 'PN_PAPERCHANNEL_F24CXID=${F24PaperChannelUser}'
         ContainerEnvEntry53: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUEF24=${AttemptQueueF24}'
         ContainerEnvEntry54: !Sub 'PN_PAPERCHANNEL_QUEUEF24=${F24ToPaperChannelQueueName}'
         ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
