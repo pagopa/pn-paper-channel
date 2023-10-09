@@ -224,7 +224,7 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
                     })
                     .doOnError(ex -> log.logCheckingOutcome(VALIDATION_NAME, false, ex.getMessage()))
                     .onErrorResume(PnGenericException.class, pnGenericException -> {
-                        // mi segno che la richiesta richiede una nuova prepare
+                        // mi segno che la richiesta richiede una nuova prepare, impostando il flag di "reworkNeeded" a TRUE
                         if (pnGenericException.getExceptionType() == ExceptionTypeEnum.DIFFERENT_SEND_COST) {
                             pnDeliveryRequest.setReworkNeeded(true);
                             return requestDeliveryDAO.updateData(pnDeliveryRequest)
@@ -328,6 +328,20 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
 
     }
 
+    /**
+     * controllo se la richiesta ha il flag di reworkNeeded a true, che ricordo essere così se per qualche motivo (es: aggiornamento costo gare)
+     * c'è un mismatch tra il costo calcolato nella PREPARE e usato nella generazione degli F24 e il costo calcolato nella SEND.
+     *
+     * Se si RISALVA l'entity di deliveryrequest perchè voglio RIESEGUIRE la logica di calcolo del costo e generazione degli F24.
+     * Da notare che questo metodo vien invocato anche nel caso della seconda raccomandata. In questo caso,
+     * se il flag reworkNeeded è true, in realtà alla "prima invocazione della prepare della seconda raccomandata" ho
+     * già fatto tutta la logica di risoluzione dell'indirizzo, e quindi non serve rieseguirla, motivo per cui metto in coda
+     * direttamente l'evento di "prepareAsync" (che calcolerà nuovamente il costo e rigenererà i pdf F24 aggiornati).
+     *
+     * @param prepareRequest la richiesta di prepare
+     * @param pnDeliveryRequest l'entity precedentemente salvata in db
+     * @return la risposta da tornare al chiamante
+     */
     private Mono<PaperChannelUpdate> checkIfReworkNeededAndReturnPaperChannelUpdate(PrepareRequest prepareRequest, PnDeliveryRequest pnDeliveryRequest){
         if (Boolean.TRUE.equals(pnDeliveryRequest.getReworkNeeded()))
         {
