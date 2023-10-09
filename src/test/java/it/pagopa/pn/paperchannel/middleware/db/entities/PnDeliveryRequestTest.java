@@ -32,6 +32,7 @@ class PnDeliveryRequestTest {
     private String requestPaId;
     private String eventToSend;
     private int cost;
+    private Boolean reworkNeeded;
 
     @BeforeEach
     void setUp(){
@@ -103,6 +104,9 @@ class PnDeliveryRequestTest {
         stringBuilder.append(", ");
         stringBuilder.append("cost=");
         stringBuilder.append(cost);
+        stringBuilder.append(", ");
+        stringBuilder.append("reworkNeeded=");
+        stringBuilder.append(reworkNeeded);
         stringBuilder.append(")");
 
         String toTest = stringBuilder.toString();
@@ -130,6 +134,7 @@ class PnDeliveryRequestTest {
         pnDeliveryRequest.setAttachments(attachments);
         pnDeliveryRequest.setRequestPaId(requestPaId);
         pnDeliveryRequest.setCost(cost);
+        pnDeliveryRequest.setReworkNeeded(reworkNeeded);
         return pnDeliveryRequest;
     }
 
@@ -162,5 +167,6 @@ class PnDeliveryRequestTest {
         pnAttachmentInfo.setChecksum("j49fkldvnj4890efmeff433t2gvnr9rgmprm3g308jknbi3392llfm29fe8");
         attachments.add(new PnAttachmentInfo());
         requestPaId = "requestPaId";
+        reworkNeeded = false;
     }
 }

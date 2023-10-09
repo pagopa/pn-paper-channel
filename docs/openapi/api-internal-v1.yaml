@@ -127,6 +127,12 @@ paths:
             application/problem+json:
               schema:
                 $ref: 'remote-refs.yaml#/components/schemas/Problem'
+        "422":
+          description: Indica che la richiesta non può essere evasa per un cambio di costo tra prepare e send, e che necessario rieseguire la prepare.
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
       callbacks:
         deliveryStatusPushUpdates:
           indirizzo_webhook_oppure_coda_sqs_legato_al_valore_header_xPagopaExtchCxId:

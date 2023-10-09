@@ -24,10 +24,7 @@ import it.pagopa.pn.paperchannel.utils.PaperCalculatorUtils;
 import it.pagopa.pn.paperchannel.utils.Utility;
 import it.pagopa.pn.paperchannel.validator.PrepareRequestValidator;
 import it.pagopa.pn.paperchannel.validator.SendRequestValidator;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -35,7 +32,6 @@ import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -174,6 +170,34 @@ class PaperMessagesServiceTest {
 
         Mockito.when(this.addressDAO.findByRequestId(Mockito.any()))
                 .thenReturn(Mono.just(getPnAddress(getPnDeliveryRequest().getRequestId())));
+
+        PaperChannelUpdate update = this.paperMessagesService
+                .preparePaperSync("TST-IOR.2332", getRequestOK()).block();
+
+        assertNotNull(update);
+        assertNotNull(update.getPrepareEvent());
+        assertNull(update.getSendEvent());
+
+    }
+
+
+    @Test
+    @DisplayName("whenPrepareFirstAttemptWithDeliveryRequestExistWithReworkFlagThenReturnResponse")
+    void prepareSyncDeliveryRequestExistFirstAttemptWithReworkFlag(){
+        PnDeliveryRequest request = getPnDeliveryRequest();
+        request.setReworkNeeded(true);
+
+        Mockito.when(this.requestDeliveryDAO.getByRequestId(Mockito.any()))
+                .thenReturn(Mono.just(request));
+
+        prepareRequestValidatorMockedStatic.when(() -> {
+            PrepareRequestValidator.compareRequestEntity(getRequestOK(), getPnDeliveryRequest(), true);
+        }).thenAnswer((Answer<Void>) invocation -> null);
+
+        Mockito.when(requestDeliveryDAO.createWithAddress(Mockito.any(), Mockito.any(), Mockito.any()))
+                .thenReturn(Mono.just(getPnDeliveryRequest()));
+
+        Mockito.doNothing().when(this.sqsSender).pushToInternalQueue(Mockito.any());
 
         PaperChannelUpdate update = this.paperMessagesService
                 .preparePaperSync("TST-IOR.2332", getRequestOK()).block();
@@ -323,6 +347,43 @@ class PaperMessagesServiceTest {
                     assertTrue(ex instanceof PnPaperEventException);
                     return true;
                 }).verify();
+    }
+
+
+    @Test
+    @DisplayName("whenPrepareSecondAttemptWithDeliveryRequestExistWithReworkFlagThenReturnResponse")
+    void prepareSyncDeliveryRequestExistSecondAttemptWithReworkFlag(){
+
+        PnDeliveryRequest request1 = getPnDeliveryRequest();
+        request1.setRequestId(request1.getRequestId()+"_1");
+
+        PnDeliveryRequest request = getPnDeliveryRequest();
+        request.setRelatedRequestId(request1.getRequestId());
+        request.setReworkNeeded(true);
+
+        //MOCK RELATED DELIVERY REQUEST
+        Mockito.when(requestDeliveryDAO.getByRequestId(request.getRelatedRequestId()))
+                .thenReturn(Mono.just(request1));
+
+        Mockito.when(this.requestDeliveryDAO.getByRequestId(Mockito.any()))
+                .thenReturn(Mono.just(request));
+
+        prepareRequestValidatorMockedStatic.when(() -> {
+            PrepareRequestValidator.compareRequestEntity(getRequestOK(), getPnDeliveryRequest(), true);
+        }).thenAnswer((Answer<Void>) invocation -> null);
+
+        Mockito.when(requestDeliveryDAO.createWithAddress(Mockito.any(), Mockito.any(), Mockito.any()))
+                .thenReturn(Mono.just(getPnDeliveryRequest()));
+
+        Mockito.doNothing().when(this.sqsSender).pushToInternalQueue(Mockito.any());
+
+        PaperChannelUpdate update = this.paperMessagesService
+                .preparePaperSync("TST-IOR.2332", getRequestOK()).block();
+
+        assertNotNull(update);
+        assertNotNull(update.getPrepareEvent());
+        assertNull(update.getSendEvent());
+
     }
 
 
@@ -491,6 +552,37 @@ class PaperMessagesServiceTest {
                     assertEquals(HttpStatus.CONFLICT, ((PnGenericException) ex).getHttpStatus());
                     return true;
                 }).verify();
+    }
+
+
+    @Test
+    void executionPaperValidationThrowErrorForCost() {
+        mocksExecutionPaperOK();
+
+        PnDeliveryRequest request = getPnDeliveryRequest();
+        request.setStatusCode(StatusDeliveryEnum.TAKING_CHARGE.getCode());
+        request.setCost(1000000);
+
+
+        //MOCK VALIDATOR
+        sendRequestValidatorMockedStatic.when(() -> {
+            SendRequestValidator.compareRequestCostEntity(Mockito.any(), Mockito.any());
+        }).thenThrow(new PnGenericException(DIFFERENT_SEND_COST, DIFFERENT_SEND_COST.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY));
+
+        //MOCK GET DELIVERY REQUEST
+        Mockito.when(requestDeliveryDAO.getByRequestId("TST-IOR.2332"))
+                .thenReturn(Mono.just(request));
+
+        SendRequest sendRequest = getRequest("TST-IOR.2332");
+        sendRequest.setRequestPaId("request-pad-id");
+        sendRequest.setPrintType("FRONTE-RETRO");
+
+        /* TEST WITHOUT CONTEXT SETTING */
+        Mono<SendResponse> mono = paperMessagesService.executionPaper("TST-IOR.2332", sendRequest);
+        int value = Assertions.assertThrows(PnGenericException.class, mono::block).getHttpStatus().value();
+        Assertions.assertEquals(422, value);
+
+        Mockito.verify(requestDeliveryDAO).updateData(Mockito.any());
     }
 
     private void mocksExecutionPaperOK() {
