@@ -68,7 +68,7 @@ class F24ServiceImplTest {
 
         assertTrue(res);
 
-        pnDeliveryRequest.getAttachments().get(0).setUrl("safestorage://filekey123");
+        pnDeliveryRequest.getAttachments().get(0).setFileKey("safestorage://filekey123");
         res = f24Service.checkDeliveryRequestAttachmentForF24(pnDeliveryRequest);
         assertFalse(res);
     }
@@ -95,7 +95,7 @@ class F24ServiceImplTest {
     void preparePDF_nocost() {
         String requestid = "REQUESTID";
         PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest(requestid, StatusDeliveryEnum.IN_PROCESSING);
-        pnDeliveryRequest.getAttachments().get(0).setUrl("f24set://IUN123/1");
+        pnDeliveryRequest.getAttachments().get(0).setFileKey("f24set://IUN123/1");
 
         Mockito.when(addressDAO.findByRequestId(requestid)).thenReturn(Mono.just(getPnAddress(requestid)));
         Mockito.when(requestDeliveryDAO.updateData(Mockito.any())).thenAnswer(i -> Mono.just(i.getArguments()[0]));
@@ -111,7 +111,7 @@ class F24ServiceImplTest {
     void preparePDF_nocost_0() {
         String requestid = "REQUESTID";
         PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest(requestid, StatusDeliveryEnum.IN_PROCESSING);
-        pnDeliveryRequest.getAttachments().get(0).setUrl("f24set://IUN123/1?cost=0");
+        pnDeliveryRequest.getAttachments().get(0).setFileKey("f24set://IUN123/1?cost=0");
 
         Mockito.when(addressDAO.findByRequestId(requestid)).thenReturn(Mono.just(getPnAddress(requestid)));
         Mockito.when(requestDeliveryDAO.updateData(Mockito.any())).thenAnswer(i -> Mono.just(i.getArguments()[0]));
@@ -129,10 +129,10 @@ class F24ServiceImplTest {
         String requestid = "REQUESTID";
         List<String> urls = List.of("safestorage://123456", "safestorage://9876543");
         PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest(requestid, F24_WAITING);
-        pnDeliveryRequest.getAttachments().get(0).setUrl("f24set://IUN123/1?cost=0");
+        pnDeliveryRequest.getAttachments().get(0).setFileKey("f24set://IUN123/1?cost=0");
         pnDeliveryRequest.getAttachments().get(0).setDocumentType("PN_F24_SET");
         PnAttachmentInfo aar = new PnAttachmentInfo();
-        aar.setUrl("safestorage://77777");
+        aar.setFileKey("safestorage://77777");
         pnDeliveryRequest.getAttachments().add(aar);
 
         Mockito.when(requestDeliveryDAO.getByRequestId(requestid)).thenReturn(Mono.just(pnDeliveryRequest));
@@ -160,11 +160,11 @@ class F24ServiceImplTest {
         List<PnAttachmentInfo> attachmentUrls = new ArrayList<>();
         PnAttachmentInfo pnAttachmentInfo = new PnAttachmentInfo();
         pnAttachmentInfo.setDate("");
-        pnAttachmentInfo.setFileKey("http://localhost:8080");
+        pnAttachmentInfo.setUrl("http://localhost:8080");
         pnAttachmentInfo.setId("");
         pnAttachmentInfo.setNumberOfPage(3);
         pnAttachmentInfo.setDocumentType("");
-        pnAttachmentInfo.setUrl("f24set://IUN123/1?cost=100");
+        pnAttachmentInfo.setFileKey("f24set://IUN123/1?cost=100");
         attachmentUrls.add(pnAttachmentInfo);
 
 

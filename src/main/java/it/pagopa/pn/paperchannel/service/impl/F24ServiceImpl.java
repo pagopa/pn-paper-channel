@@ -73,14 +73,14 @@ public class F24ServiceImpl extends GenericService implements F24Service {
 
     @NotNull
     private Optional<PnAttachmentInfo> getF24PnAttachmentInfo(PnDeliveryRequest deliveryRequest) {
-        return deliveryRequest.getAttachments().stream().filter(x -> x.getUrl().startsWith(URL_PROTOCOL_F24)).findFirst();
+        return deliveryRequest.getAttachments().stream().filter(x -> x.getFileKey().startsWith(URL_PROTOCOL_F24)).findFirst();
     }
 
     @Override
     public Mono<PnDeliveryRequest> preparePDF(PnDeliveryRequest deliveryRequest) {
         Optional<PnAttachmentInfo> optF24Attachment = getF24PnAttachmentInfo(deliveryRequest);
 
-        return optF24Attachment.map(pnAttachmentInfo -> parseF24URL(pnAttachmentInfo.getUrl())
+        return optF24Attachment.map(pnAttachmentInfo -> parseF24URL(pnAttachmentInfo.getFileKey())
                     .flatMap(f24AttachmentInfo -> enrichWithAnalogCostIfNeeded(deliveryRequest, f24AttachmentInfo))
                     .doOnSuccess(f24AttachmentInfo -> logAuditBefore("preparePDF requestId = %s, relatedRequestId = %s engaging F24 ", deliveryRequest))
                     .flatMap(f24AttachmentInfo -> f24Client.preparePDF(deliveryRequest.getRequestId(), f24AttachmentInfo.getSetId(), f24AttachmentInfo.getRecipientIndex(), sumCostAndAnalogCost(f24AttachmentInfo)).thenReturn(f24AttachmentInfo))
@@ -133,9 +133,9 @@ public class F24ServiceImpl extends GenericService implements F24Service {
                 // nel caso l'attachement fosse di tipo DOCUMENT_TYPE_F24_SET, vado a sovrascriverlo con la lista tornata da f24.
                 generatedUrls.forEach(url -> {
                     PnAttachmentInfo newAttachment = new PnAttachmentInfo();
-                    newAttachment.setUrl(url);
+                    newAttachment.setUrl(null);
                     newAttachment.setFileKey(url);
-                    newAttachment.setGeneratedFrom(pnAttachmentInfo.getUrl()); // url originale f24
+                    newAttachment.setGeneratedFrom(pnAttachmentInfo.getFileKey()); // url originale f24
                     attachments.add(newAttachment);
                 });
             }
