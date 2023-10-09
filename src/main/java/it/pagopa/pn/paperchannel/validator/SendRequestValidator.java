@@ -80,7 +80,7 @@ public class SendRequestValidator {
         // solo se avevo un costo di prepare, devo eseguire il confronto (e i 2 costi devono essere uguali)
         if (prepareCost != null && prepareCost.intValue() != sendCost.intValue()) {
             log.error("Comparison between cost used for f24 and cost computed on send is different, throw exception because this anomaly must be resolved manually");
-            throw new PnGenericException(DIFFERENT_SEND_COST, DIFFERENT_SEND_COST.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new PnGenericException(DIFFERENT_SEND_COST, DIFFERENT_SEND_COST.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
         }
     }
 

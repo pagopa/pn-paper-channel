@@ -67,6 +67,8 @@ public class PnDeliveryRequest {
 
     public static final String COL_PREPARE_COST = "cost";
 
+    public static final String COL_REWORK_NEEDED = "reworkNeeded";
+
     @Getter(onMethod = @__({@DynamoDbPartitionKey,@DynamoDbAttribute(COL_REQUEST_ID)}))
     private String requestId;
 
@@ -130,5 +132,9 @@ public class PnDeliveryRequest {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_PREPARE_COST)}))
     private Integer cost;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_REWORK_NEEDED)}))
+    private Boolean reworkNeeded;
+
 
 }

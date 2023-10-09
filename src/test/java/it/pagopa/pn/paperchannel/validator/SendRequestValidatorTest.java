@@ -89,6 +89,7 @@ class SendRequestValidatorTest {
         } catch (PnGenericException ex) {
             assertNotNull(ex);
             assertEquals(DIFFERENT_SEND_COST, ex.getExceptionType());
+            assertEquals(422, ex.getHttpStatus().value());
         }
     }
 
@@ -97,6 +98,14 @@ class SendRequestValidatorTest {
     @Test
     void compareRequestCostEntityOK() {
         Assertions.assertDoesNotThrow(() -> SendRequestValidator.compareRequestCostEntity(10, 10));
+
+    }
+
+
+
+    @Test
+    void compareRequestCostEntityOK2() {
+        Assertions.assertDoesNotThrow(() -> SendRequestValidator.compareRequestCostEntity(10, null));
 
     }
 
