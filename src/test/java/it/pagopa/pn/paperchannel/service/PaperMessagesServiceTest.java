@@ -581,6 +581,8 @@ class PaperMessagesServiceTest {
         Mono<SendResponse> mono = paperMessagesService.executionPaper("TST-IOR.2332", sendRequest);
         int value = Assertions.assertThrows(PnGenericException.class, mono::block).getHttpStatus().value();
         Assertions.assertEquals(422, value);
+
+        Mockito.verify(requestDeliveryDAO).updateData(Mockito.any());
     }
 
     private void mocksExecutionPaperOK() {
