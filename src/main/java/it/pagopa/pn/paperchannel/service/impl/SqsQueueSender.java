@@ -10,6 +10,7 @@ import it.pagopa.pn.paperchannel.middleware.queue.producer.DeliveryPushMomProduc
 import it.pagopa.pn.paperchannel.middleware.queue.producer.EventBridgeProducer;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.InternalQueueMomProducer;
 import it.pagopa.pn.paperchannel.model.ExternalChannelError;
+import it.pagopa.pn.paperchannel.model.F24Error;
 import it.pagopa.pn.paperchannel.model.NationalRegistryError;
 import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
 import it.pagopa.pn.paperchannel.service.SqsSender;
@@ -101,6 +102,7 @@ public class SqsQueueSender implements SqsSender {
                 .expired(DateUtils.addedTime(attempt+1, 1))
                 .build();
         this.internalQueueMomProducer.push(new InternalPushEvent<>(prepareHeader, entity));
+        log.info("pushed to queue entity={}", entity);
     }
 
     @Override
@@ -123,6 +125,7 @@ public class SqsQueueSender implements SqsSender {
         if (tClass == NationalRegistryError.class) typeEnum = NATIONAL_REGISTRIES_ERROR;
         if (tClass == ExternalChannelError.class) typeEnum = EXTERNAL_CHANNEL_ERROR;
         if (tClass == PrepareAsyncRequest.class) typeEnum = SAFE_STORAGE_ERROR;
+        if (tClass == F24Error.class) typeEnum = F24_ERROR;
         if (tClass == PrepareAsyncRequest.class && ((PrepareAsyncRequest) entity).isAddressRetry()) typeEnum = ADDRESS_MANAGER_ERROR;
 
         return typeEnum;

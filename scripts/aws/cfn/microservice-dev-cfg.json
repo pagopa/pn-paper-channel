@@ -11,6 +11,7 @@
     "AttemptQueueNationalRegistries": "3",
     "AttemptQueueSafeStorage": "3",
     "AttemptQueueAddressManager": "3",
+    "AttemptQueueF24": "3",
     "TtlPrepare": "14",
     "TtlExecutionRNAR": "12",
     "TtlExecutionRN890" : "11" ,

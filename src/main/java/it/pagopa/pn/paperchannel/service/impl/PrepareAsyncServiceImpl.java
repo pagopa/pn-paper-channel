@@ -19,17 +19,21 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.paperchannel.model.*;
+import it.pagopa.pn.paperchannel.service.F24Service;
 import it.pagopa.pn.paperchannel.service.PaperAddressService;
 import it.pagopa.pn.paperchannel.service.PaperAsyncService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
 import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
+import it.pagopa.pn.paperchannel.utils.PaperCalculatorUtils;
 import lombok.CustomLog;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuples;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -49,23 +53,27 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
     private final PnPaperChannelConfig paperChannelConfig;
     private final PaperRequestErrorDAO paperRequestErrorDAO;
     private final PaperAddressService paperAddressService;
+    private final PaperCalculatorUtils paperCalculatorUtils;
+    private final F24Service f24Service;
 
     public PrepareAsyncServiceImpl(PnAuditLogBuilder auditLogBuilder, NationalRegistryClient nationalRegistryClient,
-                                   RequestDeliveryDAO requestDeliveryDAO,SqsSender sqsQueueSender, CostDAO costDAO,
+                                   RequestDeliveryDAO requestDeliveryDAO, SqsSender sqsQueueSender, CostDAO costDAO,
                                    SafeStorageClient safeStorageClient, AddressDAO addressDAO, PnPaperChannelConfig paperChannelConfig,
-                                   PaperRequestErrorDAO paperRequestErrorDAO, PaperAddressService paperAddressService) {
+                                   PaperRequestErrorDAO paperRequestErrorDAO, PaperAddressService paperAddressService, PaperCalculatorUtils paperCalculatorUtils, F24Service f24Service) {
         super(auditLogBuilder, requestDeliveryDAO, costDAO, nationalRegistryClient, sqsQueueSender);
         this.safeStorageClient = safeStorageClient;
         this.addressDAO = addressDAO;
         this.paperChannelConfig = paperChannelConfig;
         this.paperRequestErrorDAO = paperRequestErrorDAO;
         this.paperAddressService = paperAddressService;
+        this.paperCalculatorUtils = paperCalculatorUtils;
+        this.f24Service = f24Service;
     }
 
     @Override
     public Mono<PnDeliveryRequest> prepareAsync(PrepareAsyncRequest request){
-        final String PROCESS_NAME = "Prepare Async";
-        log.logStartingProcess(PROCESS_NAME);
+        final String processName = "Prepare Async";
+        log.logStartingProcess(processName);
 
         String correlationId = request.getCorrelationId();
         final String requestId = request.getRequestId();
@@ -80,43 +88,64 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
             requestDeliveryEntityMono = requestDeliveryDAO.getByRequestId(requestId, true);
         }
         return requestDeliveryEntityMono
-                .flatMap(deliveryRequest -> checkAndUpdateAddress(deliveryRequest, addressFromNationalRegistry, request))
-                .map(pnDeliveryRequest -> {
-                    RequestDeliveryMapper.changeState(
-                            pnDeliveryRequest,
-                            TAKING_CHARGE.getCode(),
-                            TAKING_CHARGE.getDescription(),
-                            TAKING_CHARGE.getDetail(),
-                            pnDeliveryRequest.getProductType(),
-                            null
-                    );
-                    return pnDeliveryRequest;
-                })
-                .flatMap(pnDeliveryRequest -> getAttachmentsInfo(pnDeliveryRequest, request))
-                .flatMap(pnDeliveryRequest ->
-                     this.addressDAO.findByRequestId(pnDeliveryRequest.getRequestId())
-                            .flatMap(address -> {
-                                this.pushPrepareEvent(pnDeliveryRequest, AddressMapper.toDTO(address), request.getClientId(), StatusCodeEnum.OK, null);
-                                return this.requestDeliveryDAO.updateData(pnDeliveryRequest);
-                            })
-                )
-                .onErrorResume(ex -> {
-                    log.error("Error prepare async requestId {}, {}", requestId, ex.getMessage(), ex);
-                    if (ex instanceof PnAddressFlowException) return Mono.error(ex);
-
-                    StatusDeliveryEnum statusDeliveryEnum = StatusDeliveryEnum.PAPER_CHANNEL_ASYNC_ERROR;
-                    if(ex instanceof PnGenericException) {
-                        statusDeliveryEnum = mapper(((PnGenericException) ex).getExceptionType());
+                .flatMap(deliveryRequest -> {
+                    if (request.isF24ResponseFlow()) {
+                        log.info("just returning request because is on F24 response flow and there is no need to check address again");
+                        return Mono.just(deliveryRequest);
                     }
-                    return updateStatus(requestId, correlationId, statusDeliveryEnum)
-                            .doOnNext(entity -> {
-                                if (entity.getStatusCode().equals(StatusDeliveryEnum.UNTRACEABLE.getCode())){
-                                    sendUnreachableEvent(entity, request.getClientId(), getKOReason(ex));
-                                    log.logEndingProcess(PROCESS_NAME);
-                                }
-                            })
-                            .flatMap(entity -> Mono.error(ex));
-                });
+                    else {
+                        return checkAndUpdateAddress(deliveryRequest, addressFromNationalRegistry, request);
+                    }
+                }) // nel caso sia settato il flag di f24FlowResponse, vuol dire che ho già eseguito questo step.
+                .flatMap(pnDeliveryRequest -> {
+                    if (f24Service.checkDeliveryRequestAttachmentForF24(pnDeliveryRequest)) {
+                        return f24Service.preparePDF(pnDeliveryRequest);
+                    }
+                    else {
+                        return continueWithPrepareRequest(pnDeliveryRequest, request);
+                    }
+                })
+                .onErrorResume(ex -> handlePrepareAsyncError(request, processName, correlationId, requestId, ex));
+    }
+
+    @NotNull
+    private Mono<PnDeliveryRequest> handlePrepareAsyncError(PrepareAsyncRequest request, String processName, String correlationId, String requestId, Throwable ex) {
+        log.error("Error prepare async requestId {}, {}", requestId, ex.getMessage(), ex);
+        if (ex instanceof PnAddressFlowException
+            || ex instanceof PnF24FlowException) return Mono.error(ex);
+
+        StatusDeliveryEnum statusDeliveryEnum = StatusDeliveryEnum.PAPER_CHANNEL_ASYNC_ERROR;
+        if(ex instanceof PnGenericException pnGenericException) {
+            statusDeliveryEnum = mapper(pnGenericException.getExceptionType());
+        }
+        return updateStatus(requestId, correlationId, statusDeliveryEnum)
+                .doOnNext(entity -> {
+                    if (entity.getStatusCode().equals(StatusDeliveryEnum.UNTRACEABLE.getCode())) {
+                        sendUnreachableEvent(entity, request.getClientId(), getKOReason(ex));
+                        log.logEndingProcess(processName);
+                    }
+                })
+                .flatMap(entity -> Mono.error(ex));
+    }
+
+    private Mono<PnDeliveryRequest> continueWithPrepareRequest(PnDeliveryRequest pnDeliveryRequest, PrepareAsyncRequest request){
+        RequestDeliveryMapper.changeState(
+                pnDeliveryRequest,
+                TAKING_CHARGE.getCode(),
+                TAKING_CHARGE.getDescription(),
+                TAKING_CHARGE.getDetail(),
+                pnDeliveryRequest.getProductType(),
+                null
+        );
+
+        return getAttachmentsInfo(pnDeliveryRequest, request)
+                .flatMap(pnDeliveryRequestWithAttachmentOk ->
+                        this.addressDAO.findByRequestId(pnDeliveryRequestWithAttachmentOk.getRequestId())
+                                .flatMap(address -> {
+                                    this.pushPrepareEvent(pnDeliveryRequestWithAttachmentOk, AddressMapper.toDTO(address), request.getClientId(), StatusCodeEnum.OK, null);
+                                    return this.requestDeliveryDAO.updateData(pnDeliveryRequestWithAttachmentOk);
+                                })
+                );
     }
 
     private KOReason getKOReason(Throwable ex) {
@@ -168,7 +197,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                 .flatMap(newAddress -> {
                     log.logCheckingOutcome(VALIDATION_NAME, true);
                     pnDeliveryRequest.setAddressHash(newAddress.convertToHash());
-                    pnDeliveryRequest.setProductType(getProposalProductType(newAddress, pnDeliveryRequest.getProposalProductType()));
+                    pnDeliveryRequest.setProductType(this.paperCalculatorUtils.getProposalProductType(newAddress, pnDeliveryRequest.getProposalProductType()));
 
                     //set flowType per TTL
                     newAddress.setFlowType(Const.PREPARE);
@@ -220,9 +249,11 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                         paperChannelConfig.getAttemptSafeStorage(),
                         attachment.getFileKey(),
                         new BigDecimal(0))
+                        .map(r -> Tuples.of(r, attachment)) // mi serve l'attachment originale
                 )
-                .flatMap(fileResponse -> {
-                    AttachmentInfo info = AttachmentMapper.fromSafeStorage(fileResponse);
+                .flatMap(fileResponseAndOrigAttachment -> {
+                    AttachmentInfo info = AttachmentMapper.fromSafeStorage(fileResponseAndOrigAttachment.getT1());
+                    info.setGeneratedFrom(fileResponseAndOrigAttachment.getT2().getGeneratedFrom()); // preservo l'eventuale generatedFrom
                     if (info.getUrl() == null)
                         return Flux.error(new PnGenericException(INVALID_SAFE_STORAGE, INVALID_SAFE_STORAGE.getMessage()));
                     return HttpConnector.downloadFile(info.getUrl())

@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.validator;
 
+import it.pagopa.pn.commons.exceptions.PnInternalException;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.AttachmentDetailsDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
@@ -16,8 +17,7 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
 
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DIFFERENT_DATA_REQUEST;
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DIFFERENT_DATA_RESULT;
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -77,6 +77,35 @@ class SendRequestValidatorTest {
             assertNotNull(ex);
             assertEquals(DIFFERENT_DATA_RESULT, ex.getExceptionType());
         }
+
+    }
+
+
+    @Test
+    void compareRequestCostEntityKO() {
+        try {
+            SendRequestValidator.compareRequestCostEntity(10, 100);
+            Assertions.fail(new Throwable("invalid"));
+        } catch (PnGenericException ex) {
+            assertNotNull(ex);
+            assertEquals(DIFFERENT_SEND_COST, ex.getExceptionType());
+            assertEquals(422, ex.getHttpStatus().value());
+        }
+    }
+
+
+
+    @Test
+    void compareRequestCostEntityOK() {
+        Assertions.assertDoesNotThrow(() -> SendRequestValidator.compareRequestCostEntity(10, 10));
+
+    }
+
+
+
+    @Test
+    void compareRequestCostEntityOK2() {
+        Assertions.assertDoesNotThrow(() -> SendRequestValidator.compareRequestCostEntity(10, null));
 
     }
 

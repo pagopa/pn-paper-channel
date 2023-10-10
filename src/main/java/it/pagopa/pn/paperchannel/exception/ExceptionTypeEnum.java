@@ -24,6 +24,7 @@ public enum ExceptionTypeEnum{
     DOCUMENT_URL_NOT_FOUND("DOCUMENT_URL_NOT_FOUND", "Url allegato non disponibile"),
     DOCUMENT_NOT_DOWNLOADED("DOCUMENT_NOT_DOWNLOADED", "Non è stato possibile scaricare il documento"),
     DIFFERENT_DATA_REQUEST("DIFFERENT_DATA_REQUEST", "Richiesta già preso in carico ma sono state inviate informazioni differenti "),
+    DIFFERENT_SEND_COST("DIFFERENT_SEND_COST", "Il costo in fase di invio differisce da quanto calcolato in fase di prepare e usato per generare gli f24"),
     COUNTRY_NOT_FOUND("COUNTRY NOT FOUND", "Il paese non è stato trovato"),
     COST_NOT_FOUND("COST NOT FOUND", "Il costo non è stato trovato"),
     DIFFERENT_DATA_RESULT("DIFFERENT_DATA_RESULT", "I dati restituiti dal servizio External Channel sono differenti rispetto a quelli memorizzati nel database (per uno stesso requestId)"),
@@ -60,7 +61,8 @@ public enum ExceptionTypeEnum{
     INVALID_SAFE_STORAGE("INVALID_SAFE_STORAGE", "Il Safe Storage selezionato è inesistente."),
     WRONG_EVENT_ORDER("WRONG_EVENT_ORDER", "Uno o più eventi precedenti non sono stati trovati"),
     WRONG_RECAG012_DATA("WRONG_RECAG012_DATA", "E' stato già trovato l'evento RECAG012 in precedenza, con dati differenti"),
-    RESPONSE_NULL_FROM_DEDUPLICATION("RESPONSE_NULL_FROM_DEDUPLICATION", "La deduplication ha risposto con normalizedAddress null");
+    RESPONSE_NULL_FROM_DEDUPLICATION("RESPONSE_NULL_FROM_DEDUPLICATION", "La deduplication ha risposto con normalizedAddress null"),
+    F24_ERROR("F24_ERROR", "Problemi con la generazione dei PDF F24");
 
     private final String title;
     private final String message;

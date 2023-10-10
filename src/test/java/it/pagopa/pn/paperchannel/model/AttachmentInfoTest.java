@@ -20,6 +20,7 @@ class AttachmentInfoTest {
     private String fileKey;
     private int numberOfPage;
     private String sha256;
+    private String generatedFrom;
 
 
     @BeforeEach
@@ -91,6 +92,9 @@ class AttachmentInfoTest {
         stringBuilder.append(", ");
         stringBuilder.append("sha256=");
         stringBuilder.append(sha256);
+        stringBuilder.append(", ");
+        stringBuilder.append("generatedFrom=");
+        stringBuilder.append(generatedFrom);
         stringBuilder.append(")");
 
         String toTest = stringBuilder.toString();
@@ -135,6 +139,7 @@ class AttachmentInfoTest {
         attachmentInfo.setFileKey(fileKey);
         attachmentInfo.setNumberOfPage(numberOfPage);
         attachmentInfo.setSha256(sha256);
+        attachmentInfo.setGeneratedFrom(generatedFrom);
         return attachmentInfo;
     }
 
@@ -146,5 +151,6 @@ class AttachmentInfoTest {
         fileKey = "/safe-storage/v1/files/PDFURL";
         numberOfPage = 3;
         sha256 = "j49fkldvnj4890efmeff433t2gvnr9rgmprm3g308jknbi3392llfm29fe8";
+        generatedFrom = "f24set://qualcosa";
     }
 }

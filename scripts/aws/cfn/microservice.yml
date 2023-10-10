@@ -87,9 +87,17 @@ Parameters:
     Type: Number
     Description: 'Number of attempts for called prepare async for retry address manager'
 
+  AttemptQueueF24:
+    Type: Number
+    Description: 'Number of attempts for called prepare async for retry f24'
+
   SafeStorageCxId:
     Type: String
     Description: 'SafeStorage cx-id'
+
+  F24PaperChannelUser:
+    Type: String
+    Description: 'F24 cx-id'
 
   AddressManagerCxId:
     Type: String
@@ -283,6 +291,12 @@ Parameters:
   NationalRegistries2PaperChannelQueueARN:
     Type: String
     Description: 'Pull national-registry messages to this Queue'
+
+  F24ToPaperChannelQueueName:
+    Type: String
+
+  F24ToPaperChannelQueueARN:
+    Type: String
 
   ExternalChannels2PaperChannelQueueName:
     Type: String
@@ -507,6 +521,10 @@ Resources:
         ContainerEnvEntry48: !Sub 'PN_PAPERCHANNEL_REFINEMENTDURATION=${RefinementDuration}'
         ContainerEnvEntry49: !Sub 'PN_PAPERCHANNEL_CLOUDWATCHMETRICCRON=${CloudwatchMetricCron}'
         ContainerEnvEntry50: !Sub 'PN_PAPERCHANNEL_REQUESTPAIDOVERRIDE=${RequestPaIdOverride}'
+        ContainerEnvEntry51: !Sub 'PN_PAPERCHANNEL_CLIENTF24BASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
+        ContainerEnvEntry52: !Sub 'PN_PAPERCHANNEL_F24CXID=${F24PaperChannelUser}'
+        ContainerEnvEntry53: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUEF24=${AttemptQueueF24}'
+        ContainerEnvEntry54: !Sub 'PN_PAPERCHANNEL_QUEUEF24=${F24ToPaperChannelQueueName}'
         ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-PaperChannel-Secrets
         MappedPaths: '/paper-channel-bo/*,/paper-channel-private/*'
@@ -551,6 +569,7 @@ Resources:
               - !Ref ExternalChannels2PaperChannelQueueARN
               - !Ref ScheduledRequestsQueueARN
               - !Ref NationalRegistries2PaperChannelQueueARN
+              - !Ref F24ToPaperChannelQueueARN
           - Effect: Allow
             Action:
               - events:PutEvents
@@ -643,6 +662,7 @@ Resources:
             - !Ref ExternalChannels2PaperChannelQueueARN
             - !Ref ScheduledRequestsQueueARN
             - !Ref NationalRegistries2PaperChannelQueueARN
+            - !Ref F24ToPaperChannelQueueARN
         LogGroupsNames: !Join
           - ','
           - - !Sub '/aws/ecs/${ProjectName}-paper-channel'   
@@ -755,6 +775,17 @@ Resources:
                   Value: !Ref ApplicationLoadBalancerMetricsDimensionName
               Namespace: "AWS/ApplicationELB"
               MetricName: "HealthyHostCount"
+            Period: !Ref AutoscalingCheckPeriod
+            Stat: Average
+          ReturnData: False
+        - Id: m6
+          MetricStat:
+            Metric:
+              Dimensions:
+                - Name: QueueName
+                  Value: !Ref "F24ToPaperChannelQueueName"
+              Namespace: "AWS/SQS"
+              MetricName: "ApproximateNumberOfMessagesVisible"
             Period: !Ref AutoscalingCheckPeriod
             Stat: Average
           ReturnData: False
