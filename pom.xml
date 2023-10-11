@@ -465,7 +465,7 @@
                         </goals>
                         <phase>generate-resources</phase>
                         <configuration>
-                            <inputSpec>https://raw.githubusercontent.com/pagopa/pn-f24/9422d4f46179f3df0da56df654bf4189c11a7d2e/docs/openapi/api-internal-f24.yaml</inputSpec>
+                            <inputSpec>https://raw.githubusercontent.com/pagopa/pn-f24/88e340a3d801c0058a441338ad0e0e6acbec234d/docs/openapi/api-internal-f24.yaml</inputSpec>
                             <generatorName>java</generatorName>
                             <library>webclient</library>
                             <generateApiDocumentation>false</generateApiDocumentation>
