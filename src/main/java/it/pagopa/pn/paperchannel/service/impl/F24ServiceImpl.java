@@ -49,6 +49,7 @@ public class F24ServiceImpl extends GenericService implements F24Service {
 
     private static final String URL_PROTOCOL_F24 = "f24set";
     private static final String DOCUMENT_TYPE_F24_SET = "PN_F24_SET";
+    private static final String SAFESTORAGE_PREFIX = "safestorage://";
 
     private final F24Client f24Client;
     private final PaperCalculatorUtils paperCalculatorUtils;
@@ -110,8 +111,9 @@ public class F24ServiceImpl extends GenericService implements F24Service {
     @Override
     public Mono<PnDeliveryRequest> arrangeF24AttachmentsAndReschedulePrepare(String requestId, List<String> generatedUrls) {
         // sistemo gli allegati sostituendoli all'originale, salvo e faccio ripartire l'evento di prepare
+        final List<String> normalizedFilekeys = normalizeGeneratedUrls(generatedUrls);
         return requestDeliveryDAO.getByRequestId(requestId)
-                        .map(pnDeliveryRequest -> arrangeAttachments(pnDeliveryRequest, generatedUrls))
+                        .map(pnDeliveryRequest -> arrangeAttachments(pnDeliveryRequest, normalizedFilekeys))
                         .flatMap(requestDeliveryDAO::updateData)
                         .flatMap(deliveryRequest -> {
                             PrepareAsyncRequest request = new PrepareAsyncRequest(deliveryRequest.getRequestId(), deliveryRequest.getIun(), false, 0);
@@ -119,9 +121,9 @@ public class F24ServiceImpl extends GenericService implements F24Service {
                             this.sqsSender.pushToInternalQueue(request);
                             return Mono.just(deliveryRequest);
                         })
-                .doOnSuccess(deliveryRequest -> f24ResponseLogAuditSuccess(deliveryRequest, generatedUrls))
+                .doOnSuccess(deliveryRequest -> f24ResponseLogAuditSuccess(deliveryRequest, normalizedFilekeys))
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage())))
-                .doOnError(deliveryRequest -> f24ResponseLogAuditFailure(requestId, generatedUrls));
+                .doOnError(deliveryRequest -> f24ResponseLogAuditFailure(requestId, normalizedFilekeys));
 
     }
 
@@ -145,6 +147,10 @@ public class F24ServiceImpl extends GenericService implements F24Service {
         });
         pnDeliveryRequest.setAttachments(attachments);
         return pnDeliveryRequest;
+    }
+
+    private List<String> normalizeGeneratedUrls(List<String> generatedUrls){
+        return generatedUrls.stream().map(x -> x.startsWith(SAFESTORAGE_PREFIX)?x:(SAFESTORAGE_PREFIX +x)).toList();
     }
 
     private Integer sumCostAndAnalogCost(F24AttachmentInfo f24AttachmentInfo) {
