@@ -182,20 +182,24 @@ public class F24ServiceImpl extends GenericService implements F24Service {
         }
         else
             return Mono.just(attachmentInfo)
-                    .doOnNext(pnAddress -> logAuditSuccess("preparePDF requestId = %s, relatedRequestId = %s Receiver no need to compute cost, using 0 ", deliveryRequest));
+                    .doOnNext(pnAddress -> logAuditSuccess("preparePDF requestId = %s, relatedRequestId = %s Receiver no need to compute cost, using null ", deliveryRequest));
     }
 
     private Mono<F24AttachmentInfo> parseF24URL(String f24url) {
         try {
             UriComponents uriComponents = UriComponentsBuilder.fromUriString(f24url).build();
             MultiValueMap<String, String> parameters = uriComponents.getQueryParams();
+            // il costo 0 o nullo equivale a "non mi interessa il calcolo del costo"
+            // per semplicità metto a null
             Integer cost = parameters.containsKey("cost")?Integer.parseInt(parameters.get("cost").get(0)):null;
+            if (cost != null && cost == 0)
+                cost = null;
 
             return Mono.just(F24AttachmentInfo.builder()
                     .setId(uriComponents.getHost())
                     .recipientIndex(uriComponents.getPathSegments().get(0))
                     .cost(cost)
-                    .analogCost(0)
+                    .analogCost(null)
                     .build());
 
         } catch (Exception e) {
