@@ -51,10 +51,10 @@ public class PrepareEventMapper {
         if (status == StatusCodeEnum.OK)
         {
             // vado a popolare eventuali url generati da f24, mi baso sul fatto che abbiano il generatedFrom popolato
-            List<String> urls = deliveryRequest.getAttachments().stream().filter(x -> x.getGeneratedFrom() != null).map(PnAttachmentInfo::getUrl).toList();
-            if (!urls.isEmpty())
+            List<String> f24FileKeys = deliveryRequest.getAttachments().stream().filter(x -> x.getGeneratedFrom() != null).map(PnAttachmentInfo::getFileKey).toList();
+            if (!f24FileKeys.isEmpty())
             {
-                entityEvent.setReplacedF24AttachmentUrls(urls);
+                entityEvent.setReplacedF24AttachmentUrls(f24FileKeys);
             }
         }
         return entityEvent;
