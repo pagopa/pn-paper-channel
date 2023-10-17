@@ -115,7 +115,7 @@ class F24ServiceImplTest {
 
         Mockito.when(addressDAO.findByRequestId(requestid)).thenReturn(Mono.just(getPnAddress(requestid)));
         Mockito.when(requestDeliveryDAO.updateData(Mockito.any())).thenAnswer(i -> Mono.just(i.getArguments()[0]));
-        Mockito.when(f24Client.preparePDF(requestid, pnDeliveryRequest.getIun(), "1", 0)).thenReturn(Mono.just(new RequestAcceptedDto()));
+        Mockito.when(f24Client.preparePDF(requestid, pnDeliveryRequest.getIun(), "1", null)).thenReturn(Mono.just(new RequestAcceptedDto()));
 
 
         PnDeliveryRequest res = f24Service.preparePDF(pnDeliveryRequest).block();
