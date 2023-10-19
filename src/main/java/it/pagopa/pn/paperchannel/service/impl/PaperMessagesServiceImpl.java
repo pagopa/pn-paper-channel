@@ -76,7 +76,7 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
             log.debug("Getting PnDeliveryRequest with requestId {}, in DynamoDB table  RequestDeliveryDynamoTable", requestId);
             return this.requestDeliveryDAO.getByRequestId(prepareRequest.getRequestId())
                     .doOnNext(entity -> log.info("Founded data in DynamoDB  table RequestDeliveryDynamoTable"))
-                    .doOnNext(entity -> PrepareRequestValidator.compareRequestEntity(prepareRequest, entity, true))
+                    .doOnNext(entity -> PrepareRequestValidator.compareRequestEntity(prepareRequest, entity, true, false))
                     .doOnNext(entity -> log.debug("Getting PnAddress with requestId {}, in  DynamoDB table AddressDynamoTable", requestId))
                     .flatMap(entity -> checkIfReworkNeededAndReturnPaperChannelUpdate(prepareRequest, entity))
                     .switchIfEmpty(
@@ -92,7 +92,7 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
                 .doOnNext(oldEntity -> {
                     log.info("Founded data in DynamoDB table RequestDeliveryDynamoTable");
                     prepareRequest.setRequestId(oldEntity.getRequestId());
-                    PrepareRequestValidator.compareRequestEntity(prepareRequest, oldEntity, false);
+                    PrepareRequestValidator.compareRequestEntity(prepareRequest, oldEntity, false, true);
                 })
                 .zipWhen(oldEntity -> {
                     log.debug("Getting PnAddress with requestId {}, in DynamoDB table AddressDynamoTable", oldEntity.getRequestId());
@@ -113,7 +113,7 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
                     return this.requestDeliveryDAO.getByRequestId(prepareRequest.getRequestId())
                             .doOnNext(secondDeliveryRequest -> log.info("Attempt already exist for request id : {}", secondDeliveryRequest.getRequestId()))
                             .doOnNext(secondDeliveryRequest -> log.info("Founded data in DynamoDB table RequestDeliveryDynamoTable"))
-                            .doOnNext(secondDeliveryRequest -> PrepareRequestValidator.compareRequestEntity(prepareRequest, secondDeliveryRequest, false))
+                            .doOnNext(secondDeliveryRequest -> PrepareRequestValidator.compareRequestEntity(prepareRequest, secondDeliveryRequest, false, false))
                             .flatMap(newEntity -> checkIfReworkNeededAndReturnPaperChannelUpdate(prepareRequest, newEntity))
                             .switchIfEmpty(Mono.deferContextual(cxt ->
                                     saveRequestAndAddress(prepareRequest)

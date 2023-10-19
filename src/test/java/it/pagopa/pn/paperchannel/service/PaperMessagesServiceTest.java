@@ -165,7 +165,7 @@ class PaperMessagesServiceTest {
                 .thenReturn(Mono.just(getPnDeliveryRequest()));
 
         prepareRequestValidatorMockedStatic.when(() -> {
-            PrepareRequestValidator.compareRequestEntity(getRequestOK(), getPnDeliveryRequest(), true);
+            PrepareRequestValidator.compareRequestEntity(getRequestOK(), getPnDeliveryRequest(), true, true);
         }).thenAnswer((Answer<Void>) invocation -> null);
 
         Mockito.when(this.addressDAO.findByRequestId(Mockito.any()))
@@ -191,7 +191,7 @@ class PaperMessagesServiceTest {
                 .thenReturn(Mono.just(request));
 
         prepareRequestValidatorMockedStatic.when(() -> {
-            PrepareRequestValidator.compareRequestEntity(getRequestOK(), getPnDeliveryRequest(), true);
+            PrepareRequestValidator.compareRequestEntity(getRequestOK(), getPnDeliveryRequest(), true, true);
         }).thenAnswer((Answer<Void>) invocation -> null);
 
         Mockito.when(requestDeliveryDAO.createWithAddress(Mockito.any(), Mockito.any(), Mockito.any()))
@@ -251,7 +251,7 @@ class PaperMessagesServiceTest {
         // MOCK ERROR VALIDATION OLD REQUEST
         prepareRequestValidatorMockedStatic.when(() -> {
             PrepareRequestValidator.compareRequestEntity(
-                    request, deliveryRequest, false);
+                    request, deliveryRequest, false, true);
         }).thenThrow(new PnInputValidatorException(DIFFERENT_DATA_REQUEST,DIFFERENT_DATA_REQUEST.getMessage(), HttpStatus.CONFLICT, null));
 
 
@@ -283,7 +283,7 @@ class PaperMessagesServiceTest {
 
         //MOCK VALIDATION
         prepareRequestValidatorMockedStatic.when(() -> {
-            PrepareRequestValidator.compareRequestEntity(request, deliveryRequest, false);
+            PrepareRequestValidator.compareRequestEntity(request, deliveryRequest, false, true);
         }).thenAnswer((Answer<Void>) invocation -> null);
 
         //MOCK NEW DELIVERY REQUEST
@@ -327,7 +327,7 @@ class PaperMessagesServiceTest {
 
         //MOCK VALIDATION
         prepareRequestValidatorMockedStatic.when(() -> {
-            PrepareRequestValidator.compareRequestEntity(request, deliveryRequest, false);
+            PrepareRequestValidator.compareRequestEntity(request, deliveryRequest, false, true);
         }).thenAnswer((Answer<Void>) invocation -> null);
 
         //MOCK NEW DELIVERY REQUEST
@@ -369,7 +369,7 @@ class PaperMessagesServiceTest {
                 .thenReturn(Mono.just(request));
 
         prepareRequestValidatorMockedStatic.when(() -> {
-            PrepareRequestValidator.compareRequestEntity(getRequestOK(), getPnDeliveryRequest(), true);
+            PrepareRequestValidator.compareRequestEntity(getRequestOK(), getPnDeliveryRequest(), true, true);
         }).thenAnswer((Answer<Void>) invocation -> null);
 
         Mockito.when(requestDeliveryDAO.createWithAddress(Mockito.any(), Mockito.any(), Mockito.any()))
