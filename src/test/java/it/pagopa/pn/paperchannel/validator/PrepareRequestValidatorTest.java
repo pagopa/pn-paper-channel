@@ -7,6 +7,7 @@ import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.AnalogAddress;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PrepareRequest;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ProposalTypeEnum;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.utils.Utility;
@@ -32,7 +33,7 @@ class PrepareRequestValidatorTest {
 
     @Test
     void prepareRequestValidatorOKTest() {
-        PrepareRequestValidator.compareRequestEntity(prepareRequest, deliveryRequest, true);
+        PrepareRequestValidator.compareRequestEntity(prepareRequest, deliveryRequest, true, true);
         assertTrue(true);
     }
 
@@ -52,9 +53,114 @@ class PrepareRequestValidatorTest {
         notValid.setReceiverAddress(AddressMapper.toPojo(address));
         List<String> errors = new ArrayList<>();
         PnGenericException ex = Assertions.assertThrows(PnInputValidatorException.class,
-                () -> PrepareRequestValidator.compareRequestEntity(notValid, deliveryRequest, true));
+                () -> PrepareRequestValidator.compareRequestEntity(notValid, deliveryRequest, true, true));
         Assertions.assertNotNull(errors);
         Assertions.assertEquals(ExceptionTypeEnum.DIFFERENT_DATA_REQUEST.getMessage(), ex.getMessage());
+    }
+
+    @Test
+    void prepareRequestValidatorAttachmentTest_1() {
+        List<String> errors = new ArrayList<>();
+
+        prepareRequest.setAttachmentUrls(new ArrayList<>(List.of("safestorage://123")));
+
+        PnAttachmentInfo pnAttachmentInfo = new PnAttachmentInfo();
+        pnAttachmentInfo.setFileKey("safestorage://123");
+        deliveryRequest.setAttachments(new ArrayList<>(List.of(pnAttachmentInfo)));
+
+        Assertions.assertDoesNotThrow(() -> PrepareRequestValidator.compareRequestEntity(prepareRequest, deliveryRequest, true, true));
+        Assertions.assertDoesNotThrow(() -> PrepareRequestValidator.compareRequestEntity(prepareRequest, deliveryRequest, true, false));
+
+
+        pnAttachmentInfo = new PnAttachmentInfo();
+        pnAttachmentInfo.setFileKey("safestorage://456");
+        deliveryRequest.setAttachments(new ArrayList<>(List.of(pnAttachmentInfo)));
+
+        PnGenericException ex = Assertions.assertThrows(PnInputValidatorException.class,
+                () -> PrepareRequestValidator.compareRequestEntity(prepareRequest, deliveryRequest, true, true));
+        Assertions.assertNotNull(errors);
+        Assertions.assertEquals(ExceptionTypeEnum.DIFFERENT_DATA_REQUEST.getMessage(), ex.getMessage());
+
+        ex = Assertions.assertThrows(PnInputValidatorException.class,
+                () -> PrepareRequestValidator.compareRequestEntity(prepareRequest, deliveryRequest, true, false));
+        Assertions.assertNotNull(errors);
+        Assertions.assertEquals(ExceptionTypeEnum.DIFFERENT_DATA_REQUEST.getMessage(), ex.getMessage());
+    }
+
+    @Test
+    void prepareRequestValidatorAttachmentTest_2() {
+        List<String> errors = new ArrayList<>();
+
+        // caso in cui l'f24set della request non contiene f24set. skip a false deve dare errore
+        prepareRequest.setAttachmentUrls(new ArrayList<>(List.of("safestorage://123", "f24set://abcd")));
+
+        PnAttachmentInfo pnAttachmentInfo = new PnAttachmentInfo();
+        pnAttachmentInfo.setFileKey("safestorage://123");
+
+
+        deliveryRequest.setAttachments(new ArrayList<>(List.of(pnAttachmentInfo)));
+
+
+        Assertions.assertDoesNotThrow(() -> PrepareRequestValidator.compareRequestEntity(prepareRequest, deliveryRequest, true, true));
+        PnGenericException ex = Assertions.assertThrows(PnInputValidatorException.class,
+                () -> PrepareRequestValidator.compareRequestEntity(prepareRequest, deliveryRequest, true, false));
+        Assertions.assertNotNull(errors);
+        Assertions.assertEquals(ExceptionTypeEnum.DIFFERENT_DATA_REQUEST.getMessage(), ex.getMessage());
+
+        // caso in cui l'f24set della request è uguale da quello generato. tipico caso di check allegati nel caso di ritentativi. non deve dare errori
+        PnAttachmentInfo pnAttachmentInfo1 = new PnAttachmentInfo();
+        pnAttachmentInfo1.setFileKey("f24set://abcd");
+
+        deliveryRequest.setAttachments(new ArrayList<>(List.of(pnAttachmentInfo, pnAttachmentInfo1)));
+        Assertions.assertDoesNotThrow(() -> PrepareRequestValidator.compareRequestEntity(prepareRequest, deliveryRequest, true, true));
+        Assertions.assertDoesNotThrow(() -> PrepareRequestValidator.compareRequestEntity(prepareRequest, deliveryRequest, true, false));
+
+        // caso in cui l'f24set della request è diverso da quello generato. tipico caso di check allegati della seconda request sulla prima. skip a false deve dare errore
+        pnAttachmentInfo1 = new PnAttachmentInfo();
+        pnAttachmentInfo1.setFileKey("f24set://abcd_altro");
+
+        deliveryRequest.setAttachments(new ArrayList<>(List.of(pnAttachmentInfo, pnAttachmentInfo1)));
+        Assertions.assertDoesNotThrow(() -> PrepareRequestValidator.compareRequestEntity(prepareRequest, deliveryRequest, true, true));
+        ex = Assertions.assertThrows(PnInputValidatorException.class,
+                () -> PrepareRequestValidator.compareRequestEntity(prepareRequest, deliveryRequest, true, false));
+        Assertions.assertNotNull(errors);
+        Assertions.assertEquals(ExceptionTypeEnum.DIFFERENT_DATA_REQUEST.getMessage(), ex.getMessage());
+    }
+
+    @Test
+    void prepareRequestValidatorAttachmentTest_3() {
+        List<String> errors = new ArrayList<>();
+
+
+        prepareRequest.setAttachmentUrls(new ArrayList<>(List.of("safestorage://123", "f24set://abcd")));
+
+        PnAttachmentInfo pnAttachmentInfo = new PnAttachmentInfo();
+        pnAttachmentInfo.setFileKey("safestorage://123");
+
+        PnAttachmentInfo pnAttachmentInfo1 = new PnAttachmentInfo();
+        pnAttachmentInfo1.setFileKey("safestorage://456");
+        pnAttachmentInfo1.setGeneratedFrom("f24set://abcd");
+
+        deliveryRequest.setAttachments(new ArrayList<>(List.of(pnAttachmentInfo,pnAttachmentInfo1)));
+
+
+        Assertions.assertDoesNotThrow(() -> PrepareRequestValidator.compareRequestEntity(prepareRequest, deliveryRequest, true, true));
+        Assertions.assertDoesNotThrow(() -> PrepareRequestValidator.compareRequestEntity(prepareRequest, deliveryRequest, true, false));
+
+
+        pnAttachmentInfo1 = new PnAttachmentInfo();
+        pnAttachmentInfo1.setFileKey("safestorage://456");
+        pnAttachmentInfo1.setGeneratedFrom("f24set://abcd_altro");
+
+        deliveryRequest.setAttachments(new ArrayList<>(List.of(pnAttachmentInfo,pnAttachmentInfo1)));
+
+
+        Assertions.assertDoesNotThrow(() -> PrepareRequestValidator.compareRequestEntity(prepareRequest, deliveryRequest, true, true));
+        PnGenericException ex = Assertions.assertThrows(PnInputValidatorException.class,
+                () -> PrepareRequestValidator.compareRequestEntity(prepareRequest, deliveryRequest, true, false));
+        Assertions.assertNotNull(errors);
+        Assertions.assertEquals(ExceptionTypeEnum.DIFFERENT_DATA_REQUEST.getMessage(), ex.getMessage());
+
     }
 
     private void setDeliveryRequest(){

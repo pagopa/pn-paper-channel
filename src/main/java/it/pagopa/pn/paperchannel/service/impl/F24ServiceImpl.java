@@ -47,7 +47,7 @@ import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.F24_WAITING;
 @Service
 public class F24ServiceImpl extends GenericService implements F24Service {
 
-    private static final String URL_PROTOCOL_F24 = "f24set";
+    public static final String URL_PROTOCOL_F24 = "f24set";
     private static final String DOCUMENT_TYPE_F24_SET = "PN_F24_SET";
     private static final String SAFESTORAGE_PREFIX = "safestorage://";
 
