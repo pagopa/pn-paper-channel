@@ -9,6 +9,7 @@ import lombok.*;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode
 public class PrepareAsyncRequest {
 
     @JsonProperty("requestId")
