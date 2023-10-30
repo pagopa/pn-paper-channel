@@ -438,7 +438,7 @@
                         </goals>
                         <phase>generate-resources</phase>
                         <configuration>
-                            <inputSpec>https://raw.githubusercontent.com/pagopa/pn-address-manager/55ea6f690827131fe93d5d8ff9b02f4b632c442e/docs/openapi/pn-address-manager-v1.yaml</inputSpec>
+                            <inputSpec>https://raw.githubusercontent.com/pagopa/pn-address-manager/672cbe7854f77f9745a11c582121daf8da6ae603/docs/openapi/pn-address-manager-v1.yaml</inputSpec>
                             <generatorName>java</generatorName>
                             <library>webclient</library>
                             <generateApiDocumentation>false</generateApiDocumentation>
