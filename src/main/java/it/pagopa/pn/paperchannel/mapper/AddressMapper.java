@@ -14,7 +14,6 @@ import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
 import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.math3.analysis.function.Add;
 
 import java.time.LocalDateTime;
 
@@ -39,8 +38,7 @@ public class AddressMapper {
 
     public static Address fromAnalogToAddress(AnalogAddress analogAddress){
         if (analogAddress == null) return null;
-        Address address = mapperAnalog.toEntity(analogAddress);
-        return address;
+        return mapperAnalog.toEntity(analogAddress);
     }
 
 
@@ -124,6 +122,7 @@ public class AddressMapper {
         analogAddress.setCity2(address.getCity2());
         analogAddress.setPr(address.getPr());
         analogAddress.setCountry(address.getCountry());
+        analogAddress.setNameRow2(address.getNameRow2());
         return analogAddress;
     }
 
@@ -136,6 +135,7 @@ public class AddressMapper {
         address.setCity2(analogAddress.getCity2());
         address.setPr(analogAddress.getPr());
         address.setCountry(analogAddress.getCountry());
+        address.setNameRow2(analogAddress.getNameRow2());
         return address;
     }
 

@@ -342,11 +342,20 @@ Parameters:
     Type: String
     Default: ''
 
-  #Override send-d01-to-delivery-push
-  SendD01ToDeliveryPush:
-    Description: True se il failureDetailCode D01 deve essere mandato a delivery push
+  #Override pn.paper-channel.pnaddr001send-d01-to-delivery-push
+  Pnaddr001SendD01ToDeliveryPush:
+    Description: Per l'errore PNADDR001, True se il failureDetailCode D01 deve essere mandato a delivery push
     Type: String
     Default: true
+    AllowedValues:
+      - true
+      - false
+
+  #Override pn.paper-channel.pnaddr002send-d01-to-delivery-push
+  Pnaddr002SendD01ToDeliveryPush:
+    Description: Per l'errore PNADDR002, True se il failureDetailCode D01 deve essere mandato a delivery push
+    Type: String
+    Default: false
     AllowedValues:
       - true
       - false
@@ -517,14 +526,15 @@ Resources:
         ContainerEnvEntry44: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERCXID=${AddressManagerCxId}'
         ContainerEnvEntry45: !Sub 'PN_PAPERCHANNEL_CHARGECALCULATIONMODE=${ChargeCalculationMode}'
         ContainerEnvEntry46: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUEADDRESSMANAGER=${AttemptQueueAddressManager}'
-        ContainerEnvEntry47: !Sub 'PN_PAPERCHANNEL_SENDD01TODELIVERYPUSH=${SendD01ToDeliveryPush}'
-        ContainerEnvEntry48: !Sub 'PN_PAPERCHANNEL_REFINEMENTDURATION=${RefinementDuration}'
-        ContainerEnvEntry49: !Sub 'PN_PAPERCHANNEL_CLOUDWATCHMETRICCRON=${CloudwatchMetricCron}'
-        ContainerEnvEntry50: !Sub 'PN_PAPERCHANNEL_REQUESTPAIDOVERRIDE=${RequestPaIdOverride}'
-        ContainerEnvEntry51: !Sub 'PN_PAPERCHANNEL_CLIENTF24BASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
-        ContainerEnvEntry52: !Sub 'PN_PAPERCHANNEL_F24CXID=${F24PaperChannelUser}'
-        ContainerEnvEntry53: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUEF24=${AttemptQueueF24}'
-        ContainerEnvEntry54: !Sub 'PN_PAPERCHANNEL_QUEUEF24=${F24ToPaperChannelQueueName}'
+        ContainerEnvEntry47: !Sub 'PN_PAPERCHANNEL_PNADDR001SENDD01TODELIVERYPUSH=${Pnaddr001SendD01ToDeliveryPush}'
+        ContainerEnvEntry48: !Sub 'PN_PAPERCHANNEL_PNADDR002SENDD01TODELIVERYPUSH=${Pnaddr002SendD01ToDeliveryPush}'
+        ContainerEnvEntry49: !Sub 'PN_PAPERCHANNEL_REFINEMENTDURATION=${RefinementDuration}'
+        ContainerEnvEntry50: !Sub 'PN_PAPERCHANNEL_CLOUDWATCHMETRICCRON=${CloudwatchMetricCron}'
+        ContainerEnvEntry51: !Sub 'PN_PAPERCHANNEL_REQUESTPAIDOVERRIDE=${RequestPaIdOverride}'
+        ContainerEnvEntry52: !Sub 'PN_PAPERCHANNEL_CLIENTF24BASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
+        ContainerEnvEntry53: !Sub 'PN_PAPERCHANNEL_F24CXID=${F24PaperChannelUser}'
+        ContainerEnvEntry54: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUEF24=${AttemptQueueF24}'
+        ContainerEnvEntry55: !Sub 'PN_PAPERCHANNEL_QUEUEF24=${F24ToPaperChannelQueueName}'
         ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-PaperChannel-Secrets
         MappedPaths: '/paper-channel-bo/*,/paper-channel-private/*'
