@@ -60,10 +60,16 @@ public class PnPaperChannelConfig {
     private String requestPaIdOverride;
 
     /**
-     * True se il failureDetailCode D01 deve essere mandato a delivery push (specificando anche l'indirizzo),
+     * Per l'errore PNADDR001: True se il failureDetailCode D01 deve essere mandato a delivery push (specificando anche l'indirizzo),
      * false se invece viene salvato l'errore sulla tabella degli errori (as-is)
      */
-    private boolean sendD01ToDeliveryPush;
+    private boolean pnaddr001sendD01ToDeliveryPush;
+
+    /**
+     * Per l'errore PNADDR002: True se il failureDetailCode D01 deve essere mandato a delivery push (specificando anche l'indirizzo),
+     * false se invece viene salvato l'errore sulla tabella degli errori (as-is)
+     */
+    private boolean pnaddr002sendD01ToDeliveryPush;
 
     @PostConstruct
     public void init() {

@@ -36,7 +36,7 @@ public class AddressManagerClientImpl implements AddressManagerClient {
 
     @Override
     public Mono<DeduplicatesResponseDto> deduplicates(String correlationId, Address base, Address target) {
-        String PN_ADDRESS_MANAGER_DESCRIPTION = "Address Manager deduplicates";
+        final String PN_ADDRESS_MANAGER_DESCRIPTION = "Address Manager deduplicates";
         log.logInvokingAsyncExternalService(PnLogger.EXTERNAL_SERVICES.PN_ADDRESS_MANAGER, PN_ADDRESS_MANAGER_DESCRIPTION, correlationId);
         DeduplicatesRequestDto requestDto = new DeduplicatesRequestDto();
         requestDto.setBaseAddress(AddressMapper.toAnalogAddressManager(base));
@@ -51,12 +51,8 @@ public class AddressManagerClientImpl implements AddressManagerClient {
                 .retryWhen(
                         Retry.backoff(2, Duration.ofMillis(500))
                                 .filter(throwable -> throwable instanceof TimeoutException || throwable instanceof ConnectException)
-                ).map(response -> {
-                    log.info("Deduplicates response correlationId : {}", response.getCorrelationId());
-                    log.info("Equality : {}", response.getEqualityResult());
-                    log.info("Error : {}", response.getError());
-                    return response;
-                })
+                )
+                .doOnNext(response -> log.info("Deduplicates response: {}", response))
                 .onErrorResume(ex -> {
                     log.error("Error with deduplicates API with correlation id: {}", correlationId, ex);
                     return Mono.error(new PnAddressFlowException(ADDRESS_MANAGER_ERROR));
