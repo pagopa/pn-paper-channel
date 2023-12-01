@@ -91,7 +91,7 @@ public class PNAG012MessageHandler extends SaveDematMessageHandler {
         var pnag012PaperRequest = pnag012Wrapper.getPaperProgressStatusEventDtoPNAG012();
         var pnag012DeliveryRequest = pnag012Wrapper.getPnDeliveryRequestPNAG012();
         pnLogAudit.addsBeforeReceive(pnag012DeliveryRequest.getIun(), String.format("prepare requestId = %s Response from external-channel", pnag012DeliveryRequest.getRequestId()));
-        return eventMetaDAO.createOrUpdate(pnEventMetaPNAG012)
+        return eventMetaDAO.putIfAbsent(pnEventMetaPNAG012)
                 .doOnNext(pnEventMetaRECAG012Updated -> logSuccessAuditLog(pnag012PaperRequest, pnag012DeliveryRequest, pnLogAudit))
                 .thenReturn(pnag012Wrapper);
     }

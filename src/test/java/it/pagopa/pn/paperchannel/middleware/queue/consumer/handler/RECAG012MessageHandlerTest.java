@@ -77,6 +77,7 @@ class RECAG012MessageHandlerTest {
         PnEventMeta pnEventMeta = handler.buildPnEventMeta(paperRequest);
 
         when(mockDao.getDeliveryEventMeta("META##requestId", "META##RECAG012")).thenReturn(Mono.just(pnEventMeta));
+        when(mockPnag012MessageHandler.handleMessage(entity, paperRequest)).thenReturn(Mono.empty());
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
 
         //mi aspetto che salvi l'evento

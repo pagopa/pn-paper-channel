@@ -93,7 +93,7 @@ class RECAG011BMessageHandlerTest {
         when(eventMetaDAO.getDeliveryEventMeta("META##requestId", META_SORT_KEY_FILTER))
                 .thenReturn(Mono.just(eventMetaRECAG012Expected));
 
-        when(eventMetaDAO.createOrUpdate(pnEventMeta)).thenReturn(Mono.just(pnEventMeta));
+        when(eventMetaDAO.putIfAbsent(pnEventMeta)).thenReturn(Mono.just(pnEventMeta));
 
         // eseguo l'handler
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
@@ -102,7 +102,7 @@ class RECAG011BMessageHandlerTest {
 
         verify(eventDematDAO, times(1)).findAllByKeys("DEMAT##requestId", DEMAT_SORT_KEYS_FILTER);
         verify(eventMetaDAO, times(1)).getDeliveryEventMeta("META##requestId", META_SORT_KEY_FILTER);
-        verify(eventMetaDAO, times(1)).createOrUpdate(pnEventMeta);
+        verify(eventMetaDAO, times(1)).putIfAbsent(pnEventMeta);
 
         PNAG012Wrapper pnag012Wrapper = PNAG012Wrapper.buildPNAG012Wrapper(entity, paperRequest, eventMetaRECAG012Expected.getStatusDateTime());
         PnDeliveryRequest pnDeliveryRequestPNAG012 = pnag012Wrapper.getPnDeliveryRequestPNAG012();

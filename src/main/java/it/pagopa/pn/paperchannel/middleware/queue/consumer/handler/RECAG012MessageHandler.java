@@ -48,9 +48,8 @@ public class RECAG012MessageHandler extends SaveMetadataMessageHandler {
      * @param entity
      * @param paperRequest
      * @return Restituisce l'entità PnDeliveryRequest dato in input, se inserisce il record pnEventMeta in DB (e quindi riceve per
-     * la prima volta l'evento RECAG012.
-     * Se l'evento che riceve è già presente in DB, con gli stessi campi valorizzati, restituisce un Mono.empty.
-     * Se l'evento che riceve è già presente in DB con campi valorizzati diversamente, viene lanciata una eccezione.
+     * la prima volta l'evento RECAG012 oppure se l'evento che riceve è già presente in DB, con gli stessi campi valorizzati.
+     * Se invece l'evento che riceve è già presente in DB ma con campi valorizzati diversamente, viene lanciata una eccezione.
      */
     private Mono<PnDeliveryRequest> saveIfNotExistsInDB(Optional<PnEventMeta> optionalPnEventMeta, PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
         if(optionalPnEventMeta.isPresent()) {
@@ -62,7 +61,7 @@ public class RECAG012MessageHandler extends SaveMetadataMessageHandler {
             if(! pnEventMetaInDB.equals(pnEventMetaNew)) {
                 throw new PnGenericException(WRONG_RECAG012_DATA, "[{" + paperRequest.getRequestId() + "}] Entity RECAG012 already present. In DB: {" + pnEventMetaInDB + "}, received: {" + pnEventMetaNew + "}");
             }
-            return Mono.empty();
+            return Mono.just(entity);
         }
         else {
             // se non è già presente a DB, lo salvo come entità META
