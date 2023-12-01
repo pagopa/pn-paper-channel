@@ -53,7 +53,8 @@ public class HandlersFactory {
         var directlySendMessageHandler = new DirectlySendMessageHandler(sqsSender);
         var recag012MessageHandler = new RECAG012MessageHandler(eventMetaDAO, pnPaperChannelConfig.getTtlExecutionDaysMeta());
         var recag011AMessageHandler =  new RECAG011AMessageHandler(sqsSender, eventMetaDAO, pnPaperChannelConfig.getTtlExecutionDaysMeta());
-        var recag011BMessageHandler = new RECAG011BMessageHandler(sqsSender, eventDematDAO, pnPaperChannelConfig.getTtlExecutionDaysDemat(), eventMetaDAO, pnPaperChannelConfig.getTtlExecutionDaysMeta());
+        var pnag012MessageHandler = new PNAG012MessageHandler(sqsSender, eventDematDAO, pnPaperChannelConfig.getTtlExecutionDaysDemat(), eventMetaDAO, pnPaperChannelConfig.getTtlExecutionDaysMeta());
+        var recag011BMessageHandler = new RECAG011BMessageHandler(sqsSender, eventDematDAO, pnPaperChannelConfig.getTtlExecutionDaysDemat(), pnag012MessageHandler);
         var recag008CMessageHandler = new RECAG008CMessageHandler(sqsSender, eventMetaDAO, metaDematCleaner);
         var complex890MessageHandler = new Complex890MessageHandler(sqsSender, eventMetaDAO, metaDematCleaner, pnPaperChannelConfig.getRefinementDuration() );
         var recrn00xcMessageHandler = new RECRN00XCMessageHandler(sqsSender, eventMetaDAO, metaDematCleaner, pnPaperChannelConfig.getRefinementDuration());
@@ -85,6 +86,7 @@ public class HandlersFactory {
         map.put("RECRN003C", recrn00xcMessageHandler);
         map.put("RECRN004C", recrn00xcMessageHandler);
         map.put("RECRN005C", recrn00xcMessageHandler);
+        map.put("PNAG012", pnag012MessageHandler);
     }
 
     private void addRetryableErrorStatusCodes(ConcurrentHashMap<String, MessageHandler> map, RetryableErrorMessageHandler handler) {
@@ -134,35 +136,6 @@ public class HandlersFactory {
         map.put("RECRSI004A", handler);
     }
 
-//    private void addDemaSavedStatusCodes(ConcurrentHashMap<DematKey, MessageHandler> map, DematMessageHandler handler) {
-//
-//        map.put(new DematKey("RECAG002B", "CAN"), handler);
-//
-//    }
-
-
-//    private void addDematDeliveryPushStatusCodes(ConcurrentHashMap<DematKey, MessageHandler> map, SaveDematMessageHandler handler) {
-//        map.put(new DematKey("RECRS002B", "Plico"), handler);
-//        map.put(new DematKey("RECRS002E", "Plico"), handler);
-//        map.put(new DematKey("RECRS004B", "Plico"), handler);
-//        map.put(new DematKey("RECRS005B", "Plico"), handler);
-//        map.put(new DematKey("RECRN001B", "AR"), handler);
-//        map.put(new DematKey("RECRN002B", "Plico"), handler);
-//        map.put(new DematKey("RECRN002E", "Plico"), handler);
-//        map.put(new DematKey("RECRN002E", "Indagine"), handler);
-//        map.put(new DematKey("RECRN003B", "AR"), handler);
-//        map.put(new DematKey("RECRN004B", "Plico"), handler);
-//        map.put(new DematKey("RECRN005B", "Plico"), handler);
-//        map.put(new DematKey("RECAG001B", "23L"), handler);
-//        map.put(new DematKey("RECAG002B", "23L"), handler); //CAN è una raccomandata semplice che, se consegnata, non ha materialità da dematerializzare. in caso non fosse recapitata avrà una dematerializzazione del plico di tipo CAN
-//        map.put(new DematKey("RECAG003B", "Plico"), handler);
-//        map.put(new DematKey("RECAG003E", "Plico"), handler);
-//        map.put(new DematKey("RECAG003E", "Indagine"), handler);
-//        map.put(new DematKey("RECRI003B", "AR"), handler);
-//        map.put(new DematKey("RECRI004B", "Plico"), handler);
-//        map.put(new DematKey("RECRSI004B", "Plico"), handler);
-//
-//    }
 
     private void addSaveDematStatusCodes(ConcurrentHashMap<String, MessageHandler> map, SaveDematMessageHandler handler) {
         map.put(ExternalChannelCodeEnum.RECRS002B.name(), handler);

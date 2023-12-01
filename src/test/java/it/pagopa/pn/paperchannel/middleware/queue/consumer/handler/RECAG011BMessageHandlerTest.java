@@ -24,13 +24,14 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.List;
 
-import static it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.RECAG011BMessageHandler.DEMAT_SORT_KEYS_FILTER;
-import static it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.RECAG011BMessageHandler.META_SORT_KEY_FILTER;
+import static it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.PNAG012MessageHandler.DEMAT_SORT_KEYS_FILTER;
+import static it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.PNAG012MessageHandler.META_SORT_KEY_FILTER;
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.createMETAForPNAG012Event;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.*;
 
+// Questa classe di test, testa sia l'handler RECAG011BMessageHandler che PNAG012MessageHandler
 class RECAG011BMessageHandlerTest {
 
     private EventDematDAO eventDematDAO;
@@ -41,6 +42,8 @@ class RECAG011BMessageHandlerTest {
 
     private RECAG011BMessageHandler handler;
 
+    private PNAG012MessageHandler pnag012MessageHandler;
+
     @BeforeEach
     public void init() {
         long ttlDays = 365;
@@ -48,7 +51,8 @@ class RECAG011BMessageHandlerTest {
         eventMetaDAO = mock(EventMetaDAO.class);
         mockSqsSender = mock(SqsSender.class);
 
-        handler = new RECAG011BMessageHandler(mockSqsSender, eventDematDAO, ttlDays, eventMetaDAO, ttlDays);
+        pnag012MessageHandler = new PNAG012MessageHandler(mockSqsSender, eventDematDAO, ttlDays, eventMetaDAO, ttlDays);
+        handler = new RECAG011BMessageHandler(mockSqsSender, eventDematDAO, ttlDays, pnag012MessageHandler);
     }
 
     @Test
