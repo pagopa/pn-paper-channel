@@ -31,8 +31,12 @@ public class RECAG011BMessageHandler extends SaveDematMessageHandler {
     public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
         log.debug("[{}] RECAG011B handler start", paperRequest.getRequestId());
 
-        return super.handleMessage(entity, paperRequest)
-                .then(pnag012MessageHandler.handleMessage(entity, paperRequest));
+        return super.handleMessage(entity, paperRequest).thenReturn(entity)
+                .doOnNext(deliveryRequest -> log.info("[{}] Start PNAG012MessageHandler from RECAG011B flow", paperRequest.getRequestId()))
+                .then(pnag012MessageHandler.handleMessage(entity, paperRequest).thenReturn(entity))
+                .doOnNext(deliveryRequest -> log.debug("[{}] RECAG011B handler ended", paperRequest.getRequestId()))
+                .doOnError(ex -> log.warn("[{}] RECAG011B handler ended with error: {}", paperRequest.getRequestId(), ex.getMessage()))
+                .then();
     }
 
 }

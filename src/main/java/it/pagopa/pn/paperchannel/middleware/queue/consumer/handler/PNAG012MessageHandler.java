@@ -20,6 +20,10 @@ import java.util.Optional;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.WRONG_EVENT_ORDER;
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
 
+/**
+ * Questo handler è l'unico in cui viene scatenato da un altro handler, {@link RECAG011BMessageHandler}
+ * e non da direttamente da un evento di ext-channel.
+ */
 @Slf4j
 public class PNAG012MessageHandler extends SaveDematMessageHandler {
 
