@@ -1,7 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
-import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
@@ -17,11 +16,10 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 import java.util.Optional;
 
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.WRONG_EVENT_ORDER;
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
 
 /**
- * Questo handler è l'unico in cui viene scatenato da un altro handler, {@link RECAG011BMessageHandler}
+ * Questo handler è l'unico in cui viene scatenato da altri handler, {@link RECAG011BMessageHandler} e {@link RECAG012MessageHandler}
  * e non da direttamente da un evento di ext-channel.
  */
 @Slf4j
@@ -61,13 +59,18 @@ public class PNAG012MessageHandler extends SaveDematMessageHandler {
                 .filter(this::canCreatePNAG012Event)
                 .doOnNext(pnEventDemats -> log.info("[{}] CanCreatePNAG012Event Filter success", paperRequest.getRequestId()))
                 .flatMap(pnEventDemats -> eventMetaDAO.getDeliveryEventMeta(metadataRequestIdFilter, META_SORT_KEY_FILTER)
-                        .switchIfEmpty(Mono.error(new PnGenericException(WRONG_EVENT_ORDER, "[{" + paperRequest.getRequestId() + "}] Missing EventMeta for {" + paperRequest + "}")))
+                        .switchIfEmpty(logAndBlockPNAG012Flow(paperRequest.getRequestId()))
                 )
                 .doOnNext(pnEventMeta -> log.info("[{}] PnEventMeta found: {}", paperRequest.getRequestId(), pnEventMeta))
                 .map(pnEventMetaRECAG012 -> createMETAForPNAG012Event(paperRequest, pnEventMetaRECAG012, ttlDaysMeta))
                 .flatMap(pnEventMetaPNAG012 -> this.pnag012Flow(pnEventMetaPNAG012, entity, paperRequest, pnLogAudit))
                 .doOnNext(pnag012Wrapper -> log.info("[{}] Sending PNAG012 to delivery push: {}", pnag012Wrapper.getPaperProgressStatusEventDtoPNAG012().getRequestId(), pnag012Wrapper.getPnDeliveryRequestPNAG012()))
                 .flatMap(pnag012Wrapper -> super.sendToDeliveryPush(pnag012Wrapper.getPnDeliveryRequestPNAG012(), pnag012Wrapper.getPaperProgressStatusEventDtoPNAG012()));
+    }
+
+    private Mono<PnEventMeta> logAndBlockPNAG012Flow(String requestId) {
+        log.warn("[{}] Meta with RECAG012 not found", requestId);
+        return Mono.empty();
     }
 
     private boolean canCreatePNAG012Event(List<PnEventDemat> pnEventDemats) {

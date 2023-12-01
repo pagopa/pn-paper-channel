@@ -20,9 +20,11 @@ import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
 @Slf4j
 public class RECAG012MessageHandler extends SaveMetadataMessageHandler {
 
+    private final PNAG012MessageHandler pnag012MessageHandler;
 
-    public RECAG012MessageHandler(EventMetaDAO eventMetaDAO, Long ttlDays) {
+    public RECAG012MessageHandler(EventMetaDAO eventMetaDAO, Long ttlDays, PNAG012MessageHandler pnag012MessageHandler) {
         super(eventMetaDAO, ttlDays);
+        this.pnag012MessageHandler = pnag012MessageHandler;
     }
 
     @Override
@@ -33,10 +35,24 @@ public class RECAG012MessageHandler extends SaveMetadataMessageHandler {
         return super.eventMetaDAO.getDeliveryEventMeta(partitionKey, sortKey)
                 .map(Optional::of)
                 .defaultIfEmpty(Optional.empty())
-                .flatMap(optionalPnEventMeta -> saveIfNotExistsInDB(optionalPnEventMeta, entity, paperRequest));
+                .flatMap(optionalPnEventMeta -> saveIfNotExistsInDB(optionalPnEventMeta, entity, paperRequest))
+                .flatMap(deliveryRequest -> pnag012MessageHandler.handleMessage(entity, paperRequest).thenReturn(entity))
+                .doOnNext(deliveryRequest -> log.debug("[{}] RECAG012 handler ended", paperRequest.getRequestId()))
+                .doOnError(ex -> log.warn("[{}] RECAG012 handler ended with error: {}", paperRequest.getRequestId(), ex.getMessage()))
+                .then();
     }
 
-    private Mono<Void> saveIfNotExistsInDB(Optional<PnEventMeta> optionalPnEventMeta, PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
+    /**
+     *
+     * @param optionalPnEventMeta
+     * @param entity
+     * @param paperRequest
+     * @return Restituisce l'entità PnDeliveryRequest dato in input, se inserisce il record pnEventMeta in DB (e quindi riceve per
+     * la prima volta l'evento RECAG012.
+     * Se l'evento che riceve è già presente in DB, con gli stessi campi valorizzati, restituisce un Mono.empty.
+     * Se l'evento che riceve è già presente in DB con campi valorizzati diversamente, viene lanciata una eccezione.
+     */
+    private Mono<PnDeliveryRequest> saveIfNotExistsInDB(Optional<PnEventMeta> optionalPnEventMeta, PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
         if(optionalPnEventMeta.isPresent()) {
             PnEventMeta pnEventMetaInDB = optionalPnEventMeta.get();
             PnEventMeta pnEventMetaNew = super.buildPnEventMeta(paperRequest);
@@ -50,7 +66,7 @@ public class RECAG012MessageHandler extends SaveMetadataMessageHandler {
         }
         else {
             // se non è già presente a DB, lo salvo come entità META
-            return super.handleMessage(entity, paperRequest);
+            return super.handleMessage(entity, paperRequest).thenReturn(entity);
         }
     }
 

@@ -1,6 +1,5 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
-import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.AttachmentDetailsDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
@@ -18,7 +17,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.test.StepVerifier;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -180,7 +178,7 @@ class RECAG011BMessageHandlerTest {
     }
 
     @Test
-    void handleMessageKOBecauseZeroResultGetDeliveryEventMetaTest() {
+    void handleMessagePNAGO12BlockBecauseZeroResultGetDeliveryEventMetaTest() {
         OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
         PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
                 .requestId("requestId")
@@ -220,9 +218,12 @@ class RECAG011BMessageHandlerTest {
                 .thenReturn(Mono.empty()); // 0 risultati
 
         // eseguo l'handler
-        StepVerifier.create(handler.handleMessage(entity, paperRequest))
-                .expectError(PnGenericException.class)
-                .verify();
+//        StepVerifier.create(handler.handleMessage(entity, paperRequest))
+//                .expectError(PnGenericException.class)
+//                .verify();
+
+        // eseguo l'handler
+        assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
 
         testNormalDematFlow(pnEventDematExpected, eventDematToDeliveryPushExpected);
 
