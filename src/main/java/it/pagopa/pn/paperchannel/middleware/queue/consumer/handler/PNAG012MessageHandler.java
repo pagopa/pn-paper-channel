@@ -20,7 +20,7 @@ import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
 
 /**
  * Questo handler è l'unico in cui viene scatenato da altri handler, {@link RECAG011BMessageHandler} e {@link RECAG012MessageHandler}
- * e non da direttamente da un evento di ext-channel.
+ * e non direttamente da un evento di ext-channel.
  */
 @Slf4j
 public class PNAG012MessageHandler extends SaveDematMessageHandler {
