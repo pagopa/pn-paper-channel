@@ -93,6 +93,6 @@ public class PNAG012MessageHandler extends SaveDematMessageHandler {
         pnLogAudit.addsBeforeReceive(pnag012DeliveryRequest.getIun(), String.format("prepare requestId = %s Response from external-channel", pnag012DeliveryRequest.getRequestId()));
         return eventMetaDAO.putIfAbsent(pnEventMetaPNAG012)
                 .doOnNext(pnEventMetaRECAG012Updated -> logSuccessAuditLog(pnag012PaperRequest, pnag012DeliveryRequest, pnLogAudit))
-                .map(pnEventMeta -> pnag012Wrapper);
+                .map(pnEventMeta -> pnag012Wrapper); //blocco il flusso se la putIfAbsent non inserisce a DB
     }
 }
