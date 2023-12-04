@@ -57,6 +57,9 @@ class RECAG012MessageHandlerTest {
         //mi aspetto che salvi l'evento
         verify(mockDao, times(1)).createOrUpdate(pnEventMeta);
 
+        //mi aspetto che faccia il flusso PNAG012
+        verify(mockPnag012MessageHandler, times(1)).handleMessage(entity, paperRequest);
+
     }
 
     @Test
@@ -80,8 +83,10 @@ class RECAG012MessageHandlerTest {
         when(mockPnag012MessageHandler.handleMessage(entity, paperRequest)).thenReturn(Mono.empty());
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
 
-        //mi aspetto che salvi l'evento
-        verify(mockDao, times(0)).createOrUpdate(pnEventMeta);
+        //mi aspetto che non salvi l'evento
+        verify(mockDao, never()).createOrUpdate(pnEventMeta);
+        //mi aspetto che faccia lo stesso il flusso PNAG012
+        verify(mockPnag012MessageHandler, times(1)).handleMessage(entity, paperRequest);
 
     }
 
