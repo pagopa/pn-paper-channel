@@ -26,9 +26,9 @@ import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
 public class PNAG012MessageHandler extends SaveDematMessageHandler {
 
     protected static final String META_SORT_KEY_FILTER = buildMetaStatusCode(RECAG012_STATUS_CODE);
-    private static final String DEMAT_23L_RECAG011B = buildDocumentTypeStatusCode("23L", RECAG011B_STATUS_CODE);
+    protected static final String DEMAT_23L_RECAG011B = buildDocumentTypeStatusCode("23L", RECAG011B_STATUS_CODE);
 
-    private static final String DEMAT_ARCAD_RECAG011B = buildDocumentTypeStatusCode("ARCAD", RECAG011B_STATUS_CODE);
+    protected static final String DEMAT_ARCAD_RECAG011B = buildDocumentTypeStatusCode("ARCAD", RECAG011B_STATUS_CODE);
 
     private static final String DEMAT_CAD_RECAG011B = buildDocumentTypeStatusCode("CAD", RECAG011B_STATUS_CODE);
     protected static final String[] DEMAT_SORT_KEYS_FILTER = {
@@ -58,8 +58,12 @@ public class PNAG012MessageHandler extends SaveDematMessageHandler {
         return super.eventDematDAO.findAllByKeys(dematRequestId, DEMAT_SORT_KEYS_FILTER).collectList()
                 .filter(this::canCreatePNAG012Event)
                 .doOnNext(pnEventDemats -> log.info("[{}] CanCreatePNAG012Event Filter success", paperRequest.getRequestId()))
-                .flatMap(pnEventDemats -> eventMetaDAO.getDeliveryEventMeta(metadataRequestIdFilter, META_SORT_KEY_FILTER)
-                        .switchIfEmpty(logAndBlockPNAG012Flow(paperRequest.getRequestId()))
+                .flatMap(pnEventDemats ->
+                        eventMetaDAO.getDeliveryEventMeta(metadataRequestIdFilter, META_SORT_KEY_FILTER)
+                                .switchIfEmpty(Mono.defer(() -> {
+                                    log.warn("[{}] Meta with RECAG012 not found", paperRequest.getRequestId());
+                                    return Mono.empty();
+                                }))
                 )
                 .doOnNext(pnEventMeta -> log.info("[{}] PnEventMeta found: {}", paperRequest.getRequestId(), pnEventMeta))
                 .map(pnEventMetaRECAG012 -> createMETAForPNAG012Event(paperRequest, pnEventMetaRECAG012, ttlDaysMeta))
@@ -68,10 +72,6 @@ public class PNAG012MessageHandler extends SaveDematMessageHandler {
                 .flatMap(pnag012Wrapper -> super.sendToDeliveryPush(pnag012Wrapper.getPnDeliveryRequestPNAG012(), pnag012Wrapper.getPaperProgressStatusEventDtoPNAG012()));
     }
 
-    private Mono<PnEventMeta> logAndBlockPNAG012Flow(String requestId) {
-        log.warn("[{}] Meta with RECAG012 not found", requestId);
-        return Mono.empty();
-    }
 
     private boolean canCreatePNAG012Event(List<PnEventDemat> pnEventDemats) {
         Optional<PnEventDemat> twentyThreeLElement = pnEventDemats.stream()
@@ -93,6 +93,10 @@ public class PNAG012MessageHandler extends SaveDematMessageHandler {
         pnLogAudit.addsBeforeReceive(pnag012DeliveryRequest.getIun(), String.format("prepare requestId = %s Response from external-channel", pnag012DeliveryRequest.getRequestId()));
         return eventMetaDAO.putIfAbsent(pnEventMetaPNAG012)
                 .doOnNext(pnEventMetaRECAG012Updated -> logSuccessAuditLog(pnag012PaperRequest, pnag012DeliveryRequest, pnLogAudit))
-                .map(pnEventMeta -> pnag012Wrapper); //blocco il flusso se la putIfAbsent non inserisce a DB
+                .map(pnEventMeta -> pnag012Wrapper)
+                .switchIfEmpty(Mono.defer(() -> {
+                    log.debug("[{}] PNAG012 already exist", paperRequest.getRequestId());
+                    return Mono.empty();
+                })); //blocco il flusso se la putIfAbsent non inserisce a DB
     }
 }
