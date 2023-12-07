@@ -16,7 +16,9 @@ import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
 
 // Il RECAG012 è considerato come entità logica un metadata
 // Viene cercato sulla tabella META se esiste già l'evento, se non esiste in tabella, viene salvato a DB,
-// altrimenti l'evento arrivato viene ignorato
+// altrimenti l'evento arrivato viene ignorato.
+// Poi, esegue il flusso PNAG012, al netto del superamento delle varie condizioni che si trovano nell'handler del PNAG012.
+// L'aggiunta della gestion del PNAG012 è stata fatta a seguito del task PN-8911.
 @Slf4j
 public class RECAG012MessageHandler extends SaveMetadataMessageHandler {
 

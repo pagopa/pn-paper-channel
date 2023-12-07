@@ -22,6 +22,14 @@ import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
  * Questo handler è l'unico in cui viene scatenato da altri handler, {@link RECAG011BMessageHandler} e {@link RECAG012MessageHandler}
  * e non direttamente da un evento di ext-channel.
  */
+// 1. Chiamare una batchGetItems utilizzando le seguenti chiavi:
+//        23L##RECAG011B
+//        ARCAD##RECAG011B
+//        CAD##RECAG011B
+// 2. Nel caso in cui risultano presenti il 23L##RECAG011B e uno degli altri due element effettuare la transizione in "Distacco d'ufficio 23L fascicolo chiuso":
+//        1. Recuperare l’evento con SK META##RECAG012 e recuperare la statusDateTime (se non esiste il record, bloccare il flusso)
+//        2. effettuare PUT_IF_ABSENT di una nuova riga correlata all’evento PNAG012 in tabella impostando come statusDateTime quella recuperata al punto precedente
+//        3. inoltrare l’evento PNAG012 verso delivery_push (solo se la PUT_IF_ABSENT ha inserito il record)
 @Slf4j
 public class PNAG012MessageHandler extends SaveDematMessageHandler {
 
