@@ -73,6 +73,14 @@ public abstract class BaseDAO<T> {
         });
     }
 
+    protected CompletableFuture<T> put(PutItemEnhancedRequest<T> putItemEnhancedRequest){
+        log.logPuttingDynamoDBEntity(dynamoTable.tableName(), putItemEnhancedRequest.item());
+        return dynamoTable.putItem(putItemEnhancedRequest).thenApply(x -> {
+            log.logPutDoneDynamoDBEntity(dynamoTable.tableName());
+            return putItemEnhancedRequest.item();
+        });
+    }
+
     protected CompletableFuture<T> delete(String partitionKey, String sortKey){
         Key.Builder keyBuilder = Key.builder().partitionValue(partitionKey);
         if (!StringUtils.isBlank(sortKey)){

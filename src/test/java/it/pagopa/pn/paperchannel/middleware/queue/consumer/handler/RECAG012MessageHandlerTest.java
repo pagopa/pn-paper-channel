@@ -18,14 +18,17 @@ class RECAG012MessageHandlerTest {
 
     private EventMetaDAO mockDao;
 
+    private PNAG012MessageHandler mockPnag012MessageHandler;
+
     private SaveMetadataMessageHandler handler;
 
 
     @BeforeEach
     public void init() {
         mockDao = mock(EventMetaDAO.class);
+        mockPnag012MessageHandler = mock(PNAG012MessageHandler.class);
         long ttlDays = 365;
-        handler = new RECAG012MessageHandler(mockDao, ttlDays);
+        handler = new RECAG012MessageHandler(mockDao, ttlDays, mockPnag012MessageHandler);
     }
 
     @Test
@@ -47,11 +50,15 @@ class RECAG012MessageHandlerTest {
 
         when(mockDao.getDeliveryEventMeta("META##requestId", "META##RECAG012")).thenReturn(Mono.empty());
         when(mockDao.createOrUpdate(pnEventMeta)).thenReturn(Mono.just(pnEventMeta));
+        when(mockPnag012MessageHandler.handleMessage(entity, paperRequest)).thenReturn(Mono.empty());
 
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
 
         //mi aspetto che salvi l'evento
         verify(mockDao, times(1)).createOrUpdate(pnEventMeta);
+
+        //mi aspetto che faccia il flusso PNAG012
+        verify(mockPnag012MessageHandler, times(1)).handleMessage(entity, paperRequest);
 
     }
 
@@ -73,10 +80,13 @@ class RECAG012MessageHandlerTest {
         PnEventMeta pnEventMeta = handler.buildPnEventMeta(paperRequest);
 
         when(mockDao.getDeliveryEventMeta("META##requestId", "META##RECAG012")).thenReturn(Mono.just(pnEventMeta));
+        when(mockPnag012MessageHandler.handleMessage(entity, paperRequest)).thenReturn(Mono.empty());
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
 
-        //mi aspetto che salvi l'evento
-        verify(mockDao, times(0)).createOrUpdate(pnEventMeta);
+        //mi aspetto che non salvi l'evento
+        verify(mockDao, never()).createOrUpdate(pnEventMeta);
+        //mi aspetto che faccia lo stesso il flusso PNAG012
+        verify(mockPnag012MessageHandler, times(1)).handleMessage(entity, paperRequest);
 
     }
 
