@@ -1,5 +1,7 @@
 package it.pagopa.pn.paperchannel.config;
 
+import it.pagopa.pn.commons.exceptions.PnInternalException;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.io.*;
 import org.apache.pdfbox.pdfparser.PDFParser;
@@ -7,26 +9,39 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.MediaType;
+import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DOCUMENT_NOT_DOWNLOADED;
+
+@Component
 @Slf4j
+@RequiredArgsConstructor
 public class HttpConnector {
 
-    public static final long MAX_MAIN_MEMORY_BYTES = 1024L * 1024L;
+    public static final long ONE_MAGABYTE = 1024L * 1024L;
 
-    private HttpConnector(){
-        throw new IllegalCallerException("the constructor must not called");
+    private final PnPaperChannelConfig config;
+
+    private Long maxMegaByteInMemory;
+
+    @PostConstruct
+    public void init() {
+        maxMegaByteInMemory = ONE_MAGABYTE * config.getMaxMegabyteInMemory();
+        log.info("Max megabyte in memory: {}", maxMegaByteInMemory);
     }
 
-    public static Mono<PDDocument> downloadFile(String url, BigDecimal contentLength) {
-        boolean tmpFile = contentLength != null && contentLength.longValue() > MAX_MAIN_MEMORY_BYTES;
+
+    public Mono<PDDocument> downloadFile(String url, BigDecimal contentLength) {
+        boolean tmpFile = contentLength != null && contentLength.longValue() > maxMegaByteInMemory;
         // DataBuffer and DataBufferUtils to stream our download in chunks so that the whole file doesn't get loaded
         // into memory
         URI uri = createURI(url);
@@ -44,20 +59,20 @@ public class HttpConnector {
                     DataBufferUtils.release(dataBuffer);
                     return new RandomAccessBuffer(bytes);
                 })
-                .map(randomAccess -> HttpConnector.buildPDDocument(randomAccess, tmpFile));
+                .map(randomAccess -> buildPDDocument(randomAccess, tmpFile));
     }
 
-    private static URI createURI(String url) {
+    private URI createURI(String url) {
         try {
             return new URI(url);
         }
         catch (URISyntaxException e) {
-            throw new RuntimeException(e);
+            throw new PnInternalException(e.getMessage(), DOCUMENT_NOT_DOWNLOADED.getTitle(), e);
         }
     }
 
 
-    private static PDDocument buildPDDocument(RandomAccessRead randomAccessRead, boolean tmpFile) {
+    private PDDocument buildPDDocument(RandomAccessRead randomAccessRead, boolean tmpFile) {
         PDDocument pdDocument = null;
         try {
             ScratchFile scratchFile = buildScratchFile(tmpFile);
@@ -67,21 +82,21 @@ public class HttpConnector {
             return pdDocument;
         }
         catch (IOException e) {
-            throw new RuntimeException("Error creating PDDocument file with ScratchFile", e);
+            throw new PnInternalException("Error creating PDDocument file with ScratchFile", DOCUMENT_NOT_DOWNLOADED.getTitle(), e);
         }
         finally {
             IOUtils.closeQuietly(pdDocument);
         }
     }
 
-    private static ScratchFile buildScratchFile(boolean tmpFile) {
+    private ScratchFile buildScratchFile(boolean tmpFile) {
         if(tmpFile) {
             log.debug("File size exceeds the limit in memory allowed, I use a temporary file");
             try {
-                return new ScratchFile(MemoryUsageSetting.setupMixed(MAX_MAIN_MEMORY_BYTES));
+                return new ScratchFile(MemoryUsageSetting.setupMixed(maxMegaByteInMemory));
             }
             catch (IOException e) {
-                throw new RuntimeException("Error creating temporary file with ScratchFile", e);
+                throw new PnInternalException("Error creating temporary file with ScratchFile", DOCUMENT_NOT_DOWNLOADED.getTitle(), e);
             }
         }
         else {

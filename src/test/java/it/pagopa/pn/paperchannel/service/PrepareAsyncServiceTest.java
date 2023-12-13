@@ -34,9 +34,6 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockserver.configuration.ConfigurationProperties;
-import org.mockserver.integration.ClientAndServer;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import reactor.core.publisher.Mono;
@@ -82,6 +79,9 @@ class PrepareAsyncServiceTest {
 
     @Mock
     private PnPaperChannelConfig pnPaperChannelConfig;
+
+    @Mock
+    private HttpConnector httpConnector;
 
     private final PrepareAsyncRequest request = new PrepareAsyncRequest();
     private final Address address = new Address();
@@ -257,9 +257,8 @@ class PrepareAsyncServiceTest {
 
         request.setRequestId("REQUESTID");
         request.setF24ResponseFlow(true);
-
-        try (MockedStatic<HttpConnector> utilities = Mockito.mockStatic(HttpConnector.class)) { // non sembra funzionare...
-            utilities.when(() -> HttpConnector.downloadFile("http://1234"))
+        try {
+            Mockito.when(httpConnector.downloadFile("http://1234", BigDecimal.valueOf(1024L)))
                     .thenReturn(Mono.just(PDDocument.load(readFakePdf())));
 
 

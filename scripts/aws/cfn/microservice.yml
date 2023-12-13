@@ -360,6 +360,11 @@ Parameters:
       - true
       - false
 
+  MaxMegabyteInMemory:
+    Description: Se il file del download supera questo valore, una parte di esso verrà memorizzato come file temporaneo
+    Type: String
+    Default: 1
+
   HealthCheckTimeout:
     Description: health check timeout seconds
     Type: Number
@@ -535,6 +540,7 @@ Resources:
         ContainerEnvEntry53: !Sub 'PN_PAPERCHANNEL_F24CXID=${F24PaperChannelUser}'
         ContainerEnvEntry54: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUEF24=${AttemptQueueF24}'
         ContainerEnvEntry55: !Sub 'PN_PAPERCHANNEL_QUEUEF24=${F24ToPaperChannelQueueName}'
+        ContainerEnvEntry56: !Sub 'PN_PAPERCHANNEL_MAXMEGABYTEINMEMORY=${MaxMegabyteInMemory}'
         ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-PaperChannel-Secrets
         MappedPaths: '/paper-channel-bo/*,/paper-channel-private/*'

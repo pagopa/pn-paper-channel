@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.model.MediaType;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -38,6 +39,9 @@ class HttpConnectorTest {
 
     @MockBean
     private InternalQueueMomProducer internalQueueMomProducer;
+
+    @Autowired
+    private HttpConnector httpConnector;
 
     private static ClientAndServer mockServer;
 
@@ -83,7 +87,7 @@ class HttpConnectorTest {
                         .withStatusCode(200)
                 );
 
-        PDDocument actual = HttpConnector.downloadFile("http://localhost:9998" + url, BigDecimal.valueOf(sizeFile)).block();
+        PDDocument actual = httpConnector.downloadFile("http://localhost:9998" + url, BigDecimal.valueOf(sizeFile)).block();
 
         assertThat(actual).isNotNull();
         assertThat(actual.getNumberOfPages()).isNotZero();
