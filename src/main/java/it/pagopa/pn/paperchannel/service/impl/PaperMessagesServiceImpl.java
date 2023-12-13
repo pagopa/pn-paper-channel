@@ -4,6 +4,7 @@ import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.commons.utils.LogUtils;
 import it.pagopa.pn.commons.utils.MDCUtils;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
+import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.exception.PnPaperEventException;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.*;
@@ -20,10 +21,10 @@ import it.pagopa.pn.paperchannel.model.AttachmentInfo;
 import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.service.PaperMessagesService;
-import it.pagopa.pn.paperchannel.service.PaperTenderService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
 import it.pagopa.pn.paperchannel.utils.Const;
+import it.pagopa.pn.paperchannel.utils.PaperCalculatorUtils;
 import it.pagopa.pn.paperchannel.utils.Utility;
 import it.pagopa.pn.paperchannel.validator.PrepareRequestValidator;
 import it.pagopa.pn.paperchannel.validator.SendRequestValidator;
@@ -35,14 +36,14 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuples;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_IN_PROCESSING;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_NOT_EXIST;
 import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.READY_TO_SEND;
-import static it.pagopa.pn.paperchannel.utils.Const.*;
+import static it.pagopa.pn.paperchannel.utils.Const.CONTEXT_KEY_CLIENT_ID;
+import static it.pagopa.pn.paperchannel.utils.Const.CONTEXT_KEY_PREFIX_CLIENT_ID;
 
 @CustomLog
 @Service
@@ -51,18 +52,18 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
     private final AddressDAO addressDAO;
     private final ExternalChannelClient externalChannelClient;
     private final PnPaperChannelConfig pnPaperChannelConfig;
-    private final PaperTenderService paperTenderService;
+    private final PaperCalculatorUtils paperCalculatorUtils;
 
 
     public PaperMessagesServiceImpl(PnAuditLogBuilder auditLogBuilder, RequestDeliveryDAO requestDeliveryDAO, CostDAO costDAO,
                                     NationalRegistryClient nationalRegistryClient, SqsSender sqsSender, AddressDAO addressDAO,
                                     ExternalChannelClient externalChannelClient, PnPaperChannelConfig pnPaperChannelConfig,
-                                    PaperTenderService paperTenderService) {
+                                    PaperCalculatorUtils paperCalculatorUtils) {
         super(auditLogBuilder, requestDeliveryDAO, costDAO, nationalRegistryClient, sqsSender);
         this.addressDAO = addressDAO;
         this.externalChannelClient = externalChannelClient;
         this.pnPaperChannelConfig = pnPaperChannelConfig;
-        this.paperTenderService = paperTenderService;
+        this.paperCalculatorUtils = paperCalculatorUtils;
     }
 
     @Override
@@ -72,16 +73,12 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
             log.info("First attempt requestId {}", requestId);
 
             //case of 204
-            log.debug("Getting PnDeliveryRequest with requestId {}, in DynamoDB table RequestDeliveryDynamoTable", requestId);
+            log.debug("Getting PnDeliveryRequest with requestId {}, in DynamoDB table  RequestDeliveryDynamoTable", requestId);
             return this.requestDeliveryDAO.getByRequestId(prepareRequest.getRequestId())
-                    .doOnNext(entity -> log.info("Founded data in DynamoDB table RequestDeliveryDynamoTable"))
-                    .doOnNext(entity -> PrepareRequestValidator.compareRequestEntity(prepareRequest, entity, true))
-                    .doOnNext(entity -> log.debug("Getting PnAddress with requestId {}, in DynamoDB table AddressDynamoTable", requestId))
-                    .flatMap(entity -> addressDAO.findByRequestId(requestId)
-                                            .doOnNext(address -> log.info("Founded data in DynamoDB table AddressDynamoTable"))
-                                            .map(address-> PreparePaperResponseMapper.fromResult(entity, address))
-                                            .switchIfEmpty(Mono.just(PreparePaperResponseMapper.fromResult(entity,null)))
-                    )
+                    .doOnNext(entity -> log.info("Founded data in DynamoDB  table RequestDeliveryDynamoTable"))
+                    .doOnNext(entity -> PrepareRequestValidator.compareRequestEntity(prepareRequest, entity, true, false))
+                    .doOnNext(entity -> log.debug("Getting PnAddress with requestId {}, in  DynamoDB table AddressDynamoTable", requestId))
+                    .flatMap(entity -> checkIfReworkNeededAndReturnPaperChannelUpdate(prepareRequest, entity))
                     .switchIfEmpty(
                             Mono.defer(() -> saveRequestAndAddress(prepareRequest)
                                                         .flatMap(this::createAndPushPrepareEvent)
@@ -95,7 +92,7 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
                 .doOnNext(oldEntity -> {
                     log.info("Founded data in DynamoDB table RequestDeliveryDynamoTable");
                     prepareRequest.setRequestId(oldEntity.getRequestId());
-                    PrepareRequestValidator.compareRequestEntity(prepareRequest, oldEntity, false);
+                    PrepareRequestValidator.compareRequestEntity(prepareRequest, oldEntity, false, true);
                 })
                 .zipWhen(oldEntity -> {
                     log.debug("Getting PnAddress with requestId {}, in DynamoDB table AddressDynamoTable", oldEntity.getRequestId());
@@ -103,7 +100,7 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
                             .doOnNext(address -> log.info("Founded data in DynamoDB table AddressDynamoTable"))
                             .doOnNext(address -> log.debug("Address of the related request"))
                             .doOnNext(address -> log.debug(
-                                    "name surname: {}, address: {}, zip: {}, foreign state: {}",
+                                    "name surname: {}, address: {}, zip: {},  foreign state: {}",
                                     LogUtils.maskGeneric(address.getFullName()),
                                     LogUtils.maskGeneric(address.getAddress()),
                                     LogUtils.maskGeneric(address.getCap()),
@@ -116,14 +113,8 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
                     return this.requestDeliveryDAO.getByRequestId(prepareRequest.getRequestId())
                             .doOnNext(secondDeliveryRequest -> log.info("Attempt already exist for request id : {}", secondDeliveryRequest.getRequestId()))
                             .doOnNext(secondDeliveryRequest -> log.info("Founded data in DynamoDB table RequestDeliveryDynamoTable"))
-                            .doOnNext(secondDeliveryRequest -> PrepareRequestValidator.compareRequestEntity(prepareRequest, secondDeliveryRequest, false))
-                            .flatMap(newEntity -> {
-                                log.debug("Getting PnAddress with requestId {}, in DynamoDB table AddressDynamoTable", newEntity.getRequestId());
-                                return addressDAO.findByRequestId(newEntity.getRequestId())
-                                        .doOnNext(address -> log.info("Founded data in DynamoDB table AddressDynamoTable"))
-                                        .map(address-> PreparePaperResponseMapper.fromResult(newEntity, address))
-                                        .switchIfEmpty(Mono.just(PreparePaperResponseMapper.fromResult(newEntity,null)));
-                            })
+                            .doOnNext(secondDeliveryRequest -> PrepareRequestValidator.compareRequestEntity(prepareRequest, secondDeliveryRequest, false, false))
+                            .flatMap(newEntity -> checkIfReworkNeededAndReturnPaperChannelUpdate(prepareRequest, newEntity))
                             .switchIfEmpty(Mono.deferContextual(cxt ->
                                     saveRequestAndAddress(prepareRequest)
                                             .flatMap(response -> {
@@ -193,11 +184,11 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
         log.info("Start executionPaper with requestId {}", requestId);
         sendRequest.setRequestId(requestId);
 
-        log.debug("Getting data {} with requestId {} in DynamoDb table {}", "PnDeliveryRequest", requestId, "RequestDeliveryDynamoTable");
+        log.debug("Getting  data {} with requestId {} in DynamoDb table {}", "PnDeliveryRequest", requestId, "RequestDeliveryDynamoTable");
         return this.requestDeliveryDAO.getByRequestId(sendRequest.getRequestId())
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)))
                 .map(entity -> {
-                    log.info("Founded data in DynamoDb table {}", "RequestDeliveryDynamoTable");
+                    log.info("Founded data in  DynamoDb table {}", "RequestDeliveryDynamoTable");
                     SendRequestValidator.compareRequestEntity(sendRequest,entity);
                     if (StringUtils.equals(entity.getStatusCode(), StatusDeliveryEnum.IN_PROCESSING.getCode())) {
                         throw new PnGenericException(DELIVERY_REQUEST_IN_PROCESSING, DELIVERY_REQUEST_IN_PROCESSING.getMessage(), HttpStatus.CONFLICT);
@@ -224,8 +215,23 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
                             sendRequest.getProductType(),
                             StringUtils.equals(sendRequest.getPrintType(), Const.BN_FRONTE_RETRO)
                     ).map(response -> {
+                        // controllo se il costo (eventuale) usato nella prepare è uguale a quello attuale nella send.
+                        // se così non dovesse essere, viene lanciata una exception
+                        SendRequestValidator.compareRequestCostEntity(response.getAmount(), pnDeliveryRequest.getCost());
+
                         log.logCheckingOutcome(VALIDATION_NAME, true);
                         return Tuples.of(response, pnDeliveryRequest, attachments, address);
+                    })
+                    .doOnError(ex -> log.logCheckingOutcome(VALIDATION_NAME, false, ex.getMessage()))
+                    .onErrorResume(PnGenericException.class, pnGenericException -> {
+                        // mi segno che la richiesta richiede una nuova prepare, impostando il flag di "reworkNeeded" a TRUE
+                        if (pnGenericException.getExceptionType() == ExceptionTypeEnum.DIFFERENT_SEND_COST) {
+                            pnDeliveryRequest.setReworkNeeded(true);
+                            return requestDeliveryDAO.updateData(pnDeliveryRequest)
+                                    .flatMap(x -> Mono.error(pnGenericException));
+                        }
+                        else
+                            return Mono.error(pnGenericException);
                     });
                 })
                 .flatMap(tuple -> {
@@ -253,7 +259,7 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
                                 .doOnNext(requestUpdated -> log.info("Updated data in DynamoDb table {}", "RequestDeliveryDynamoTable"))
                                 .map(requestUpdated -> sendResponse)
                                 .doOnError(ex -> {
-                                    String logString = "prepare requestId = %s, trace_id = %s  request to External Channel";
+                                    String logString = "prepare requestId = %s, trace_id = %s  request to  External Channel";
                                     logString = String.format(logString, sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY));
                                     pnLogAudit.addsFailSend(sendRequest.getIun(), logString);
                                 });
@@ -307,66 +313,49 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
     }
 
     private Mono<SendResponse> getSendResponse(Address address, List<AttachmentInfo> attachments, ProductTypeEnum productType, boolean isReversePrinter){
-        return this.calculator(attachments, address, productType, isReversePrinter)
+        return this.paperCalculatorUtils.calculator(attachments, address, productType, isReversePrinter)
                 .map(amount -> {
-                    int totalPages = getNumberOfPages(attachments, isReversePrinter, true);
+                    int totalPages = this.paperCalculatorUtils.getNumberOfPages(attachments, isReversePrinter, true);
                     Integer amountPriceFormat = Utility.toCentsFormat(amount);
                     log.debug("Amount : {}", amount);
                     log.debug("Total pages : {}", totalPages);
                     SendResponse response = new SendResponse();
                     response.setAmount(amountPriceFormat);
                     response.setNumberOfPages(totalPages);
-                    response.setEnvelopeWeight(getLetterWeight(totalPages));
+                    response.setEnvelopeWeight(this.paperCalculatorUtils.getLetterWeight(totalPages));
                     return response;
                 });
 
     }
 
-    private int getLetterWeight(int  numberOfPages){
-        int weightPaper = this.pnPaperChannelConfig.getPaperWeight();
-        int weightLetter = this.pnPaperChannelConfig.getLetterWeight();
-        return (weightPaper * numberOfPages) + weightLetter;
-    }
-
-    private Mono<BigDecimal> calculator(List<AttachmentInfo> attachments, Address address, ProductTypeEnum productType, boolean isReversePrinter){
-        boolean isNational = StringUtils.isBlank(address.getCountry()) ||
-                StringUtils.equalsIgnoreCase(address.getCountry(), "it") ||
-                StringUtils.equalsIgnoreCase(address.getCountry(), "italia") ||
-                StringUtils.equalsIgnoreCase(address.getCountry(), "italy");
-
-        if (StringUtils.isNotBlank(address.getCap()) && isNational) {
-            return getAmount(attachments, address.getCap(), null, getProductType(address, productType), isReversePrinter)
-                    .map(item -> item);
+    /**
+     * controllo se la richiesta ha il flag di reworkNeeded a true, che ricordo essere così se per qualche motivo (es: aggiornamento costo gare)
+     * c'è un mismatch tra il costo calcolato nella PREPARE e usato nella generazione degli F24 e il costo calcolato nella SEND.
+     *
+     * Se si RISALVA l'entity di deliveryrequest perchè voglio RIESEGUIRE la logica di calcolo del costo e generazione degli F24.
+     * Da notare che questo metodo vien invocato anche nel caso della seconda raccomandata. In questo caso,
+     * se il flag reworkNeeded è true, in realtà alla "prima invocazione della prepare della seconda raccomandata" ho
+     * già fatto tutta la logica di risoluzione dell'indirizzo, e quindi non serve rieseguirla, motivo per cui metto in coda
+     * direttamente l'evento di "prepareAsync" (che calcolerà nuovamente il costo e rigenererà i pdf F24 aggiornati).
+     *
+     * @param prepareRequest la richiesta di prepare
+     * @param pnDeliveryRequest l'entity precedentemente salvata in db
+     * @return la risposta da tornare al chiamante
+     */
+    private Mono<PaperChannelUpdate> checkIfReworkNeededAndReturnPaperChannelUpdate(PrepareRequest prepareRequest, PnDeliveryRequest pnDeliveryRequest){
+        if (Boolean.TRUE.equals(pnDeliveryRequest.getReworkNeeded()))
+        {
+            return Mono.defer(() -> saveRequestAndAddress(prepareRequest)
+                    .flatMap(this::createAndPushPrepareEvent)
+                    .then(Mono.just(PreparePaperResponseMapper.fromResult(pnDeliveryRequest, null))));
         }
-        return paperTenderService.getZoneFromCountry(address.getCountry())
-                .flatMap(zone -> getAmount(attachments,null, zone, super.getProductType(address, productType), isReversePrinter).map(item -> item));
-
-    }
-
-    private Mono<BigDecimal> getAmount(List<AttachmentInfo> attachments, String cap, String zone, String productType, boolean isReversePrinter){
-        String processName = "Get Amount";
-        log.logStartingProcess(processName);
-        return paperTenderService.getCostFrom(cap, zone, productType)
-                .map(contract ->{
-                    if (!pnPaperChannelConfig.getChargeCalculationMode().equalsIgnoreCase(AAR)){
-                        Integer totPages = getNumberOfPages(attachments, isReversePrinter, false);
-                        BigDecimal priceTotPages = contract.getPriceAdditional().multiply(BigDecimal.valueOf(totPages));
-                        log.logEndingProcess(processName);
-                        return contract.getPrice().add(priceTotPages);
-                    }else{
-                        log.logEndingProcess(processName);
-                        return contract.getPrice();
-                    }
-                });
-    }
-
-    private Integer getNumberOfPages(List<AttachmentInfo> attachments, boolean isReversePrinter, boolean ignoreAAR){
-        if (attachments == null || attachments.isEmpty()) return 0;
-        return attachments.stream().map(attachment -> {
-            int numberOfPages = attachment.getNumberOfPage();
-            if (isReversePrinter) numberOfPages = (int) Math.ceil(((double) attachment.getNumberOfPage())/2);
-            return (!ignoreAAR && StringUtils.equals(attachment.getDocumentType(), Const.PN_AAR)) ? numberOfPages-1 : numberOfPages;
-        }).reduce(0, Integer::sum);
+        else {
+            log.debug("Getting PnAddress with requestId {}, in DynamoDB table AddressDynamoTable", prepareRequest.getRequestId());
+            return addressDAO.findByRequestId(prepareRequest.getRequestId())
+                    .doOnNext(address -> log.info("Founded data  in DynamoDB table AddressDynamoTable"))
+                    .map(address -> PreparePaperResponseMapper.fromResult(pnDeliveryRequest, address))
+                    .switchIfEmpty(Mono.just(PreparePaperResponseMapper.fromResult(pnDeliveryRequest, null)));
+        }
     }
 
     private Address saveAddresses(SendRequest sendRequest) {
@@ -375,7 +364,7 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
         Address address = AddressMapper.fromAnalogToAddress(sendRequest.getReceiverAddress(), sendRequest.getProductType().getValue(), Const.EXECUTION);
         PnAddress addressEntity = AddressMapper.toEntity(address,sendRequest.getRequestId(), pnPaperChannelConfig);
         //save receiver address
-        log.debug("Inserting data {} with requestId {} in DynamoDb table {}", "addressEntity", sendRequest.getRequestId(), "AddressDynamoTable");
+        log.debug("Inserting  data {} with requestId {} in DynamoDb table {}", "addressEntity", sendRequest.getRequestId(), "AddressDynamoTable");
         addressDAO.create(addressEntity);
         log.info("Inserted data in DynamoDb table {}", "AddressDynamoTable");
         if (sendRequest.getSenderAddress() != null) {
@@ -406,7 +395,7 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
             Address mapped = AddressMapper.fromAnalogToAddress(prepareRequest.getReceiverAddress(), null, Const.PREPARE);
             pnDeliveryRequest.setAddressHash(mapped.convertToHash());
             receiverAddressEntity = AddressMapper.toEntity(mapped, prepareRequest.getRequestId(), pnPaperChannelConfig);
-            pnDeliveryRequest.setProductType(getProposalProductType(mapped, pnDeliveryRequest.getProposalProductType()));
+            pnDeliveryRequest.setProductType(this.paperCalculatorUtils.getProposalProductType(mapped, pnDeliveryRequest.getProposalProductType()));
             log.info("RequestId - {}, Proposal product type - {}, Product type - {}",
                     pnDeliveryRequest.getRequestId(), pnDeliveryRequest.getProposalProductType(), pnDeliveryRequest.getProductType());
         }

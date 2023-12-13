@@ -7,6 +7,8 @@ import reactor.core.publisher.Mono;
 public interface EventMetaDAO {
     Mono<PnEventMeta> createOrUpdate(PnEventMeta pnEventMeta);
 
+    Mono<PnEventMeta> putIfAbsent(PnEventMeta pnEventMeta);
+
     Mono<PnEventMeta> getDeliveryEventMeta(String metaRequestId, String metaStatusCode);
 
     Flux<PnEventMeta> findAllByRequestId(String metaRequestId);

@@ -7,6 +7,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -146,6 +147,38 @@ class EventMetaDAOTestIT extends BaseTest {
 
         assertThat(result).isEmpty();
 
+    }
+
+    @Test
+    void putIfAbsentTest() {
+        final String requestId = "JVRK-202302-G-1;RECINDEX_0;SENTATTEMPTMADE_0;PCRETRY_0";
+        final String statusCode = "RECAG011B";
+        String metaRequestId = "META##" + requestId;
+        String metaStatusCode = "META##" + statusCode;
+        eventMeta1.setMetaRequestId(metaRequestId);
+        eventMeta1.setMetaStatusCode(metaStatusCode);
+        eventMeta1.setRequestId(requestId);
+        eventMeta1.setStatusCode(statusCode);
+        eventMeta1.setDeliveryFailureCause(null);
+
+        PnEventMeta entityInDB = eventMetaDAO.getDeliveryEventMeta(metaRequestId, metaStatusCode).block();
+        assertThat(entityInDB).isNull();
+
+        //la prima put mi aspetto che vada a buon fine (e restituisca la entity in input)
+        StepVerifier.create(eventMetaDAO.putIfAbsent(eventMeta1))
+                .expectNext(eventMeta1)
+                .verifyComplete();
+        entityInDB = eventMetaDAO.getDeliveryEventMeta(metaRequestId, metaStatusCode).block();
+        assertThat(entityInDB).isNotNull().isEqualTo(eventMeta1);
+        assertThat(entityInDB.getDeliveryFailureCause()).isNull();
+
+        //la seconda put mi aspetto che non modifichi il record (e restituisca Mono.empty)
+        eventMeta1.setDeliveryFailureCause("change-value");
+        StepVerifier.create(eventMetaDAO.putIfAbsent(eventMeta1))
+                .expectComplete()
+                .verify();
+        entityInDB = eventMetaDAO.getDeliveryEventMeta(metaRequestId, metaStatusCode).block();
+        assertThat(entityInDB.getDeliveryFailureCause()).isNull();
     }
 
     private void initialize() {

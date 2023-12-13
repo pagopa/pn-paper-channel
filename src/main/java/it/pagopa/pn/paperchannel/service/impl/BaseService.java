@@ -3,19 +3,12 @@ package it.pagopa.pn.paperchannel.service.impl;
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.commons.utils.MDCUtils;
 import it.pagopa.pn.paperchannel.encryption.DataEncryption;
-import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ProductTypeEnum;
-import it.pagopa.pn.paperchannel.mapper.RequestDeliveryMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
-import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.NationalRegistryError;
-import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.service.SqsSender;
-import it.pagopa.pn.paperchannel.utils.PnLogAudit;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -23,32 +16,23 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.time.Duration;
-import java.util.function.Function;
 
 import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.NATIONAL_REGISTRY_ERROR;
 import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.NATIONAL_REGISTRY_WAITING;
-import static it.pagopa.pn.paperchannel.utils.Const.*;
 
 @Slf4j
-public class BaseService {
+public class BaseService extends GenericService {
 
-    protected final PnAuditLogBuilder auditLogBuilder;
     protected final NationalRegistryClient nationalRegistryClient;
-    protected final SqsSender sqsSender;
-    protected RequestDeliveryDAO requestDeliveryDAO;
     protected CostDAO costDAO;
     @Autowired
     @Qualifier("dataVaultEncryption")
     protected DataEncryption dataEncryption;
-    protected PnLogAudit pnLogAudit;
 
     public BaseService(PnAuditLogBuilder auditLogBuilder, RequestDeliveryDAO requestDeliveryDAO, CostDAO costDAO,
                 NationalRegistryClient nationalRegistryClient, SqsSender sqsSender) {
-        this.auditLogBuilder = auditLogBuilder;
-        this.pnLogAudit = new PnLogAudit(auditLogBuilder);
+        super(auditLogBuilder, sqsSender, requestDeliveryDAO);
         this.nationalRegistryClient = nationalRegistryClient;
-        this.requestDeliveryDAO = requestDeliveryDAO;
-        this.sqsSender = sqsSender;
         this.costDAO = costDAO;
     }
 
@@ -94,83 +78,5 @@ public class BaseService {
                 }).subscribeOn(Schedulers.boundedElastic())).subscribe();
     }
 
-
-    private Mono<PnDeliveryRequest> changeStatusDeliveryRequest(PnDeliveryRequest deliveryRequest, StatusDeliveryEnum status){
-        RequestDeliveryMapper.changeState(
-                deliveryRequest,
-                status.getCode(),
-                status.getDescription(),
-                status.getDetail(),
-                deliveryRequest.getProductType(), null);
-        return this.requestDeliveryDAO.updateData(deliveryRequest).flatMap(Mono::just);
-    }
-
-    private <T> void saveErrorAndPushError(String requestId, StatusDeliveryEnum status,  T error, Function<T, Void> queuePush){
-        this.requestDeliveryDAO.getByRequestId(requestId).publishOn(Schedulers.boundedElastic())
-                .flatMap(entity -> changeStatusDeliveryRequest(entity, status)
-                        .flatMap(updated -> {
-                            queuePush.apply(error);
-                            return Mono.just("");
-                        })
-                ).subscribeOn(Schedulers.boundedElastic()).subscribe();
-    }
-
-
-
-
-    protected String getProductType(Address address, ProductTypeEnum productTypeEnum){
-        String productType = "";
-        boolean isNational = StringUtils.isBlank(address.getCountry()) ||
-                StringUtils.equalsIgnoreCase(address.getCountry(), "it") ||
-                StringUtils.equalsIgnoreCase(address.getCountry(), "italia") ||
-                StringUtils.equalsIgnoreCase(address.getCountry(), "italy");
-
-        if (StringUtils.isNotBlank(address.getCap()) && isNational) {
-            if (productTypeEnum.equals(ProductTypeEnum.AR)) {
-                productType = RACCOMANDATA_AR;
-            } else if (productTypeEnum.equals(ProductTypeEnum.RS)){
-                productType = RACCOMANDATA_SEMPLICE;
-            } else if (productTypeEnum.equals(ProductTypeEnum._890)){
-                productType = RACCOMANDATA_890;
-            }
-        } else {
-            if (productTypeEnum.equals(ProductTypeEnum.RIR) || productTypeEnum.equals(ProductTypeEnum._890)) {
-                productType = RACCOMANDATA_AR;
-            } else if (productTypeEnum.equals(ProductTypeEnum.RIS)){
-                productType = RACCOMANDATA_SEMPLICE;
-            }
-        }
-        return productType;
-    }
-
-    protected String getProposalProductType(Address address, String productType){
-        String proposalProductType = "";
-        boolean isNational = StringUtils.isBlank(address.getCountry()) ||
-                StringUtils.equalsIgnoreCase(address.getCountry(), "it") ||
-                StringUtils.equalsIgnoreCase(address.getCountry(), "italia") ||
-                StringUtils.equalsIgnoreCase(address.getCountry(), "italy");
-        //nazionale
-        if (StringUtils.isNotBlank(address.getCap()) && isNational) {
-            if(productType.equals(RACCOMANDATA_SEMPLICE)){
-                proposalProductType = ProductTypeEnum.RS.getValue();
-            }
-            if(productType.equals(RACCOMANDATA_890)){
-                proposalProductType = ProductTypeEnum._890.getValue();
-            }
-            if(productType.equals(RACCOMANDATA_AR)){
-                proposalProductType = ProductTypeEnum.AR.getValue();
-            }
-        }
-        //internazionale
-        else {
-            if(productType.equals(RACCOMANDATA_SEMPLICE)){
-                proposalProductType = ProductTypeEnum.RIS.getValue();
-            }
-            if(productType.equals(RACCOMANDATA_AR) || productType.equals(RACCOMANDATA_890)){
-                proposalProductType = ProductTypeEnum.RIR.getValue();
-            }
-        }
-        return proposalProductType;
-    }
 
 }

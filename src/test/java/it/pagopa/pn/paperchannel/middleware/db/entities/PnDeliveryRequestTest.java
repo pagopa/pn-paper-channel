@@ -31,6 +31,8 @@ class PnDeliveryRequestTest {
     private List<PnAttachmentInfo> attachments;
     private String requestPaId;
     private String eventToSend;
+    private int cost;
+    private Boolean reworkNeeded;
 
     @BeforeEach
     void setUp(){
@@ -99,6 +101,12 @@ class PnDeliveryRequestTest {
         stringBuilder.append(", ");
         stringBuilder.append("eventToSend=");
         stringBuilder.append(eventToSend);
+        stringBuilder.append(", ");
+        stringBuilder.append("cost=");
+        stringBuilder.append(cost);
+        stringBuilder.append(", ");
+        stringBuilder.append("reworkNeeded=");
+        stringBuilder.append(reworkNeeded);
         stringBuilder.append(")");
 
         String toTest = stringBuilder.toString();
@@ -125,6 +133,8 @@ class PnDeliveryRequestTest {
         pnDeliveryRequest.setRelatedRequestId(relatedRequestId);
         pnDeliveryRequest.setAttachments(attachments);
         pnDeliveryRequest.setRequestPaId(requestPaId);
+        pnDeliveryRequest.setCost(cost);
+        pnDeliveryRequest.setReworkNeeded(reworkNeeded);
         return pnDeliveryRequest;
     }
 
@@ -144,6 +154,7 @@ class PnDeliveryRequestTest {
         printType = "BN_FRONTE_RETRO";
         startDate = DateUtils.formatDate(Instant.now());
         productType = "890";
+        cost= 100;
         relatedRequestId = "MOCK-SUCC-WKHU-202209-P-1_send_digital_domicile0_source_PLATFORM_attempt_2";
         attachments = new ArrayList<>();
         PnAttachmentInfo pnAttachmentInfo = new PnAttachmentInfo();
@@ -156,5 +167,6 @@ class PnDeliveryRequestTest {
         pnAttachmentInfo.setChecksum("j49fkldvnj4890efmeff433t2gvnr9rgmprm3g308jknbi3392llfm29fe8");
         attachments.add(new PnAttachmentInfo());
         requestPaId = "requestPaId";
+        reworkNeeded = false;
     }
 }

@@ -127,6 +127,12 @@ paths:
             application/problem+json:
               schema:
                 $ref: 'remote-refs.yaml#/components/schemas/Problem'
+        "422":
+          description: Indica che la richiesta non può essere evasa per un cambio di costo tra prepare e send, e che necessario rieseguire la prepare.
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
       callbacks:
         deliveryStatusPushUpdates:
           indirizzo_webhook_oppure_coda_sqs_legato_al_valore_header_xPagopaExtchCxId:
@@ -198,7 +204,10 @@ paths:
         \ ma stessi parametri passati, si può tornare il codice 200 se la richiesta\
         \ è già stata elaborata (o si conosce già l'esito), o il 204 se è ancora in\
         \ fase di elaborazione. I dati relativi alla richiesta vanno mantenuti in\
-        \ forma anonima tramite opportuno hash."
+        \ forma anonima tramite opportuno hash. \
+        \ E' possibile riceve al più un url relativo a f24, relativo ad un set di\
+        \ documenti f24 da generare. La risposta alla prepare, conterrà la lista\
+        \ delle fileKey di safestorage generate da pn-f24"
       operationId: sendPaperPrepareRequest
       parameters:
         - name: requestId

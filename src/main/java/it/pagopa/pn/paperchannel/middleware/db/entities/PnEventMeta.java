@@ -17,8 +17,8 @@ import java.time.Instant;
 @ToString
 @DynamoDbBean
 public class PnEventMeta {
-    private static final String COL_PK = "pk";
-    private static final String COL_SK = "sk";
+    public static final String COL_PK = "pk";
+    public static final String COL_SK = "sk";
 
     private static final String COL_REQUEST_ID = "requestId";
     private static final String COL_STATUS_CODE = "statusCode";

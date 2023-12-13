@@ -28,6 +28,7 @@ import java.util.UUID;
 
 import static it.pagopa.pn.commons.utils.MDCUtils.MDC_TRACE_ID_KEY;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
+import static it.pagopa.pn.paperchannel.utils.DeduplicateErrorConst.*;
 import static it.pagopa.pn.paperchannel.utils.Utility.DEDUPLICATION_REQUEST_PREFIX;
 
 @Slf4j
@@ -124,8 +125,7 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
                     logAuditBefore("prepare requestId = %s, relatedRequestId = %s Deduplicates service has DeduplicatesResponse.error empty ?", deliveryRequest);
                     if (StringUtils.isNotBlank(deduplicatesResponse.getError())){
                         logAuditSuccess("prepare requestId = %s, relatedRequestId = %s Deduplicate response have an error", deliveryRequest);
-                        return Mono.error(manageErrorD001(paperProperties, DISCARD_NOTIFICATION, deduplicatesResponse.getError(), discovered, deliveryRequest.getRequestId()));
-                        //Indirizzo diverso - Normalizzazione KO = D01 (fare configurazione)
+                        return handleDeduplicationError(DISCARD_NOTIFICATION, deduplicatesResponse.getError(), discovered, deliveryRequest.getRequestId());
                     }
 
                     logAuditSuccess("prepare requestId = %s, relatedRequestId = %s Deduplicate service has DeduplicatesResponse.error is empty",deliveryRequest);
@@ -161,8 +161,7 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
                     }
                     if (deduplicateResponse.getError() != null){
                         log.error("Response from address manager {} with request id {}", deduplicateResponse.getError(), pnDeliveryRequest.getRequestId());
-                        return Mono.error(manageErrorD001(paperProperties, ADDRESS_MANAGER_ERROR, deduplicateResponse.getError(), fromNationalRegistries, pnDeliveryRequest.getRequestId()));
-                        //Indirizzo diverso - Normalizzazione KO = D01 (con configurazione)
+                        return handleDeduplicationError(ADDRESS_MANAGER_ERROR, deduplicateResponse.getError(), fromNationalRegistries, pnDeliveryRequest.getRequestId());
                     }
                     logAuditSuccess("prepare requestId = %s, relatedRequestId = %s Deduplicate service has DeduplicatesResponse.error is empty",pnDeliveryRequest);
 
@@ -175,6 +174,16 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
                     AnalogAddressDto addressFromManager = deduplicateResponse.getNormalizedAddress();
                     return checkAndParseNormalizedAddress(addressFromManager, firstAttempt, pnDeliveryRequest.getRequestId());
                 });
+    }
+
+    private Mono<Address> handleDeduplicationError(ExceptionTypeEnum exceptionType, String errorCode, Address addressFailed, String requestId) {
+        return switch (errorCode) {
+            case PNADDR001, PNADDR002 ->
+                    //Indirizzo diverso - Normalizzazione KO = D01 (con configurazione)
+                    Mono.error(manageErrorD001(paperProperties, exceptionType, errorCode, addressFailed, requestId));
+            case PNADDR999 -> Mono.error(new PnAddressFlowException(ADDRESS_MANAGER_ERROR));
+            default -> Mono.error(new PnGenericException(RESPONSE_ERROR_NOT_HANDLED_FROM_DEDUPLICATION, RESPONSE_ERROR_NOT_HANDLED_FROM_DEDUPLICATION.getMessage()));
+        };
     }
 
     private Mono<Address> checkAndParseNormalizedAddress(AnalogAddressDto normalizedAddress, Address older, String requestId){
@@ -229,14 +238,18 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
     }
 
     private Throwable manageErrorD001(PnPaperChannelConfig config, ExceptionTypeEnum exceptionType,
-                                                          String message, Address addressFailed, String requestId) {
-        if(config.isSendD01ToDeliveryPush()) {
+                                                          String errorCode, Address addressFailed, String requestId) {
+
+        boolean isSendD01ToDeliveryPush = PNADDR001.equals(errorCode) ? config.isPnaddr001sendD01ToDeliveryPush() :
+                config.isPnaddr002sendD01ToDeliveryPush();
+
+        if(isSendD01ToDeliveryPush) {
             log.debug("[{}] SendD01ToDeliveryPush is enabled, send D001 event to delivery push", requestId);
             return throwD001(addressFailed);
         }
         else {
             log.warn("[{}] D001 Event discarded ", requestId);
-            return new PnGenericException(exceptionType, message);
+            return new PnGenericException(exceptionType, errorCode);
         }
     }
 

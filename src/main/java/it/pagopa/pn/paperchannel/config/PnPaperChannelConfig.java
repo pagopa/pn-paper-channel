@@ -26,11 +26,13 @@ public class PnPaperChannelConfig {
     private String clientSafeStorageBasepath;
     private String clientNationalRegistriesBasepath;
     private String clientExternalChannelBasepath;
+    private String clientF24Basepath;
     private String clientDataVaultBasepath;
     private String clientAddressManagerBasepath;
     private String addressManagerCxId;
     private String addressManagerApiKey;
     private String safeStorageCxId;
+    private String f24CxId;
     private String xPagopaExtchCxId;
     private String nationalRegistryCxId;
     private String queueDeliveryPush;
@@ -42,6 +44,7 @@ public class PnPaperChannelConfig {
     private Integer attemptQueueExternalChannel;
     private Integer attemptQueueNationalRegistries;
     private Integer attemptQueueAddressManager;
+    private Integer attemptQueueF24;
     private Long ttlPrepare;
     private Long ttlExecutionN_890;
     private Long ttlExecutionN_AR;
@@ -57,10 +60,16 @@ public class PnPaperChannelConfig {
     private String requestPaIdOverride;
 
     /**
-     * True se il failureDetailCode D01 deve essere mandato a delivery push (specificando anche l'indirizzo),
+     * Per l'errore PNADDR001: True se il failureDetailCode D01 deve essere mandato a delivery push (specificando anche l'indirizzo),
      * false se invece viene salvato l'errore sulla tabella degli errori (as-is)
      */
-    private boolean sendD01ToDeliveryPush;
+    private boolean pnaddr001sendD01ToDeliveryPush;
+
+    /**
+     * Per l'errore PNADDR002: True se il failureDetailCode D01 deve essere mandato a delivery push (specificando anche l'indirizzo),
+     * false se invece viene salvato l'errore sulla tabella degli errori (as-is)
+     */
+    private boolean pnaddr002sendD01ToDeliveryPush;
 
     @PostConstruct
     public void init() {

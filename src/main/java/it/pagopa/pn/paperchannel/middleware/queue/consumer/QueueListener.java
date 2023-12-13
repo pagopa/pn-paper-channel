@@ -3,6 +3,7 @@ package it.pagopa.pn.paperchannel.middleware.queue.consumer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.awspring.cloud.messaging.listener.SqsMessageDeletionPolicy;
 import io.awspring.cloud.messaging.listener.annotation.SqsListener;
+import it.pagopa.pn.api.dto.events.PnF24PdfSetReadyEvent;
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.commons.utils.MDCUtils;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
@@ -14,8 +15,10 @@ import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
 import it.pagopa.pn.paperchannel.middleware.queue.model.InternalEventHeader;
 import it.pagopa.pn.paperchannel.middleware.queue.model.ManualRetryEvent;
 import it.pagopa.pn.paperchannel.model.ExternalChannelError;
+import it.pagopa.pn.paperchannel.model.F24Error;
 import it.pagopa.pn.paperchannel.model.NationalRegistryError;
 import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
+import it.pagopa.pn.paperchannel.service.F24Service;
 import it.pagopa.pn.paperchannel.service.QueueListenerService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.PnLogAudit;
@@ -56,6 +59,8 @@ public class QueueListener {
     private PaperRequestErrorDAO paperRequestErrorDAO;
     @Autowired
     private PnAuditLogBuilder pnAuditLogBuilder;
+    @Autowired
+    private F24Service f24Service;
 
     @SqsListener(value = "${pn.paper-channel.queue-internal}", deletionPolicy = SqsMessageDeletionPolicy.ALWAYS)
     public void pullFromInternalQueue(@Payload String node, @Headers Map<String, Object> headers){
@@ -153,6 +158,28 @@ public class QueueListener {
                         return null;
                     });
 
+        } else if (internalEventHeader.getEventType().equals(EventTypeEnum.F24_ERROR.name())){
+
+            boolean noAttempt = (paperChannelConfig.getAttemptQueueF24()-1) < internalEventHeader.getAttempt();
+            F24Error error = convertToObject(node, F24Error.class);
+            execution(error, noAttempt, internalEventHeader.getAttempt(), internalEventHeader.getExpired(), F24Error.class,
+                    entity -> {
+                        PnLogAudit pnLogAudit = new PnLogAudit(pnAuditLogBuilder);
+                        pnLogAudit.addsBeforeDiscard(entity.getIun(), String.format("requestId = %s finish retry f24 error ?", entity.getRequestId()));
+
+                        paperRequestErrorDAO.created(
+                                        entity.getRequestId(),
+                                        F24_ERROR.getMessage(),
+                                        EventTypeEnum.F24_ERROR.name())
+                                .subscribe();
+                        pnLogAudit.addsSuccessDiscard(entity.getIun(), String.format("requestId = %s finish retry f24 error", entity.getRequestId()));
+                        return null;
+                    },
+                    entityAndAttempt -> {
+                        this.queueListenerService.f24ErrorListener(entityAndAttempt.getFirst(), entityAndAttempt.getSecond());
+                        return null;
+                    });
+
         } else if (internalEventHeader.getEventType().equals(EventTypeEnum.PREPARE_ASYNC_FLOW.name())){
             log.info("Push internal queue - first time");
             PrepareAsyncRequest request = convertToObject(node, PrepareAsyncRequest.class);
@@ -173,6 +200,13 @@ public class QueueListener {
         SingleStatusUpdateDto body = convertToObject(node, SingleStatusUpdateDto.class);
         setMDCContext(headers);
         this.queueListenerService.externalChannelListener(body, 0);
+    }
+
+    @SqsListener(value = "${pn.paper-channel.queue-f24}", deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)
+    public void pullF24(@Payload String node, @Headers Map<String,Object> headers){
+        PnF24PdfSetReadyEvent.Detail body = convertToObject(node, PnF24PdfSetReadyEvent.Detail.class);
+        setMDCContext(headers);
+        this.queueListenerService.f24ResponseListener(body);
     }
 
     private InternalEventHeader toInternalEventHeader(Map<String, Object> headers){

@@ -6,12 +6,14 @@ import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.mapper.common.BaseMapper;
 import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.KOReason;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 
 import java.time.Instant;
+import java.util.List;
 
 public class PrepareEventMapper {
 
@@ -46,6 +48,15 @@ public class PrepareEventMapper {
         entityEvent.setStatusDetail(deliveryRequest.getStatusCode());
         entityEvent.setProductType(deliveryRequest.getProductType());
         entityEvent.setStatusDateTime(Instant.now());
+        if (status == StatusCodeEnum.OK)
+        {
+            // vado a popolare eventuali url generati da f24, mi baso sul fatto che abbiano il generatedFrom popolato
+            List<String> f24FileKeys = deliveryRequest.getAttachments().stream().filter(x -> x.getGeneratedFrom() != null).map(PnAttachmentInfo::getFileKey).toList();
+            if (!f24FileKeys.isEmpty())
+            {
+                entityEvent.setReplacedF24AttachmentUrls(f24FileKeys);
+            }
+        }
         return entityEvent;
     }
 
