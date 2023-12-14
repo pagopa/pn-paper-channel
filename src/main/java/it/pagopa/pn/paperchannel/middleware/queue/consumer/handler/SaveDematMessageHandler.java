@@ -18,7 +18,7 @@ import java.util.List;
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
 
 //Tutti gli eventi, fatta eccezione di quelli evidenziati (*), dovranno essere memorizzati nella tabella come entità DEMAT.
-// Tutti gli eventi che contengono dematerializzazioni del tipo (Plico, 23L, Indagine, AR) dovranno essere inviati come
+// Tutti gli eventi che contengono dematerializzazioni del tipo (Plico, 23L, Indagine, AR, 23I) dovranno essere inviati come
 // eventi PROGRESS verso delivery-push (oltre che salvati a db)
 @Slf4j
 public class SaveDematMessageHandler extends SendToDeliveryPushHandler {
@@ -28,7 +28,8 @@ public class SaveDematMessageHandler extends SendToDeliveryPushHandler {
             "Plico",
             "AR",
             "Indagine",
-            "23L"
+            "23L",
+            "23I"
     );
 
     protected final EventDematDAO eventDematDAO;

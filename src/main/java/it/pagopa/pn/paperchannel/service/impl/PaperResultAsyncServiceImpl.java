@@ -34,7 +34,7 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
 
     private final HandlersFactory handlersFactory;
 
-    private final String processName = "Result Async Background";
+    private static final String PROCESS_NAME = "Result Async Background";
 
     public PaperResultAsyncServiceImpl(PnAuditLogBuilder auditLogBuilder, RequestDeliveryDAO requestDeliveryDAO,
                                        NationalRegistryClient nationalRegistryClient, SqsSender sqsSender,
@@ -46,7 +46,7 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
 
     @Override
     public Mono<Void> resultAsyncBackground(SingleStatusUpdateDto singleStatusUpdateDto, Integer attempt) {
-        log.logStartingProcess(processName);
+        log.logStartingProcess(PROCESS_NAME);
         if (singleStatusUpdateDto == null || singleStatusUpdateDto.getAnalogMail() == null || StringUtils.isBlank(singleStatusUpdateDto.getAnalogMail().getRequestId())) {
             log.error("the message sent from external channel, includes errors. It cannot be processing");
             return Mono.error(new PnGenericException(DATA_NULL_OR_INVALID, DATA_NULL_OR_INVALID.getMessage()));
@@ -110,7 +110,7 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
                 pnDeliveryRequestMono.getProductType(),
                 singleStatusUpdateDto.getAnalogMail().getStatusDateTime().toInstant()
         );
-        log.logEndingProcess(processName);
+        log.logEndingProcess(PROCESS_NAME);
         return requestDeliveryDAO.updateData(pnDeliveryRequestMono);
     }
 
