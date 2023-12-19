@@ -44,6 +44,16 @@ public class PaperCalculatorUtils {
 
     }
 
+    /**
+     * Algoritmo del calcolo del costo: <b>${prezzo base scaglione di peso} + ( (${numero di pagine}-1) * ${prezzo pagina aggiuntiva} )</b>
+     *
+     * @param attachments lista di allegati della notifica
+     * @param cap di spedizione (null se la spedizione è estera)
+     * @param zone eventuale zona recuperata dalla country (è valorizzato a null se è presente un CAP ed è italiano)
+     * @param productType tipo di prodotto (AR, 890, etc)
+     * @param isReversePrinter true, se il printType della request della SEND è di tipo BN_FRONTE_RETRO
+     * @return calcolo del costp della notifica
+     */
     private Mono<BigDecimal> getAmount(List<AttachmentInfo> attachments, String cap, String zone, String productType, boolean isReversePrinter){
         String processName = "Get Amount";
         log.logStartingProcess(processName);

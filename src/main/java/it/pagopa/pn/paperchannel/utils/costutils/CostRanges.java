@@ -6,6 +6,24 @@ import java.math.BigDecimal;
 import java.util.Map;
 import java.util.TreeMap;
 
+/**
+ * Questa classe contiene i range di peso per le quali il costo della notifica cambia. In particolare:
+ * Le fasce complessive previste dalla gara di postalizzazione e da considerare in termini di grammatura saranno:
+ * <p>
+ *     x <= 20gr (già gestita da SEND)
+ * <p>
+ *     20 < x <= 50
+ * <p>
+ *     50 < x <=100
+ * <p>
+ *     100 < x <=250
+ * <p>
+ *     250 < x <=350
+ * <p>
+ *     350 < x <=1000
+ * <p>
+ *     1000 < x <=2000
+ */
 public class CostRanges {
 
     private CostRanges() {}
@@ -18,6 +36,13 @@ public class CostRanges {
     private static final int SIXTH_RANGE = 1000;
     private static final int SEVENTH_RANGE = 2000;
 
+    /**
+     *
+     * @param costDTO il costo della notifica che contiene tante colonne quanti sono i range di peso
+     * @param totPagesWight il peso totale delle pagine
+     * @return il basePrice appartenente al range di peso. Se il peso va oltre l'ultimo valore del range, viene
+     * sollevata una eccezione.
+     */
     public static BigDecimal getBasePriceForWeight(CostDTO costDTO, int totPagesWight) {
         TreeMap<Integer, BigDecimal> priceMap = buildPriceMap(costDTO);
         return priceMap.entrySet().stream()

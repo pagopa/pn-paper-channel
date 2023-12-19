@@ -1,20 +1,17 @@
 package it.pagopa.pn.paperchannel.middleware.db.entities;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Objects;
 
 @DynamoDbBean
 @Getter
 @Setter
 @ToString
 @NoArgsConstructor
+@EqualsAndHashCode(of = {"cap", "zone", "tenderCode", "productType"})
 public class PnCost {
     public static final String COL_DELIVERY_DRIVER_CODE = "driverCode";
     public static final String COL_UUID = "uuidCode";
@@ -80,16 +77,4 @@ public class PnCost {
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_FSU)}))
     private Boolean fsu;
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || this.getClass() != o.getClass()) return false;
-        PnCost pnCost = (PnCost) o;
-        return Objects.equals(cap, pnCost.cap) && Objects.equals(zone, pnCost.zone) && tenderCode.equals(pnCost.tenderCode) && productType.equals(pnCost.productType);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(cap, zone, tenderCode, productType);
-    }
 }
