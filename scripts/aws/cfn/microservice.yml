@@ -316,7 +316,7 @@ Parameters:
 
   ChargeCalculationMode:
     Type: String
-    Description: 'Variable that determines the amount. It can be AAR or ALL'
+    Description: 'Variable that determines the amount. It can be AAR or COMPLETE'
     AllowedValues:
       - AAR
       - COMPLETE
