@@ -29,8 +29,16 @@ class CostMapperTest {
 
     @Test
     void costMappertoInternationalContractTest() {
-        CostDTO response=CostMapper.toCostDTO(getPnPaperCost(ProductTypeEnumDto.RS.getValue()));
+        PnCost pnPaperCost = getPnPaperCost(ProductTypeEnumDto.RS.getValue());
+        CostDTO response=CostMapper.toCostDTO(pnPaperCost);
         Assertions.assertNotNull(response);
+        Assertions.assertEquals(pnPaperCost.getBasePrice(), response.getPrice());
+        Assertions.assertEquals(pnPaperCost.getBasePrice50(), response.getPrice50());
+        Assertions.assertEquals(pnPaperCost.getBasePrice100(), response.getPrice100());
+        Assertions.assertEquals(pnPaperCost.getBasePrice250(), response.getPrice250());
+        Assertions.assertEquals(pnPaperCost.getBasePrice350(), response.getPrice350());
+        Assertions.assertEquals(pnPaperCost.getBasePrice1000(), response.getPrice1000());
+        Assertions.assertEquals(pnPaperCost.getBasePrice2000(), response.getPrice2000());
     }
     @Test
     void costMapperToNationalContractTest() {
@@ -64,6 +72,12 @@ class CostMapperTest {
         //pnCost.setCap("00061");
         pnCost.setPagePrice(BigDecimal.valueOf(0.1F));
         pnCost.setBasePrice(BigDecimal.valueOf(0.5F));
+        pnCost.setBasePrice50(BigDecimal.valueOf(0.5F));
+        pnCost.setBasePrice100(BigDecimal.valueOf(0.6F));
+        pnCost.setBasePrice250(BigDecimal.valueOf(0.7F));
+        pnCost.setBasePrice350(BigDecimal.valueOf(0.8F));
+        pnCost.setBasePrice1000(BigDecimal.valueOf(0.9F));
+        pnCost.setBasePrice2000(BigDecimal.valueOf(1.0F));
         pnCost.setTenderCode("GARA-2022");
         pnCost.setZone("ZONE_1");
         pnCost.setProductType(str);
