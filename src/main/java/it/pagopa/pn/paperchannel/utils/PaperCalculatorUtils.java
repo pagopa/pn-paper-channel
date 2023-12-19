@@ -1,6 +1,7 @@
 package it.pagopa.pn.paperchannel.utils;
 
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
+import it.pagopa.pn.paperchannel.utils.costutils.CostRanges;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ProductTypeEnum;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.AttachmentInfo;
@@ -50,9 +51,11 @@ public class PaperCalculatorUtils {
                 .map(contract ->{
                     if (!pnPaperChannelConfig.getChargeCalculationMode().equalsIgnoreCase(AAR)){
                         Integer totPages = getNumberOfPages(attachments, isReversePrinter, false);
+                        int totPagesWight = getLetterWeight(totPages);
+                        BigDecimal basePriceForWeight = CostRanges.getBasePriceForWeight(contract, totPagesWight);
                         BigDecimal priceTotPages = contract.getPriceAdditional().multiply(BigDecimal.valueOf(totPages));
                         log.logEndingProcess(processName);
-                        return contract.getPrice().add(priceTotPages);
+                        return basePriceForWeight.add(priceTotPages);
                     }else{
                         log.logEndingProcess(processName);
                         return contract.getPrice();

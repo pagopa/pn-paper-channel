@@ -24,6 +24,12 @@ public class PnCost {
     public static final String TENDER_INDEX = "tender-index";
     public static final String COL_PRODUCT_TYPE = "productType";
     public static final String COL_BASE_PRICE = "basePrice";
+    public static final String COL_BASE_PRICE_50 = "basePrice50";
+    public static final String COL_BASE_PRICE_100 = "basePrice100";
+    public static final String COL_BASE_PRICE_250 = "basePrice250";
+    public static final String COL_BASE_PRICE_350 = "basePrice350";
+    public static final String COL_BASE_PRICE_1000 = "basePrice1000";
+    public static final String COL_BASE_PRICE_2000 = "basePrice2000";
     public static final String COL_PAGE_PRICE = "pagePrice";
     public static final String COL_FSU = "fsu";
 
@@ -49,6 +55,24 @@ public class PnCost {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_BASE_PRICE)}))
     private BigDecimal basePrice;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_BASE_PRICE_50)}))
+    private BigDecimal basePrice50;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_BASE_PRICE_100)}))
+    private BigDecimal basePrice100;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_BASE_PRICE_250)}))
+    private BigDecimal basePrice250;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_BASE_PRICE_350)}))
+    private BigDecimal basePrice350;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_BASE_PRICE_1000)}))
+    private BigDecimal basePrice1000;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_BASE_PRICE_2000)}))
+    private BigDecimal basePrice2000;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_PAGE_PRICE)}))
     private BigDecimal pagePrice;
