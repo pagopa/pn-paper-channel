@@ -19,6 +19,7 @@ import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.service.impl.PaperMessagesServiceImpl;
+import it.pagopa.pn.paperchannel.utils.ChargeCalculationModeEnum;
 import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.PaperCalculatorUtils;
 import it.pagopa.pn.paperchannel.utils.Utility;
@@ -615,7 +616,7 @@ class PaperMessagesServiceTest {
         Mockito.when(paperTenderService.getCostFrom(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(getNationalCost()));
 
-        Mockito.when(pnPaperChannelConfig.getChargeCalculationMode()).thenReturn("AAR");
+        Mockito.when(pnPaperChannelConfig.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.AAR);
     }
 
     @Test
@@ -699,7 +700,7 @@ class PaperMessagesServiceTest {
         Mockito.when(paperTenderService.getCostFrom(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(getNationalCost()));
 
-        Mockito.when(pnPaperChannelConfig.getChargeCalculationMode()).thenReturn("AAR");
+        Mockito.when(pnPaperChannelConfig.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.AAR);
 
         StepVerifier.create(paperMessagesService.executionPaper("TST-IOR.2332", sendRequest))
                 .expectErrorMatches((ex) -> {
@@ -753,7 +754,7 @@ class PaperMessagesServiceTest {
         Mockito.when(paperTenderService.getCostFrom(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(getInternationalCost()));
 
-        Mockito.when(pnPaperChannelConfig.getChargeCalculationMode()).thenReturn("AAR");
+        Mockito.when(pnPaperChannelConfig.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.AAR);
 
         StepVerifier.create(paperMessagesService.executionPaper("TST-IOR.2332", sendRequest))
                 .expectNextMatches((response) -> {
@@ -782,7 +783,7 @@ class PaperMessagesServiceTest {
         Mockito.when(paperTenderService.getCostFrom(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(getNationalCost()));
 
-        Mockito.when(pnPaperChannelConfig.getChargeCalculationMode()).thenReturn("AAR");
+        Mockito.when(pnPaperChannelConfig.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.AAR);
 
         StepVerifier.create(paperMessagesService.executionPaper("TST-IOR.2332", getRequest("TST-IOR.2332")))
                 .expectNextMatches((response) -> {

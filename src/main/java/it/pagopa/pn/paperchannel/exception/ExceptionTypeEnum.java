@@ -63,7 +63,8 @@ public enum ExceptionTypeEnum{
     WRONG_RECAG012_DATA("WRONG_RECAG012_DATA", "E' stato già trovato l'evento RECAG012 in precedenza, con dati differenti"),
     RESPONSE_NULL_FROM_DEDUPLICATION("RESPONSE_NULL_FROM_DEDUPLICATION", "La deduplication ha risposto con normalizedAddress null"),
     RESPONSE_ERROR_NOT_HANDLED_FROM_DEDUPLICATION("RESPONSE_ERROR_NOT_HANDLED_FROM_DEDUPLICATION", "La deduplication ha risposto con con un codice errore non gestito"),
-    F24_ERROR("F24_ERROR", "Problemi con la generazione dei PDF F24");
+    F24_ERROR("F24_ERROR", "Problemi con la generazione dei PDF F24"),
+    COST_OUF_OF_RANGE("COST_OUF_OF_RANGE", "Il costo calcolato della notifica sfora il limite dell'ultimo range");
 
     private final String title;
     private final String message;

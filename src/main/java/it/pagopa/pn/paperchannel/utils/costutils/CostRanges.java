@@ -1,10 +1,13 @@
 package it.pagopa.pn.paperchannel.utils.costutils;
 
+import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.CostDTO;
 
 import java.math.BigDecimal;
 import java.util.Map;
 import java.util.TreeMap;
+
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.COST_OUF_OF_RANGE;
 
 /**
  * Questa classe contiene i range di peso per le quali il costo della notifica cambia. In particolare:
@@ -49,7 +52,7 @@ public class CostRanges {
                 .filter(entry -> totPagesWight <= entry.getKey())
                 .findFirst()
                 .map(Map.Entry::getValue)
-                .orElseThrow(() -> new RuntimeException(String.format("Weight %s exceeded 2000 gr", totPagesWight)));
+                .orElseThrow(() -> new PnGenericException(COST_OUF_OF_RANGE, String.format("Weight %s exceeded 2000 gr", totPagesWight)));
     }
 
     private static TreeMap<Integer, BigDecimal> buildPriceMap(CostDTO costDTO) {

@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.utils.costutils;
 
+import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.CostDTO;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -34,7 +35,7 @@ class CostRangesTest {
         int weight = 2001;
         CostDTO costDTO = buildCostDTO();
         assertThatThrownBy(() -> CostRanges.getBasePriceForWeight(costDTO, weight))
-                .isInstanceOf(RuntimeException.class);
+                .isInstanceOf(PnGenericException.class);
     }
 
     private CostDTO buildCostDTO() {

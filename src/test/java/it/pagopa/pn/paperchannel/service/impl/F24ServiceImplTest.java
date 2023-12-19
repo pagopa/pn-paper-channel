@@ -2,10 +2,8 @@ package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
-import it.pagopa.pn.paperchannel.encryption.impl.DataVaultEncryptionImpl;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnf24.v1.dto.RequestAcceptedDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.CostDTO;
-import it.pagopa.pn.paperchannel.mapper.AddressMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
@@ -18,6 +16,7 @@ import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.service.F24Service;
 import it.pagopa.pn.paperchannel.service.PaperTenderService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
+import it.pagopa.pn.paperchannel.utils.ChargeCalculationModeEnum;
 import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.PaperCalculatorUtils;
 import it.pagopa.pn.paperchannel.utils.Utility;
@@ -78,7 +77,7 @@ class F24ServiceImplTest {
         String requestid = "REQUESTID";
         PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest(requestid, StatusDeliveryEnum.IN_PROCESSING);
 
-        Mockito.when(pnPaperChannelConfig.getChargeCalculationMode()).thenReturn("AAR");
+        Mockito.when(pnPaperChannelConfig.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.AAR);
         Mockito.when(addressDAO.findByRequestId(requestid)).thenReturn(Mono.just(getPnAddress(requestid)));
         Mockito.when(requestDeliveryDAO.updateData(Mockito.any())).thenAnswer(i -> Mono.just(i.getArguments()[0]));
         Mockito.when(f24Client.preparePDF(requestid, pnDeliveryRequest.getIun(), "1", 200)).thenReturn(Mono.just(new RequestAcceptedDto()));
