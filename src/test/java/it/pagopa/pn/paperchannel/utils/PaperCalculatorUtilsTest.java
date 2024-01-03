@@ -37,7 +37,7 @@ class PaperCalculatorUtilsTest {
         Mockito.when(paperTenderService.getCostFrom(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(getNationalCost()));
 
-        Mockito.when(pnPaperChannelConfig.getChargeCalculationMode()).thenReturn("AAR");
+        Mockito.when(pnPaperChannelConfig.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.AAR);
 
         List<AttachmentInfo> attachmentUrls = new ArrayList<>();
         AttachmentInfo pnAttachmentInfo = new AttachmentInfo();
@@ -58,6 +58,40 @@ class PaperCalculatorUtilsTest {
         Assertions.assertEquals(1, res.intValue());
     }
 
+    //${peso busta} + ( ${numero di pagine} * ${peso pagina} )
+    //nel test: 5 + (5 * 5) = 30 (numero di pagine 10, ma reversPrinter=true per cui 5 effettive)
+    //${prezzo base scaglione di peso} + ( (${numero di pagine}-1) * ${prezzo pagina aggiuntiva} )
+    //nel test: 3 + (2 * 2) = 12 (essendo il peso 30, si va nel secondo range, dove: dto.setPrice50(BigDecimal.valueOf(2.00));)
+    @Test
+    void calculatorWithCOMPLETE() {
+
+        List<AttachmentInfo> attachmentUrls = new ArrayList<>();
+        AttachmentInfo pnAttachmentInfo = new AttachmentInfo();
+        pnAttachmentInfo.setDate("");
+        pnAttachmentInfo.setFileKey("http://localhost:8080");
+        pnAttachmentInfo.setId("");
+        pnAttachmentInfo.setNumberOfPage(10);
+        pnAttachmentInfo.setDocumentType("");
+        pnAttachmentInfo.setUrl("");
+        attachmentUrls.add(pnAttachmentInfo);
+
+        Address address = new Address();
+        address.setCap("30030");
+
+        Mockito.when(paperTenderService.getCostFrom(address.getCap(), null, ProductTypeEnum.AR.getValue()))
+                .thenReturn(Mono.just(getNationalCost()));
+
+
+        Mockito.when(pnPaperChannelConfig.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.COMPLETE);
+        Mockito.when(pnPaperChannelConfig.getPaperWeight()).thenReturn(5);
+        Mockito.when(pnPaperChannelConfig.getLetterWeight()).thenReturn(5);
+
+        BigDecimal res = paperCalculatorUtils.calculator(attachmentUrls, address, ProductTypeEnum.AR, true).block();
+
+        assert res != null;
+        Assertions.assertEquals(12, res.intValue());
+    }
+
     @Test
     void calculatorInt() {
         //MOCK RETRIEVE NATIONAL COST
@@ -67,7 +101,7 @@ class PaperCalculatorUtilsTest {
         Mockito.when(paperTenderService.getZoneFromCountry(Mockito.any()))
                 .thenReturn(Mono.just("ZONE_1"));
 
-        Mockito.when(pnPaperChannelConfig.getChargeCalculationMode()).thenReturn("AAR");
+        Mockito.when(pnPaperChannelConfig.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.AAR);
 
         List<AttachmentInfo> attachmentUrls = new ArrayList<>();
         AttachmentInfo pnAttachmentInfo = new AttachmentInfo();
@@ -177,6 +211,12 @@ class PaperCalculatorUtilsTest {
     private CostDTO getNationalCost() {
         CostDTO dto = new CostDTO();
         dto.setPrice(BigDecimal.valueOf(1.00));
+        dto.setPrice50(BigDecimal.valueOf(2.00));
+        dto.setPrice100(BigDecimal.valueOf(3.00));
+        dto.setPrice250(BigDecimal.valueOf(4.00));
+        dto.setPrice350(BigDecimal.valueOf(5.00));
+        dto.setPrice1000(BigDecimal.valueOf(6.00));
+        dto.setPrice2000(BigDecimal.valueOf(7.00));
         dto.setPriceAdditional(BigDecimal.valueOf(2.00));
         return dto;
     }

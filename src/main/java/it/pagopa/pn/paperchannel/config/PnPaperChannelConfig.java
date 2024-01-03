@@ -1,11 +1,11 @@
 package it.pagopa.pn.paperchannel.config;
 
 import it.pagopa.pn.commons.conf.SharedAutoConfiguration;
+import it.pagopa.pn.paperchannel.utils.ChargeCalculationModeEnum;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -55,7 +55,7 @@ public class PnPaperChannelConfig {
     private Long ttlExecutionDaysDemat;
     private Integer paperWeight;
     private Integer letterWeight;
-    private String chargeCalculationMode;
+    private ChargeCalculationModeEnum chargeCalculationMode;
     private Duration refinementDuration;
     private String requestPaIdOverride;
 

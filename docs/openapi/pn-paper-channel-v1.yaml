@@ -648,6 +648,30 @@ components:
           type: number
           maximum: 999999
           minimum: 0
+        price50:
+          type: number
+          maximum: 999999
+          minimum: 0
+        price100:
+          type: number
+          maximum: 999999
+          minimum: 0
+        price250:
+          type: number
+          maximum: 999999
+          minimum: 0
+        price350:
+          type: number
+          maximum: 999999
+          minimum: 0
+        price1000:
+          type: number
+          maximum: 999999
+          minimum: 0
+        price2000:
+          type: number
+          maximum: 999999
+          minimum: 0
         priceAdditional:
           type: number
           maximum: 999999

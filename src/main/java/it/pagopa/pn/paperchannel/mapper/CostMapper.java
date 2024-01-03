@@ -47,6 +47,12 @@ public class CostMapper {
             dto.setZone(InternationalZoneEnum.fromValue(paperCost.getZone()));
         }
         dto.setPrice(paperCost.getBasePrice());
+        dto.setPrice50(paperCost.getBasePrice50());
+        dto.setPrice100(paperCost.getBasePrice100());
+        dto.setPrice250(paperCost.getBasePrice250());
+        dto.setPrice350(paperCost.getBasePrice350());
+        dto.setPrice1000(paperCost.getBasePrice1000());
+        dto.setPrice2000(paperCost.getBasePrice2000());
         dto.setPriceAdditional(paperCost.getPagePrice());
         dto.setProductType(ProductTypeEnumDto.fromValue(paperCost.getProductType()));
         return dto;

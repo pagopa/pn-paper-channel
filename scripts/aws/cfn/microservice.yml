@@ -314,10 +314,13 @@ Parameters:
     Type: String
     Description: 'Send and pull requests in this queue'
 
-  #ChargeCalculationMode
   ChargeCalculationMode:
     Type: String
-    Description: 'Variable that determines the amount. It can be AAR or ALL'
+    Description: 'Variable that determines the amount. It can be AAR or COMPLETE'
+    Default: 'AAR'
+    AllowedValues:
+      - AAR
+      - COMPLETE
 
   # OpenApi Bucket params
   MicroserviceBucketName:

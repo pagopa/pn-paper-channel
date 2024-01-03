@@ -1,6 +1,8 @@
 package it.pagopa.pn.paperchannel.utils;
 
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.CostDTO;
+import it.pagopa.pn.paperchannel.utils.costutils.CostRanges;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ProductTypeEnum;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.AttachmentInfo;
@@ -43,21 +45,36 @@ public class PaperCalculatorUtils {
 
     }
 
+    /**
+     * Algoritmo del calcolo del costo per modalità COMPLETE:
+     * <b>${prezzo base scaglione di peso} + ( (${numero di pagine}-1) * ${prezzo pagina aggiuntiva} )</b>
+     *
+     * @param attachments lista di allegati della notifica
+     * @param cap di spedizione (null se la spedizione è estera)
+     * @param zone eventuale zona recuperata dalla country (è valorizzato a null se è presente un CAP ed è italiano)
+     * @param productType tipo di prodotto (AR, 890, etc)
+     * @param isReversePrinter true, se il printType della request della SEND è di tipo BN_FRONTE_RETRO
+     * @return calcolo del costp della notifica
+     */
     private Mono<BigDecimal> getAmount(List<AttachmentInfo> attachments, String cap, String zone, String productType, boolean isReversePrinter){
         String processName = "Get Amount";
         log.logStartingProcess(processName);
         return paperTenderService.getCostFrom(cap, zone, productType)
-                .map(contract ->{
-                    if (!pnPaperChannelConfig.getChargeCalculationMode().equalsIgnoreCase(AAR)){
-                        Integer totPages = getNumberOfPages(attachments, isReversePrinter, false);
-                        BigDecimal priceTotPages = contract.getPriceAdditional().multiply(BigDecimal.valueOf(totPages));
-                        log.logEndingProcess(processName);
-                        return contract.getPrice().add(priceTotPages);
-                    }else{
-                        log.logEndingProcess(processName);
-                        return contract.getPrice();
+                .map(contract ->
+                    switch (pnPaperChannelConfig.getChargeCalculationMode()) {
+                        case AAR -> contract.getPrice();
+                        case COMPLETE -> getPriceForCOMPLETEMode(attachments, contract, isReversePrinter);
                     }
-                });
+                )
+                .doOnNext(totalCost -> log.logEndingProcess(processName));
+    }
+
+    private BigDecimal getPriceForCOMPLETEMode(List<AttachmentInfo> attachments, CostDTO costDTO, boolean isReversePrinter){
+        Integer totPages = getNumberOfPages(attachments, isReversePrinter, false);
+        int totPagesWight = getLetterWeight(totPages);
+        BigDecimal basePriceForWeight = CostRanges.getBasePriceForWeight(costDTO, totPagesWight);
+        BigDecimal priceTotPages = costDTO.getPriceAdditional().multiply(BigDecimal.valueOf(totPages));
+        return basePriceForWeight.add(priceTotPages);
     }
 
 
