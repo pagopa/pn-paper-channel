@@ -27,7 +27,7 @@
     "MaxTasksNumber": "10",
     "AutoscalingThreshold": "1200",
     "ConsumedQueueMessagePerMinute": "3300",
-    "ChargeCalculationMode": "AAR",
+    "ChargeCalculationMode": "COMPLETE",
     "AddressManagerBaseUrl": "http://alb.confidential.pn.internal:8080",
     "DataVaultBaseUrl": "http://alb.confidential.pn.internal:8080",
     "RefinementDuration": "1m",
