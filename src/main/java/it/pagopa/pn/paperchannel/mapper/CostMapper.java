@@ -28,6 +28,12 @@ public class CostMapper {
             cost.setUuid(UUID.randomUUID().toString());
         }
         cost.setBasePrice(dto.getPrice());
+        cost.setBasePrice50(dto.getPrice50());
+        cost.setBasePrice100(dto.getPrice100());
+        cost.setBasePrice250(dto.getPrice250());
+        cost.setBasePrice350(dto.getPrice350());
+        cost.setBasePrice1000(dto.getPrice1000());
+        cost.setBasePrice2000(dto.getPrice2000());
         cost.setPagePrice(dto.getPriceAdditional());
         cost.setProductType(dto.getProductType().getValue());
         cost.setCap(dto.getCap());
