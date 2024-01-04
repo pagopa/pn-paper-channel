@@ -75,8 +75,8 @@ public class PaperCalculatorUtils {
         BigDecimal basePriceForWeight = CostRanges.getBasePriceForWeight(costDTO, totPagesWight);
         BigDecimal priceTotPages = costDTO.getPriceAdditional().multiply(BigDecimal.valueOf(totPages));
         BigDecimal completedPrice = basePriceForWeight.add(priceTotPages);
-        log.info("Calculating cost COMPLETE mode, totPages={}, totPagesWight={}, basePriceForWeight={}, priceTotPages={}, completedPrice={}",
-                totPages, totPagesWight, basePriceForWeight, priceTotPages, completedPrice);
+        log.info("Calculating cost COMPLETE mode, totPages={}, totPagesWight={}, basePriceForWeight={}, priceTotPages={}, completedPrice={}, costDTO: {}",
+                totPages, totPagesWight, basePriceForWeight, priceTotPages, completedPrice, costDTO);
         return completedPrice;
     }
 
