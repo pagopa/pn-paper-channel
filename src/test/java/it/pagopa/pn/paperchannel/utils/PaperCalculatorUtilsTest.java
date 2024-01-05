@@ -71,7 +71,7 @@ class PaperCalculatorUtilsTest {
         pnAttachmentInfo.setFileKey("http://localhost:8080");
         pnAttachmentInfo.setId("");
         pnAttachmentInfo.setNumberOfPage(1);
-        pnAttachmentInfo.setDocumentType("PN_AAR");
+        pnAttachmentInfo.setDocumentType(Const.PN_AAR);
         pnAttachmentInfo.setUrl("");
         attachmentUrls.add(pnAttachmentInfo);
 
@@ -105,7 +105,7 @@ class PaperCalculatorUtilsTest {
         aar.setFileKey("http://localhost:8080");
         aar.setId("");
         aar.setNumberOfPage(1);
-        aar.setDocumentType("PN_AAR");
+        aar.setDocumentType(Const.PN_AAR);
         aar.setUrl("");
         AttachmentInfo pnAttachmentInfo = new AttachmentInfo();
         pnAttachmentInfo.setDate("");
@@ -148,7 +148,7 @@ class PaperCalculatorUtilsTest {
         aar.setFileKey("http://localhost:8080");
         aar.setId("");
         aar.setNumberOfPage(1);
-        aar.setDocumentType("AAR");
+        aar.setDocumentType(Const.PN_AAR);
         aar.setUrl("");
         AttachmentInfo pnAttachmentInfo = new AttachmentInfo();
         pnAttachmentInfo.setDate("");
@@ -190,7 +190,7 @@ class PaperCalculatorUtilsTest {
         aar.setFileKey("http://localhost:8080");
         aar.setId("");
         aar.setNumberOfPage(1);
-        aar.setDocumentType("PN_AAR");
+        aar.setDocumentType(Const.PN_AAR);
         aar.setUrl("");
         AttachmentInfo pnAttachmentInfo = new AttachmentInfo();
         pnAttachmentInfo.setDate("");
@@ -276,7 +276,7 @@ class PaperCalculatorUtilsTest {
         assertEquals(3, res1);
 
 
-        pnAttachmentInfo.setDocumentType("PN_AAR");
+        pnAttachmentInfo.setDocumentType(Const.PN_AAR);
         int res2 = paperCalculatorUtils.getNumberOfPages(attachmentUrls, false, false);
         assertEquals(2, res2);
         int res3 = paperCalculatorUtils.getNumberOfPages(attachmentUrls, false, true);
@@ -342,7 +342,7 @@ class PaperCalculatorUtilsTest {
         aar.setFileKey("http://localhost:8080");
         aar.setId("");
         aar.setNumberOfPage(1);
-        aar.setDocumentType("PN_AAR");
+        aar.setDocumentType(Const.PN_AAR);
         aar.setUrl("");
         AttachmentInfo pnAttachmentInfo = new AttachmentInfo();
         pnAttachmentInfo.setDate("");
@@ -368,7 +368,7 @@ class PaperCalculatorUtilsTest {
         aar.setFileKey("http://localhost:8080");
         aar.setId("");
         aar.setNumberOfPage(1);
-        aar.setDocumentType("PN_AAR");
+        aar.setDocumentType(Const.PN_AAR);
         aar.setUrl("");
         AttachmentInfo pnAttachmentInfo = new AttachmentInfo();
         pnAttachmentInfo.setDate("");
