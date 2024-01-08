@@ -174,16 +174,9 @@ public class Utility {
     public static Map<String, Boolean> requiredCostFSU(){
         Map<String, Boolean> map = new HashMap<>();
 
-        map.put("ZONE_1-AR", false);
-        map.put("ZONE_1-RS", false);
-        map.put("ZONE_2-AR", false);
-        map.put("ZONE_2-RS", false);
-        map.put("ZONE_3-AR", false);
-        map.put("ZONE_3-RS", false);
         map.put("99999-AR", false);
         map.put("99999-890", false);
         map.put("99999-RS", false);
-
 
         return map;
     }
