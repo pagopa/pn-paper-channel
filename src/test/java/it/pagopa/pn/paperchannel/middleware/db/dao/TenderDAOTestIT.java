@@ -96,11 +96,11 @@ class TenderDAOTestIT extends BaseTest {
     }
 
     @Test
-    void getTenderStatusValidateNotConsolidateTest(){
+    void getTenderStatusValidateConsolidate5Test(){
         Instant startDate = Instant.parse("2024-01-10T00:20:56.630714800Z");
         Instant endDate = Instant.parse("2024-01-28T00:20:56.630714800Z");
         PnTender tender = this.tenderDAO.getConsolidate(startDate, endDate).block();
-        assertNull(tender);
+        assertNotNull(tender);
     }
 
 
