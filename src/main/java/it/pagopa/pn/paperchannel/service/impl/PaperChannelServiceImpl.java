@@ -292,12 +292,9 @@ public class PaperChannelServiceImpl implements PaperChannelService {
         if (isCreated) pnLogAudit.addsBeforeCreate("Create Tender");
         else pnLogAudit.addsBeforeUpdate("Update Tender");
 
-        //set 00:00
-        request.getStartDate().setTime(DateUtils.formatDateWithSpecificHour(request.getStartDate(), 0,0,0).getTime());
-        //set 23:59
-        request.getEndDate().setTime(DateUtils.formatDateWithSpecificHour(request.getEndDate(), 23,59,0).getTime());
+
         return Mono.just(TenderMapper.toTenderRequest(request))
-                .flatMap(entity -> this.tenderDAO.createOrUpdate(entity))
+                .flatMap(this.tenderDAO::createOrUpdate)
                 .map(entity -> {
                     if (isCreated) pnLogAudit.addsSuccessCreate("Create Tender OK:"+ Utility.objectToJson(entity));
                     TenderCreateResponseDTO response = new TenderCreateResponseDTO();
