@@ -70,10 +70,11 @@ public class PaperCalculatorUtils {
     }
 
     private BigDecimal getPriceForCOMPLETEMode(List<AttachmentInfo> attachments, CostDTO costDTO, boolean isReversePrinter){
-        Integer totPages = getNumberOfPages(attachments, isReversePrinter, false);
+        Integer totPagesIgnoringAAR = getNumberOfPages(attachments, isReversePrinter, false);
+        Integer totPages = getNumberOfPages(attachments, isReversePrinter, true);
         int totPagesWight = getLetterWeight(totPages);
         BigDecimal basePriceForWeight = CostRanges.getBasePriceForWeight(costDTO, totPagesWight);
-        BigDecimal priceTotPages = costDTO.getPriceAdditional().multiply(BigDecimal.valueOf(totPages));
+        BigDecimal priceTotPages = costDTO.getPriceAdditional().multiply(BigDecimal.valueOf(totPagesIgnoringAAR));
         BigDecimal completedPrice = basePriceForWeight.add(priceTotPages);
         log.info("Calculating cost COMPLETE mode, totPages={}, totPagesWight={}, basePriceForWeight={}, priceTotPages={}, completedPrice={}, costDTO: {}",
                 totPages, totPagesWight, basePriceForWeight, priceTotPages, completedPrice, costDTO);
@@ -89,12 +90,12 @@ public class PaperCalculatorUtils {
 
 
 
-    public Integer getNumberOfPages(List<AttachmentInfo> attachments, boolean isReversePrinter, boolean ignoreAAR){
+    public Integer getNumberOfPages(List<AttachmentInfo> attachments, boolean isReversePrinter, boolean includeAAR){
         if (attachments == null || attachments.isEmpty()) return 0;
         return attachments.stream().map(attachment -> {
             int numberOfPages = attachment.getNumberOfPage();
             if (isReversePrinter) numberOfPages = (int) Math.ceil(((double) attachment.getNumberOfPage())/2);
-            return (!ignoreAAR && StringUtils.equals(attachment.getDocumentType(), Const.PN_AAR)) ? numberOfPages-1 : numberOfPages;
+            return (!includeAAR && StringUtils.equals(attachment.getDocumentType(), Const.PN_AAR)) ? numberOfPages-1 : numberOfPages;
         }).reduce(0, Integer::sum);
     }
 

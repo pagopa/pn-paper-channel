@@ -59,19 +59,19 @@ class PaperCalculatorUtilsTest {
     }
 
     //${peso busta} + ( ${numero di pagine} * ${peso pagina} )
-    //nel test: 5 + (5 * 5) = 30 (numero di pagine 10, ma reversPrinter=true per cui 5 effettive)
+    //nel test: 5 + (1 * 5) = 10
     //${prezzo base scaglione di peso} + ( (${numero di pagine}-1) * ${prezzo pagina aggiuntiva} )
-    //nel test: 3 + (2 * 2) = 12 (essendo il peso 30, si va nel secondo range, dove: dto.setPrice50(BigDecimal.valueOf(2.00));)
+    //nel test: 1 + (0 * 2) = 1 (essendo il peso 10, si va nel primo range, dove: dto.setPrice(BigDecimal.valueOf(1.00));)
     @Test
-    void calculatorWithCOMPLETE() {
+    void calculatorWithOneCOMPLETE() {
 
         List<AttachmentInfo> attachmentUrls = new ArrayList<>();
         AttachmentInfo pnAttachmentInfo = new AttachmentInfo();
         pnAttachmentInfo.setDate("");
         pnAttachmentInfo.setFileKey("http://localhost:8080");
         pnAttachmentInfo.setId("");
-        pnAttachmentInfo.setNumberOfPage(10);
-        pnAttachmentInfo.setDocumentType("");
+        pnAttachmentInfo.setNumberOfPage(1);
+        pnAttachmentInfo.setDocumentType(Const.PN_AAR);
         pnAttachmentInfo.setUrl("");
         attachmentUrls.add(pnAttachmentInfo);
 
@@ -89,7 +89,134 @@ class PaperCalculatorUtilsTest {
         BigDecimal res = paperCalculatorUtils.calculator(attachmentUrls, address, ProductTypeEnum.AR, true).block();
 
         assert res != null;
+        Assertions.assertEquals(1, res.intValue());
+    }
+
+    //${peso busta} + ( ${numero di pagine} * ${peso pagina} )
+    //nel test: 5 + (6 * 5) = 35 (numero di pagine degli atti 9, ma reversPrinter=true per cui 5 effettive + 1 AAR)
+    //${prezzo base scaglione di peso} + ( (${numero di pagine}-1) * ${prezzo pagina aggiuntiva} )
+    //nel test: 2 + (5 * 2) = 12 (essendo il peso 35, si va nel secondo range, dove: dto.setPrice50(BigDecimal.valueOf(2.00));)
+    @Test
+    void calculatorWithCOMPLETE() {
+
+        List<AttachmentInfo> attachmentUrls = new ArrayList<>();
+        AttachmentInfo aar = new AttachmentInfo();
+        aar.setDate("");
+        aar.setFileKey("http://localhost:8080");
+        aar.setId("");
+        aar.setNumberOfPage(1);
+        aar.setDocumentType(Const.PN_AAR);
+        aar.setUrl("");
+        AttachmentInfo pnAttachmentInfo = new AttachmentInfo();
+        pnAttachmentInfo.setDate("");
+        pnAttachmentInfo.setFileKey("http://localhost:8080");
+        pnAttachmentInfo.setId("");
+        pnAttachmentInfo.setNumberOfPage(9);
+        pnAttachmentInfo.setDocumentType("");
+        pnAttachmentInfo.setUrl("");
+        attachmentUrls.add(pnAttachmentInfo);
+        attachmentUrls.add(aar);
+
+        Address address = new Address();
+        address.setCap("30030");
+
+        Mockito.when(paperTenderService.getCostFrom(address.getCap(), null, ProductTypeEnum.AR.getValue()))
+                .thenReturn(Mono.just(getNationalCost()));
+
+
+        Mockito.when(pnPaperChannelConfig.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.COMPLETE);
+        Mockito.when(pnPaperChannelConfig.getPaperWeight()).thenReturn(5);
+        Mockito.when(pnPaperChannelConfig.getLetterWeight()).thenReturn(5);
+
+        BigDecimal res = paperCalculatorUtils.calculator(attachmentUrls, address, ProductTypeEnum.AR, true).block();
+
+        assert res != null;
         Assertions.assertEquals(12, res.intValue());
+    }
+
+
+    //${peso busta} + ( ${numero di pagine} * ${peso pagina} )
+    //nel test: 5 + (9 * 5) = 50 (numero di pagine degli atti 15, ma reversPrinter=true per cui 8 effettive + 1 AAR)
+    //${prezzo base scaglione di peso} + ( (${numero di pagine}-1) * ${prezzo pagina aggiuntiva} )
+    //nel test: 2 + (8 * 2) = 18 (essendo il peso 55, si va nel terzo range, dove: dto.setPrice50(BigDecimal.valueOf(2.00));)
+    @Test
+    void calculatorWithSecondRangeLimitUpCOMPLETE() {
+
+        List<AttachmentInfo> attachmentUrls = new ArrayList<>();
+        AttachmentInfo aar = new AttachmentInfo();
+        aar.setDate("");
+        aar.setFileKey("http://localhost:8080");
+        aar.setId("");
+        aar.setNumberOfPage(1);
+        aar.setDocumentType(Const.PN_AAR);
+        aar.setUrl("");
+        AttachmentInfo pnAttachmentInfo = new AttachmentInfo();
+        pnAttachmentInfo.setDate("");
+        pnAttachmentInfo.setFileKey("http://localhost:8080");
+        pnAttachmentInfo.setId("");
+        pnAttachmentInfo.setNumberOfPage(15);
+        pnAttachmentInfo.setDocumentType("");
+        pnAttachmentInfo.setUrl("");
+        attachmentUrls.add(pnAttachmentInfo);
+        attachmentUrls.add(aar);
+
+        Address address = new Address();
+        address.setCap("30030");
+
+        Mockito.when(paperTenderService.getCostFrom(address.getCap(), null, ProductTypeEnum.AR.getValue()))
+                .thenReturn(Mono.just(getNationalCost()));
+
+
+        Mockito.when(pnPaperChannelConfig.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.COMPLETE);
+        Mockito.when(pnPaperChannelConfig.getPaperWeight()).thenReturn(5);
+        Mockito.when(pnPaperChannelConfig.getLetterWeight()).thenReturn(5);
+
+        BigDecimal res = paperCalculatorUtils.calculator(attachmentUrls, address, ProductTypeEnum.AR, true).block();
+
+        assert res != null;
+        Assertions.assertEquals(18, res.intValue());
+    }
+
+    //${peso busta} + ( ${numero di pagine} * ${peso pagina} )
+    //nel test: 5 + (10 * 5) = 55 (numero di pagine degli atti 17, ma reversPrinter=true per cui 9 effettive + 1 AAR)
+    //${prezzo base scaglione di peso} + ( (${numero di pagine}-1) * ${prezzo pagina aggiuntiva} )
+    //nel test: 3 + (9 * 2) = 21 (essendo il peso 55, si va nel terzo range, dove: dto.setPrice100(BigDecimal.valueOf(3.00));)
+    @Test
+    void calculatorWithThirdRangeCOMPLETE() {
+
+        List<AttachmentInfo> attachmentUrls = new ArrayList<>();
+        AttachmentInfo aar = new AttachmentInfo();
+        aar.setDate("");
+        aar.setFileKey("http://localhost:8080");
+        aar.setId("");
+        aar.setNumberOfPage(1);
+        aar.setDocumentType(Const.PN_AAR);
+        aar.setUrl("");
+        AttachmentInfo pnAttachmentInfo = new AttachmentInfo();
+        pnAttachmentInfo.setDate("");
+        pnAttachmentInfo.setFileKey("http://localhost:8080");
+        pnAttachmentInfo.setId("");
+        pnAttachmentInfo.setNumberOfPage(17);
+        pnAttachmentInfo.setDocumentType("");
+        pnAttachmentInfo.setUrl("");
+        attachmentUrls.add(pnAttachmentInfo);
+        attachmentUrls.add(aar);
+
+        Address address = new Address();
+        address.setCap("30030");
+
+        Mockito.when(paperTenderService.getCostFrom(address.getCap(), null, ProductTypeEnum.AR.getValue()))
+                .thenReturn(Mono.just(getNationalCost()));
+
+
+        Mockito.when(pnPaperChannelConfig.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.COMPLETE);
+        Mockito.when(pnPaperChannelConfig.getPaperWeight()).thenReturn(5);
+        Mockito.when(pnPaperChannelConfig.getLetterWeight()).thenReturn(5);
+
+        BigDecimal res = paperCalculatorUtils.calculator(attachmentUrls, address, ProductTypeEnum.AR, true).block();
+
+        assert res != null;
+        Assertions.assertEquals(21, res.intValue());
     }
 
     @Test
@@ -149,7 +276,7 @@ class PaperCalculatorUtilsTest {
         assertEquals(3, res1);
 
 
-        pnAttachmentInfo.setDocumentType("PN_AAR");
+        pnAttachmentInfo.setDocumentType(Const.PN_AAR);
         int res2 = paperCalculatorUtils.getNumberOfPages(attachmentUrls, false, false);
         assertEquals(2, res2);
         int res3 = paperCalculatorUtils.getNumberOfPages(attachmentUrls, false, true);
@@ -204,6 +331,58 @@ class PaperCalculatorUtilsTest {
         assertEquals("RS", res2);
         String res3 = paperCalculatorUtils.getProposalProductType(address, ProductTypeEnum._890.getValue());
         assertEquals("890", res3);
+    }
+
+    //(numero di pagine degli atti 4, ma reversPrinter=true per cui 2 effettive + 1 AAR)
+    @Test
+    void getNumberOfPagesIncludeAARTrueTest() {
+        List<AttachmentInfo> attachmentUrls = new ArrayList<>();
+        AttachmentInfo aar = new AttachmentInfo();
+        aar.setDate("");
+        aar.setFileKey("http://localhost:8080");
+        aar.setId("");
+        aar.setNumberOfPage(1);
+        aar.setDocumentType(Const.PN_AAR);
+        aar.setUrl("");
+        AttachmentInfo pnAttachmentInfo = new AttachmentInfo();
+        pnAttachmentInfo.setDate("");
+        pnAttachmentInfo.setFileKey("http://localhost:8080");
+        pnAttachmentInfo.setId("");
+        pnAttachmentInfo.setNumberOfPage(4);
+        pnAttachmentInfo.setDocumentType("");
+        pnAttachmentInfo.setUrl("");
+        attachmentUrls.add(pnAttachmentInfo);
+        attachmentUrls.add(aar);
+
+        Integer numberOfPages = paperCalculatorUtils.getNumberOfPages(attachmentUrls, true, true);
+        System.out.println(numberOfPages);
+        assertEquals(3, numberOfPages);
+    }
+
+    //(numero di pagine degli atti 4, ma reversPrinter=true per cui 2 effettive)
+    @Test
+    void getNumberOfPagesIncludeAARFalseTest() {
+        List<AttachmentInfo> attachmentUrls = new ArrayList<>();
+        AttachmentInfo aar = new AttachmentInfo();
+        aar.setDate("");
+        aar.setFileKey("http://localhost:8080");
+        aar.setId("");
+        aar.setNumberOfPage(1);
+        aar.setDocumentType(Const.PN_AAR);
+        aar.setUrl("");
+        AttachmentInfo pnAttachmentInfo = new AttachmentInfo();
+        pnAttachmentInfo.setDate("");
+        pnAttachmentInfo.setFileKey("http://localhost:8080");
+        pnAttachmentInfo.setId("");
+        pnAttachmentInfo.setNumberOfPage(4);
+        pnAttachmentInfo.setDocumentType("");
+        pnAttachmentInfo.setUrl("");
+        attachmentUrls.add(pnAttachmentInfo);
+        attachmentUrls.add(aar);
+
+        Integer numberOfPages = paperCalculatorUtils.getNumberOfPages(attachmentUrls, true, false);
+        System.out.println(numberOfPages);
+        assertEquals(2, numberOfPages);
     }
 
 
