@@ -7,6 +7,7 @@ import it.pagopa.pn.commons.log.PnAuditLogEventType;
 import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnF24FlowException;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnf24.v1.dto.NumberOfPagesResponseDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ProductTypeEnum;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
 import it.pagopa.pn.paperchannel.mapper.AttachmentMapper;
@@ -79,33 +80,64 @@ public class F24ServiceImpl extends GenericService implements F24Service {
 
     @Override
     public Mono<PnDeliveryRequest> preparePDF(PnDeliveryRequest deliveryRequest) {
-        Optional<PnAttachmentInfo> optF24Attachment = getF24PnAttachmentInfo(deliveryRequest);
 
-        return optF24Attachment.map(pnAttachmentInfo -> parseF24URL(pnAttachmentInfo.getFileKey())
-                    .flatMap(f24AttachmentInfo -> enrichWithAnalogCostIfNeeded(deliveryRequest, f24AttachmentInfo))
-                    .doOnSuccess(f24AttachmentInfo -> logAuditBefore("preparePDF requestId = %s, relatedRequestId = %s engaging F24 ", deliveryRequest))
-                    .flatMap(f24AttachmentInfo -> f24Client.preparePDF(deliveryRequest.getRequestId(), f24AttachmentInfo.getSetId(), f24AttachmentInfo.getRecipientIndex(), sumCostAndAnalogCost(f24AttachmentInfo)).thenReturn(f24AttachmentInfo))
-                    .doOnNext(f24AttachmentInfo -> logAuditSuccess("preparePDF requestId = %s, relatedRequestId = %s successfully sent to F24", deliveryRequest))
-                    .map(f24AttachmentInfo -> {
-                        RequestDeliveryMapper.changeState(
-                                deliveryRequest,
-                                F24_WAITING.getCode(),
-                                F24_WAITING.getDescription(),
-                                F24_WAITING.getDetail(),
-                                deliveryRequest.getProductType(),
-                                null
-                        );
-                        deliveryRequest.setCost(f24AttachmentInfo.getAnalogCost());
-                        getF24PnAttachmentInfo(deliveryRequest).ifPresent(d -> d.setDocumentType(DOCUMENT_TYPE_F24_SET));
+        PnAttachmentInfo f24Attachment = getF24PnAttachmentInfo(deliveryRequest).orElseGet(() -> {
+            log.fatal("URL f24set is required and should exist");
+            throw new PnInternalException("missing URL f24set on f24serviceImpl", PnExceptionsCodes.ERROR_CODE_PN_GENERIC_ERROR);
+        });
 
-                        return deliveryRequest;
-                    })
-                    .flatMap(this.requestDeliveryDAO::updateData)
-                    .onErrorResume(ex -> catchThrowableAndThrowPnF24FlowException(ex, deliveryRequest.getIun(), deliveryRequest.getRequestId(), deliveryRequest.getRelatedRequestId())))
-                .orElseGet(() -> {
-                    log.fatal("URL f24set is required and should exist");
-                    return Mono.error(new PnInternalException("missing URL f24set on f24serviceImpl", PnExceptionsCodes.ERROR_CODE_PN_GENERIC_ERROR));
-                });
+        f24Attachment.setDocumentType(DOCUMENT_TYPE_F24_SET);
+
+        return this.parseF24URL(f24Attachment.getFileKey())
+
+                /* Retrieve F24 number of pages */
+                .doOnNext(f24AttachmentInfo -> logAuditBefore("getNumberOfPages requestId = %s, relatedRequestId = %s engaging F24 ", deliveryRequest))
+                .zipWhen(f24AttachmentInfo -> f24Client.getNumberOfPages(f24AttachmentInfo.getSetId(), f24AttachmentInfo.getRecipientIndex()))
+                .doOnNext(f24AttachmentInfoAndNumberOfPagesTuple -> logAuditSuccess("getNumberOfPages requestId = %s, relatedRequestId = %s successfully sent to F24", deliveryRequest))
+
+                /* Enrich original F24 attachment number of pages field */
+                .map(f24AttachmentInfoAndNumberOfPagesTuple -> {
+                    F24AttachmentInfo f24AttachmentInfo = f24AttachmentInfoAndNumberOfPagesTuple.getT1();
+                    NumberOfPagesResponseDto numberOfPagesResponseDto = f24AttachmentInfoAndNumberOfPagesTuple.getT2();
+
+                    f24Attachment.setNumberOfPage(numberOfPagesResponseDto.getNumberOfPages());
+                    return f24AttachmentInfo;
+                })
+
+                /* Zip to produce a Tuple<F24AttachmentInfo, Integer (aka Analog Cost)> */
+                .zipWhen(f24AttachmentInfo -> enrichWithAnalogCostIfNeeded(deliveryRequest, f24Attachment))
+
+                /* Enrich F24AttachmentInfo with analog cost and propagate itØ */
+                .map(f24AttachmentInfoAndAnalogCost -> {
+                    F24AttachmentInfo f24AttachmentInfo = f24AttachmentInfoAndAnalogCost.getT1();
+                    Integer analogCost = f24AttachmentInfoAndAnalogCost.getT2();
+
+                    f24AttachmentInfo.setAnalogCost(analogCost);
+                    return f24AttachmentInfo;
+                })
+
+                /* Call preparePDF request API and propagate Analog Cost */
+                .doOnSuccess(f24AttachmentInfo -> logAuditBefore("preparePDF requestId = %s, relatedRequestId = %s engaging F24 ", deliveryRequest))
+                .flatMap(f24AttachmentInfo -> f24Client.preparePDF(deliveryRequest.getRequestId(), f24AttachmentInfo.getSetId(), f24AttachmentInfo.getRecipientIndex(), sumCostAndAnalogCost(f24AttachmentInfo)).thenReturn(f24AttachmentInfo.getAnalogCost()))
+                .doOnNext(f24AttachmentInfo -> logAuditSuccess("preparePDF requestId = %s, relatedRequestId = %s successfully sent to F24", deliveryRequest))
+
+                /* Insert Analog Cost in delivery request */
+                .map(analogCost -> {
+                    RequestDeliveryMapper.changeState(
+                            deliveryRequest,
+                            F24_WAITING.getCode(),
+                            F24_WAITING.getDescription(),
+                            F24_WAITING.getDetail(),
+                            deliveryRequest.getProductType(),
+                            null
+                    );
+                    deliveryRequest.setCost(analogCost);
+                    return deliveryRequest;
+                })
+
+                /* Update delivery request on database */
+                .flatMap(this.requestDeliveryDAO::updateData)
+                .onErrorResume(ex -> catchThrowableAndThrowPnF24FlowException(ex, deliveryRequest.getIun(), deliveryRequest.getRequestId(), deliveryRequest.getRelatedRequestId()));
     }
 
     @Override
@@ -157,11 +189,11 @@ public class F24ServiceImpl extends GenericService implements F24Service {
         return f24AttachmentInfo.getCost()==null? null: f24AttachmentInfo.getCost() + f24AttachmentInfo.getAnalogCost();
     }
 
-    private Mono<F24AttachmentInfo> enrichWithAnalogCostIfNeeded(PnDeliveryRequest deliveryRequest, F24AttachmentInfo attachmentInfo){
+    private Mono<Integer> enrichWithAnalogCostIfNeeded(PnDeliveryRequest deliveryRequest, PnAttachmentInfo pnAttachmentInfo){
         logAuditBefore("preparePDF requestId = %s, relatedRequestId = %s prepare F24", deliveryRequest);
 
-        if (attachmentInfo.getCost() != null && attachmentInfo.getCost() > 0)
-        {
+        // TODO forse meglio fare un controllo sul numero di pagine visto che ora ce le abbiamo?
+        if (pnAttachmentInfo.getNumberOfPage() != null && pnAttachmentInfo.getNumberOfPage() > 0) {
             return addressDAO.findByRequestId(deliveryRequest.getRequestId())
                     .switchIfEmpty(Mono.defer(() -> {
                         logAuditSuccess("preparePDF requestId = %s, relatedRequestId = %s Receiver address is not present on DB!!", deliveryRequest);
@@ -173,16 +205,12 @@ public class F24ServiceImpl extends GenericService implements F24Service {
                             receiverAddress,
                             ProductTypeEnum.fromValue(deliveryRequest.getProductType()),
                             StringUtils.equals(deliveryRequest.getPrintType(), Const.BN_FRONTE_RETRO)))
-                    .map(analogCost -> {
-                        // aggiorno il costo
-                        attachmentInfo.setAnalogCost(Utility.toCentsFormat(analogCost));
-                        return  attachmentInfo;
-                    })
-                    .doOnNext(pnAddress -> logAuditSuccess("preparePDF requestId = %s, relatedRequestId = %s Receiver address is present on DB, computed cost " + attachmentInfo.getAnalogCost(), deliveryRequest));
+                    .map(Utility::toCentsFormat)
+                    .doOnNext(analogCost -> logAuditSuccess("preparePDF requestId = %s, relatedRequestId = %s Receiver address is present on DB, computed cost " + analogCost, deliveryRequest));
         }
-        else
-            return Mono.just(attachmentInfo)
-                    .doOnNext(pnAddress -> logAuditSuccess("preparePDF requestId = %s, relatedRequestId = %s Receiver no need to compute cost, using null ", deliveryRequest));
+
+        logAuditSuccess("preparePDF requestId = %s, relatedRequestId = %s Receiver no need to compute cost, using null ", deliveryRequest);
+        return Mono.empty();
     }
 
     private Mono<F24AttachmentInfo> parseF24URL(String f24url) {
@@ -215,6 +243,7 @@ public class F24ServiceImpl extends GenericService implements F24Service {
     private static class F24AttachmentInfo{
         private Integer cost;
         private Integer analogCost;
+        private Integer numberOfPage;
         private String setId;
         private String recipientIndex;
     }
