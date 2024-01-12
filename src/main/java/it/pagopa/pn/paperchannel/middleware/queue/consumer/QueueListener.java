@@ -168,10 +168,10 @@ public class QueueListener {
                         pnLogAudit.addsBeforeDiscard(entity.getIun(), String.format("requestId = %s finish retry f24 error ?", entity.getRequestId()));
 
                         paperRequestErrorDAO.created(
-                                        entity.getRequestId(),
-                                        F24_ERROR.getMessage(),
-                                        EventTypeEnum.F24_ERROR.name())
-                                .subscribe();
+                                entity.getRequestId(),
+                                entity.getMessage(),
+                                EventTypeEnum.F24_ERROR.name()).subscribe();
+
                         pnLogAudit.addsSuccessDiscard(entity.getIun(), String.format("requestId = %s finish retry f24 error", entity.getRequestId()));
                         return null;
                     },
