@@ -314,13 +314,9 @@ Parameters:
     Type: String
     Description: 'Send and pull requests in this queue'
 
-  ChargeCalculationMode:
+  DateChargeCalculationModes:
     Type: String
-    Description: 'Variable that determines the amount. It can be AAR or COMPLETE'
-    Default: 'AAR'
-    AllowedValues:
-      - AAR
-      - COMPLETE
+    Description: 'Variable that determines which calculation mode to use,  in startConfigurationTime;calculationMode format.'
 
   # OpenApi Bucket params
   MicroserviceBucketName:
@@ -527,7 +523,7 @@ Resources:
         ContainerEnvEntry42: !Sub 'PN_PAPERCHANNEL_LETTERWEIGHT=${LetterWeight}'
         ContainerEnvEntry43: !Sub 'PN_PAPERCHANNEL_CLIENTADDRESSMANAGERBASEPATH=${AddressManagerBaseUrl}'
         ContainerEnvEntry44: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERCXID=${AddressManagerCxId}'
-        ContainerEnvEntry45: !Sub 'PN_PAPERCHANNEL_CHARGECALCULATIONMODE=${ChargeCalculationMode}'
+        ContainerEnvEntry45: !Sub 'PN_PAPERCHANNEL_DATECHARGECALCULATIONMODES=${DateChargeCalculationModes}'
         ContainerEnvEntry46: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUEADDRESSMANAGER=${AttemptQueueAddressManager}'
         ContainerEnvEntry47: !Sub 'PN_PAPERCHANNEL_PNADDR001SENDD01TODELIVERYPUSH=${Pnaddr001SendD01ToDeliveryPush}'
         ContainerEnvEntry48: !Sub 'PN_PAPERCHANNEL_PNADDR002SENDD01TODELIVERYPUSH=${Pnaddr002SendD01ToDeliveryPush}'
