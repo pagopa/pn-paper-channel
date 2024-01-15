@@ -17,10 +17,7 @@ import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.service.F24Service;
 import it.pagopa.pn.paperchannel.service.PaperTenderService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
-import it.pagopa.pn.paperchannel.utils.ChargeCalculationModeEnum;
-import it.pagopa.pn.paperchannel.utils.Const;
-import it.pagopa.pn.paperchannel.utils.PaperCalculatorUtils;
-import it.pagopa.pn.paperchannel.utils.Utility;
+import it.pagopa.pn.paperchannel.utils.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -62,6 +59,8 @@ class F24ServiceImplTest {
     private PaperTenderService paperTenderService;
     @MockBean
     private PnPaperChannelConfig pnPaperChannelConfig;
+    @MockBean
+    private DateChargeCalculationModesUtils dateChargeCalculationModesUtils;
     @MockBean
     private SqsSender sqsSender;
     @MockBean
@@ -118,7 +117,7 @@ class F24ServiceImplTest {
         numberOfPagesResponseDto.setNumberOfPages(numberOfPages);
 
         // When
-        Mockito.when(pnPaperChannelConfig.getChargeCalculationMode()).thenReturn(chargeCalculationModeEnum);
+        Mockito.when(dateChargeCalculationModesUtils.getChargeCalculationMode()).thenReturn(chargeCalculationModeEnum);
         Mockito.when(pnPaperChannelConfig.getPaperWeight()).thenReturn(paperWeight);
         Mockito.when(pnPaperChannelConfig.getLetterWeight()).thenReturn(letterWeight);
 
@@ -152,7 +151,7 @@ class F24ServiceImplTest {
         numberOfPagesResponseDto.setNumberOfPages(10);
 
         // When
-        Mockito.when(pnPaperChannelConfig.getChargeCalculationMode()).thenReturn(calculationMode);
+        Mockito.when(dateChargeCalculationModesUtils.getChargeCalculationMode()).thenReturn(calculationMode);
         Mockito.when(addressDAO.findByRequestId(Mockito.anyString())).thenReturn(Mono.just(getPnAddress(requestid)));
         Mockito.when(requestDeliveryDAO.updateData(Mockito.any())).thenAnswer(i -> Mono.just(i.getArguments()[0]));
 
@@ -182,7 +181,7 @@ class F24ServiceImplTest {
         numberOfPagesResponseDto.setNumberOfPages(10);
 
         // When
-        Mockito.when(pnPaperChannelConfig.getChargeCalculationMode()).thenReturn(calculationMode);
+        Mockito.when(dateChargeCalculationModesUtils.getChargeCalculationMode()).thenReturn(calculationMode);
         Mockito.when(addressDAO.findByRequestId(Mockito.anyString())).thenReturn(Mono.just(getPnAddress(requestid)));
         Mockito.when(requestDeliveryDAO.updateData(Mockito.any())).thenAnswer(i -> Mono.just(i.getArguments()[0]));
 
@@ -342,6 +341,4 @@ class F24ServiceImplTest {
         dto.setPriceAdditional(BigDecimal.valueOf(2.00));
         return dto;
     }
-
-
 }

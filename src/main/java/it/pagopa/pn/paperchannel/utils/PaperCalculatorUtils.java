@@ -29,6 +29,7 @@ public class PaperCalculatorUtils {
 
     private final PaperTenderService paperTenderService;
     private final PnPaperChannelConfig pnPaperChannelConfig;
+    private final DateChargeCalculationModesUtils chargeCalculationModeUtils;
 
     public Mono<BigDecimal> calculator(List<AttachmentInfo> attachments, Address address, ProductTypeEnum productType, boolean isReversePrinter){
         boolean isNational = StringUtils.isBlank(address.getCountry()) ||
@@ -59,9 +60,11 @@ public class PaperCalculatorUtils {
     private Mono<BigDecimal> getAmount(List<AttachmentInfo> attachments, String cap, String zone, String productType, boolean isReversePrinter){
         String processName = "Get Amount";
         log.logStartingProcess(processName);
+        var calculationModeEnum = chargeCalculationModeUtils.getChargeCalculationMode();
+        log.debug("calculationMode found: {}", calculationModeEnum);
         return paperTenderService.getCostFrom(cap, zone, productType)
                 .map(contract ->
-                    switch (pnPaperChannelConfig.getChargeCalculationMode()) {
+                    switch (calculationModeEnum) {
                         case AAR -> contract.getPrice();
                         case COMPLETE -> getPriceForCOMPLETEMode(attachments, contract, isReversePrinter);
                     }

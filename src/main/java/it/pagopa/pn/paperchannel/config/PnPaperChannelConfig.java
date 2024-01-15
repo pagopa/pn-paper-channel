@@ -1,7 +1,7 @@
 package it.pagopa.pn.paperchannel.config;
 
 import it.pagopa.pn.commons.conf.SharedAutoConfiguration;
-import it.pagopa.pn.paperchannel.utils.ChargeCalculationModeEnum;
+import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -55,7 +55,7 @@ public class PnPaperChannelConfig {
     private Long ttlExecutionDaysDemat;
     private Integer paperWeight;
     private Integer letterWeight;
-    private ChargeCalculationModeEnum chargeCalculationMode;
+    private List<String> dateChargeCalculationModes;
     private Duration refinementDuration;
     private String requestPaIdOverride;
 
