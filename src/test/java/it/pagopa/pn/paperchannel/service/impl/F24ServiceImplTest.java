@@ -16,10 +16,7 @@ import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.service.F24Service;
 import it.pagopa.pn.paperchannel.service.PaperTenderService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
-import it.pagopa.pn.paperchannel.utils.ChargeCalculationModeEnum;
-import it.pagopa.pn.paperchannel.utils.Const;
-import it.pagopa.pn.paperchannel.utils.PaperCalculatorUtils;
-import it.pagopa.pn.paperchannel.utils.Utility;
+import it.pagopa.pn.paperchannel.utils.*;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -55,6 +52,8 @@ class F24ServiceImplTest {
     @MockBean
     private PnPaperChannelConfig pnPaperChannelConfig;
     @MockBean
+    private DateChargeCalculationModesUtils dateChargeCalculationModesUtils;
+    @MockBean
     private SqsSender sqsSender;
     @MockBean
     private F24Client f24Client;
@@ -77,7 +76,7 @@ class F24ServiceImplTest {
         String requestid = "REQUESTID";
         PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest(requestid, StatusDeliveryEnum.IN_PROCESSING);
 
-        Mockito.when(pnPaperChannelConfig.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.AAR);
+        Mockito.when(dateChargeCalculationModesUtils.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.AAR);
         Mockito.when(addressDAO.findByRequestId(requestid)).thenReturn(Mono.just(getPnAddress(requestid)));
         Mockito.when(requestDeliveryDAO.updateData(Mockito.any())).thenAnswer(i -> Mono.just(i.getArguments()[0]));
         Mockito.when(f24Client.preparePDF(requestid, pnDeliveryRequest.getIun(), "1", 200)).thenReturn(Mono.just(new RequestAcceptedDto()));

@@ -16,7 +16,7 @@ public class DateChargeCalculationModesUtils {
 
     private static final String SEPARATOR = ";";
     private static final int START_DATE_INDEX = 0;
-    private static final int CALCULATION_MODE_INDEX = 0;
+    private static final int CALCULATION_MODE_INDEX = 1;
 
     private final List<DateChargeCalculationMode> dateChargeCalculationModes;
 

@@ -30,6 +30,8 @@ class PaperCalculatorUtilsTest {
     private PaperTenderService paperTenderService;
     @Mock
     private PnPaperChannelConfig pnPaperChannelConfig;
+    @Mock
+    private DateChargeCalculationModesUtils dateChargeCalculationModesUtils;
 
     @Test
     void calculator() {
@@ -37,7 +39,7 @@ class PaperCalculatorUtilsTest {
         Mockito.when(paperTenderService.getCostFrom(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(getNationalCost()));
 
-        Mockito.when(pnPaperChannelConfig.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.AAR);
+        Mockito.when(dateChargeCalculationModesUtils.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.AAR);
 
         List<AttachmentInfo> attachmentUrls = new ArrayList<>();
         AttachmentInfo pnAttachmentInfo = new AttachmentInfo();
@@ -82,7 +84,7 @@ class PaperCalculatorUtilsTest {
                 .thenReturn(Mono.just(getNationalCost()));
 
 
-        Mockito.when(pnPaperChannelConfig.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.COMPLETE);
+        Mockito.when(dateChargeCalculationModesUtils.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.COMPLETE);
         Mockito.when(pnPaperChannelConfig.getPaperWeight()).thenReturn(5);
         Mockito.when(pnPaperChannelConfig.getLetterWeight()).thenReturn(5);
 
@@ -124,7 +126,7 @@ class PaperCalculatorUtilsTest {
                 .thenReturn(Mono.just(getNationalCost()));
 
 
-        Mockito.when(pnPaperChannelConfig.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.COMPLETE);
+        Mockito.when(dateChargeCalculationModesUtils.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.COMPLETE);
         Mockito.when(pnPaperChannelConfig.getPaperWeight()).thenReturn(5);
         Mockito.when(pnPaperChannelConfig.getLetterWeight()).thenReturn(5);
 
@@ -167,7 +169,7 @@ class PaperCalculatorUtilsTest {
                 .thenReturn(Mono.just(getNationalCost()));
 
 
-        Mockito.when(pnPaperChannelConfig.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.COMPLETE);
+        Mockito.when(dateChargeCalculationModesUtils.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.COMPLETE);
         Mockito.when(pnPaperChannelConfig.getPaperWeight()).thenReturn(5);
         Mockito.when(pnPaperChannelConfig.getLetterWeight()).thenReturn(5);
 
@@ -209,7 +211,7 @@ class PaperCalculatorUtilsTest {
                 .thenReturn(Mono.just(getNationalCost()));
 
 
-        Mockito.when(pnPaperChannelConfig.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.COMPLETE);
+        Mockito.when(dateChargeCalculationModesUtils.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.COMPLETE);
         Mockito.when(pnPaperChannelConfig.getPaperWeight()).thenReturn(5);
         Mockito.when(pnPaperChannelConfig.getLetterWeight()).thenReturn(5);
 
@@ -228,7 +230,7 @@ class PaperCalculatorUtilsTest {
         Mockito.when(paperTenderService.getZoneFromCountry(Mockito.any()))
                 .thenReturn(Mono.just("ZONE_1"));
 
-        Mockito.when(pnPaperChannelConfig.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.AAR);
+        Mockito.when(dateChargeCalculationModesUtils.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.AAR);
 
         List<AttachmentInfo> attachmentUrls = new ArrayList<>();
         AttachmentInfo pnAttachmentInfo = new AttachmentInfo();
