@@ -58,6 +58,10 @@ public class F24ClientImpl implements F24Client {
     public Mono<NumberOfPagesResponseDto> getNumberOfPages(String setId, String recipientIndex) {
         log.logInvokingExternalService(F24_EXTERNAL_SERVICE, F_24_GET_NUMBER_PAGES_DESCRIPTION);
 
-        return this.apiService.getTotalNumberOfPages(setId, List.of(recipientIndex));
+        return this.apiService.getTotalNumberOfPages(setId, List.of(recipientIndex))
+                .onErrorResume(ex -> {
+                    log.error("Error while getting number of pages from F24 service", ex);
+                    return Mono.error(ex);
+                });
     }
 }

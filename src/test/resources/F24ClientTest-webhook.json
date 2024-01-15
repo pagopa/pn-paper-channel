@@ -15,31 +15,76 @@
         "status": "OK"
       }
     }
-  },{
-  "httpRequest": {
-    "path": "/f24-private/prepare/REQUESTIDCONFLICT",
-    "method": "POST"
   },
-  "httpResponse": {
-    "statusCode": 409,
-    "headers": {
-      "content-type": [
-        "application/json"
-      ]
+  {
+    "httpRequest": {
+      "path": "/f24-private/prepare/REQUESTIDCONFLICT",
+      "method": "POST"
     },
-    "body": {
-      "status": 409,
-      "title": "Conflict",
-      "detail": "Conflict",
-      "traceId": "123e4567-e89b-12d3-a456-426614174000",
-      "errors": [
-        {
-          "code": "123-4567",
-          "element": null,
-          "detail": "Conflict"
-        }
-      ]
+    "httpResponse": {
+      "statusCode": 409,
+      "headers": {
+        "content-type": [
+          "application/json"
+        ]
+      },
+      "body": {
+        "status": 409,
+        "title": "Conflict",
+        "detail": "Conflict",
+        "traceId": "123e4567-e89b-12d3-a456-426614174000",
+        "errors": [
+          {
+            "code": "123-4567",
+            "element": null,
+            "detail": "Conflict"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "path": "/f24-private/pdf/SETID/number-of-pages",
+      "method": "GET"
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "content-type": [
+          "application/json"
+        ]
+      },
+      "body": {
+        "numberOfPages": "10"
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "path": "/f24-private/pdf/BADSETID/number-of-pages",
+      "method": "GET"
+    },
+    "httpResponse": {
+      "statusCode": 500,
+      "headers": {
+        "content-type": [
+          "application/json"
+        ]
+      },
+      "body": {
+        "status": 500,
+        "title": "Internal Server Error",
+        "detail": "Unexpected error occurs",
+        "traceId": "123e4567-e89b-12d3-a456-426614174000",
+        "errors": [
+          {
+            "code": "123-4567",
+            "element": null,
+            "detail": "Unexpected error occurs"
+          }
+        ]
+      }
     }
   }
-}
 ]

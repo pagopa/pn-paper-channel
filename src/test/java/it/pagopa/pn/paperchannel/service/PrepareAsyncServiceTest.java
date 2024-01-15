@@ -28,6 +28,7 @@ import it.pagopa.pn.paperchannel.model.KOReason;
 import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.service.impl.PrepareAsyncServiceImpl;
+import it.pagopa.pn.paperchannel.utils.DateUtils;
 import it.pagopa.pn.paperchannel.utils.PaperCalculatorUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.junit.jupiter.api.*;
@@ -45,14 +46,14 @@ import reactor.test.StepVerifier;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.F24_WAITING;
 import static it.pagopa.pn.paperchannel.utils.Const.RACCOMANDATA_SEMPLICE;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
 class PrepareAsyncServiceTest {
@@ -216,6 +217,61 @@ class PrepareAsyncServiceTest {
                 }).verify();
     }
 
+    @Test
+    @DisplayName("testPrepareAsyncTestWithF24AttachmentSuccess")
+    void testPrepareAsyncTestWithF24AttachmentSuccess() {
+
+        // Given
+        String requestId = "RequestID";
+        String iun = "IUN1234";
+
+        request.setRequestId(requestId);
+        request.setF24ResponseFlow(false);
+
+        PnDeliveryRequest deliveryRequest = getDeliveryRequest();
+
+        deliveryRequest.setRequestId(request.getRequestId());
+        deliveryRequest.setIun(iun);
+
+        PnAttachmentInfo f24Attachment = new PnAttachmentInfo();
+        f24Attachment.setUrl("safestorage://1");
+        f24Attachment.setFileKey("1");
+        f24Attachment.setGeneratedFrom(String.format("f24set://%s/1?cost=10", iun));
+
+        deliveryRequest.getAttachments().add(f24Attachment);
+
+        PnAttachmentInfo aarAttachment = new PnAttachmentInfo();
+        aarAttachment.setUrl("safestorage://2");
+        aarAttachment.setFileKey("2");
+        aarAttachment.setGeneratedFrom("safestorage://PN_AAR-12345.pdf");
+        aarAttachment.setNumberOfPage(10);
+        deliveryRequest.getAttachments().add(aarAttachment);
+
+        PnDeliveryRequest updatedDeliveryRequest = new PnDeliveryRequest();
+        updatedDeliveryRequest.setRequestId(request.getRequestId());
+        updatedDeliveryRequest.setStatusCode(F24_WAITING.getCode());
+        updatedDeliveryRequest.setStatusDescription(F24_WAITING.getDescription());
+        updatedDeliveryRequest.setStatusDetail(F24_WAITING.getDetail());
+        updatedDeliveryRequest.setProposalProductType(deliveryRequest.getProposalProductType());
+        updatedDeliveryRequest.setStatusDate(DateUtils.formatDate(Instant.now()));
+
+        // When
+        Mockito.when(this.requestDeliveryDAO.getByRequestId(Mockito.anyString(), Mockito.anyBoolean())).thenReturn(Mono.just(deliveryRequest));
+        Mockito.when(this.paperAddressService.getCorrectAddress(Mockito.any(PnDeliveryRequest.class), Mockito.any(Address.class), Mockito.any(PrepareAsyncRequest.class))).thenReturn(Mono.just(new Address()));
+        Mockito.when(this.addressDAO.create(Mockito.any(PnAddress.class))).thenReturn(Mono.just(new PnAddress()));
+
+        Mockito.when(this.f24Service.checkDeliveryRequestAttachmentForF24(Mockito.any(PnDeliveryRequest.class))).thenReturn(true);
+        Mockito.when(this.f24Service.preparePDF(Mockito.any(PnDeliveryRequest.class))).thenReturn(Mono.just(updatedDeliveryRequest));
+
+        PnDeliveryRequest res = this.prepareAsyncService.prepareAsync(request).block();
+
+        // Then
+        assertNotNull(res);
+        assertEquals(F24_WAITING.getCode(), res.getStatusCode());
+        assertEquals(F24_WAITING.getDescription(), res.getStatusDescription());
+        assertEquals(F24_WAITING.getDetail(), res.getStatusDetail());
+    }
+
 
     @Test
     @DisplayName("prepareAsyncTestF24Flow")
@@ -316,6 +372,15 @@ class PrepareAsyncServiceTest {
     }
 
     private PnDeliveryRequest getDeliveryRequest(){
+        pnDeliveryRequest.setRequestId("FATY-FATY-2023041520230302");
+        pnDeliveryRequest.setIun("FATY-FATY-2023041520230302-101111");
+        pnDeliveryRequest.setProposalProductType(RACCOMANDATA_SEMPLICE);
+        List<PnAttachmentInfo> attachmentInfoList = new ArrayList<>();
+        pnDeliveryRequest.setAttachments(attachmentInfoList);
+        return pnDeliveryRequest;
+    }
+
+    private PnDeliveryRequest getF24WaitingDeliveryRequest(){
         pnDeliveryRequest.setRequestId("FATY-FATY-2023041520230302");
         pnDeliveryRequest.setIun("FATY-FATY-2023041520230302-101111");
         pnDeliveryRequest.setProposalProductType(RACCOMANDATA_SEMPLICE);
