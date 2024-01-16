@@ -58,6 +58,7 @@ public class PnPaperChannelConfig {
     private List<String> dateChargeCalculationModes;
     private Duration refinementDuration;
     private String requestPaIdOverride;
+    private Long maxMegabyteInMemory;
 
     /**
      * Per l'errore PNADDR001: True se il failureDetailCode D01 deve essere mandato a delivery push (specificando anche l'indirizzo),

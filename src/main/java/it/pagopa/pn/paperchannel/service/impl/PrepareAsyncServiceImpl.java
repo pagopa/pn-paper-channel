@@ -55,11 +55,12 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
     private final PaperAddressService paperAddressService;
     private final PaperCalculatorUtils paperCalculatorUtils;
     private final F24Service f24Service;
+    private final HttpConnector httpConnector;
 
     public PrepareAsyncServiceImpl(PnAuditLogBuilder auditLogBuilder, NationalRegistryClient nationalRegistryClient,
                                    RequestDeliveryDAO requestDeliveryDAO, SqsSender sqsQueueSender, CostDAO costDAO,
                                    SafeStorageClient safeStorageClient, AddressDAO addressDAO, PnPaperChannelConfig paperChannelConfig,
-                                   PaperRequestErrorDAO paperRequestErrorDAO, PaperAddressService paperAddressService, PaperCalculatorUtils paperCalculatorUtils, F24Service f24Service) {
+                                   PaperRequestErrorDAO paperRequestErrorDAO, PaperAddressService paperAddressService, PaperCalculatorUtils paperCalculatorUtils, F24Service f24Service, HttpConnector httpConnector) {
         super(auditLogBuilder, requestDeliveryDAO, costDAO, nationalRegistryClient, sqsQueueSender);
         this.safeStorageClient = safeStorageClient;
         this.addressDAO = addressDAO;
@@ -68,6 +69,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
         this.paperAddressService = paperAddressService;
         this.paperCalculatorUtils = paperCalculatorUtils;
         this.f24Service = f24Service;
+        this.httpConnector = httpConnector;
     }
 
     @Override
@@ -79,7 +81,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
         final String requestId = request.getRequestId();
         Address addressFromNationalRegistry = request.getAddress();
 
-        Mono<PnDeliveryRequest> requestDeliveryEntityMono = null;
+        Mono<PnDeliveryRequest> requestDeliveryEntityMono;
         if (correlationId!= null) {
             log.info("Start async for {} correlation id", request.getCorrelationId());
             requestDeliveryEntityMono = requestDeliveryDAO.getByCorrelationId(correlationId, true);
@@ -256,7 +258,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                     info.setGeneratedFrom(fileResponseAndOrigAttachment.getT2().getGeneratedFrom()); // preservo l'eventuale generatedFrom
                     if (info.getUrl() == null)
                         return Flux.error(new PnGenericException(INVALID_SAFE_STORAGE, INVALID_SAFE_STORAGE.getMessage()));
-                    return HttpConnector.downloadFile(info.getUrl())
+                    return httpConnector.downloadFile(info.getUrl(), fileResponseAndOrigAttachment.getT1().getContentLength())
                             .map(pdDocument -> {
                                 try {
                                     if (pdDocument.getDocumentInformation() != null && pdDocument.getDocumentInformation().getCreationDate() != null) {
