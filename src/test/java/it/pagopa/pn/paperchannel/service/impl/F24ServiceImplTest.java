@@ -65,6 +65,8 @@ class F24ServiceImplTest {
     private SqsSender sqsSender;
     @MockBean
     private F24Client f24Client;
+    @MockBean
+    private AttachmentUtils attachmentUtils;
 
     @Test
     @DisplayName("checkDeliveryRequestAttachmentForF24")
@@ -116,6 +118,8 @@ class F24ServiceImplTest {
         NumberOfPagesResponseDto numberOfPagesResponseDto = new NumberOfPagesResponseDto();
         numberOfPagesResponseDto.setNumberOfPages(numberOfPages);
 
+        PnDeliveryRequest enrichedPnDeliveryRequest = getDeliveryRequestWithPages(requestid, StatusDeliveryEnum.IN_PROCESSING, 10, numberOfPages);
+
         // When
         Mockito.when(dateChargeCalculationModesUtils.getChargeCalculationMode()).thenReturn(chargeCalculationModeEnum);
         Mockito.when(pnPaperChannelConfig.getPaperWeight()).thenReturn(paperWeight);
@@ -125,6 +129,7 @@ class F24ServiceImplTest {
         Mockito.when(requestDeliveryDAO.updateData(Mockito.any())).thenAnswer(i -> Mono.just(i.getArguments()[0]));
 
         Mockito.when(f24Client.getNumberOfPages(Mockito.anyString(), Mockito.anyString())).thenReturn(Mono.just(numberOfPagesResponseDto));
+        Mockito.when(attachmentUtils.enrichAttachmentInfos(Mockito.any(PnDeliveryRequest.class), Mockito.anyBoolean())).thenReturn(Mono.just(enrichedPnDeliveryRequest));
         Mockito.when(f24Client.preparePDF(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyInt())).thenReturn(Mono.just(new RequestAcceptedDto()));
 
         Mockito.when(paperTenderService.getCostFrom(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(Mono.just(getNationalCost()));
@@ -144,11 +149,15 @@ class F24ServiceImplTest {
 
         // Given
         String requestid = "REQUESTID";
+        Integer f24NumberOfPages = 10;
+
         PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest(requestid, StatusDeliveryEnum.IN_PROCESSING, null);
         pnDeliveryRequest.getAttachments().get(0).setFileKey("f24set://IUN123/1");
 
         NumberOfPagesResponseDto numberOfPagesResponseDto = new NumberOfPagesResponseDto();
-        numberOfPagesResponseDto.setNumberOfPages(10);
+        numberOfPagesResponseDto.setNumberOfPages(f24NumberOfPages);
+
+        PnDeliveryRequest enrichedPnDeliveryRequest = getDeliveryRequestWithPages(requestid, StatusDeliveryEnum.IN_PROCESSING, 10, f24NumberOfPages);
 
         // When
         Mockito.when(dateChargeCalculationModesUtils.getChargeCalculationMode()).thenReturn(calculationMode);
@@ -156,6 +165,7 @@ class F24ServiceImplTest {
         Mockito.when(requestDeliveryDAO.updateData(Mockito.any())).thenAnswer(i -> Mono.just(i.getArguments()[0]));
 
         Mockito.when(f24Client.getNumberOfPages(Mockito.anyString(), Mockito.anyString())).thenReturn(Mono.just(numberOfPagesResponseDto));
+        Mockito.when(attachmentUtils.enrichAttachmentInfos(Mockito.any(PnDeliveryRequest.class), Mockito.anyBoolean())).thenReturn(Mono.just(enrichedPnDeliveryRequest));
         Mockito.when(f24Client.preparePDF(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.any())).thenReturn(Mono.just(new RequestAcceptedDto()));
 
         Mockito.when(paperTenderService.getCostFrom(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(Mono.just(getNationalCost()));
@@ -174,11 +184,14 @@ class F24ServiceImplTest {
 
         // Given
         String requestid = "REQUESTID";
+        Integer f24NumberOfPages = 10;
         PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest(requestid, StatusDeliveryEnum.IN_PROCESSING, 0);
         pnDeliveryRequest.getAttachments().get(0).setFileKey("f24set://IUN123/1?cost=0");
 
         NumberOfPagesResponseDto numberOfPagesResponseDto = new NumberOfPagesResponseDto();
-        numberOfPagesResponseDto.setNumberOfPages(10);
+        numberOfPagesResponseDto.setNumberOfPages(f24NumberOfPages);
+
+        PnDeliveryRequest enrichedPnDeliveryRequest = getDeliveryRequestWithPages(requestid, StatusDeliveryEnum.IN_PROCESSING, 10, f24NumberOfPages);
 
         // When
         Mockito.when(dateChargeCalculationModesUtils.getChargeCalculationMode()).thenReturn(calculationMode);
@@ -186,6 +199,7 @@ class F24ServiceImplTest {
         Mockito.when(requestDeliveryDAO.updateData(Mockito.any())).thenAnswer(i -> Mono.just(i.getArguments()[0]));
 
         Mockito.when(f24Client.getNumberOfPages(Mockito.anyString(), Mockito.anyString())).thenReturn(Mono.just(numberOfPagesResponseDto));
+        Mockito.when(attachmentUtils.enrichAttachmentInfos(Mockito.any(PnDeliveryRequest.class), Mockito.anyBoolean())).thenReturn(Mono.just(enrichedPnDeliveryRequest));
         Mockito.when(f24Client.preparePDF(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.any())).thenReturn(Mono.just(new RequestAcceptedDto()));
 
         Mockito.when(paperTenderService.getCostFrom(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(Mono.just(getNationalCost()));
@@ -263,7 +277,7 @@ class F24ServiceImplTest {
         aarPnAttachmentInfo.setDate("");
         aarPnAttachmentInfo.setUrl("http://localhost:8080");
         aarPnAttachmentInfo.setId("");
-        aarPnAttachmentInfo.setNumberOfPage(1);
+        aarPnAttachmentInfo.setNumberOfPage(null);
         aarPnAttachmentInfo.setDocumentType(Const.PN_AAR);
         aarPnAttachmentInfo.setFileKey("safestorage://PN_AAR-12345.pdf");
         attachmentUrls.add(aarPnAttachmentInfo);
@@ -272,7 +286,7 @@ class F24ServiceImplTest {
         notificationPnAttachmentInfo.setDate("");
         notificationPnAttachmentInfo.setUrl("http://localhost:8080");
         notificationPnAttachmentInfo.setId("");
-        notificationPnAttachmentInfo.setNumberOfPage(10);
+        notificationPnAttachmentInfo.setNumberOfPage(null);
         notificationPnAttachmentInfo.setDocumentType("");
         notificationPnAttachmentInfo.setFileKey("safestorage://PN_NOTIFICATION_ATTACHMENTS-12345.pdf");
         attachmentUrls.add(notificationPnAttachmentInfo);
@@ -294,6 +308,16 @@ class F24ServiceImplTest {
         deliveryRequest.setProductType("AR");
         deliveryRequest.setAttachments(attachmentUrls);
         return deliveryRequest;
+    }
+
+    private PnDeliveryRequest getDeliveryRequestWithPages(String requestId, StatusDeliveryEnum status, Integer cost, Integer f24NumberOfPages) {
+        PnDeliveryRequest pnDeliveryRequest = this.getDeliveryRequest(requestId, status, cost);
+
+        pnDeliveryRequest.getAttachments().get(0).setNumberOfPage(f24NumberOfPages); // F24
+        pnDeliveryRequest.getAttachments().get(1).setNumberOfPage(1); // AAR
+        pnDeliveryRequest.getAttachments().get(2).setNumberOfPage(10); // ATTACHMENT
+
+        return pnDeliveryRequest;
     }
 
 
