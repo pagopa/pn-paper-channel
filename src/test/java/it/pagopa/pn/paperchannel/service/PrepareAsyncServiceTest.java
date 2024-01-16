@@ -28,7 +28,6 @@ import it.pagopa.pn.paperchannel.model.KOReason;
 import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.service.impl.PrepareAsyncServiceImpl;
-import it.pagopa.pn.paperchannel.utils.AttachmentUtils;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import it.pagopa.pn.paperchannel.utils.PaperCalculatorUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -36,6 +35,9 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.integration.ClientAndServer;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import reactor.core.publisher.Mono;
@@ -82,9 +84,6 @@ class PrepareAsyncServiceTest {
     @Mock
     private PnPaperChannelConfig pnPaperChannelConfig;
 
-    @Mock
-    private AttachmentUtils attachmentUtils;
-
     private final PrepareAsyncRequest request = new PrepareAsyncRequest();
     private final Address address = new Address();
     private final PnDeliveryRequest pnDeliveryRequest = new PnDeliveryRequest();
@@ -125,8 +124,6 @@ class PrepareAsyncServiceTest {
 
         Mockito.when(this.f24Service.checkDeliveryRequestAttachmentForF24(Mockito.any()))
                 .thenReturn(false);
-
-        Mockito.when(this.attachmentUtils.enrichAttachmentInfos(Mockito.any(PnDeliveryRequest.class), Mockito.anyBoolean())).thenReturn(Mono.just(getDeliveryRequest()));
 
         Mockito.doNothing().when(this.sqsSender).pushPrepareEvent(Mockito.any());
 
@@ -198,7 +195,7 @@ class PrepareAsyncServiceTest {
         Mockito.when(this.addressDAO.create(Mockito.any()))
                         .thenReturn(Mono.just(getAddress()));
 
-        Mockito.when(this.attachmentUtils.enrichAttachmentInfos(Mockito.any(PnDeliveryRequest.class), Mockito.anyBoolean())).thenReturn(Mono.error(new PnGenericException(ExceptionTypeEnum.INVALID_SAFE_STORAGE, "")));
+        Mockito.when(this.safeStorageClient.getFile(Mockito.any())).thenReturn(Mono.just(fileDownloadResponseDto()));
 
         Mockito.doNothing().when(this.sqsSender)
                 .pushInternalError(Mockito.any(), Mockito.anyInt(), Mockito.any());
@@ -318,7 +315,7 @@ class PrepareAsyncServiceTest {
         request.setF24ResponseFlow(true);
 
         try (MockedStatic<HttpConnector> utilities = Mockito.mockStatic(HttpConnector.class)) { // non sembra funzionare...
-            utilities.when(() -> HttpConnector.downloadFile("http://1234"))
+            utilities.when(() -> new HttpConnector().downloadFile("http://1234"))
                     .thenReturn(Mono.just(PDDocument.load(readFakePdf())));
 
 

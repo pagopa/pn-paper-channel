@@ -3,6 +3,7 @@ package it.pagopa.pn.paperchannel.config;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.http.MediaType;
+import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
@@ -10,14 +11,11 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+@Component
 @Slf4j
 public class HttpConnector {
 
-    private HttpConnector(){
-        throw new IllegalCallerException("the constructor must not called");
-    }
-
-    public static Mono<PDDocument> downloadFile(String url) {
+    public Mono<PDDocument> downloadFile(String url) {
         log.info("Url to download: {}", url);
         try {
             return WebClient
