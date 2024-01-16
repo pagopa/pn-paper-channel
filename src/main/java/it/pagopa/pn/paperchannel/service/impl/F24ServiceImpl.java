@@ -4,10 +4,14 @@ import it.pagopa.pn.commons.exceptions.PnExceptionsCodes;
 import it.pagopa.pn.commons.exceptions.PnInternalException;
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.commons.log.PnAuditLogEventType;
+import it.pagopa.pn.paperchannel.config.HttpConnector;
+import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnF24FlowException;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
+import it.pagopa.pn.paperchannel.exception.PnRetryStorageException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnf24.v1.dto.NumberOfPagesResponseDto;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileDownloadResponseDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ProductTypeEnum;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
 import it.pagopa.pn.paperchannel.mapper.AttachmentMapper;
@@ -17,12 +21,14 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.F24Client;
+import it.pagopa.pn.paperchannel.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.paperchannel.model.F24Error;
 import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.service.F24Service;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.Const;
+import it.pagopa.pn.paperchannel.utils.DateUtils;
 import it.pagopa.pn.paperchannel.utils.PaperCalculatorUtils;
 import it.pagopa.pn.paperchannel.utils.Utility;
 import lombok.Builder;
@@ -35,15 +41,21 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
+import reactor.util.function.Tuples;
 
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.ADDRESS_NOT_EXIST;
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_NOT_EXIST;
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.INVALID_SAFE_STORAGE;
 import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.F24_WAITING;
 
 @CustomLog
@@ -56,16 +68,25 @@ public class F24ServiceImpl extends GenericService implements F24Service {
     private final F24Client f24Client;
     private final PaperCalculatorUtils paperCalculatorUtils;
     private final AddressDAO addressDAO;
+    private final PnPaperChannelConfig paperChannelConfig;
+
+    private final SafeStorageClient safeStorageClient;
+
+    private final HttpConnector httpConnector;
 
 
     public F24ServiceImpl(PnAuditLogBuilder auditLogBuilder, F24Client f24Client,
                           SqsSender sqsQueueSender,
-                          PaperCalculatorUtils paperCalculatorUtils, AddressDAO addressDAO, RequestDeliveryDAO requestDeliveryDAO) {
+                          PaperCalculatorUtils paperCalculatorUtils, AddressDAO addressDAO, RequestDeliveryDAO requestDeliveryDAO,
+                          PnPaperChannelConfig paperChannelConfig, SafeStorageClient safeStorageClient, HttpConnector httpConnector) {
         super(auditLogBuilder, sqsQueueSender, requestDeliveryDAO);
         this.f24Client = f24Client;
         this.paperCalculatorUtils = paperCalculatorUtils;
         this.addressDAO = addressDAO;
         this.requestDeliveryDAO = requestDeliveryDAO;
+        this.paperChannelConfig = paperChannelConfig;
+        this.safeStorageClient = safeStorageClient;
+        this.httpConnector = httpConnector;
     }
 
     @Override
@@ -122,12 +143,19 @@ public class F24ServiceImpl extends GenericService implements F24Service {
                 .map(f24AttachmentInfoAndNumberOfPagesTuple -> {
                     F24AttachmentInfo f24AttachmentInfo = f24AttachmentInfoAndNumberOfPagesTuple.getT1();
                     NumberOfPagesResponseDto numberOfPagesResponseDto = f24AttachmentInfoAndNumberOfPagesTuple.getT2();
+                    log.debug("F24Client.getNumberOfPages response: {}", numberOfPagesResponseDto);
 
                     f24AttachmentInfo.setNumberOfPage(numberOfPagesResponseDto.getNumberOfPages());
                     f24Attachment.setNumberOfPage(numberOfPagesResponseDto.getNumberOfPages());
                     return f24AttachmentInfo;
                 })
-
+                .flatMap(f24AttachmentInfo -> enrichAttachmentsNotF24WithPageNumber(deliveryRequest).thenReturn(f24AttachmentInfo))
+                .doOnNext(f24AttachmentInfo -> {
+                    List<Tuple2<String, Integer>> tuples = deliveryRequest.getAttachments().stream()
+                            .map(pnAttachmentInfo -> Tuples.of(pnAttachmentInfo.getFileKey(), pnAttachmentInfo.getNumberOfPage()))
+                            .toList();
+                    log.debug("Attachments with number of pages after enrichment: {}", tuples);
+                })
                 /* Zip to produce a Tuple<F24AttachmentInfo, Integer (aka Analog Cost)> */
                 .flatMap(f24AttachmentInfo -> enrichWithAnalogCostIfNeeded(deliveryRequest, f24AttachmentInfo))
 
@@ -142,6 +170,63 @@ public class F24ServiceImpl extends GenericService implements F24Service {
                 /* Update delivery request on database */
                 .flatMap(this.requestDeliveryDAO::updateData)
                 .onErrorResume(ex -> catchThrowableAndThrowPnF24FlowException(ex, deliveryRequest.getIun(), deliveryRequest.getRequestId(), deliveryRequest.getRelatedRequestId()));
+    }
+
+    private Mono<PnDeliveryRequest> enrichAttachmentsNotF24WithPageNumber(PnDeliveryRequest deliveryRequest) {
+
+        log.debug("BEFORE filter getNumberOfPagesWithoutF24 Attachments: {}", deliveryRequest.getAttachments());
+        List<PnAttachmentInfo> pnAttachmentInfosWithoutF24 = deliveryRequest.getAttachments().stream()
+                .filter(pnAttachmentInfo -> !pnAttachmentInfo.getFileKey().startsWith(URL_PROTOCOL_F24))
+                .toList();
+
+        log.debug("AFTER filter getNumberOfPagesWithoutF24 Attachments: {}", pnAttachmentInfosWithoutF24);
+        return Flux.fromIterable(pnAttachmentInfosWithoutF24)
+                .parallel()
+                .flatMap(attachment -> getFileRecursive(
+                        paperChannelConfig.getAttemptSafeStorage(),
+                        attachment.getFileKey(),
+                        new BigDecimal(0))
+                        .map(r -> Tuples.of(r, attachment)) // mi serve l'attachment originale
+                )
+                .flatMap(fileResponseAndOrigAttachment -> {
+                    if (fileResponseAndOrigAttachment.getT1().getDownload() == null || fileResponseAndOrigAttachment.getT1().getDownload().getUrl() == null)
+                        return Flux.error(new PnGenericException(INVALID_SAFE_STORAGE, INVALID_SAFE_STORAGE.getMessage()));
+                    return httpConnector.downloadFile(fileResponseAndOrigAttachment.getT1().getDownload().getUrl())
+                            .map(pdDocument -> {
+                                try {
+                                    if (pdDocument.getDocumentInformation() != null && pdDocument.getDocumentInformation().getCreationDate() != null) {
+                                        fileResponseAndOrigAttachment.getT2().setDate(DateUtils.formatDate(pdDocument.getDocumentInformation().getCreationDate().toInstant()));
+                                    }
+                                    log.debug("Key: {}, totalPages: {}", fileResponseAndOrigAttachment.getT1().getKey(), pdDocument.getNumberOfPages());
+                                    fileResponseAndOrigAttachment.getT2().setNumberOfPage(pdDocument.getNumberOfPages());
+                                    pdDocument.close();
+                                } catch (IOException e) {
+                                    throw new PnGenericException(INVALID_SAFE_STORAGE, INVALID_SAFE_STORAGE.getMessage());
+                                }
+                                return deliveryRequest;
+                            });
+
+                })
+                .sequential()
+                .collectList()
+                .thenReturn(deliveryRequest);
+    }
+
+    public Mono<FileDownloadResponseDto> getFileRecursive(Integer n, String fileKey, BigDecimal millis){
+        if (n<0)
+            return Mono.error(new PnGenericException( DOCUMENT_URL_NOT_FOUND, DOCUMENT_URL_NOT_FOUND.getMessage() ) );
+        else {
+            return Mono.delay(Duration.ofMillis( millis.longValue() ))
+                    .flatMap(item -> safeStorageClient.getFile(fileKey)
+                            .map(fileDownloadResponseDto -> fileDownloadResponseDto)
+                            .onErrorResume(ex -> {
+                                log.error ("Error with retrieve {}", ex.getMessage());
+                                return Mono.error(ex);
+                            })
+                            .onErrorResume(PnRetryStorageException.class, ex ->
+                                    getFileRecursive(n - 1, fileKey, ex.getRetryAfter())
+                            ));
+        }
     }
 
     private PnDeliveryRequest enrichDeliveryRequest(PnDeliveryRequest deliveryRequest, StatusDeliveryEnum status, Integer analogCost, Instant statusDate) {

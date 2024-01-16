@@ -315,7 +315,7 @@ class PrepareAsyncServiceTest {
         request.setF24ResponseFlow(true);
 
         try (MockedStatic<HttpConnector> utilities = Mockito.mockStatic(HttpConnector.class)) { // non sembra funzionare...
-            utilities.when(() -> HttpConnector.downloadFile("http://1234"))
+            utilities.when(() -> new HttpConnector().downloadFile("http://1234"))
                     .thenReturn(Mono.just(PDDocument.load(readFakePdf())));
 
 
