@@ -166,10 +166,16 @@ public class F24ServiceImpl extends GenericService implements F24Service {
 
                 /* Insert Analog Cost and change status of delivery request to F24_WAITING */
                 .map(analogCost -> this.enrichDeliveryRequest(deliveryRequest, F24_WAITING, analogCost, null))
-
+                .map(this::restoreNumberOfPagesAtNull)
                 /* Update delivery request on database */
                 .flatMap(this.requestDeliveryDAO::updateData)
                 .onErrorResume(ex -> catchThrowableAndThrowPnF24FlowException(ex, deliveryRequest.getIun(), deliveryRequest.getRequestId(), deliveryRequest.getRelatedRequestId()));
+    }
+
+    private PnDeliveryRequest restoreNumberOfPagesAtNull(PnDeliveryRequest pnDeliveryRequest) {
+        pnDeliveryRequest.getAttachments()
+                .forEach(pnAttachmentInfo -> pnAttachmentInfo.setNumberOfPage(null));
+        return pnDeliveryRequest;
     }
 
     private Mono<PnDeliveryRequest> enrichAttachmentsNotF24WithPageNumber(PnDeliveryRequest deliveryRequest) {
@@ -194,10 +200,7 @@ public class F24ServiceImpl extends GenericService implements F24Service {
                     return httpConnector.downloadFile(fileResponseAndOrigAttachment.getT1().getDownload().getUrl())
                             .map(pdDocument -> {
                                 try {
-                                    if (pdDocument.getDocumentInformation() != null && pdDocument.getDocumentInformation().getCreationDate() != null) {
-                                        fileResponseAndOrigAttachment.getT2().setDate(DateUtils.formatDate(pdDocument.getDocumentInformation().getCreationDate().toInstant()));
-                                    }
-                                    log.debug("Key: {}, totalPages: {}", fileResponseAndOrigAttachment.getT1().getKey(), pdDocument.getNumberOfPages());
+                                    log.debug("enrichAttachmentsNotF24WithPageNumber Key: {}, totalPages: {}", fileResponseAndOrigAttachment.getT1().getKey(), pdDocument.getNumberOfPages());
                                     fileResponseAndOrigAttachment.getT2().setNumberOfPage(pdDocument.getNumberOfPages());
                                     pdDocument.close();
                                 } catch (IOException e) {
