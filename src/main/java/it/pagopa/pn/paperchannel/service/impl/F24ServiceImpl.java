@@ -175,7 +175,9 @@ public class F24ServiceImpl extends GenericService implements F24Service {
         pnDeliveryRequest.getAttachments()
                 .forEach(pnAttachmentInfo -> {
                     pnAttachmentInfo.setNumberOfPage(null);
-                    pnAttachmentInfo.setDocumentType(null);
+                    if(!pnAttachmentInfo.getFileKey().startsWith(URL_PROTOCOL_F24)) {
+                        pnAttachmentInfo.setDocumentType(null);
+                    }
                 });
         return pnDeliveryRequest;
     }
