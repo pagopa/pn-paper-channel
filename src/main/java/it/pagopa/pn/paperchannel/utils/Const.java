@@ -36,4 +36,5 @@ public class Const {
     public static final String CONTEXT_KEY_PREFIX_CLIENT_ID = "PREFIX_CLIENT_ID";
 
     public static final String DOCUMENT_TYPE_F24_SET = "PN_F24_SET";
+    public static final String URL_PROTOCOL_F24 = "f24set";
 }

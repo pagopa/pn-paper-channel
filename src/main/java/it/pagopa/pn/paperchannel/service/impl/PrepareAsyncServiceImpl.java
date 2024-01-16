@@ -23,10 +23,7 @@ import it.pagopa.pn.paperchannel.service.F24Service;
 import it.pagopa.pn.paperchannel.service.PaperAddressService;
 import it.pagopa.pn.paperchannel.service.PaperAsyncService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
-import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
-import it.pagopa.pn.paperchannel.utils.Const;
-import it.pagopa.pn.paperchannel.utils.DateUtils;
-import it.pagopa.pn.paperchannel.utils.PaperCalculatorUtils;
+import it.pagopa.pn.paperchannel.utils.*;
 import lombok.CustomLog;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -56,10 +53,13 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
     private final PaperCalculatorUtils paperCalculatorUtils;
     private final F24Service f24Service;
 
+    private final AttachmentUtils attachmentUtils;
+
     public PrepareAsyncServiceImpl(PnAuditLogBuilder auditLogBuilder, NationalRegistryClient nationalRegistryClient,
                                    RequestDeliveryDAO requestDeliveryDAO, SqsSender sqsQueueSender, CostDAO costDAO,
                                    SafeStorageClient safeStorageClient, AddressDAO addressDAO, PnPaperChannelConfig paperChannelConfig,
-                                   PaperRequestErrorDAO paperRequestErrorDAO, PaperAddressService paperAddressService, PaperCalculatorUtils paperCalculatorUtils, F24Service f24Service) {
+                                   PaperRequestErrorDAO paperRequestErrorDAO, PaperAddressService paperAddressService,
+                                   PaperCalculatorUtils paperCalculatorUtils, F24Service f24Service, AttachmentUtils attachmentUtils) {
         super(auditLogBuilder, requestDeliveryDAO, costDAO, nationalRegistryClient, sqsQueueSender);
         this.safeStorageClient = safeStorageClient;
         this.addressDAO = addressDAO;
@@ -68,6 +68,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
         this.paperAddressService = paperAddressService;
         this.paperCalculatorUtils = paperCalculatorUtils;
         this.f24Service = f24Service;
+        this.attachmentUtils = attachmentUtils;
     }
 
     @Override
@@ -138,7 +139,12 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                 null
         );
 
-        return getAttachmentsInfo(pnDeliveryRequest, request)
+        return this.attachmentUtils.enrichAttachmentInfos(pnDeliveryRequest, false)
+                .onErrorResume(ex -> {
+                    request.setIun(pnDeliveryRequest.getIun());
+                    this.sqsSender.pushInternalError(request, request.getAttemptRetry(), PrepareAsyncRequest.class);
+                    return Mono.error(ex);
+                })
                 .flatMap(pnDeliveryRequestWithAttachmentOk ->
                         this.addressDAO.findByRequestId(pnDeliveryRequestWithAttachmentOk.getRequestId())
                                 .flatMap(address -> {
@@ -234,55 +240,6 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                          getFileRecursive(n - 1, fileKey, ex.getRetryAfter())
                     ));
         }
-    }
-
-    private Mono<PnDeliveryRequest> getAttachmentsInfo(PnDeliveryRequest deliveryRequest, PrepareAsyncRequest request){
-
-        if(deliveryRequest.getAttachments().isEmpty() ||
-                !deliveryRequest.getAttachments().stream().filter(a ->a.getNumberOfPage()!=null && a.getNumberOfPage()>0).toList().isEmpty()){
-            return Mono.just(deliveryRequest);
-        }
-
-        return Flux.fromStream(deliveryRequest.getAttachments().stream())
-                .parallel()
-                .flatMap( attachment -> getFileRecursive(
-                        paperChannelConfig.getAttemptSafeStorage(),
-                        attachment.getFileKey(),
-                        new BigDecimal(0))
-                        .map(r -> Tuples.of(r, attachment)) // mi serve l'attachment originale
-                )
-                .flatMap(fileResponseAndOrigAttachment -> {
-                    AttachmentInfo info = AttachmentMapper.fromSafeStorage(fileResponseAndOrigAttachment.getT1());
-                    info.setGeneratedFrom(fileResponseAndOrigAttachment.getT2().getGeneratedFrom()); // preservo l'eventuale generatedFrom
-                    if (info.getUrl() == null)
-                        return Flux.error(new PnGenericException(INVALID_SAFE_STORAGE, INVALID_SAFE_STORAGE.getMessage()));
-                    return HttpConnector.downloadFile(info.getUrl())
-                            .map(pdDocument -> {
-                                try {
-                                    if (pdDocument.getDocumentInformation() != null && pdDocument.getDocumentInformation().getCreationDate() != null) {
-                                        info.setDate(DateUtils.formatDate(pdDocument.getDocumentInformation().getCreationDate().toInstant()));
-                                    }
-                                    info.setNumberOfPage(pdDocument.getNumberOfPages());
-                                    pdDocument.close();
-                                } catch (IOException e) {
-                                    throw new PnGenericException(INVALID_SAFE_STORAGE, INVALID_SAFE_STORAGE.getMessage());
-                                }
-                                return info;
-                            });
-
-                })
-                .map(AttachmentMapper::toEntity)
-                .sequential()
-                .collectList()
-                .map(listAttachment -> {
-                    deliveryRequest.setAttachments(listAttachment);
-                    return deliveryRequest;
-                })
-                .onErrorResume(ex -> {
-                    request.setIun(deliveryRequest.getIun());
-                    this.sqsSender.pushInternalError(request, request.getAttemptRetry(), PrepareAsyncRequest.class);
-                    return Mono.error(ex);
-                });
     }
 
 

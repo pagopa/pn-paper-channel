@@ -22,6 +22,7 @@ import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.service.F24Service;
 import it.pagopa.pn.paperchannel.service.SqsSender;
+import it.pagopa.pn.paperchannel.utils.AttachmentUtils;
 import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.PaperCalculatorUtils;
 import it.pagopa.pn.paperchannel.utils.Utility;
@@ -57,15 +58,25 @@ public class F24ServiceImpl extends GenericService implements F24Service {
     private final PaperCalculatorUtils paperCalculatorUtils;
     private final AddressDAO addressDAO;
 
+    private final AttachmentUtils attachmentUtils;
 
-    public F24ServiceImpl(PnAuditLogBuilder auditLogBuilder, F24Client f24Client,
-                          SqsSender sqsQueueSender,
-                          PaperCalculatorUtils paperCalculatorUtils, AddressDAO addressDAO, RequestDeliveryDAO requestDeliveryDAO) {
+
+    public F24ServiceImpl(
+            PnAuditLogBuilder auditLogBuilder,
+            F24Client f24Client,
+            SqsSender sqsQueueSender,
+            PaperCalculatorUtils paperCalculatorUtils,
+            AddressDAO addressDAO,
+            RequestDeliveryDAO requestDeliveryDAO,
+            AttachmentUtils attachmentUtils) {
+
         super(auditLogBuilder, sqsQueueSender, requestDeliveryDAO);
+
         this.f24Client = f24Client;
         this.paperCalculatorUtils = paperCalculatorUtils;
         this.addressDAO = addressDAO;
         this.requestDeliveryDAO = requestDeliveryDAO;
+        this.attachmentUtils = attachmentUtils;
     }
 
     @Override
@@ -128,8 +139,11 @@ public class F24ServiceImpl extends GenericService implements F24Service {
                     return f24AttachmentInfo;
                 })
 
-                /* Zip to produce a Tuple<F24AttachmentInfo, Integer (aka Analog Cost)> */
-                .flatMap(f24AttachmentInfo -> enrichWithAnalogCostIfNeeded(deliveryRequest, f24AttachmentInfo))
+                /* Zip to produce a Tuple<F24AttachmentInfo, PnDeliveryRequest> */
+                .zipWhen(f24AttachmentInfo -> this.attachmentUtils.enrichAttachmentInfos(deliveryRequest, true))
+
+                /* Calculate costs */
+                .flatMap(f24AttachmentInfoWithDeliveryRequest -> enrichWithAnalogCostIfNeeded(f24AttachmentInfoWithDeliveryRequest.getT2(), f24AttachmentInfoWithDeliveryRequest.getT1()))
 
                 /* Call preparePDF request API and propagate Analog Cost */
                 .doOnSuccess(f24AttachmentInfo -> logAuditBefore("preparePDF requestId = %s, relatedRequestId = %s engaging F24 ", deliveryRequest))
