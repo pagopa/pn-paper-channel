@@ -32,12 +32,9 @@ public class AttachmentUtils {
     private final SafeStorageClient safeStorageClient;
     private final PnPaperChannelConfig paperChannelConfig;
 
-    public Mono<PnDeliveryRequest> enrichAttachmentInfos(PnDeliveryRequest deliveryRequest, Boolean excludeF24) {
+    public Mono<PnDeliveryRequest> enrichAttachmentInfos(PnDeliveryRequest deliveryRequest, boolean excludeF24) {
 
         List<PnAttachmentInfo> attachments = deliveryRequest.getAttachments();
-        if (attachments.isEmpty() || !attachments.stream().filter(attachment -> attachment.getNumberOfPage() != null && attachment.getNumberOfPage() > 0).toList().isEmpty()) {
-            return Mono.just(deliveryRequest);
-        }
 
         Stream<PnAttachmentInfo> attachmentStream = excludeF24
                 ? attachments.stream().filter(pnAttachmentInfo -> !pnAttachmentInfo.getFileKey().startsWith(Const.URL_PROTOCOL_F24))
@@ -45,6 +42,7 @@ public class AttachmentUtils {
 
         return Flux.fromStream(attachmentStream)
                 .parallel()
+                .filter(pnAttachmentInfo -> pnAttachmentInfo.getNumberOfPage() != null && pnAttachmentInfo.getNumberOfPage() > 0)
                 .flatMap(attachment -> getFileRecursive(
                         paperChannelConfig.getAttemptSafeStorage(),
                         attachment.getFileKey(),
