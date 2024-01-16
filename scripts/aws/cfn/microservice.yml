@@ -318,6 +318,11 @@ Parameters:
     Type: String
     Description: 'Variable that determines which calculation mode to use,  in startConfigurationTime;calculationMode format.'
 
+  F24ClientReadTimeoutMillis:
+    Type: String
+    Default: '30000'
+    Description: 'Timeout in millis for F24 service API invocations'
+
   # OpenApi Bucket params
   MicroserviceBucketName:
     Type: String
@@ -534,6 +539,7 @@ Resources:
         ContainerEnvEntry53: !Sub 'PN_PAPERCHANNEL_F24CXID=${F24PaperChannelUser}'
         ContainerEnvEntry54: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUEF24=${AttemptQueueF24}'
         ContainerEnvEntry55: !Sub 'PN_PAPERCHANNEL_QUEUEF24=${F24ToPaperChannelQueueName}'
+        ContainerEnvEntry56: !Sub 'PN_PAPERCHANNEL_F24CLIENT_TIMEOUTMILLIS=${F24ClientReadTimeoutMillis}'
         ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-PaperChannel-Secrets
         MappedPaths: '/paper-channel-bo/*,/paper-channel-private/*'
