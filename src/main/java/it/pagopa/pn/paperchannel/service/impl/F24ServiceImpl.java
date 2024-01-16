@@ -28,7 +28,6 @@ import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.service.F24Service;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.Const;
-import it.pagopa.pn.paperchannel.utils.DateUtils;
 import it.pagopa.pn.paperchannel.utils.PaperCalculatorUtils;
 import it.pagopa.pn.paperchannel.utils.Utility;
 import lombok.Builder;
@@ -166,15 +165,18 @@ public class F24ServiceImpl extends GenericService implements F24Service {
 
                 /* Insert Analog Cost and change status of delivery request to F24_WAITING */
                 .map(analogCost -> this.enrichDeliveryRequest(deliveryRequest, F24_WAITING, analogCost, null))
-                .map(this::restoreNumberOfPagesAtNull)
+                .map(this::restoreNumberOfPagesAndDocTypeAtNull)
                 /* Update delivery request on database */
                 .flatMap(this.requestDeliveryDAO::updateData)
                 .onErrorResume(ex -> catchThrowableAndThrowPnF24FlowException(ex, deliveryRequest.getIun(), deliveryRequest.getRequestId(), deliveryRequest.getRelatedRequestId()));
     }
 
-    private PnDeliveryRequest restoreNumberOfPagesAtNull(PnDeliveryRequest pnDeliveryRequest) {
+    private PnDeliveryRequest restoreNumberOfPagesAndDocTypeAtNull(PnDeliveryRequest pnDeliveryRequest) {
         pnDeliveryRequest.getAttachments()
-                .forEach(pnAttachmentInfo -> pnAttachmentInfo.setNumberOfPage(null));
+                .forEach(pnAttachmentInfo -> {
+                    pnAttachmentInfo.setNumberOfPage(null);
+                    pnAttachmentInfo.setDocumentType(null);
+                });
         return pnDeliveryRequest;
     }
 
@@ -202,6 +204,7 @@ public class F24ServiceImpl extends GenericService implements F24Service {
                                 try {
                                     log.debug("enrichAttachmentsNotF24WithPageNumber Key: {}, totalPages: {}", fileResponseAndOrigAttachment.getT1().getKey(), pdDocument.getNumberOfPages());
                                     fileResponseAndOrigAttachment.getT2().setNumberOfPage(pdDocument.getNumberOfPages());
+                                    fileResponseAndOrigAttachment.getT2().setDocumentType(fileResponseAndOrigAttachment.getT1().getDocumentType());
                                     pdDocument.close();
                                 } catch (IOException e) {
                                     throw new PnGenericException(INVALID_SAFE_STORAGE, INVALID_SAFE_STORAGE.getMessage());
