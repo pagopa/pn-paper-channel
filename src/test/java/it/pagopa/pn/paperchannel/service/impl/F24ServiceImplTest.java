@@ -27,11 +27,9 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mockito;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -48,7 +46,6 @@ import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.F24_WAITING;
 import static org.junit.jupiter.api.Assertions.*;
 
 
-@ExtendWith(MockitoExtension.class)
 @SpringBootTest(classes = {PaperCalculatorUtils.class, F24ServiceImpl.class, PnAuditLogBuilder.class})
 class F24ServiceImplTest {
 
@@ -175,8 +172,15 @@ class F24ServiceImplTest {
         assertEquals(expectedCost, res.getCost());
 
         /* Check called twice to verify F24 skip during attachment page calculation */
-        Mockito.verify(safeStorageClient, Mockito.times(2)).getFile(Mockito.anyString());
-        Mockito.verify(httpConnector, Mockito.times(2)).downloadFile(Mockito.anyString());
+        if(calculationMode.equals(ChargeCalculationModeEnum.COMPLETE.name())) {
+            Mockito.verify(safeStorageClient, Mockito.times(2)).getFile(Mockito.anyString());
+            Mockito.verify(httpConnector, Mockito.times(2)).downloadFile(Mockito.anyString());
+        }
+        else {
+            Mockito.verify(safeStorageClient, Mockito.never()).getFile(Mockito.anyString());
+            Mockito.verify(httpConnector, Mockito.never()).downloadFile(Mockito.anyString());
+        }
+
     }
 
     @Test
