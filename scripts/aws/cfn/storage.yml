@@ -101,6 +101,7 @@ Resources:
         QueueName: !Sub '${ProjectName}-paper_channel_requests'
         AlarmSNSTopicName: !Ref AlarmSNSTopicName
         DelaySeconds: 1
+        VisibilityTimeout: 60
 
   RequestDeliveryDynamoTable:
     Type: AWS::DynamoDB::Table
