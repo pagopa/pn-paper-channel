@@ -10,6 +10,7 @@ import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnF24FlowException;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.exception.PnRetryStorageException;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnf24.v1.dto.MetadataPagesDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnf24.v1.dto.NumberOfPagesResponseDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileDownloadResponseDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ProductTypeEnum;
@@ -50,11 +51,11 @@ import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.INVALID_SAFE_STORAGE;
 import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.F24_WAITING;
 
 @CustomLog
@@ -144,9 +145,12 @@ public class F24ServiceImpl extends GenericService implements F24Service {
                     NumberOfPagesResponseDto numberOfPagesResponseDto = f24AttachmentInfoAndNumberOfPagesTuple.getT2();
                     log.debug("F24Client.getNumberOfPages response: {}", numberOfPagesResponseDto);
 
-                    f24AttachmentInfo.setNumberOfPage(numberOfPagesResponseDto.getNumberOfPages());
-                    f24Attachment.setNumberOfPage(numberOfPagesResponseDto.getNumberOfPages());
+                    List<MetadataPagesDto> metadataPagesDtoList = numberOfPagesResponseDto.getF24Set() != null ? numberOfPagesResponseDto.getF24Set() : Collections.emptyList();
+
+                    f24AttachmentInfo.setNumberOfPage(getNumberOfPagesFromF24Attachment(metadataPagesDtoList));
+                    f24Attachment.setNumberOfPage(getNumberOfPagesFromF24Attachment(metadataPagesDtoList));
                     return f24AttachmentInfo;
+
                 })
                 .flatMap(f24AttachmentInfo -> enrichAttachmentsNotF24WithPageNumber(deliveryRequest).thenReturn(f24AttachmentInfo))
                 .doOnNext(f24AttachmentInfo -> {
@@ -180,6 +184,14 @@ public class F24ServiceImpl extends GenericService implements F24Service {
                     }
                 });
         return pnDeliveryRequest;
+    }
+
+    private Integer getNumberOfPagesFromF24Attachment(List<MetadataPagesDto> metadataPagesList) {
+
+        return metadataPagesList.stream()
+                .filter(metadataPagesDto -> metadataPagesDto != null && metadataPagesDto.getNumberOfPages() != null)
+                .map(metadataPagesDto -> metadataPagesDto.getNumberOfPages() % 2 == 0 ? metadataPagesDto.getNumberOfPages() : metadataPagesDto.getNumberOfPages() + 1)
+                .reduce(0, Integer::sum);
     }
 
     private Mono<PnDeliveryRequest> enrichAttachmentsNotF24WithPageNumber(PnDeliveryRequest deliveryRequest) {
