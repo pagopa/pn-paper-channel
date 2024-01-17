@@ -321,7 +321,7 @@ Parameters:
   F24ClientReadTimeoutMillis:
     Type: String
     Default: '30000'
-    Description: 'Timeout in millis for F24 service API invocations'
+    Description: 'Timeout in millis for F24 service API invocations. It depends on Visibility Timeout of Internal Queue'
 
   # OpenApi Bucket params
   MicroserviceBucketName:
