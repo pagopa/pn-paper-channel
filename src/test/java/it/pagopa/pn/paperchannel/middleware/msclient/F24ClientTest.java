@@ -38,7 +38,6 @@ class F24ClientTest extends BaseTest.WithMockServer {
     void testGetNumberOfPagesOK() {
         NumberOfPagesResponseDto numberOfPagesResponseDtoMono = f24Client.getNumberOfPages(SET_ID, RECIPIENT_INDEX).block();
         Assertions.assertNotNull(numberOfPagesResponseDtoMono);
-        Assertions.assertNotNull(numberOfPagesResponseDtoMono.getNumberOfPages());
     }
 
     @Test

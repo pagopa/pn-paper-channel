@@ -4,6 +4,7 @@ import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.paperchannel.config.HttpConnector;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.PnF24FlowException;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnf24.v1.dto.MetadataPagesDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnf24.v1.dto.NumberOfPagesResponseDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnf24.v1.dto.RequestAcceptedDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileDownloadInfoDto;
@@ -108,18 +109,17 @@ class F24ServiceImplTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "AAR, 5, 5, 10, 10, 100",
-            "AAR, 12, 12, 10, 56, 100",
-            "AAR, 12, 12, 0, 56, NULL",
-            "AAR, 12, 12, NULL, 56, NULL",
-            "COMPLETE, 5, 5, 10, 10, 4400",
-            "COMPLETE, 4, 8, 10, 20, 6400",
-            "COMPLETE, 4, 8, 10, 50, 12500",
-            "COMPLETE, 4, 8, 0, 50, NULL",
-            "COMPLETE, 4, 8, NULL, 50, NULL"
+            "AAR, 5, 5, 10, 100",
+            "AAR, 12, 12, 10, 100",
+            "AAR, 12, 12, 0, NULL",
+            "AAR, 12, 12, NULL, NULL",
+            "COMPLETE, 5, 5, 10, 6400",
+            "COMPLETE, 1, 1, 10, 6200",
+            "COMPLETE, 4, 8, 0, NULL",
+            "COMPLETE, 4, 8, NULL, NULL"
     }, nullValues = {"NULL"})
     @DisplayName("testPreparePDFSuccess")
-    void testPreparePDFSuccess(String calculationMode, Integer paperWeight, Integer letterWeight, Integer f24Cost, Integer f24NumberOfPages, Integer expectedCost) throws IOException {
+    void testPreparePDFSuccess(String calculationMode, Integer paperWeight, Integer letterWeight, Integer f24Cost, Integer expectedCost) throws IOException {
 
         // Given
         String requestId = "REQUESTID";
@@ -132,7 +132,7 @@ class F24ServiceImplTest {
         PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest(requestId, StatusDeliveryEnum.IN_PROCESSING, f24Cost);
 
         NumberOfPagesResponseDto numberOfPagesResponseDto = new NumberOfPagesResponseDto();
-        numberOfPagesResponseDto.setNumberOfPages(f24NumberOfPages);
+        numberOfPagesResponseDto.setF24Set(getF24MetadataPages(10));
 
         FileDownloadResponseDto aarFileDownloadResponse = getFileDownloadDTOResponse(Const.PN_AAR);
         FileDownloadResponseDto attachmentFileDownloadResponse = getFileDownloadDTOResponse(ATTACHMENT_DOC_TYPE);
@@ -235,7 +235,9 @@ class F24ServiceImplTest {
 
         String f24FileKey = f24Cost == null ? F24_FILE_KEY : String.format("%s?cost=%s", F24_FILE_KEY, f24Cost);
 
+        /* F24 Set Attachment */
         PnAttachmentInfo f24PnAttachmentInfo = getPnAttachmentInfo(f24FileKey, Const.DOCUMENT_TYPE_F24_SET);
+
         PnAttachmentInfo aarPnAttachmentInfo = getPnAttachmentInfo("safestorage://PN_AAR-12345.pdf", Const.PN_AAR);
         PnAttachmentInfo notificationPnAttachmentInfo = getPnAttachmentInfo("safestorage://PN_NOTIFICATION_ATTACHMENTS-12345.pdf", ATTACHMENT_DOC_TYPE);
 
@@ -264,6 +266,20 @@ class F24ServiceImplTest {
         deliveryRequest.setAttachments(attachmentUrls);
 
         return deliveryRequest;
+    }
+
+    private List<MetadataPagesDto> getF24MetadataPages(Integer count) {
+
+        List<MetadataPagesDto> f24MetadataPagesDtoList = new ArrayList<>();
+        for (int n = 0; n < count; n++) {
+            MetadataPagesDto metadataPagesDto = new MetadataPagesDto();
+            metadataPagesDto.setNumberOfPages(1);
+            metadataPagesDto.setFileKey(RandomStringUtils.randomAscii(10));
+
+            f24MetadataPagesDtoList.add(metadataPagesDto);
+        }
+
+        return f24MetadataPagesDtoList;
     }
 
     private PnAttachmentInfo getPnAttachmentInfo(String fileKey, String documentType) {

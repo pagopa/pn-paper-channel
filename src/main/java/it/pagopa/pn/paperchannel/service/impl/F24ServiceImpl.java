@@ -10,6 +10,8 @@ import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnF24FlowException;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.exception.PnRetryStorageException;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnf24.v1.dto.MetadataPagesDto;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnf24.v1.dto.NumberOfPagesResponseDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileDownloadResponseDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ProductTypeEnum;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
@@ -47,6 +49,7 @@ import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -172,8 +175,11 @@ public class F24ServiceImpl extends GenericService implements F24Service {
                 .map(numberOfPagesResponseDto -> {
                     /* Enrich original F24 attachment number of pages field */
                     log.debug("F24Client.getNumberOfPages response: {}", numberOfPagesResponseDto);
-                    f24AttachmentInfo.setNumberOfPage(numberOfPagesResponseDto.getNumberOfPages());
-                    f24Attachment.setNumberOfPage(numberOfPagesResponseDto.getNumberOfPages());
+                    List<MetadataPagesDto> metadataPagesDtoList = numberOfPagesResponseDto.getF24Set() != null ? numberOfPagesResponseDto.getF24Set() : Collections.emptyList();
+
+                    f24AttachmentInfo.setNumberOfPage(getNumberOfPagesFromF24Attachment(metadataPagesDtoList));
+                    f24Attachment.setNumberOfPage(getNumberOfPagesFromF24Attachment(metadataPagesDtoList));
+
                     return numberOfPagesResponseDto;
                 })
                 .flatMap(numberOfPagesResponseDto -> enrichAttachmentsNotF24WithPageNumber(deliveryRequest).thenReturn(numberOfPagesResponseDto))
@@ -199,6 +205,14 @@ public class F24ServiceImpl extends GenericService implements F24Service {
                     });
         }
         return pnDeliveryRequest;
+    }
+
+    private Integer getNumberOfPagesFromF24Attachment(List<MetadataPagesDto> metadataPagesList) {
+
+        return metadataPagesList.stream()
+                .filter(metadataPagesDto -> metadataPagesDto != null && metadataPagesDto.getNumberOfPages() != null)
+                .map(metadataPagesDto -> metadataPagesDto.getNumberOfPages() % 2 == 0 ? metadataPagesDto.getNumberOfPages() : metadataPagesDto.getNumberOfPages() + 1)
+                .reduce(0, Integer::sum);
     }
 
     // In fase di PREPARE nella modalità COMPLETE, siccome ho necessità di conoscere le pagine anche degli attachments non f24,
