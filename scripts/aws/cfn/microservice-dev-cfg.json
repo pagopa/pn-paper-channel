@@ -32,6 +32,7 @@
     "DataVaultBaseUrl": "http://alb.confidential.pn.internal:8080",
     "RefinementDuration": "1m",
     "CloudwatchMetricCron": "0 */5 * * * *",
-    "F24ClientReadTimeoutMillis": "30000"
+    "F24ClientReadTimeoutMillis": "30000",
+    "F24ClientRetryMaxAttempts": "0"
   }
 }

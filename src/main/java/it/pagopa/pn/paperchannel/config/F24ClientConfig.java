@@ -28,4 +28,10 @@ public class F24ClientConfig extends CommonBaseClient {
     public void setReadTimeoutMillis(@Value("${pn.paper-channel.f24client.timeout-millis}") int readTimeoutMillis) {
         super.setReadTimeoutMillis(readTimeoutMillis);
     }
+
+    @Autowired
+    @Override
+    public void setRetryMaxAttempts(@Value("${pn.paper-channel.f24client.retry-max-attempts}") int retryMaxAttempts) {
+        super.setRetryMaxAttempts(retryMaxAttempts);
+    }
 }
