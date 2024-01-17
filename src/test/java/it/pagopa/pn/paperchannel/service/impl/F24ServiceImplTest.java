@@ -110,13 +110,13 @@ class F24ServiceImplTest {
     @CsvSource(value = {
             "AAR, 5, 5, 10, 10, 100",
             "AAR, 12, 12, 10, 56, 100",
-            "AAR, 12, 12, 0, 56, 100",
-            "AAR, 12, 12, NULL, 56, 100",
+            "AAR, 12, 12, 0, 56, NULL",
+            "AAR, 12, 12, NULL, 56, NULL",
             "COMPLETE, 5, 5, 10, 10, 4400",
             "COMPLETE, 4, 8, 10, 20, 6400",
             "COMPLETE, 4, 8, 10, 50, 12500",
-            "COMPLETE, 4, 8, 0, 50, 12500",
-            "COMPLETE, 4, 8, NULL, 50, 12500"
+            "COMPLETE, 4, 8, 0, 50, NULL",
+            "COMPLETE, 4, 8, NULL, 50, NULL"
     }, nullValues = {"NULL"})
     @DisplayName("testPreparePDFSuccess")
     void testPreparePDFSuccess(String calculationMode, Integer paperWeight, Integer letterWeight, Integer f24Cost, Integer f24NumberOfPages, Integer expectedCost) throws IOException {
@@ -172,7 +172,7 @@ class F24ServiceImplTest {
         assertEquals(expectedCost, res.getCost());
 
         /* Check called twice to verify F24 skip during attachment page calculation */
-        if(calculationMode.equals(ChargeCalculationModeEnum.COMPLETE.name())) {
+        if(calculationMode.equals(ChargeCalculationModeEnum.COMPLETE.name()) && f24Cost != null && f24Cost > 0) {
             Mockito.verify(safeStorageClient, Mockito.times(2)).getFile(Mockito.anyString());
             Mockito.verify(httpConnector, Mockito.times(2)).downloadFile(Mockito.anyString());
         }

@@ -133,26 +133,34 @@ public class F24ServiceImpl extends GenericService implements F24Service {
     private Mono<PnDeliveryRequest> preparePdfAndEnrichDeliveryRequest(PnDeliveryRequest deliveryRequest, PnAttachmentInfo f24Attachment) {
 
         return this.parseF24URL(f24Attachment.getFileKey())
-                .flatMap(f24AttachmentInfo -> checkAndHandlerF24ForCOMPLETEMode(f24AttachmentInfo, deliveryRequest, f24Attachment))
-                .flatMap(f24AttachmentInfo -> enrichWithAnalogCostIfNeeded(deliveryRequest, f24AttachmentInfo))
+                .flatMap(f24AttachmentInfo -> enrichWithAnalogCostIfNeeded(f24AttachmentInfo, deliveryRequest, f24Attachment))
                 /* Call preparePDF request API and propagate Analog Cost */
                 .doOnSuccess(f24AttachmentInfo -> logAuditBefore("preparePDF requestId = %s, relatedRequestId = %s engaging F24 ", deliveryRequest))
-                .flatMap(f24AttachmentInfo -> f24Client.preparePDF(deliveryRequest.getRequestId(), f24AttachmentInfo.getSetId(), f24AttachmentInfo.getRecipientIndex(), sumCostAndAnalogCost(f24AttachmentInfo)).thenReturn(f24AttachmentInfo.getAnalogCost()))
+                .flatMap(f24AttachmentInfo -> f24Client.preparePDF(deliveryRequest.getRequestId(), f24AttachmentInfo.getSetId(), f24AttachmentInfo.getRecipientIndex(), sumCostAndAnalogCost(f24AttachmentInfo)).thenReturn(f24AttachmentInfo))
                 .doOnNext(f24AttachmentInfo -> logAuditSuccess("preparePDF requestId = %s, relatedRequestId = %s successfully sent to F24", deliveryRequest))
                 /* Insert Analog Cost and change status of delivery request to F24_WAITING */
-                .map(analogCost -> this.enrichDeliveryRequest(deliveryRequest, F24_WAITING, analogCost, null))
+                .map(f24AttachmentInfo -> this.enrichDeliveryRequest(deliveryRequest, F24_WAITING, f24AttachmentInfo.getAnalogCost(), null))
                 .map(this::restoreNumberOfPagesAndDocTypeAtNullIfCOMPLETEMode)
                 /* Update delivery request on database */
                 .flatMap(this.requestDeliveryDAO::updateData)
                 .onErrorResume(ex -> catchThrowableAndThrowPnF24FlowException(ex, deliveryRequest.getIun(), deliveryRequest.getRequestId(), deliveryRequest.getRelatedRequestId()));
     }
 
-    private Mono<F24AttachmentInfo> checkAndHandlerF24ForCOMPLETEMode(F24AttachmentInfo f24AttachmentInfo, PnDeliveryRequest deliveryRequest, PnAttachmentInfo f24Attachment) {
-        if (dateChargeCalculationModesUtils.getChargeCalculationMode() == ChargeCalculationModeEnum.AAR) {
-            log.debug("Skipped f24Client handler pages because mode is AAR");
-            return Mono.just(f24AttachmentInfo);
+    private Mono<F24AttachmentInfo> enrichWithAnalogCostIfNeeded(F24AttachmentInfo f24AttachmentInfo, PnDeliveryRequest deliveryRequest, PnAttachmentInfo f24Attachment) {
+        if (f24AttachmentInfo.getCost() != null && f24AttachmentInfo.getCost() > 0) {
+
+            if(dateChargeCalculationModesUtils.getChargeCalculationMode() == ChargeCalculationModeEnum.COMPLETE) {
+                log.debug("enrichWithAnalogCost for COMPLETE");
+                return handlerF24ForCOMPLETEMode( f24AttachmentInfo, deliveryRequest, f24Attachment)
+                        .flatMap(numberOfPagesResponseDto -> enrichWithAnalogCost(deliveryRequest, f24AttachmentInfo));
+            }
+            else {
+                log.debug("enrichWithAnalogCost for AAR");
+                return enrichWithAnalogCost(deliveryRequest, f24AttachmentInfo);
+            }
         } else {
-            return handlerF24ForCOMPLETEMode( f24AttachmentInfo, deliveryRequest, f24Attachment);
+            log.debug("Skipped enrichWithAnalogCostIfNeeded because cost is: {}", f24AttachmentInfo.getCost());
+            return Mono.just(f24AttachmentInfo);
         }
     }
 
@@ -294,7 +302,7 @@ public class F24ServiceImpl extends GenericService implements F24Service {
         return f24AttachmentInfo.getCost()==null? null: f24AttachmentInfo.getCost() + f24AttachmentInfo.getAnalogCost();
     }
 
-    private Mono<F24AttachmentInfo> enrichWithAnalogCostIfNeeded(PnDeliveryRequest deliveryRequest, F24AttachmentInfo pnAttachmentInfo) {
+    private Mono<F24AttachmentInfo> enrichWithAnalogCost(PnDeliveryRequest deliveryRequest, F24AttachmentInfo pnAttachmentInfo) {
         logAuditBefore("preparePDF requestId = %s, relatedRequestId = %s prepare F24", deliveryRequest);
 
 
