@@ -24,16 +24,13 @@ import it.pagopa.pn.paperchannel.service.PaperTenderService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.*;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mockito;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -45,13 +42,11 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.F24_WAITING;
 import static org.junit.jupiter.api.Assertions.*;
 
 
-@ExtendWith(MockitoExtension.class)
 @SpringBootTest(classes = {PaperCalculatorUtils.class, F24ServiceImpl.class, PnAuditLogBuilder.class})
 class F24ServiceImplTest {
 
@@ -116,12 +111,12 @@ class F24ServiceImplTest {
     @CsvSource(value = {
             "AAR, 5, 5, 10, 100",
             "AAR, 12, 12, 10, 100",
-            "AAR, 12, 12, 0, 100",
-            "AAR, 12, 12, NULL, 100",
+            "AAR, 12, 12, 0, NULL",
+            "AAR, 12, 12, NULL, NULL",
             "COMPLETE, 5, 5, 10, 6400",
             "COMPLETE, 1, 1, 10, 6200",
-            "COMPLETE, 4, 8, 0, 6400",
-            "COMPLETE, 4, 8, NULL, 6400"
+            "COMPLETE, 4, 8, 0, NULL",
+            "COMPLETE, 4, 8, NULL, NULL"
     }, nullValues = {"NULL"})
     @DisplayName("testPreparePDFSuccess")
     void testPreparePDFSuccess(String calculationMode, Integer paperWeight, Integer letterWeight, Integer f24Cost, Integer expectedCost) throws IOException {
@@ -177,8 +172,15 @@ class F24ServiceImplTest {
         assertEquals(expectedCost, res.getCost());
 
         /* Check called twice to verify F24 skip during attachment page calculation */
-        Mockito.verify(safeStorageClient, Mockito.times(2)).getFile(Mockito.anyString());
-        Mockito.verify(httpConnector, Mockito.times(2)).downloadFile(Mockito.anyString());
+        if(calculationMode.equals(ChargeCalculationModeEnum.COMPLETE.name()) && f24Cost != null && f24Cost > 0) {
+            Mockito.verify(safeStorageClient, Mockito.times(2)).getFile(Mockito.anyString());
+            Mockito.verify(httpConnector, Mockito.times(2)).downloadFile(Mockito.anyString());
+        }
+        else {
+            Mockito.verify(safeStorageClient, Mockito.never()).getFile(Mockito.anyString());
+            Mockito.verify(httpConnector, Mockito.never()).downloadFile(Mockito.anyString());
+        }
+
     }
 
     @Test
