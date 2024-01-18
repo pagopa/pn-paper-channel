@@ -353,7 +353,8 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
         if (Boolean.TRUE.equals(pnDeliveryRequest.getReworkNeeded()))
         {
             log.info("Call PREPARE Sync with rework-needed=true");
-            return createAndPushPrepareEvent(pnDeliveryRequest)
+            return saveRequestAndAddress(prepareRequest)
+                    .flatMap(entitySaved -> createAndPushPrepareEvent(pnDeliveryRequest))
                     .then(Mono.just(PreparePaperResponseMapper.fromResult(pnDeliveryRequest, null)));
         }
         else {

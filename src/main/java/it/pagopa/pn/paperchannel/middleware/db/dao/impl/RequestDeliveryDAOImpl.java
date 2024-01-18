@@ -59,7 +59,7 @@ public class RequestDeliveryDAOImpl extends BaseDAO<PnDeliveryRequest> implement
         return Mono.fromFuture(countOccurrencesEntity(request.getRequestId())
                         .thenCompose( total -> {
                             log.debug("Delivery request with same request id : {}", total);
-                            if (total == 0){
+                            if ( total == 0 || Boolean.TRUE.equals(request.getReworkNeeded())) {
                                 try {
                                     TransactWriteItemsEnhancedRequest.Builder builder =
                                             TransactWriteItemsEnhancedRequest.builder();
