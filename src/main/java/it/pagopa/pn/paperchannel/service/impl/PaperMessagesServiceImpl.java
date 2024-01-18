@@ -347,7 +347,7 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
         {
             log.info("Call PREPARE Sync with rework-needed=true");
             return saveRequestAndAddress(prepareRequest, true)
-                    .flatMap(entitySaved -> createAndPushPrepareEvent(pnDeliveryRequest))
+                    .flatMap(this::createAndPushPrepareEvent)
                     .then(Mono.just(PreparePaperResponseMapper.fromResult(pnDeliveryRequest, null)));
         }
         else {
