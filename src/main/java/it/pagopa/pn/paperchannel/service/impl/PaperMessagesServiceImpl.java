@@ -191,7 +191,15 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
                     log.info("Founded data in  DynamoDb table {}", "RequestDeliveryDynamoTable");
                     SendRequestValidator.compareRequestEntity(sendRequest,entity);
                     if (StringUtils.equals(entity.getStatusCode(), StatusDeliveryEnum.IN_PROCESSING.getCode())) {
-                        throw new PnGenericException(DELIVERY_REQUEST_IN_PROCESSING, DELIVERY_REQUEST_IN_PROCESSING.getMessage(), HttpStatus.CONFLICT);
+
+                        if(Boolean.TRUE.equals(entity.getReworkNeeded())) {
+                            log.info("SEND with rework-needed=true, now I reset the flag to false");
+                            entity.setReworkNeeded(false);
+                            entity.setStatusCode(StatusDeliveryEnum.TAKING_CHARGE.getCode());
+                        }
+                        else {
+                            throw new PnGenericException(DELIVERY_REQUEST_IN_PROCESSING, DELIVERY_REQUEST_IN_PROCESSING.getMessage(), HttpStatus.CONFLICT);
+                        }
                     }
                     log.info("RequestId - {}, Product type - {}",
                             entity.getRequestId(), entity.getProductType());
@@ -238,7 +246,6 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
                     SendResponse sendResponse = tuple.getT1();
                     PnDeliveryRequest pnDeliveryRequest = tuple.getT2();
                     List<AttachmentInfo> attachments = tuple.getT3();
-                    Address address = tuple.getT4();
 
                     if (StringUtils.equals(pnDeliveryRequest.getStatusCode(), StatusDeliveryEnum.TAKING_CHARGE.getCode())) {
                         RequestDeliveryMapper.changeState(
@@ -345,9 +352,9 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
     private Mono<PaperChannelUpdate> checkIfReworkNeededAndReturnPaperChannelUpdate(PrepareRequest prepareRequest, PnDeliveryRequest pnDeliveryRequest){
         if (Boolean.TRUE.equals(pnDeliveryRequest.getReworkNeeded()))
         {
-            return Mono.defer(() -> saveRequestAndAddress(prepareRequest)
-                    .flatMap(this::createAndPushPrepareEvent)
-                    .then(Mono.just(PreparePaperResponseMapper.fromResult(pnDeliveryRequest, null))));
+            log.info("Call PREPARE Sync with rework-needed=true");
+            return createAndPushPrepareEvent(pnDeliveryRequest)
+                    .then(Mono.just(PreparePaperResponseMapper.fromResult(pnDeliveryRequest, null)));
         }
         else {
             log.debug("Getting PnAddress with requestId {}, in DynamoDB table AddressDynamoTable", prepareRequest.getRequestId());
