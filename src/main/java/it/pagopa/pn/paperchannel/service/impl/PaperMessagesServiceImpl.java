@@ -353,7 +353,7 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
         if (Boolean.TRUE.equals(pnDeliveryRequest.getReworkNeeded()))
         {
             log.info("Call PREPARE Sync with rework-needed=true");
-            return saveRequestAndAddress(prepareRequest)
+            return saveRequestAndAddressForReworkNeeded(prepareRequest)
                     .flatMap(entitySaved -> createAndPushPrepareEvent(pnDeliveryRequest))
                     .then(Mono.just(PreparePaperResponseMapper.fromResult(pnDeliveryRequest, null)));
         }
@@ -413,6 +413,34 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
             pnDeliveryRequest.setHashOldAddress(mapped.convertToHash());
             discoveredAddressEntity = AddressMapper.toEntity(mapped, prepareRequest.getRequestId(), AddressTypeEnum.DISCOVERED_ADDRESS, pnPaperChannelConfig);
         }
+        log.logEndingProcess(processName);
+        return requestDeliveryDAO.createWithAddress(pnDeliveryRequest, receiverAddressEntity, discoveredAddressEntity);
+    }
+
+    //TODO rifattorizare per eliminare duplicazione
+    private Mono<PnDeliveryRequest> saveRequestAndAddressForReworkNeeded(PrepareRequest prepareRequest) {
+        String processName = "Save Request and Address For ReworkNeeded";
+        log.logStartingProcess(processName);
+        PnDeliveryRequest pnDeliveryRequest = RequestDeliveryMapper.toEntity(prepareRequest);
+        PnAddress receiverAddressEntity = null;
+        PnAddress discoveredAddressEntity = null;
+
+        if (prepareRequest.getReceiverAddress() != null) {
+            Address mapped = AddressMapper.fromAnalogToAddress(prepareRequest.getReceiverAddress(), null, Const.PREPARE);
+            pnDeliveryRequest.setAddressHash(mapped.convertToHash());
+            receiverAddressEntity = AddressMapper.toEntity(mapped, prepareRequest.getRequestId(), pnPaperChannelConfig);
+            pnDeliveryRequest.setProductType(this.paperCalculatorUtils.getProposalProductType(mapped, pnDeliveryRequest.getProposalProductType()));
+            log.info("RequestId - {}, Proposal product type - {}, Product type - {}",
+                    pnDeliveryRequest.getRequestId(), pnDeliveryRequest.getProposalProductType(), pnDeliveryRequest.getProductType());
+        }
+
+        if (prepareRequest.getDiscoveredAddress() != null) {
+            Address mapped = AddressMapper.fromAnalogToAddress(prepareRequest.getDiscoveredAddress(), null, Const.PREPARE);
+            pnDeliveryRequest.setHashOldAddress(mapped.convertToHash());
+            discoveredAddressEntity = AddressMapper.toEntity(mapped, prepareRequest.getRequestId(), AddressTypeEnum.DISCOVERED_ADDRESS, pnPaperChannelConfig);
+        }
+
+        pnDeliveryRequest.setReworkNeeded(true);
         log.logEndingProcess(processName);
         return requestDeliveryDAO.createWithAddress(pnDeliveryRequest, receiverAddressEntity, discoveredAddressEntity);
     }

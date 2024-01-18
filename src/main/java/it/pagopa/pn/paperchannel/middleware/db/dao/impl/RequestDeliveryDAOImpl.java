@@ -58,7 +58,7 @@ public class RequestDeliveryDAOImpl extends BaseDAO<PnDeliveryRequest> implement
         String fiscalCode = request.getFiscalCode();
         return Mono.fromFuture(countOccurrencesEntity(request.getRequestId())
                         .thenCompose( total -> {
-                            log.debug("Delivery request with same request id : {}", total);
+                            log.debug("Delivery request with same request id: {} and with reworkNeeded: {}", total, request.getReworkNeeded());
                             if ( total == 0 || Boolean.TRUE.equals(request.getReworkNeeded())) {
                                 try {
                                     TransactWriteItemsEnhancedRequest.Builder builder =
