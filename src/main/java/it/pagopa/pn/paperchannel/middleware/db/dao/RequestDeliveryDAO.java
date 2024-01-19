@@ -5,7 +5,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import reactor.core.publisher.Mono;
 
 public interface RequestDeliveryDAO {
-    Mono<PnDeliveryRequest> createWithAddress(PnDeliveryRequest request, PnAddress pnAddress);
+
     Mono<PnDeliveryRequest> createWithAddress(PnDeliveryRequest request, PnAddress pnAddress, PnAddress discoveredAddress);
 
     Mono<PnDeliveryRequest> updateData(PnDeliveryRequest pnDeliveryRequest);
