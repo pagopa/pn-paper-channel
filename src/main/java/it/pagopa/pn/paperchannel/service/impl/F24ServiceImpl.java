@@ -115,10 +115,11 @@ public class F24ServiceImpl extends GenericService implements F24Service {
     }
 
     @Override
-    public Mono<PnDeliveryRequest> arrangeF24AttachmentsAndReschedulePrepare(String requestId, List<String> generatedUrls) {
+    public Mono<PnDeliveryRequest> arrangeF24AttachmentsAndReschedulePrepare(String requestIdFromF24, List<String> generatedUrls) {
         // sistemo gli allegati sostituendoli all'originale, salvo e faccio ripartire l'evento di prepare
+        String requestIdDeliveryRequest = requestIdFromF24.split(REWORK_COUNT_SUFFIX_REQUEST_ID)[0];
         final List<String> normalizedFilekeys = normalizeGeneratedUrls(generatedUrls);
-        return requestDeliveryDAO.getByRequestId(requestId)
+        return requestDeliveryDAO.getByRequestId(requestIdDeliveryRequest)
                         .map(pnDeliveryRequest -> arrangeAttachments(pnDeliveryRequest, normalizedFilekeys))
                         .flatMap(requestDeliveryDAO::updateData)
                         .flatMap(deliveryRequest -> {
@@ -129,7 +130,7 @@ public class F24ServiceImpl extends GenericService implements F24Service {
                         })
                 .doOnSuccess(deliveryRequest -> f24ResponseLogAuditSuccess(deliveryRequest, normalizedFilekeys))
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage())))
-                .doOnError(deliveryRequest -> f24ResponseLogAuditFailure(requestId, normalizedFilekeys));
+                .doOnError(deliveryRequest -> f24ResponseLogAuditFailure(requestIdFromF24, normalizedFilekeys));
 
     }
 
