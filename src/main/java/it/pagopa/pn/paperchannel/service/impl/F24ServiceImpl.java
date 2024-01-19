@@ -62,7 +62,7 @@ public class F24ServiceImpl extends GenericService implements F24Service {
 
     public static final String URL_PROTOCOL_F24 = "f24set";
     private static final String SAFESTORAGE_PREFIX = "safestorage://";
-    private static final String REWORK_COUNT_SUFFIX_REQUEST_ID = "_REWORK_";
+    private static final String REWORK_COUNT_SUFFIX_REQUEST_ID = ".REWORK_";
 
     private final F24Client f24Client;
     private final PaperCalculatorUtils paperCalculatorUtils;
@@ -116,8 +116,9 @@ public class F24ServiceImpl extends GenericService implements F24Service {
 
     @Override
     public Mono<PnDeliveryRequest> arrangeF24AttachmentsAndReschedulePrepare(String requestIdFromF24, List<String> generatedUrls) {
+        //recupero la requestId dell'entità eliminando eventualmente il .REWORK_n
+        String requestIdDeliveryRequest = requestIdFromF24.replaceAll("\\.REWORK_\\d", "");
         // sistemo gli allegati sostituendoli all'originale, salvo e faccio ripartire l'evento di prepare
-        String requestIdDeliveryRequest = requestIdFromF24.split(REWORK_COUNT_SUFFIX_REQUEST_ID)[0];
         final List<String> normalizedFilekeys = normalizeGeneratedUrls(generatedUrls);
         return requestDeliveryDAO.getByRequestId(requestIdDeliveryRequest)
                         .map(pnDeliveryRequest -> arrangeAttachments(pnDeliveryRequest, normalizedFilekeys))

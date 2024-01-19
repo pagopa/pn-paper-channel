@@ -346,7 +346,7 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
         if (Boolean.TRUE.equals(pnDeliveryRequest.getReworkNeeded()))
         {
             log.info("Call PREPARE Sync with rework-needed=true");
-            return saveRequestAndAddress(prepareRequest, true)
+            return saveRequestAndAddress(prepareRequest, true, pnDeliveryRequest.getReworkNeededCount())
                     .flatMap(this::createAndPushPrepareEvent)
                     .then(Mono.just(PreparePaperResponseMapper.fromResult(pnDeliveryRequest, null)));
         }
@@ -385,7 +385,7 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
     }
 
 
-    private Mono<PnDeliveryRequest> saveRequestAndAddress(PrepareRequest prepareRequest, boolean reworkNeeded){
+    private Mono<PnDeliveryRequest> saveRequestAndAddress(PrepareRequest prepareRequest, boolean reworkNeeded, int reworkNeededCount){
         String processName = "Save Request and Address";
         log.logStartingProcess(processName);
         PnDeliveryRequest pnDeliveryRequest = RequestDeliveryMapper.toEntity(prepareRequest);
@@ -413,7 +413,6 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
                 pnDeliveryRequest.setReworkNeededCount(1);
             }
             else {
-                Integer reworkNeededCount = pnDeliveryRequest.getReworkNeededCount();
                 pnDeliveryRequest.setReworkNeededCount(reworkNeededCount + 1);
             }
         }
@@ -423,7 +422,7 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
     }
 
     private Mono<PnDeliveryRequest> saveRequestAndAddress(PrepareRequest prepareRequest){
-        return saveRequestAndAddress(prepareRequest, false);
+        return saveRequestAndAddress(prepareRequest, false, 0);
     }
 
     private Mono<Void> createAndPushPrepareEvent(PnDeliveryRequest deliveryRequest){
