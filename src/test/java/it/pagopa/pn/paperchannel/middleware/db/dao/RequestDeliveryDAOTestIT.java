@@ -34,7 +34,7 @@ class RequestDeliveryDAOTestIT extends BaseTest {
     void createWithAddressTest(){
         Mockito.when(dataVaultEncryption.encode(Mockito.any(), Mockito.any())).thenReturn("returnOk");
         Mockito.when(dataVaultEncryption.decode(Mockito.any())).thenReturn("returnOk");
-        PnDeliveryRequest createRequest = this.requestDeliveryDAO.createWithAddress(request, address).block();
+        PnDeliveryRequest createRequest = this.requestDeliveryDAO.createWithAddress(request, address, null).block();
         assertNotNull(createRequest);
     }
 
@@ -42,14 +42,14 @@ class RequestDeliveryDAOTestIT extends BaseTest {
     void createWithoutAddressTest(){
         Mockito.when(dataVaultEncryption.encode(Mockito.any(), Mockito.any())).thenReturn("returnOk");
         Mockito.when(dataVaultEncryption.decode(Mockito.any())).thenReturn("returnOk");
-        PnDeliveryRequest createRequest2 = this.requestDeliveryDAO.createWithAddress(request1, null).block();
+        PnDeliveryRequest createRequest2 = this.requestDeliveryDAO.createWithAddress(request1, null, null).block();
         assertNotNull(createRequest2);
     }
     @Test
     void updateDataTest(){
         Mockito.when(dataVaultEncryption.encode(Mockito.any(), Mockito.any())).thenReturn("returnOk");
         Mockito.when(dataVaultEncryption.decode(Mockito.any())).thenReturn("returnOk");
-        PnDeliveryRequest createRequest = this.requestDeliveryDAO.createWithAddress(request2, address).block();
+        PnDeliveryRequest createRequest = this.requestDeliveryDAO.createWithAddress(request2, address, null).block();
         PnDeliveryRequest updateRequest = this.requestDeliveryDAO.updateData(duplicateRequest).block();
         assertNotNull(updateRequest);
     }

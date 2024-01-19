@@ -345,9 +345,10 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
     private Mono<PaperChannelUpdate> checkIfReworkNeededAndReturnPaperChannelUpdate(PrepareRequest prepareRequest, PnDeliveryRequest pnDeliveryRequest){
         if (Boolean.TRUE.equals(pnDeliveryRequest.getReworkNeeded()))
         {
-            return Mono.defer(() -> saveRequestAndAddress(prepareRequest)
+            log.info("Call PREPARE Sync with rework-needed=true");
+            return saveRequestAndAddress(prepareRequest, true, pnDeliveryRequest.getReworkNeededCount())
                     .flatMap(this::createAndPushPrepareEvent)
-                    .then(Mono.just(PreparePaperResponseMapper.fromResult(pnDeliveryRequest, null))));
+                    .then(Mono.just(PreparePaperResponseMapper.fromResult(pnDeliveryRequest, null)));
         }
         else {
             log.debug("Getting PnAddress with requestId {}, in DynamoDB table AddressDynamoTable", prepareRequest.getRequestId());
@@ -384,7 +385,7 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
     }
 
 
-    private Mono<PnDeliveryRequest> saveRequestAndAddress(PrepareRequest prepareRequest){
+    private Mono<PnDeliveryRequest> saveRequestAndAddress(PrepareRequest prepareRequest, boolean reworkNeeded, Integer reworkNeededCount){
         String processName = "Save Request and Address";
         log.logStartingProcess(processName);
         PnDeliveryRequest pnDeliveryRequest = RequestDeliveryMapper.toEntity(prepareRequest);
@@ -405,8 +406,23 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
             pnDeliveryRequest.setHashOldAddress(mapped.convertToHash());
             discoveredAddressEntity = AddressMapper.toEntity(mapped, prepareRequest.getRequestId(), AddressTypeEnum.DISCOVERED_ADDRESS, pnPaperChannelConfig);
         }
+
+        if(reworkNeeded) {
+            pnDeliveryRequest.setReworkNeeded(true);
+            if(pnDeliveryRequest.getReworkNeededCount() == null) {
+                pnDeliveryRequest.setReworkNeededCount(1);
+            }
+            else {
+                pnDeliveryRequest.setReworkNeededCount(reworkNeededCount + 1);
+            }
+        }
+
         log.logEndingProcess(processName);
         return requestDeliveryDAO.createWithAddress(pnDeliveryRequest, receiverAddressEntity, discoveredAddressEntity);
+    }
+
+    private Mono<PnDeliveryRequest> saveRequestAndAddress(PrepareRequest prepareRequest){
+        return saveRequestAndAddress(prepareRequest, false, 0);
     }
 
     private Mono<Void> createAndPushPrepareEvent(PnDeliveryRequest deliveryRequest){

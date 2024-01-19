@@ -23,14 +23,17 @@ public class PaperMessagesRestV1Controller implements PaperMessagesApi {
 
     @Override
     public Mono<ResponseEntity<PaperChannelUpdate>> sendPaperPrepareRequest(String requestId, Mono<PrepareRequest> prepareRequest, ServerWebExchange exchange) {
-       return prepareRequest
-               .doOnNext(request -> {
-                   log.debug("Delivery Request of prepare flow");
-                   log.debug(request.getReceiverAddress().toString());
-               })
-               .flatMap(request -> paperMessagesService.preparePaperSync(requestId, request))
-               .map(ResponseEntity::ok)
-               .switchIfEmpty(Mono.just(ResponseEntity.noContent().build()));
+        MDC.put( MDCUtils.MDC_PN_CTX_REQUEST_ID, "PREPARE_PHASE_" + requestId);
+        Mono<ResponseEntity<PaperChannelUpdate>> responseEntityMono = prepareRequest
+                .doOnNext(request -> {
+                    log.debug("Delivery Request of prepare flow");
+                    log.debug(request.getReceiverAddress().toString());
+                })
+                .flatMap(request -> paperMessagesService.preparePaperSync(requestId, request))
+                .map(ResponseEntity::ok)
+                .switchIfEmpty(Mono.just(ResponseEntity.noContent().build()));
+
+        return MDCUtils.addMDCToContextAndExecute(responseEntityMono);
     }
 
     @Override
@@ -40,7 +43,7 @@ public class PaperMessagesRestV1Controller implements PaperMessagesApi {
 
     @Override
     public Mono<ResponseEntity<SendResponse>> sendPaperSendRequest(String requestId, Mono<SendRequest> sendRequest, ServerWebExchange exchange) {
-        MDC.put( MDCUtils.MDC_PN_CTX_REQUEST_ID, requestId);
+        MDC.put( MDCUtils.MDC_PN_CTX_REQUEST_ID, "SEND_PHASE_" + requestId);
         Mono<ResponseEntity<SendResponse>> responseEntityMono = sendRequest.flatMap(request -> paperMessagesService.executionPaper(requestId, request))
                 .map(ResponseEntity::ok);
 
