@@ -6,7 +6,7 @@ import reactor.core.publisher.Mono;
 
 public interface RequestDeliveryDAO {
 
-    Mono<PnDeliveryRequest> createWithAddress(PnDeliveryRequest request, PnAddress pnAddress, PnAddress discoveredAddress, boolean reworkNeeded);
+    Mono<PnDeliveryRequest> createWithAddress(PnDeliveryRequest request, PnAddress pnAddress, PnAddress discoveredAddress);
 
     Mono<PnDeliveryRequest> updateData(PnDeliveryRequest pnDeliveryRequest);
 

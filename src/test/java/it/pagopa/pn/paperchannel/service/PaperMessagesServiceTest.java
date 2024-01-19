@@ -150,7 +150,7 @@ class PaperMessagesServiceTest {
         Mockito.when(this.requestDeliveryDAO.getByRequestId(Mockito.any()))
                 .thenReturn(Mono.empty());
 
-        Mockito.when(requestDeliveryDAO.createWithAddress(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.anyBoolean()))
+        Mockito.when(requestDeliveryDAO.createWithAddress(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(getPnDeliveryRequest()));
 
         Mockito.doNothing().when(this.sqsSender).pushToInternalQueue(Mockito.any());
@@ -195,7 +195,7 @@ class PaperMessagesServiceTest {
             PrepareRequestValidator.compareRequestEntity(getRequestOK(), getPnDeliveryRequest(), true, true);
         }).thenAnswer((Answer<Void>) invocation -> null);
 
-        Mockito.when(requestDeliveryDAO.createWithAddress(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.anyBoolean()))
+        Mockito.when(requestDeliveryDAO.createWithAddress(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(getPnDeliveryRequest()));
 
         Mockito.doNothing().when(this.sqsSender).pushToInternalQueue(Mockito.any());
@@ -296,7 +296,7 @@ class PaperMessagesServiceTest {
                         .thenReturn(Mono.just(getPnAddress("OLD_ADDRESS")));
 
         //MOCK SAVE NEW DELIVERY REQUEST
-        Mockito.when(requestDeliveryDAO.createWithAddress(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.anyBoolean()))
+        Mockito.when(requestDeliveryDAO.createWithAddress(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(deliveryRequest));
 
         //MOCK PUSH QUEUE
@@ -340,7 +340,7 @@ class PaperMessagesServiceTest {
                 .thenReturn(Mono.just(getPnAddress("OLD_ADDRESS")));
 
         //MOCK SAVE NEW DELIVERY REQUEST
-        Mockito.when(requestDeliveryDAO.createWithAddress(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.anyBoolean()))
+        Mockito.when(requestDeliveryDAO.createWithAddress(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(deliveryRequest));
 
         StepVerifier.create(this.paperMessagesService.preparePaperSync("TST-IOR.2332", request))
@@ -373,7 +373,7 @@ class PaperMessagesServiceTest {
             PrepareRequestValidator.compareRequestEntity(getRequestOK(), getPnDeliveryRequest(), true, true);
         }).thenAnswer((Answer<Void>) invocation -> null);
 
-        Mockito.when(requestDeliveryDAO.createWithAddress(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.anyBoolean()))
+        Mockito.when(requestDeliveryDAO.createWithAddress(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(getPnDeliveryRequest()));
 
         Mockito.doNothing().when(this.sqsSender).pushToInternalQueue(Mockito.any());
@@ -810,7 +810,7 @@ class PaperMessagesServiceTest {
     void paperAsyncEntityAndAddressSwitchIfEmptyTest() {
 
         Mockito.when(requestDeliveryDAO.getByRequestId(deliveryRequestTakingCharge.getRequestId())).thenReturn(Mono.empty());
-        Mockito.when(requestDeliveryDAO.createWithAddress(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.anyBoolean()))
+        Mockito.when(requestDeliveryDAO.createWithAddress(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(deliveryRequestTakingCharge));
         Mockito.doNothing().when(sqsSender).pushToInternalQueue(Mockito.any());
         PaperChannelUpdate update = paperMessagesService.preparePaperSync(deliveryRequestTakingCharge.getRequestId(), getRequestOK()).block();

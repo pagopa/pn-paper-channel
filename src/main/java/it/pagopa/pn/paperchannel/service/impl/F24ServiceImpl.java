@@ -11,7 +11,6 @@ import it.pagopa.pn.paperchannel.exception.PnF24FlowException;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.exception.PnRetryStorageException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnf24.v1.dto.MetadataPagesDto;
-import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnf24.v1.dto.NumberOfPagesResponseDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileDownloadResponseDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ProductTypeEnum;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
@@ -63,6 +62,7 @@ public class F24ServiceImpl extends GenericService implements F24Service {
 
     public static final String URL_PROTOCOL_F24 = "f24set";
     private static final String SAFESTORAGE_PREFIX = "safestorage://";
+    private static final String REWORK_COUNT_SUFFIX_REQUEST_ID = "_REWORK_";
 
     private final F24Client f24Client;
     private final PaperCalculatorUtils paperCalculatorUtils;
@@ -135,15 +135,17 @@ public class F24ServiceImpl extends GenericService implements F24Service {
 
     private Mono<PnDeliveryRequest> preparePdfAndEnrichDeliveryRequest(PnDeliveryRequest deliveryRequest, PnAttachmentInfo f24Attachment) {
 
+        String requestIdForF24Prepare = Boolean.TRUE.equals(deliveryRequest.getReworkNeeded()) ? deliveryRequest.getRequestId() + REWORK_COUNT_SUFFIX_REQUEST_ID + deliveryRequest.getReworkNeededCount() : deliveryRequest.getRequestId();
         return this.parseF24URL(f24Attachment.getFileKey())
                 .flatMap(f24AttachmentInfo -> enrichWithAnalogCostIfNeeded(f24AttachmentInfo, deliveryRequest, f24Attachment))
                 /* Call preparePDF request API and propagate Analog Cost */
                 .doOnSuccess(f24AttachmentInfo -> logAuditBefore("preparePDF requestId = %s, relatedRequestId = %s engaging F24 ", deliveryRequest))
-                .flatMap(f24AttachmentInfo -> f24Client.preparePDF(deliveryRequest.getRequestId(), f24AttachmentInfo.getSetId(), f24AttachmentInfo.getRecipientIndex(), sumCostAndAnalogCost(f24AttachmentInfo)).thenReturn(f24AttachmentInfo))
+                .flatMap(f24AttachmentInfo -> f24Client.preparePDF(requestIdForF24Prepare, f24AttachmentInfo.getSetId(), f24AttachmentInfo.getRecipientIndex(), sumCostAndAnalogCost(f24AttachmentInfo)).thenReturn(f24AttachmentInfo))
                 .doOnNext(f24AttachmentInfo -> logAuditSuccess("preparePDF requestId = %s, relatedRequestId = %s successfully sent to F24", deliveryRequest))
                 /* Insert Analog Cost and change status of delivery request to F24_WAITING */
                 .map(f24AttachmentInfo -> this.enrichDeliveryRequest(deliveryRequest, F24_WAITING, f24AttachmentInfo.getAnalogCost(), null))
                 .map(this::restoreNumberOfPagesAndDocTypeAtNullIfCOMPLETEMode)
+                .map(this::resetReworkNeededFlag)
                 /* Update delivery request on database */
                 .flatMap(this.requestDeliveryDAO::updateData)
                 .onErrorResume(ex -> catchThrowableAndThrowPnF24FlowException(ex, deliveryRequest.getIun(), deliveryRequest.getRequestId(), deliveryRequest.getRelatedRequestId()));
@@ -184,10 +186,12 @@ public class F24ServiceImpl extends GenericService implements F24Service {
                 })
                 .flatMap(numberOfPagesResponseDto -> enrichAttachmentsNotF24WithPageNumber(deliveryRequest).thenReturn(numberOfPagesResponseDto))
                 .doOnNext(numberOfPagesResponseDto -> {
-                    List<Tuple2<String, Integer>> tuples = deliveryRequest.getAttachments().stream()
-                            .map(pnAttachmentInfo -> Tuples.of(pnAttachmentInfo.getFileKey(), pnAttachmentInfo.getNumberOfPage()))
-                            .toList();
-                    log.debug("Attachments with number of pages after enrichment: {}", tuples);
+                    if(log.isDebugEnabled()) {
+                        List<Tuple2<String, Integer>> tuples = deliveryRequest.getAttachments().stream()
+                                .map(pnAttachmentInfo -> Tuples.of(pnAttachmentInfo.getFileKey(), pnAttachmentInfo.getNumberOfPage()))
+                                .toList();
+                        log.debug("Attachments with number of pages after enrichment: {}", tuples);
+                    }
                 })
                 .thenReturn(f24AttachmentInfo);
     }
@@ -204,6 +208,11 @@ public class F24ServiceImpl extends GenericService implements F24Service {
                         }
                     });
         }
+        return pnDeliveryRequest;
+    }
+
+    private PnDeliveryRequest resetReworkNeededFlag(PnDeliveryRequest pnDeliveryRequest) {
+        pnDeliveryRequest.setReworkNeeded(null);
         return pnDeliveryRequest;
     }
 

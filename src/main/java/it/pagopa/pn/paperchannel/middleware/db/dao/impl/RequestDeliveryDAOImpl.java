@@ -49,12 +49,12 @@ public class RequestDeliveryDAOImpl extends BaseDAO<PnDeliveryRequest> implement
 
 
     @Override
-    public Mono<PnDeliveryRequest> createWithAddress(PnDeliveryRequest request, PnAddress pnAddress, PnAddress discoveredAddress, boolean reworkNeeded) {
+    public Mono<PnDeliveryRequest> createWithAddress(PnDeliveryRequest request, PnAddress pnAddress, PnAddress discoveredAddress) {
         String fiscalCode = request.getFiscalCode();
         return Mono.fromFuture(countOccurrencesEntity(request.getRequestId())
                         .thenCompose( total -> {
-                            log.debug("Delivery request with same request id: {} and with reworkNeeded: {}", total, reworkNeeded);
-                            if ( total == 0 || Boolean.TRUE.equals(reworkNeeded)) {
+                            log.debug("Delivery request with same request id: {} and with reworkNeeded: {}", total, request.getReworkNeeded());
+                            if ( total == 0 || Boolean.TRUE.equals(request.getReworkNeeded())) {
                                 try {
                                     TransactWriteItemsEnhancedRequest.Builder builder =
                                             TransactWriteItemsEnhancedRequest.builder();

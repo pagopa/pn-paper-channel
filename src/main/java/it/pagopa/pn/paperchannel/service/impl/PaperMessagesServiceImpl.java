@@ -406,8 +406,20 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
             pnDeliveryRequest.setHashOldAddress(mapped.convertToHash());
             discoveredAddressEntity = AddressMapper.toEntity(mapped, prepareRequest.getRequestId(), AddressTypeEnum.DISCOVERED_ADDRESS, pnPaperChannelConfig);
         }
+
+        if(reworkNeeded) {
+            pnDeliveryRequest.setReworkNeeded(true);
+            if(pnDeliveryRequest.getReworkNeededCount() == null) {
+                pnDeliveryRequest.setReworkNeededCount(1);
+            }
+            else {
+                Integer reworkNeededCount = pnDeliveryRequest.getReworkNeededCount();
+                pnDeliveryRequest.setReworkNeededCount(reworkNeededCount + 1);
+            }
+        }
+
         log.logEndingProcess(processName);
-        return requestDeliveryDAO.createWithAddress(pnDeliveryRequest, receiverAddressEntity, discoveredAddressEntity, reworkNeeded);
+        return requestDeliveryDAO.createWithAddress(pnDeliveryRequest, receiverAddressEntity, discoveredAddressEntity);
     }
 
     private Mono<PnDeliveryRequest> saveRequestAndAddress(PrepareRequest prepareRequest){
