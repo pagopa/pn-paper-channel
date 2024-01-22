@@ -16,7 +16,7 @@ echo $_GARA
 
 gara() {
     #INSERIMENTO GARA : il "code" non deve già essere presente a db.
-    curl --location --request POST "${_BASEURI}/paper-channel-bo/v1/tender" --header 'Content-Type: application/json' --data "{ \"code\": \"$_GARA\", \"name\": \"Gara Recapito 2023 - Configurazione Scaglioni Peso\", \"startDate\": \"2024-01-22\", \"endDate\": \"2025-09-10\" }"
+    curl --location --request POST "${_BASEURI}/paper-channel-bo/v1/tender" --header 'Content-Type: application/json' --data "{ \"code\": \"$_GARA\", \"name\": \"Gara Recapito Costi 2024 - update 01/2024\", \"startDate\": \"2024-01-22\", \"endDate\": \"2025-09-10\" }"
 }
 
 recapitisti(){
