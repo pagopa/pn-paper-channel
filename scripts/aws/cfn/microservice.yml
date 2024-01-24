@@ -328,6 +328,11 @@ Parameters:
     Default: '0'
     Description: 'Max retry attempts for F24 client'
 
+  RequiredDemats:
+    Type: String
+    Default: '23L,ARCAD'
+    Description: 'Variable that defines all the mandatory demats related (for now) only to PNAG012 events, using format <DEMAT_1>,<DEMAT_2>,...,<DEMAT_N>'
+
   # OpenApi Bucket params
   MicroserviceBucketName:
     Type: String
@@ -546,6 +551,7 @@ Resources:
         ContainerEnvEntry55: !Sub 'PN_PAPERCHANNEL_QUEUEF24=${F24ToPaperChannelQueueName}'
         ContainerEnvEntry56: !Sub 'PN_PAPERCHANNEL_F24CLIENT_TIMEOUTMILLIS=${F24ClientReadTimeoutMillis}'
         ContainerEnvEntry57: !Sub 'PN_PAPERCHANNEL_F24CLIENT_RETRYMAXATTEMPTS=${F24ClientRetryMaxAttempts}'
+        ContainerEnvEntry58: !Sub 'PN_PAPERCHANNEL_REQUIREDDEMATS=${RequiredDemats}'
         ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-PaperChannel-Secrets
         MappedPaths: '/paper-channel-bo/*,/paper-channel-private/*'
