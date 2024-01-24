@@ -13,6 +13,7 @@ import org.springframework.context.annotation.Import;
 import javax.annotation.PostConstruct;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -58,7 +59,7 @@ public class PnPaperChannelConfig {
     private List<String> dateChargeCalculationModes;
     private Duration refinementDuration;
     private String requestPaIdOverride;
-    private List<String> requiredDemats;
+    private Set<String> requiredDemats;
 
     /**
      * Per l'errore PNADDR001: True se il failureDetailCode D01 deve essere mandato a delivery push (specificando anche l'indirizzo),
