@@ -20,6 +20,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.util.HashSet;
 import java.util.List;
 
 import static it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.PNAG012MessageHandler.DEMAT_SORT_KEYS_FILTER;
@@ -47,7 +48,8 @@ class RECAG011BMessageHandlerTest {
         eventMetaDAO = mock(EventMetaDAO.class);
         mockSqsSender = mock(SqsSender.class);
 
-        PNAG012MessageHandler pnag012MessageHandler = new PNAG012MessageHandler(mockSqsSender, eventDematDAO, ttlDays, eventMetaDAO, ttlDays);
+        // TODO: added new HashSet, implement test cases
+        PNAG012MessageHandler pnag012MessageHandler = new PNAG012MessageHandler(mockSqsSender, eventDematDAO, ttlDays, eventMetaDAO, ttlDays, new HashSet<>());
         handler = new RECAG011BMessageHandler(mockSqsSender, eventDematDAO, ttlDays, pnag012MessageHandler);
     }
 

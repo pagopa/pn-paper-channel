@@ -17,6 +17,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.OffsetDateTime;
+import java.util.HashSet;
 
 import static it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.PNAG012MessageHandler.*;
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
@@ -39,7 +40,9 @@ class PNAG012MessageHandlerTest {
         eventDematDAO = mock(EventDematDAO.class);
         eventMetaDAO = mock(EventMetaDAO.class);
         mockSqsSender = mock(SqsSender.class);
-        handler = new PNAG012MessageHandler(mockSqsSender, eventDematDAO, ttlDays, eventMetaDAO, ttlDays);
+
+        // TODO: added new HashSet, implement test cases
+        handler = new PNAG012MessageHandler(mockSqsSender, eventDematDAO, ttlDays, eventMetaDAO, ttlDays, new HashSet<>());
     }
 
     @Test

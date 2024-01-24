@@ -14,7 +14,8 @@ import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
 
@@ -49,10 +50,13 @@ public class PNAG012MessageHandler extends SaveDematMessageHandler {
 
     private final Long ttlDaysMeta;
 
-    public PNAG012MessageHandler(SqsSender sqsSender, EventDematDAO eventDematDAO, Long ttlDaysDemat, EventMetaDAO eventMetaDAO, Long ttlDaysMeta) {
+    private final Set<String> requiredDemats;
+
+    public PNAG012MessageHandler(SqsSender sqsSender, EventDematDAO eventDematDAO, Long ttlDaysDemat, EventMetaDAO eventMetaDAO, Long ttlDaysMeta, Set<String> requiredDemats) {
         super(sqsSender, eventDematDAO, ttlDaysDemat);
         this.eventMetaDAO = eventMetaDAO;
         this.ttlDaysMeta = ttlDaysMeta;
+        this.requiredDemats = requiredDemats;
     }
 
     @Override
@@ -81,17 +85,22 @@ public class PNAG012MessageHandler extends SaveDematMessageHandler {
     }
 
 
+    /**
+     * This method evaluates whether it is possible to create and send a PNAG012 event
+     * checking if all required demats are included as subset in pnEventDemats.
+     *
+     * @param pnEventDemats the demats to check
+     * @return              true if all required demats are include, false otherwise
+     * */
     private boolean canCreatePNAG012Event(List<PnEventDemat> pnEventDemats) {
-        Optional<PnEventDemat> twentyThreeLElement = pnEventDemats.stream()
-                .filter(pnEventDemat -> DEMAT_23L_RECAG011B.equals(pnEventDemat.getDocumentTypeStatusCode()))
-                .findFirst();
 
-        Optional<PnEventDemat> arcadOrCadElement = pnEventDemats.stream()
-                .filter(pnEventDemat -> DEMAT_ARCAD_RECAG011B.equals(pnEventDemat.getDocumentTypeStatusCode()) ||
-                        DEMAT_CAD_RECAG011B.equals(pnEventDemat.getDocumentTypeStatusCode()))
-                .findFirst();
+        // TODO: implement ARCAD-CAD equality method in utils
 
-        return twentyThreeLElement.isPresent() && arcadOrCadElement.isPresent();
+        Set<String> recag011bDocumentTypes = pnEventDemats.stream()
+                .filter(pnEventDemat -> pnEventDemat.getStatusCode().equals(RECAG011B_STATUS_CODE))
+                .map(PnEventDemat::getDocumentType).collect(Collectors.toSet());
+
+        return recag011bDocumentTypes.containsAll(requiredDemats);
     }
 
     private Mono<PNAG012Wrapper> pnag012Flow(PnEventMeta pnEventMetaPNAG012, PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest, PnLogAudit pnLogAudit) {
