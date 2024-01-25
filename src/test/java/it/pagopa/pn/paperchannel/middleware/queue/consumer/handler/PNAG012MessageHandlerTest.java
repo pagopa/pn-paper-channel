@@ -106,7 +106,10 @@ class PNAG012MessageHandlerTest {
         // Then
         // eseguo l'handler
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
-        verify(mockSqsSender, times(1)).pushSendEvent(any());
+
+        verify(eventMetaDAO, times(1)).getDeliveryEventMeta(anyString(), anyString());
+        verify(eventMetaDAO, times(1)).putIfAbsent(any(PnEventMeta.class));
+        verify(mockSqsSender, times(1)).pushSendEvent(any(SendEvent.class));
 
     }
 
