@@ -11,6 +11,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventDemat;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
 import it.pagopa.pn.paperchannel.middleware.queue.model.PNAG012Wrapper;
 import it.pagopa.pn.paperchannel.service.SqsSender;
+import it.pagopa.pn.paperchannel.utils.DematDocumentTypeEnum;
 import it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,11 +21,12 @@ import reactor.core.publisher.Mono;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.PNAG012MessageHandler.DEMAT_SORT_KEYS_FILTER;
 import static it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.PNAG012MessageHandler.META_SORT_KEY_FILTER;
+import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.RECAG011B_STATUS_CODE;
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.createMETAForPNAG012Event;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -48,8 +50,12 @@ class RECAG011BMessageHandlerTest {
         eventMetaDAO = mock(EventMetaDAO.class);
         mockSqsSender = mock(SqsSender.class);
 
-        // TODO: added new HashSet, implement test cases
-        PNAG012MessageHandler pnag012MessageHandler = new PNAG012MessageHandler(mockSqsSender, eventDematDAO, ttlDays, eventMetaDAO, ttlDays, new HashSet<>());
+        Set<String> requiredDemats = Set.of(
+                DematDocumentTypeEnum.DEMAT_23L.getDocumentType(),
+                DematDocumentTypeEnum.DEMAT_ARCAD.getDocumentType()
+        );
+
+        PNAG012MessageHandler pnag012MessageHandler = new PNAG012MessageHandler(mockSqsSender, eventDematDAO, ttlDays, eventMetaDAO, ttlDays, requiredDemats);
         handler = new RECAG011BMessageHandler(mockSqsSender, eventDematDAO, ttlDays, pnag012MessageHandler);
     }
 
@@ -84,8 +90,13 @@ class RECAG011BMessageHandlerTest {
 
         PnEventDemat pnEventDemat23L = new PnEventDemat();
         pnEventDemat23L.setDocumentTypeStatusCode("23L##RECAG011B");
+        pnEventDemat23L.setDocumentType(DematDocumentTypeEnum.DEMAT_23L.getDocumentType());
+        pnEventDemat23L.setStatusCode(RECAG011B_STATUS_CODE);
+
         PnEventDemat pnEventDematARCAD = new PnEventDemat();
         pnEventDematARCAD.setDocumentTypeStatusCode("ARCAD##RECAG011B");
+        pnEventDematARCAD.setDocumentType(DematDocumentTypeEnum.DEMAT_ARCAD.getDocumentType());
+        pnEventDematARCAD.setStatusCode(RECAG011B_STATUS_CODE);
 
         when(eventDematDAO.findAllByKeys("DEMAT##requestId", DEMAT_SORT_KEYS_FILTER)).thenReturn(
                 Flux.fromIterable(List.of(pnEventDemat23L, pnEventDematARCAD)));
@@ -151,7 +162,9 @@ class RECAG011BMessageHandlerTest {
 
         PnEventDemat pnEventDemat23L = new PnEventDemat();
         pnEventDemat23L.setDocumentTypeStatusCode("23L##RECAG011B");
-        //viene trovato solo 23L##RECAG011B, che non basta a soddisfare il filtro
+        pnEventDemat23L.setDocumentType(DematDocumentTypeEnum.DEMAT_23L.getDocumentType());
+        pnEventDemat23L.setStatusCode(RECAG011B_STATUS_CODE);
+        //viene trovato solo 23L##RECAG011B, che non basta a soddisfare il filtro (vedere requiredDemats nell'init)
 
         when(eventDematDAO.findAllByKeys("DEMAT##requestId", DEMAT_SORT_KEYS_FILTER)).thenReturn(
                 Flux.fromIterable(List.of(pnEventDemat23L)));
@@ -210,8 +223,13 @@ class RECAG011BMessageHandlerTest {
 
         PnEventDemat pnEventDemat23L = new PnEventDemat();
         pnEventDemat23L.setDocumentTypeStatusCode("23L##RECAG011B");
+        pnEventDemat23L.setDocumentType(DematDocumentTypeEnum.DEMAT_23L.getDocumentType());
+        pnEventDemat23L.setStatusCode(RECAG011B_STATUS_CODE);
+
         PnEventDemat pnEventDematARCAD = new PnEventDemat();
         pnEventDematARCAD.setDocumentTypeStatusCode("ARCAD##RECAG011B");
+        pnEventDematARCAD.setDocumentType(DematDocumentTypeEnum.DEMAT_ARCAD.getDocumentType());
+        pnEventDematARCAD.setStatusCode(RECAG011B_STATUS_CODE);
 
         when(eventDematDAO.findAllByKeys("DEMAT##requestId", DEMAT_SORT_KEYS_FILTER)).thenReturn(
                 Flux.fromIterable(List.of(pnEventDemat23L, pnEventDematARCAD)));
@@ -271,8 +289,13 @@ class RECAG011BMessageHandlerTest {
 
         PnEventDemat pnEventDemat23L = new PnEventDemat();
         pnEventDemat23L.setDocumentTypeStatusCode("23L##RECAG011B");
+        pnEventDemat23L.setDocumentType(DematDocumentTypeEnum.DEMAT_23L.getDocumentType());
+        pnEventDemat23L.setStatusCode(RECAG011B_STATUS_CODE);
+
         PnEventDemat pnEventDematARCAD = new PnEventDemat();
         pnEventDematARCAD.setDocumentTypeStatusCode("ARCAD##RECAG011B");
+        pnEventDematARCAD.setDocumentType(DematDocumentTypeEnum.DEMAT_ARCAD.getDocumentType());
+        pnEventDematARCAD.setStatusCode(RECAG011B_STATUS_CODE);
 
         when(eventDematDAO.findAllByKeys("DEMAT##requestId", DEMAT_SORT_KEYS_FILTER)).thenReturn(
                 Flux.fromIterable(List.of(pnEventDemat23L, pnEventDematARCAD)));

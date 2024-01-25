@@ -40,7 +40,7 @@ public class PNAG012MessageHandler extends SaveDematMessageHandler {
 
     protected static final String DEMAT_ARCAD_RECAG011B = buildDocumentTypeStatusCode(DematDocumentTypeEnum.DEMAT_ARCAD.getDocumentType(), RECAG011B_STATUS_CODE);
 
-    private static final String DEMAT_CAD_RECAG011B = buildDocumentTypeStatusCode(DematDocumentTypeEnum.DEMAT_CAD.getDocumentType(), RECAG011B_STATUS_CODE);
+    protected static final String DEMAT_CAD_RECAG011B = buildDocumentTypeStatusCode(DematDocumentTypeEnum.DEMAT_CAD.getDocumentType(), RECAG011B_STATUS_CODE);
     protected static final String[] DEMAT_SORT_KEYS_FILTER = {
             DEMAT_23L_RECAG011B,
             DEMAT_ARCAD_RECAG011B,
