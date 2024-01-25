@@ -2,22 +2,23 @@ package it.pagopa.pn.paperchannel.utils;
 
 import lombok.Getter;
 
-import java.util.Arrays;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @Getter
 public enum DematDocumentTypeEnum {
-    DEMAT_AR("AR", Set.of("AR")),
-    DEMAT_ARCAD("ARCAD", Set.of("ARCAD", "CAD")),
-    DEMAT_23L("23L", Set.of("23L"));
+    DEMAT_AR("AR", "AR"),
+    DEMAT_ARCAD("ARCAD", "ARCAD"),
+    DEMAT_CAD("CAD", "ARCAD"),
+    DEMAT_23L("23L", "23L");
 
+    private final String documentType;
     private final String alias;
-    private final Set<String> documentTypes;
 
-    DematDocumentTypeEnum(String alias, Set<String> documentTypes) {
+    private final static String DEMAT_PREFIX = "DEMAT_";
+
+    DematDocumentTypeEnum(String documentType, String alias) {
+        this.documentType = documentType;
         this.alias = alias;
-        this.documentTypes = documentTypes;
     }
 
     /**
@@ -27,9 +28,15 @@ public enum DematDocumentTypeEnum {
      * @return              optional {@link DematDocumentTypeEnum}
      * */
     public static Optional<DematDocumentTypeEnum> fromDocumentType(String documentType) {
-        return Arrays.stream(DematDocumentTypeEnum.values())
-                .filter(dematDocumentTypeEnum -> dematDocumentTypeEnum.getDocumentTypes().contains(documentType))
-                .findFirst();
+        DematDocumentTypeEnum dematDocumentTypeEnum;
+
+        try {
+            dematDocumentTypeEnum = DematDocumentTypeEnum.valueOf(DEMAT_PREFIX + documentType);
+        } catch (IllegalArgumentException e) {
+            dematDocumentTypeEnum = null;
+        }
+
+        return Optional.ofNullable(dematDocumentTypeEnum);
     }
 
     /**
