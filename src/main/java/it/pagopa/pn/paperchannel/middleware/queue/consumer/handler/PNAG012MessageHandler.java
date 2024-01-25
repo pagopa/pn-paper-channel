@@ -9,6 +9,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventDemat;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
 import it.pagopa.pn.paperchannel.middleware.queue.model.PNAG012Wrapper;
 import it.pagopa.pn.paperchannel.service.SqsSender;
+import it.pagopa.pn.paperchannel.utils.DematDocumentTypeEnum;
 import it.pagopa.pn.paperchannel.utils.PnLogAudit;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
@@ -87,18 +88,18 @@ public class PNAG012MessageHandler extends SaveDematMessageHandler {
 
     /**
      * This method evaluates whether it is possible to create and send a PNAG012 event
-     * checking if all required demats are included as subset in pnEventDemats.
+     * checking if all required demats are included as subset of pnEventDemats.
      *
      * @param pnEventDemats the demats to check
-     * @return              true if all required demats are include, false otherwise
+     * @return              true if all required demats are included, false otherwise
      * */
     private boolean canCreatePNAG012Event(List<PnEventDemat> pnEventDemats) {
 
-        // TODO: implement ARCAD-CAD equality method in utils
-
+        // Set ensure no duplicates
         Set<String> recag011bDocumentTypes = pnEventDemats.stream()
                 .filter(pnEventDemat -> pnEventDemat.getStatusCode().equals(RECAG011B_STATUS_CODE))
-                .map(PnEventDemat::getDocumentType).collect(Collectors.toSet());
+                .map(pnEventDemat -> DematDocumentTypeEnum.getAliasFromDocumentType(pnEventDemat.getDocumentType()))
+                .collect(Collectors.toSet());
 
         return recag011bDocumentTypes.containsAll(requiredDemats);
     }
