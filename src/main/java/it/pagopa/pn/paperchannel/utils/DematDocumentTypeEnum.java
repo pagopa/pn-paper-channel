@@ -1,15 +1,30 @@
 package it.pagopa.pn.paperchannel.utils;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
 
+/**
+ * <p>
+ *     This enum gathers all demat document types in a type safe way providing some additional utilities:
+ *     <ul>
+ *         <li>Gather demat document types in a centralized enumeration</li>
+ *         <li>Provide aliasing translation when need to refer to same or similar object from a business point of view</li>
+ *         <li>Implement utility methods to retrieve correct value from raw string with fallbacks to avoid throwing exceptions</li>
+ *     </ul>
+ * </p>
+ */
 @Getter
+@Slf4j
 public enum DematDocumentTypeEnum {
     DEMAT_AR("AR", "AR"),
     DEMAT_ARCAD("ARCAD", "ARCAD"),
     DEMAT_CAD("CAD", "ARCAD"),
-    DEMAT_23L("23L", "23L");
+    DEMAT_23L("23L", "23L"),
+    DEMAT_PLICO("Plico", "Plico"),
+    DEMAT_INDAGINE("Indagine", "Indagine");
 
     private final String documentType;
     private final String alias;
@@ -28,12 +43,13 @@ public enum DematDocumentTypeEnum {
      * @return              optional {@link DematDocumentTypeEnum}
      * */
     public static Optional<DematDocumentTypeEnum> fromDocumentType(String documentType) {
-        DematDocumentTypeEnum dematDocumentTypeEnum;
+        DematDocumentTypeEnum dematDocumentTypeEnum = null;
 
         try {
-            dematDocumentTypeEnum = DematDocumentTypeEnum.valueOf(DEMAT_PREFIX + documentType);
+            // use StringUtils#upperCase to avoid null pointer exceptions
+            dematDocumentTypeEnum = DematDocumentTypeEnum.valueOf(DEMAT_PREFIX + StringUtils.upperCase(documentType));
         } catch (IllegalArgumentException e) {
-            dematDocumentTypeEnum = null;
+            log.warn("Cannot find DematDocumentTypeEnum with name {}", documentType);
         }
 
         return Optional.ofNullable(dematDocumentTypeEnum);

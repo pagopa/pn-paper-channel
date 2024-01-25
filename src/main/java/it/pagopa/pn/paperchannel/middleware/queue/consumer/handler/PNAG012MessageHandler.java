@@ -95,9 +95,10 @@ public class PNAG012MessageHandler extends SaveDematMessageHandler {
      * */
     private boolean canCreatePNAG012Event(List<PnEventDemat> pnEventDemats) {
 
-        // Set ensure no duplicates
+        // Set<> ensure no duplicates
         Set<String> recag011bDocumentTypes = pnEventDemats.stream()
                 .filter(pnEventDemat -> pnEventDemat.getStatusCode().equals(RECAG011B_STATUS_CODE))
+                .filter(pnEventDemat -> pnEventDemat.getDocumentType() != null)
                 .map(pnEventDemat -> DematDocumentTypeEnum.getAliasFromDocumentType(pnEventDemat.getDocumentType()))
                 .collect(Collectors.toSet());
 
