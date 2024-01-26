@@ -13,6 +13,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventDemat;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.DematDocumentTypeEnum;
+import it.pagopa.pn.paperchannel.utils.MetaDematUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -54,7 +55,7 @@ class PNAG012MessageHandlerTest {
     }
 
     @Test
-    void okTest() {
+    void testFlowContainsExactlyRequiredDematsOK() {
 
         // Given
         OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
@@ -84,16 +85,9 @@ class PNAG012MessageHandlerTest {
         demat2.setStatusCode(RECAG011B_STATUS_CODE);
         demat2.setDocumentType(DematDocumentTypeEnum.DEMAT_ARCAD.getDocumentType());
 
-        /* Not known Demat 3 must not interfere with required demats check */
-        PnEventDemat demat3 = new PnEventDemat();
-        demat3.setDematRequestId(dematRequestId);
-        demat3.setDocumentTypeStatusCode(DEMAT_ARCAD_RECAG011B);
-        demat3.setStatusCode(RECAG011B_STATUS_CODE);
-        demat3.setDocumentType("AnotherDocumentType");
-
         // When
         when(eventDematDAO.findAllByKeys(dematRequestId, DEMAT_SORT_KEYS_FILTER))
-                .thenReturn(Flux.just(demat1, demat2, demat3));
+                .thenReturn(Flux.just(demat1, demat2));
 
         String metadataRequestIdFilter = buildMetaRequestId(paperRequest.getRequestId());
         PnEventMeta pnEventMetaRECAG012 = buildPnEventMeta(paperRequest);
@@ -111,6 +105,72 @@ class PNAG012MessageHandlerTest {
         verify(eventMetaDAO, times(1)).putIfAbsent(any(PnEventMeta.class));
         verify(mockSqsSender, times(1)).pushSendEvent(any(SendEvent.class));
 
+    }
+
+    @Test
+    void testFlowContainsAtLeastRequiredDematsOK() {
+
+        // Given
+        OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
+        PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
+                .requestId("requestId")
+                .statusCode("RECAG012")
+                .statusDateTime(instant)
+                .clientRequestTimeStamp(instant)
+                .deliveryFailureCause("M02");
+
+        PnDeliveryRequest entity = new PnDeliveryRequest();
+        entity.setRequestId("requestId");
+        entity.setStatusCode("statusDetail");
+        entity.setStatusDetail(StatusCodeEnum.PROGRESS.getValue());
+
+        String dematRequestId = buildDematRequestId(paperRequest.getRequestId());
+        String notManagedDocumentType = "AnotherDocumentType";
+
+        PnEventDemat demat1 = new PnEventDemat();
+        demat1.setDematRequestId(dematRequestId);
+        demat1.setDocumentTypeStatusCode(DEMAT_23L_RECAG011B);
+        demat1.setStatusCode(RECAG011B_STATUS_CODE);
+        demat1.setDocumentType(DematDocumentTypeEnum.DEMAT_23L.getDocumentType());
+
+        PnEventDemat demat2 = new PnEventDemat();
+        demat2.setDematRequestId(dematRequestId);
+        demat2.setDocumentTypeStatusCode(DEMAT_ARCAD_RECAG011B);
+        demat2.setStatusCode(RECAG011B_STATUS_CODE);
+        demat2.setDocumentType(DematDocumentTypeEnum.DEMAT_ARCAD.getDocumentType());
+
+        /* Not known Demat 3 must not interfere with required demats check */
+        PnEventDemat demat3 = new PnEventDemat();
+        demat3.setDematRequestId(dematRequestId);
+        demat3.setDocumentTypeStatusCode(MetaDematUtils.buildDocumentTypeStatusCode(notManagedDocumentType, RECAG011B_STATUS_CODE));
+        demat3.setStatusCode(RECAG011B_STATUS_CODE);
+        demat3.setDocumentType(notManagedDocumentType);
+
+        /* Demat with null document type must be skipped from required demats check */
+        PnEventDemat demat4 = new PnEventDemat();
+        demat4.setDematRequestId(dematRequestId);
+        demat4.setDocumentTypeStatusCode(MetaDematUtils.buildDocumentTypeStatusCode(notManagedDocumentType, RECAG011B_STATUS_CODE));
+        demat4.setStatusCode(RECAG011B_STATUS_CODE);
+        demat4.setDocumentType(null);
+
+        // When
+        when(eventDematDAO.findAllByKeys(dematRequestId, DEMAT_SORT_KEYS_FILTER))
+                .thenReturn(Flux.just(demat1, demat2, demat3, demat4));
+
+        String metadataRequestIdFilter = buildMetaRequestId(paperRequest.getRequestId());
+        PnEventMeta pnEventMetaRECAG012 = buildPnEventMeta(paperRequest);
+        when(eventMetaDAO.getDeliveryEventMeta(metadataRequestIdFilter, META_SORT_KEY_FILTER))
+                .thenReturn(Mono.just(pnEventMetaRECAG012));
+
+        PnEventMeta pnEventMetaPNAG012 = createMETAForPNAG012Event(paperRequest, pnEventMetaRECAG012, 365L);
+        when(eventMetaDAO.putIfAbsent(pnEventMetaPNAG012)).thenReturn(Mono.just(pnEventMetaPNAG012));
+
+        // Then
+        assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
+
+        verify(eventMetaDAO, times(1)).getDeliveryEventMeta(anyString(), anyString());
+        verify(eventMetaDAO, times(1)).putIfAbsent(any(PnEventMeta.class));
+        verify(mockSqsSender, times(1)).pushSendEvent(any(SendEvent.class));
     }
 
     @Test
