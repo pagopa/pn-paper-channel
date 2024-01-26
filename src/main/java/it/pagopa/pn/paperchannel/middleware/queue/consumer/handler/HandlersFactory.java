@@ -51,7 +51,7 @@ public class HandlersFactory {
         var customAggregatorMessageHandler = new CustomAggregatorMessageHandler(sqsSender, eventMetaDAO, metaDematCleaner);
         var aggregatorMessageHandler = new AggregatorMessageHandler(sqsSender, eventMetaDAO, metaDematCleaner);
         var directlySendMessageHandler = new DirectlySendMessageHandler(sqsSender);
-        var pnag012MessageHandler = new PNAG012MessageHandler(sqsSender, eventDematDAO, pnPaperChannelConfig.getTtlExecutionDaysDemat(), eventMetaDAO, pnPaperChannelConfig.getTtlExecutionDaysMeta());
+        var pnag012MessageHandler = new PNAG012MessageHandler(sqsSender, eventDematDAO, pnPaperChannelConfig.getTtlExecutionDaysDemat(), eventMetaDAO, pnPaperChannelConfig.getTtlExecutionDaysMeta(), pnPaperChannelConfig.getRequiredDemats());
         var recag012MessageHandler = new RECAG012MessageHandler(eventMetaDAO, pnPaperChannelConfig.getTtlExecutionDaysMeta(), pnag012MessageHandler);
         var recag011AMessageHandler =  new RECAG011AMessageHandler(sqsSender, eventMetaDAO, pnPaperChannelConfig.getTtlExecutionDaysMeta());
         var recag011BMessageHandler = new RECAG011BMessageHandler(sqsSender, eventDematDAO, pnPaperChannelConfig.getTtlExecutionDaysDemat(), pnag012MessageHandler);

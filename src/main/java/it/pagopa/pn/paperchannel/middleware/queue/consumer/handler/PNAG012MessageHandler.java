@@ -9,12 +9,14 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventDemat;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
 import it.pagopa.pn.paperchannel.middleware.queue.model.PNAG012Wrapper;
 import it.pagopa.pn.paperchannel.service.SqsSender;
+import it.pagopa.pn.paperchannel.utils.DematDocumentTypeEnum;
 import it.pagopa.pn.paperchannel.utils.PnLogAudit;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
 
@@ -34,11 +36,11 @@ import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
 public class PNAG012MessageHandler extends SaveDematMessageHandler {
 
     protected static final String META_SORT_KEY_FILTER = buildMetaStatusCode(RECAG012_STATUS_CODE);
-    protected static final String DEMAT_23L_RECAG011B = buildDocumentTypeStatusCode("23L", RECAG011B_STATUS_CODE);
+    protected static final String DEMAT_23L_RECAG011B = buildDocumentTypeStatusCode(DematDocumentTypeEnum.DEMAT_23L.getDocumentType(), RECAG011B_STATUS_CODE);
 
-    protected static final String DEMAT_ARCAD_RECAG011B = buildDocumentTypeStatusCode("ARCAD", RECAG011B_STATUS_CODE);
+    protected static final String DEMAT_ARCAD_RECAG011B = buildDocumentTypeStatusCode(DematDocumentTypeEnum.DEMAT_ARCAD.getDocumentType(), RECAG011B_STATUS_CODE);
 
-    private static final String DEMAT_CAD_RECAG011B = buildDocumentTypeStatusCode("CAD", RECAG011B_STATUS_CODE);
+    protected static final String DEMAT_CAD_RECAG011B = buildDocumentTypeStatusCode(DematDocumentTypeEnum.DEMAT_CAD.getDocumentType(), RECAG011B_STATUS_CODE);
     protected static final String[] DEMAT_SORT_KEYS_FILTER = {
             DEMAT_23L_RECAG011B,
             DEMAT_ARCAD_RECAG011B,
@@ -49,10 +51,13 @@ public class PNAG012MessageHandler extends SaveDematMessageHandler {
 
     private final Long ttlDaysMeta;
 
-    public PNAG012MessageHandler(SqsSender sqsSender, EventDematDAO eventDematDAO, Long ttlDaysDemat, EventMetaDAO eventMetaDAO, Long ttlDaysMeta) {
+    private final Set<String> requiredDemats;
+
+    public PNAG012MessageHandler(SqsSender sqsSender, EventDematDAO eventDematDAO, Long ttlDaysDemat, EventMetaDAO eventMetaDAO, Long ttlDaysMeta, Set<String> requiredDemats) {
         super(sqsSender, eventDematDAO, ttlDaysDemat);
         this.eventMetaDAO = eventMetaDAO;
         this.ttlDaysMeta = ttlDaysMeta;
+        this.requiredDemats = requiredDemats;
     }
 
     @Override
@@ -81,17 +86,23 @@ public class PNAG012MessageHandler extends SaveDematMessageHandler {
     }
 
 
+    /**
+     * This method evaluates whether it is possible to create and send a PNAG012 event
+     * checking if all required demats are included as subset of pnEventDemats.
+     *
+     * @param pnEventDemats the demats to check
+     * @return              true if all required demats are included, false otherwise
+     * */
     private boolean canCreatePNAG012Event(List<PnEventDemat> pnEventDemats) {
-        Optional<PnEventDemat> twentyThreeLElement = pnEventDemats.stream()
-                .filter(pnEventDemat -> DEMAT_23L_RECAG011B.equals(pnEventDemat.getDocumentTypeStatusCode()))
-                .findFirst();
 
-        Optional<PnEventDemat> arcadOrCadElement = pnEventDemats.stream()
-                .filter(pnEventDemat -> DEMAT_ARCAD_RECAG011B.equals(pnEventDemat.getDocumentTypeStatusCode()) ||
-                        DEMAT_CAD_RECAG011B.equals(pnEventDemat.getDocumentTypeStatusCode()))
-                .findFirst();
+        // Set<> ensure no duplicates
+        Set<String> recag011bDocumentTypes = pnEventDemats.stream()
+                .filter(pnEventDemat -> pnEventDemat.getStatusCode().equals(RECAG011B_STATUS_CODE))
+                .filter(pnEventDemat -> pnEventDemat.getDocumentType() != null)
+                .map(pnEventDemat -> DematDocumentTypeEnum.getAliasFromDocumentType(pnEventDemat.getDocumentType()))
+                .collect(Collectors.toSet());
 
-        return twentyThreeLElement.isPresent() && arcadOrCadElement.isPresent();
+        return recag011bDocumentTypes.containsAll(requiredDemats);
     }
 
     private Mono<PNAG012Wrapper> pnag012Flow(PnEventMeta pnEventMetaPNAG012, PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest, PnLogAudit pnLogAudit) {

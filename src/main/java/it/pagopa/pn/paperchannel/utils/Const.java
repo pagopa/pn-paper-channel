@@ -36,4 +36,13 @@ public class Const {
     public static final String CONTEXT_KEY_PREFIX_CLIENT_ID = "PREFIX_CLIENT_ID";
 
     public static final String DOCUMENT_TYPE_F24_SET = "PN_F24_SET";
+
+    /* Demat document type constants */
+    public static final String DEMAT_AR = "AR";
+    public static final String DEMAT_ARCAD = "ARCAD";
+    public static final String DEMAT_CAD = "CAD";
+    public static final String DEMAT_23L = "23L";
+    public static final String DEMAT_PLICO = "Plico";
+    public static final String DEMAT_INDAGINE = "Indagine";
+
 }
