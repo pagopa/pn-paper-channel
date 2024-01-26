@@ -34,6 +34,6 @@
     "CloudwatchMetricCron": "0 */5 * * * *",
     "F24ClientReadTimeoutMillis": "30000",
     "F24ClientRetryMaxAttempts": "0",
-    "RequiredDemats": "23L,ARCAD"
+    "RequiredDemats": "23L"
   }
 }
