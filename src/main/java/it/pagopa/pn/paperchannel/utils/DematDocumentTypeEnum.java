@@ -14,22 +14,24 @@ import java.util.*;
  *         <li>Provide aliasing translation when need to refer to same or similar object from a business point of view</li>
  *         <li>Implement utility methods to retrieve correct value from raw string with fallbacks to avoid throwing exceptions</li>
  *     </ul>
+ *
+ *     Document type string values come from {@link Const} class to provide better code maintainability
  * </p>
  */
 @Getter
 @Slf4j
 public enum DematDocumentTypeEnum {
-    DEMAT_AR("AR", "AR"),
-    DEMAT_ARCAD("ARCAD", "ARCAD"),
-    DEMAT_CAD("CAD", "ARCAD"),
-    DEMAT_23L("23L", "23L"),
-    DEMAT_PLICO("Plico", "Plico"),
-    DEMAT_INDAGINE("Indagine", "Indagine");
+    DEMAT_AR(Const.DEMAT_AR, Const.DEMAT_AR),
+    DEMAT_ARCAD(Const.DEMAT_ARCAD, Const.DEMAT_ARCAD),
+    DEMAT_CAD(Const.DEMAT_CAD, Const.DEMAT_ARCAD),
+    DEMAT_23L(Const.DEMAT_23L, Const.DEMAT_23L),
+    DEMAT_PLICO(Const.DEMAT_PLICO, Const.DEMAT_PLICO),
+    DEMAT_INDAGINE(Const.DEMAT_INDAGINE, Const.DEMAT_INDAGINE);
 
     private final String documentType;
     private final String alias;
 
-    private final static String DEMAT_PREFIX = "DEMAT_";
+    private static final String DEMAT_PREFIX = "DEMAT_";
 
     DematDocumentTypeEnum(String documentType, String alias) {
         this.documentType = documentType;
