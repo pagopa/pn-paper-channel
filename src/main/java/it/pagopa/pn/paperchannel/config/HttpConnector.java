@@ -43,4 +43,25 @@ public class HttpConnector {
             return Mono.error(e);
         }
     }
+
+    public Mono<byte[]> downloadFileInByteArray(String url) {
+        log.info("Url to download: {}", url);
+        try {
+            return WebClient
+                    .builder()
+                    .codecs(codecs ->
+                            codecs.defaultCodecs()
+                                    .maxInMemorySize(-1)
+                    )
+                    .build()
+                    .get()
+                    .uri(new URI(url))
+                    .accept(MediaType.APPLICATION_PDF)
+                    .retrieve()
+                    .bodyToMono(byte[].class);
+        } catch (URISyntaxException e) {
+            log.error("Error syntax URI for url {}: {}", url, e.getMessage());
+            return Mono.error(e);
+        }
+    }
 }

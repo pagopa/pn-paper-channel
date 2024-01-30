@@ -14,10 +14,7 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
 import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
 import it.pagopa.pn.paperchannel.middleware.queue.model.InternalEventHeader;
 import it.pagopa.pn.paperchannel.middleware.queue.model.ManualRetryEvent;
-import it.pagopa.pn.paperchannel.model.ExternalChannelError;
-import it.pagopa.pn.paperchannel.model.F24Error;
-import it.pagopa.pn.paperchannel.model.NationalRegistryError;
-import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
+import it.pagopa.pn.paperchannel.model.*;
 import it.pagopa.pn.paperchannel.service.F24Service;
 import it.pagopa.pn.paperchannel.service.QueueListenerService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
@@ -184,6 +181,10 @@ public class QueueListener {
             log.info("Push internal queue - first time");
             PrepareAsyncRequest request = convertToObject(node, PrepareAsyncRequest.class);
             this.queueListenerService.internalListener(request, internalEventHeader.getAttempt());
+        } else if (internalEventHeader.getEventType().equals(EventTypeEnum.SEND_ZIP_HANDLE.name())){
+            log.info("Push dematZipInternal queue - first time");
+            var request = convertToObject(node, DematZipInternalEvent.class);
+            this.queueListenerService.dematZipInternalListener(request, internalEventHeader.getAttempt());
         }
 
     }

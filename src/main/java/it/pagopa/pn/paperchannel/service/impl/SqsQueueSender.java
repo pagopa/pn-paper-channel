@@ -9,10 +9,7 @@ import it.pagopa.pn.paperchannel.middleware.queue.model.*;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.DeliveryPushMomProducer;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.EventBridgeProducer;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.InternalQueueMomProducer;
-import it.pagopa.pn.paperchannel.model.ExternalChannelError;
-import it.pagopa.pn.paperchannel.model.F24Error;
-import it.pagopa.pn.paperchannel.model.NationalRegistryError;
-import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
+import it.pagopa.pn.paperchannel.model.*;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import it.pagopa.pn.paperchannel.utils.Utility;
@@ -31,6 +28,7 @@ public class SqsQueueSender implements SqsSender {
 
     private static final String PUBLISHER_UPDATE = "paper-channel-update";
     private static final String PUBLISHER_PREPARE = "paper-channel-prepare";
+    private static final String PUBLISHER_SEND_ZIP_HANDLE = "paper-channel-send-zip";
 
     @Autowired
     private DeliveryPushMomProducer deliveryPushMomProducer;
@@ -68,6 +66,22 @@ public class SqsQueueSender implements SqsSender {
                 .build();
 
         InternalPushEvent<PrepareAsyncRequest> internalPushEvent = new InternalPushEvent<>(prepareHeader, prepareAsyncRequest);
+        this.internalQueueMomProducer.push(internalPushEvent);
+    }
+
+    @Override
+    public void pushDematZipInternalEvent(DematZipInternalEvent dematZipInternalEvent) {
+        InternalEventHeader prepareHeader= InternalEventHeader.builder()
+                .publisher(PUBLISHER_SEND_ZIP_HANDLE)
+                .eventId(UUID.randomUUID().toString())
+                .createdAt(Instant.now())
+                .eventType(EventTypeEnum.SEND_ZIP_HANDLE.name())
+                .clientId("")
+                .attempt(0)
+                .expired(Instant.now())
+                .build();
+
+        InternalPushEvent<DematZipInternalEvent> internalPushEvent = new InternalPushEvent<>(prepareHeader, dematZipInternalEvent);
         this.internalQueueMomProducer.push(internalPushEvent);
     }
 

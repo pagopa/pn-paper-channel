@@ -3,6 +3,7 @@ package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 import it.pagopa.pn.paperchannel.exception.PnDematNotValidException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.AttachmentDetailsDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
+import it.pagopa.pn.paperchannel.mapper.DematZipInternalEventMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventDemat;
@@ -53,13 +54,25 @@ public class SaveDematMessageHandler extends SendToDeliveryPushHandler {
 
         return Flux.fromIterable(attachments)
                 .flatMap(attachmentDetailsDto -> {
-                    PnEventDemat pnEventDemat = buildPnEventDemat(paperRequest, attachmentDetailsDto);
-                    return eventDematDAO.createOrUpdate(pnEventDemat)
-                            .doOnNext(savedEntity -> log.info("[{}] Saved PaperRequest from ExcChannel: {}", paperRequest.getRequestId(), savedEntity))
-                            .flatMap(savedEntity -> checkAndSendToDeliveryPush(entity, paperRequest, attachmentDetailsDto));
+                    if(isAZipFile(attachmentDetailsDto) && sendToDeliveryPush(attachmentDetailsDto.getDocumentType())) {
+                        //manda nella coda interna
+                        var dematZipInternalEvent = DematZipInternalEventMapper.toDematZipInternalEvent(paperRequest, attachmentDetailsDto);
+                        sqsSender.pushDematZipInternalEvent(dematZipInternalEvent);
+                        return Mono.empty();
+                    }
+                    else {
+                        PnEventDemat pnEventDemat = buildPnEventDemat(paperRequest, attachmentDetailsDto);
+                        return eventDematDAO.createOrUpdate(pnEventDemat)
+                                .doOnNext(savedEntity -> log.info("[{}] Saved PaperRequest from ExcChannel: {}", paperRequest.getRequestId(), savedEntity))
+                                .flatMap(savedEntity -> checkAndSendToDeliveryPush(entity, paperRequest, attachmentDetailsDto));
+                    }
                 })
                 .then();
 
+    }
+
+    private boolean isAZipFile(AttachmentDetailsDto attachment) {
+        return attachment.getUri().contains(".zip");
     }
 
     private Mono<Void> checkAndSendToDeliveryPush(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest, AttachmentDetailsDto attachmentDetailsDto) {

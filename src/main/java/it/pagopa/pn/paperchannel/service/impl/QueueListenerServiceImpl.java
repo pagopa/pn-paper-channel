@@ -2,7 +2,6 @@ package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.api.dto.events.PnF24PdfSetReadyEvent;
 import it.pagopa.pn.api.dto.events.PnF24PdfSetReadyEventItem;
-import it.pagopa.pn.api.dto.events.PnF24PdfSetReadyEventPayload;
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.commons.utils.MDCUtils;
 import it.pagopa.pn.paperchannel.exception.PnAddressFlowException;
@@ -34,7 +33,6 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static it.pagopa.pn.commons.log.PnLogger.EXTERNAL_SERVICES.PN_NATIONAL_REGISTRIES;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
@@ -57,6 +55,8 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
     private ExternalChannelClient externalChannelClient;
     @Autowired
     private F24Service f24Service;
+    @Autowired
+    private DematZipService dematZipService;
 
     public QueueListenerServiceImpl(PnAuditLogBuilder auditLogBuilder,
                                     RequestDeliveryDAO requestDeliveryDAO,
@@ -77,6 +77,32 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                         .flatMap(prepareRequest -> {
                             prepareRequest.setAttemptRetry(attempt);
                             return this.paperAsyncService.prepareAsync(prepareRequest);
+                        })
+                        .doOnSuccess(resultFromAsync ->{
+                                    log.info("End of prepare async internal");
+                                    log.logEndingProcess(processName);
+                                }
+                        )
+                        .doOnError(throwable -> {
+                            log.error(throwable.getMessage());
+                            if (throwable instanceof PnAddressFlowException) return;
+                            if (throwable instanceof PnF24FlowException pnF24FlowException) manageF24Exception(pnF24FlowException.getF24Error(), pnF24FlowException.getF24Error().getAttempt(), pnF24FlowException);
+
+                            throw new PnGenericException(PREPARE_ASYNC_LISTENER_EXCEPTION, PREPARE_ASYNC_LISTENER_EXCEPTION.getMessage());
+                        }))
+                .block();
+    }
+
+    //FIXME gestire gli errori
+    @Override
+    public void dematZipInternalListener(DematZipInternalEvent body, int attempt) {
+        String processName = "DematZipInternalListener";
+        MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, body.getRequestId());
+        log.logStartingProcess(processName);
+        MDCUtils.addMDCToContextAndExecute(Mono.just(body)
+                        .flatMap(dematZipInternalEvent -> {
+                            dematZipInternalEvent.setAttemptRetry(attempt);
+                            return this.dematZipService.handle(dematZipInternalEvent);
                         })
                         .doOnSuccess(resultFromAsync ->{
                                     log.info("End of prepare async internal");
