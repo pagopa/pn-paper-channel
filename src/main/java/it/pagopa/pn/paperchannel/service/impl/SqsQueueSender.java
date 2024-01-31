@@ -70,7 +70,7 @@ public class SqsQueueSender implements SqsSender {
     }
 
     @Override
-    public void pushDematZipInternalEvent(DematZipInternalEvent dematZipInternalEvent) {
+    public void pushDematZipInternalEvent(DematInternalEvent dematZipInternalEvent) {
         InternalEventHeader prepareHeader= InternalEventHeader.builder()
                 .publisher(PUBLISHER_SEND_ZIP_HANDLE)
                 .eventId(UUID.randomUUID().toString())
@@ -81,7 +81,7 @@ public class SqsQueueSender implements SqsSender {
                 .expired(Instant.now())
                 .build();
 
-        InternalPushEvent<DematZipInternalEvent> internalPushEvent = new InternalPushEvent<>(prepareHeader, dematZipInternalEvent);
+        InternalPushEvent<DematInternalEvent> internalPushEvent = new InternalPushEvent<>(prepareHeader, dematZipInternalEvent);
         this.internalQueueMomProducer.push(internalPushEvent);
     }
 

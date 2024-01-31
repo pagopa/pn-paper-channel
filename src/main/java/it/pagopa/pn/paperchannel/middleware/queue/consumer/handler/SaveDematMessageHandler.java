@@ -3,7 +3,7 @@ package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 import it.pagopa.pn.paperchannel.exception.PnDematNotValidException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.AttachmentDetailsDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
-import it.pagopa.pn.paperchannel.mapper.DematZipInternalEventMapper;
+import it.pagopa.pn.paperchannel.mapper.DematInternalEventMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventDemat;
@@ -56,8 +56,9 @@ public class SaveDematMessageHandler extends SendToDeliveryPushHandler {
                 .flatMap(attachmentDetailsDto -> {
                     if(isAZipFile(attachmentDetailsDto) && sendToDeliveryPush(attachmentDetailsDto.getDocumentType())) {
                         //manda nella coda interna
-                        var dematZipInternalEvent = DematZipInternalEventMapper.toDematZipInternalEvent(paperRequest, attachmentDetailsDto);
-                        sqsSender.pushDematZipInternalEvent(dematZipInternalEvent);
+                        paperRequest.setAttachments(List.of(attachmentDetailsDto));
+                        var dematInternalEvent = DematInternalEventMapper.toDematInternalEvent(entity, paperRequest);
+                        sqsSender.pushDematZipInternalEvent(dematInternalEvent);
                         return Mono.empty();
                     }
                     else {

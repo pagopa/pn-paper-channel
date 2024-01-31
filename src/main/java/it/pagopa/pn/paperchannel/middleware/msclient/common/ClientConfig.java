@@ -7,6 +7,7 @@ import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.api.
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnnationalregistries.v1.api.AddressApi;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.ApiClient;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.api.FileDownloadApi;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.api.FileUploadApi;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -20,6 +21,15 @@ public class ClientConfig extends CommonBaseClient {
         newApiClient.setBasePath(pnPaperChannelConfig.getClientSafeStorageBasepath());
 
         return new FileDownloadApi(newApiClient);
+    }
+
+    @Bean
+    public FileUploadApi fileUploadApi (PnPaperChannelConfig pnPaperChannelConfig){
+
+        ApiClient newApiClient = new ApiClient(super.initWebClient(ApiClient.buildWebClientBuilder()));
+        newApiClient.setBasePath(pnPaperChannelConfig.getClientSafeStorageBasepath());
+
+        return new FileUploadApi(newApiClient);
     }
 
     @Bean

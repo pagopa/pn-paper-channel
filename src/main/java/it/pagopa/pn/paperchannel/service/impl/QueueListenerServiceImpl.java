@@ -95,14 +95,14 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
 
     //FIXME gestire gli errori
     @Override
-    public void dematZipInternalListener(DematZipInternalEvent body, int attempt) {
+    public void dematZipInternalListener(DematInternalEvent body, int attempt) {
         String processName = "DematZipInternalListener";
         MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, body.getRequestId());
         log.logStartingProcess(processName);
         MDCUtils.addMDCToContextAndExecute(Mono.just(body)
-                        .flatMap(dematZipInternalEvent -> {
-                            dematZipInternalEvent.setAttemptRetry(attempt);
-                            return this.dematZipService.handle(dematZipInternalEvent);
+                        .flatMap(dematInternalEvent -> {
+                            dematInternalEvent.setAttemptRetry(attempt);
+                            return this.dematZipService.handle(dematInternalEvent);
                         })
                         .doOnSuccess(resultFromAsync ->{
                                     log.info("End of prepare async internal");

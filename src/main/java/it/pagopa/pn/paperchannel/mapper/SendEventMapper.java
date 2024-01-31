@@ -8,8 +8,11 @@ import it.pagopa.pn.paperchannel.mapper.common.BaseMapper;
 import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
+import it.pagopa.pn.paperchannel.model.DematInternalEvent;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.List;
 
 
 @Slf4j
@@ -45,31 +48,59 @@ public class SendEventMapper {
         return entity;
     }
 
+//    public static SendEvent createSendEventMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
+//        SendEvent sendEvent = new SendEvent();
+//        sendEvent.setStatusCode(StatusCodeEnum.valueOf(entity.getStatusDetail()));
+//        sendEvent.setStatusDetail(paperRequest.getStatusCode());
+//        sendEvent.setStatusDescription(entity.getStatusDescription());
+//
+//
+//        sendEvent.setRequestId(entity.getRequestId());
+//        sendEvent.setStatusDateTime(DateUtils.getDatefromOffsetDateTime(paperRequest.getStatusDateTime()));
+//        sendEvent.setRegisteredLetterCode(paperRequest.getRegisteredLetterCode());
+//        if (paperRequest.getClientRequestTimeStamp() != null) {
+//            sendEvent.setClientRequestTimeStamp(paperRequest.getClientRequestTimeStamp().toInstant());
+//        }
+//
+//        sendEvent.setDeliveryFailureCause(paperRequest.getDeliveryFailureCause());
+//        sendEvent.setDiscoveredAddress(AddressMapper.toPojo(paperRequest.getDiscoveredAddress()));
+//
+//        if (paperRequest.getAttachments() != null && !paperRequest.getAttachments().isEmpty()) {
+//            sendEvent.setAttachments(
+//                    paperRequest.getAttachments()
+//                            .stream()
+//                            .map(AttachmentMapper::fromAttachmentDetailsDto)
+//                            .toList()
+//            );
+//        }
+//
+//        return sendEvent;
+//
+//    }
     public static SendEvent createSendEventMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
+        DematInternalEvent dematZipInternalEvent = DematInternalEventMapper.toDematInternalEvent(entity, paperRequest);
+        return createSendEventMessage(dematZipInternalEvent);
+
+    }
+
+    public static SendEvent createSendEventMessage(DematInternalEvent dematZipInternalEvent) {
         SendEvent sendEvent = new SendEvent();
-        sendEvent.setStatusCode(StatusCodeEnum.valueOf(entity.getStatusDetail()));
-        sendEvent.setStatusDetail(paperRequest.getStatusCode());
-        sendEvent.setStatusDescription(entity.getStatusDescription());
+        sendEvent.setStatusCode(StatusCodeEnum.valueOf(dematZipInternalEvent.getStatusDetail()));
+        sendEvent.setStatusDetail(dematZipInternalEvent.getStatusCode());
+        sendEvent.setStatusDescription(dematZipInternalEvent.getStatusDescription());
 
 
-        sendEvent.setRequestId(entity.getRequestId());
-        sendEvent.setStatusDateTime(DateUtils.getDatefromOffsetDateTime(paperRequest.getStatusDateTime()));
-        sendEvent.setRegisteredLetterCode(paperRequest.getRegisteredLetterCode());
-        if (paperRequest.getClientRequestTimeStamp() != null) {
-            sendEvent.setClientRequestTimeStamp(paperRequest.getClientRequestTimeStamp().toInstant());
+        sendEvent.setRequestId(dematZipInternalEvent.getRequestId());
+        sendEvent.setStatusDateTime(DateUtils.getDatefromOffsetDateTime(dematZipInternalEvent.getStatusDateTime()));
+        sendEvent.setRegisteredLetterCode(dematZipInternalEvent.getRegisteredLetterCode());
+        if (dematZipInternalEvent.getClientRequestTimeStamp() != null) {
+            sendEvent.setClientRequestTimeStamp(dematZipInternalEvent.getClientRequestTimeStamp().toInstant());
         }
 
-        sendEvent.setDeliveryFailureCause(paperRequest.getDeliveryFailureCause());
-        sendEvent.setDiscoveredAddress(AddressMapper.toPojo(paperRequest.getDiscoveredAddress()));
+        sendEvent.setDeliveryFailureCause(dematZipInternalEvent.getDeliveryFailureCause());
+        sendEvent.setDiscoveredAddress(dematZipInternalEvent.getDiscoveredAddress());
 
-        if (paperRequest.getAttachments() != null && !paperRequest.getAttachments().isEmpty()) {
-            sendEvent.setAttachments(
-                    paperRequest.getAttachments()
-                            .stream()
-                            .map(AttachmentMapper::fromAttachmentDetailsDto)
-                            .toList()
-            );
-        }
+        sendEvent.setAttachments(List.of(dematZipInternalEvent.getAttachmentDetails()));
 
         return sendEvent;
 
