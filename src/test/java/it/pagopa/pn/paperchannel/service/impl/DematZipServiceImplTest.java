@@ -95,7 +95,6 @@ class DematZipServiceImplTest {
     @Test
     void handleKoBecauseSafeStorageKo() {
         String fileKey = "fileKeyZip.zip";
-        String s3Url = "http://[bucket_name].s3.amazonaws.com/";
         DematInternalEvent dematInternalEvent = DematInternalEvent.builder()
                 .requestId("requestId")
                 .statusDateTime(OffsetDateTime.now())
@@ -104,25 +103,14 @@ class DematZipServiceImplTest {
                 .attachmentDetails(new AttachmentDetails().url(SAFESTORAGE_PREFIX + fileKey))
                 .build();
 
-        FileDownloadResponseDto zipSafeStorageResponse = new FileDownloadResponseDto();
-        zipSafeStorageResponse.setDownload(new FileDownloadInfoDto().url(s3Url));
         when(safeStorageClient.getFile(fileKey)).thenReturn(Mono.error(WebClientResponseException.create(502,  "", new HttpHeaders(), null, null)));
 
-        when(httpConnector.downloadFileInByteArray(s3Url)).thenReturn(Mono.just(getFile("zip/zip-with-pdf-and-xml.zip")));
-
-
-        FileCreationWithContentRequest fileCreationRequestWithContent = safeStorageUtils.buildFileCreationWithContentRequest(getFile("zip/test.pdf"));
-        FileCreationResponseDto fileCreationResponseDto = new FileCreationResponseDto().secret("secret").key("fileKeyPdf.pdf");
-        String sha256 = safeStorageUtils.computeSha256(fileCreationRequestWithContent.getContent());
-        when(safeStorageClient.createFile(fileCreationRequestWithContent))
-                .thenReturn(Mono.just(fileCreationResponseDto));
-
-        when(httpConnector.uploadContent(fileCreationRequestWithContent, fileCreationResponseDto, sha256)).thenReturn(Mono.empty());
 
         StepVerifier.create(dematZipService.handle(dematInternalEvent))
-                .verifyComplete();
+                .expectError()
+                .verify();
 
-        verify(sqsSender, times(2)).pushSendEvent(any());
+        verify(sqsSender, never()).pushSendEvent(any());
     }
 
     private byte[] getFile(String file) {
