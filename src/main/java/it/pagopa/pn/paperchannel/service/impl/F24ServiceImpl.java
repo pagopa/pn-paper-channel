@@ -55,13 +55,13 @@ import java.util.Optional;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.INVALID_SAFE_STORAGE;
 import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.F24_WAITING;
+import static it.pagopa.pn.paperchannel.utils.SafeStorageUtils.SAFESTORAGE_PREFIX;
 
 @CustomLog
 @Service
 public class F24ServiceImpl extends GenericService implements F24Service {
 
     public static final String URL_PROTOCOL_F24 = "f24set";
-    private static final String SAFESTORAGE_PREFIX = "safestorage://";
     private static final String REWORK_COUNT_SUFFIX_REQUEST_ID = ".REWORK_";
 
     private final F24Client f24Client;

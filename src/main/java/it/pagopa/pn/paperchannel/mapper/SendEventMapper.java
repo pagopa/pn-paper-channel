@@ -48,38 +48,33 @@ public class SendEventMapper {
         return entity;
     }
 
-//    public static SendEvent createSendEventMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
-//        SendEvent sendEvent = new SendEvent();
-//        sendEvent.setStatusCode(StatusCodeEnum.valueOf(entity.getStatusDetail()));
-//        sendEvent.setStatusDetail(paperRequest.getStatusCode());
-//        sendEvent.setStatusDescription(entity.getStatusDescription());
-//
-//
-//        sendEvent.setRequestId(entity.getRequestId());
-//        sendEvent.setStatusDateTime(DateUtils.getDatefromOffsetDateTime(paperRequest.getStatusDateTime()));
-//        sendEvent.setRegisteredLetterCode(paperRequest.getRegisteredLetterCode());
-//        if (paperRequest.getClientRequestTimeStamp() != null) {
-//            sendEvent.setClientRequestTimeStamp(paperRequest.getClientRequestTimeStamp().toInstant());
-//        }
-//
-//        sendEvent.setDeliveryFailureCause(paperRequest.getDeliveryFailureCause());
-//        sendEvent.setDiscoveredAddress(AddressMapper.toPojo(paperRequest.getDiscoveredAddress()));
-//
-//        if (paperRequest.getAttachments() != null && !paperRequest.getAttachments().isEmpty()) {
-//            sendEvent.setAttachments(
-//                    paperRequest.getAttachments()
-//                            .stream()
-//                            .map(AttachmentMapper::fromAttachmentDetailsDto)
-//                            .toList()
-//            );
-//        }
-//
-//        return sendEvent;
-//
-//    }
     public static SendEvent createSendEventMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
-        DematInternalEvent dematZipInternalEvent = DematInternalEventMapper.toDematInternalEvent(entity, paperRequest);
-        return createSendEventMessage(dematZipInternalEvent);
+        SendEvent sendEvent = new SendEvent();
+        sendEvent.setStatusCode(StatusCodeEnum.valueOf(entity.getStatusDetail()));
+        sendEvent.setStatusDetail(paperRequest.getStatusCode());
+        sendEvent.setStatusDescription(entity.getStatusDescription());
+
+
+        sendEvent.setRequestId(entity.getRequestId());
+        sendEvent.setStatusDateTime(DateUtils.getDatefromOffsetDateTime(paperRequest.getStatusDateTime()));
+        sendEvent.setRegisteredLetterCode(paperRequest.getRegisteredLetterCode());
+        if (paperRequest.getClientRequestTimeStamp() != null) {
+            sendEvent.setClientRequestTimeStamp(paperRequest.getClientRequestTimeStamp().toInstant());
+        }
+
+        sendEvent.setDeliveryFailureCause(paperRequest.getDeliveryFailureCause());
+        sendEvent.setDiscoveredAddress(AddressMapper.toPojo(paperRequest.getDiscoveredAddress()));
+
+        if (paperRequest.getAttachments() != null && !paperRequest.getAttachments().isEmpty()) {
+            sendEvent.setAttachments(
+                    paperRequest.getAttachments()
+                            .stream()
+                            .map(AttachmentMapper::fromAttachmentDetailsDto)
+                            .toList()
+            );
+        }
+
+        return sendEvent;
 
     }
 

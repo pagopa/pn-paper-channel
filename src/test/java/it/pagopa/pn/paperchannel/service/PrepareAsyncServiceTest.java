@@ -40,6 +40,7 @@ import org.mockserver.integration.ClientAndServer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
+import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -315,7 +316,7 @@ class PrepareAsyncServiceTest {
         request.setF24ResponseFlow(true);
 
         try (MockedStatic<HttpConnector> utilities = Mockito.mockStatic(HttpConnector.class)) { // non sembra funzionare...
-            utilities.when(() -> new HttpConnector().downloadFile("http://1234"))
+            utilities.when(() -> new HttpConnector(WebClient.builder()).downloadFile("http://1234"))
                     .thenReturn(Mono.just(PDDocument.load(readFakePdf())));
 
 

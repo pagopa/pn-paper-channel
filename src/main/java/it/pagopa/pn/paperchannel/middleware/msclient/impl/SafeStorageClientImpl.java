@@ -29,6 +29,8 @@ import java.net.URI;
 import java.time.Duration;
 import java.util.concurrent.TimeoutException;
 
+import static it.pagopa.pn.paperchannel.utils.SafeStorageUtils.SAFESTORAGE_PREFIX;
+
 
 @Component
 @RequiredArgsConstructor
@@ -54,9 +56,8 @@ public class SafeStorageClientImpl implements SafeStorageClient {
         log.logInvokingAsyncExternalService(PnLogger.EXTERNAL_SERVICES.PN_SAFE_STORAGE, PN_SAFE_STORAGE_DESCRIPTION, null);
         String reqFileKey = fileKey;
         log.info("Getting file with {} key", fileKey);
-        final String BASE_URL = "safestorage://";
-        if (fileKey.contains(BASE_URL)){
-            fileKey = fileKey.replace(BASE_URL, "");
+        if (fileKey.contains(SAFESTORAGE_PREFIX)){
+            fileKey = fileKey.replace(SAFESTORAGE_PREFIX, "");
         }
         log.debug("Req params : {}", fileKey);
 

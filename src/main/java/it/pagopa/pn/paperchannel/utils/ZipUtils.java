@@ -1,5 +1,7 @@
 package it.pagopa.pn.paperchannel.utils;
 
+import it.pagopa.pn.paperchannel.exception.PnZipException;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -21,10 +23,10 @@ public class ZipUtils {
                 }
             }
         } catch (IOException e) {
-            throw new RuntimeException("Failed to extract PDF from ZIP", e);
+            throw new PnZipException("Failed to extract PDF from ZIP", e);
         }
 
-        throw new RuntimeException("PDF not found in the ZIP file");
+        throw new PnZipException("PDF not found in the ZIP file");
     }
 
     private static byte[] readZipEntry(ZipInputStream zipInputStream) throws IOException {

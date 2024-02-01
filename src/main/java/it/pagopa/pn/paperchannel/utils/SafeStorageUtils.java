@@ -1,6 +1,5 @@
 package it.pagopa.pn.paperchannel.utils;
 
-import it.pagopa.pn.commons.exceptions.PnInternalException;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.exception.PnRetryStorageException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileCreationResponseDto;
@@ -18,6 +17,7 @@ import java.security.MessageDigest;
 import java.time.Duration;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DOCUMENT_URL_NOT_FOUND;
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.ERROR_CODE_PAPERCHANNEL_UPLOADFILEERROR;
 
 @Component
 @Slf4j
@@ -64,7 +64,7 @@ public class SafeStorageUtils {
         return safeStorageClient.createFile(fileCreationRequest)
                 .onErrorResume(exception ->{
                     log.error("Cannot create file ", exception);
-                    return Mono.error(new RuntimeException("Cannot create file", exception));
+                    return Mono.error(new PnGenericException(ERROR_CODE_PAPERCHANNEL_UPLOADFILEERROR, "Cannot create file "));
                 })
                 .flatMap(fileCreationResponse -> safeStorageClient.uploadContent(fileCreationRequest, fileCreationResponse, sha256).thenReturn(fileCreationResponse))
                 .map(FileCreationResponseDto::getKey);
@@ -77,7 +77,8 @@ public class SafeStorageUtils {
             byte[] encodedHash = digest.digest( content );
             return bytesToBase64( encodedHash );
         } catch (Exception exc) {
-            throw new RuntimeException("cannot compute sha256", exc );
+            log.error("cannot compute sha256", exc);
+            throw new PnGenericException(ERROR_CODE_PAPERCHANNEL_UPLOADFILEERROR, "cannot compute sha256");
         }
     }
 
