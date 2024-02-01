@@ -9,5 +9,4 @@ public interface SafeStorageClient {
 
     Mono<FileDownloadResponseDto> getFile(String fileKey);
     Mono<FileCreationResponseDto> createFile(FileCreationWithContentRequest fileCreationRequestWithContent);
-    Mono<Void> uploadContent(FileCreationWithContentRequest fileCreationRequest, FileCreationResponseDto fileCreationResponse, String sha256);
 }

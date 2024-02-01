@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.utils;
 
+import it.pagopa.pn.paperchannel.config.HttpConnector;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.exception.PnRetryStorageException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileCreationResponseDto;
@@ -8,6 +9,7 @@ import it.pagopa.pn.paperchannel.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.paperchannel.model.FileCreationWithContentRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Base64Utils;
 import reactor.core.publisher.Mono;
@@ -33,6 +35,7 @@ public class SafeStorageUtils {
 
     private final SafeStorageClient safeStorageClient;
 
+    private final HttpConnector httpConnector;
 
 
     public String getFileKeyFromUri(String uri) {
@@ -56,6 +59,20 @@ public class SafeStorageUtils {
         }
     }
 
+    public Mono<byte[]> downloadFileInByteArray(String url) {
+        return httpConnector.downloadFileInByteArray(url);
+    }
+
+    public FileCreationWithContentRequest buildFileCreationWithContentRequest(byte[] bytesPdf) {
+        FileCreationWithContentRequest request = new FileCreationWithContentRequest();
+        request.setContentType(EXTERNAL_LEGAL_FACTS_DOC_TYPE);
+        request.setDocumentType(MediaType.APPLICATION_PDF_VALUE);
+        request.setStatus(SAVED_STATUS);
+        request.setContent(bytesPdf);
+
+        return request;
+    }
+
     public Mono<String> createAndUploadContent(FileCreationWithContentRequest fileCreationRequest) {
         log.info("Start createAndUploadFile - documentType={} filesize={}", fileCreationRequest.getDocumentType(), fileCreationRequest.getContent().length);
 
@@ -66,11 +83,11 @@ public class SafeStorageUtils {
                     log.error("Cannot create file ", exception);
                     return Mono.error(new PnGenericException(ERROR_CODE_PAPERCHANNEL_UPLOADFILEERROR, "Cannot create file "));
                 })
-                .flatMap(fileCreationResponse -> safeStorageClient.uploadContent(fileCreationRequest, fileCreationResponse, sha256).thenReturn(fileCreationResponse))
+                .flatMap(fileCreationResponse -> httpConnector.uploadContent(fileCreationRequest, fileCreationResponse, sha256).thenReturn(fileCreationResponse))
                 .map(FileCreationResponseDto::getKey);
     }
 
-    private String computeSha256( byte[] content ) {
+    public String computeSha256( byte[] content ) {
 
         try{
             MessageDigest digest = MessageDigest.getInstance("SHA-256");

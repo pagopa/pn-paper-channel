@@ -12,20 +12,11 @@ import it.pagopa.pn.paperchannel.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.paperchannel.model.FileCreationWithContentRequest;
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.reactive.function.BodyInserters;
-import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
-
-import javax.annotation.PostConstruct;
 import java.net.ConnectException;
-import java.net.URI;
 import java.time.Duration;
 import java.util.concurrent.TimeoutException;
 
@@ -40,14 +31,6 @@ public class SafeStorageClientImpl implements SafeStorageClient {
     private final PnPaperChannelConfig pnPaperChannelConfig;
     private final FileDownloadApi fileDownloadApi;
     private final FileUploadApi fileUploadApi;
-    private final WebClient.Builder webClientBuilder;
-
-    private WebClient webClient;
-
-    @PostConstruct
-    public void initWebClient() {
-        webClient = webClientBuilder.build();
-    }
 
 
     @Override
@@ -91,33 +74,6 @@ public class SafeStorageClientImpl implements SafeStorageClient {
 
         return fileUploadApi.createFile(pnPaperChannelConfig.getSafeStorageCxId(), fileCreationRequest )
                 .doOnError( res -> log.error("File creation error - documentType={} filesize={}", fileCreationRequest.getDocumentType(), fileCreationRequestWithContent.getContent().length));
-    }
-
-    @Override
-    public Mono<Void> uploadContent(FileCreationWithContentRequest fileCreationRequest, FileCreationResponseDto fileCreationResponse, String sha256) {
-        final String UPLOAD_FILE_CONTENT = "Safe Storage uploadContent";
-        log.logInvokingAsyncExternalService(PnLogger.EXTERNAL_SERVICES.PN_SAFE_STORAGE, UPLOAD_FILE_CONTENT, fileCreationResponse.getKey());
-
-        MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
-        headers.add("Content-type", fileCreationRequest.getContentType());
-        headers.add("x-amz-checksum-sha256", sha256);
-        headers.add("x-amz-meta-secret", fileCreationResponse.getSecret());
-
-        URI url = URI.create(fileCreationResponse.getUploadUrl());
-        HttpMethod method = fileCreationResponse.getUploadMethod() == FileCreationResponseDto.UploadMethodEnum.POST ? HttpMethod.POST : HttpMethod.PUT;
-
-        return webClient.method(method)
-                .uri(url)
-                .headers(httpHeaders -> httpHeaders.addAll(headers))
-                .body(BodyInserters.fromResource(new ByteArrayResource(fileCreationRequest.getContent())))
-                .retrieve()
-                .toEntity(String.class)
-                .flatMap(stringResponseEntity -> {
-                    if (stringResponseEntity.getStatusCodeValue() != org.springframework.http.HttpStatus.OK.value()) {
-                        return Mono.error(new RuntimeException());
-                    }
-                    return Mono.empty();
-                });
     }
 
 

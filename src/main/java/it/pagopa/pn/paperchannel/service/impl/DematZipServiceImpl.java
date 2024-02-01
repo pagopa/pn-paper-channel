@@ -1,15 +1,14 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
-import it.pagopa.pn.paperchannel.config.HttpConnector;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileDownloadResponseDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.AttachmentDetails;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.mapper.SendEventMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.model.DematInternalEvent;
-import it.pagopa.pn.paperchannel.model.FileCreationWithContentRequest;
 import it.pagopa.pn.paperchannel.service.DematZipService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.SafeStorageUtils;
@@ -33,35 +32,34 @@ public class DematZipServiceImpl extends GenericService implements DematZipServi
 
     private final SafeStorageUtils safeStorageUtils;
 
-    private final HttpConnector httpConnector;
-
 
 
     public DematZipServiceImpl(PnAuditLogBuilder auditLogBuilder, SqsSender sqsSender, RequestDeliveryDAO requestDeliveryDAO,
-                               PnPaperChannelConfig pnPaperChannelConfig, SafeStorageUtils safeStorageUtils, HttpConnector httpConnector) {
+                               PnPaperChannelConfig pnPaperChannelConfig, SafeStorageUtils safeStorageUtils) {
         super(auditLogBuilder, sqsSender, requestDeliveryDAO);
         this.pnPaperChannelConfig = pnPaperChannelConfig;
         this.safeStorageUtils = safeStorageUtils;
-        this.httpConnector = httpConnector;
     }
 
     @Override
     public Mono<Void> handle(DematInternalEvent dematInternalEvent) {
         String fileKeyZip = safeStorageUtils.getFileKeyFromUri(dematInternalEvent.getAttachmentDetails().getUrl());
         return safeStorageUtils.getFileRecursive(pnPaperChannelConfig.getAttemptSafeStorage(), fileKeyZip, BigDecimal.ZERO)
-                .flatMap(fileDownloadResponseDto -> {
-                    if (fileDownloadResponseDto.getDownload() == null || fileDownloadResponseDto.getDownload().getUrl() == null) {
-                        return Mono.error(new PnGenericException(INVALID_SAFE_STORAGE, INVALID_SAFE_STORAGE.getMessage()));
-                    }
-                    return Mono.just(fileDownloadResponseDto);
-                })
-                .flatMap(fileDownloadResponseDto -> httpConnector.downloadFileInByteArray(fileDownloadResponseDto.getDownload().getUrl()))
+                .flatMap(this::checkValidUrl)
+                .flatMap(fileDownloadResponseDto -> safeStorageUtils.downloadFileInByteArray(fileDownloadResponseDto.getDownload().getUrl()))
                 .map(ZipUtils::extractPdfFromZip)
-                .map(this::buildFileCreationWithContentRequest)
+                .map(safeStorageUtils::buildFileCreationWithContentRequest)
                 .flatMap(safeStorageUtils::createAndUploadContent)
                 .map(fileKeyPdf -> buildSendEventsForZipAndPdf(dematInternalEvent, fileKeyPdf))
                 .doOnNext(sendEvents -> sendEvents.forEach(sqsSender::pushSendEvent))
                 .then();
+    }
+
+    private Mono<FileDownloadResponseDto> checkValidUrl(FileDownloadResponseDto fileDownloadResponseDto) {
+        if (fileDownloadResponseDto.getDownload() == null || fileDownloadResponseDto.getDownload().getUrl() == null) {
+            return Mono.error(new PnGenericException(INVALID_SAFE_STORAGE, INVALID_SAFE_STORAGE.getMessage()));
+        }
+        return Mono.just(fileDownloadResponseDto);
     }
 
     @NotNull
@@ -77,16 +75,6 @@ public class DematZipServiceImpl extends GenericService implements DematZipServi
 
         sendEventPdfMessage.setAttachments(List.of(attachmentDetailsPDF));
         return List.of(sendEventZipMessage, sendEventPdfMessage);
-    }
-
-    private FileCreationWithContentRequest buildFileCreationWithContentRequest(byte[] bytesPdf) {
-        FileCreationWithContentRequest request = new FileCreationWithContentRequest();
-        request.setContentType(EXTERNAL_LEGAL_FACTS_DOC_TYPE);
-        request.setDocumentType(MediaType.APPLICATION_PDF_VALUE);
-        request.setStatus(SAVED_STATUS);
-        request.setContent(bytesPdf);
-
-        return request;
     }
 
     private String enrichWithPrefixIfNeeded(String url) {
