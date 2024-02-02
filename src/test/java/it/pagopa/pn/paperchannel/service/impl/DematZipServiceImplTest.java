@@ -72,7 +72,7 @@ class DematZipServiceImplTest {
                 .statusDateTime(OffsetDateTime.now())
                 .statusDetail(StatusCodeEnum.PROGRESS.getValue())
                 .attemptRetry(0)
-                .attachmentDetails(new AttachmentDetails().url(SAFESTORAGE_PREFIX + fileKey))
+                .attachmentDetails(new AttachmentDetails().url(SAFESTORAGE_PREFIX + fileKey).id("1"))
                 .build();
 
         FileDownloadResponseDto zipSafeStorageResponse = new FileDownloadResponseDto();

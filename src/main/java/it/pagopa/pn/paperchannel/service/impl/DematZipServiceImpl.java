@@ -90,7 +90,7 @@ public class DematZipServiceImpl extends GenericService implements DematZipServi
 
     private Mono<Void> saveDematAndSendEvents(DematInternalEvent dematInternalEvent, String fileKeyPdf) {
         var attachmentDetailsPDF = new AttachmentDetails()
-                .id(dematInternalEvent.getAttachmentDetails().getId() + 1)
+                .id(createId(dematInternalEvent.getAttachmentDetails().getId()))
                 .documentType(MediaType.APPLICATION_PDF_VALUE)
                 .date(Instant.now())
                 .url(enrichWithPrefixIfNeeded(fileKeyPdf));
@@ -109,6 +109,16 @@ public class DematZipServiceImpl extends GenericService implements DematZipServi
                 .doOnNext(pnEventDematsSaved -> log.info("Sent events: {}", sendEvents))
                 .then();
 
+    }
+
+    private String createId(String originalId) {
+        try {
+            final int number = Integer.parseInt(originalId) + 1;
+            return String.valueOf(number);
+        }
+        catch (NumberFormatException e) {
+            return originalId + "-pdf";
+        }
     }
 
     protected PnEventDemat buildPnEventDemat(DematInternalEvent dematInternalEvent, AttachmentDetails attachmentDetails) {

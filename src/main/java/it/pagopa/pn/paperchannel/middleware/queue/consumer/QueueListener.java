@@ -15,7 +15,6 @@ import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
 import it.pagopa.pn.paperchannel.middleware.queue.model.InternalEventHeader;
 import it.pagopa.pn.paperchannel.middleware.queue.model.ManualRetryEvent;
 import it.pagopa.pn.paperchannel.model.*;
-import it.pagopa.pn.paperchannel.service.F24Service;
 import it.pagopa.pn.paperchannel.service.QueueListenerService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.PnLogAudit;
@@ -51,7 +50,6 @@ public class QueueListener {
     private final ObjectMapper objectMapper;
     private final PaperRequestErrorDAO paperRequestErrorDAO;
     private final PnAuditLogBuilder pnAuditLogBuilder;
-    private final F24Service f24Service;
 
     @SqsListener(value = "${pn.paper-channel.queue-internal}", deletionPolicy = SqsMessageDeletionPolicy.ALWAYS)
     public void pullFromInternalQueue(@Payload String node, @Headers Map<String, Object> headers){

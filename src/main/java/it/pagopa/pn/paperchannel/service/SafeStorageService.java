@@ -26,7 +26,7 @@ public interface SafeStorageService {
 
     default FileCreationWithContentRequest buildFileCreationWithContentRequest(byte[] bytesPdf) {
         FileCreationWithContentRequest request = new FileCreationWithContentRequest();
-        request.setContentType(EXTERNAL_LEGAL_FACTS_DOC_TYPE);
+        request.setContentType(EXTERNAL_LEGAL_FACTS_DOC_TYPE); //TODO in attesa di capire quale valore mettere
         request.setDocumentType(MediaType.APPLICATION_PDF_VALUE);
         request.setStatus(SAVED_STATUS);
         request.setContent(bytesPdf);
