@@ -15,6 +15,7 @@ public class DematInternalEventMapper {
 
         return DematInternalEvent.builder()
                 .requestId(entity.getRequestId())
+                .iun(entity.getIun())
                 .statusDetail(entity.getStatusDetail())
                 .statusDescription(entity.getStatusDescription())
                 .statusDateTime(paperRequest.getStatusDateTime())

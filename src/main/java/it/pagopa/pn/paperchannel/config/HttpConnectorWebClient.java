@@ -21,7 +21,6 @@ import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 
 @Component
 @CustomLog
@@ -50,25 +49,23 @@ public class HttpConnectorWebClient implements HttpConnector {
 
     public Mono<byte[]> downloadFileInByteArray(String url) {
         log.info("Url to download: {}", url);
-        try {
-            Flux<DataBuffer> dataBufferFlux = webClient
-                    .get()
-                    .uri(new URI(url))
-                    .accept(MediaType.APPLICATION_PDF)
-                    .retrieve()
-                    .bodyToFlux(DataBuffer.class)
-                    .doOnError(ex -> log.error("Error in WebClient", ex));
-            return DataBufferUtils.join(dataBufferFlux)
-                    .map(dataBuffer -> {
-                        byte[] bytes = new byte[dataBuffer.readableByteCount()];
-                        dataBuffer.read(bytes);
-                        DataBufferUtils.release(dataBuffer);
-                        return bytes;
-                    });
-        } catch (URISyntaxException ex) {
-            log.error("error in URI ", ex);
-            return Mono.error(ex);
-        }
+
+        Flux<DataBuffer> dataBufferFlux = webClient
+                .get()
+                .uri(URI.create(url))
+                .accept(MediaType.APPLICATION_PDF)
+                .retrieve()
+                .bodyToFlux(DataBuffer.class)
+                .doOnError(ex -> log.error("Error in WebClient", ex));
+
+        return DataBufferUtils.join(dataBufferFlux)
+                .map(dataBuffer -> {
+                    byte[] bytes = new byte[dataBuffer.readableByteCount()];
+                    dataBuffer.read(bytes);
+                    DataBufferUtils.release(dataBuffer);
+                    return bytes;
+                });
+
     }
 
     public Mono<Void> uploadContent(FileCreationWithContentRequest fileCreationRequest, FileCreationResponseDto fileCreationResponse, String sha256) {

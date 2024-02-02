@@ -12,6 +12,7 @@
     "AttemptQueueSafeStorage": "3",
     "AttemptQueueAddressManager": "3",
     "AttemptQueueF24": "3",
+    "AttemptQueueZipHandle": "3",
     "TtlPrepare": "14",
     "TtlExecutionRNAR": "12",
     "TtlExecutionRN890" : "11" ,
@@ -34,6 +35,7 @@
     "CloudwatchMetricCron": "0 */5 * * * *",
     "F24ClientReadTimeoutMillis": "30000",
     "F24ClientRetryMaxAttempts": "0",
-    "RequiredDemats": "23L"
+    "RequiredDemats": "23L",
+    "ZipHandleActive": true
   }
 }

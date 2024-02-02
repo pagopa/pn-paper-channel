@@ -36,10 +36,13 @@ public class SaveDematMessageHandler extends SendToDeliveryPushHandler {
 
     private final Long ttlDays;
 
-    public SaveDematMessageHandler(SqsSender sqsSender, EventDematDAO eventDematDAO, Long ttlDays) {
+    private final boolean zipHandleActive;
+
+    public SaveDematMessageHandler(SqsSender sqsSender, EventDematDAO eventDematDAO, Long ttlDays, boolean zipHandleActive) {
         super(sqsSender);
         this.eventDematDAO = eventDematDAO;
         this.ttlDays = ttlDays;
+        this.zipHandleActive = zipHandleActive;
     }
 
 
@@ -54,7 +57,8 @@ public class SaveDematMessageHandler extends SendToDeliveryPushHandler {
 
         return Flux.fromIterable(attachments)
                 .flatMap(attachmentDetailsDto -> {
-                    if(isAZipFile(attachmentDetailsDto) && sendToDeliveryPush(attachmentDetailsDto.getDocumentType())) {
+                    if(zipHandleActive && isAZipFile(attachmentDetailsDto) && sendToDeliveryPush(attachmentDetailsDto.getDocumentType())) {
+                        log.debug("[{}] Zip Handle Flow", paperRequest.getRequestId());
                         //manda nella coda interna
                         paperRequest.setAttachments(List.of(attachmentDetailsDto));
                         var dematInternalEvent = DematInternalEventMapper.toDematInternalEvent(entity, paperRequest);

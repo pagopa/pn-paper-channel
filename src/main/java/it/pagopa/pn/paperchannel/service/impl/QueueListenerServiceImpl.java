@@ -110,8 +110,9 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                                 }
                         )
                         .doOnError(throwable -> {
-                            log.error(throwable.getMessage());
-                            //TODO capire cosa fare in caso di errore
+                            log.error("Error in dematZipInternalListener", throwable);
+                            body.setErrorMessage(throwable.getMessage());
+                            this.sqsSender.pushInternalError(body, body.getAttemptRetry(), DematInternalEvent.class);
                         }))
                 .block();
     }

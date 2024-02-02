@@ -20,7 +20,7 @@ import java.net.ConnectException;
 import java.time.Duration;
 import java.util.concurrent.TimeoutException;
 
-import static it.pagopa.pn.paperchannel.utils.SafeStorageUtils.SAFESTORAGE_PREFIX;
+import static it.pagopa.pn.paperchannel.service.impl.SafeStorageServiceImpl.SAFESTORAGE_PREFIX;
 
 
 @Component

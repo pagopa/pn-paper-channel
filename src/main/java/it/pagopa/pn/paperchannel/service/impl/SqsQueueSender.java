@@ -28,7 +28,6 @@ public class SqsQueueSender implements SqsSender {
 
     private static final String PUBLISHER_UPDATE = "paper-channel-update";
     private static final String PUBLISHER_PREPARE = "paper-channel-prepare";
-    private static final String PUBLISHER_SEND_ZIP_HANDLE = "paper-channel-send-zip";
 
     @Autowired
     private DeliveryPushMomProducer deliveryPushMomProducer;
@@ -72,7 +71,7 @@ public class SqsQueueSender implements SqsSender {
     @Override
     public void pushDematZipInternalEvent(DematInternalEvent dematZipInternalEvent) {
         InternalEventHeader prepareHeader= InternalEventHeader.builder()
-                .publisher(PUBLISHER_SEND_ZIP_HANDLE)
+                .publisher(PUBLISHER_PREPARE)
                 .eventId(UUID.randomUUID().toString())
                 .createdAt(Instant.now())
                 .eventType(EventTypeEnum.SEND_ZIP_HANDLE.name())
@@ -141,6 +140,7 @@ public class SqsQueueSender implements SqsSender {
         if (tClass == PrepareAsyncRequest.class) typeEnum = SAFE_STORAGE_ERROR;
         if (tClass == F24Error.class) typeEnum = F24_ERROR;
         if (tClass == PrepareAsyncRequest.class && ((PrepareAsyncRequest) entity).isAddressRetry()) typeEnum = ADDRESS_MANAGER_ERROR;
+        if (tClass == DematInternalEvent.class) typeEnum = ZIP_HANDLE_ERROR;
 
         return typeEnum;
     }

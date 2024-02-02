@@ -8,12 +8,13 @@ import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileDownloadResponseDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.AttachmentDetails;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
+import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventDemat;
 import it.pagopa.pn.paperchannel.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.paperchannel.model.DematInternalEvent;
 import it.pagopa.pn.paperchannel.model.FileCreationWithContentRequest;
 import it.pagopa.pn.paperchannel.service.SqsSender;
-import it.pagopa.pn.paperchannel.utils.SafeStorageUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
@@ -25,7 +26,7 @@ import reactor.test.StepVerifier;
 import java.io.IOException;
 import java.time.OffsetDateTime;
 
-import static it.pagopa.pn.paperchannel.utils.SafeStorageUtils.SAFESTORAGE_PREFIX;
+import static it.pagopa.pn.paperchannel.service.impl.SafeStorageServiceImpl.SAFESTORAGE_PREFIX;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -42,9 +43,11 @@ class DematZipServiceImplTest {
 
     private SafeStorageClient safeStorageClient;
 
-    private SafeStorageUtils safeStorageUtils;
+    private SafeStorageServiceImpl safeStorageService;
 
     private HttpConnector httpConnector;
+
+    private EventDematDAO eventDematDAO;
 
     @BeforeEach
     public void init() {
@@ -54,9 +57,10 @@ class DematZipServiceImplTest {
         safeStorageClient = mock(SafeStorageClient.class);
         httpConnector = mock(HttpConnector.class);
         pnPaperChannelConfig = mock(PnPaperChannelConfig.class);
-        safeStorageUtils = new SafeStorageUtils(safeStorageClient, httpConnector);
+        safeStorageService = new SafeStorageServiceImpl(safeStorageClient, httpConnector);
+        eventDematDAO = mock(EventDematDAO.class);
         when(pnPaperChannelConfig.getAttemptSafeStorage()).thenReturn(1);
-        dematZipService = new DematZipServiceImpl(auditLogBuilder, sqsSender, requestDeliveryDAO, pnPaperChannelConfig, safeStorageUtils);
+        dematZipService = new DematZipServiceImpl(auditLogBuilder, sqsSender, requestDeliveryDAO, pnPaperChannelConfig, safeStorageService, eventDematDAO);
     }
 
     @Test
@@ -78,18 +82,21 @@ class DematZipServiceImplTest {
         when(httpConnector.downloadFileInByteArray(s3Url)).thenReturn(Mono.just(getFile("zip/zip-with-pdf-and-xml.zip")));
 
 
-        FileCreationWithContentRequest fileCreationRequestWithContent = safeStorageUtils.buildFileCreationWithContentRequest(getFile("zip/test.pdf"));
+        FileCreationWithContentRequest fileCreationRequestWithContent = safeStorageService.buildFileCreationWithContentRequest(getFile("zip/test.pdf"));
         FileCreationResponseDto fileCreationResponseDto = new FileCreationResponseDto().secret("secret").key("fileKeyPdf.pdf");
-        String sha256 = safeStorageUtils.computeSha256(fileCreationRequestWithContent.getContent());
+        String sha256 = safeStorageService.computeSha256(fileCreationRequestWithContent.getContent());
         when(safeStorageClient.createFile(fileCreationRequestWithContent))
                 .thenReturn(Mono.just(fileCreationResponseDto));
 
         when(httpConnector.uploadContent(fileCreationRequestWithContent, fileCreationResponseDto, sha256)).thenReturn(Mono.empty());
 
+        when(eventDematDAO.createOrUpdate(any())).thenReturn(Mono.just(new PnEventDemat()));
+
         StepVerifier.create(dematZipService.handle(dematInternalEvent))
                 .verifyComplete();
 
         verify(sqsSender, times(2)).pushSendEvent(any());
+        verify(eventDematDAO, times(2)).createOrUpdate(any());
     }
 
     @Test
@@ -111,6 +118,7 @@ class DematZipServiceImplTest {
                 .verify();
 
         verify(sqsSender, never()).pushSendEvent(any());
+        verify(eventDematDAO, never()).createOrUpdate(any());
     }
 
     private byte[] getFile(String file) {

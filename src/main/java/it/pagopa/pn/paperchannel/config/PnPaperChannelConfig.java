@@ -46,6 +46,7 @@ public class PnPaperChannelConfig {
     private Integer attemptQueueNationalRegistries;
     private Integer attemptQueueAddressManager;
     private Integer attemptQueueF24;
+    private Integer attemptQueueZipHandle;
     private Long ttlPrepare;
     private Long ttlExecutionN_890;
     private Long ttlExecutionN_AR;
@@ -60,6 +61,7 @@ public class PnPaperChannelConfig {
     private Duration refinementDuration;
     private String requestPaIdOverride;
     private Set<String> requiredDemats;
+    private boolean zipHandleActive;
 
     /**
      * Per l'errore PNADDR001: True se il failureDetailCode D01 deve essere mandato a delivery push (specificando anche l'indirizzo),

@@ -51,7 +51,7 @@ class PNAG012MessageHandlerTest {
                 DematDocumentTypeEnum.DEMAT_ARCAD.getDocumentType()
         );
 
-        handler = new PNAG012MessageHandler(mockSqsSender, eventDematDAO, ttlDays, eventMetaDAO, ttlDays, requiredDemats);
+        handler = new PNAG012MessageHandler(mockSqsSender, eventDematDAO, ttlDays, eventMetaDAO, ttlDays, requiredDemats, false);
     }
 
     @Test

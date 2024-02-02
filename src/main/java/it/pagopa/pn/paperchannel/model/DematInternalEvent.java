@@ -11,6 +11,7 @@ import java.time.OffsetDateTime;
 public class DematInternalEvent {
     
     private String requestId; //PnDeliveryRequest.getRequestId
+    private String iun; //PnDeliveryRequest.getIun
     private String statusDetail;//PnDeliveryRequest.getStatusDetail
     private String statusDescription;//PnDeliveryRequest.getStatusDescription
     private OffsetDateTime statusDateTime; //PaperProgressStatusEventDto.getStatusDateTime
@@ -21,4 +22,5 @@ public class DematInternalEvent {
     private AnalogAddress discoveredAddress; //PaperProgressStatusEventDto.getDiscoveredAddress
     private AttachmentDetails attachmentDetails; //PaperProgressStatusEventDto.getAttachments.get(0)
     private int attemptRetry;
+    private String errorMessage;
 }
