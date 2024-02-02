@@ -48,8 +48,8 @@ public class SafeStorageServiceImpl implements SafeStorageService {
     }
 
     @Override
-    public Mono<byte[]> downloadFileInByteArray(String url) {
-        return httpConnector.downloadFileInByteArray(url);
+    public Mono<byte[]> downloadFileAsByteArray(String url) {
+        return httpConnector.downloadFileAsByteArray(url);
     }
 
     @Override

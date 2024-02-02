@@ -50,7 +50,7 @@ public interface SafeStorageService {
     }
 
     Mono<FileDownloadResponseDto> getFileRecursive(Integer n, String fileKey, BigDecimal millis);
-    Mono<byte[]> downloadFileInByteArray(String url);
+    Mono<byte[]> downloadFileAsByteArray(String url);
     Mono<PDDocument> downloadFile(String url);
     Mono<String> createAndUploadContent(FileCreationWithContentRequest fileCreationRequest);
 }

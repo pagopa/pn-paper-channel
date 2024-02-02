@@ -79,7 +79,7 @@ class DematZipServiceImplTest {
         zipSafeStorageResponse.setDownload(new FileDownloadInfoDto().url(s3Url));
         when(safeStorageClient.getFile(fileKey)).thenReturn(Mono.just(zipSafeStorageResponse));
 
-        when(httpConnector.downloadFileInByteArray(s3Url)).thenReturn(Mono.just(getFile("zip/zip-with-pdf-and-xml.zip")));
+        when(httpConnector.downloadFileAsByteArray(s3Url)).thenReturn(Mono.just(getFile("zip/zip-with-pdf-and-xml.zip")));
 
 
         FileCreationWithContentRequest fileCreationRequestWithContent = safeStorageService.buildFileCreationWithContentRequest(getFile("zip/test.pdf"));

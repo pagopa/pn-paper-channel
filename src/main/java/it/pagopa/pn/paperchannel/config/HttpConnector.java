@@ -11,7 +11,7 @@ public interface HttpConnector {
 
     Mono<PDDocument> downloadFile(String url);
 
-    Mono<byte[]> downloadFileInByteArray(String url);
+    Mono<byte[]> downloadFileAsByteArray(String url);
 
     Mono<Void> uploadContent(FileCreationWithContentRequest fileCreationRequest, FileCreationResponseDto fileCreationResponse, String sha256);
 }

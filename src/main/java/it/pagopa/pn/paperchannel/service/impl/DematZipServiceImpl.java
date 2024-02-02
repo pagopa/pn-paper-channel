@@ -58,7 +58,7 @@ public class DematZipServiceImpl extends GenericService implements DematZipServi
         return safeStorageService.getFileRecursive(pnPaperChannelConfig.getAttemptSafeStorage(), fileKeyZip, BigDecimal.ZERO)
                 .doOnNext(fileDownloadResponseDto -> log.debug("Response from getFileRecursive: {}", fileDownloadResponseDto))
                 .flatMap(this::checkValidUrl)
-                .flatMap(fileDownloadResponseDto -> safeStorageService.downloadFileInByteArray(fileDownloadResponseDto.getDownload().getUrl()))
+                .flatMap(fileDownloadResponseDto -> safeStorageService.downloadFileAsByteArray(fileDownloadResponseDto.getDownload().getUrl()))
                 .doOnNext(bytes -> log.debug("Download file done"))
                 .map(ZipUtils::extractPdfFromZip)
                 .doOnNext(bytes -> log.debug("Extract PDF from ZIP done"))

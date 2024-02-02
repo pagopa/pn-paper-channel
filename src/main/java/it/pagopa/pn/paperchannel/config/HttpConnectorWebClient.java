@@ -33,7 +33,7 @@ public class HttpConnectorWebClient implements HttpConnector {
     }
 
     public Mono<PDDocument> downloadFile(String url) {
-        return downloadFileInByteArray(url)
+        return downloadFileAsByteArray(url)
                 .map(bytes -> buildPDDocument(url, bytes));
     }
 
@@ -47,7 +47,7 @@ public class HttpConnectorWebClient implements HttpConnector {
 
     }
 
-    public Mono<byte[]> downloadFileInByteArray(String url) {
+    public Mono<byte[]> downloadFileAsByteArray(String url) {
         log.info("Url to download: {}", url);
 
         Flux<DataBuffer> dataBufferFlux = webClient

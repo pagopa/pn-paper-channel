@@ -2,6 +2,7 @@ package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.paperchannel.config.HttpConnector;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
+import it.pagopa.pn.paperchannel.exception.PnRetryStorageException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileCreationResponseDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileDownloadResponseDto;
 import it.pagopa.pn.paperchannel.middleware.msclient.SafeStorageClient;
@@ -22,7 +23,7 @@ import reactor.test.StepVerifier;
 import java.io.IOException;
 import java.math.BigDecimal;
 
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class SafeStorageServiceImplTest {
@@ -57,11 +58,23 @@ class SafeStorageServiceImplTest {
     }
 
     @Test
-    void downloadFileInByteArrayOk() {
+    void getFileRecursiveOkWithFinishedAttempts() {
+        String fileKey = "fileKeyPdf";
+        int attempt = 3;
+        when(safeStorageClient.getFile(fileKey)).thenReturn(Mono.error(new PnRetryStorageException(BigDecimal.ZERO)));
+        StepVerifier.create(safeStorageService.getFileRecursive(attempt, fileKey, BigDecimal.ZERO))
+                .expectError(PnGenericException.class)
+                .verify();
+
+        verify(safeStorageClient, times(3 + 1)).getFile(fileKey);
+    }
+
+    @Test
+    void downloadFileAsByteArrayOk() {
         String url = "http://[bucket_name].s3.amazonaws.com/";
         byte[] response = "A VALUE".getBytes();
-        when(httpConnector.downloadFileInByteArray(url)).thenReturn(Mono.just(response));
-        StepVerifier.create(safeStorageService.downloadFileInByteArray(url))
+        when(httpConnector.downloadFileAsByteArray(url)).thenReturn(Mono.just(response));
+        StepVerifier.create(safeStorageService.downloadFileAsByteArray(url))
                 .expectNext(response)
                 .verifyComplete();
     }
