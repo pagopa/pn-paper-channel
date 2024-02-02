@@ -17,13 +17,10 @@ import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.ZipUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.util.List;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.INVALID_SAFE_STORAGE;
@@ -90,49 +87,36 @@ public class DematZipServiceImpl extends GenericService implements DematZipServi
 
     private Mono<Void> saveDematAndSendEvents(DematInternalEvent dematInternalEvent, String fileKeyPdf) {
         var attachmentDetailsPDF = new AttachmentDetails()
-                .id(createId(dematInternalEvent.getAttachmentDetails().getId()))
-                .documentType(MediaType.APPLICATION_PDF_VALUE)
-                .date(Instant.now())
+                .id("0")
+                .documentType(dematInternalEvent.getAttachmentDetails().getDocumentType())
+                .date(dematInternalEvent.getAttachmentDetails().getDate())
                 .url(enrichWithPrefixIfNeeded(fileKeyPdf));
 
-        var pnEventDematZip = buildPnEventDemat(dematInternalEvent, dematInternalEvent.getAttachmentDetails());
-        var pnEventDematPdf = buildPnEventDemat(dematInternalEvent, attachmentDetailsPDF);
+        var pnEventDematZip = buildPnEventDemat(dematInternalEvent);
         var sendEventZip = buildSendEventsForZipAndPdf(dematInternalEvent, dematInternalEvent.getAttachmentDetails());
         var sendEventPdf = buildSendEventsForZipAndPdf(dematInternalEvent, attachmentDetailsPDF);
         var sendEvents = List.of(sendEventZip, sendEventPdf);
 
-        return Flux.fromIterable(List.of(pnEventDematZip, pnEventDematPdf))
-                .flatMap(eventDematDAO::createOrUpdate)
-                .doOnNext(pnEventDemat -> log.debug("Save demat: {}", pnEventDemat))
-                .collectList()
-                .doOnNext(pnEventDematsSaved -> sendEvents.forEach(sqsSender::pushSendEvent))
-                .doOnNext(pnEventDematsSaved -> log.info("Sent events: {}", sendEvents))
+        return eventDematDAO.createOrUpdate(pnEventDematZip)
+                .doOnNext(pnEventDematSaved -> log.debug("Save demat: {}", pnEventDematSaved))
+                .doOnNext(pnEventDematSaved -> sendEvents.forEach(sqsSender::pushSendEvent))
+                .doOnNext(pnEventDematSaved -> log.info("Sent events: {}", sendEvents))
                 .then();
 
     }
 
-    private String createId(String originalId) {
-        try {
-            final int number = Integer.parseInt(originalId) + 1;
-            return String.valueOf(number);
-        }
-        catch (NumberFormatException e) {
-            return originalId + "-pdf";
-        }
-    }
-
-    protected PnEventDemat buildPnEventDemat(DematInternalEvent dematInternalEvent, AttachmentDetails attachmentDetails) {
+    protected PnEventDemat buildPnEventDemat(DematInternalEvent dematInternalEvent) {
         PnEventDemat pnEventDemat = new PnEventDemat();
-        pnEventDemat.setDematRequestId(buildDematRequestId(dematInternalEvent.getRequestId()));
-        pnEventDemat.setDocumentTypeStatusCode(buildDocumentTypeStatusCode(attachmentDetails.getDocumentType(), dematInternalEvent.getStatusCode()));
+        pnEventDemat.setDematRequestId(buildDematRequestId(dematInternalEvent.getExtChannelRequestId()));
+        pnEventDemat.setDocumentTypeStatusCode(buildDocumentTypeStatusCode(dematInternalEvent.getAttachmentDetails().getDocumentType(), dematInternalEvent.getStatusCode()));
         pnEventDemat.setTtl(dematInternalEvent.getStatusDateTime().plusDays(pnPaperChannelConfig.getTtlExecutionDaysDemat()).toEpochSecond());
 
-        pnEventDemat.setRequestId(dematInternalEvent.getRequestId());
+        pnEventDemat.setRequestId(dematInternalEvent.getExtChannelRequestId());
         pnEventDemat.setStatusCode(dematInternalEvent.getStatusCode());
-        pnEventDemat.setDocumentType(attachmentDetails.getDocumentType());
-        pnEventDemat.setDocumentDate(attachmentDetails.getDate());
+        pnEventDemat.setDocumentType(dematInternalEvent.getAttachmentDetails().getDocumentType());
+        pnEventDemat.setDocumentDate(dematInternalEvent.getAttachmentDetails().getDate());
         pnEventDemat.setStatusDateTime(dematInternalEvent.getStatusDateTime().toInstant());
-        pnEventDemat.setUri(attachmentDetails.getUrl());
+        pnEventDemat.setUri(dematInternalEvent.getAttachmentDetails().getUrl());
         return pnEventDemat;
     }
 }

@@ -18,6 +18,7 @@ public class DematInternalEventMapper {
                 .iun(entity.getIun())
                 .statusDetail(entity.getStatusDetail())
                 .statusDescription(entity.getStatusDescription())
+                .extChannelRequestId(paperRequest.getRequestId())
                 .statusDateTime(paperRequest.getStatusDateTime())
                 .statusCode(paperRequest.getStatusCode())
                 .clientRequestTimeStamp(paperRequest.getClientRequestTimeStamp())

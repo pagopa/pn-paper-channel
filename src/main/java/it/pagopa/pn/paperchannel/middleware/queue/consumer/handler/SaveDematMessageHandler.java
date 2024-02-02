@@ -77,7 +77,7 @@ public class SaveDematMessageHandler extends SendToDeliveryPushHandler {
     }
 
     private boolean isAZipFile(AttachmentDetailsDto attachment) {
-        return attachment.getUri().contains(".zip");
+        return attachment.getUri().endsWith(".zip");
     }
 
     private Mono<Void> checkAndSendToDeliveryPush(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest, AttachmentDetailsDto attachmentDetailsDto) {

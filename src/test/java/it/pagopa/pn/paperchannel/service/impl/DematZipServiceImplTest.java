@@ -96,7 +96,7 @@ class DematZipServiceImplTest {
                 .verifyComplete();
 
         verify(sqsSender, times(2)).pushSendEvent(any());
-        verify(eventDematDAO, times(2)).createOrUpdate(any());
+        verify(eventDematDAO, times(1)).createOrUpdate(any());
     }
 
     @Test

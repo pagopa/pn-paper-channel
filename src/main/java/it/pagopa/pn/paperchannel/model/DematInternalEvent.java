@@ -14,6 +14,7 @@ public class DematInternalEvent {
     private String iun; //PnDeliveryRequest.getIun
     private String statusDetail;//PnDeliveryRequest.getStatusDetail
     private String statusDescription;//PnDeliveryRequest.getStatusDescription
+    private String extChannelRequestId; //PaperProgressStatusEventDto.getRequestId
     private OffsetDateTime statusDateTime; //PaperProgressStatusEventDto.getStatusDateTime
     private String statusCode;//PaperProgressStatusEventDto.getStatusCode
     private OffsetDateTime clientRequestTimeStamp; //PaperProgressStatusEventDto.getClientRequestTimeStamp()
