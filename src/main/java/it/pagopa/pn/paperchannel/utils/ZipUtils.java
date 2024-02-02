@@ -19,7 +19,13 @@ public class ZipUtils {
             ZipEntry zipEntry;
             while ((zipEntry = zipInputStream.getNextEntry()) != null) {
                 if (zipEntry.getName().endsWith(".pdf")) {
-                    return readZipEntry(zipInputStream);
+                    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                    byte[] buffer = new byte[1024];
+                    int bytesRead;
+                    while ((bytesRead = zipInputStream.read(buffer)) != -1) {
+                        byteArrayOutputStream.write(buffer, 0, bytesRead);
+                    }
+                    return byteArrayOutputStream.toByteArray();
                 }
             }
         } catch (IOException e) {
@@ -27,15 +33,5 @@ public class ZipUtils {
         }
 
         throw new PnZipException("PDF not found in the ZIP file");
-    }
-
-    private static byte[] readZipEntry(ZipInputStream zipInputStream) throws IOException {
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        byte[] buffer = new byte[1024];
-        int bytesRead;
-        while ((bytesRead = zipInputStream.read(buffer)) != -1) {
-            byteArrayOutputStream.write(buffer, 0, bytesRead);
-        }
-        return byteArrayOutputStream.toByteArray();
     }
 }
