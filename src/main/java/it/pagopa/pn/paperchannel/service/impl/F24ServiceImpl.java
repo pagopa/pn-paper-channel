@@ -28,6 +28,7 @@ import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.service.F24Service;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.*;
+import it.pagopa.pn.paperchannel.utils.costutils.CostUtils;
 import lombok.Builder;
 import lombok.CustomLog;
 import lombok.Getter;
@@ -323,8 +324,22 @@ public class F24ServiceImpl extends GenericService implements F24Service {
         return generatedUrls.stream().map(x -> x.startsWith(SAFESTORAGE_PREFIX)?x:(SAFESTORAGE_PREFIX +x)).toList();
     }
 
+    /**
+     * This method sum the partial cost coming from f24Set with the analog cost calculated from paper channel
+     * including the VAT coming from the same f24Set
+     *
+     * @param f24AttachmentInfo     f24 attachment wrapper containing f24set information
+     *
+     * @return                      the sum of the partial cost and analog shipping cost including VAT
+     * */
     private Integer sumCostAndAnalogCost(F24AttachmentInfo f24AttachmentInfo) {
-        return f24AttachmentInfo.getCost()==null? null: f24AttachmentInfo.getCost() + f24AttachmentInfo.getAnalogCost();
+        Integer f24TotalCost = null;
+
+        if (f24AttachmentInfo.getCost() != null) {
+            f24TotalCost = f24AttachmentInfo.getCost() + CostUtils.getCostWithVat(f24AttachmentInfo.getVat(), f24AttachmentInfo.getAnalogCost());
+        }
+
+        return f24TotalCost;
     }
 
     private Mono<F24AttachmentInfo> enrichWithAnalogCost(PnDeliveryRequest deliveryRequest, F24AttachmentInfo pnAttachmentInfo) {
@@ -353,17 +368,26 @@ public class F24ServiceImpl extends GenericService implements F24Service {
         try {
             UriComponents uriComponents = UriComponentsBuilder.fromUriString(f24url).build();
             MultiValueMap<String, String> parameters = uriComponents.getQueryParams();
+
+            /* Read query parameters from f24Set url */
+            Integer cost = parameters.containsKey("cost")
+                    ? Integer.parseInt(parameters.get("cost").get(0))
+                    : null;
+
+            Integer vat = parameters.containsKey("vat")
+                    ? Integer.parseInt(parameters.get("vat").get(0))
+                    : null;
+
             // il costo 0 o nullo equivale a "non mi interessa il calcolo del costo"
             // per semplicità metto a null
-            Integer cost = parameters.containsKey("cost")?Integer.parseInt(parameters.get("cost").get(0)):null;
-            if (cost != null && cost == 0)
-                cost = null;
+            if (cost != null && cost == 0) cost = null;
 
             return Mono.just(F24AttachmentInfo.builder()
                     .setId(uriComponents.getHost())
                     .recipientIndex(uriComponents.getPathSegments().get(0))
                     .cost(cost)
                     .analogCost(null)
+                    .vat(vat)
                     .build());
 
         } catch (Exception e) {
@@ -373,14 +397,45 @@ public class F24ServiceImpl extends GenericService implements F24Service {
     }
 
 
+    /**
+     * This nested class acts as wrapper to store additional information retrieved or calculated
+     * during prepare async process phase.
+     *
+     *
+     */
     @Builder
     @Getter
     @Setter
     private static class F24AttachmentInfo{
+
+        /**
+         * Partial cost sent from delivery push with IVA
+         * */
         private Integer cost;
+
+        /**
+         * Shipping cost calculated from paper channel without IVA
+         * */
         private Integer analogCost;
+
+        /**
+         * Percentage of vat to apply to analog cost and already applied to cost
+         * */
+        private Integer vat;
+
+        /**
+         * Number of pages related to f24Set
+         * */
         private Integer numberOfPage;
+
+        /**
+         * A string that identifies the set of documents of F24
+         * */
         private String setId;
+
+        /**
+         * Target of analog shipping
+         * */
         private String recipientIndex;
     }
 
