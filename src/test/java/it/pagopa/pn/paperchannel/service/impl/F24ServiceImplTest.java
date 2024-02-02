@@ -29,7 +29,8 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -43,6 +44,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.F24_WAITING;
 import static org.junit.jupiter.api.Assertions.*;
@@ -111,18 +113,7 @@ class F24ServiceImplTest {
     }
 
     @ParameterizedTest
-    @CsvSource(value = {
-            "AAR, 5, 5, 10, NULL, 100, 110",
-            "AAR, 12, 12, 10, NULL, 100, 110",
-            "AAR, 12, 12, 0, NULL, NULL, NULL",
-            "AAR, 12, 12, NULL, NULL, NULL, NULL",
-            "AAR, 5, 5, 10, 22, 100, 132", // AAR with VAT
-            "COMPLETE, 5, 5, 10, NULL, 6400, 6410",
-            "COMPLETE, 1, 1, 10, NULL, 6200, 6210",
-            "COMPLETE, 4, 8, 0, NULL, NULL, NULL",
-            "COMPLETE, 4, 8, NULL, NULL, NULL, NULL",
-            "COMPLETE, 5, 5, 10, 22, 6400, 7818" // COMPLETE with VAT
-    }, nullValues = {"NULL"})
+    @MethodSource(value = "preparePDFTestCases")
     @DisplayName("testPreparePDFSuccess")
     void testPreparePDFSuccess(
             String calculationMode,
@@ -391,5 +382,39 @@ class F24ServiceImplTest {
 
             return pdDocument;
         }
+    }
+
+    /** 
+     * Build test argument cases for {@link F24ServiceImplTest#testPreparePDFSuccess}
+     * */
+    private static Stream<Arguments> preparePDFTestCases() {
+
+        /* Test cases for AAR date calculation mode */
+        Arguments aarTestCaseWithNoVat1 = Arguments.of("AAR", 5, 5, 10, null, 100, 110);
+        Arguments aarTestCaseWithNoVat2 = Arguments.of("AAR", 12, 12, 10, null, 100, 110);
+        Arguments aarTestCaseWithZeroCostAndNoVat = Arguments.of("AAR", 12, 12, 0, null, null, null);
+        Arguments aarTestCaseWithNoCostAndNoVat = Arguments.of("AAR", 12, 12, null, null, null, null);
+        Arguments aarTestCaseWithCostAndVat = Arguments.of("AAR", 5, 5, 10, 22, 100, 132);
+
+        /* Test cases for COMPLETE date calculation mode */
+        Arguments completeTestCaseWithNoVat1 = Arguments.of("COMPLETE", 5, 5, 10, null, 6400, 6410);
+        Arguments completeTestCaseWithNoVat2 = Arguments.of("COMPLETE", 1, 1, 10, null, 6200, 6210);
+        Arguments completeTestCaseWithZeroCostAndNoVat = Arguments.of("COMPLETE", 4, 8, 0, null, null, null);
+        Arguments completeTestCaseWithNoCostAndNoVat = Arguments.of("COMPLETE", 4, 8, null, null, null, null);
+        Arguments completeTestCaseWithCostAndVat = Arguments.of("COMPLETE", 5, 5, 10, 22, 6400, 7818);
+
+        return Stream.of(
+                aarTestCaseWithNoVat1,
+                aarTestCaseWithNoVat2,
+                aarTestCaseWithZeroCostAndNoVat,
+                aarTestCaseWithNoCostAndNoVat,
+                aarTestCaseWithCostAndVat,
+                completeTestCaseWithNoVat1,
+                completeTestCaseWithNoVat2,
+                completeTestCaseWithZeroCostAndNoVat,
+                completeTestCaseWithNoCostAndNoVat,
+                completeTestCaseWithCostAndVat
+        );
+
     }
 }
