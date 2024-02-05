@@ -13,6 +13,8 @@ import java.time.OffsetDateTime;
  */
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class DematInternalEvent {
     
     private String requestId; //PnDeliveryRequest.getRequestId
