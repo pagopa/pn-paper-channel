@@ -5,7 +5,9 @@ import it.pagopa.pn.paperchannel.model.FileCreationWithContentRequest;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import reactor.core.publisher.Mono;
 
-
+/**
+ * HTTP reactive client used to invoke external services that do not have OpenAPI documentation, such as the S3 service
+ */
 public interface HttpConnector {
 
 

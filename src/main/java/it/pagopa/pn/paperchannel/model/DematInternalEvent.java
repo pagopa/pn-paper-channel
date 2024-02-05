@@ -6,6 +6,11 @@ import lombok.*;
 
 import java.time.OffsetDateTime;
 
+/**
+ * Internal Demat event that is currently used to manage demats that contain ZIPs in the attachments.
+ * The object of type DematInternalEvent is created from {@link it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto}
+ * and {@link it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest}, thanks to the {@link it.pagopa.pn.paperchannel.mapper.DematInternalEventMapper}
+ */
 @Data
 @Builder
 public class DematInternalEvent {

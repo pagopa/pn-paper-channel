@@ -12,6 +12,11 @@ public class ZipUtils {
 
     private ZipUtils() {}
 
+    /**
+     * Utility method that extracts a PDF from a ZIP given as input
+     * @param zipData The ZIP file in bytearray format
+     * @return The PDF file in bytearray format
+     */
     public static byte[] extractPdfFromZip(byte[] zipData) {
         try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(zipData);
              ZipInputStream zipInputStream = new ZipInputStream(byteArrayInputStream)) {
