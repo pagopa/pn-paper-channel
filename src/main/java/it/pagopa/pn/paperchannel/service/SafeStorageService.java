@@ -16,7 +16,7 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.ERROR_CODE_P
 public interface SafeStorageService {
 
     String SAFESTORAGE_PREFIX = "safestorage://";
-    String EXTERNAL_LEGAL_FACTS_DOC_TYPE = "PN_EXTERNAL_LEGAL_FACTS";
+    String ZIP_HANDLE_DOC_TYPE = "PN_EXTERNAL_LEGAL_FACTS";
     String SAVED_STATUS = "SAVED";
 
 
@@ -26,8 +26,8 @@ public interface SafeStorageService {
 
     default FileCreationWithContentRequest buildFileCreationWithContentRequest(byte[] bytesPdf) {
         FileCreationWithContentRequest request = new FileCreationWithContentRequest();
-        request.setContentType(EXTERNAL_LEGAL_FACTS_DOC_TYPE); //TODO in attesa di capire quale valore mettere
-        request.setDocumentType(MediaType.APPLICATION_PDF_VALUE);
+        request.setContentType(MediaType.APPLICATION_PDF_VALUE);
+        request.setDocumentType(ZIP_HANDLE_DOC_TYPE); //TODO in attesa di capire quale valore mettere
         request.setStatus(SAVED_STATUS);
         request.setContent(bytesPdf);
 
