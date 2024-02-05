@@ -29,11 +29,13 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -42,6 +44,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.F24_WAITING;
 import static org.junit.jupiter.api.Assertions.*;
@@ -51,6 +54,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class F24ServiceImplTest {
 
     private final static String IUN = "ABCD-EFGH-00000000-000001";
+    private final static String RECIPIENT_INDEX = "0";
     private final static String F24_FILE_KEY = "f24set://ABCD-EFGH-00000000-000001/0";
     private final static String ATTACHMENT_DOC_TYPE = "PDF";
     private final static String ATTACHMENT_URL = "http://localhost:8080";
@@ -83,7 +87,8 @@ class F24ServiceImplTest {
     void checkDeliveryRequestAttachmentForF24WithF24Attachment() {
 
         // Given
-        PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest("REQUESTID", StatusDeliveryEnum.IN_PROCESSING, 0);
+        List<PnAttachmentInfo> attachmentUrls = this.getPnAttachmentInfoList(null, null);
+        PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest("REQUESTID", StatusDeliveryEnum.IN_PROCESSING, attachmentUrls);
 
         // When
         boolean res = f24Service.checkDeliveryRequestAttachmentForF24(pnDeliveryRequest);
@@ -108,18 +113,17 @@ class F24ServiceImplTest {
     }
 
     @ParameterizedTest
-    @CsvSource(value = {
-            "AAR, 5, 5, 10, 100",
-            "AAR, 12, 12, 10, 100",
-            "AAR, 12, 12, 0, NULL",
-            "AAR, 12, 12, NULL, NULL",
-            "COMPLETE, 5, 5, 10, 6400",
-            "COMPLETE, 1, 1, 10, 6200",
-            "COMPLETE, 4, 8, 0, NULL",
-            "COMPLETE, 4, 8, NULL, NULL"
-    }, nullValues = {"NULL"})
+    @MethodSource(value = "preparePDFTestCases")
     @DisplayName("testPreparePDFSuccess")
-    void testPreparePDFSuccess(String calculationMode, Integer paperWeight, Integer letterWeight, Integer f24Cost, Integer expectedCost) throws IOException {
+    void testPreparePDFSuccess(
+            String calculationMode,
+            Integer paperWeight,
+            Integer letterWeight,
+            Integer f24Cost,
+            Integer vat,
+            Integer expectedAnalogCost,
+            Integer expectedF24CostWithVat
+    ) throws IOException {
 
         // Given
         String requestId = "REQUESTID";
@@ -129,7 +133,8 @@ class F24ServiceImplTest {
 
         ChargeCalculationModeEnum chargeCalculationModeEnum = ChargeCalculationModeEnum.valueOf(calculationMode);
 
-        PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest(requestId, StatusDeliveryEnum.IN_PROCESSING, f24Cost);
+        List<PnAttachmentInfo> attachmentUrls = this.getPnAttachmentInfoList(f24Cost, vat);
+        PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest(requestId, StatusDeliveryEnum.IN_PROCESSING, attachmentUrls);
 
         NumberOfPagesResponseDto numberOfPagesResponseDto = new NumberOfPagesResponseDto();
         numberOfPagesResponseDto.setF24Set(getF24MetadataPages(10));
@@ -169,7 +174,12 @@ class F24ServiceImplTest {
         // Then
         assertNotNull(res);
         assertEquals(F24_WAITING.getCode(), res.getStatusCode());
-        assertEquals(expectedCost, res.getCost());
+        assertEquals(expectedAnalogCost, res.getCost());
+
+        /* Verify that F24 file generation is performed with exact cost including VAT when specified:
+           partialCost + (analogCost + analogCost * vat/100)
+        */
+        Mockito.verify(f24Client).preparePDF(requestId, IUN, RECIPIENT_INDEX, expectedF24CostWithVat);
 
         /* Check called twice to verify F24 skip during attachment page calculation */
         if(calculationMode.equals(ChargeCalculationModeEnum.COMPLETE.name()) && f24Cost != null && f24Cost > 0) {
@@ -190,7 +200,8 @@ class F24ServiceImplTest {
         // Given
         String requestid = "REQUESTID";
 
-        PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest(requestid, StatusDeliveryEnum.IN_PROCESSING, 10);
+        List<PnAttachmentInfo> attachmentUrls = this.getPnAttachmentInfoList(10, null);
+        PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest(requestid, StatusDeliveryEnum.IN_PROCESSING, attachmentUrls);
 
         // When
         Mockito.when(f24Client.getNumberOfPages(Mockito.anyString(), Mockito.anyString())).thenReturn(Mono.error(new RuntimeException()));
@@ -208,15 +219,16 @@ class F24ServiceImplTest {
 
         // Given
         String requestid = "REQUESTID";
-        List<String> urls = List.of("safestorage://123456", "safestorage://9876543");
+        List<String> f24SetResolvedUrls = List.of("safestorage://123456", "safestorage://9876543");
 
-        PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest(requestid, F24_WAITING, 0);
+        List<PnAttachmentInfo> attachmentUrls = this.getPnAttachmentInfoList(null, null);
+        PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest(requestid, F24_WAITING, attachmentUrls);
 
         // When
         Mockito.when(requestDeliveryDAO.getByRequestId(Mockito.anyString())).thenReturn(Mono.just(pnDeliveryRequest));
         Mockito.when(requestDeliveryDAO.updateData(Mockito.any())).thenAnswer(i -> Mono.just(i.getArguments()[0]));
 
-        PnDeliveryRequest res = f24Service.arrangeF24AttachmentsAndReschedulePrepare(requestid, urls).block();
+        PnDeliveryRequest res = f24Service.arrangeF24AttachmentsAndReschedulePrepare(requestid, f24SetResolvedUrls).block();
 
         // Then
         Mockito.verify(this.sqsSender).pushToInternalQueue(Mockito.any());
@@ -226,26 +238,12 @@ class F24ServiceImplTest {
         assertEquals(F24_WAITING.getCode(), res.getStatusCode());
         assertEquals(4, res.getAttachments().size());
 
-        assertTrue(res.getAttachments().stream().map(PnAttachmentInfo::getFileKey).toList().containsAll(urls));
-        assertFalse(res.getAttachments().stream().map(PnAttachmentInfo::getFileKey).toList().contains(F24_FILE_KEY.concat("?cost=0")));
+        assertTrue(res.getAttachments().stream().map(PnAttachmentInfo::getFileKey).toList().containsAll(f24SetResolvedUrls));
+        assertFalse(res.getAttachments().stream().map(PnAttachmentInfo::getFileKey).anyMatch(fileKey -> fileKey.startsWith(F24ServiceImpl.URL_PROTOCOL_F24)));
     }
 
-    private PnDeliveryRequest getDeliveryRequest(String requestId, StatusDeliveryEnum status, Integer f24Cost){
+    private PnDeliveryRequest getDeliveryRequest(String requestId, StatusDeliveryEnum status, List<PnAttachmentInfo> attachmentUrls){
         PnDeliveryRequest deliveryRequest= new PnDeliveryRequest();
-
-        String f24FileKey = f24Cost == null ? F24_FILE_KEY : String.format("%s?cost=%s", F24_FILE_KEY, f24Cost);
-
-        /* F24 Set Attachment */
-        PnAttachmentInfo f24PnAttachmentInfo = getPnAttachmentInfo(f24FileKey, Const.DOCUMENT_TYPE_F24_SET);
-
-        PnAttachmentInfo aarPnAttachmentInfo = getPnAttachmentInfo("safestorage://PN_AAR-12345.pdf", Const.PN_AAR);
-        PnAttachmentInfo notificationPnAttachmentInfo = getPnAttachmentInfo("safestorage://PN_NOTIFICATION_ATTACHMENTS-12345.pdf", ATTACHMENT_DOC_TYPE);
-
-        List<PnAttachmentInfo> attachmentUrls = new ArrayList<>(List.of(
-                f24PnAttachmentInfo,
-                aarPnAttachmentInfo,
-                notificationPnAttachmentInfo)
-        );
 
         deliveryRequest.setAddressHash(getAddress().convertToHash());
         deliveryRequest.setRequestId(requestId);
@@ -282,6 +280,28 @@ class F24ServiceImplTest {
         return f24MetadataPagesDtoList;
     }
 
+    private List<PnAttachmentInfo> getPnAttachmentInfoList(Integer f24Cost, Integer vat) {
+
+        UriComponentsBuilder f24Uri = UriComponentsBuilder.fromUriString(F24_FILE_KEY);
+
+        if (f24Cost != null) f24Uri.queryParam("cost", f24Cost);
+        if (vat != null) f24Uri.queryParam("vat", vat);
+
+        String f24FileKey = f24Uri.toUriString();
+
+        /* F24 Set Attachment */
+        PnAttachmentInfo f24PnAttachmentInfo = getPnAttachmentInfo(f24FileKey, Const.DOCUMENT_TYPE_F24_SET);
+
+        PnAttachmentInfo aarPnAttachmentInfo = getPnAttachmentInfo("safestorage://PN_AAR-12345.pdf", Const.PN_AAR);
+        PnAttachmentInfo notificationPnAttachmentInfo = getPnAttachmentInfo("safestorage://PN_NOTIFICATION_ATTACHMENTS-12345.pdf", ATTACHMENT_DOC_TYPE);
+
+        return new ArrayList<>(List.of(
+                f24PnAttachmentInfo,
+                aarPnAttachmentInfo,
+                notificationPnAttachmentInfo)
+        );
+    }
+
     private PnAttachmentInfo getPnAttachmentInfo(String fileKey, String documentType) {
 
         PnAttachmentInfo pnAttachmentInfo = new PnAttachmentInfo();
@@ -293,7 +313,6 @@ class F24ServiceImplTest {
 
         return pnAttachmentInfo;
     }
-
 
     private Address getAddress(){
         Address address = new Address();
@@ -310,7 +329,6 @@ class F24ServiceImplTest {
         address.setFlowType(Const.PREPARE);
         return address;
     }
-
 
     private PnAddress getPnAddress(String requestId){
         PnAddress pnAddress = new PnAddress();
@@ -364,5 +382,39 @@ class F24ServiceImplTest {
 
             return pdDocument;
         }
+    }
+
+    /** 
+     * Build test argument cases for {@link F24ServiceImplTest#testPreparePDFSuccess}
+     * */
+    private static Stream<Arguments> preparePDFTestCases() {
+
+        /* Test cases for AAR date calculation mode */
+        Arguments aarTestCaseWithNoVat1 = Arguments.of("AAR", 5, 5, 10, null, 100, 110);
+        Arguments aarTestCaseWithNoVat2 = Arguments.of("AAR", 12, 12, 10, null, 100, 110);
+        Arguments aarTestCaseWithZeroCostAndNoVat = Arguments.of("AAR", 12, 12, 0, null, null, null);
+        Arguments aarTestCaseWithNoCostAndNoVat = Arguments.of("AAR", 12, 12, null, null, null, null);
+        Arguments aarTestCaseWithCostAndVat = Arguments.of("AAR", 5, 5, 10, 22, 100, 132);
+
+        /* Test cases for COMPLETE date calculation mode */
+        Arguments completeTestCaseWithNoVat1 = Arguments.of("COMPLETE", 5, 5, 10, null, 6400, 6410);
+        Arguments completeTestCaseWithNoVat2 = Arguments.of("COMPLETE", 1, 1, 10, null, 6200, 6210);
+        Arguments completeTestCaseWithZeroCostAndNoVat = Arguments.of("COMPLETE", 4, 8, 0, null, null, null);
+        Arguments completeTestCaseWithNoCostAndNoVat = Arguments.of("COMPLETE", 4, 8, null, null, null, null);
+        Arguments completeTestCaseWithCostAndVat = Arguments.of("COMPLETE", 5, 5, 10, 22, 6400, 7818);
+
+        return Stream.of(
+                aarTestCaseWithNoVat1,
+                aarTestCaseWithNoVat2,
+                aarTestCaseWithZeroCostAndNoVat,
+                aarTestCaseWithNoCostAndNoVat,
+                aarTestCaseWithCostAndVat,
+                completeTestCaseWithNoVat1,
+                completeTestCaseWithNoVat2,
+                completeTestCaseWithZeroCostAndNoVat,
+                completeTestCaseWithNoCostAndNoVat,
+                completeTestCaseWithCostAndVat
+        );
+
     }
 }
