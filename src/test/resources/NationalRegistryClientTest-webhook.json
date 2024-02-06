@@ -119,5 +119,125 @@
         ]
       }
     }
+  },
+  {
+    "httpRequest": {
+      "path": "/national-registries-private/PF/addresses",
+      "method": "POST",
+      "body": {
+        "filter": {
+          "taxId": "CODICEFISCALE_200_WITH_DELAY"
+        }
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "content-type": [
+          "application/json"
+        ]
+      },
+      "body": {
+        "correlationId": "string"
+      },
+      "delay": {
+        "timeUnit": "SECONDS",
+        "value": 12
+      }
+    },
+    "times": {
+      "remainingTimes": 1,
+      "unlimited": false
+    }
+  },
+  {
+    "httpRequest": {
+      "path": "/national-registries-private/PF/addresses",
+      "method": "POST",
+      "body": {
+        "filter": {
+          "taxId": "CODICEFISCALE_200_WITH_DELAY"
+        }
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "content-type": [
+          "application/json"
+        ]
+      },
+      "body": {
+        "correlationId": "string"
+      }
+    },
+    "times": {
+      "remainingTimes": 1,
+      "unlimited": false
+    }
+  },
+  {
+    "httpRequest": {
+      "path": "/national-registries-private/PF/addresses",
+      "method": "POST",
+      "body": {
+        "filter": {
+          "taxId": "CODICEFISCALE_SOCKET_CLOSE"
+        }
+      }
+    },
+    "httpError" : {
+      "dropConnection" : true
+    },
+    "times": {
+      "remainingTimes": 1,
+      "unlimited": false
+    }
+  },
+  {
+    "httpRequest": {
+      "path": "/national-registries-private/PF/addresses",
+      "method": "POST",
+      "body": {
+        "filter": {
+          "taxId": "CODICEFISCALE_SOCKET_CLOSE"
+        }
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "content-type": [
+          "application/json"
+        ]
+      },
+      "body": {
+        "correlationId": "string"
+      }
+    },
+    "times": {
+      "remainingTimes": 1,
+      "unlimited": false
+    }
+  },
+  {
+    "httpRequest": {
+      "path": "/national-registries-private/PF/addresses",
+      "method": "POST",
+      "body": {
+        "filter": {
+          "taxId": "CODICEFISCALE_EXCEEDED_RETRY"
+        }
+      }
+    },
+    "httpResponse": {
+      "delay": {
+        "timeUnit": "SECONDS",
+        "value": 12
+      }
+    },
+    "times": {
+      "unlimited": true
+    }
   }
 ]
