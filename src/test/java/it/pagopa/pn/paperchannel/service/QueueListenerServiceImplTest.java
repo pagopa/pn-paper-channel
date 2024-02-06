@@ -34,8 +34,7 @@ import java.util.List;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 
-@ExtendWith(MockitoExtension.class)
-class QueueListenerServiceImplTest extends BaseTest{
+class QueueListenerServiceImplTest extends BaseTest {
 
     @Autowired
     QueueListenerServiceImpl queueListenerService;

@@ -171,8 +171,8 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                         .doOnNext(addressAndEntity -> nationalResolveLogAudit(addressAndEntity.getT2(), addressAndEntity.getT1()))
 
                         /* If Delivery Request status is not NATIONAL_REGISTRY_WAITING then skip to avoid reworks on same or not expected events */
-                        .doOnNext(addressAndEntity -> log.info("Skipping National Registry event? {}", this.isNationalRegistryDuplicatedEvent(addressAndEntity.getT2())))
-                        .filter(addressAndEntity -> !this.isNationalRegistryDuplicatedEvent(addressAndEntity.getT2()))
+                        .doOnNext(addressAndEntity -> log.info("Skipping National Registry event? {}", this.isDeliveryRequestInNationalRegistryWaitingStatus(addressAndEntity.getT2())))
+                        .filter(addressAndEntity -> !this.isDeliveryRequestInNationalRegistryWaitingStatus(addressAndEntity.getT2()))
 
                         .flatMap(addressAndEntity -> {
                             AddressSQSMessageDto addressFromNational = addressAndEntity.getT1();
@@ -320,7 +320,7 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
         }
     }
 
-    private boolean isNationalRegistryDuplicatedEvent(PnDeliveryRequest deliveryRequest) {
-        return deliveryRequest.getStatusCode() == null || !deliveryRequest.getStatusCode().equalsIgnoreCase(NATIONAL_REGISTRY_WAITING.getCode());
+    private boolean isDeliveryRequestInNationalRegistryWaitingStatus(PnDeliveryRequest deliveryRequest) {
+        return !NATIONAL_REGISTRY_WAITING.getCode().equalsIgnoreCase(deliveryRequest.getStatusCode());
     }
 }
