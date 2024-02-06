@@ -13,17 +13,14 @@ import lombok.CustomLog;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
-import reactor.util.retry.Retry;
 
-import java.net.ConnectException;
-import java.time.Duration;
 import java.time.Instant;
-import java.util.Date;
-import java.util.concurrent.TimeoutException;
 
 @CustomLog
 @Component
 public class NationalRegistryClientImpl extends BaseClient implements NationalRegistryClient {
+
+    private static final String PN_NATIONAL_REGISTRY_DESCRIPTION = "National Registry finderAddress";
 
     private final PnPaperChannelConfig pnPaperChannelConfig;
     private final AddressApi addressApi;
@@ -34,13 +31,11 @@ public class NationalRegistryClientImpl extends BaseClient implements NationalRe
         this.addressApi = addressApi;
     }
 
-
-
     @Override
     public Mono<AddressOKDto> finderAddress(String correlationId, String recipientTaxId, String recipientType) {
-        String PN_NATIONAL_REGISTRY_DESCRIPTION = "National Registry finderAddress";
         log.logInvokingExternalService(PnLogger.EXTERNAL_SERVICES.PN_NATIONAL_REGISTRIES, PN_NATIONAL_REGISTRY_DESCRIPTION);
         log.debug("Getting fiscalCode {} key", recipientTaxId);
+
         AddressRequestBodyDto addressRequestBodyDto = new AddressRequestBodyDto();
         AddressRequestBodyFilterDto filterDto = new AddressRequestBodyFilterDto();
         filterDto.setCorrelationId(correlationId);
@@ -51,14 +46,9 @@ public class NationalRegistryClientImpl extends BaseClient implements NationalRe
 
         log.debug("pn-national-registries-cx-id : {}", pnPaperChannelConfig.getNationalRegistryCxId());
         return addressApi.getAddresses(recipientType,addressRequestBodyDto, pnPaperChannelConfig.getNationalRegistryCxId())
-                .retryWhen(
-                        Retry.backoff(2, Duration.ofMillis(500))
-                                .filter(throwable -> throwable instanceof TimeoutException || throwable instanceof ConnectException)
-                )
                 .onErrorResume(WebClientResponseException.class, ex -> {
                     log.error(ex.getResponseBodyAsString());
                     return Mono.error(ex);
-
                 });
     }
 }
