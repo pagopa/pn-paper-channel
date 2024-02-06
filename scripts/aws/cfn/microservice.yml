@@ -91,6 +91,16 @@ Parameters:
     Type: Number
     Description: 'Number of attempts for called prepare async for retry f24'
 
+  AttemptQueueZipHandle:
+    Type: Number
+    Description: 'Number of attempts for called zip handle'
+    Default: 3
+
+  ZipHandleActive:
+    Type: String
+    Description: 'Activation feature flag for Zip handler in Demat Flow'
+    Default: 'false'
+
   SafeStorageCxId:
     Type: String
     Description: 'SafeStorage cx-id'
@@ -552,6 +562,8 @@ Resources:
         ContainerEnvEntry56: !Sub 'PN_PAPERCHANNEL_F24CLIENT_TIMEOUTMILLIS=${F24ClientReadTimeoutMillis}'
         ContainerEnvEntry57: !Sub 'PN_PAPERCHANNEL_F24CLIENT_RETRYMAXATTEMPTS=${F24ClientRetryMaxAttempts}'
         ContainerEnvEntry58: !Sub 'PN_PAPERCHANNEL_REQUIREDDEMATS=${RequiredDemats}'
+        ContainerEnvEntry59: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUEZIPHANDLE=${AttemptQueueZipHandle}'
+        ContainerEnvEntry60: !Sub 'PN_PAPERCHANNEL_ZIPHANDLEACTIVE=${ZipHandleActive}'
         ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-PaperChannel-Secrets
         MappedPaths: '/paper-channel-bo/*,/paper-channel-private/*'
