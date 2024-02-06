@@ -5,6 +5,7 @@ import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.exception.PnRetryStorageException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileCreationResponseDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileDownloadResponseDto;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.safestorage.model.FileCreationResponse;
 import it.pagopa.pn.paperchannel.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.paperchannel.model.FileCreationWithContentRequest;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -100,10 +101,10 @@ class SafeStorageServiceImplTest {
         String sha256 = safeStorageService.computeSha256(request.getContent());
 
 
-        FileCreationResponseDto responseFromCreateFile = new FileCreationResponseDto();
+        FileCreationResponse responseFromCreateFile = new FileCreationResponse();
         responseFromCreateFile.setKey("fileKey");
         responseFromCreateFile.setSecret("secret");
-        when(safeStorageClient.createFile(request)).thenReturn(Mono.just(responseFromCreateFile));
+        when(safeStorageClient.createFile(request, sha256)).thenReturn(Mono.just(responseFromCreateFile));
         when(httpConnector.uploadContent(request, responseFromCreateFile, sha256)).thenReturn(Mono.empty());
 
         StepVerifier.create(safeStorageService.createAndUploadContent(request))
@@ -119,7 +120,9 @@ class SafeStorageServiceImplTest {
         request.setStatus("SAVED");
         request.setDocumentType("EXTERNAL_LEGAL_FACT");
 
-        when(safeStorageClient.createFile(request)).thenReturn(Mono.error(WebClientResponseException.create(502, "", new HttpHeaders(), null, null)));
+        String sha256 = safeStorageService.computeSha256(request.getContent());
+
+        when(safeStorageClient.createFile(request, sha256)).thenReturn(Mono.error(WebClientResponseException.create(502, "", new HttpHeaders(), null, null)));
 
         StepVerifier.create(safeStorageService.createAndUploadContent(request))
                 .expectError(PnGenericException.class)

@@ -6,6 +6,7 @@ import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileCreationResponseDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileDownloadInfoDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileDownloadResponseDto;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.safestorage.model.FileCreationResponse;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.AttachmentDetails;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
@@ -83,12 +84,12 @@ class DematZipServiceImplTest {
 
 
         FileCreationWithContentRequest fileCreationRequestWithContent = safeStorageService.buildFileCreationWithContentRequest(getFile("zip/test.pdf"));
-        FileCreationResponseDto fileCreationResponseDto = new FileCreationResponseDto().secret("secret").key("fileKeyPdf.pdf");
+        FileCreationResponse fileCreationResponse = new FileCreationResponse().secret("secret").key("fileKeyPdf.pdf");
         String sha256 = safeStorageService.computeSha256(fileCreationRequestWithContent.getContent());
-        when(safeStorageClient.createFile(fileCreationRequestWithContent))
-                .thenReturn(Mono.just(fileCreationResponseDto));
+        when(safeStorageClient.createFile(fileCreationRequestWithContent, sha256))
+                .thenReturn(Mono.just(fileCreationResponse));
 
-        when(httpConnector.uploadContent(fileCreationRequestWithContent, fileCreationResponseDto, sha256)).thenReturn(Mono.empty());
+        when(httpConnector.uploadContent(fileCreationRequestWithContent, fileCreationResponse, sha256)).thenReturn(Mono.empty());
 
         when(eventDematDAO.createOrUpdate(any())).thenReturn(Mono.just(new PnEventDemat()));
 

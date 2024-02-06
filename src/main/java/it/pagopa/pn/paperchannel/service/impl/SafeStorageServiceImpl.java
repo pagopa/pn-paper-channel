@@ -3,8 +3,8 @@ package it.pagopa.pn.paperchannel.service.impl;
 import it.pagopa.pn.paperchannel.config.HttpConnector;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.exception.PnRetryStorageException;
-import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileCreationResponseDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileDownloadResponseDto;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.safestorage.model.FileCreationResponse;
 import it.pagopa.pn.paperchannel.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.paperchannel.model.FileCreationWithContentRequest;
 import it.pagopa.pn.paperchannel.service.SafeStorageService;
@@ -63,12 +63,12 @@ public class SafeStorageServiceImpl implements SafeStorageService {
 
         String sha256 = computeSha256(fileCreationRequest.getContent());
 
-        return safeStorageClient.createFile(fileCreationRequest)
+        return safeStorageClient.createFile(fileCreationRequest, sha256)
                 .onErrorResume(exception ->{
                     log.error("Cannot create file ", exception);
                     return Mono.error(new PnGenericException(ERROR_CODE_PAPERCHANNEL_ZIP_HANDLE, exception.getMessage()));
                 })
                 .flatMap(fileCreationResponse -> httpConnector.uploadContent(fileCreationRequest, fileCreationResponse, sha256).thenReturn(fileCreationResponse))
-                .map(FileCreationResponseDto::getKey);
+                .map(FileCreationResponse::getKey);
     }
 }

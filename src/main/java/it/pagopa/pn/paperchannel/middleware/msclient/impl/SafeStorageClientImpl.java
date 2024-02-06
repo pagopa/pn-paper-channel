@@ -4,10 +4,10 @@ import it.pagopa.pn.commons.log.PnLogger;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.PnRetryStorageException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.api.FileDownloadApi;
-import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.api.FileUploadApi;
-import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileCreationRequestDto;
-import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileCreationResponseDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileDownloadResponseDto;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.safestorage.model.FileCreationRequest;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.safestorage.model.FileCreationResponse;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.safestorage_reactive.api.FileUploadApi;
 import it.pagopa.pn.paperchannel.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.paperchannel.model.FileCreationWithContentRequest;
 import lombok.CustomLog;
@@ -63,17 +63,17 @@ public class SafeStorageClientImpl implements SafeStorageClient {
     }
 
     @Override
-    public Mono<FileCreationResponseDto> createFile(FileCreationWithContentRequest fileCreationRequestWithContent) {
+    public Mono<FileCreationResponse> createFile(FileCreationWithContentRequest fileCreationRequestWithContent, String sha256) {
         final String PN_SAFE_STORAGE_DESCRIPTION = "Safe Storage createFile";
         log.logInvokingExternalService(PnLogger.EXTERNAL_SERVICES.PN_SAFE_STORAGE, PN_SAFE_STORAGE_DESCRIPTION);
 
-        var fileCreationRequest = new FileCreationRequestDto();
+        FileCreationRequest fileCreationRequest = new FileCreationRequest();
         fileCreationRequest.setContentType(fileCreationRequestWithContent.getContentType());
         fileCreationRequest.setDocumentType(fileCreationRequestWithContent.getDocumentType());
         fileCreationRequest.setStatus(fileCreationRequestWithContent.getStatus());
 
-        return fileUploadApi.createFile(pnPaperChannelConfig.getSafeStorageCxId(), fileCreationRequest )
-                .doOnError( res -> log.error("File creation error - documentType={} filesize={}", fileCreationRequest.getDocumentType(), fileCreationRequestWithContent.getContent().length));
+        return fileUploadApi.createFile( pnPaperChannelConfig.getSafeStorageCxId(),"SHA-256", sha256,  fileCreationRequest )
+                .doOnError( res -> log.error("File creation error - documentType={} filesize={} sha256={}", fileCreationRequest.getDocumentType(), fileCreationRequestWithContent.getContent().length, sha256));
     }
 
 

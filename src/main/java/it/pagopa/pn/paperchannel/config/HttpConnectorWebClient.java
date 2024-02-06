@@ -2,7 +2,7 @@ package it.pagopa.pn.paperchannel.config;
 
 import it.pagopa.pn.commons.log.PnLogger;
 import it.pagopa.pn.paperchannel.exception.PnDownloadException;
-import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileCreationResponseDto;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.safestorage.model.FileCreationResponse;
 import it.pagopa.pn.paperchannel.model.FileCreationWithContentRequest;
 import lombok.CustomLog;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -68,7 +68,7 @@ public class HttpConnectorWebClient implements HttpConnector {
 
     }
 
-    public Mono<Void> uploadContent(FileCreationWithContentRequest fileCreationRequest, FileCreationResponseDto fileCreationResponse, String sha256) {
+    public Mono<Void> uploadContent(FileCreationWithContentRequest fileCreationRequest, FileCreationResponse fileCreationResponse, String sha256) {
         final String UPLOAD_FILE_CONTENT = "Safe Storage uploadContent";
         log.logInvokingAsyncExternalService(PnLogger.EXTERNAL_SERVICES.PN_SAFE_STORAGE, UPLOAD_FILE_CONTENT, fileCreationResponse.getKey());
 
@@ -78,7 +78,7 @@ public class HttpConnectorWebClient implements HttpConnector {
         headers.add("x-amz-meta-secret", fileCreationResponse.getSecret());
 
         URI url = URI.create(fileCreationResponse.getUploadUrl());
-        HttpMethod method = fileCreationResponse.getUploadMethod() == FileCreationResponseDto.UploadMethodEnum.POST ? HttpMethod.POST : HttpMethod.PUT;
+        HttpMethod method = fileCreationResponse.getUploadMethod() == FileCreationResponse.UploadMethodEnum.POST ? HttpMethod.POST : HttpMethod.PUT;
 
         return webClient.method(method)
                 .uri(url)
