@@ -53,8 +53,8 @@ public class PNAG012MessageHandler extends SaveDematMessageHandler {
 
     private final Set<String> requiredDemats;
 
-    public PNAG012MessageHandler(SqsSender sqsSender, EventDematDAO eventDematDAO, Long ttlDaysDemat, EventMetaDAO eventMetaDAO, Long ttlDaysMeta, Set<String> requiredDemats) {
-        super(sqsSender, eventDematDAO, ttlDaysDemat);
+    public PNAG012MessageHandler(SqsSender sqsSender, EventDematDAO eventDematDAO, Long ttlDaysDemat, EventMetaDAO eventMetaDAO, Long ttlDaysMeta, Set<String> requiredDemats, boolean zipHandleActive) {
+        super(sqsSender, eventDematDAO, ttlDaysDemat, zipHandleActive);
         this.eventMetaDAO = eventMetaDAO;
         this.ttlDaysMeta = ttlDaysMeta;
         this.requiredDemats = requiredDemats;

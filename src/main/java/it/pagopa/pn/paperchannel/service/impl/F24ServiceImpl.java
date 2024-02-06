@@ -4,14 +4,11 @@ import it.pagopa.pn.commons.exceptions.PnExceptionsCodes;
 import it.pagopa.pn.commons.exceptions.PnInternalException;
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.commons.log.PnAuditLogEventType;
-import it.pagopa.pn.paperchannel.config.HttpConnector;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnF24FlowException;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
-import it.pagopa.pn.paperchannel.exception.PnRetryStorageException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnf24.v1.dto.MetadataPagesDto;
-import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileDownloadResponseDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ProductTypeEnum;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
 import it.pagopa.pn.paperchannel.mapper.AttachmentMapper;
@@ -21,11 +18,11 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.F24Client;
-import it.pagopa.pn.paperchannel.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.paperchannel.model.F24Error;
 import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.service.F24Service;
+import it.pagopa.pn.paperchannel.service.SafeStorageService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.*;
 import it.pagopa.pn.paperchannel.utils.costutils.CostUtils;
@@ -46,7 +43,6 @@ import reactor.util.function.Tuples;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -56,13 +52,13 @@ import java.util.Optional;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.INVALID_SAFE_STORAGE;
 import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.F24_WAITING;
+import static it.pagopa.pn.paperchannel.service.SafeStorageService.SAFESTORAGE_PREFIX;
 
 @CustomLog
 @Service
 public class F24ServiceImpl extends GenericService implements F24Service {
 
     public static final String URL_PROTOCOL_F24 = "f24set";
-    private static final String SAFESTORAGE_PREFIX = "safestorage://";
     private static final String REWORK_COUNT_SUFFIX_REQUEST_ID = ".REWORK_";
 
     private final F24Client f24Client;
@@ -70,9 +66,7 @@ public class F24ServiceImpl extends GenericService implements F24Service {
     private final AddressDAO addressDAO;
     private final PnPaperChannelConfig paperChannelConfig;
 
-    private final SafeStorageClient safeStorageClient;
-
-    private final HttpConnector httpConnector;
+    private final SafeStorageService safeStorageService;
 
     private final DateChargeCalculationModesUtils dateChargeCalculationModesUtils;
 
@@ -80,7 +74,7 @@ public class F24ServiceImpl extends GenericService implements F24Service {
     public F24ServiceImpl(PnAuditLogBuilder auditLogBuilder, F24Client f24Client,
                           SqsSender sqsQueueSender,
                           PaperCalculatorUtils paperCalculatorUtils, AddressDAO addressDAO, RequestDeliveryDAO requestDeliveryDAO,
-                          PnPaperChannelConfig paperChannelConfig, SafeStorageClient safeStorageClient, HttpConnector httpConnector,
+                          PnPaperChannelConfig paperChannelConfig, SafeStorageService safeStorageService,
                           DateChargeCalculationModesUtils dateChargeCalculationModesUtils) {
         super(auditLogBuilder, sqsQueueSender, requestDeliveryDAO);
         this.f24Client = f24Client;
@@ -88,8 +82,7 @@ public class F24ServiceImpl extends GenericService implements F24Service {
         this.addressDAO = addressDAO;
         this.requestDeliveryDAO = requestDeliveryDAO;
         this.paperChannelConfig = paperChannelConfig;
-        this.safeStorageClient = safeStorageClient;
-        this.httpConnector = httpConnector;
+        this.safeStorageService = safeStorageService;
         this.dateChargeCalculationModesUtils = dateChargeCalculationModesUtils;
     }
 
@@ -239,7 +232,7 @@ public class F24ServiceImpl extends GenericService implements F24Service {
         log.debug("AFTER filter getNumberOfPagesWithoutF24 Attachments: {}", pnAttachmentInfosWithoutF24);
         return Flux.fromIterable(pnAttachmentInfosWithoutF24)
                 .parallel()
-                .flatMap(attachment -> getFileRecursive(
+                .flatMap(attachment -> safeStorageService.getFileRecursive(
                         paperChannelConfig.getAttemptSafeStorage(),
                         attachment.getFileKey(),
                         new BigDecimal(0))
@@ -248,7 +241,7 @@ public class F24ServiceImpl extends GenericService implements F24Service {
                 .flatMap(fileResponseAndOrigAttachment -> {
                     if (fileResponseAndOrigAttachment.getT1().getDownload() == null || fileResponseAndOrigAttachment.getT1().getDownload().getUrl() == null)
                         return Flux.error(new PnGenericException(INVALID_SAFE_STORAGE, INVALID_SAFE_STORAGE.getMessage()));
-                    return httpConnector.downloadFile(fileResponseAndOrigAttachment.getT1().getDownload().getUrl())
+                    return safeStorageService.downloadFile(fileResponseAndOrigAttachment.getT1().getDownload().getUrl())
                             .map(pdDocument -> {
                                 try {
                                     log.debug("enrichAttachmentsNotF24WithPageNumber Key: {}, totalPages: {}", fileResponseAndOrigAttachment.getT1().getKey(), pdDocument.getNumberOfPages());
@@ -265,23 +258,6 @@ public class F24ServiceImpl extends GenericService implements F24Service {
                 .sequential()
                 .collectList()
                 .thenReturn(deliveryRequest);
-    }
-
-    public Mono<FileDownloadResponseDto> getFileRecursive(Integer n, String fileKey, BigDecimal millis){
-        if (n<0)
-            return Mono.error(new PnGenericException( DOCUMENT_URL_NOT_FOUND, DOCUMENT_URL_NOT_FOUND.getMessage() ) );
-        else {
-            return Mono.delay(Duration.ofMillis( millis.longValue() ))
-                    .flatMap(item -> safeStorageClient.getFile(fileKey)
-                            .map(fileDownloadResponseDto -> fileDownloadResponseDto)
-                            .onErrorResume(ex -> {
-                                log.error ("Error with retrieve {}", ex.getMessage());
-                                return Mono.error(ex);
-                            })
-                            .onErrorResume(PnRetryStorageException.class, ex ->
-                                    getFileRecursive(n - 1, fileKey, ex.getRetryAfter())
-                            ));
-        }
     }
 
     private PnDeliveryRequest enrichDeliveryRequest(PnDeliveryRequest deliveryRequest, StatusDeliveryEnum status, Integer analogCost, Instant statusDate) {

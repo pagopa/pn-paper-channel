@@ -1,7 +1,6 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
-import it.pagopa.pn.paperchannel.config.HttpConnector;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.PnF24FlowException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnf24.v1.dto.MetadataPagesDto;
@@ -16,11 +15,11 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.F24Client;
-import it.pagopa.pn.paperchannel.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.service.F24Service;
 import it.pagopa.pn.paperchannel.service.PaperTenderService;
+import it.pagopa.pn.paperchannel.service.SafeStorageService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.*;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -78,9 +77,7 @@ class F24ServiceImplTest {
     @MockBean
     private F24Client f24Client;
     @MockBean
-    private SafeStorageClient safeStorageClient;
-    @MockBean
-    private HttpConnector httpConnector;
+    private SafeStorageService safeStorageService;
 
     @Test
     @DisplayName("checkDeliveryRequestAttachmentForF24")
@@ -156,12 +153,12 @@ class F24ServiceImplTest {
         Mockito.when(f24Client.getNumberOfPages(Mockito.anyString(), Mockito.anyString())).thenReturn(Mono.just(numberOfPagesResponseDto));
 
         /* Called twice for AAR and other Attachment file, skipping F24 */
-        Mockito.when(safeStorageClient.getFile(Mockito.any()))
+        Mockito.when(safeStorageService.getFileRecursive(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(aarFileDownloadResponse))
                 .thenReturn(Mono.just(attachmentFileDownloadResponse));
 
         /* Called twice for AAR and other Attachment file, skipping F24 */
-        Mockito.when(httpConnector.downloadFile(Mockito.any()))
+        Mockito.when(safeStorageService.downloadFile(Mockito.any()))
                 .thenReturn(Mono.just(aarDocument))
                 .thenReturn(Mono.just(attachmentDocument));
 
@@ -183,12 +180,12 @@ class F24ServiceImplTest {
 
         /* Check called twice to verify F24 skip during attachment page calculation */
         if(calculationMode.equals(ChargeCalculationModeEnum.COMPLETE.name()) && f24Cost != null && f24Cost > 0) {
-            Mockito.verify(safeStorageClient, Mockito.times(2)).getFile(Mockito.anyString());
-            Mockito.verify(httpConnector, Mockito.times(2)).downloadFile(Mockito.anyString());
+            Mockito.verify(safeStorageService, Mockito.times(2)).getFileRecursive(Mockito.any(), Mockito.any(), Mockito.any());
+            Mockito.verify(safeStorageService, Mockito.times(2)).downloadFile(Mockito.anyString());
         }
         else {
-            Mockito.verify(safeStorageClient, Mockito.never()).getFile(Mockito.anyString());
-            Mockito.verify(httpConnector, Mockito.never()).downloadFile(Mockito.anyString());
+            Mockito.verify(safeStorageService, Mockito.never()).getFileRecursive(Mockito.any(), Mockito.any(), Mockito.any());
+            Mockito.verify(safeStorageService, Mockito.never()).downloadFile(Mockito.anyString());
         }
 
     }

@@ -55,8 +55,8 @@ class RECAG011BMessageHandlerTest {
                 DematDocumentTypeEnum.DEMAT_ARCAD.getDocumentType()
         );
 
-        PNAG012MessageHandler pnag012MessageHandler = new PNAG012MessageHandler(mockSqsSender, eventDematDAO, ttlDays, eventMetaDAO, ttlDays, requiredDemats);
-        handler = new RECAG011BMessageHandler(mockSqsSender, eventDematDAO, ttlDays, pnag012MessageHandler);
+        PNAG012MessageHandler pnag012MessageHandler = new PNAG012MessageHandler(mockSqsSender, eventDematDAO, ttlDays, eventMetaDAO, ttlDays, requiredDemats, false);
+        handler = new RECAG011BMessageHandler(mockSqsSender, eventDematDAO, ttlDays, pnag012MessageHandler, false);
     }
 
     @Test

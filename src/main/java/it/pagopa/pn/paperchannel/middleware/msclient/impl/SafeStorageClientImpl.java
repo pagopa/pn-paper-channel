@@ -5,8 +5,13 @@ import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.PnRetryStorageException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.api.FileDownloadApi;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileDownloadResponseDto;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.safestorage.model.FileCreationRequest;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.safestorage.model.FileCreationResponse;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.safestorage_reactive.api.FileUploadApi;
 import it.pagopa.pn.paperchannel.middleware.msclient.SafeStorageClient;
+import it.pagopa.pn.paperchannel.model.FileCreationWithContentRequest;
 import lombok.CustomLog;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
@@ -15,29 +20,27 @@ import java.net.ConnectException;
 import java.time.Duration;
 import java.util.concurrent.TimeoutException;
 
+import static it.pagopa.pn.paperchannel.service.impl.SafeStorageServiceImpl.SAFESTORAGE_PREFIX;
+
 
 @Component
+@RequiredArgsConstructor
 @CustomLog
 public class SafeStorageClientImpl implements SafeStorageClient {
-    private PnPaperChannelConfig pnPaperChannelConfig;
-    private FileDownloadApi fileDownloadApi;
 
-    public SafeStorageClientImpl(PnPaperChannelConfig cfg,
-                                   FileDownloadApi fileDownloadApi) {
-        this.pnPaperChannelConfig = cfg;
-        this.fileDownloadApi = fileDownloadApi;
-    }
+    private final PnPaperChannelConfig pnPaperChannelConfig;
+    private final FileDownloadApi fileDownloadApi;
+    private final FileUploadApi fileUploadApi;
 
 
     @Override
     public Mono<FileDownloadResponseDto> getFile(String fileKey) {
-        String PN_SAFE_STORAGE_DESCRIPTION = "Safe Storage getFile";
+        final String PN_SAFE_STORAGE_DESCRIPTION = "Safe Storage getFile";
         log.logInvokingAsyncExternalService(PnLogger.EXTERNAL_SERVICES.PN_SAFE_STORAGE, PN_SAFE_STORAGE_DESCRIPTION, null);
         String reqFileKey = fileKey;
         log.info("Getting file with {} key", fileKey);
-        String BASE_URL = "safestorage://";
-        if (fileKey.contains(BASE_URL)){
-            fileKey = fileKey.replace(BASE_URL, "");
+        if (fileKey.contains(SAFESTORAGE_PREFIX)){
+            fileKey = fileKey.replace(SAFESTORAGE_PREFIX, "");
         }
         log.debug("Req params : {}", fileKey);
 
@@ -58,4 +61,20 @@ public class SafeStorageClientImpl implements SafeStorageClient {
                     return Mono.error(ex);
                 });
     }
+
+    @Override
+    public Mono<FileCreationResponse> createFile(FileCreationWithContentRequest fileCreationRequestWithContent, String sha256) {
+        final String PN_SAFE_STORAGE_DESCRIPTION = "Safe Storage createFile";
+        log.logInvokingExternalService(PnLogger.EXTERNAL_SERVICES.PN_SAFE_STORAGE, PN_SAFE_STORAGE_DESCRIPTION);
+
+        FileCreationRequest fileCreationRequest = new FileCreationRequest();
+        fileCreationRequest.setContentType(fileCreationRequestWithContent.getContentType());
+        fileCreationRequest.setDocumentType(fileCreationRequestWithContent.getDocumentType());
+        fileCreationRequest.setStatus(fileCreationRequestWithContent.getStatus());
+
+        return fileUploadApi.createFile( pnPaperChannelConfig.getSafeStorageCxId(),"SHA-256", sha256,  fileCreationRequest )
+                .doOnError( res -> log.error("File creation error - documentType={} filesize={} sha256={}", fileCreationRequest.getDocumentType(), fileCreationRequestWithContent.getContent().length, sha256));
+    }
+
+
 }

@@ -15,8 +15,8 @@ public class RECAG011BMessageHandler extends SaveDematMessageHandler {
 
     private final PNAG012MessageHandler pnag012MessageHandler;
 
-    public RECAG011BMessageHandler(SqsSender sqsSender, EventDematDAO eventDematDAO, Long ttlDaysDemat, PNAG012MessageHandler pnag012MessageHandler) {
-        super(sqsSender, eventDematDAO, ttlDaysDemat);
+    public RECAG011BMessageHandler(SqsSender sqsSender, EventDematDAO eventDematDAO, Long ttlDaysDemat, PNAG012MessageHandler pnag012MessageHandler, boolean zipHandleActive) {
+        super(sqsSender, eventDematDAO, ttlDaysDemat, zipHandleActive);
         this.pnag012MessageHandler = pnag012MessageHandler;
     }
 
