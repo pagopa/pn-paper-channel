@@ -30,6 +30,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
 
 import java.util.List;
 
@@ -173,6 +174,7 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                         /* If Delivery Request status is not NATIONAL_REGISTRY_WAITING then skip to avoid reworks on same or not expected events */
                         .doOnNext(addressAndEntity -> log.info("Skipping National Registry event? {}", !this.isDeliveryRequestInNationalRegistryWaitingStatus(addressAndEntity.getT2())))
                         .filter(addressAndEntity -> this.isDeliveryRequestInNationalRegistryWaitingStatus(addressAndEntity.getT2()))
+                        .doOnDiscard(Tuple2.class, addressAndEntity -> log.logEndingProcess(PROCESS_NAME))
 
                         .flatMap(addressAndEntity -> {
                             AddressSQSMessageDto addressFromNational = addressAndEntity.getT1();
