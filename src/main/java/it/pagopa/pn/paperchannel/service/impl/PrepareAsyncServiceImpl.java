@@ -95,7 +95,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                     var pnDeliveryRequest = pnDeliveryRequestWithAddress.getT1();
                     var correctAddress = pnDeliveryRequestWithAddress.getT2();
                     if (f24Service.checkDeliveryRequestAttachmentForF24(pnDeliveryRequest)) {
-                        return f24Service.preparePDF(pnDeliveryRequestWithAddress.getT1());
+                        return f24Service.preparePDF(pnDeliveryRequest);
                     }
                     else {
                         return continueWithPrepareRequest(pnDeliveryRequest, request, correctAddress);
