@@ -15,7 +15,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public abstract class SendToDeliveryPushHandler implements MessageHandler {
 
-    private final SqsSender sqsSender;
+    protected final SqsSender sqsSender;
 
     @Override
     public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {

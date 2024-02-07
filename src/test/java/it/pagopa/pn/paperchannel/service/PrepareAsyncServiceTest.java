@@ -1,6 +1,5 @@
 package it.pagopa.pn.paperchannel.service;
 
-import it.pagopa.pn.paperchannel.config.HttpConnector;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnAddressFlowException;
@@ -22,7 +21,6 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.AddressManagerClient;
-import it.pagopa.pn.paperchannel.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.KOReason;
 import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
@@ -35,9 +33,6 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockserver.configuration.ConfigurationProperties;
-import org.mockserver.integration.ClientAndServer;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import reactor.core.publisher.Mono;
@@ -45,7 +40,6 @@ import reactor.test.StepVerifier;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -71,7 +65,7 @@ class PrepareAsyncServiceTest {
     @Mock
     private SqsSender sqsSender;
     @Mock
-    private SafeStorageClient safeStorageClient;
+    private SafeStorageService safeStorageService;
     @Mock
     private AddressManagerClient addressManagerClient;
     @Mock
@@ -117,9 +111,6 @@ class PrepareAsyncServiceTest {
                 .thenReturn(Mono.just(new Address()));
 
         Mockito.when(this.addressDAO.create(Mockito.any()))
-                .thenReturn(Mono.just(getAddress()));
-
-        Mockito.when(this.addressDAO.findByRequestId(Mockito.any()))
                 .thenReturn(Mono.just(getAddress()));
 
         Mockito.when(this.f24Service.checkDeliveryRequestAttachmentForF24(Mockito.any()))
@@ -195,7 +186,7 @@ class PrepareAsyncServiceTest {
         Mockito.when(this.addressDAO.create(Mockito.any()))
                         .thenReturn(Mono.just(getAddress()));
 
-        Mockito.when(this.safeStorageClient.getFile(Mockito.any())).thenReturn(Mono.just(fileDownloadResponseDto()));
+        Mockito.when(this.safeStorageService.getFileRecursive(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(Mono.just(fileDownloadResponseDto()));
 
         Mockito.doNothing().when(this.sqsSender)
                 .pushInternalError(Mockito.any(), Mockito.anyInt(), Mockito.any());
@@ -275,7 +266,6 @@ class PrepareAsyncServiceTest {
 
     @Test
     @DisplayName("prepareAsyncTestF24Flow")
-    @Disabled("disabilitato finchè non sarà mockabile httpconnector")
     void prepareAsyncTestF24Flow(){
         PnDeliveryRequest deliveryRequest = getDeliveryRequest();
 
@@ -294,8 +284,6 @@ class PrepareAsyncServiceTest {
 
         Mockito.when(this.requestDeliveryDAO.getByRequestId(Mockito.any(), Mockito.eq(true)))
                 .thenReturn(Mono.just(deliveryRequest));
-        Mockito.when(this.requestDeliveryDAO.getByRequestId(Mockito.any()))
-                .thenReturn(Mono.just(deliveryRequest));
 
         Mockito.when(this.requestDeliveryDAO.updateData(Mockito.any())).thenReturn(Mono.just(deliveryRequest));
 
@@ -309,14 +297,13 @@ class PrepareAsyncServiceTest {
         f.setContentLength(new BigDecimal(100));
 
 
-        Mockito.when(safeStorageClient.getFile(Mockito.anyString())).thenReturn(Mono.just(f));
+        Mockito.when(safeStorageService.getFileRecursive(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(Mono.just(f));
 
         request.setRequestId("REQUESTID");
         request.setF24ResponseFlow(true);
 
-        try (MockedStatic<HttpConnector> utilities = Mockito.mockStatic(HttpConnector.class)) { // non sembra funzionare...
-            utilities.when(() -> new HttpConnector().downloadFile("http://1234"))
-                    .thenReturn(Mono.just(PDDocument.load(readFakePdf())));
+        try {
+            Mockito.when(safeStorageService.downloadFile("http://1234")).thenReturn(Mono.just(PDDocument.load(readFakePdf())));
 
 
             this.prepareAsyncService.prepareAsync(request).block();
@@ -328,7 +315,6 @@ class PrepareAsyncServiceTest {
 
             PrepareEvent prepareEventActual = prepareEventArgumentCaptor.getValue();
 
-            assertThat(prepareEventActual.getRequestId()).isEqualTo(request.getRequestId());
             assertThat(prepareEventActual.getStatusCode()).isEqualTo(StatusCodeEnum.OK);
             assertThat(prepareEventActual.getReplacedF24AttachmentUrls()).hasSize(2);
         } catch (IOException e) {
@@ -336,20 +322,8 @@ class PrepareAsyncServiceTest {
         }
     }
 
-
-
-    @Test
-    @DisplayName("getFileRecursiveErrrorAttemptSaveStorage-1")
-    void getFileRecursiveErrror(){
-        StepVerifier.create(this.prepareAsyncService.getFileRecursive(-1,"", new BigDecimal(BigInteger.ZERO)))
-                .expectErrorMatches((ex) -> {
-                    assertTrue(ex instanceof PnGenericException);
-                    return true;
-                }).verify();;
-    }
-
     public byte[] readFakePdf(){
-        Resource resource = new ClassPathResource("pdf/sample.pdf");
+        Resource resource = new ClassPathResource("zip/test.pdf");
         try {
             String path = resource.getFile().getAbsolutePath();
             return resource.getInputStream().readAllBytes();

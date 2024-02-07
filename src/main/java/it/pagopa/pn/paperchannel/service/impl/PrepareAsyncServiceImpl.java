@@ -1,10 +1,8 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.commons.log.PnAuditLogBuilder;
-import it.pagopa.pn.paperchannel.config.HttpConnector;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.*;
-import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileDownloadResponseDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PrepareEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
@@ -15,14 +13,11 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
-import it.pagopa.pn.paperchannel.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.paperchannel.model.*;
-import it.pagopa.pn.paperchannel.service.F24Service;
-import it.pagopa.pn.paperchannel.service.PaperAddressService;
-import it.pagopa.pn.paperchannel.service.PaperAsyncService;
-import it.pagopa.pn.paperchannel.service.SqsSender;
+import it.pagopa.pn.paperchannel.service.*;
 import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
 import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
@@ -37,9 +32,7 @@ import reactor.util.function.Tuples;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.time.Duration;
 
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DOCUMENT_URL_NOT_FOUND;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.INVALID_SAFE_STORAGE;
 import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.TAKING_CHARGE;
 import static it.pagopa.pn.paperchannel.utils.Const.PREFIX_REQUEST_ID_SERVICE_DESK;
@@ -48,7 +41,7 @@ import static it.pagopa.pn.paperchannel.utils.Const.PREFIX_REQUEST_ID_SERVICE_DE
 @CustomLog
 public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncService {
 
-    private final SafeStorageClient safeStorageClient;
+    private final SafeStorageService safeStorageService;
     private final AddressDAO addressDAO;
     private final PnPaperChannelConfig paperChannelConfig;
     private final PaperRequestErrorDAO paperRequestErrorDAO;
@@ -56,22 +49,19 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
     private final PaperCalculatorUtils paperCalculatorUtils;
     private final F24Service f24Service;
 
-    private final HttpConnector httpConnector;
-
     public PrepareAsyncServiceImpl(PnAuditLogBuilder auditLogBuilder, NationalRegistryClient nationalRegistryClient,
                                    RequestDeliveryDAO requestDeliveryDAO, SqsSender sqsQueueSender, CostDAO costDAO,
-                                   SafeStorageClient safeStorageClient, AddressDAO addressDAO, PnPaperChannelConfig paperChannelConfig,
+                                   SafeStorageService safeStorageService, AddressDAO addressDAO, PnPaperChannelConfig paperChannelConfig,
                                    PaperRequestErrorDAO paperRequestErrorDAO, PaperAddressService paperAddressService,
-                                   PaperCalculatorUtils paperCalculatorUtils, F24Service f24Service, HttpConnector httpConnector) {
+                                   PaperCalculatorUtils paperCalculatorUtils, F24Service f24Service) {
         super(auditLogBuilder, requestDeliveryDAO, costDAO, nationalRegistryClient, sqsQueueSender);
-        this.safeStorageClient = safeStorageClient;
+        this.safeStorageService = safeStorageService;
         this.addressDAO = addressDAO;
         this.paperChannelConfig = paperChannelConfig;
         this.paperRequestErrorDAO = paperRequestErrorDAO;
         this.paperAddressService = paperAddressService;
         this.paperCalculatorUtils = paperCalculatorUtils;
         this.f24Service = f24Service;
-        this.httpConnector = httpConnector;
     }
 
     @Override
@@ -92,21 +82,23 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
             requestDeliveryEntityMono = requestDeliveryDAO.getByRequestId(requestId, true);
         }
         return requestDeliveryEntityMono
-                .flatMap(deliveryRequest -> {
+                .zipWhen(deliveryRequest -> {
                     if (request.isF24ResponseFlow()) {
-                        log.info("just returning request because is on F24 response flow and there is no need to check address again");
-                        return Mono.just(deliveryRequest);
+                        log.info("just returning find address because is on F24 response flow and there is no need to check address again");
+                        return this.addressDAO.findByRequestId(deliveryRequest.getRequestId());
                     }
                     else {
                         return checkAndUpdateAddress(deliveryRequest, addressFromNationalRegistry, request);
                     }
                 }) // nel caso sia settato il flag di f24FlowResponse, vuol dire che ho già eseguito questo step.
-                .flatMap(pnDeliveryRequest -> {
+                .flatMap(pnDeliveryRequestWithAddress -> {
+                    var pnDeliveryRequest = pnDeliveryRequestWithAddress.getT1();
+                    var correctAddress = pnDeliveryRequestWithAddress.getT2();
                     if (f24Service.checkDeliveryRequestAttachmentForF24(pnDeliveryRequest)) {
                         return f24Service.preparePDF(pnDeliveryRequest);
                     }
                     else {
-                        return continueWithPrepareRequest(pnDeliveryRequest, request);
+                        return continueWithPrepareRequest(pnDeliveryRequest, request, correctAddress);
                     }
                 })
                 .onErrorResume(ex -> handlePrepareAsyncError(request, processName, correlationId, requestId, ex));
@@ -132,7 +124,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                 .flatMap(entity -> Mono.error(ex));
     }
 
-    private Mono<PnDeliveryRequest> continueWithPrepareRequest(PnDeliveryRequest pnDeliveryRequest, PrepareAsyncRequest request){
+    private Mono<PnDeliveryRequest> continueWithPrepareRequest(PnDeliveryRequest pnDeliveryRequest, PrepareAsyncRequest request, PnAddress correctAddress){
         RequestDeliveryMapper.changeState(
                 pnDeliveryRequest,
                 TAKING_CHARGE.getCode(),
@@ -143,12 +135,10 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
         );
 
         return getAttachmentsInfo(pnDeliveryRequest, request)
-                .flatMap(pnDeliveryRequestWithAttachmentOk ->
-                        this.addressDAO.findByRequestId(pnDeliveryRequestWithAttachmentOk.getRequestId())
-                                .flatMap(address -> {
-                                    this.pushPrepareEvent(pnDeliveryRequestWithAttachmentOk, AddressMapper.toDTO(address), request.getClientId(), StatusCodeEnum.OK, null);
-                                    return this.requestDeliveryDAO.updateData(pnDeliveryRequestWithAttachmentOk);
-                                })
+                .flatMap(pnDeliveryRequestWithAttachmentOk -> {
+                            this.pushPrepareEvent(pnDeliveryRequestWithAttachmentOk, AddressMapper.toDTO(correctAddress), request.getClientId(), StatusCodeEnum.OK, null);
+                            return this.requestDeliveryDAO.updateData(pnDeliveryRequestWithAttachmentOk);
+                        }
                 );
     }
 
@@ -195,7 +185,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                 });
     }
 
-    private Mono<PnDeliveryRequest> checkAndUpdateAddress(PnDeliveryRequest pnDeliveryRequest, Address fromNationalRegistries, PrepareAsyncRequest queueModel){
+    private Mono<PnAddress> checkAndUpdateAddress(PnDeliveryRequest pnDeliveryRequest, Address fromNationalRegistries, PrepareAsyncRequest queueModel){
         final String VALIDATION_NAME = "Check and update address";
         return this.paperAddressService.getCorrectAddress(pnDeliveryRequest, fromNationalRegistries, queueModel)
                 .flatMap(newAddress -> {
@@ -205,13 +195,12 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
 
                     //set flowType per TTL
                     newAddress.setFlowType(Const.PREPARE);
-                    return addressDAO.create(AddressMapper.toEntity(newAddress, pnDeliveryRequest.getRequestId(), AddressTypeEnum.RECEIVER_ADDRESS, paperChannelConfig))
-                            .map(item -> pnDeliveryRequest);
+                    return addressDAO.create(AddressMapper.toEntity(newAddress, pnDeliveryRequest.getRequestId(), AddressTypeEnum.RECEIVER_ADDRESS, paperChannelConfig));
                 })
                 .onErrorResume(PnGenericException.class, ex -> handleAndThrowAgainError(ex, pnDeliveryRequest.getRequestId()));
     }
 
-    private Mono<PnDeliveryRequest> handleAndThrowAgainError(PnGenericException ex, String requestId) {
+    private Mono<PnAddress> handleAndThrowAgainError(PnGenericException ex, String requestId) {
         if(ex instanceof PnUntracebleException) {
             // se l'eccezione PnGenericException è di tipo UNTRACEABLE, ALLORA NON SCRIVO L'ERRORE SU DB
             return Mono.error(ex);
@@ -223,22 +212,6 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
         }
     }
 
-    public Mono<FileDownloadResponseDto> getFileRecursive(Integer n, String fileKey, BigDecimal millis){
-        if (n<0)
-            return Mono.error(new PnGenericException( DOCUMENT_URL_NOT_FOUND, DOCUMENT_URL_NOT_FOUND.getMessage() ) );
-        else {
-            return Mono.delay(Duration.ofMillis( millis.longValue() ))
-                     .flatMap(item -> safeStorageClient.getFile(fileKey)
-                     .map(fileDownloadResponseDto -> fileDownloadResponseDto)
-                     .onErrorResume(ex -> {
-                         log.error ("Error with retrieve {}", ex.getMessage());
-                         return Mono.error(ex);
-                     })
-                     .onErrorResume(PnRetryStorageException.class, ex ->
-                         getFileRecursive(n - 1, fileKey, ex.getRetryAfter())
-                    ));
-        }
-    }
 
     private Mono<PnDeliveryRequest> getAttachmentsInfo(PnDeliveryRequest deliveryRequest, PrepareAsyncRequest request){
 
@@ -249,7 +222,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
 
         return Flux.fromStream(deliveryRequest.getAttachments().stream())
                 .parallel()
-                .flatMap( attachment -> getFileRecursive(
+                .flatMap( attachment -> safeStorageService.getFileRecursive(
                         paperChannelConfig.getAttemptSafeStorage(),
                         attachment.getFileKey(),
                         new BigDecimal(0))
@@ -260,7 +233,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                     info.setGeneratedFrom(fileResponseAndOrigAttachment.getT2().getGeneratedFrom()); // preservo l'eventuale generatedFrom
                     if (info.getUrl() == null)
                         return Flux.error(new PnGenericException(INVALID_SAFE_STORAGE, INVALID_SAFE_STORAGE.getMessage()));
-                    return httpConnector.downloadFile(info.getUrl())
+                    return safeStorageService.downloadFile(info.getUrl())
                             .map(pdDocument -> {
                                 try {
                                     if (pdDocument.getDocumentInformation() != null && pdDocument.getDocumentInformation().getCreationDate() != null) {

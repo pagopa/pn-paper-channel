@@ -14,18 +14,14 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
 import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
 import it.pagopa.pn.paperchannel.middleware.queue.model.InternalEventHeader;
 import it.pagopa.pn.paperchannel.middleware.queue.model.ManualRetryEvent;
-import it.pagopa.pn.paperchannel.model.ExternalChannelError;
-import it.pagopa.pn.paperchannel.model.F24Error;
-import it.pagopa.pn.paperchannel.model.NationalRegistryError;
-import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
-import it.pagopa.pn.paperchannel.service.F24Service;
+import it.pagopa.pn.paperchannel.model.*;
 import it.pagopa.pn.paperchannel.service.QueueListenerService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.PnLogAudit;
 import it.pagopa.pn.paperchannel.utils.Utility;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
 import org.springframework.messaging.handler.annotation.Headers;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -46,21 +42,14 @@ import static it.pagopa.pn.paperchannel.middleware.queue.model.InternalEventHead
 
 @Component
 @Slf4j
+@RequiredArgsConstructor
 public class QueueListener {
-    @Autowired
-    private QueueListenerService queueListenerService;
-    @Autowired
-    private PnPaperChannelConfig paperChannelConfig;
-    @Autowired
-    private SqsSender sqsSender;
-    @Autowired
-    private ObjectMapper objectMapper;
-    @Autowired
-    private PaperRequestErrorDAO paperRequestErrorDAO;
-    @Autowired
-    private PnAuditLogBuilder pnAuditLogBuilder;
-    @Autowired
-    private F24Service f24Service;
+    private final QueueListenerService queueListenerService;
+    private final PnPaperChannelConfig paperChannelConfig;
+    private final SqsSender sqsSender;
+    private final ObjectMapper objectMapper;
+    private final PaperRequestErrorDAO paperRequestErrorDAO;
+    private final PnAuditLogBuilder pnAuditLogBuilder;
 
     @SqsListener(value = "${pn.paper-channel.queue-internal}", deletionPolicy = SqsMessageDeletionPolicy.ALWAYS)
     public void pullFromInternalQueue(@Payload String node, @Headers Map<String, Object> headers){
@@ -180,10 +169,36 @@ public class QueueListener {
                         return null;
                     });
 
+        } else if (internalEventHeader.getEventType().equals(EventTypeEnum.ZIP_HANDLE_ERROR.name())){
+
+            boolean noAttempt = (paperChannelConfig.getAttemptQueueZipHandle() -1 ) < internalEventHeader.getAttempt();
+            var error = convertToObject(node, DematInternalEvent.class);
+            execution(error, noAttempt, internalEventHeader.getAttempt(), internalEventHeader.getExpired(), DematInternalEvent.class,
+                    entity -> {
+                        PnLogAudit pnLogAudit = new PnLogAudit(pnAuditLogBuilder);
+                        pnLogAudit.addsBeforeDiscard(entity.getIun(), String.format("requestId = %s finish retry zip handle error ?", entity.getRequestId()));
+
+                        paperRequestErrorDAO.created(
+                                entity.getRequestId(),
+                                entity.getErrorMessage(),
+                                EventTypeEnum.ZIP_HANDLE_ERROR.name()).subscribe();
+
+                        pnLogAudit.addsSuccessDiscard(entity.getIun(), String.format("requestId = %s finish retry zip handle error", entity.getRequestId()));
+                        return null;
+                    },
+                    entityAndAttempt -> {
+                        this.queueListenerService.dematZipInternalListener(entityAndAttempt.getFirst(), entityAndAttempt.getSecond());
+                        return null;
+                    });
+
         } else if (internalEventHeader.getEventType().equals(EventTypeEnum.PREPARE_ASYNC_FLOW.name())){
             log.info("Push internal queue - first time");
             PrepareAsyncRequest request = convertToObject(node, PrepareAsyncRequest.class);
             this.queueListenerService.internalListener(request, internalEventHeader.getAttempt());
+        } else if (internalEventHeader.getEventType().equals(EventTypeEnum.SEND_ZIP_HANDLE.name())){
+            log.info("Push dematZipInternal queue - first time");
+            var request = convertToObject(node, DematInternalEvent.class);
+            this.queueListenerService.dematZipInternalListener(request, internalEventHeader.getAttempt());
         }
 
     }

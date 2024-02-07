@@ -9,10 +9,7 @@ import it.pagopa.pn.paperchannel.middleware.queue.model.*;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.DeliveryPushMomProducer;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.EventBridgeProducer;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.InternalQueueMomProducer;
-import it.pagopa.pn.paperchannel.model.ExternalChannelError;
-import it.pagopa.pn.paperchannel.model.F24Error;
-import it.pagopa.pn.paperchannel.model.NationalRegistryError;
-import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
+import it.pagopa.pn.paperchannel.model.*;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import it.pagopa.pn.paperchannel.utils.Utility;
@@ -72,6 +69,22 @@ public class SqsQueueSender implements SqsSender {
     }
 
     @Override
+    public void pushDematZipInternalEvent(DematInternalEvent dematZipInternalEvent) {
+        InternalEventHeader prepareHeader= InternalEventHeader.builder()
+                .publisher(PUBLISHER_PREPARE)
+                .eventId(UUID.randomUUID().toString())
+                .createdAt(Instant.now())
+                .eventType(EventTypeEnum.SEND_ZIP_HANDLE.name())
+                .clientId("")
+                .attempt(0)
+                .expired(Instant.now())
+                .build();
+
+        InternalPushEvent<DematInternalEvent> internalPushEvent = new InternalPushEvent<>(prepareHeader, dematZipInternalEvent);
+        this.internalQueueMomProducer.push(internalPushEvent);
+    }
+
+    @Override
     public void pushSendEventOnEventBridge(String clientId, SendEvent event) {
         PaperChannelUpdate update = new PaperChannelUpdate();
         update.setSendEvent(event);
@@ -127,6 +140,7 @@ public class SqsQueueSender implements SqsSender {
         if (tClass == PrepareAsyncRequest.class) typeEnum = SAFE_STORAGE_ERROR;
         if (tClass == F24Error.class) typeEnum = F24_ERROR;
         if (tClass == PrepareAsyncRequest.class && ((PrepareAsyncRequest) entity).isAddressRetry()) typeEnum = ADDRESS_MANAGER_ERROR;
+        if (tClass == DematInternalEvent.class) typeEnum = ZIP_HANDLE_ERROR;
 
         return typeEnum;
     }

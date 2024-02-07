@@ -1,0 +1,307 @@
+openapi: 3.0.3
+info:
+  title: >-
+    SafeStorage
+  version: v1.0
+  license:
+    name: PN software license
+    url: 'https://www.pn.pagopa.it/LICENSE'
+  description: >-
+    __SafeStorage__: memorizza e __archivia a fini legali file non modificabili__.
+    Opzionalmente appone firma digitale e marcatura temporale.
+
+    #### Elenco casi d'uso da soddisfare:
+      - Upload degli allegati di una notifica, già firmati dalle PA, da mantenere per 120gg. <br/>
+      - Upload, firma digitale e marcatura temporale degli atti opponibili a terzi.
+        Conservare 10 anni. <br/>
+      - Upload Avvisi di Avvenuta Ricezione. <br />
+      - Upload dei documenti digitali generati da pn-external-channels durante la consegna di messaggi
+        digitali e copie conformi dei documenti generati durante la consegna di corrispondenza cartacea.
+        Questi documenti vanno conservati 10 anni <br />
+      - Download dei file e verifica dei loro checksum. <br />
+      - In caso di contenzioso bisogna allungare il periodo di retention per file specifici.
+
+    #### Requisiti non funzionali:
+      - I file contenuti nel _SafeStorage_ devono essere "reccuperabili" in caso di disastro di
+        una regione. <br/>
+      - I file possono essere di dimensioni fino a 1GB, solitamente nell'ordine di 1MB ad eccezione dei
+        documenti allegati alle notifiche che spesso arrivano ai 50MB. <br/>
+      - SafeStorage deve garantire la validità della marcatura temporale nel tempo. <br/>
+
+    #### Parametri di runtime:
+      - pst: il tempo (secondi o minuti) in cui un presigned URL rimane valido.
+      - stayHotTime: quanto tempo un file che era stato archiviato e poi richiamato rimane "hot"
+        prima di essere nuovamente archiviato.
+
+    #### Operazioni da invocare per l'archiviazione di un nuovo file.
+      1. Invocare POST al path '/safe-storage/v1/files' (operation id: createFile ) <br/>
+      2. Invocare PUT sul presigned URL ottenuto (operation id: uploadFileContent ) <br/>
+      3. Quando il file è stato caricato e firmato/marcato verrà inserito un messaggio in una coda
+         SQS specifica per il client che ha richiesto l'operazione.
+
+    #### Operazioni da invocare per la lettura di un file esistente.
+      1. Invocare GET al path '/safe-storage/v1/files/{fileKey}' (operation id: getFile ) <br/>
+      2. Il file può essere hot (pronto al download) o cold (minuti o ore per il recupero del file)<br/>
+      3.
+         1. Se il fle è _hot_ la risposta contiene un url di download da usare entro ```pst``` (tempo
+            validità presigned url); `pst` è parametro di installazione di SafeStorage.
+         2. Se il file è _cold_ la risposta contiene un indicazione del tempo necessario a
+            renderlo _hot_. <br/>
+            Solo in questo caso, quando il file sarà pronto, verrà inserito un messaggio in una coda
+            SQS specifica per il client che ha richiesto l'operazione. Tale messaggio conterrà l'URL
+            di download.
+      4. L'url di download può essere utilizzato, entro la sua scadenza, per recuperare il contenuto
+         del file.
+
+servers:
+  - url: >-
+      https://api.pn.pagopa.it
+    description: Server url
+tags:
+  - name: cfg
+    description: Configurazioni
+  - name: fileUpload
+    description: Caricamento file
+  - name: fileDownload
+    description: Lettura file
+  - name: fileMetadataUpdate
+    description: Aggiornamento metadati file
+paths:
+
+        ################################################################################################
+        ###                                     CARICAMENTO FILE                                     ###
+        ################################################################################################
+
+  '/safe-storage/v1/files':
+    post:
+      operationId: createFile
+      tags:
+        - fileUpload
+      summary: Prenota caricamento file
+      description: >-
+        Questa operazione chiede la generazione di un URL per caricare un nuovo file.
+        Dovrà essere seguita da una chiamata all'URL generato che servirà a caricare l'effettivo
+        contenuto del file. Il tempo massimo che può intercorrere tra le due invocazioni è ```pst```.
+      parameters:
+        - $ref: '#/components/parameters/clientIdHeader'
+        - name: x-checksum
+          in: header
+          schema:
+            type: string
+        - name: x-checksum-value
+          in: header
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FileCreationRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileCreationResponse'
+        '404':
+          description: Non trovato. Restituito se il parametro clientId è diverso dal client autenticato
+
+  '/sage-storage/v1/upload-with-presigned-url':
+    put:
+      operationId: uploadFileContent
+      tags:
+        - fileUpload
+      summary: Carica contenuto file
+      description: >-
+        #### UTILIZZO DEL URL DI UPLOAD, NON VA IMPLEMENTATA COME API. SERVE PER DOCUMENTAZIONE
+          PUT o POST necessaria a caricare il contentuto del file tramite presigned URL.
+          Il presigned url deve essere utilizzabile una volta sola. <br />
+
+          Al termine di questa invocazione _SafeStorage_ avvierà, se necessario, i processi
+          di firma digitale e marcatura temporale. In ogni caso, quando il file e i suoi metadati
+          saranno completi e disponibili sullo storage, verrà notificato un evento al client che
+          ha prenotato il presigned URL utilizzato.
+      parameters:
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+        - name: x-amz-meta-secret
+          in: header
+          schema:
+            type: string
+          description: >-
+            __discutibile__ Token aggiuntivo per far si che sia necessario intercettare anche gli
+            header e non solo l'URL.
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              type: string
+              format: binary
+      responses:
+        '200':
+          description: OK
+          headers:
+            x-amz-version-id:
+              schema:
+                type: string
+        '403':
+          description: presigned URL scaduto
+      callbacks:
+        putIntoSqs:
+          'configuredSqsPath':
+            put:
+              summary: Send 'file ready' event to SQS
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/FileCreatedDto'
+              responses:
+                '204':
+                  description: OK
+                '404':
+                  description: SQS queue not found
+
+
+
+components:
+  parameters:
+    clientIdHeader:
+      name: x-pagopa-safestorage-cx-id
+      description: Identificativo del sistema client
+      in: header
+      required: true
+      schema:
+        type: string
+      example: pn-delivery-push
+
+  schemas:
+    FileCreationRequest:
+      description: Richiesta di autorizzazione a caricare un nuovo file
+      type: object
+      required:
+        - contentType
+        - documentType
+        - status
+      properties:
+        contentType:
+          type: string
+          description: Il MIME format del contenuto del file che si intende caricare
+          example: 'application/pdf'
+        documentType:
+          type: string
+          description: >-
+            Il tipo di documento da caricare; definisce diritti di accesso e tempo
+            di permanenza del file all'interno di _SafeStorage_
+          example: 'PN_NOTIFICATION_ATTACHMENTS'
+        status:
+          type: string
+          description: >-
+            lo stato del documento, ne definisce il tempo di permanenza all'interno
+            di _SafeStorage_.
+          example: PRELOADED
+
+    FileCreationResponse:
+      description: Informazioni necessarie a caricare il contenuto di un file
+      type: object
+      required:
+        - uploadMethod
+        - uploadUrl
+        - secret
+        - key
+      properties:
+        uploadMethod:
+          type: string
+          enum: [ 'PUT', 'POST' ]
+          description: >-
+            Indica se per l'upload del contenuto file bisogna utilizzare il metodo PUT o POST
+        uploadUrl:
+          type: string
+          description: >-
+            URL a cui effettuare l'upload del contenuto del documento.
+          example: 'https://preloadpn.aws.amazon.......'
+        secret:
+          type: string
+          description: >-
+            __discutibile__ Token aggiuntivo per far si che sia necessario intercettare anche gli
+            header e non solo l'URL di upload del contenuto del documento.
+          example: AZ23RF12
+        key:
+          type: string
+          description: >-
+            la chiave restituita deve essere globalmente unica per installazione di SafeStorage e
+            persistente attraverso i processi di disaster recovery.
+          example: '8F7E/9A3B/1234/AB87'
+
+    FileCreatedDto:
+      description: >-
+        Evento generato quando il contenuto di un file è stato caricato, elaborato da
+        _SafeStorage_, ed è pronto all'uso.
+      type: object
+      required:
+        - key
+        - versionId
+        - contentType
+        - contentLength
+        - checksum
+        - documentType
+        - documentStatus
+        - retentionUntil
+      properties:
+        key:
+          type: string
+          description: la chiave da utilizzare per il recupero del file
+          example: '8F7E/9A3B/1234/AB87'
+        versionId:
+          type: string
+          description: __discutibile__. La versione del file su S3
+          example: '3Z9SdhZ50PBeIj617KEMrztNKDMJj8FZ'
+        documentType:
+          type: string
+          description: Il tipo del documento
+          example: PN_NOTIFICATION_ATTACHMENTS
+        documentStatus:
+          type: string
+          description: Lo stato del documento
+          example: ATTACHED
+        contentType:
+          type: string
+          example: 'application/pdf'
+        contentLength:
+          type: number
+          example: 54092
+          description: dmensione, in byte, del contenuto.
+        checksum:
+          type: string
+          description: >-
+            SHA256 o MD5 del contenuto del file. Il tipo di checksum cambia a seconda del
+            documentType.
+        retentionUntil:
+          type: string
+          format: date-time
+          description: >-
+            data e ora fino a cui il documento sarà garantito all'interno di _SafeStorage_. <br/>
+            Può essere ritardata nel tempo, mai anticipata.
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+
+security:
+  - ApiKeyAuth: [] # use the same name as under securitySchemes
+
+
+
+
+
+
+
+
+# CRITTIGRAFIAAAA Transparent encription con CloudHSF va bene ?
+
+# Accertamenti su marcatura temporale

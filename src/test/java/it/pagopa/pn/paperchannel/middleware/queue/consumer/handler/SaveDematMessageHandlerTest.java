@@ -34,12 +34,12 @@ class SaveDematMessageHandlerTest {
     public void init() {
         mockDao = mock(EventDematDAO.class);
         mockSqsSender = mock(SqsSender.class);
-        long ttlDays = 365;
-        handler = new SaveDematMessageHandler(mockSqsSender, mockDao, ttlDays);
     }
 
     @Test
     void handleMessageWithDocumentTypePlicoTest() {
+        handler = new SaveDematMessageHandler(mockSqsSender, mockDao, 365L, false);
+
         OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
         PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
                 .requestId("requestId")
@@ -73,6 +73,8 @@ class SaveDematMessageHandlerTest {
 
     @Test
     void handleMessageWithDocumentTypeCADTest() {
+        handler = new SaveDematMessageHandler(mockSqsSender, mockDao, 365L, false);
+
         OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
         PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
                 .requestId("requestId")
@@ -106,6 +108,8 @@ class SaveDematMessageHandlerTest {
 
     @Test
     void handleMessageWithDocumentTypeCADAnd23LTest() {
+        handler = new SaveDematMessageHandler(mockSqsSender, mockDao, 365L, false);
+
         OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
         PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
                 .requestId("requestId")
@@ -153,6 +157,8 @@ class SaveDematMessageHandlerTest {
 
     @Test
     void handleMessageWithoutAttachmentsTest() {
+        handler = new SaveDematMessageHandler(mockSqsSender, mockDao, 365L, false);
+
         OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
         PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
                 .requestId("requestId")
@@ -168,6 +174,39 @@ class SaveDematMessageHandlerTest {
         StepVerifier.create(handler.handleMessage(entity, paperRequest))
                 .expectError(PnDematNotValidException.class)
                 .verify();
+
+    }
+
+    @Test
+    void handleMessageWithDocumentTypePlicoWithZipHandleActiveTrueTest() {
+        handler = new SaveDematMessageHandler(mockSqsSender, mockDao, 365L, true);
+
+        OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
+        PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
+                .requestId("requestId")
+                .statusCode("RECRS002B")
+                .statusDateTime(instant)
+                .clientRequestTimeStamp(instant)
+                .attachments(List.of(new AttachmentDetailsDto()
+                        .documentType("Plico")
+                        .date(instant)
+                        .uri("safestorage://fileKey.zip"))
+                );
+
+        PnDeliveryRequest entity = new PnDeliveryRequest();
+        entity.setRequestId("requestId");
+        entity.setStatusCode("statusDetail");
+        entity.setStatusDetail(StatusCodeEnum.PROGRESS.getValue());
+
+        assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
+
+        //mi aspetto che non salvi l'evento poiché entra in funzione la gestione del demat zip
+        verify(mockDao, never()).createOrUpdate(any());
+        //mi aspetto che non mandi il messaggio a delivery-push poiché entra in funzione la gestione del demat zip
+        verify(mockSqsSender, never()).pushSendEvent(any());
+
+        //mi aspetto che mandi l'evento dematInternalEvent sulla coda interna
+        verify(mockSqsSender, times(1)).pushDematZipInternalEvent(any());
 
     }
 

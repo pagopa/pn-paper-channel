@@ -1,5 +1,7 @@
 package it.pagopa.pn.paperchannel.middleware.msclient;
 
+import io.netty.handler.timeout.ReadTimeoutException;
+import io.netty.handler.timeout.TimeoutException;
 import it.pagopa.pn.paperchannel.config.BaseTest;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnnationalregistries.v1.dto.AddressOKDto;
 import org.junit.jupiter.api.Assertions;
@@ -21,6 +23,29 @@ class NationalRegistryClientTest extends BaseTest.WithMockServer {
         AddressOKDto addressOKDtoMono = nationalRegistryClient.finderAddress("CORR1", "CODICEFISCALE200","PF").block();
         Assertions.assertNotNull(addressOKDtoMono);
         Assertions.assertNotNull(addressOKDtoMono.getCorrelationId());
+    }
+
+    @Test
+    void testWithRetryForConnectionTimeout(){
+        AddressOKDto addressOKDtoMono = nationalRegistryClient.finderAddress("CORR1", "CODICEFISCALE_200_WITH_DELAY","PF").block();
+        Assertions.assertNotNull(addressOKDtoMono);
+        Assertions.assertNotNull(addressOKDtoMono.getCorrelationId());
+    }
+
+    @Test
+    void testWithRetryForSocketClose(){
+        AddressOKDto addressOKDtoMono = nationalRegistryClient.finderAddress("CORR1", "CODICEFISCALE_SOCKET_CLOSE","PF").block();
+        Assertions.assertNotNull(addressOKDtoMono);
+        Assertions.assertNotNull(addressOKDtoMono.getCorrelationId());
+    }
+
+    @Test
+    void testWithExceededRetryForConnectionTimeout(){
+        nationalRegistryClient.finderAddress("CORR1", "CODICEFISCALE_EXCEEDED_RETRY","PF")
+                .onErrorResume(Exception.class, ex -> {
+                    Assertions.assertInstanceOf(ReadTimeoutException.class, ex.getCause());
+                    return Mono.empty();
+                }).block();
     }
 
     @Test

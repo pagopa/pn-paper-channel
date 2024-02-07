@@ -3,6 +3,7 @@ package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 import it.pagopa.pn.paperchannel.exception.PnDematNotValidException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.AttachmentDetailsDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
+import it.pagopa.pn.paperchannel.mapper.DematInternalEventMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventDemat;
@@ -35,10 +36,13 @@ public class SaveDematMessageHandler extends SendToDeliveryPushHandler {
 
     private final Long ttlDays;
 
-    public SaveDematMessageHandler(SqsSender sqsSender, EventDematDAO eventDematDAO, Long ttlDays) {
+    private final boolean zipHandleActive;
+
+    public SaveDematMessageHandler(SqsSender sqsSender, EventDematDAO eventDematDAO, Long ttlDays, boolean zipHandleActive) {
         super(sqsSender);
         this.eventDematDAO = eventDematDAO;
         this.ttlDays = ttlDays;
+        this.zipHandleActive = zipHandleActive;
     }
 
 
@@ -53,13 +57,27 @@ public class SaveDematMessageHandler extends SendToDeliveryPushHandler {
 
         return Flux.fromIterable(attachments)
                 .flatMap(attachmentDetailsDto -> {
-                    PnEventDemat pnEventDemat = buildPnEventDemat(paperRequest, attachmentDetailsDto);
-                    return eventDematDAO.createOrUpdate(pnEventDemat)
-                            .doOnNext(savedEntity -> log.info("[{}] Saved PaperRequest from ExcChannel: {}", paperRequest.getRequestId(), savedEntity))
-                            .flatMap(savedEntity -> checkAndSendToDeliveryPush(entity, paperRequest, attachmentDetailsDto));
+                    if(zipHandleActive && isAZipFile(attachmentDetailsDto) && sendToDeliveryPush(attachmentDetailsDto.getDocumentType())) {
+                        log.debug("[{}] Zip Handle Flow", paperRequest.getRequestId());
+                        //manda nella coda interna
+                        paperRequest.setAttachments(List.of(attachmentDetailsDto));
+                        var dematInternalEvent = DematInternalEventMapper.toDematInternalEvent(entity, paperRequest);
+                        sqsSender.pushDematZipInternalEvent(dematInternalEvent);
+                        return Mono.empty();
+                    }
+                    else {
+                        PnEventDemat pnEventDemat = buildPnEventDemat(paperRequest, attachmentDetailsDto);
+                        return eventDematDAO.createOrUpdate(pnEventDemat)
+                                .doOnNext(savedEntity -> log.info("[{}] Saved PaperRequest from ExcChannel: {}", paperRequest.getRequestId(), savedEntity))
+                                .flatMap(savedEntity -> checkAndSendToDeliveryPush(entity, paperRequest, attachmentDetailsDto));
+                    }
                 })
                 .then();
 
+    }
+
+    private boolean isAZipFile(AttachmentDetailsDto attachment) {
+        return attachment.getUri().endsWith(".zip");
     }
 
     private Mono<Void> checkAndSendToDeliveryPush(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest, AttachmentDetailsDto attachmentDetailsDto) {

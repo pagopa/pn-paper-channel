@@ -8,8 +8,11 @@ import it.pagopa.pn.paperchannel.mapper.common.BaseMapper;
 import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
+import it.pagopa.pn.paperchannel.model.DematInternalEvent;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.List;
 
 
 @Slf4j
@@ -70,6 +73,29 @@ public class SendEventMapper {
                             .toList()
             );
         }
+
+        return sendEvent;
+
+    }
+
+    public static SendEvent createSendEventMessage(DematInternalEvent dematZipInternalEvent) {
+        SendEvent sendEvent = new SendEvent();
+        sendEvent.setStatusCode(StatusCodeEnum.valueOf(dematZipInternalEvent.getStatusDetail()));
+        sendEvent.setStatusDetail(dematZipInternalEvent.getStatusCode());
+        sendEvent.setStatusDescription(dematZipInternalEvent.getStatusDescription());
+
+
+        sendEvent.setRequestId(dematZipInternalEvent.getRequestId());
+        sendEvent.setStatusDateTime(DateUtils.getDatefromOffsetDateTime(dematZipInternalEvent.getStatusDateTime()));
+        sendEvent.setRegisteredLetterCode(dematZipInternalEvent.getRegisteredLetterCode());
+        if (dematZipInternalEvent.getClientRequestTimeStamp() != null) {
+            sendEvent.setClientRequestTimeStamp(dematZipInternalEvent.getClientRequestTimeStamp().toInstant());
+        }
+
+        sendEvent.setDeliveryFailureCause(dematZipInternalEvent.getDeliveryFailureCause());
+        sendEvent.setDiscoveredAddress(dematZipInternalEvent.getDiscoveredAddress());
+
+        sendEvent.setAttachments(List.of(dematZipInternalEvent.getAttachmentDetails()));
 
         return sendEvent;
 
