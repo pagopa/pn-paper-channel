@@ -113,9 +113,6 @@ class PrepareAsyncServiceTest {
         Mockito.when(this.addressDAO.create(Mockito.any()))
                 .thenReturn(Mono.just(getAddress()));
 
-        Mockito.when(this.addressDAO.findByRequestId(Mockito.any()))
-                .thenReturn(Mono.just(getAddress()));
-
         Mockito.when(this.f24Service.checkDeliveryRequestAttachmentForF24(Mockito.any()))
                 .thenReturn(false);
 
