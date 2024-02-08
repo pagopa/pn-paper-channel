@@ -8,6 +8,7 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventDemat;
 import it.pagopa.pn.paperchannel.service.SqsSender;
+import it.pagopa.pn.paperchannel.utils.Utility;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Flux;
@@ -57,7 +58,7 @@ public class SaveDematMessageHandler extends SendToDeliveryPushHandler {
 
         return Flux.fromIterable(attachments)
                 .flatMap(attachmentDetailsDto -> {
-                    if(zipHandleActive && isAZipFile(attachmentDetailsDto) && sendToDeliveryPush(attachmentDetailsDto.getDocumentType())) {
+                    if(isZipHandleFlow(entity.getRequestId(), attachmentDetailsDto)) {
                         log.debug("[{}] Zip Handle Flow", paperRequest.getRequestId());
                         //manda nella coda interna
                         paperRequest.setAttachments(List.of(attachmentDetailsDto));
@@ -81,7 +82,7 @@ public class SaveDematMessageHandler extends SendToDeliveryPushHandler {
     }
 
     private Mono<Void> checkAndSendToDeliveryPush(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest, AttachmentDetailsDto attachmentDetailsDto) {
-        if(sendToDeliveryPush(attachmentDetailsDto.getDocumentType())) {
+        if(isAttachmentMappedAsProgress(attachmentDetailsDto.getDocumentType())) {
             //invio a delivery push lo stesso evento quanti sono gli attachment
             //ogni evento inviato avrà l'attachment diverso
             paperRequest.setAttachments(List.of(attachmentDetailsDto));
@@ -110,8 +111,15 @@ public class SaveDematMessageHandler extends SendToDeliveryPushHandler {
     }
 
 
-    private boolean sendToDeliveryPush(String attachmentType) {
+    private boolean isAttachmentMappedAsProgress(String attachmentType) {
         return ATTACHMENT_TYPES_SEND_TO_DELIVERY_PUSH.contains(attachmentType);
+    }
+
+    private boolean isZipHandleFlow(String requestId, AttachmentDetailsDto attachmentDetailsDto) {
+        return zipHandleActive &&
+                Utility.isNotCallCenterEvoluto(requestId) &&
+                isAZipFile(attachmentDetailsDto) &&
+                isAttachmentMappedAsProgress(attachmentDetailsDto.getDocumentType());
     }
 
 }

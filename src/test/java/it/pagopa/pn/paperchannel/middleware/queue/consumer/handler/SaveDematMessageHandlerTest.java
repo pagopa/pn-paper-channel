@@ -10,8 +10,10 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventDemat;
 import it.pagopa.pn.paperchannel.service.SqsSender;
+import it.pagopa.pn.paperchannel.utils.Const;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.MDC;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -207,6 +209,45 @@ class SaveDematMessageHandlerTest {
 
         //mi aspetto che mandi l'evento dematInternalEvent sulla coda interna
         verify(mockSqsSender, times(1)).pushDematZipInternalEvent(any());
+
+    }
+
+    @Test
+    void handleMessageWithDocumentTypePlicoWithZipHandleActiveTrueButMessageFromCallCenterEvolutoTest() {
+        handler = new SaveDematMessageHandler(mockSqsSender, mockDao, 365L, true);
+
+        OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
+        PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
+                .requestId(Const.PREFIX_REQUEST_ID_SERVICE_DESK + "requestId")
+                .statusCode("RECRS002B")
+                .statusDateTime(instant)
+                .clientRequestTimeStamp(instant)
+                .attachments(List.of(new AttachmentDetailsDto()
+                        .documentType("Plico")
+                        .date(instant)
+                        .uri("safestorage://fileKey.zip"))
+                );
+
+        PnDeliveryRequest entity = new PnDeliveryRequest();
+        entity.setRequestId(Const.PREFIX_REQUEST_ID_SERVICE_DESK + "requestId");
+        entity.setStatusCode("statusDetail");
+        entity.setStatusDetail(StatusCodeEnum.PROGRESS.getValue());
+
+        PnEventDemat pnEventDematPlico = handler.buildPnEventDemat(paperRequest, paperRequest.getAttachments().get(0));
+
+        SendEvent sendEventPlico = SendEventMapper.createSendEventMessage(entity, getPaperRequestForOneAttachment(paperRequest, paperRequest.getAttachments().get(0)));
+
+        when(mockDao.createOrUpdate(pnEventDematPlico)).thenReturn(Mono.just(pnEventDematPlico));
+        MDC.put(Const.CONTEXT_KEY_CLIENT_ID, Const.PREFIX_REQUEST_ID_SERVICE_DESK);
+
+        assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
+
+        //mi aspetto che salvi l'evento Plico
+        verify(mockDao, times(1)).createOrUpdate(pnEventDematPlico);
+        //mi aspetto che mandi il messaggio in event bridge per l'evento Plico
+        verify(mockSqsSender, times(1)).pushSendEventOnEventBridge(Const.PREFIX_REQUEST_ID_SERVICE_DESK, sendEventPlico);
+
+        MDC.clear();
 
     }
 
