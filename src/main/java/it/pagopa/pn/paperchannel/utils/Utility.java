@@ -181,4 +181,12 @@ public class Utility {
         return map;
     }
 
+    public static boolean isCallCenterEvoluto(String requestId) {
+        return requestId.startsWith(Const.PREFIX_REQUEST_ID_SERVICE_DESK);
+    }
+
+    public static boolean isNotCallCenterEvoluto(String requestId) {
+        return !isCallCenterEvoluto(requestId);
+    }
+
 }

@@ -6,6 +6,7 @@ import it.pagopa.pn.paperchannel.mapper.SendEventMapper;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.Const;
+import it.pagopa.pn.paperchannel.utils.Utility;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
@@ -23,7 +24,7 @@ public abstract class SendToDeliveryPushHandler implements MessageHandler {
         log.debug("[{}] Response of ExternalChannel from request id {}", paperRequest.getRequestId(), paperRequest);
         SendEvent sendEvent = SendEventMapper.createSendEventMessage(entity, paperRequest);
 
-        if (entity.getRequestId().contains(Const.PREFIX_REQUEST_ID_SERVICE_DESK)){
+        if (Utility.isCallCenterEvoluto(entity.getRequestId())){
             String clientId = MDC.get(Const.CONTEXT_KEY_CLIENT_ID);
             log.debug("[{}] clientId from context", clientId);
             sqsSender.pushSendEventOnEventBridge(clientId, sendEvent);
