@@ -36,6 +36,6 @@
     "F24ClientReadTimeoutMillis": "30000",
     "F24ClientRetryMaxAttempts": "0",
     "RequiredDemats": "23L",
-    "ZipHandleActive": "true"
+    "ZipHandleActive": "false"
   }
 }
