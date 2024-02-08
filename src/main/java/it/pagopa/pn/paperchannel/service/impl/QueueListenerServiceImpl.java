@@ -28,14 +28,15 @@ import it.pagopa.pn.paperchannel.utils.Const;
 import lombok.CustomLog;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.MDC;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
 
 import java.util.List;
 
 import static it.pagopa.pn.commons.log.PnLogger.EXTERNAL_SERVICES.PN_NATIONAL_REGISTRIES;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
+import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.NATIONAL_REGISTRY_WAITING;
 import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.READY_TO_SEND;
 
 @Service
@@ -43,27 +44,36 @@ import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.READY_TO_SEND;
 public class QueueListenerServiceImpl extends BaseService implements QueueListenerService {
     private static final String NATIONAL_REGISTRY_DESCRIPTION = "Retrieve the address.";
 
-    @Autowired
-    private PaperResultAsyncService paperResultAsyncService;
-    @Autowired
-    private PaperAsyncService paperAsyncService;
-    @Autowired
-    private AddressDAO addressDAO;
-    @Autowired
-    private PaperRequestErrorDAO paperRequestErrorDAO;
-    @Autowired
-    private ExternalChannelClient externalChannelClient;
-    @Autowired
-    private F24Service f24Service;
-    @Autowired
-    private DematZipService dematZipService;
+    private final PaperResultAsyncService paperResultAsyncService;
+    private final PaperAsyncService paperAsyncService;
+    private final AddressDAO addressDAO;
+    private final PaperRequestErrorDAO paperRequestErrorDAO;
+    private final ExternalChannelClient externalChannelClient;
+    private final F24Service f24Service;
+    private final DematZipService dematZipService;
 
     public QueueListenerServiceImpl(PnAuditLogBuilder auditLogBuilder,
                                     RequestDeliveryDAO requestDeliveryDAO,
                                     CostDAO costDAO,
                                     NationalRegistryClient nationalRegistryClient,
-                                    SqsSender sqsSender) {
+                                    SqsSender sqsSender,
+                                    PaperResultAsyncService paperResultAsyncService,
+                                    PaperAsyncService paperAsyncService,
+                                    AddressDAO addressDAO,
+                                    PaperRequestErrorDAO paperRequestErrorDAO,
+                                    ExternalChannelClient externalChannelClient,
+                                    F24Service f24Service,
+                                    DematZipService dematZipService) {
+
         super(auditLogBuilder, requestDeliveryDAO, costDAO, nationalRegistryClient, sqsSender);
+
+        this.paperResultAsyncService = paperResultAsyncService;
+        this.paperAsyncService = paperAsyncService;
+        this.addressDAO = addressDAO;
+        this.paperRequestErrorDAO = paperRequestErrorDAO;
+        this.externalChannelClient = externalChannelClient;
+        this.f24Service = f24Service;
+        this.dematZipService = dematZipService;
     }
 
 
@@ -187,6 +197,12 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                                     .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage())));
                         })
                         .doOnNext(addressAndEntity -> nationalResolveLogAudit(addressAndEntity.getT2(), addressAndEntity.getT1()))
+
+                        /* If Delivery Request status is not NATIONAL_REGISTRY_WAITING then skip to avoid reworks on same or not expected events */
+                        .doOnNext(addressAndEntity -> log.info("Skipping National Registry event? {}", !this.isDeliveryRequestInNationalRegistryWaitingStatus(addressAndEntity.getT2())))
+                        .filter(addressAndEntity -> this.isDeliveryRequestInNationalRegistryWaitingStatus(addressAndEntity.getT2()))
+                        .doOnDiscard(Tuple2.class, addressAndEntity -> log.logEndingProcess(PROCESS_NAME))
+
                         .flatMap(addressAndEntity -> {
                             AddressSQSMessageDto addressFromNational = addressAndEntity.getT1();
                             PnDeliveryRequest entity = addressAndEntity.getT2();
@@ -333,4 +349,7 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
         }
     }
 
+    private boolean isDeliveryRequestInNationalRegistryWaitingStatus(PnDeliveryRequest deliveryRequest) {
+        return NATIONAL_REGISTRY_WAITING.getCode().equalsIgnoreCase(deliveryRequest.getStatusCode());
+    }
 }
