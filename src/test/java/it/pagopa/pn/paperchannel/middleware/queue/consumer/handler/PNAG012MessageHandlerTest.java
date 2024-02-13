@@ -108,6 +108,59 @@ class PNAG012MessageHandlerTest {
     }
 
     @Test
+    void testFlowContainsExactlyRequiredDematsWithDifferentStatusCodesTwo() {
+
+        // Given
+        OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
+        PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
+                .requestId("requestId")
+                .statusCode("RECAG012")
+                .statusDateTime(instant)
+                .clientRequestTimeStamp(instant)
+                .deliveryFailureCause("M02");
+
+        PnDeliveryRequest entity = new PnDeliveryRequest();
+        entity.setRequestId("requestId");
+        entity.setStatusCode("statusDetail");
+        entity.setStatusDetail(StatusCodeEnum.PROGRESS.getValue());
+
+        String dematRequestId = buildDematRequestId(paperRequest.getRequestId());
+
+        PnEventDemat demat1 = new PnEventDemat();
+        demat1.setDematRequestId(dematRequestId);
+        demat1.setDocumentTypeStatusCode(DEMAT_23L_RECAG011B);
+        demat1.setStatusCode(RECAG011B_STATUS_CODE);
+        demat1.setDocumentType(DematDocumentTypeEnum.DEMAT_23L.getDocumentType());
+
+        PnEventDemat demat2 = new PnEventDemat();
+        demat2.setDematRequestId(dematRequestId);
+        demat2.setDocumentTypeStatusCode(DEMAT_ARCAD_RECAG008B);
+        demat2.setStatusCode(RECAG011B_STATUS_CODE);
+        demat2.setDocumentType(DematDocumentTypeEnum.DEMAT_ARCAD.getDocumentType());
+
+        // When
+        when(eventDematDAO.findAllByKeys(dematRequestId, DEMAT_SORT_KEYS_FILTER))
+                .thenReturn(Flux.just(demat1, demat2));
+
+        String metadataRequestIdFilter = buildMetaRequestId(paperRequest.getRequestId());
+        PnEventMeta pnEventMetaRECAG012 = buildPnEventMeta(paperRequest);
+        when(eventMetaDAO.getDeliveryEventMeta(metadataRequestIdFilter, META_SORT_KEY_FILTER))
+                .thenReturn(Mono.just(pnEventMetaRECAG012));
+
+        PnEventMeta pnEventMetaPNAG012 = createMETAForPNAG012Event(paperRequest, pnEventMetaRECAG012, 365L);
+        when(eventMetaDAO.putIfAbsent(pnEventMetaPNAG012)).thenReturn(Mono.just(pnEventMetaPNAG012));
+
+        // Then
+        // eseguo l'handler
+        assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
+
+        verify(eventMetaDAO, times(1)).getDeliveryEventMeta(anyString(), anyString());
+        verify(eventMetaDAO, times(1)).putIfAbsent(any(PnEventMeta.class));
+        verify(mockSqsSender, times(1)).pushSendEvent(any(SendEvent.class));
+
+    }
+
+    @Test
     void testFlowContainsAtLeastRequiredDematsOK() {
 
         // Given
