@@ -41,10 +41,20 @@ public class PNAG012MessageHandler extends SaveDematMessageHandler {
     protected static final String DEMAT_ARCAD_RECAG011B = buildDocumentTypeStatusCode(DematDocumentTypeEnum.DEMAT_ARCAD.getDocumentType(), RECAG011B_STATUS_CODE);
 
     protected static final String DEMAT_CAD_RECAG011B = buildDocumentTypeStatusCode(DematDocumentTypeEnum.DEMAT_CAD.getDocumentType(), RECAG011B_STATUS_CODE);
+
+    protected static final String DEMAT_23L_RECAG008B = buildDocumentTypeStatusCode(DematDocumentTypeEnum.DEMAT_23L.getDocumentType(), RECAG008B_STATUS_CODE);
+
+    protected static final String DEMAT_ARCAD_RECAG008B = buildDocumentTypeStatusCode(DematDocumentTypeEnum.DEMAT_ARCAD.getDocumentType(), RECAG008B_STATUS_CODE);
+
+    protected static final String DEMAT_CAD_RECAG008B = buildDocumentTypeStatusCode(DematDocumentTypeEnum.DEMAT_CAD.getDocumentType(), RECAG008B_STATUS_CODE);
+
     protected static final String[] DEMAT_SORT_KEYS_FILTER = {
             DEMAT_23L_RECAG011B,
             DEMAT_ARCAD_RECAG011B,
             DEMAT_CAD_RECAG011B,
+            DEMAT_23L_RECAG008B,
+            DEMAT_ARCAD_RECAG008B,
+            DEMAT_CAD_RECAG008B
     };
 
     private final EventMetaDAO eventMetaDAO;
@@ -69,7 +79,9 @@ public class PNAG012MessageHandler extends SaveDematMessageHandler {
         PnLogAudit pnLogAudit = new PnLogAudit(auditLogBuilder);
 
         return super.eventDematDAO.findAllByKeys(dematRequestId, DEMAT_SORT_KEYS_FILTER).collectList()
+                .doOnNext(pnEventDemats -> log.debug("Result of findAllByKeys: {}", pnEventDemats))
                 .filter(this::canCreatePNAG012Event)
+                .doOnDiscard(List.class, o -> log.info("PNAG012 filter not passed"))
                 .doOnNext(pnEventDemats -> log.info("[{}] CanCreatePNAG012Event Filter success", paperRequest.getRequestId()))
                 .flatMap(pnEventDemats ->
                         eventMetaDAO.getDeliveryEventMeta(metadataRequestIdFilter, META_SORT_KEY_FILTER)
@@ -90,19 +102,14 @@ public class PNAG012MessageHandler extends SaveDematMessageHandler {
      * This method evaluates whether it is possible to create and send a PNAG012 event
      * checking if all required demats are included as subset of pnEventDemats.
      *
-     * @param pnEventDemats the demats to check
+     * @param pnEventDematsFromDB the demats to check
      * @return              true if all required demats are included, false otherwise
      * */
-    private boolean canCreatePNAG012Event(List<PnEventDemat> pnEventDemats) {
+    private boolean canCreatePNAG012Event(List<PnEventDemat> pnEventDematsFromDB) {
 
-        // Set<> ensure no duplicates
-        Set<String> recag011bDocumentTypes = pnEventDemats.stream()
-                .filter(pnEventDemat -> pnEventDemat.getStatusCode().equals(RECAG011B_STATUS_CODE))
-                .filter(pnEventDemat -> pnEventDemat.getDocumentType() != null)
-                .map(pnEventDemat -> DematDocumentTypeEnum.getAliasFromDocumentType(pnEventDemat.getDocumentType()))
-                .collect(Collectors.toSet());
+        Set<String> documentTypes = getDocumentTypesFromPnEventDemats(pnEventDematsFromDB);
 
-        return recag011bDocumentTypes.containsAll(requiredDemats);
+        return documentTypes.containsAll(requiredDemats);
     }
 
     private Mono<PNAG012Wrapper> pnag012Flow(PnEventMeta pnEventMetaPNAG012, PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest, PnLogAudit pnLogAudit) {
@@ -117,5 +124,12 @@ public class PNAG012MessageHandler extends SaveDematMessageHandler {
                     log.debug("[{}] PNAG012 already exist", paperRequest.getRequestId());
                     return Mono.empty();
                 })); //blocco il flusso se la putIfAbsent non inserisce a DB
+    }
+
+    private Set<String> getDocumentTypesFromPnEventDemats(List<PnEventDemat> pnEventDematsFromDB) {
+        return pnEventDematsFromDB.stream()
+                .filter(pnEventDemat -> pnEventDemat.getDocumentType() != null)
+                .map(pnEventDemat -> DematDocumentTypeEnum.getAliasFromDocumentType(pnEventDemat.getDocumentType()))
+                .collect(Collectors.toSet());
     }
 }
