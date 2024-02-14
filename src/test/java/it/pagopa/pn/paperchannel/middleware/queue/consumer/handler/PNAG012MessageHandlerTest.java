@@ -473,6 +473,47 @@ class PNAG012MessageHandlerTest {
         verify(mockSqsSender, times(1)).pushSendEvent(any());
     }
 
+    @Test
+    void filterNotPassedBecause23LMissedTest() {
+
+        // Given
+        OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
+        PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
+                .requestId("requestId")
+                .statusCode("RECAG012")
+                .statusDateTime(instant)
+                .clientRequestTimeStamp(instant)
+                .deliveryFailureCause("M02");
+
+        PnDeliveryRequest entity = new PnDeliveryRequest();
+        entity.setRequestId("requestId");
+        entity.setStatusCode("statusDetail");
+        entity.setStatusDetail(StatusCodeEnum.PROGRESS.getValue());
+
+        String dematRequestId = buildDematRequestId(paperRequest.getRequestId());
+
+
+        PnEventDemat demat2 = new PnEventDemat();
+        demat2.setDematRequestId(dematRequestId);
+        demat2.setDocumentTypeStatusCode(DEMAT_ARCAD_RECAG011B);
+        demat2.setStatusCode(RECAG011B_STATUS_CODE);
+        demat2.setDocumentType(DematDocumentTypeEnum.DEMAT_ARCAD.getDocumentType());
+
+        // When
+        when(eventDematDAO.findAllByKeys(dematRequestId, DEMAT_SORT_KEYS_FILTER))
+                .thenReturn(Flux.just(demat2));
+
+
+        // Then
+        // eseguo l'handler
+        assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
+
+        //mi aspetto che non arrivi nè a fare la query dei meta nè a maggior ragione inviare l'evento a delivery-push
+        verify(eventMetaDAO, never()).getDeliveryEventMeta(any(), any());
+        verify(mockSqsSender, never()).pushSendEvent(any());
+
+    }
+
     private PnEventMeta buildPnEventMeta(PaperProgressStatusEventDto paperRequest) {
         PnEventMeta pnEventMeta = new PnEventMeta();
         pnEventMeta.setMetaRequestId(buildMetaRequestId(paperRequest.getRequestId()));

@@ -81,6 +81,7 @@ public class PNAG012MessageHandler extends SaveDematMessageHandler {
         return super.eventDematDAO.findAllByKeys(dematRequestId, DEMAT_SORT_KEYS_FILTER).collectList()
                 .doOnNext(pnEventDemats -> log.debug("Result of findAllByKeys: {}", pnEventDemats))
                 .filter(this::canCreatePNAG012Event)
+                .doOnDiscard(List.class, o -> log.info("PNAG012 filter not passed"))
                 .doOnNext(pnEventDemats -> log.info("[{}] CanCreatePNAG012Event Filter success", paperRequest.getRequestId()))
                 .flatMap(pnEventDemats ->
                         eventMetaDAO.getDeliveryEventMeta(metadataRequestIdFilter, META_SORT_KEY_FILTER)
