@@ -152,6 +152,7 @@ class QueueListenerServiceImplTest {
         addressSQSMessageDto.setCorrelationId("1234");
         addressSQSMessageDto.setError("ok");
         AddressSQSMessagePhysicalAddressDto addressDto = new AddressSQSMessagePhysicalAddressDto();
+        addressDto.setAddress("address");
         addressSQSMessageDto.setPhysicalAddress(addressDto);
 
         // When
@@ -183,10 +184,12 @@ class QueueListenerServiceImplTest {
 
         addressSQSMessageDto.setCorrelationId("1234");
         AddressSQSMessagePhysicalAddressDto addressDto = new AddressSQSMessagePhysicalAddressDto();
+        addressDto.setAddress("address");
         addressSQSMessageDto.setPhysicalAddress(addressDto);
 
         // When
         Mockito.when(this.requestDeliveryDAO.getByCorrelationId(Mockito.anyString())).thenReturn(Mono.just(deliveryRequest));
+        Mockito.when(this.addressDAO.findByRequestId(deliveryRequest.getRelatedRequestId())).thenReturn(Mono.just(new PnAddress()));
         Mockito.doNothing().when(this.sqsSender).pushToInternalQueue(Mockito.any(PrepareAsyncRequest.class));
 
         this.queueListenerService.nationalRegistriesResponseListener(addressSQSMessageDto);
