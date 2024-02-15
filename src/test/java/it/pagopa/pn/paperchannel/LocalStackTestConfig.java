@@ -8,6 +8,10 @@ import com.amazonaws.services.kms.AWSKMSClientBuilder;
 import com.amazonaws.services.kms.model.CreateKeyRequest;
 import com.amazonaws.services.kms.model.CreateKeyResult;
 import com.amazonaws.services.kms.model.Tag;
+import com.amazonaws.services.sqs.AmazonSQS;
+import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
+import com.amazonaws.services.sqs.model.AmazonSQSException;
+import com.amazonaws.services.sqs.model.CreateQueueRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.core.io.ClassPathResource;
@@ -49,6 +53,7 @@ public class LocalStackTestConfig {
         localStack.start();
         System.setProperty("aws.kms.keyId", kmsKeyCreation(localStack));
         System.setProperty("aws.endpoint-url", localStack.getEndpointOverride(DYNAMODB).toString());
+        createSqsQueuesTest();
 
         try {
             System.setProperty("aws.sharedCredentialsFile", new ClassPathResource("testcontainers/credentials").getFile().getAbsolutePath());
@@ -79,6 +84,44 @@ public class LocalStackTestConfig {
         CreateKeyResult key = awskms.createKey(req);
         log.info("Arn : {}", key.getKeyMetadata().getArn());
         return key.getKeyMetadata().getArn();
+    }
+
+    public static void createSqsQueuesTest() {
+        var extChannelQueueName = "local-ext-channels-outputs-test";
+        var extChannelDLQQueueName = extChannelQueueName + "-DLQ";
+
+        AmazonSQS sqs = AmazonSQSClientBuilder
+                .standard()
+                .withEndpointConfiguration(
+                        new AwsClientBuilder.EndpointConfiguration(
+                                localStack.getEndpointOverride(LocalStackContainer.Service.SQS).toString(),
+                                localStack.getRegion()
+                        )
+                )
+                .withCredentials(
+                        new AWSStaticCredentialsProvider(
+                                new BasicAWSCredentials(localStack.getAccessKey(), localStack.getSecretKey())
+                        )
+                )
+                .build();
+
+        CreateQueueRequest extChannelQueueDLQ = new CreateQueueRequest("")
+                .withQueueName(extChannelDLQQueueName);
+
+        CreateQueueRequest extChannelQueue = new CreateQueueRequest("")
+                .withQueueName(extChannelQueueName)
+                .addAttributesEntry("DelaySeconds", "0")
+                .addAttributesEntry("VisibilityTimeout", "5")
+                .addAttributesEntry("RedrivePolicy", "{\"deadLetterTargetArn\":\"arn:aws:sqs:us-east-1:000000000000:" + extChannelDLQQueueName + "\",\"maxReceiveCount\":\"2\"}");
+
+        try {
+            sqs.createQueue(extChannelQueue);
+            sqs.createQueue(extChannelQueueDLQ);
+        } catch (AmazonSQSException e) {
+            if (!e.getErrorCode().equals("QueueAlreadyExists")) {
+                throw e;
+            }
+        }
     }
 
 

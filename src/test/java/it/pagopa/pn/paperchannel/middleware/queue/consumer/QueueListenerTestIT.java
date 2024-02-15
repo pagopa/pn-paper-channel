@@ -20,6 +20,7 @@ import it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.HttpHeaders;
@@ -37,6 +38,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
 
+@SpringBootTest(properties = { "pn.paper-channel.queue-external-channel=local-ext-channels-outputs-test" })
 class QueueListenerTestIT extends BaseTest
 {
 
@@ -87,7 +89,7 @@ class QueueListenerTestIT extends BaseTest
 
         //mi aspetto che a seguito del 400 di ext-channel, il messaggio venga letto 2 volte poiché in localstack è configurato maxReceiveCount=2
         await()
-                .atMost(Duration.ofMinutes(1))
+                .atMost(Duration.ofSeconds(10))
                 .untilAsserted(() -> verify(queueListenerService, times(2)).externalChannelListener(any(), anyInt()));
 
         //mi aspetto che non cia mai invocato il salvataggio della PaperError
@@ -95,7 +97,7 @@ class QueueListenerTestIT extends BaseTest
 
         //mi aspetto che dopo aver letto il messaggio 2 volte, quest'ultimo venga re-indirizzato in DLQ
         await()
-                .atMost(Duration.ofMinutes(1))
+                .atMost(Duration.ofSeconds(10))
                 .untilAsserted(() -> {
                     final ReceiveMessageResponse receiveMessageResponse = sqsClient.receiveMessage(ReceiveMessageRequest.builder()
                             .queueUrl(config.getQueueExternalChannel() + "-DLQ")
