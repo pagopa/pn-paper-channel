@@ -21,9 +21,7 @@ import it.pagopa.pn.paperchannel.utils.PnLogAudit;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
-import java.time.Duration;
 import java.util.List;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.EXTERNAL_CHANNEL_API_EXCEPTION;
@@ -109,41 +107,11 @@ public class RetryableErrorMessageHandler extends SendToDeliveryPushHandler {
                 .doOnSuccess(unused -> pnLogAudit.addsSuccessSend(sendRequest.getIun(),
                         String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY)))
                 )
-                .onErrorResume(ex -> {
-                    pnLogAudit.addsWarningSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY)));
-                    return paperRequestErrorDAO.created(sendRequest.getRequestId(), EXTERNAL_CHANNEL_API_EXCEPTION.getMessage(),
-                                    EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name())
-                            .flatMap(errorEntity -> Mono.error(ex));
-                })
+                .doOnError(ex ->
+                    pnLogAudit.addsWarningSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY)))
+                )
                 .thenReturn(pnDeliveryRequest);
 
-    }
-
-    //TODO cancellare questo metodo inutilizzato
-    private void sendEngageRequestOld(PnDeliveryRequest pnDeliveryRequest, String requestId) {
-        PnAuditLogBuilder auditLogBuilder = new PnAuditLogBuilder();
-        PnLogAudit pnLogAudit = new PnLogAudit(auditLogBuilder);
-
-        Mono.delay(Duration.ofMillis(10)).publishOn(Schedulers.boundedElastic())
-                .flatMap(i ->  addressDAO.findAllByRequestId(pnDeliveryRequest.getRequestId()))
-                .flatMap(pnAddresses -> {
-                    SendRequest sendRequest = SendRequestMapper.toDto(pnAddresses, pnDeliveryRequest);
-                    sendRequest.setRequestId(requestId);
-                    pnLogAudit.addsBeforeSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY)));
-
-                    return this.externalChannelClient.sendEngageRequest(sendRequest, pnDeliveryRequest.getAttachments().stream().map(AttachmentMapper::fromEntity).toList()).publishOn(Schedulers.boundedElastic())
-                            .then(Mono.defer(() -> {
-                                pnLogAudit.addsSuccessSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY)));
-                                return Mono.empty();
-                            }))
-                            .onErrorResume(ex -> {
-                                pnLogAudit.addsFailSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY)));
-                                return paperRequestErrorDAO.created(sendRequest.getRequestId(),
-                                        EXTERNAL_CHANNEL_API_EXCEPTION.getMessage(),
-                                        EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name()).flatMap(errorEntity -> Mono.error(ex));
-                            });
-                })
-                .subscribeOn(Schedulers.boundedElastic()).subscribe();
     }
 
 }
