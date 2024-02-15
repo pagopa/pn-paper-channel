@@ -213,7 +213,7 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                                 throw new PnGenericException(NATIONAL_REGISTRY_LISTENER_EXCEPTION, NATIONAL_REGISTRY_LISTENER_EXCEPTION.getMessage());
                             }
 
-                            if (addressFromNational.getPhysicalAddress() != null) {
+                            if (validatePhysicalAddressPayload(addressFromNational, entity.getRequestId())) {
                                 Address address = AddressMapper.fromNationalRegistry(addressFromNational.getPhysicalAddress());
                                 return this.retrieveRelatedAddress(entity.getRelatedRequestId(), address)
                                         .map(updateAddress -> new PrepareAsyncRequest(entity.getCorrelationId(), updateAddress));
@@ -227,6 +227,17 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                             return Mono.empty();
                         }))
                 .block();
+    }
+
+    private boolean validatePhysicalAddressPayload(AddressSQSMessageDto payload, String requestId) {
+        boolean isValid = payload.getPhysicalAddress() != null &&
+                payload.getPhysicalAddress().getAddress() != null;
+
+        if(!isValid) {
+            log.warn("[{}] Physical Address from NR not valid", requestId);
+        }
+
+        return isValid;
     }
 
     @Override
