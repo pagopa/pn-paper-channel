@@ -53,11 +53,7 @@ public class ExternalChannelClientImpl extends BaseClient implements ExternalCha
             String requestIdx = sendRequest.getRequestId();
             var dto = buildPaperEngageRequest(sendRequest, attachments);
 
-            return this.paperMessagesApi.sendPaperEngageRequest(requestIdx, this.pnPaperChannelConfig.getXPagopaExtchCxId(), dto)
-                    .retryWhen(
-                            Retry.backoff(2, Duration.ofMillis(500))
-                                    .filter(throwable -> throwable instanceof TimeoutException || throwable instanceof ConnectException)
-                    );
+            return this.paperMessagesApi.sendPaperEngageRequest(requestIdx, this.pnPaperChannelConfig.getXPagopaExtchCxId(), dto);
         });
 
     }
