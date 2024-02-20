@@ -239,7 +239,6 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                             log.info("Called national Registries");
                             log.logInvokingAsyncExternalService(PN_NATIONAL_REGISTRIES,NATIONAL_REGISTRY_DESCRIPTION, nationalRegistryError.getRequestId());
                             this.finderAddressFromNationalRegistries(
-                                    nationalRegistryError.getCorrelationId(),
                                     nationalRegistryError.getRequestId(),
                                     nationalRegistryError.getRelatedRequestId(),
                                     nationalRegistryError.getFiscalCode(),
