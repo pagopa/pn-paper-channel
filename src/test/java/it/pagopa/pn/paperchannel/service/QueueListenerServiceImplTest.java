@@ -17,10 +17,14 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnRequestError;
+import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
+import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
 import it.pagopa.pn.paperchannel.model.F24Error;
 import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.service.impl.QueueListenerServiceImpl;
+import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,6 +38,7 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
+import static org.assertj.core.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
 class QueueListenerServiceImplTest {
@@ -64,6 +69,9 @@ class QueueListenerServiceImplTest {
 
     @Spy
     private PnAuditLogBuilder pnAuditLogBuilder;
+
+    @Mock
+    private ExternalChannelClient externalChannelClient;
 
 
     @Test
@@ -433,6 +441,63 @@ class QueueListenerServiceImplTest {
         catch(PnGenericException ex){
             Assertions.assertEquals(EXTERNAL_CHANNEL_LISTENER_EXCEPTION, ex.getExceptionType());
         }
+    }
+
+    @Test
+    void manualRetryExternalChannelOk() {
+        String requestid = "PREPARE_ANALOG_DOMICILE.IUN_ZAMG-URDZ-VZRU-202311-D-1.RECINDEX_0.ATTEMPT_1";
+        String pcRetry = "1";
+
+        PnDeliveryRequest deliveryRequest = new PnDeliveryRequest();
+        deliveryRequest.setRequestId(requestid);
+        deliveryRequest.setProductType("AR");
+        deliveryRequest.setAttachments(List.of());
+
+        final PnAddress addOne = new PnAddress();
+        addOne.setTypology(AddressTypeEnum.RECEIVER_ADDRESS.name());
+        final PnAddress addTwo = new PnAddress();
+        addTwo.setTypology(AddressTypeEnum.SENDER_ADDRES.name());
+
+
+        Mockito.when(requestDeliveryDAO.getByRequestId(requestid)).thenReturn(Mono.just(deliveryRequest));
+        Mockito.when(addressDAO.findAllByRequestId(requestid)).thenReturn(Mono.just(List.of(addOne, addTwo)));
+        Mockito.when(externalChannelClient.sendEngageRequest(Mockito.any(), Mockito.any()))
+                .thenReturn(Mono.empty());
+        Mockito.when(requestDeliveryDAO.updateData(Mockito.any()))
+                .thenReturn(Mono.just(deliveryRequest));
+
+        assertThatNoException().isThrownBy(() -> queueListenerService.manualRetryExternalChannel(requestid, pcRetry));
+        Mockito.verify(requestDeliveryDAO, Mockito.times(1)).updateData(Mockito.any());
+        Mockito.verify(paperRequestErrorDAO, Mockito.never()).created(Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
+    }
+
+    @Test
+    void manualRetryExternalChannelKo() {
+        String requestid = "PREPARE_ANALOG_DOMICILE.IUN_ZAMG-URDZ-VZRU-202311-D-1.RECINDEX_0.ATTEMPT_1";
+        String pcRetry = "1";
+
+        PnDeliveryRequest deliveryRequest = new PnDeliveryRequest();
+        deliveryRequest.setRequestId(requestid);
+        deliveryRequest.setProductType("AR");
+        deliveryRequest.setAttachments(List.of());
+
+        final PnAddress add = new PnAddress();
+        add.setTypology(AddressTypeEnum.RECEIVER_ADDRESS.name());
+
+
+        Mockito.when(requestDeliveryDAO.getByRequestId(requestid)).thenReturn(Mono.just(deliveryRequest));
+        Mockito.when(paperRequestErrorDAO.created(requestid, "Error message", EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name()))
+                .thenReturn(Mono.just(new PnRequestError()));
+
+        Mockito.when(externalChannelClient.sendEngageRequest(Mockito.any(), Mockito.any()))
+                .thenReturn(Mono.error(new NullPointerException("Error message")));
+
+        Mockito.when(addressDAO.findAllByRequestId(requestid)).thenReturn(Mono.just(List.of(add)));
+
+        assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> queueListenerService.manualRetryExternalChannel(requestid, pcRetry));
+
+        Mockito.verify(paperRequestErrorDAO, Mockito.times(1))
+                .created(requestid, "Error message", EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name());
     }
 
     private PnAddress getRelatedAddress(){

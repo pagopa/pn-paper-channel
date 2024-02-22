@@ -321,9 +321,10 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                                 return this.requestDeliveryDAO.updateData(request);
                             }))
                             .onErrorResume(ex -> {
+                                log.warn("[{}] Error in manualRetryExternalChannel", requestId, ex);
                                 pnLogAudit.addsWarningSend(
                                         request.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", request.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY)));
-                                return paperRequestErrorDAO.created(requestId, EXTERNAL_CHANNEL_API_EXCEPTION.getMessage(), EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name())
+                                return paperRequestErrorDAO.created(requestId, ex.getMessage(), EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name())
                                         .flatMap(errorEntity -> Mono.error(ex));
                             });
                 })

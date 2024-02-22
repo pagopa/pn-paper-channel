@@ -4,16 +4,19 @@ import it.pagopa.pn.paperchannel.config.BaseTest;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.AnalogAddress;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ProductTypeEnum;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendRequest;
-import org.junit.jupiter.api.Assertions;
+import it.pagopa.pn.paperchannel.model.AttachmentInfo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.test.StepVerifier;
 
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+
+import static it.pagopa.pn.paperchannel.utils.Const.PN_AAR;
+
 class ExternalChannelClientTest  extends BaseTest.WithMockServer {
 
     @Autowired
@@ -28,17 +31,19 @@ class ExternalChannelClientTest  extends BaseTest.WithMockServer {
 
     @Test
     void testOK() {
-        externalChannelClient.sendEngageRequest(sendRequest, new ArrayList<>()).block();
-        Assertions.assertTrue(true);
+        AttachmentInfo attachmentInfo = new AttachmentInfo();
+        attachmentInfo.setDocumentType(PN_AAR);
+        externalChannelClient.sendEngageRequest(sendRequest, List.of(attachmentInfo)).block();
+        StepVerifier.create(externalChannelClient.sendEngageRequest(sendRequest, List.of(attachmentInfo)))
+                        .verifyComplete();
     }
 
     @Test
     void testBadRequest() {
         sendRequest.setRequestId(null);
-        WebClientResponseException exception = Assertions.assertThrows(WebClientResponseException.class, ()-> {
-            externalChannelClient.sendEngageRequest(sendRequest, new ArrayList<>()).block();
-        });
-        Assertions.assertEquals(exception.getStatusCode().value(), HttpStatus.BAD_REQUEST.value());
+        StepVerifier.create(externalChannelClient.sendEngageRequest(sendRequest, new ArrayList<>()))
+                .expectErrorMatches(ex -> ex instanceof WebClientResponseException e && e.getStatusCode().value() == 400)
+                .verify();
     }
 
     private void inizialize(){
