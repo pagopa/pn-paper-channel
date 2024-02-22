@@ -5,7 +5,7 @@ import it.pagopa.pn.api.dto.events.PnF24PdfSetReadyEventItem;
 import it.pagopa.pn.api.dto.events.PnF24PdfSetReadyEventPayload;
 import it.pagopa.pn.commons.exceptions.PnExceptionsCodes;
 import it.pagopa.pn.commons.exceptions.PnInternalException;
-import it.pagopa.pn.paperchannel.config.BaseTest;
+import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnF24FlowException;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
@@ -24,41 +24,46 @@ import it.pagopa.pn.paperchannel.service.impl.QueueListenerServiceImpl;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 
-class QueueListenerServiceImplTest extends BaseTest {
+@ExtendWith(MockitoExtension.class)
+class QueueListenerServiceImplTest {
 
-    @Autowired
+    @InjectMocks
     QueueListenerServiceImpl queueListenerService;
 
-    @MockBean
+    @Mock
     private PaperResultAsyncService paperResultAsyncService;
 
-    @MockBean
+    @Mock
     private PaperAsyncService paperAsyncService;
 
-    @MockBean
+    @Mock
     private AddressDAO addressDAO;
 
-    @MockBean
+    @Mock
     private PaperRequestErrorDAO paperRequestErrorDAO;
 
-    @MockBean
+    @Mock
     private RequestDeliveryDAO requestDeliveryDAO;
 
-    @MockBean
+    @Mock
     private SqsSender sqsSender;
 
-    @MockBean
+    @Mock
     private F24Service f24Service;
+
+    @Spy
+    private PnAuditLogBuilder pnAuditLogBuilder;
 
 
     @Test
@@ -95,19 +100,20 @@ class QueueListenerServiceImplTest extends BaseTest {
 
     @Test
     void nationalRegistriesResponseListenerUntraceableAddressBecauseCorrelationIdIsNotFoundTest(){
+        final AddressSQSMessageDto payload = new AddressSQSMessageDto();
 
         try{
-            this.queueListenerService.nationalRegistriesResponseListener(new AddressSQSMessageDto());
+
+            this.queueListenerService.nationalRegistriesResponseListener(payload);
             Assertions.fail("Il metodo non è andato in eccezione");
         }
         catch(PnGenericException ex){
             Assertions.assertEquals(CORRELATION_ID_NOT_FOUND, ex.getExceptionType());
         }
 
-        AddressSQSMessageDto addressSQSMessageDto = new AddressSQSMessageDto();
-        addressSQSMessageDto.setCorrelationId("");
+        payload.setCorrelationId("");
         try{
-            this.queueListenerService.nationalRegistriesResponseListener(addressSQSMessageDto);
+            this.queueListenerService.nationalRegistriesResponseListener(payload);
         }
         catch(PnGenericException ex){
             Assertions.assertEquals(CORRELATION_ID_NOT_FOUND, ex.getExceptionType());
@@ -146,6 +152,7 @@ class QueueListenerServiceImplTest extends BaseTest {
         addressSQSMessageDto.setCorrelationId("1234");
         addressSQSMessageDto.setError("ok");
         AddressSQSMessagePhysicalAddressDto addressDto = new AddressSQSMessagePhysicalAddressDto();
+        addressDto.setAddress("address");
         addressSQSMessageDto.setPhysicalAddress(addressDto);
 
         // When
@@ -177,11 +184,12 @@ class QueueListenerServiceImplTest extends BaseTest {
 
         addressSQSMessageDto.setCorrelationId("1234");
         AddressSQSMessagePhysicalAddressDto addressDto = new AddressSQSMessagePhysicalAddressDto();
+        addressDto.setAddress("address");
         addressSQSMessageDto.setPhysicalAddress(addressDto);
 
         // When
         Mockito.when(this.requestDeliveryDAO.getByCorrelationId(Mockito.anyString())).thenReturn(Mono.just(deliveryRequest));
-        Mockito.when(this.addressDAO.findByRequestId(Mockito.anyString())).thenReturn(Mono.just(getRelatedAddress()));
+        Mockito.when(this.addressDAO.findByRequestId(deliveryRequest.getRelatedRequestId())).thenReturn(Mono.just(new PnAddress()));
         Mockito.doNothing().when(this.sqsSender).pushToInternalQueue(Mockito.any(PrepareAsyncRequest.class));
 
         this.queueListenerService.nationalRegistriesResponseListener(addressSQSMessageDto);
@@ -247,6 +255,35 @@ class QueueListenerServiceImplTest extends BaseTest {
         // Then
         Mockito.verify(this.paperRequestErrorDAO, Mockito.never()).created(Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
         Mockito.verify(this.sqsSender, Mockito.never()).pushToInternalQueue(Mockito.any(PrepareAsyncRequest.class));
+    }
+
+    @Test
+    void nationalRegistriesResponseListenerWithAddressInPhysicalAddressEmptyTest() {
+
+        // Given
+        PnDeliveryRequest deliveryRequest = new PnDeliveryRequest();
+        AddressSQSMessageDto addressSQSMessageDto = new AddressSQSMessageDto();
+        addressSQSMessageDto.setPhysicalAddress(new AddressSQSMessagePhysicalAddressDto());
+
+        deliveryRequest.setIun("1223");
+        deliveryRequest.setRequestId("1234dc");
+        deliveryRequest.setRelatedRequestId("1234abc");
+        deliveryRequest.setCorrelationId("9999");
+
+        deliveryRequest.setStatusCode(StatusDeliveryEnum.NATIONAL_REGISTRY_WAITING.getCode());
+        deliveryRequest.setStatusDescription(StatusDeliveryEnum.NATIONAL_REGISTRY_WAITING.getCode() + " - " + StatusDeliveryEnum.NATIONAL_REGISTRY_WAITING.getDescription());
+        deliveryRequest.setStatusDetail(StatusDeliveryEnum.NATIONAL_REGISTRY_WAITING.getDetail());
+
+        addressSQSMessageDto.setCorrelationId("9999");
+        addressSQSMessageDto.setError("");
+
+        // When
+        Mockito.when(this.requestDeliveryDAO.getByCorrelationId(Mockito.anyString())).thenReturn(Mono.just(deliveryRequest));
+
+        this.queueListenerService.nationalRegistriesResponseListener(addressSQSMessageDto);
+
+        // Mi aspetto che venga inviato l'evento con address vuoto nella coda interna
+        Mockito.verify(this.sqsSender,Mockito.times(1)).pushToInternalQueue(new PrepareAsyncRequest(addressSQSMessageDto.getCorrelationId(), null));
     }
 
     @Test
