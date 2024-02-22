@@ -23,8 +23,8 @@ import java.util.regex.Pattern;
 @Slf4j
 public class Utility {
     private static final Pattern PATTERN_PREFIX_CLIENT_ID = Pattern.compile("^\\d{3}\\.");
-    public static final String POSTMAN_REQUEST_PREFIX = "POSTMAN_ADDRESS_";
-    public static final String NATIONAL_REGISTRIES_REQUEST_PREFIX = "NR_ADDRESS_";
+    public static final String POSTMAN_REQUEST_PREFIX = "PST_ADDRESS_";
+    public static final String NATIONAL_REGISTRIES_REQUEST_PREFIX = "NRG_ADDRESS_";
 
     private Utility() {
         throw new IllegalCallerException();
