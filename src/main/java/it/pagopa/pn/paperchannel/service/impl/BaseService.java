@@ -41,6 +41,7 @@ public class BaseService extends GenericService {
     protected void finderAddressFromNationalRegistries(String requestId, String relatedRequestId, String fiscalCode, String personType, String iun, Integer attempt){
         String correlationId = Utility.buildNationalRegistriesCorrelationId(requestId);
         MDC.put(MDCUtils.MDC_TRACE_ID_KEY, MDC.get(MDCUtils.MDC_TRACE_ID_KEY));
+        MDC.put(MDCUtils.MDC_PN_SET_ID, correlationId);
         MDCUtils.addMDCToContextAndExecute(Mono.delay(Duration.ofMillis(20)).publishOn(Schedulers.boundedElastic())
                 .flatMap(i -> {
                     log.info("Start call national registries for find address");
