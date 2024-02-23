@@ -41,11 +41,10 @@ public class BaseService extends GenericService {
     protected void finderAddressFromNationalRegistries(String requestId, String relatedRequestId, String fiscalCode, String personType, String iun, Integer attempt){
         String correlationId = Utility.buildNationalRegistriesCorrelationId(requestId);
         MDC.put(MDCUtils.MDC_TRACE_ID_KEY, MDC.get(MDCUtils.MDC_TRACE_ID_KEY));
-        MDC.put(MDCUtils.MDC_PN_SET_ID, correlationId);
         MDCUtils.addMDCToContextAndExecute(Mono.delay(Duration.ofMillis(20)).publishOn(Schedulers.boundedElastic())
                 .flatMap(i -> {
-                    log.info("Start call national registries for find address");
-                    pnLogAudit.addsBeforeResolveService(iun, String.format("prepare requestId = %s, relatedRequestId= %s, trace_id = %s Request to National Registry service", requestId, relatedRequestId, correlationId));
+                    log.info("Start call national registries for find address with correlationId: {}", correlationId);
+                    pnLogAudit.addsBeforeResolveService(iun, String.format("prepare requestId = %s, relatedRequestId= %s, correlationId = %s Request to National Registry service", requestId, relatedRequestId, correlationId));
                     return this.nationalRegistryClient.finderAddress(correlationId, fiscalCode, personType)
                             .onErrorResume(e -> {
                                 NationalRegistryError error = new NationalRegistryError();
@@ -64,7 +63,7 @@ public class BaseService extends GenericService {
                 })
                 .publishOn(Schedulers.boundedElastic())
                 .flatMap(address -> {
-                    log.info("National registries has response");
+                    log.info("National registries has response with correlationId: {}", correlationId);
                     return this.requestDeliveryDAO.getByRequestId(requestId)
                             .flatMap(entity -> {
                                 log.debug("Entity edited with correlation id {} and new status {}", correlationId, NATIONAL_REGISTRY_WAITING.getDetail());
@@ -74,8 +73,8 @@ public class BaseService extends GenericService {
                 })
                 .flatMap(Mono::just)
                 .onErrorResume(ex -> {
-                    pnLogAudit.addsWarningResolveService(iun, String.format("prepare requestId = %s, relatedRequestId = %s, trace_id = %s Response KO from National Registry service", requestId, relatedRequestId, MDC.get(MDCUtils.MDC_TRACE_ID_KEY)));
-                    log.warn("NationalRegistries finder address in errors {}", ex.getMessage());
+                    pnLogAudit.addsWarningResolveService(iun, String.format("prepare requestId = %s, relatedRequestId = %s, correlationId = %s Response KO from National Registry service", requestId, relatedRequestId, correlationId));
+                    log.warn("NationalRegistries finder address with correlationId {} in errors {}", correlationId, ex.getMessage());
                     return Mono.empty();
 
                 }).subscribeOn(Schedulers.boundedElastic())).subscribe();
