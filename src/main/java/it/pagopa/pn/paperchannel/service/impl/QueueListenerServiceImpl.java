@@ -38,6 +38,7 @@ import static it.pagopa.pn.commons.log.PnLogger.EXTERNAL_SERVICES.PN_NATIONAL_RE
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.NATIONAL_REGISTRY_WAITING;
 import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.READY_TO_SEND;
+import static it.pagopa.pn.paperchannel.utils.Utility.resolveAuditLogFromResponse;
 
 @Service
 @CustomLog
@@ -196,7 +197,7 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                             return requestDeliveryDAO.getByCorrelationId(correlationId)
                                     .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage())));
                         })
-                        .doOnNext(addressAndEntity -> nationalResolveLogAudit(addressAndEntity.getT2(), addressAndEntity.getT1()))
+                        .doOnNext(addressAndEntity -> resolveAuditLogFromResponse(addressAndEntity.getT2(), addressAndEntity.getT1().getError(), pnLogAudit, PN_NATIONAL_REGISTRIES))
 
                         /* If Delivery Request status is not NATIONAL_REGISTRY_WAITING then skip to avoid reworks on same or not expected events */
                         .doOnNext(addressAndEntity -> log.info("Skipping National Registry event? {}", !this.isDeliveryRequestInNationalRegistryWaitingStatus(addressAndEntity.getT2())))
@@ -339,25 +340,6 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                     return fromNationalRegistry;
                 }).switchIfEmpty(Mono.just(fromNationalRegistry));
 
-    }
-
-
-    private void nationalResolveLogAudit(PnDeliveryRequest entity, AddressSQSMessageDto address) {
-        if (StringUtils.isEmpty(address.getError())) {
-            pnLogAudit.addsSuccessResolveService(
-                    entity.getIun(),
-                    String.format("prepare requestId = %s, relatedRequestId = %s, traceId = %s Response OK from National Registry service",
-                            entity.getRequestId(),
-                            entity.getRelatedRequestId(),
-                            entity.getCorrelationId()));
-        } else {
-            pnLogAudit.addsFailResolveService(
-                    entity.getIun(),
-                    String.format("prepare requestId = %s, relatedRequestId = %s, traceId = %s Response KO from National Registry service",
-                            entity.getRequestId(),
-                            entity.getRelatedRequestId(),
-                            entity.getCorrelationId()));
-        }
     }
 
     private boolean isDeliveryRequestInNationalRegistryWaitingStatus(PnDeliveryRequest deliveryRequest) {
