@@ -1,6 +1,5 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
-import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.*;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PrepareEvent;
@@ -49,12 +48,12 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
     private final PaperCalculatorUtils paperCalculatorUtils;
     private final F24Service f24Service;
 
-    public PrepareAsyncServiceImpl(PnAuditLogBuilder auditLogBuilder, NationalRegistryClient nationalRegistryClient,
+    public PrepareAsyncServiceImpl(NationalRegistryClient nationalRegistryClient,
                                    RequestDeliveryDAO requestDeliveryDAO, SqsSender sqsQueueSender, CostDAO costDAO,
                                    SafeStorageService safeStorageService, AddressDAO addressDAO, PnPaperChannelConfig paperChannelConfig,
                                    PaperRequestErrorDAO paperRequestErrorDAO, PaperAddressService paperAddressService,
                                    PaperCalculatorUtils paperCalculatorUtils, F24Service f24Service) {
-        super(auditLogBuilder, requestDeliveryDAO, costDAO, nationalRegistryClient, sqsQueueSender);
+        super(requestDeliveryDAO, costDAO, nationalRegistryClient, sqsQueueSender);
         this.safeStorageService = safeStorageService;
         this.addressDAO = addressDAO;
         this.paperChannelConfig = paperChannelConfig;

@@ -30,8 +30,6 @@ public abstract class SecondAttemptFlowService {
 
     private final AddressManagerClient addressManagerClient;
 
-    protected final PnLogAudit pnLogAudit;
-
     protected final PnPaperChannelConfig paperProperties;
 
 
@@ -44,6 +42,8 @@ public abstract class SecondAttemptFlowService {
     }
 
     public void checkAndHandleErrors(PnDeliveryRequest pnDeliveryRequest, DeduplicatesResponseDto deduplicatesResponse, Address secondAttemptAddress) {
+        PnLogAudit pnLogAudit = new PnLogAudit();
+
         logAuditBeforeLogic("prepare requestId = %s, relatedRequestId = %s Deduplicates service has DeduplicatesResponse.error empty ?", pnDeliveryRequest, pnLogAudit);
         if (StringUtils.isNotBlank(deduplicatesResponse.getError())) {
             log.error("Response from address manager {} with request id {}", deduplicatesResponse.getError(), pnDeliveryRequest.getRequestId());
@@ -55,6 +55,7 @@ public abstract class SecondAttemptFlowService {
     }
 
     public void checkAndHandleSameAddresses(PnDeliveryRequest pnDeliveryRequest, DeduplicatesResponseDto deduplicatesResponse, Address secondAttemptAddress) {
+        PnLogAudit pnLogAudit = new PnLogAudit();
         logAuditBeforeLogic("prepare requestId = %s, relatedRequestId = %s " + getAddressName() + " and First address is Equals ?", pnDeliveryRequest, pnLogAudit);
 
         if (Boolean.TRUE.equals(deduplicatesResponse.getEqualityResult())) {
@@ -76,6 +77,8 @@ public abstract class SecondAttemptFlowService {
 
 
     protected Mono<DeduplicatesResponseDto> callDeduplica(String correlationId, PnDeliveryRequest pnDeliveryRequest, Address secondAttemptAddress, Address firstAttemptAddress) {
+        PnLogAudit pnLogAudit = new PnLogAudit();
+
         var iun = pnDeliveryRequest.getIun();
         var requestId = pnDeliveryRequest.getRequestId();
         var relatedRequestId = pnDeliveryRequest.getRelatedRequestId();

@@ -1,15 +1,13 @@
 package it.pagopa.pn.paperchannel.service;
 
-import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.middleware.msclient.AddressManagerClient;
-import it.pagopa.pn.paperchannel.utils.PnLogAudit;
+import it.pagopa.pn.paperchannel.service.impl.NrgSecondAttemptFlowService;
+import it.pagopa.pn.paperchannel.service.impl.PstSecondAttemptFlowService;
 import org.springframework.stereotype.Component;
 
 @Component
 public class SecondAttemptFlowHandlerFactory {
-
-    protected final PnLogAudit pnLogAudit;
 
     protected final PnPaperChannelConfig paperProperties;
 
@@ -18,11 +16,10 @@ public class SecondAttemptFlowHandlerFactory {
     private final NrgSecondAttemptFlowService nrgSecondAttemptFlowService;
 
 
-    public SecondAttemptFlowHandlerFactory(AddressManagerClient addressManagerClient, PnAuditLogBuilder auditLogBuilder, PnPaperChannelConfig paperProperties) {
-        this.pnLogAudit = new PnLogAudit(auditLogBuilder);
+    public SecondAttemptFlowHandlerFactory(AddressManagerClient addressManagerClient, PnPaperChannelConfig paperProperties) {
         this.paperProperties = paperProperties;
-        this.pstSecondAttemptFlowService = new PstSecondAttemptFlowService(addressManagerClient, pnLogAudit, paperProperties);
-        this.nrgSecondAttemptFlowService = new NrgSecondAttemptFlowService(addressManagerClient, pnLogAudit, paperProperties);
+        this.pstSecondAttemptFlowService = new PstSecondAttemptFlowService(addressManagerClient, paperProperties);
+        this.nrgSecondAttemptFlowService = new NrgSecondAttemptFlowService(addressManagerClient, paperProperties);
     }
 
 

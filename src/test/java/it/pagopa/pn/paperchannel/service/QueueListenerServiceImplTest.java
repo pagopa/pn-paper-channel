@@ -5,7 +5,6 @@ import it.pagopa.pn.api.dto.events.PnF24PdfSetReadyEventItem;
 import it.pagopa.pn.api.dto.events.PnF24PdfSetReadyEventPayload;
 import it.pagopa.pn.commons.exceptions.PnExceptionsCodes;
 import it.pagopa.pn.commons.exceptions.PnInternalException;
-import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnF24FlowException;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
@@ -31,14 +30,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatNoException;
 
 @ExtendWith(MockitoExtension.class)
 class QueueListenerServiceImplTest {
@@ -66,9 +65,6 @@ class QueueListenerServiceImplTest {
 
     @Mock
     private F24Service f24Service;
-
-    @Spy
-    private PnAuditLogBuilder pnAuditLogBuilder;
 
     @Mock
     private ExternalChannelClient externalChannelClient;

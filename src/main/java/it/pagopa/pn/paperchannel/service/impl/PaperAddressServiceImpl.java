@@ -1,6 +1,5 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
-import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.paperchannel.exception.PnAddressFlowException;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.exception.PnUntracebleException;
@@ -18,6 +17,7 @@ import it.pagopa.pn.paperchannel.service.PaperAddressService;
 import it.pagopa.pn.paperchannel.service.SecondAttemptFlowHandlerFactory;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
+import it.pagopa.pn.paperchannel.utils.PnLogAudit;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -35,10 +35,10 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
     private final SecondAttemptFlowHandlerFactory secondAttemptFlowHandlerFactory;
 
 
-    public PaperAddressServiceImpl(PnAuditLogBuilder auditLogBuilder, NationalRegistryClient nationalRegistryClient,
+    public PaperAddressServiceImpl(NationalRegistryClient nationalRegistryClient,
                                    RequestDeliveryDAO requestDeliveryDAO, SqsSender sqsQueueSender, CostDAO costDAO,
                                    AddressDAO addressDAO, SecondAttemptFlowHandlerFactory secondAttemptFlowHandlerFactory) {
-        super(auditLogBuilder, requestDeliveryDAO, costDAO, nationalRegistryClient, sqsQueueSender);
+        super(requestDeliveryDAO, costDAO, nationalRegistryClient, sqsQueueSender);
         this.addressDAO = addressDAO;
         this.secondAttemptFlowHandlerFactory = secondAttemptFlowHandlerFactory;
     }
@@ -46,6 +46,8 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
 
     @Override
     public Mono<Address> getCorrectAddress(PnDeliveryRequest deliveryRequest, Address fromNationalRegistry, PrepareAsyncRequest queueModel) {
+
+        PnLogAudit pnLogAudit = new PnLogAudit();
         logAuditBeforeLogic("prepare requestId = %s, relatedRequestId = %s Is Receiver Address present ?", deliveryRequest, pnLogAudit);
 
         return this.addressDAO.findByRequestId(deliveryRequest.getRequestId(), AddressTypeEnum.RECEIVER_ADDRESS)
@@ -61,6 +63,9 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
     }
 
     private Mono<Address> chooseAddress(PnDeliveryRequest deliveryRequest, Address fromNationalRegistry, Address addressFromFirstAttempt) {
+
+        PnLogAudit pnLogAudit = new PnLogAudit();
+
         // Only discovered address is null and retrieved national registry address
         if (StringUtils.isNotBlank(deliveryRequest.getCorrelationId())){
             logAuditBeforeLogic("prepare requestId = %s, relatedRequestId = %s Is National Registry Address present ?", deliveryRequest, pnLogAudit);
@@ -83,6 +88,9 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
     }
 
     private Mono<Address> getAddressFromNationalRegistry(PnDeliveryRequest deliveryRequest, Address fromNationalRegistry, Address addressFromFirstAttempt) {
+
+        PnLogAudit pnLogAudit = new PnLogAudit();
+
         if (fromNationalRegistry == null) {
             logAuditSuccessLogic("prepare requestId = %s, relatedRequestId = %s National Registry Address is null", deliveryRequest, pnLogAudit);
             KOReason koReason = new KOReason(FailureDetailCodeEnum.D00, null);
@@ -96,6 +104,9 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
     }
 
     private Mono<Address> getAddressFromDiscoveredAddress(PnDeliveryRequest deliveryRequest, Address addressFromFirstAttempt) {
+
+        PnLogAudit pnLogAudit = new PnLogAudit();
+
         logAuditSuccessLogic("prepare requestId = %s, relatedRequestId = %s Is Second attempt check discovered address", deliveryRequest, pnLogAudit);
         logAuditBeforeLogic("prepare requestId = %s, relatedRequestId = %s Is Discovered address present ?", deliveryRequest, pnLogAudit);
         return this.addressDAO.findByRequestId(deliveryRequest.getRequestId(), AddressTypeEnum.DISCOVERED_ADDRESS)

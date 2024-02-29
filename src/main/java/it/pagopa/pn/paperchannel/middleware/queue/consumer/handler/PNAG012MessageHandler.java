@@ -1,6 +1,5 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
-import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
@@ -75,8 +74,7 @@ public class PNAG012MessageHandler extends SaveDematMessageHandler {
         String metadataRequestIdFilter = buildMetaRequestId(paperRequest.getRequestId());
         String dematRequestId = buildDematRequestId(paperRequest.getRequestId());
 
-        PnAuditLogBuilder auditLogBuilder = new PnAuditLogBuilder();
-        PnLogAudit pnLogAudit = new PnLogAudit(auditLogBuilder);
+        PnLogAudit pnLogAudit = new PnLogAudit();
 
         return super.eventDematDAO.findAllByKeys(dematRequestId, DEMAT_SORT_KEYS_FILTER).collectList()
                 .doOnNext(pnEventDemats -> log.debug("Result of findAllByKeys: {}", pnEventDemats))

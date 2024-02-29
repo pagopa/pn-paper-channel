@@ -1,6 +1,5 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
-import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.DiscoveredAddressDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
@@ -66,8 +65,7 @@ public class RECRN00XCMessageHandler extends SendToDeliveryPushHandler {
                         var pnrn012PaperRequest = pnrn012Wrapper.getPaperProgressStatusEventDtoPNRN012();
                         var pnrn012DeliveryRequest = pnrn012Wrapper.getPnDeliveryRequestPNRN012();
 
-                        PnAuditLogBuilder auditLogBuilder = new PnAuditLogBuilder();
-                        PnLogAudit pnLogAudit = new PnLogAudit(auditLogBuilder);
+                        PnLogAudit pnLogAudit = new PnLogAudit();
                         pnLogAudit.addsBeforeReceive(entity.getIun(), String.format("prepare requestId = %s Response from external-channel",pnrn012DeliveryRequest.getRequestId()));
                         logSuccessAuditLog(pnrn012PaperRequest, pnrn012DeliveryRequest, pnLogAudit);
 

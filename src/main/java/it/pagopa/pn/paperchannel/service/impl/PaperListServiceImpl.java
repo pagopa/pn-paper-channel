@@ -5,17 +5,17 @@ import it.pagopa.pn.paperchannel.mapper.CapMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.CapDAO;
 import it.pagopa.pn.paperchannel.service.PaperListService;
 import lombok.CustomLog;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 
 @CustomLog
 @Service
+@RequiredArgsConstructor
 public class PaperListServiceImpl implements PaperListService {
 
-    @Autowired
-    private CapDAO capDAO;
+    private final CapDAO capDAO;
 
     @Override
     public Mono<CapResponseDto> getAllCap(String value) {

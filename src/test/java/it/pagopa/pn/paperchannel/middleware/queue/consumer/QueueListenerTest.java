@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
@@ -23,14 +22,13 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 
-
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
 
 import static it.pagopa.pn.api.dto.events.GenericEventHeader.PN_EVENT_HEADER_EVENT_TYPE;
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.MAPPER_ERROR;
 import static it.pagopa.pn.paperchannel.middleware.queue.model.InternalEventHeader.PN_EVENT_HEADER_ATTEMPT;
 import static it.pagopa.pn.paperchannel.middleware.queue.model.InternalEventHeader.PN_EVENT_HEADER_EXPIRED;
 import static org.junit.jupiter.api.Assertions.*;
@@ -51,9 +49,6 @@ class QueueListenerTest {
     private SqsSender sender;
     @Mock
     private PnPaperChannelConfig pnPaperChannelConfig;
-
-    @Spy
-    private PnAuditLogBuilder pnAuditLogBuilder;
 
     @Spy
     private ObjectMapper objectMapper;

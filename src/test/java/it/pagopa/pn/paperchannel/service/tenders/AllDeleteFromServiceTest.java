@@ -1,7 +1,6 @@
 package it.pagopa.pn.paperchannel.service.tenders;
 
 
-import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.paperchannel.config.InstanceCreator;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.TenderDTO;
@@ -19,7 +18,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -45,8 +43,6 @@ class AllDeleteFromServiceTest {
     @Mock
     private TenderDAO tenderDAO;
 
-    @Spy
-    private PnAuditLogBuilder pnAuditLogBuilder;
     private PnTender pnTenderOK;
     private PnDeliveryDriver pnDeliveryDriver;
     private PnCost pnCostNational;

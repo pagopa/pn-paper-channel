@@ -9,7 +9,7 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.TenderDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.ZoneDAO;
 import it.pagopa.pn.paperchannel.service.PaperTenderService;
 import lombok.CustomLog;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -18,14 +18,12 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.COST_DRIVER_
 
 @CustomLog
 @Service
+@RequiredArgsConstructor
 public class PaperTenderServiceImpl implements PaperTenderService {
 
-    @Autowired
-    private TenderDAO tenderDAO;
-    @Autowired
-    private CostDAO costDAO;
-    @Autowired
-    private ZoneDAO zoneDAO;
+    private final TenderDAO tenderDAO;
+    private final CostDAO costDAO;
+    private final ZoneDAO zoneDAO;
 
     @Override
     public Mono<CostDTO> getCostFrom(String cap, String zone, String productType){

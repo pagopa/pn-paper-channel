@@ -1,4 +1,4 @@
-package it.pagopa.pn.paperchannel.service;
+package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.PnUntracebleException;
@@ -8,7 +8,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.AddressManagerClient;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.KOReason;
-import it.pagopa.pn.paperchannel.utils.PnLogAudit;
+import it.pagopa.pn.paperchannel.service.SecondAttemptFlowService;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
@@ -19,8 +19,8 @@ public class NrgSecondAttemptFlowService extends SecondAttemptFlowService {
 
     private static final String NATIONAL_REGISTRIES_ADDRESS_NAME = "National Registry Address";
 
-    protected NrgSecondAttemptFlowService(AddressManagerClient addressManagerClient, PnLogAudit pnLogAudit, PnPaperChannelConfig pnPaperChannelConfig) {
-        super(addressManagerClient, pnLogAudit, pnPaperChannelConfig);
+    public NrgSecondAttemptFlowService(AddressManagerClient addressManagerClient, PnPaperChannelConfig pnPaperChannelConfig) {
+        super(addressManagerClient, pnPaperChannelConfig);
     }
 
     @Override
