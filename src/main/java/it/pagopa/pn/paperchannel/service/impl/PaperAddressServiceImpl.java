@@ -99,7 +99,7 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
         }
         logAuditSuccessLogic("prepare requestId = %s, relatedRequestId = %s National Registry Address is present", deliveryRequest, pnLogAudit);
 
-        return secondAttemptFlowHandlerFactory.getSecondAttemptFlowService(SecondAttemptFlowHandlerFactory.FlowType.NATIONA_REGISTY_FLOW)
+        return secondAttemptFlowHandlerFactory.getSecondAttemptFlowService(SecondAttemptFlowHandlerFactory.FlowType.NATIONAL_REGISTY_FLOW)
                 .handleSecondAttempt(deliveryRequest, fromNationalRegistry, addressFromFirstAttempt);
     }
 
@@ -117,7 +117,7 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
                 }))
                 .doOnNext(pnAddress -> logAuditSuccessLogic("prepare requestId = %s, relatedRequestId = %s discovered address is present on DB", deliveryRequest, pnLogAudit))
                 .map(AddressMapper::toDTO)
-                .flatMap(discoveredAddress -> secondAttemptFlowHandlerFactory.getSecondAttemptFlowService(SecondAttemptFlowHandlerFactory.FlowType.NATIONA_REGISTY_FLOW)
+                .flatMap(discoveredAddress -> secondAttemptFlowHandlerFactory.getSecondAttemptFlowService(SecondAttemptFlowHandlerFactory.FlowType.POSTMAN_FLOW)
                         .handleSecondAttempt(deliveryRequest, discoveredAddress, addressFromFirstAttempt));
 
     }
