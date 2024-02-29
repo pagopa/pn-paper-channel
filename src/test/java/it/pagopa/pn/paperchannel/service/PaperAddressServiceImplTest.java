@@ -52,8 +52,9 @@ class PaperAddressServiceImplTest {
     @BeforeEach
     public void init() {
         paperProperties = new PnPaperChannelConfig();
+        var secondAttemptFlowHandlerFactory = new SecondAttemptFlowHandlerFactory(addressManagerClient, auditLogBuilder, paperProperties);
         paperAddressService = new PaperAddressServiceImpl(auditLogBuilder, null, null,
-                sqsSender, null, paperProperties, addressDAO, addressManagerClient);
+                sqsSender, null, addressDAO, secondAttemptFlowHandlerFactory);
     }
 
     @Test
