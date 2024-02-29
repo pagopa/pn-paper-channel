@@ -82,9 +82,14 @@ public abstract class SecondAttemptFlowService {
         var iun = pnDeliveryRequest.getIun();
         var requestId = pnDeliveryRequest.getRequestId();
         var relatedRequestId = pnDeliveryRequest.getRelatedRequestId();
-        pnLogAudit.addsBeforeResolveService(iun, String.format("prepare requestId = %s, relatedRequestId= %s, correlationId = %s Request to National Registry service", requestId, relatedRequestId, correlationId));
+        pnLogAudit.addsBeforeResolveService(iun, String.format("prepare requestId = %s, relatedRequestId= %s, correlationId = %s Request to %s", requestId, relatedRequestId, correlationId, PnLogger.EXTERNAL_SERVICES.PN_ADDRESS_MANAGER));
         return addressManagerClient.deduplicates(pnDeliveryRequest.getCorrelationId(), firstAttemptAddress, secondAttemptAddress)
-                .doOnNext(deduplicatesResponseDto -> resolveAuditLogFromResponse(pnDeliveryRequest, deduplicatesResponseDto.getError(), pnLogAudit, PnLogger.EXTERNAL_SERVICES.PN_ADDRESS_MANAGER));
+                .doOnNext(deduplicatesResponseDto -> resolveAuditLogFromResponse(pnDeliveryRequest, deduplicatesResponseDto.getError(), pnLogAudit, PnLogger.EXTERNAL_SERVICES.PN_ADDRESS_MANAGER))
+                .doOnError(ex -> {
+                            pnLogAudit.addsWarningResolveService(iun, String.format("prepare requestId = %s, relatedRequestId = %s, correlationId = %s Response KO from %s", requestId, relatedRequestId, correlationId, PnLogger.EXTERNAL_SERVICES.PN_ADDRESS_MANAGER));
+                            log.warn("Address Manager deduplicates with correlationId {} in errors {}", correlationId, ex.getMessage());
+                        }
+                );
     }
 
     private Mono<Address> checkAndParseNormalizedAddress(AnalogAddressDto normalizedAddress, Address older, String requestId){
