@@ -213,7 +213,7 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                                 throw new PnGenericException(NATIONAL_REGISTRY_LISTENER_EXCEPTION, NATIONAL_REGISTRY_LISTENER_EXCEPTION.getMessage());
                             }
 
-                            if (addressFromNational.getPhysicalAddress() != null) {
+                            if (validatePhysicalAddressPayload(addressFromNational, entity.getRequestId())) {
                                 Address address = AddressMapper.fromNationalRegistry(addressFromNational.getPhysicalAddress());
                                 return this.retrieveRelatedAddress(entity.getRelatedRequestId(), address)
                                         .map(updateAddress -> new PrepareAsyncRequest(entity.getCorrelationId(), updateAddress));
@@ -229,6 +229,17 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                 .block();
     }
 
+    private boolean validatePhysicalAddressPayload(AddressSQSMessageDto payload, String requestId) {
+        boolean isValid = payload.getPhysicalAddress() != null &&
+                payload.getPhysicalAddress().getAddress() != null;
+
+        if(!isValid) {
+            log.warn("[{}] Physical Address from NR not valid", requestId);
+        }
+
+        return isValid;
+    }
+
     @Override
     public void nationalRegistriesErrorListener(NationalRegistryError data, int attempt) {
         MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, data.getRequestId());
@@ -239,7 +250,6 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                             log.info("Called national Registries");
                             log.logInvokingAsyncExternalService(PN_NATIONAL_REGISTRIES,NATIONAL_REGISTRY_DESCRIPTION, nationalRegistryError.getRequestId());
                             this.finderAddressFromNationalRegistries(
-                                    nationalRegistryError.getCorrelationId(),
                                     nationalRegistryError.getRequestId(),
                                     nationalRegistryError.getRelatedRequestId(),
                                     nationalRegistryError.getFiscalCode(),
@@ -311,9 +321,10 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                                 return this.requestDeliveryDAO.updateData(request);
                             }))
                             .onErrorResume(ex -> {
+                                log.warn("[{}] Error in manualRetryExternalChannel", requestId, ex);
                                 pnLogAudit.addsWarningSend(
                                         request.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", request.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY)));
-                                return paperRequestErrorDAO.created(requestId, EXTERNAL_CHANNEL_API_EXCEPTION.getMessage(), EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name())
+                                return paperRequestErrorDAO.created(requestId, ex.getMessage(), EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name())
                                         .flatMap(errorEntity -> Mono.error(ex));
                             });
                 })

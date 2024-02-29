@@ -13,7 +13,6 @@ import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import lombok.CustomLog;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
@@ -34,6 +33,9 @@ import static it.pagopa.pn.paperchannel.utils.Const.PN_AAR;
 @CustomLog
 @Component
 public class ExternalChannelClientImpl extends BaseClient implements ExternalChannelClient {
+
+    private static final String PN_EXTERNAL_CHANNEL_DESCRIPTION = "External Channel sendEngageRequest";
+
     private final PnPaperChannelConfig pnPaperChannelConfig;
     private final PaperMessagesApi paperMessagesApi;
 
@@ -45,10 +47,18 @@ public class ExternalChannelClientImpl extends BaseClient implements ExternalCha
     }
 
 
-    public Mono<Void> sendEngageRequest(SendRequest sendRequest, List<AttachmentInfo> attachments){
-        String PN_EXTERNAL_CHANNEL_DESCRIPTION = "External Channel sendEngageRequest";
-        log.logInvokingAsyncExternalService(PnLogger.EXTERNAL_SERVICES.PN_EXTERNAL_CHANNELS, PN_EXTERNAL_CHANNEL_DESCRIPTION, sendRequest.getRequestId());
-        String requestIdx = sendRequest.getRequestId();
+    public Mono<Void> sendEngageRequest(SendRequest sendRequest, List<AttachmentInfo> attachments) {
+        return Mono.defer(() -> {
+            log.logInvokingAsyncExternalService(PnLogger.EXTERNAL_SERVICES.PN_EXTERNAL_CHANNELS, PN_EXTERNAL_CHANNEL_DESCRIPTION, sendRequest.getRequestId());
+            String requestIdx = sendRequest.getRequestId();
+            var dto = buildPaperEngageRequest(sendRequest, attachments);
+
+            return this.paperMessagesApi.sendPaperEngageRequest(requestIdx, this.pnPaperChannelConfig.getXPagopaExtchCxId(), dto);
+        });
+
+    }
+
+    private PaperEngageRequestDto buildPaperEngageRequest(SendRequest sendRequest, List<AttachmentInfo> attachments) {
         PaperEngageRequestDto dto = new PaperEngageRequestDto();
         dto.setRequestId(sendRequest.getRequestId());
         dto.setRequestPaId(sendRequest.getRequestPaId());
@@ -97,11 +107,7 @@ public class ExternalChannelClientImpl extends BaseClient implements ExternalCha
             dto.setArCity(sendRequest.getArAddress().getCity());
         }
 
-        return this.paperMessagesApi.sendPaperEngageRequest(requestIdx, this.pnPaperChannelConfig.getXPagopaExtchCxId(), dto)
-                .retryWhen(
-                        Retry.backoff(2, Duration.ofMillis(500))
-                                .filter(throwable -> throwable instanceof TimeoutException || throwable instanceof ConnectException)
-                );
+        return dto;
     }
 
 }

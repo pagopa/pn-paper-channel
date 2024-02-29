@@ -18,18 +18,14 @@ import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
 import it.pagopa.pn.paperchannel.service.PaperAddressService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
+import it.pagopa.pn.paperchannel.utils.Utility;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
-import java.util.UUID;
-
-import static it.pagopa.pn.commons.utils.MDCUtils.MDC_TRACE_ID_KEY;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 import static it.pagopa.pn.paperchannel.utils.DeduplicateErrorConst.*;
-import static it.pagopa.pn.paperchannel.utils.Utility.DEDUPLICATION_REQUEST_PREFIX;
 
 @Slf4j
 @Service
@@ -119,8 +115,8 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
     private Mono<Address> flowPostmanAddress(PnDeliveryRequest deliveryRequest, Address discovered, Address firstAttempt){
         log.info("flowPostmanAddress for requestId {}", deliveryRequest.getRequestId());
         logAuditBefore("prepare requestId = %s, relatedRequestId = %s Discovered and First address is Equals ?", deliveryRequest);
-        var deduplicationRequestId = DEDUPLICATION_REQUEST_PREFIX + deliveryRequest.getRequestId();
-        return this.addressManagerClient.deduplicates(deduplicationRequestId, firstAttempt, discovered)
+        var correlationId = Utility.buildPostmanAddressCorrelationId(deliveryRequest.getRequestId());
+        return this.addressManagerClient.deduplicates(correlationId, firstAttempt, discovered)
                 .flatMap(deduplicatesResponse -> {
                     logAuditBefore("prepare requestId = %s, relatedRequestId = %s Deduplicates service has DeduplicatesResponse.error empty ?", deliveryRequest);
                     if (StringUtils.isNotBlank(deduplicatesResponse.getError())){
@@ -201,7 +197,6 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
     private <T> Mono<T> handlePnAddressFlowException(PnAddressFlowException ex, PnDeliveryRequest deliveryRequest, PrepareAsyncRequest queueModel) {
         if (ex.getExceptionType() == ATTEMPT_ADDRESS_NATIONAL_REGISTRY){
             this.finderAddressFromNationalRegistries(
-                    (MDC.get(MDC_TRACE_ID_KEY) == null ? UUID.randomUUID().toString() : MDC.get(MDC_TRACE_ID_KEY)),
                     deliveryRequest.getRequestId(),
                     deliveryRequest.getRelatedRequestId(),
                     deliveryRequest.getFiscalCode(),

@@ -37,7 +37,6 @@ import reactor.core.publisher.Mono;
 import reactor.util.function.Tuples;
 
 import java.util.List;
-import java.util.UUID;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_IN_PROCESSING;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_NOT_EXIST;
@@ -146,7 +145,6 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
                                                             String.format("prepare requestId = %s, relatedRequestId = %s Discovered Address is not present", requestId, prepareRequest.getRelatedRequestId())
                                                     );
                                                     this.finderAddressFromNationalRegistries(
-                                                            (MDC.get(MDCUtils.MDC_TRACE_ID_KEY) == null ? UUID.randomUUID().toString() : MDC.get(MDCUtils.MDC_TRACE_ID_KEY)),
                                                             response.getRequestId(),
                                                             response.getRelatedRequestId(),
                                                             response.getFiscalCode(),
@@ -207,7 +205,7 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
                             LogUtils.maskGeneric(sendRequest.getReceiverAddress().getCap()),
                             LogUtils.maskGeneric(sendRequest.getReceiverAddress().getCountry())
                     );
-                    String VALIDATION_NAME = "Amount calculation process";
+                    final String VALIDATION_NAME = "Amount calculation process";
                     log.logChecking(VALIDATION_NAME);
                     return getSendResponse(
                             address,
@@ -238,7 +236,6 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
                     SendResponse sendResponse = tuple.getT1();
                     PnDeliveryRequest pnDeliveryRequest = tuple.getT2();
                     List<AttachmentInfo> attachments = tuple.getT3();
-                    Address address = tuple.getT4();
 
                     if (StringUtils.equals(pnDeliveryRequest.getStatusCode(), StatusDeliveryEnum.TAKING_CHARGE.getCode())) {
                         RequestDeliveryMapper.changeState(

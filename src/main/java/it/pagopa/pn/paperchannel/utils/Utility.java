@@ -8,6 +8,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
@@ -22,7 +23,8 @@ import java.util.regex.Pattern;
 @Slf4j
 public class Utility {
     private static final Pattern PATTERN_PREFIX_CLIENT_ID = Pattern.compile("^\\d{3}\\.");
-    public static final String DEDUPLICATION_REQUEST_PREFIX = "DEDUP_ADDRESS_";
+    public static final String POSTMAN_REQUEST_PREFIX = "PST_ADDRESS_";
+    public static final String NATIONAL_REGISTRIES_REQUEST_PREFIX = "NRG_ADDRESS_";
 
     private Utility() {
         throw new IllegalCallerException();
@@ -187,6 +189,14 @@ public class Utility {
 
     public static boolean isNotCallCenterEvoluto(String requestId) {
         return !isCallCenterEvoluto(requestId);
+    }
+
+    public static String buildNationalRegistriesCorrelationId(@NotNull String requestId) {
+        return NATIONAL_REGISTRIES_REQUEST_PREFIX + requestId;
+    }
+
+    public static String buildPostmanAddressCorrelationId(@NotNull String requestId) {
+        return POSTMAN_REQUEST_PREFIX + requestId;
     }
 
 }
