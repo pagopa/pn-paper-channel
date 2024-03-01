@@ -84,7 +84,7 @@ public abstract class SecondAttemptFlowService {
         var relatedRequestId = pnDeliveryRequest.getRelatedRequestId();
         pnLogAudit.addsBeforeResolveService(iun, String.format("prepare requestId = %s, relatedRequestId= %s, correlationId = %s Request to %s", requestId, relatedRequestId, correlationId, PnLogger.EXTERNAL_SERVICES.PN_ADDRESS_MANAGER));
         return addressManagerClient.deduplicates(correlationId, firstAttemptAddress, secondAttemptAddress)
-                .doOnNext(deduplicatesResponseDto -> resolveAuditLogFromResponse(pnDeliveryRequest, deduplicatesResponseDto.getError(), pnLogAudit, PnLogger.EXTERNAL_SERVICES.PN_ADDRESS_MANAGER))
+                .doOnNext(deduplicatesResponseDto -> resolveAuditLogFromResponse(pnDeliveryRequest, deduplicatesResponseDto.getError(), pnLogAudit, PnLogger.EXTERNAL_SERVICES.PN_ADDRESS_MANAGER, correlationId))
                 .doOnError(ex -> {
                             pnLogAudit.addsWarningResolveService(iun, String.format("prepare requestId = %s, relatedRequestId = %s, correlationId = %s Response KO from %s", requestId, relatedRequestId, correlationId, PnLogger.EXTERNAL_SERVICES.PN_ADDRESS_MANAGER));
                             log.warn("Address Manager deduplicates with correlationId {} in errors {}", correlationId, ex.getMessage());

@@ -199,7 +199,7 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                             return requestDeliveryDAO.getByCorrelationId(correlationId)
                                     .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage())));
                         })
-                        .doOnNext(addressAndEntity -> resolveAuditLogFromResponse(addressAndEntity.getT2(), addressAndEntity.getT1().getError(), pnLogAudit, PN_NATIONAL_REGISTRIES))
+                        .doOnNext(addressAndEntity -> resolveAuditLogFromResponse(addressAndEntity.getT2(), addressAndEntity.getT1().getError(), pnLogAudit, PN_NATIONAL_REGISTRIES, addressAndEntity.getT2().getCorrelationId()))
 
                         /* If Delivery Request status is not NATIONAL_REGISTRY_WAITING then skip to avoid reworks on same or not expected events */
                         .doOnNext(addressAndEntity -> log.info("Skipping National Registry event? {}", !this.isDeliveryRequestInNationalRegistryWaitingStatus(addressAndEntity.getT2())))

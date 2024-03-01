@@ -218,14 +218,14 @@ public class Utility {
         );
     }
 
-    public static void resolveAuditLogFromResponse(PnDeliveryRequest entity, String error, PnLogAudit pnLogAudit, String serviceName) {
+    public static void resolveAuditLogFromResponse(PnDeliveryRequest entity, String error, PnLogAudit pnLogAudit, String serviceName, String correlationId) {
         if (StringUtils.isEmpty(error)) {
             pnLogAudit.addsSuccessResolveService(
                     entity.getIun(),
                     String.format("prepare requestId = %s, relatedRequestId = %s, correlationId = %s Response OK from %s service",
                             entity.getRequestId(),
                             entity.getRelatedRequestId(),
-                            entity.getCorrelationId(),
+                            correlationId,
                             serviceName));
         } else {
             pnLogAudit.addsFailResolveService(
@@ -233,7 +233,7 @@ public class Utility {
                     String.format("prepare requestId = %s, relatedRequestId = %s, correlationId = %s Response KO from %s service",
                             entity.getRequestId(),
                             entity.getRelatedRequestId(),
-                            entity.getCorrelationId(),
+                            correlationId,
                             serviceName));
         }
     }
