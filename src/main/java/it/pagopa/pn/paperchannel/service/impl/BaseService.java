@@ -1,6 +1,5 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
-import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.commons.utils.MDCUtils;
 import it.pagopa.pn.paperchannel.encryption.DataEncryption;
 import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
@@ -8,6 +7,7 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.model.NationalRegistryError;
 import it.pagopa.pn.paperchannel.service.SqsSender;
+import it.pagopa.pn.paperchannel.utils.PnLogAudit;
 import it.pagopa.pn.paperchannel.utils.Utility;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
@@ -30,15 +30,19 @@ public class BaseService extends GenericService {
     @Qualifier("dataVaultEncryption")
     protected DataEncryption dataEncryption;
 
-    public BaseService(PnAuditLogBuilder auditLogBuilder, RequestDeliveryDAO requestDeliveryDAO, CostDAO costDAO,
+    public BaseService(RequestDeliveryDAO requestDeliveryDAO, CostDAO costDAO,
                 NationalRegistryClient nationalRegistryClient, SqsSender sqsSender) {
-        super(auditLogBuilder, sqsSender, requestDeliveryDAO);
+        super(sqsSender, requestDeliveryDAO);
+
         this.nationalRegistryClient = nationalRegistryClient;
         this.costDAO = costDAO;
     }
 
 
     protected void finderAddressFromNationalRegistries(String requestId, String relatedRequestId, String fiscalCode, String personType, String iun, Integer attempt){
+
+        PnLogAudit pnLogAudit = new PnLogAudit();
+
         String correlationId = Utility.buildNationalRegistriesCorrelationId(requestId);
         MDC.put(MDCUtils.MDC_TRACE_ID_KEY, MDC.get(MDCUtils.MDC_TRACE_ID_KEY));
         MDCUtils.addMDCToContextAndExecute(Mono.delay(Duration.ofMillis(20)).publishOn(Schedulers.boundedElastic())

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -197,6 +198,44 @@ public class Utility {
 
     public static String buildPostmanAddressCorrelationId(@NotNull String requestId) {
         return POSTMAN_REQUEST_PREFIX + requestId;
+    }
+
+    public static void logAuditSuccessLogic(String message, PnDeliveryRequest deliveryRequest, PnLogAudit pnLogAudit){
+        pnLogAudit.addsSuccessResolveLogic(
+                deliveryRequest.getIun(),
+                String.format(message,
+                        deliveryRequest.getRequestId(),
+                        deliveryRequest.getRelatedRequestId())
+        );
+    }
+
+    public static void logAuditBeforeLogic(String message, PnDeliveryRequest deliveryRequest, PnLogAudit pnLogAudit){
+        pnLogAudit.addsBeforeResolveLogic(
+                deliveryRequest.getIun(),
+                String.format(message,
+                        deliveryRequest.getRequestId(),
+                        deliveryRequest.getRelatedRequestId())
+        );
+    }
+
+    public static void resolveAuditLogFromResponse(PnDeliveryRequest entity, String error, PnLogAudit pnLogAudit, String serviceName, String correlationId) {
+        if (StringUtils.isEmpty(error)) {
+            pnLogAudit.addsSuccessResolveService(
+                    entity.getIun(),
+                    String.format("prepare requestId = %s, relatedRequestId = %s, correlationId = %s Response OK from %s service",
+                            entity.getRequestId(),
+                            entity.getRelatedRequestId(),
+                            correlationId,
+                            serviceName));
+        } else {
+            pnLogAudit.addsFailResolveService(
+                    entity.getIun(),
+                    String.format("prepare requestId = %s, relatedRequestId = %s, correlationId = %s Response KO from %s service",
+                            entity.getRequestId(),
+                            entity.getRelatedRequestId(),
+                            correlationId,
+                            serviceName));
+        }
     }
 
 }

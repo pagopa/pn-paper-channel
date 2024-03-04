@@ -1,6 +1,5 @@
 package it.pagopa.pn.paperchannel.service;
 
-import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnAddressFlowException;
@@ -22,7 +21,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -46,14 +44,12 @@ class PaperAddressServiceImplTest {
     @Mock
     private SqsSender sqsSender;
 
-    @Spy
-    private PnAuditLogBuilder auditLogBuilder;
-
     @BeforeEach
     public void init() {
         paperProperties = new PnPaperChannelConfig();
-        paperAddressService = new PaperAddressServiceImpl(auditLogBuilder, null, null,
-                sqsSender, null, paperProperties, addressDAO, addressManagerClient);
+        var secondAttemptFlowHandlerFactory = new SecondAttemptFlowHandlerFactory(addressManagerClient, paperProperties);
+        paperAddressService = new PaperAddressServiceImpl(null, null,
+                sqsSender, null, addressDAO, secondAttemptFlowHandlerFactory);
     }
 
     @Test

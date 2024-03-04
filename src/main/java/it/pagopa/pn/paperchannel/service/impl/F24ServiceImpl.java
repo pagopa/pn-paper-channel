@@ -2,7 +2,6 @@ package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.commons.exceptions.PnExceptionsCodes;
 import it.pagopa.pn.commons.exceptions.PnInternalException;
-import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.commons.log.PnAuditLogEventType;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
@@ -50,9 +49,10 @@ import java.util.List;
 import java.util.Optional;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.INVALID_SAFE_STORAGE;
 import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.F24_WAITING;
 import static it.pagopa.pn.paperchannel.service.SafeStorageService.SAFESTORAGE_PREFIX;
+import static it.pagopa.pn.paperchannel.utils.Utility.logAuditBeforeLogic;
+import static it.pagopa.pn.paperchannel.utils.Utility.logAuditSuccessLogic;
 
 @CustomLog
 @Service
@@ -71,12 +71,12 @@ public class F24ServiceImpl extends GenericService implements F24Service {
     private final DateChargeCalculationModesUtils dateChargeCalculationModesUtils;
 
 
-    public F24ServiceImpl(PnAuditLogBuilder auditLogBuilder, F24Client f24Client,
+    public F24ServiceImpl(F24Client f24Client,
                           SqsSender sqsQueueSender,
                           PaperCalculatorUtils paperCalculatorUtils, AddressDAO addressDAO, RequestDeliveryDAO requestDeliveryDAO,
                           PnPaperChannelConfig paperChannelConfig, SafeStorageService safeStorageService,
                           DateChargeCalculationModesUtils dateChargeCalculationModesUtils) {
-        super(auditLogBuilder, sqsQueueSender, requestDeliveryDAO);
+        super(sqsQueueSender, requestDeliveryDAO);
         this.f24Client = f24Client;
         this.paperCalculatorUtils = paperCalculatorUtils;
         this.addressDAO = addressDAO;
@@ -110,6 +110,9 @@ public class F24ServiceImpl extends GenericService implements F24Service {
 
     @Override
     public Mono<PnDeliveryRequest> arrangeF24AttachmentsAndReschedulePrepare(String requestIdFromF24, List<String> generatedUrls) {
+
+        PnLogAudit pnLogAudit = new PnLogAudit();
+
         //recupero la requestId dell'entità eliminando eventualmente il .REWORK_n
         String requestIdDeliveryRequest = requestIdFromF24.replaceAll("\\.REWORK_\\d", "");
         // sistemo gli allegati sostituendoli all'originale, salvo e faccio ripartire l'evento di prepare
@@ -123,21 +126,23 @@ public class F24ServiceImpl extends GenericService implements F24Service {
                             this.sqsSender.pushToInternalQueue(request);
                             return Mono.just(deliveryRequest);
                         })
-                .doOnSuccess(deliveryRequest -> f24ResponseLogAuditSuccess(deliveryRequest, normalizedFilekeys))
+                .doOnSuccess(deliveryRequest -> f24ResponseLogAuditSuccess(deliveryRequest, normalizedFilekeys, pnLogAudit))
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage())))
-                .doOnError(deliveryRequest -> f24ResponseLogAuditFailure(requestIdFromF24, normalizedFilekeys));
+                .doOnError(deliveryRequest -> f24ResponseLogAuditFailure(requestIdFromF24, normalizedFilekeys, pnLogAudit));
 
     }
 
     private Mono<PnDeliveryRequest> preparePdfAndEnrichDeliveryRequest(PnDeliveryRequest deliveryRequest, PnAttachmentInfo f24Attachment) {
 
+        PnLogAudit pnLogAudit = new PnLogAudit();
+
         String requestIdForF24Prepare = Boolean.TRUE.equals(deliveryRequest.getReworkNeeded()) ? deliveryRequest.getRequestId() + REWORK_COUNT_SUFFIX_REQUEST_ID + deliveryRequest.getReworkNeededCount() : deliveryRequest.getRequestId();
         return this.parseF24URL(f24Attachment.getFileKey())
                 .flatMap(f24AttachmentInfo -> enrichWithAnalogCostIfNeeded(f24AttachmentInfo, deliveryRequest, f24Attachment))
                 /* Call preparePDF request API and propagate Analog Cost */
-                .doOnSuccess(f24AttachmentInfo -> logAuditBefore("preparePDF requestId = %s, relatedRequestId = %s engaging F24 ", deliveryRequest))
+                .doOnSuccess(f24AttachmentInfo -> logAuditBeforeLogic("preparePDF requestId = %s, relatedRequestId = %s engaging F24 ", deliveryRequest, pnLogAudit))
                 .flatMap(f24AttachmentInfo -> f24Client.preparePDF(requestIdForF24Prepare, f24AttachmentInfo.getSetId(), f24AttachmentInfo.getRecipientIndex(), sumCostAndAnalogCost(f24AttachmentInfo)).thenReturn(f24AttachmentInfo))
-                .doOnNext(f24AttachmentInfo -> logAuditSuccess("preparePDF requestId = %s, relatedRequestId = %s successfully sent to F24", deliveryRequest))
+                .doOnNext(f24AttachmentInfo -> logAuditSuccessLogic("preparePDF requestId = %s, relatedRequestId = %s successfully sent to F24", deliveryRequest, pnLogAudit))
                 /* Insert Analog Cost and change status of delivery request to F24_WAITING */
                 .map(f24AttachmentInfo -> this.enrichDeliveryRequest(deliveryRequest, F24_WAITING, f24AttachmentInfo.getAnalogCost(), null))
                 .map(this::restoreNumberOfPagesAndDocTypeAtNullIfCOMPLETEMode)
@@ -166,10 +171,13 @@ public class F24ServiceImpl extends GenericService implements F24Service {
     }
 
     private Mono<F24AttachmentInfo> handlerF24ForCOMPLETEMode(F24AttachmentInfo f24AttachmentInfo, PnDeliveryRequest deliveryRequest, PnAttachmentInfo f24Attachment) {
-        logAuditBefore("getNumberOfPages requestId = %s, relatedRequestId = %s engaging F24 ", deliveryRequest);
+
+        PnLogAudit pnLogAudit = new PnLogAudit();
+
+        logAuditBeforeLogic("getNumberOfPages requestId = %s, relatedRequestId = %s engaging F24 ", deliveryRequest, pnLogAudit);
         /* Retrieve F24 number of pages */
         return f24Client.getNumberOfPages(f24AttachmentInfo.getSetId(), f24AttachmentInfo.getRecipientIndex())
-                .doOnNext(numberOfPagesResponseDto -> logAuditSuccess("getNumberOfPages requestId = %s, relatedRequestId = %s successfully sent to F24", deliveryRequest))
+                .doOnNext(numberOfPagesResponseDto -> logAuditSuccessLogic("getNumberOfPages requestId = %s, relatedRequestId = %s successfully sent to F24", deliveryRequest, pnLogAudit))
                 .map(numberOfPagesResponseDto -> {
                     /* Enrich original F24 attachment number of pages field */
                     log.debug("F24Client.getNumberOfPages response: {}", numberOfPagesResponseDto);
@@ -319,12 +327,13 @@ public class F24ServiceImpl extends GenericService implements F24Service {
     }
 
     private Mono<F24AttachmentInfo> enrichWithAnalogCost(PnDeliveryRequest deliveryRequest, F24AttachmentInfo pnAttachmentInfo) {
-        logAuditBefore("preparePDF requestId = %s, relatedRequestId = %s prepare F24", deliveryRequest);
+        PnLogAudit pnLogAudit = new PnLogAudit();
+        logAuditBeforeLogic("preparePDF requestId = %s, relatedRequestId = %s prepare F24", deliveryRequest, pnLogAudit);
 
 
         return addressDAO.findByRequestId(deliveryRequest.getRequestId())
                 .switchIfEmpty(Mono.defer(() -> {
-                    logAuditSuccess("preparePDF requestId = %s, relatedRequestId = %s Receiver address is not present on DB!!", deliveryRequest);
+                    logAuditSuccessLogic("preparePDF requestId = %s, relatedRequestId = %s Receiver address is not present on DB!!", deliveryRequest, pnLogAudit);
                     log.error("Receiver Address for {} request id not found on DB", deliveryRequest.getRequestId());
                     throw new PnInternalException(ADDRESS_NOT_EXIST.name(), ADDRESS_NOT_EXIST.getMessage());
                 }))
@@ -337,7 +346,7 @@ public class F24ServiceImpl extends GenericService implements F24Service {
                     pnAttachmentInfo.setAnalogCost(Utility.toCentsFormat(analogCost));
                     return pnAttachmentInfo;
                 })
-                .doOnNext(analogCost -> logAuditSuccess("preparePDF requestId = %s, relatedRequestId = %s Receiver address is present on DB, computed cost " + analogCost, deliveryRequest));
+                .doOnNext(analogCost -> logAuditSuccessLogic("preparePDF requestId = %s, relatedRequestId = %s Receiver address is present on DB, computed cost " + analogCost, deliveryRequest, pnLogAudit));
     }
 
     private Mono<F24AttachmentInfo> parseF24URL(String f24url) {
@@ -428,26 +437,7 @@ public class F24ServiceImpl extends GenericService implements F24Service {
         return Mono.error(pnF24FlowException);
     }
 
-    private void logAuditSuccess(String message, PnDeliveryRequest deliveryRequest){
-        pnLogAudit.addsSuccessResolveLogic(
-                deliveryRequest.getIun(),
-                String.format(message,
-                        deliveryRequest.getRequestId(),
-                        deliveryRequest.getRelatedRequestId())
-        );
-    }
-
-    private void logAuditBefore(String message, PnDeliveryRequest deliveryRequest){
-        pnLogAudit.addsBeforeResolveLogic(
-                deliveryRequest.getIun(),
-                String.format(message,
-                        deliveryRequest.getRequestId(),
-                        deliveryRequest.getRelatedRequestId())
-        );
-    }
-
-
-    private void f24ResponseLogAuditSuccess(PnDeliveryRequest entity, List<String> generatedUrls) {
+    private void f24ResponseLogAuditSuccess(PnDeliveryRequest entity, List<String> generatedUrls, PnLogAudit pnLogAudit) {
 
             String docs = String.join(",", generatedUrls);
 
@@ -460,7 +450,7 @@ public class F24ServiceImpl extends GenericService implements F24Service {
                             docs));
     }
 
-    private void f24ResponseLogAuditFailure(String requestId, List<String> generatedUrls) {
+    private void f24ResponseLogAuditFailure(String requestId, List<String> generatedUrls, PnLogAudit pnLogAudit) {
 
             String docs = String.join(",", generatedUrls==null?List.of("null"):generatedUrls);
 

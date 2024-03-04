@@ -2,7 +2,6 @@ package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.api.dto.events.PnF24PdfSetReadyEvent;
 import it.pagopa.pn.api.dto.events.PnF24PdfSetReadyEventItem;
-import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.commons.utils.MDCUtils;
 import it.pagopa.pn.paperchannel.exception.PnAddressFlowException;
 import it.pagopa.pn.paperchannel.exception.PnF24FlowException;
@@ -25,6 +24,7 @@ import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
 import it.pagopa.pn.paperchannel.model.*;
 import it.pagopa.pn.paperchannel.service.*;
 import it.pagopa.pn.paperchannel.utils.Const;
+import it.pagopa.pn.paperchannel.utils.PnLogAudit;
 import lombok.CustomLog;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.MDC;
@@ -38,6 +38,7 @@ import static it.pagopa.pn.commons.log.PnLogger.EXTERNAL_SERVICES.PN_NATIONAL_RE
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.NATIONAL_REGISTRY_WAITING;
 import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.READY_TO_SEND;
+import static it.pagopa.pn.paperchannel.utils.Utility.resolveAuditLogFromResponse;
 
 @Service
 @CustomLog
@@ -52,8 +53,7 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
     private final F24Service f24Service;
     private final DematZipService dematZipService;
 
-    public QueueListenerServiceImpl(PnAuditLogBuilder auditLogBuilder,
-                                    RequestDeliveryDAO requestDeliveryDAO,
+    public QueueListenerServiceImpl(RequestDeliveryDAO requestDeliveryDAO,
                                     CostDAO costDAO,
                                     NationalRegistryClient nationalRegistryClient,
                                     SqsSender sqsSender,
@@ -65,7 +65,7 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                                     F24Service f24Service,
                                     DematZipService dematZipService) {
 
-        super(auditLogBuilder, requestDeliveryDAO, costDAO, nationalRegistryClient, sqsSender);
+        super(requestDeliveryDAO, costDAO, nationalRegistryClient, sqsSender);
 
         this.paperResultAsyncService = paperResultAsyncService;
         this.paperAsyncService = paperAsyncService;
@@ -180,6 +180,9 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
 
     @Override
     public void nationalRegistriesResponseListener(AddressSQSMessageDto body) {
+
+        PnLogAudit pnLogAudit = new PnLogAudit();
+
         final String PROCESS_NAME = "National Registries Response Listener";
         MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, body.getCorrelationId());
 
@@ -196,7 +199,7 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                             return requestDeliveryDAO.getByCorrelationId(correlationId)
                                     .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage())));
                         })
-                        .doOnNext(addressAndEntity -> nationalResolveLogAudit(addressAndEntity.getT2(), addressAndEntity.getT1()))
+                        .doOnNext(addressAndEntity -> resolveAuditLogFromResponse(addressAndEntity.getT2(), addressAndEntity.getT1().getError(), pnLogAudit, PN_NATIONAL_REGISTRIES, addressAndEntity.getT2().getCorrelationId()))
 
                         /* If Delivery Request status is not NATIONAL_REGISTRY_WAITING then skip to avoid reworks on same or not expected events */
                         .doOnNext(addressAndEntity -> log.info("Skipping National Registry event? {}", !this.isDeliveryRequestInNationalRegistryWaitingStatus(addressAndEntity.getT2())))
@@ -292,6 +295,9 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
 
     @Override
     public void manualRetryExternalChannel(String requestId, String newPcRetry) {
+
+        PnLogAudit pnLogAudit = new PnLogAudit();
+
         MDC.put(MDCUtils.MDC_TRACE_ID_KEY, MDC.get(MDCUtils.MDC_TRACE_ID_KEY));
         this.requestDeliveryDAO.getByRequestId(requestId)
                 .switchIfEmpty(Mono.defer(() -> {
@@ -339,25 +345,6 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                     return fromNationalRegistry;
                 }).switchIfEmpty(Mono.just(fromNationalRegistry));
 
-    }
-
-
-    private void nationalResolveLogAudit(PnDeliveryRequest entity, AddressSQSMessageDto address) {
-        if (StringUtils.isEmpty(address.getError())) {
-            pnLogAudit.addsSuccessResolveService(
-                    entity.getIun(),
-                    String.format("prepare requestId = %s, relatedRequestId = %s, traceId = %s Response OK from National Registry service",
-                            entity.getRequestId(),
-                            entity.getRelatedRequestId(),
-                            entity.getCorrelationId()));
-        } else {
-            pnLogAudit.addsFailResolveService(
-                    entity.getIun(),
-                    String.format("prepare requestId = %s, relatedRequestId = %s, traceId = %s Response KO from National Registry service",
-                            entity.getRequestId(),
-                            entity.getRelatedRequestId(),
-                            entity.getCorrelationId()));
-        }
     }
 
     private boolean isDeliveryRequestInNationalRegistryWaitingStatus(PnDeliveryRequest deliveryRequest) {

@@ -1,6 +1,5 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
-import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileDownloadResponseDto;
@@ -24,7 +23,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.INVALID_SAFE_STORAGE;
-import static it.pagopa.pn.paperchannel.service.impl.SafeStorageServiceImpl.*;
+import static it.pagopa.pn.paperchannel.service.impl.SafeStorageServiceImpl.SAFESTORAGE_PREFIX;
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.buildDematRequestId;
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.buildDocumentTypeStatusCode;
 
@@ -40,9 +39,9 @@ public class DematZipServiceImpl extends GenericService implements DematZipServi
 
 
 
-    public DematZipServiceImpl(PnAuditLogBuilder auditLogBuilder, SqsSender sqsSender, RequestDeliveryDAO requestDeliveryDAO,
+    public DematZipServiceImpl(SqsSender sqsSender, RequestDeliveryDAO requestDeliveryDAO,
                                PnPaperChannelConfig pnPaperChannelConfig, SafeStorageService safeStorageService, EventDematDAO eventDematDAO) {
-        super(auditLogBuilder, sqsSender, requestDeliveryDAO);
+        super(sqsSender, requestDeliveryDAO);
         this.pnPaperChannelConfig = pnPaperChannelConfig;
         this.safeStorageService = safeStorageService;
         this.eventDematDAO = eventDematDAO;
