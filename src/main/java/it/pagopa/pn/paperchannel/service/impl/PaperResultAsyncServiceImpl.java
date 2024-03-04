@@ -1,6 +1,5 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
-import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.DiscoveredAddressDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.SingleStatusUpdateDto;
@@ -16,6 +15,7 @@ import it.pagopa.pn.paperchannel.service.PaperResultAsyncService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum;
+import it.pagopa.pn.paperchannel.utils.PnLogAudit;
 import it.pagopa.pn.paperchannel.utils.Utility;
 import lombok.CustomLog;
 import org.apache.commons.lang3.StringUtils;
@@ -29,17 +29,16 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DATA_NULL_OR
 @Service
 public class PaperResultAsyncServiceImpl extends BaseService implements PaperResultAsyncService {
 
-
     private final PnClientDAO pnClientDAO;
 
     private final HandlersFactory handlersFactory;
 
     private final String processName = "Result Async Background";
 
-    public PaperResultAsyncServiceImpl(PnAuditLogBuilder auditLogBuilder, RequestDeliveryDAO requestDeliveryDAO,
+    public PaperResultAsyncServiceImpl(RequestDeliveryDAO requestDeliveryDAO,
                                        NationalRegistryClient nationalRegistryClient, SqsSender sqsSender,
                                        HandlersFactory handlersFactory,PnClientDAO pnClientDAO) {
-        super(auditLogBuilder, requestDeliveryDAO, null, nationalRegistryClient, sqsSender);
+        super(requestDeliveryDAO, null, nationalRegistryClient, sqsSender);
         this.handlersFactory = handlersFactory;
         this.pnClientDAO = pnClientDAO;
     }
@@ -84,6 +83,9 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
     }
 
     private void logEntity(PnDeliveryRequest entity, SingleStatusUpdateDto singleStatusUpdateDto) {
+
+        PnLogAudit pnLogAudit = new PnLogAudit();
+
         log.info("GETTED ENTITY: {}", entity.getRequestId());
         SingleStatusUpdateDto logDto = singleStatusUpdateDto;
         DiscoveredAddressDto discoveredAddressDto = logDto.getAnalogMail().getDiscoveredAddress();

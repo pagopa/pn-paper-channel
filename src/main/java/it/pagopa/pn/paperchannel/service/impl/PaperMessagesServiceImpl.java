@@ -1,6 +1,5 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
-import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.commons.utils.LogUtils;
 import it.pagopa.pn.commons.utils.MDCUtils;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
@@ -22,10 +21,7 @@ import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.service.PaperMessagesService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
-import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
-import it.pagopa.pn.paperchannel.utils.Const;
-import it.pagopa.pn.paperchannel.utils.PaperCalculatorUtils;
-import it.pagopa.pn.paperchannel.utils.Utility;
+import it.pagopa.pn.paperchannel.utils.*;
 import it.pagopa.pn.paperchannel.validator.PrepareRequestValidator;
 import it.pagopa.pn.paperchannel.validator.SendRequestValidator;
 import lombok.CustomLog;
@@ -54,11 +50,11 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
     private final PaperCalculatorUtils paperCalculatorUtils;
 
 
-    public PaperMessagesServiceImpl(PnAuditLogBuilder auditLogBuilder, RequestDeliveryDAO requestDeliveryDAO, CostDAO costDAO,
+    public PaperMessagesServiceImpl(RequestDeliveryDAO requestDeliveryDAO, CostDAO costDAO,
                                     NationalRegistryClient nationalRegistryClient, SqsSender sqsSender, AddressDAO addressDAO,
                                     ExternalChannelClient externalChannelClient, PnPaperChannelConfig pnPaperChannelConfig,
                                     PaperCalculatorUtils paperCalculatorUtils) {
-        super(auditLogBuilder, requestDeliveryDAO, costDAO, nationalRegistryClient, sqsSender);
+        super(requestDeliveryDAO, costDAO, nationalRegistryClient, sqsSender);
         this.addressDAO = addressDAO;
         this.externalChannelClient = externalChannelClient;
         this.pnPaperChannelConfig = pnPaperChannelConfig;
@@ -67,6 +63,9 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
 
     @Override
     public Mono<PaperChannelUpdate> preparePaperSync(String requestId, PrepareRequest prepareRequest){
+
+        PnLogAudit pnLogAudit = new PnLogAudit();
+
         prepareRequest.setRequestId(requestId);
         if (StringUtils.isEmpty(prepareRequest.getRelatedRequestId())){
             log.info("First attempt requestId {}", requestId);
@@ -179,6 +178,9 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
 
     @Override
     public Mono<SendResponse> executionPaper(String requestId, SendRequest sendRequest) {
+
+        PnLogAudit pnLogAudit = new PnLogAudit();
+
         log.info("Start executionPaper with requestId {}", requestId);
         sendRequest.setRequestId(requestId);
 
@@ -268,6 +270,9 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
 
 
     private Mono<Void> sendEngageExternalChannel(SendRequest sendRequest, List<AttachmentInfo> attachments){
+
+        PnLogAudit pnLogAudit = new PnLogAudit();
+
         return Utility.getFromContext(CONTEXT_KEY_PREFIX_CLIENT_ID, "")
                 .switchIfEmpty(Mono.just(""))
                 .map(clientIdPrefix -> Utility.getRequestIdWithParams(sendRequest.getRequestId(), "0", clientIdPrefix))

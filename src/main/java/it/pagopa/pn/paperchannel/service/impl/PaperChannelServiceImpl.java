@@ -1,6 +1,5 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
-import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.paperchannel.dao.ExcelDAO;
 import it.pagopa.pn.paperchannel.dao.common.ExcelEngine;
 import it.pagopa.pn.paperchannel.dao.model.DeliveriesData;
@@ -18,7 +17,6 @@ import it.pagopa.pn.paperchannel.model.FileStatusCodeEnum;
 import it.pagopa.pn.paperchannel.s3.S3Bucket;
 import it.pagopa.pn.paperchannel.service.PaperChannelService;
 import it.pagopa.pn.paperchannel.utils.Const;
-import it.pagopa.pn.paperchannel.utils.DateUtils;
 import it.pagopa.pn.paperchannel.utils.PnLogAudit;
 import it.pagopa.pn.paperchannel.utils.Utility;
 import it.pagopa.pn.paperchannel.validator.CostValidator;
@@ -56,7 +54,6 @@ public class PaperChannelServiceImpl implements PaperChannelService {
     private final TenderDAO tenderDAO;
     private final ExcelDAO<DeliveriesData> excelDAO;
     private final FileDownloadDAO fileDownloadDAO;
-    private final PnAuditLogBuilder pnAuditLogBuilder;
     private final S3Bucket s3Bucket;
 
 
@@ -283,7 +280,7 @@ public class PaperChannelServiceImpl implements PaperChannelService {
 
     @Override
     public Mono<TenderCreateResponseDTO> createOrUpdateTender(TenderCreateRequestDTO request) {
-        PnLogAudit pnLogAudit = new PnLogAudit(pnAuditLogBuilder);
+        PnLogAudit pnLogAudit = new PnLogAudit();
         final boolean isCreated = (request.getCode() == null);
         if (request.getEndDate().before(request.getStartDate())){
             return Mono.error(new PnGenericException(ExceptionTypeEnum.BADLY_DATE_INTERVAL, ExceptionTypeEnum.BADLY_DATE_INTERVAL.getMessage()));
@@ -313,7 +310,7 @@ public class PaperChannelServiceImpl implements PaperChannelService {
 
     @Override
     public Mono<Void> createOrUpdateDriver(String tenderCode, DeliveryDriverDTO request) {
-        PnLogAudit pnLogAudit = new PnLogAudit(pnAuditLogBuilder);
+        PnLogAudit pnLogAudit = new PnLogAudit();
         AtomicBoolean isCreated = new AtomicBoolean(false);
         return this.tenderDAO.getTender(tenderCode)
                 .switchIfEmpty(Mono.error(new PnGenericException(ExceptionTypeEnum.TENDER_NOT_EXISTED, ExceptionTypeEnum.TENDER_NOT_EXISTED.getMessage())))
@@ -355,7 +352,7 @@ public class PaperChannelServiceImpl implements PaperChannelService {
 
     @Override
     public Mono<Void> createOrUpdateCost(String tenderCode, String taxId, CostDTO request) {
-        PnLogAudit pnLogAudit = new PnLogAudit(pnAuditLogBuilder);
+        PnLogAudit pnLogAudit = new PnLogAudit();
         final boolean isCreated = (request.getUid() == null);
 
         if ((request.getCap() == null || request.getCap().isEmpty()) && request.getZone() == null){
@@ -406,7 +403,7 @@ public class PaperChannelServiceImpl implements PaperChannelService {
 
     @Override
     public Mono<Void> deleteTender(String tenderCode) {
-        PnLogAudit pnLogAudit = new PnLogAudit(pnAuditLogBuilder);
+        PnLogAudit pnLogAudit = new PnLogAudit();
         pnLogAudit.addsBeforeDelete("Delete Tender with tenderCode:" + tenderCode);
         return this.tenderWithCreatedStatus(tenderCode, TENDER_CANNOT_BE_DELETED)
                 .flatMap(tender -> this.deliveryDriverDAO.getDeliveryDriverFromTender(tender.getTenderCode(),null)
@@ -427,7 +424,7 @@ public class PaperChannelServiceImpl implements PaperChannelService {
 
     @Override
     public Mono<Void> deleteDriver(String tenderCode, String deliveryDriverId) {
-        PnLogAudit pnLogAudit = new PnLogAudit(pnAuditLogBuilder);
+        PnLogAudit pnLogAudit = new PnLogAudit();
         pnLogAudit.addsBeforeDelete("Delete DeliveryDriver with tenderCode:" + tenderCode);
         return this.tenderWithCreatedStatus(tenderCode, DRIVER_CANNOT_BE_DELETED)
                         .flatMap(tender -> this.costDAO.findAllFromTenderCode(tenderCode,deliveryDriverId)
@@ -449,7 +446,7 @@ public class PaperChannelServiceImpl implements PaperChannelService {
 
     @Override
     public Mono<Void> deleteCost(String tenderCode, String deliveryDriverId, String uuid) {
-        PnLogAudit pnLogAudit = new PnLogAudit(pnAuditLogBuilder);
+        PnLogAudit pnLogAudit = new PnLogAudit();
         pnLogAudit.addsBeforeDelete("Delete Cost with tenderCode:" + tenderCode);
         return this.tenderWithCreatedStatus(tenderCode, COST_CANNOT_BE_DELETED)
                 .flatMap(tender -> this.costDAO.deleteCost(deliveryDriverId, uuid))

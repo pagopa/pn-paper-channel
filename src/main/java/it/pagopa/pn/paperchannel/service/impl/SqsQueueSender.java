@@ -5,7 +5,10 @@ import it.pagopa.pn.commons.utils.LogUtils;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PaperChannelUpdate;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PrepareEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
-import it.pagopa.pn.paperchannel.middleware.queue.model.*;
+import it.pagopa.pn.paperchannel.middleware.queue.model.DeliveryPushEvent;
+import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
+import it.pagopa.pn.paperchannel.middleware.queue.model.InternalEventHeader;
+import it.pagopa.pn.paperchannel.middleware.queue.model.InternalPushEvent;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.DeliveryPushMomProducer;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.EventBridgeProducer;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.InternalQueueMomProducer;
@@ -13,8 +16,8 @@ import it.pagopa.pn.paperchannel.model.*;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import it.pagopa.pn.paperchannel.utils.Utility;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -24,17 +27,15 @@ import static it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum.*;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class SqsQueueSender implements SqsSender {
 
     private static final String PUBLISHER_UPDATE = "paper-channel-update";
     private static final String PUBLISHER_PREPARE = "paper-channel-prepare";
 
-    @Autowired
-    private DeliveryPushMomProducer deliveryPushMomProducer;
-    @Autowired
-    private InternalQueueMomProducer internalQueueMomProducer;
-    @Autowired
-    private EventBridgeProducer eventBridgeProducer;
+    private final DeliveryPushMomProducer deliveryPushMomProducer;
+    private final InternalQueueMomProducer internalQueueMomProducer;
+    private final EventBridgeProducer eventBridgeProducer;
 
     @Override
     public void pushSendEvent(SendEvent event) {

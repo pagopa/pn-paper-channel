@@ -5,10 +5,10 @@ import it.pagopa.pn.commons.log.PnAuditLogEventType;
 
 public class PnLogAudit {
 
-    private PnAuditLogBuilder pnAuditLogBuilder;
+    private final PnAuditLogBuilder pnAuditLogBuilder;
 
-    public PnLogAudit(PnAuditLogBuilder pnAuditLogBuilder) {
-        this.pnAuditLogBuilder = pnAuditLogBuilder;
+    public PnLogAudit() {
+        this.pnAuditLogBuilder = new PnAuditLogBuilder();
     }
 
     public void addsLog(PnAuditLogEventType type, String iun, String msg1, String msg2) {

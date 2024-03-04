@@ -1,6 +1,5 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
-import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.mapper.SendEventMapper;
@@ -9,7 +8,6 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
 import it.pagopa.pn.paperchannel.middleware.queue.consumer.MetaDematCleaner;
 import it.pagopa.pn.paperchannel.middleware.queue.model.PNAG012Wrapper;
-
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.PnLogAudit;
 import lombok.extern.slf4j.Slf4j;
@@ -143,8 +141,7 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
             // 3 b
             log.info("[{}] (statusDateTime[META##RECAG00_A] - statusDateTime[META##RECAG011A]) >= {}", paperRequest.getRequestId(), refinementDuration);
 
-            PnAuditLogBuilder auditLogBuilder = new PnAuditLogBuilder();
-            PnLogAudit pnLogAudit = new PnLogAudit(auditLogBuilder);
+            PnLogAudit pnLogAudit = new PnLogAudit();
             PNAG012Wrapper pnag012Wrapper = PNAG012Wrapper.buildPNAG012Wrapper(entity, paperRequest, recag011ADateTime.plus(refinementDuration));
             var pnag012PaperRequest = pnag012Wrapper.getPaperProgressStatusEventDtoPNAG012();
             var pnag012DeliveryRequest = pnag012Wrapper.getPnDeliveryRequestPNAG012();

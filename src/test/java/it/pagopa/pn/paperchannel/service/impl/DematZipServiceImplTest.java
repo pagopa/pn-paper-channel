@@ -1,9 +1,7 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
-import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.paperchannel.config.HttpConnector;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
-import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileCreationResponseDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileDownloadInfoDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileDownloadResponseDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.safestorage.model.FileCreationResponse;
@@ -52,7 +50,6 @@ class DematZipServiceImplTest {
 
     @BeforeEach
     public void init() {
-        PnAuditLogBuilder auditLogBuilder = new PnAuditLogBuilder();
         sqsSender = mock(SqsSender.class);
         requestDeliveryDAO = mock(RequestDeliveryDAO.class);
         safeStorageClient = mock(SafeStorageClient.class);
@@ -61,7 +58,7 @@ class DematZipServiceImplTest {
         safeStorageService = new SafeStorageServiceImpl(safeStorageClient, httpConnector);
         eventDematDAO = mock(EventDematDAO.class);
         when(pnPaperChannelConfig.getAttemptSafeStorage()).thenReturn(1);
-        dematZipService = new DematZipServiceImpl(auditLogBuilder, sqsSender, requestDeliveryDAO, pnPaperChannelConfig, safeStorageService, eventDematDAO);
+        dematZipService = new DematZipServiceImpl(sqsSender, requestDeliveryDAO, pnPaperChannelConfig, safeStorageService, eventDematDAO);
     }
 
     @Test

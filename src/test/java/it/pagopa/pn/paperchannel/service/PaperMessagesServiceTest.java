@@ -1,6 +1,5 @@
 package it.pagopa.pn.paperchannel.service;
 
-import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.encryption.DataEncryption;
 import it.pagopa.pn.paperchannel.encryption.impl.DataVaultEncryptionImpl;
@@ -24,7 +23,9 @@ import it.pagopa.pn.paperchannel.validator.PrepareRequestValidator;
 import it.pagopa.pn.paperchannel.validator.SendRequestValidator;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.*;
+import org.mockito.ArgumentCaptor;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,7 +45,7 @@ import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
-@SpringBootTest(classes = {PaperCalculatorUtils.class, PaperMessagesServiceImpl.class, PnAuditLogBuilder.class, DataVaultEncryptionImpl.class})
+@SpringBootTest(classes = {PaperCalculatorUtils.class, PaperMessagesServiceImpl.class, DataVaultEncryptionImpl.class})
 class PaperMessagesServiceTest {
 
     @Autowired
@@ -82,9 +83,6 @@ class PaperMessagesServiceTest {
 
     @Autowired
     private PaperCalculatorUtils paperCalculatorUtils;
-
-    @Spy
-    PnAuditLogBuilder auditLogBuilder;
 
 
     private PnDeliveryRequest deliveryRequestTakingCharge;

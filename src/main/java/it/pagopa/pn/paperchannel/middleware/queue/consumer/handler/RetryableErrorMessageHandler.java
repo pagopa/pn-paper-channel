@@ -1,6 +1,5 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
-import it.pagopa.pn.commons.log.PnAuditLogBuilder;
 import it.pagopa.pn.commons.utils.MDCUtils;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
@@ -14,7 +13,6 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
 import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
 import it.pagopa.pn.paperchannel.model.AttachmentInfo;
-
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.PnLogAudit;
@@ -94,8 +92,7 @@ public class RetryableErrorMessageHandler extends SendToDeliveryPushHandler {
     }
 
     private Mono<PnDeliveryRequest> callExternalChannel(List<PnAddress> pnAddresses, PnDeliveryRequest pnDeliveryRequest, String requestId) {
-        PnAuditLogBuilder auditLogBuilder = new PnAuditLogBuilder();
-        PnLogAudit pnLogAudit = new PnLogAudit(auditLogBuilder);
+        PnLogAudit pnLogAudit = new PnLogAudit();
 
         SendRequest sendRequest = SendRequestMapper.toDto(pnAddresses, pnDeliveryRequest);
         sendRequest.setRequestId(requestId);
