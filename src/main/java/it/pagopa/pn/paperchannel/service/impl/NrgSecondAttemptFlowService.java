@@ -42,6 +42,12 @@ public class NrgSecondAttemptFlowService extends SecondAttemptFlowService {
     }
 
     @Override
+    protected RuntimeException throwExceptionToContinueFlowAfterError(Address addressFailed) {
+        KOReason koReason = new KOReason(FailureDetailCodeEnum.D01, addressFailed);
+        return new PnUntracebleException(koReason);
+    }
+
+    @Override
     public String retrieveCorrelationId(PnDeliveryRequest deliveryRequest) {
         return deliveryRequest.getCorrelationId();
     }

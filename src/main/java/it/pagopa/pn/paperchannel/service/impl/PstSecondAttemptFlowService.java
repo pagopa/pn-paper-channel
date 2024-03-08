@@ -40,6 +40,11 @@ public class PstSecondAttemptFlowService extends SecondAttemptFlowService {
     }
 
     @Override
+    protected RuntimeException throwExceptionToContinueFlowAfterError(Address addressFailed) {
+        return new PnAddressFlowException(ATTEMPT_ADDRESS_NATIONAL_REGISTRY);
+    }
+
+    @Override
     public String retrieveCorrelationId(PnDeliveryRequest deliveryRequest) {
         return Utility.buildPostmanAddressCorrelationId(deliveryRequest.getRequestId());
     }
