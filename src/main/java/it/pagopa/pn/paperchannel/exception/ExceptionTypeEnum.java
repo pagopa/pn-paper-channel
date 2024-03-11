@@ -55,7 +55,7 @@ public enum ExceptionTypeEnum{
     INVALID_CAP_FSU("INVALID_CAP_FSU", "Per FSU non sono stati inseriti i cap di default"),
     INVALID_ZONE_FSU("INVALID_ZONE_FSU", "Non sono stati inseriti i costi internazionali obbligatori per FSU"),
     INVALID_ZONE_PRODUCT_TYPE("INVALID_ZONE_PRODUCT_TYPE", "Ci sono Costi internazionali duplicati."),
-    ATTEMPT_ADDRESS_NATIONAL_REGISTRY("ATTEMPT_ADDRESS_NATIONAL_REGISTRY", "Discovered and first attempt are equals, find from national registry"),
+    ATTEMPT_ADDRESS_NATIONAL_REGISTRY("ATTEMPT_ADDRESS_NATIONAL_REGISTRY", "Postman flow failed, find from national registry"),
     DISCARD_NOTIFICATION("DISCARD_NOTIFICATION", "Discard notification"),
     INVALID_VALUE_FROM_PROPS("INVALID_VALUE_FROM_PROPS", "Il valore della proprietà è diverso da quello atteso"),
     INVALID_SAFE_STORAGE("INVALID_SAFE_STORAGE", "Il Safe Storage selezionato è inesistente."),

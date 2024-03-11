@@ -107,24 +107,24 @@ public abstract class SecondAttemptFlowService {
         switch (errorCode) {
             case PNADDR001, PNADDR002 ->
                 //Indirizzo diverso - Normalizzazione KO = D01 (con configurazione)
-                    throw manageErrorD001(paperProperties, exceptionType, errorCode, addressFailed, requestId);
+                    throw manageErrorD01(paperProperties, exceptionType, errorCode, addressFailed, requestId);
             case PNADDR999 -> throw new PnAddressFlowException(ADDRESS_MANAGER_ERROR);
             default -> throw new PnGenericException(RESPONSE_ERROR_NOT_HANDLED_FROM_DEDUPLICATION, RESPONSE_ERROR_NOT_HANDLED_FROM_DEDUPLICATION.getMessage());
         }
     }
 
-    private RuntimeException manageErrorD001(PnPaperChannelConfig config, ExceptionTypeEnum exceptionType,
-                                      String errorCode, Address addressFailed, String requestId) {
+    private RuntimeException manageErrorD01(PnPaperChannelConfig config, ExceptionTypeEnum exceptionType,
+                                            String errorCode, Address addressFailed, String requestId) {
 
-        boolean isSendD01ToDeliveryPush = PNADDR001.equals(errorCode) ? config.isPnaddr001sendD01ToDeliveryPush() :
-                config.isPnaddr002sendD01ToDeliveryPush();
+        boolean isContinueFlow = PNADDR001.equals(errorCode) ? config.isPnaddr001continueFlow() :
+                config.isPnaddr002continueFlow();
 
-        if(isSendD01ToDeliveryPush) {
-            log.debug("[{}] SendD01ToDeliveryPush is enabled, send D001 event to delivery push", requestId);
+        if(isContinueFlow) {
+            log.debug("[{}] ContinueFlow for {} is enabled, continue flow", requestId, errorCode);
             return throwExceptionToContinueFlowAfterError(addressFailed);
         }
         else {
-            log.warn("[{}] D001 Event discarded ", requestId);
+            log.debug("[{}] ContinueFlow for {} is disabled, stop flow", requestId, errorCode);
             return new PnGenericException(exceptionType, errorCode);
         }
     }

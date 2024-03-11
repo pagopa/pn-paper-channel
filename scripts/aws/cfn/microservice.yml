@@ -366,18 +366,18 @@ Parameters:
     Type: String
     Default: ''
 
-  #Override pn.paper-channel.pnaddr001send-d01-to-delivery-push
-  Pnaddr001SendD01ToDeliveryPush:
-    Description: Per l'errore PNADDR001, True se il failureDetailCode D01 deve essere mandato a delivery push
+  #Override pn.paper-channel.pnaddr001continue-flow
+  Pnaddr001ContinueFlow:
+    Description: Per l'errore PNADDR001, true se il flusso deve continuare, false se si deve salvare l'errore a DB
     Type: String
     Default: true
     AllowedValues:
       - true
       - false
 
-  #Override pn.paper-channel.pnaddr002send-d01-to-delivery-push
-  Pnaddr002SendD01ToDeliveryPush:
-    Description: Per l'errore PNADDR002, True se il failureDetailCode D01 deve essere mandato a delivery push
+  #Override pn.paper-channel.pnaddr002continue-flow
+  Pnaddr002ContinueFlow:
+    Description: Per l'errore PNADDR002, true se il flusso deve continuare, false se si deve salvare l'errore a DB
     Type: String
     Default: false
     AllowedValues:
@@ -550,8 +550,8 @@ Resources:
         ContainerEnvEntry44: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERCXID=${AddressManagerCxId}'
         ContainerEnvEntry45: !Sub 'PN_PAPERCHANNEL_DATECHARGECALCULATIONMODES=${DateChargeCalculationModes}'
         ContainerEnvEntry46: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUEADDRESSMANAGER=${AttemptQueueAddressManager}'
-        ContainerEnvEntry47: !Sub 'PN_PAPERCHANNEL_PNADDR001SENDD01TODELIVERYPUSH=${Pnaddr001SendD01ToDeliveryPush}'
-        ContainerEnvEntry48: !Sub 'PN_PAPERCHANNEL_PNADDR002SENDD01TODELIVERYPUSH=${Pnaddr002SendD01ToDeliveryPush}'
+        ContainerEnvEntry47: !Sub 'PN_PAPERCHANNEL_PNADDR001CONTINUEFLOW=${Pnaddr001ContinueFlow}'
+        ContainerEnvEntry48: !Sub 'PN_PAPERCHANNEL_PNADDR002CONTINUEFLOW=${Pnaddr002ContinueFlow}'
         ContainerEnvEntry49: !Sub 'PN_PAPERCHANNEL_REFINEMENTDURATION=${RefinementDuration}'
         ContainerEnvEntry50: !Sub 'PN_PAPERCHANNEL_CLOUDWATCHMETRICCRON=${CloudwatchMetricCron}'
         ContainerEnvEntry51: !Sub 'PN_PAPERCHANNEL_REQUESTPAIDOVERRIDE=${RequestPaIdOverride}'

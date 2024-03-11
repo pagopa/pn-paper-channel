@@ -36,6 +36,7 @@ public class NrgSecondAttemptFlowService extends SecondAttemptFlowService {
 
     @Override
     public void handleSameAddresses(PnDeliveryRequest pnDeliveryRequest, Address secondAttemptAddress) {
+        log.debug("Same Address in NR Flow, send D02 event to delivery-push");
         KOReason koReason = new KOReason(FailureDetailCodeEnum.D02, secondAttemptAddress);
         throw new PnUntracebleException(koReason);
         //Indirizzo coincidenti = D02
@@ -43,6 +44,7 @@ public class NrgSecondAttemptFlowService extends SecondAttemptFlowService {
 
     @Override
     protected RuntimeException throwExceptionToContinueFlowAfterError(Address addressFailed) {
+        log.debug("ContinueFlow enabled for NR Flow, send D01 event to delivery-push");
         KOReason koReason = new KOReason(FailureDetailCodeEnum.D01, addressFailed);
         return new PnUntracebleException(koReason);
     }
