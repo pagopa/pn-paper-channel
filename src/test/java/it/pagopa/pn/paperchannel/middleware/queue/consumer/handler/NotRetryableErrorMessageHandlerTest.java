@@ -8,6 +8,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnRequestError;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import reactor.core.publisher.Mono;
 
 import java.time.OffsetDateTime;
@@ -42,7 +43,7 @@ class NotRetryableErrorMessageHandlerTest {
                 .statusDateTime(instant)
                 .clientRequestTimeStamp(instant);
 
-        when(paperRequestErrorDAOMock.created("requestId", "statusCode", "statusDetails"))
+        when(paperRequestErrorDAOMock.created(Mockito.anyString(), Mockito.anyString(), Mockito.anyString()))
                 .thenReturn(Mono.just(new PnRequestError()));
 
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
