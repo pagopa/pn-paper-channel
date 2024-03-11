@@ -8,7 +8,7 @@ import java.util.List;
 public interface PaperRequestErrorDAO {
 
 
-    Mono<PnRequestError> created(String requestId, String error, String classType);
+    Mono<PnRequestError> created(PnRequestError pnRequestError);
 
     Mono<List<PnRequestError>>  findAll();
 }

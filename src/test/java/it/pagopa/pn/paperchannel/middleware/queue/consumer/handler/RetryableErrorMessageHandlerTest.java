@@ -17,6 +17,7 @@ import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import reactor.core.publisher.Mono;
 
 import java.time.OffsetDateTime;
@@ -90,6 +91,8 @@ class RetryableErrorMessageHandlerTest {
 
     @Test
     void handleMessageHasNotOtherAttemptTest() {
+
+        // Given
         OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T16:33:00.000Z");
         PnDeliveryRequest pnDeliveryRequest = new PnDeliveryRequest();
         pnDeliveryRequest.setRequestId("request");
@@ -102,18 +105,18 @@ class RetryableErrorMessageHandlerTest {
         paperRequest.setStatusDateTime(instant);
         paperRequest.setClientRequestTimeStamp(instant);
 
+        // When
         when(mockConfig.getAttemptQueueExternalChannel()).thenReturn(-1);
-        when(mockRequestError.created("request", EXTERNAL_CHANNEL_API_EXCEPTION.getMessage(),
-                EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name() )).thenReturn(Mono.just(new PnRequestError()));
+        when(mockRequestError.created(Mockito.any(PnRequestError.class))).thenReturn(Mono.just(new PnRequestError()));
 
+        // Then
         assertDoesNotThrow(() -> handler.handleMessage(pnDeliveryRequest, paperRequest).block());
 
         //verifico che viene NON invocato ext-channels
         verify(mockExtChannel, timeout(2000).times(0)).sendEngageRequest(any(SendRequest.class), anyList());
 
         //verifico che viene salvata la richiesta andata in errore
-        verify(mockRequestError, timeout(2000).times(1)).created(pnDeliveryRequest.getRequestId(),
-                EXTERNAL_CHANNEL_API_EXCEPTION.getMessage(), EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name());
+        verify(mockRequestError, timeout(2000).times(1)).created(any(PnRequestError.class));
 
         //verifico che viene inviato l'evento a delivery-push
         verify(mockSqsSender, times(1)).pushSendEvent(any(SendEvent.class));

@@ -16,6 +16,7 @@ class PnRequestErrorTest {
     public String error;
     public String flowThrow;
     public String author;
+    public String paId;
 
     @BeforeEach
     void setUp(){
@@ -37,6 +38,9 @@ class PnRequestErrorTest {
         stringBuilder.append("author=");
         stringBuilder.append(author);
         stringBuilder.append(", ");
+        stringBuilder.append("paId=");
+        stringBuilder.append(paId);
+        stringBuilder.append(", ");
         stringBuilder.append("error=");
         stringBuilder.append(error);
         stringBuilder.append(", ");
@@ -55,6 +59,7 @@ class PnRequestErrorTest {
         pnRequestError.setAuthor(author);
         pnRequestError.setError(error);
         pnRequestError.setFlowThrow(flowThrow);
+        pnRequestError.setPaId(paId);
         return pnRequestError;
     }
 
@@ -64,5 +69,6 @@ class PnRequestErrorTest {
         author= Const.PN_PAPER_CHANNEL;
         error = EXTERNAL_CHANNEL_LISTENER_EXCEPTION.getMessage();
         flowThrow = EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name();
+        paId = "0123456789";
     }
 }

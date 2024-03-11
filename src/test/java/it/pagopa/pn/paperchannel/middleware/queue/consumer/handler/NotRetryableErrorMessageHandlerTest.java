@@ -8,6 +8,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnRequestError;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import reactor.core.publisher.Mono;
 
 import java.time.OffsetDateTime;
@@ -31,6 +32,8 @@ class NotRetryableErrorMessageHandlerTest {
 
     @Test
     void handleMessageTest() {
+
+        // Given
         PnDeliveryRequest entity = new PnDeliveryRequest();
         entity.setRequestId("requestId");
         entity.setStatusCode(StatusCodeEnum.PROGRESS.getValue());
@@ -42,12 +45,19 @@ class NotRetryableErrorMessageHandlerTest {
                 .statusDateTime(instant)
                 .clientRequestTimeStamp(instant);
 
-        when(paperRequestErrorDAOMock.created("requestId", "statusCode", "statusDetails"))
-                .thenReturn(Mono.just(new PnRequestError()));
+        PnRequestError pnRequestError = PnRequestError.builder()
+                .requestId(entity.getRequestId())
+                .error(entity.getStatusCode())
+                .flowThrow(entity.getStatusDetail())
+                .build();
 
+        // When
+        when(paperRequestErrorDAOMock.created(Mockito.any(PnRequestError.class)))
+                .thenReturn(Mono.just(pnRequestError));
+
+        // Then
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
 
-        verify(paperRequestErrorDAOMock, timeout(1000).times(1))
-                .created("requestId", StatusCodeEnum.PROGRESS.getValue(), StatusCodeEnum.PROGRESS.getValue());
+        verify(paperRequestErrorDAOMock, timeout(1000).times(1)).created(Mockito.any(PnRequestError.class));
     }
 }

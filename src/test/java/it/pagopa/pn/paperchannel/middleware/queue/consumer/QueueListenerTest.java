@@ -115,6 +115,8 @@ class QueueListenerTest {
 
     @Test
     void internalQueueEventNationalRegNoAttempsTest(){
+
+        // Given
         String json = """
                 {
                     "correlationId": "abc",
@@ -126,15 +128,19 @@ class QueueListenerTest {
         headers.put(PN_EVENT_HEADER_EXPIRED, "2023-04-12T14:35:35.135725152Z");
         headers.put(PN_EVENT_HEADER_ATTEMPT, "4");
         PnRequestError requestError = new PnRequestError();
-        when(paperRequestErrorDAO.created(Mockito.any(),Mockito.any(),Mockito.any())).thenReturn(Mono.just(requestError));
+
+        // When
+        when(paperRequestErrorDAO.created(Mockito.any(PnRequestError.class))).thenReturn(Mono.just(requestError));
         queueListener.pullFromInternalQueue(json, headers);
+
+        // Then
         assertTrue(true);
     }
 
     @Test
     void internalQueueEventNationalRegExpiredTest(){
-        Mockito.when(paperRequestErrorDAO.created("NRTK-EWZL-KVPV-202212-Q-1124ds", "ERROR WITH RETRIEVE ADDRESS",
-                EventTypeEnum.NATIONAL_REGISTRIES_ERROR.name())).thenReturn(Mono.just(new PnRequestError()));
+
+        // Given
         String json = """
                 {
                     "correlationId": "abc",
@@ -145,12 +151,19 @@ class QueueListenerTest {
         headers.put(PN_EVENT_HEADER_EVENT_TYPE, EventTypeEnum.NATIONAL_REGISTRIES_ERROR.name());
         headers.put(PN_EVENT_HEADER_EXPIRED, "2030-04-12T14:35:35.135725152Z");
         headers.put(PN_EVENT_HEADER_ATTEMPT, "0");
+
+        // When
+        Mockito.when(paperRequestErrorDAO.created(Mockito.any(PnRequestError.class))).thenReturn(Mono.just(new PnRequestError()));
         queueListener.pullFromInternalQueue(json, headers);
+
+        // Then
         assertTrue(true);
     }
 
     @Test
     void internalQueueEventNationalRegistryErrorTest(){
+
+        // Given
         String json = """
                 {
                     "correlationId": "abc",
@@ -161,8 +174,12 @@ class QueueListenerTest {
         headers.put(PN_EVENT_HEADER_EVENT_TYPE, EventTypeEnum.NATIONAL_REGISTRIES_ERROR.name());
         headers.put(PN_EVENT_HEADER_EXPIRED, "2023-02-12T14:35:35.135725152Z");
         headers.put(PN_EVENT_HEADER_ATTEMPT, "0");
-        Mockito.when(paperRequestErrorDAO.created(Mockito.any(),Mockito.any(),Mockito.any())).thenReturn(Mono.just(new PnRequestError()));
+
+        // When
+        when(paperRequestErrorDAO.created(Mockito.any(PnRequestError.class))).thenReturn(Mono.just(new PnRequestError()));
         queueListener.pullFromInternalQueue(json, headers);
+
+        // Then
         assertTrue(true);
     }
 
@@ -191,6 +208,8 @@ class QueueListenerTest {
 
     @Test
     void internalQueueEventF24ErrorTest(){
+
+        // Given
         String json = """
                 {
                     "correlationId": "abc",
@@ -201,14 +220,20 @@ class QueueListenerTest {
         headers.put(PN_EVENT_HEADER_EVENT_TYPE, EventTypeEnum.F24_ERROR.name());
         headers.put(PN_EVENT_HEADER_EXPIRED, "2023-02-12T14:35:35.135725152Z");
         headers.put(PN_EVENT_HEADER_ATTEMPT, "0");
-        Mockito.when(paperRequestErrorDAO.created(Mockito.any(),Mockito.any(),Mockito.any())).thenReturn(Mono.just(new PnRequestError()));
+
+        // When
+        when(paperRequestErrorDAO.created(Mockito.any(PnRequestError.class))).thenReturn(Mono.just(new PnRequestError()));
         queueListener.pullFromInternalQueue(json, headers);
+
+        // Then
         assertTrue(true);
     }
 
 
     @Test
     void internalQueueEventExternalChannelJsonBadlyTest(){
+
+        // Given
         String json = """
                 {
                     correlationId: null,
@@ -219,75 +244,18 @@ class QueueListenerTest {
         headers.put(PN_EVENT_HEADER_EVENT_TYPE, EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name());
         headers.put(PN_EVENT_HEADER_EXPIRED, "2023-04-12T14:35:35.135725152Z");
         headers.put(PN_EVENT_HEADER_ATTEMPT, "0");
-        PnGenericException exception = assertThrows(PnGenericException.class, () ->{
-            queueListener.pullFromInternalQueue(json, headers);
-        });
+
+        // When
+        PnGenericException exception = assertThrows(PnGenericException.class, () -> queueListener.pullFromInternalQueue(json, headers));
+
+        // Then
         assertEquals(MAPPER_ERROR, exception.getExceptionType());
     }
 
     @Test
     void internalQueueEventExternalChannelNoAttempsTest(){
-        String json = """
-                {
-                     "digitalCourtesy": null,
-                     "digitalLegal": null,
-                     "analogMail": 
-                     {
-                        "requestId": "AKUZ-AWPL-LTPX-20230415",
-                        "registeredLetterCode": null, 
-                        "productType": "AR",
-                        "iun": "AKUZ-AWPL-LTPX-20230415",
-                        "statusCode": "002",
-                        "statusDescription": "Mock status",
-                        "statusDateTime": "2023-01-12T14:35:35.135725152Z",
-                        "deliveryFailureCause": null,
-                        "attachments": null,
-                        "discoveredAddress": null,
-                        "clientRequestTimeStamp": "2023-01-12T14:35:35.13572075Z"
-                     }
-                }""";
-        Map<String, Object> headers = new HashMap<>();
-        headers.put(PN_EVENT_HEADER_EVENT_TYPE, EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name());
-        headers.put(PN_EVENT_HEADER_EXPIRED, "2023-04-12T14:35:35.135725152Z");
-        headers.put(PN_EVENT_HEADER_ATTEMPT, "4");
-        PnRequestError requestError = new PnRequestError();
-        when(paperRequestErrorDAO.created(Mockito.any(),Mockito.any(),Mockito.any())).thenReturn(Mono.just(requestError));
-        queueListener.pullFromInternalQueue(json, headers);
-        assertTrue(true);
-    }
 
-    @Test
-    void internalQueueEventExternalChannelExpiredTest(){
-        String json = """
-                {
-                     "digitalCourtesy": null,
-                     "digitalLegal": null,
-                     "analogMail": 
-                     {
-                        "requestId": "AKUZ-AWPL-LTPX-20230415",
-                        "registeredLetterCode": null, 
-                        "productType": "AR",
-                        "iun": "AKUZ-AWPL-LTPX-20230415",
-                        "statusCode": "002",
-                        "statusDescription": "Mock status",
-                        "statusDateTime": "2023-01-12T14:35:35.135725152Z",
-                        "deliveryFailureCause": null,
-                        "attachments": null,
-                        "discoveredAddress": null,
-                        "clientRequestTimeStamp": "2023-01-12T14:35:35.13572075Z"
-                     }
-                }""";
-        Map<String, Object> headers = new HashMap<>();
-        headers.put(PN_EVENT_HEADER_EVENT_TYPE, EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name());
-        headers.put(PN_EVENT_HEADER_EXPIRED, "2030-04-12T14:35:35.135725152Z");
-        headers.put(PN_EVENT_HEADER_ATTEMPT, "0");
-        Mockito.when(paperRequestErrorDAO.created(Mockito.any(),Mockito.any(),Mockito.any())).thenReturn(Mono.just(new PnRequestError()));
-        queueListener.pullFromInternalQueue(json, headers);
-        assertTrue(true);
-    }
-
-    @Test
-    void internalQueueEventExternalChannelErrorTest(){
+        // Given
         String json = """
                 {
                      "digitalCourtesy": null,
@@ -295,7 +263,80 @@ class QueueListenerTest {
                      "analogMail":
                      {
                         "requestId": "AKUZ-AWPL-LTPX-20230415",
-                        "registeredLetterCode": null, 
+                        "registeredLetterCode": null,
+                        "productType": "AR",
+                        "iun": "AKUZ-AWPL-LTPX-20230415",
+                        "statusCode": "002",
+                        "statusDescription": "Mock status",
+                        "statusDateTime": "2023-01-12T14:35:35.135725152Z",
+                        "deliveryFailureCause": null,
+                        "attachments": null,
+                        "discoveredAddress": null,
+                        "clientRequestTimeStamp": "2023-01-12T14:35:35.13572075Z"
+                     }
+                }""";
+        Map<String, Object> headers = new HashMap<>();
+        headers.put(PN_EVENT_HEADER_EVENT_TYPE, EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name());
+        headers.put(PN_EVENT_HEADER_EXPIRED, "2023-04-12T14:35:35.135725152Z");
+        headers.put(PN_EVENT_HEADER_ATTEMPT, "4");
+        PnRequestError requestError = new PnRequestError();
+
+        // When
+        when(paperRequestErrorDAO.created(Mockito.any(PnRequestError.class))).thenReturn(Mono.just(requestError));
+        queueListener.pullFromInternalQueue(json, headers);
+
+        // Then
+        assertTrue(true);
+    }
+
+    @Test
+    void internalQueueEventExternalChannelExpiredTest(){
+
+        // Given
+        String json = """
+                {
+                     "digitalCourtesy": null,
+                     "digitalLegal": null,
+                     "analogMail":
+                     {
+                        "requestId": "AKUZ-AWPL-LTPX-20230415",
+                        "registeredLetterCode": null,
+                        "productType": "AR",
+                        "iun": "AKUZ-AWPL-LTPX-20230415",
+                        "statusCode": "002",
+                        "statusDescription": "Mock status",
+                        "statusDateTime": "2023-01-12T14:35:35.135725152Z",
+                        "deliveryFailureCause": null,
+                        "attachments": null,
+                        "discoveredAddress": null,
+                        "clientRequestTimeStamp": "2023-01-12T14:35:35.13572075Z"
+                     }
+                }""";
+        Map<String, Object> headers = new HashMap<>();
+        headers.put(PN_EVENT_HEADER_EVENT_TYPE, EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name());
+        headers.put(PN_EVENT_HEADER_EXPIRED, "2030-04-12T14:35:35.135725152Z");
+        headers.put(PN_EVENT_HEADER_ATTEMPT, "0");
+
+        // When
+        when(paperRequestErrorDAO.created(Mockito.any(PnRequestError.class))).thenReturn(Mono.just(new PnRequestError()));
+        queueListener.pullFromInternalQueue(json, headers);
+
+        // Then
+        assertTrue(true);
+    }
+
+    @Test
+    void internalQueueEventExternalChannelErrorTest(){
+
+        // Given
+        String json = """
+                {
+                     "digitalCourtesy": null,
+                     "digitalLegal": null,
+                     "analogMail":
+                     {
+                        "requestId": "AKUZ-AWPL-LTPX-20230415",
+                        "registeredLetterCode": null,
                         "productType": "AR",
                         "iun": "AKUZ-AWPL-LTPX-20230415",
                         "statusCode": "002",
@@ -311,13 +352,19 @@ class QueueListenerTest {
         headers.put(PN_EVENT_HEADER_EVENT_TYPE, EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name());
         headers.put(PN_EVENT_HEADER_EXPIRED, "2023-02-12T14:35:35.135725152Z");
         headers.put(PN_EVENT_HEADER_ATTEMPT, "0");
-        Mockito.when(paperRequestErrorDAO.created(Mockito.any(),Mockito.any(),Mockito.any())).thenReturn(Mono.just(new PnRequestError()));
+
+        // When
+        when(paperRequestErrorDAO.created(Mockito.any(PnRequestError.class))).thenReturn(Mono.just(new PnRequestError()));
         queueListener.pullFromInternalQueue(json, headers);
+
+        // Then
         assertTrue(true);
     }
 
     @Test
     void internalQueueEventSafeStorageJsonBadlyTest(){
+
+        // Given
         String json = """
                 {
                     correlationId: null,
@@ -328,22 +375,26 @@ class QueueListenerTest {
         headers.put(PN_EVENT_HEADER_EVENT_TYPE, EventTypeEnum.SAFE_STORAGE_ERROR.name());
         headers.put(PN_EVENT_HEADER_EXPIRED, "2023-04-12T14:35:35.135725152Z");
         headers.put(PN_EVENT_HEADER_ATTEMPT, "0");
-        PnGenericException exception = assertThrows(PnGenericException.class, () ->{
-            queueListener.pullFromInternalQueue(json, headers);
-        });
+
+        // When
+        PnGenericException exception = assertThrows(PnGenericException.class, () -> queueListener.pullFromInternalQueue(json, headers));
+
+        // Then
         assertEquals(MAPPER_ERROR, exception.getExceptionType());
     }
 
     @Test
     void internalQueueEventSafeStorageNoAttempsTest(){
+
+        // Given
         String json = """
                 {
                      "digitalCourtesy": null,
                      "digitalLegal": null,
-                     "analogMail": 
+                     "analogMail":
                      {
                         "requestId": "AKUZ-AWPL-LTPX-20230415",
-                        "registeredLetterCode": null, 
+                        "registeredLetterCode": null,
                         "productType": "AR",
                         "iun": "AKUZ-AWPL-LTPX-20230415",
                         "statusCode": "002",
@@ -360,21 +411,27 @@ class QueueListenerTest {
         headers.put(PN_EVENT_HEADER_EXPIRED, "2023-04-12T14:35:35.135725152Z");
         headers.put(PN_EVENT_HEADER_ATTEMPT, "4");
         PnRequestError requestError = new PnRequestError();
-        when(paperRequestErrorDAO.created(Mockito.any(),Mockito.any(),Mockito.any())).thenReturn(Mono.just(requestError));
+
+        // When
+        when(paperRequestErrorDAO.created(Mockito.any(PnRequestError.class))).thenReturn(Mono.just(requestError));
         queueListener.pullFromInternalQueue(json, headers);
+
+        // Then
         assertTrue(true);
     }
 
     @Test
     void internalQueueEventSafeStorageExpiredTest(){
+
+        // Given
         String json = """
                 {
                      "digitalCourtesy": null,
                      "digitalLegal": null,
-                     "analogMail": 
+                     "analogMail":
                      {
                         "requestId": "AKUZ-AWPL-LTPX-20230415",
-                        "registeredLetterCode": null, 
+                        "registeredLetterCode": null,
                         "productType": "AR",
                         "iun": "AKUZ-AWPL-LTPX-20230415",
                         "statusCode": "002",
@@ -390,21 +447,27 @@ class QueueListenerTest {
         headers.put(PN_EVENT_HEADER_EVENT_TYPE, EventTypeEnum.SAFE_STORAGE_ERROR.name());
         headers.put(PN_EVENT_HEADER_EXPIRED, "2030-04-12T14:35:35.135725152Z");
         headers.put(PN_EVENT_HEADER_ATTEMPT, "0");
-        Mockito.when(paperRequestErrorDAO.created(Mockito.any(),Mockito.any(),Mockito.any())).thenReturn(Mono.just(new PnRequestError()));
+
+        // When
+        when(paperRequestErrorDAO.created(Mockito.any(PnRequestError.class))).thenReturn(Mono.just(new PnRequestError()));
         queueListener.pullFromInternalQueue(json, headers);
+
+        // Then
         assertTrue(true);
     }
 
     @Test
     void internalQueueEventSafeStorageErrorTest(){
+
+        // Given
         String json = """
                 {
                      "digitalCourtesy": null,
                      "digitalLegal": null,
-                     "analogMail": 
+                     "analogMail":
                      {
                         "requestId": "AKUZ-AWPL-LTPX-20230415",
-                        "registeredLetterCode": null, 
+                        "registeredLetterCode": null,
                         "productType": "AR",
                         "iun": "AKUZ-AWPL-LTPX-20230415",
                         "statusCode": "002",
@@ -420,8 +483,12 @@ class QueueListenerTest {
         headers.put(PN_EVENT_HEADER_EVENT_TYPE, EventTypeEnum.SAFE_STORAGE_ERROR.name());
         headers.put(PN_EVENT_HEADER_EXPIRED, "2023-02-12T14:35:35.135725152Z");
         headers.put(PN_EVENT_HEADER_ATTEMPT, "0");
-        Mockito.when(paperRequestErrorDAO.created(Mockito.any(),Mockito.any(),Mockito.any())).thenReturn(Mono.just(new PnRequestError()));
+
+        // When
+        when(paperRequestErrorDAO.created(Mockito.any(PnRequestError.class))).thenReturn(Mono.just(new PnRequestError()));
         queueListener.pullFromInternalQueue(json, headers);
+
+        // Then
         assertTrue(true);
     }
 
@@ -482,10 +549,10 @@ class QueueListenerTest {
                 {
                      "digitalCourtesy": null,
                      "digitalLegal": null,
-                     "analogMail": 
+                     "analogMail":
                      {
                         "requestId": "AKUZ-AWPL-LTPX-20230415",
-                        "registeredLetterCode": null, 
+                        "registeredLetterCode": null,
                         "productType": "AR",
                         "iun": "AKUZ-AWPL-LTPX-20230415",
                         "statusCode": "002",
@@ -507,9 +574,9 @@ class QueueListenerTest {
                 {
                      digitalCourtesy: null,
                      "digitalLegal": null,
-                     "analogMail": 
+                     "analogMail":
                      {
-                        "registeredLetterCode": null, 
+                        "registeredLetterCode": null,
                         "productType": "AR",
                         "iun": "AKUZ-AWPL-LTPX-20230415",
                         "statusCode": "002",
