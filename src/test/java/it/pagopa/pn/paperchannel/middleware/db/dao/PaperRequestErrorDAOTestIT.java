@@ -16,12 +16,19 @@ class PaperRequestErrorDAOTestIT extends BaseTest {
 
     @Test
     void createRequestErrorTest(){
-        String requestId = "id-1234";
-        String error = "errore test";
-        String classType = "java";
-        PnRequestError requestError = this.paperRequestErrorDAO.created(requestId, error, classType).block();
-        assertNotNull(requestError);
 
+        // Given
+        PnRequestError pnRequestError = PnRequestError.builder()
+                .requestId("id-1234")
+                .error("errore test")
+                .flowThrow("java")
+                .build();
+
+        // When
+        PnRequestError requestError = this.paperRequestErrorDAO.created(pnRequestError).block();
+
+        // Then
+        assertNotNull(requestError);
     }
 
     @Test

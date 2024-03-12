@@ -78,7 +78,7 @@ class QueueListenerTestIT extends BaseTest
         when(requestDeliveryDAO.updateData(pnDeliveryRequest)).thenReturn(Mono.just(pnDeliveryRequest));
         when(addressDAO.findAllByRequestId(requestId)).thenReturn(Mono.just(createAddresses()));
         when(externalChannelClient.sendEngageRequest(any(), any())).thenReturn(Mono.error(WebClientResponseException.create(400, "", new HttpHeaders(), null, Charset.defaultCharset())));
-        when(paperRequestErrorDAO.created(anyString(), anyString(), anyString())).thenReturn(Mono.just(new PnRequestError()));
+        when(paperRequestErrorDAO.created(any(PnRequestError.class))).thenReturn(Mono.just(new PnRequestError()));
 
         //invio il messaggio nella coda di ext-channel
         final String messageJson = toJson(messagePayload);
@@ -93,7 +93,7 @@ class QueueListenerTestIT extends BaseTest
                 .untilAsserted(() -> verify(queueListenerService, times(2)).externalChannelListener(any(), anyInt()));
 
         //mi aspetto che non cia mai invocato il salvataggio della PaperError
-        verify(paperRequestErrorDAO, never()).created(anyString(), anyString(), anyString());
+        verify(paperRequestErrorDAO, never()).created(any(PnRequestError.class));
 
         //mi aspetto che dopo aver letto il messaggio 2 volte, quest'ultimo venga re-indirizzato in DLQ
         await()

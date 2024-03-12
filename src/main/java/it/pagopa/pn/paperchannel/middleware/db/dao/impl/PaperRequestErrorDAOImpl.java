@@ -12,7 +12,6 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 
-import java.time.Instant;
 import java.util.List;
 
 @Repository
@@ -27,15 +26,8 @@ public class PaperRequestErrorDAOImpl extends BaseDAO<PnRequestError> implements
                 awsPropertiesConfig.getDynamodbPaperRequestErrorTable(), PnRequestError.class);}
 
     @Override
-    public Mono<PnRequestError> created(String requestId, String error, String flowThrow) {
-        PnRequestError requestError = new PnRequestError();
-        requestError.setRequestId(requestId);
-        requestError.setError(error);
-        requestError.setCreated(Instant.now());
-        requestError.setAuthor(Const.PN_PAPER_CHANNEL);
-        requestError.setFlowThrow(flowThrow);
-
-        return Mono.fromFuture(this.put(requestError).thenApply(item -> requestError));
+    public Mono<PnRequestError> created(PnRequestError pnRequestError) {
+        return Mono.fromFuture(this.put(pnRequestError).thenApply(item -> pnRequestError));
     }
 
 

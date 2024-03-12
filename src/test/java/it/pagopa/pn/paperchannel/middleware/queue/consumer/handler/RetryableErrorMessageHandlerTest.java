@@ -17,6 +17,7 @@ import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import reactor.core.publisher.Mono;
 
 import java.time.OffsetDateTime;
@@ -90,30 +91,40 @@ class RetryableErrorMessageHandlerTest {
 
     @Test
     void handleMessageHasNotOtherAttemptTest() {
-        OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T16:33:00.000Z");
+
+        // Given
         PnDeliveryRequest pnDeliveryRequest = new PnDeliveryRequest();
         pnDeliveryRequest.setRequestId("request");
         pnDeliveryRequest.setStatusDetail(StatusCodeEnum.PROGRESS.getValue());
         pnDeliveryRequest.setAttachments(new ArrayList<>());
         pnDeliveryRequest.setProductType(ProductTypeEnum.AR.getValue());
+        pnDeliveryRequest.setRequestPaId("0123456789");
+
+        OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T16:33:00.000Z");
 
         PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto();
         paperRequest.setRequestId("request.PCRETRY_-2");
         paperRequest.setStatusDateTime(instant);
         paperRequest.setClientRequestTimeStamp(instant);
 
+        // When
         when(mockConfig.getAttemptQueueExternalChannel()).thenReturn(-1);
-        when(mockRequestError.created("request", EXTERNAL_CHANNEL_API_EXCEPTION.getMessage(),
-                EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name() )).thenReturn(Mono.just(new PnRequestError()));
+        when(mockRequestError.created(Mockito.any(PnRequestError.class))).thenReturn(Mono.just(new PnRequestError()));
 
+        // Then
         assertDoesNotThrow(() -> handler.handleMessage(pnDeliveryRequest, paperRequest).block());
 
         //verifico che viene NON invocato ext-channels
         verify(mockExtChannel, timeout(2000).times(0)).sendEngageRequest(any(SendRequest.class), anyList());
 
         //verifico che viene salvata la richiesta andata in errore
-        verify(mockRequestError, timeout(2000).times(1)).created(pnDeliveryRequest.getRequestId(),
-                EXTERNAL_CHANNEL_API_EXCEPTION.getMessage(), EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name());
+        verify(mockRequestError, timeout(2000).times(1))
+                .created(argThat(requestError ->
+                    requestError.getRequestId().equals(pnDeliveryRequest.getRequestId()) &&
+                    requestError.getPaId().equals(pnDeliveryRequest.getRequestPaId()) &&
+                    requestError.getError().equals(EXTERNAL_CHANNEL_API_EXCEPTION.getMessage()) &&
+                    requestError.getFlowThrow().equals(EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name())
+                ));
 
         //verifico che viene inviato l'evento a delivery-push
         verify(mockSqsSender, times(1)).pushSendEvent(any(SendEvent.class));

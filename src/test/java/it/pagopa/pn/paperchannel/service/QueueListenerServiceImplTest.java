@@ -18,7 +18,6 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnRequestError;
 import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
-import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
 import it.pagopa.pn.paperchannel.model.F24Error;
 import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
@@ -199,7 +198,7 @@ class QueueListenerServiceImplTest {
         this.queueListenerService.nationalRegistriesResponseListener(addressSQSMessageDto);
 
         // Then
-        Mockito.verify(this.paperRequestErrorDAO, Mockito.never()).created(Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
+        Mockito.verify(this.paperRequestErrorDAO, Mockito.never()).created(Mockito.any(PnRequestError.class));
         Mockito.verify(this.sqsSender, Mockito.times(1)).pushToInternalQueue(Mockito.any(PrepareAsyncRequest.class));
     }
 
@@ -228,7 +227,7 @@ class QueueListenerServiceImplTest {
         this.queueListenerService.nationalRegistriesResponseListener(addressSQSMessageDto);
 
         // Then
-        Mockito.verify(this.paperRequestErrorDAO, Mockito.never()).created(Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
+        Mockito.verify(this.paperRequestErrorDAO, Mockito.never()).created(Mockito.any(PnRequestError.class));
         Mockito.verify(this.sqsSender, Mockito.times(1)).pushToInternalQueue(Mockito.any(PrepareAsyncRequest.class));
     }
 
@@ -257,7 +256,7 @@ class QueueListenerServiceImplTest {
         this.queueListenerService.nationalRegistriesResponseListener(addressSQSMessageDto);
 
         // Then
-        Mockito.verify(this.paperRequestErrorDAO, Mockito.never()).created(Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
+        Mockito.verify(this.paperRequestErrorDAO, Mockito.never()).created(Mockito.any(PnRequestError.class));
         Mockito.verify(this.sqsSender, Mockito.never()).pushToInternalQueue(Mockito.any(PrepareAsyncRequest.class));
     }
 
@@ -464,7 +463,7 @@ class QueueListenerServiceImplTest {
 
         assertThatNoException().isThrownBy(() -> queueListenerService.manualRetryExternalChannel(requestid, pcRetry));
         Mockito.verify(requestDeliveryDAO, Mockito.times(1)).updateData(Mockito.any());
-        Mockito.verify(paperRequestErrorDAO, Mockito.never()).created(Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
+        Mockito.verify(paperRequestErrorDAO, Mockito.never()).created(Mockito.any(PnRequestError.class));
     }
 
     @Test
@@ -480,10 +479,8 @@ class QueueListenerServiceImplTest {
         final PnAddress add = new PnAddress();
         add.setTypology(AddressTypeEnum.RECEIVER_ADDRESS.name());
 
-
         Mockito.when(requestDeliveryDAO.getByRequestId(requestid)).thenReturn(Mono.just(deliveryRequest));
-        Mockito.when(paperRequestErrorDAO.created(requestid, "Error message", EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name()))
-                .thenReturn(Mono.just(new PnRequestError()));
+        Mockito.when(paperRequestErrorDAO.created(Mockito.any(PnRequestError.class))).thenReturn(Mono.just(new PnRequestError()));
 
         Mockito.when(externalChannelClient.sendEngageRequest(Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.error(new NullPointerException("Error message")));
@@ -492,8 +489,7 @@ class QueueListenerServiceImplTest {
 
         assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> queueListenerService.manualRetryExternalChannel(requestid, pcRetry));
 
-        Mockito.verify(paperRequestErrorDAO, Mockito.times(1))
-                .created(requestid, "Error message", EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name());
+        Mockito.verify(paperRequestErrorDAO, Mockito.times(1)).created(Mockito.any(PnRequestError.class));
     }
 
     private PnAddress getRelatedAddress(){

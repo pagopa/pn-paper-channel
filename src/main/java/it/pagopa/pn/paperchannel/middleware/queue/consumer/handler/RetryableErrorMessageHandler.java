@@ -10,6 +10,7 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnRequestError;
 import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
 import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
 import it.pagopa.pn.paperchannel.model.AttachmentInfo;
@@ -28,6 +29,8 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.EXTERNAL_CHA
 @Slf4j
 //@RequiredArgsConstructor
 public class RetryableErrorMessageHandler extends SendToDeliveryPushHandler {
+
+    private static final String REQUEST_TO_EXTERNAL_CHANNEL = "prepare requestId = %s, trace_id = %s  request to External Channel";
 
     private final ExternalChannelClient externalChannelClient;
 
@@ -56,9 +59,17 @@ public class RetryableErrorMessageHandler extends SendToDeliveryPushHandler {
             return sendEngageRequest(entity, setRetryRequestId(paperRequest.getRequestId()))
                     .flatMap(pnDeliveryRequest -> super.handleMessage(entity, paperRequest));
         } else {
-            return paperRequestErrorDAO.created(entity.getRequestId(),
-                            EXTERNAL_CHANNEL_API_EXCEPTION.getMessage(), EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name())
-                    .flatMap(pnRequestError -> super.handleMessage(entity, paperRequest));
+
+            PnRequestError pnRequestError = PnRequestError.builder()
+                    .requestId(entity.getRequestId())
+                    .paId(entity.getRequestPaId())
+                    .error(EXTERNAL_CHANNEL_API_EXCEPTION.getMessage())
+                    .flowThrow(EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name())
+                    .build();
+
+            return paperRequestErrorDAO
+                    .created(pnRequestError)
+                    .flatMap(requestError -> super.handleMessage(entity, paperRequest));
         }
 
     }
@@ -96,16 +107,16 @@ public class RetryableErrorMessageHandler extends SendToDeliveryPushHandler {
 
         SendRequest sendRequest = SendRequestMapper.toDto(pnAddresses, pnDeliveryRequest);
         sendRequest.setRequestId(requestId);
-        pnLogAudit.addsBeforeSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY)));
+        pnLogAudit.addsBeforeSend(sendRequest.getIun(), String.format(REQUEST_TO_EXTERNAL_CHANNEL, sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY)));
 
         List<AttachmentInfo> attachmentInfos = pnDeliveryRequest.getAttachments().stream().map(AttachmentMapper::fromEntity).toList();
 
         return externalChannelClient.sendEngageRequest(sendRequest, attachmentInfos)
                 .doOnSuccess(unused -> pnLogAudit.addsSuccessSend(sendRequest.getIun(),
-                        String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY)))
+                        String.format(REQUEST_TO_EXTERNAL_CHANNEL, sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY)))
                 )
                 .doOnError(ex ->
-                    pnLogAudit.addsWarningSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY)))
+                    pnLogAudit.addsWarningSend(sendRequest.getIun(), String.format(REQUEST_TO_EXTERNAL_CHANNEL, sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY)))
                 )
                 .thenReturn(pnDeliveryRequest);
 

@@ -18,6 +18,7 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnRequestError;
 import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
@@ -212,7 +213,15 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                             // check error body
                             if (StringUtils.isNotEmpty(addressFromNational.getError())) {
                                 log.info("Error message is not empty for correlationId" +addressFromNational.getCorrelationId());
-                                paperRequestErrorDAO.created(entity.getRequestId(), NATIONAL_REGISTRY_LISTENER_EXCEPTION.getTitle(), NATIONAL_REGISTRY_LISTENER_EXCEPTION.getMessage());
+
+                                PnRequestError pnRequestError = PnRequestError.builder()
+                                        .requestId(entity.getRequestId())
+                                        .error(NATIONAL_REGISTRY_LISTENER_EXCEPTION.getTitle())
+                                        .flowThrow(NATIONAL_REGISTRY_LISTENER_EXCEPTION.getMessage())
+                                        .build();
+
+                                paperRequestErrorDAO.created(pnRequestError);
+
                                 throw new PnGenericException(NATIONAL_REGISTRY_LISTENER_EXCEPTION, NATIONAL_REGISTRY_LISTENER_EXCEPTION.getMessage());
                             }
 
@@ -330,7 +339,14 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                                 log.warn("[{}] Error in manualRetryExternalChannel", requestId, ex);
                                 pnLogAudit.addsWarningSend(
                                         request.getIun(), String.format("prepare requestId = %s, trace_id = %s  request to External Channel", request.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY)));
-                                return paperRequestErrorDAO.created(requestId, ex.getMessage(), EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name())
+
+                                PnRequestError pnRequestError = PnRequestError.builder()
+                                        .requestId(requestId)
+                                        .error(ex.getMessage())
+                                        .flowThrow(EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name())
+                                        .build();
+
+                                return paperRequestErrorDAO.created(pnRequestError)
                                         .flatMap(errorEntity -> Mono.error(ex));
                             });
                 })
