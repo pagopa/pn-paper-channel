@@ -36,7 +36,14 @@ public class PstSecondAttemptFlowService extends SecondAttemptFlowService {
 
     @Override
     public void handleSameAddresses(PnDeliveryRequest pnDeliveryRequest, Address secondAttemptAddress) {
+        log.debug("Same Address in Postman Flow, call national registries");
         throw new PnAddressFlowException(ATTEMPT_ADDRESS_NATIONAL_REGISTRY);
+    }
+
+    @Override
+    protected RuntimeException throwExceptionToContinueFlowAfterError(Address addressFailed) {
+        log.debug("ContinueFlow enabled for Postman Flow, call national registries");
+        return new PnAddressFlowException(ATTEMPT_ADDRESS_NATIONAL_REGISTRY);
     }
 
     @Override

@@ -25,6 +25,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.RESPONSE_ERROR_NOT_HANDLED_FROM_DEDUPLICATION;
 import static it.pagopa.pn.paperchannel.utils.DeduplicateErrorConst.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -83,9 +84,9 @@ class PaperAddressServiceImplTest {
 
     }
 
-    //Indirizzo coincidenti = D02
+    //Flusso NR: Indirizzo coincidenti, mando a delivery-push l'evento D02
     @Test
-    void getCorrectAddressNationalRegistryFlowKOForDeduplicationAddressEquals() {
+    void getCorrectAddressNationalRegistryFlowKOForDeduplicationAddressEqualsNrFlow() {
         PrepareAsyncRequest prepareAsyncRequest = new PrepareAsyncRequest();
         DeduplicatesResponseDto mockDeduplicationResponse = new DeduplicatesResponseDto();
         mockDeduplicationResponse.setEqualityResult(true);
@@ -118,7 +119,46 @@ class PaperAddressServiceImplTest {
 
     }
 
-    //Errore PNADDR001: Indirizzo diverso - Normalizzazione KO = D01 (con configurazione Pnaddr01SendD01ToDeliveryPush = true)
+    //Flusso postino: Indirizzo coincidenti, richiamo i registri nazionali
+    @Test
+    void getCorrectAddressNationalRegistryFlowKOForDeduplicationAddressEqualsPostmanFlow() {
+        PrepareAsyncRequest prepareAsyncRequest = new PrepareAsyncRequest();
+        DeduplicatesResponseDto mockDeduplicationResponse = new DeduplicatesResponseDto();
+        mockDeduplicationResponse.setEqualityResult(true);
+        String requestId = "";
+        PnDeliveryRequest deliveryRequest = new PnDeliveryRequest();
+        deliveryRequest.setIun("a-iun");
+        deliveryRequest.setRequestId(requestId);
+        deliveryRequest.setCorrelationId(null); //questo campo non-null determina il fatto di scegliere il flusso NR
+        deliveryRequest.setRelatedRequestId("related-request");
+        PnAddress addressFromDb = new PnAddress();
+        addressFromDb.setRequestId(requestId);
+        addressFromDb.setAddress("via Roma");
+        PnAddress discoveredAddressFromDb = new PnAddress();
+        discoveredAddressFromDb.setRequestId(requestId);
+        discoveredAddressFromDb.setAddress("via discovered");
+
+        Address addressFirstAttempt = AddressMapper.toDTO(addressFromDb);
+        Address addressDiscovered = AddressMapper.toDTO(discoveredAddressFromDb);
+
+        when(addressDAO.findByRequestId(requestId, AddressTypeEnum.RECEIVER_ADDRESS))
+                .thenReturn(Mono.just(addressFromDb));
+
+        when(addressDAO.findByRequestId(requestId, AddressTypeEnum.DISCOVERED_ADDRESS))
+                .thenReturn(Mono.just(discoveredAddressFromDb));
+
+        when(addressManagerClient.deduplicates(any(), eq(addressFirstAttempt), eq(addressDiscovered)))
+                .thenReturn(Mono.just(mockDeduplicationResponse));
+
+        StepVerifier.create(paperAddressService.getCorrectAddress(deliveryRequest, addressDiscovered, prepareAsyncRequest))
+                .expectErrorMatches(throwable ->
+                   throwable instanceof PnAddressFlowException ex && ex.getExceptionType() == ExceptionTypeEnum.ATTEMPT_ADDRESS_NATIONAL_REGISTRY
+                )
+                .verify();
+
+    }
+
+    //Errore PNADDR001 flusso NR: Indirizzo non postalizzabile - invio a delivery-push il D01 (con configurazione Pnaddr001ContinueFlow = true)
     @Test
     void getCorrectAddressNationalRegistryFlowKOForDeduplicationError() {
         PrepareAsyncRequest prepareAsyncRequest = new PrepareAsyncRequest();
@@ -142,7 +182,7 @@ class PaperAddressServiceImplTest {
         when(addressManagerClient.deduplicates(correlationId, addressFirstAttempt, fromNationalRegistry))
                 .thenReturn(Mono.just(mockDeduplicationResponse));
 
-        paperProperties.setPnaddr001sendD01ToDeliveryPush(true);
+        paperProperties.setPnaddr001continueFlow(true);
 
         StepVerifier.create(paperAddressService.getCorrectAddress(deliveryRequest, fromNationalRegistry, prepareAsyncRequest))
                 .expectErrorMatches(throwable -> {
@@ -156,7 +196,7 @@ class PaperAddressServiceImplTest {
 
     }
 
-    //Indirizzo diverso - Normalizzazione KO con D01SendToDeliveryPush = false = non mando a delivery-push l'evento
+    //Errore non gestito flusso NR - Scrivo sulla tabella degli errori (lancio di PnGenericException(RESPONSE_ERROR_NOT_HANDLED_FROM_DEDUPLICATION))
     @Test
     void getCorrectAddressNationalRegistryFlowKOForDeduplicationErrorNoDeliveryPush() {
         PrepareAsyncRequest prepareAsyncRequest = new PrepareAsyncRequest();
@@ -180,10 +220,12 @@ class PaperAddressServiceImplTest {
         when(addressManagerClient.deduplicates(correlationId, addressFirstAttempt, fromNationalRegistry))
                 .thenReturn(Mono.just(mockDeduplicationResponse));
 
-        paperProperties.setPnaddr001sendD01ToDeliveryPush(false);
+        paperProperties.setPnaddr001continueFlow(false);
 
         StepVerifier.create(paperAddressService.getCorrectAddress(deliveryRequest, fromNationalRegistry, prepareAsyncRequest))
-                .expectErrorMatches(throwable -> !(throwable instanceof PnUntracebleException))
+                .expectErrorMatches(throwable ->
+                    throwable instanceof PnGenericException ex && ex.getExceptionType() == RESPONSE_ERROR_NOT_HANDLED_FROM_DEDUPLICATION
+                )
                 .verify();
 
     }
@@ -218,7 +260,8 @@ class PaperAddressServiceImplTest {
 
     }
 
-    //Errore PNADDR001: Indirizzo diverso - Normalizzazione KO = D01 (con configurazione Pnaddr01SendD01ToDeliveryPush = true)
+    //Errore PNADDR001 flusso postino: Indirizzo non postalizzabile, lancio di PnAddressFlowException(ATTEMPT_ADDRESS_NATIONAL_REGISTRY)
+    // per richiamare i servizi nazionali (con configurazione Pnaddr001ContinueFlow = true)
     @Test
     void getCorrectAddressDiscoveredAddressFlowKOForDeduplicationErrorPNADDR001() {
         PrepareAsyncRequest prepareAsyncRequest = new PrepareAsyncRequest();
@@ -249,21 +292,20 @@ class PaperAddressServiceImplTest {
         when(addressManagerClient.deduplicates(any(), eq(addressFirstAttempt), eq(addressDiscovered)))
                 .thenReturn(Mono.just(mockDeduplicationResponse));
 
-        paperProperties.setPnaddr001sendD01ToDeliveryPush(true);
+        paperProperties.setPnaddr001continueFlow(true);
 
         StepVerifier.create(paperAddressService.getCorrectAddress(deliveryRequest, null, prepareAsyncRequest))
                 .expectErrorMatches(throwable -> {
-                    boolean isPnUntracebleException = throwable instanceof PnUntracebleException;
-                    PnUntracebleException pnUntracebleException = (PnUntracebleException) throwable;
-                    boolean isD01 = pnUntracebleException.getKoReason().failureDetailCode() == FailureDetailCodeEnum.D01;
-                    boolean failedAddress = pnUntracebleException.getKoReason().addressFailed().equals(addressDiscovered);
-                    return isPnUntracebleException && isD01 && failedAddress;
+                    boolean isPnAddressFlowException = throwable instanceof PnAddressFlowException pnAddressFlowException;
+                    PnAddressFlowException pnAddressFlowException = (PnAddressFlowException) throwable;
+                    boolean errorToRunNRFlow = pnAddressFlowException.getExceptionType() == ExceptionTypeEnum.ATTEMPT_ADDRESS_NATIONAL_REGISTRY;
+                    return isPnAddressFlowException && errorToRunNRFlow;
                 })
                 .verify();
 
     }
 
-    //Errore PNADDR002: (Indirizzo dichiarato postalizzabile dal normalizzatore ma con CAP/stato estero non abilitati (con configurazione Pnaddr02SendD01ToDeliveryPush = false)
+    //Errore PNADDR002 flusso postino: (Indirizzo dichiarato postalizzabile dal normalizzatore ma con CAP/stato estero non abilitati (con configurazione Pnaddr002ContinueFlow = false)
     @Test
     void getCorrectAddressDiscoveredAddressFlowKOForDeduplicationErrorPNADDR002() {
         PrepareAsyncRequest prepareAsyncRequest = new PrepareAsyncRequest();
@@ -294,7 +336,7 @@ class PaperAddressServiceImplTest {
         when(addressManagerClient.deduplicates(any(), eq(addressFirstAttempt), eq(addressDiscovered)))
                 .thenReturn(Mono.just(mockDeduplicationResponse));
 
-        paperProperties.setPnaddr001sendD01ToDeliveryPush(false);
+        paperProperties.setPnaddr001continueFlow(false);
 
         StepVerifier.create(paperAddressService.getCorrectAddress(deliveryRequest, null, prepareAsyncRequest))
                 .expectErrorMatches(throwable -> {
@@ -306,7 +348,8 @@ class PaperAddressServiceImplTest {
 
     }
 
-    //Errore PNADDR002: (Indirizzo dichiarato postalizzabile dal normalizzatore ma con CAP/stato estero non abilitati (con configurazione Pnaddr02SendD01ToDeliveryPush = false)
+    //Errore PNADDR999 flusso postino: errore dal normalizzatore, lancio PnAddressFlowException(ADDRESS_MANAGER_ERROR)
+    // per effettuare delle reties in coda
     @Test
     void getCorrectAddressDiscoveredAddressFlowKOForDeduplicationErrorPNADDR999() {
         PrepareAsyncRequest prepareAsyncRequest = new PrepareAsyncRequest();
@@ -345,7 +388,7 @@ class PaperAddressServiceImplTest {
         when(addressManagerClient.deduplicates(any(), eq(addressFirstAttempt), eq(addressDiscovered)))
                 .thenReturn(Mono.just(mockDeduplicationResponse));
 
-        paperProperties.setPnaddr001sendD01ToDeliveryPush(false);
+        paperProperties.setPnaddr001continueFlow(false);
 
         StepVerifier.create(paperAddressService.getCorrectAddress(deliveryRequest, null, prepareAsyncRequest))
                 .expectErrorMatches(throwable -> {

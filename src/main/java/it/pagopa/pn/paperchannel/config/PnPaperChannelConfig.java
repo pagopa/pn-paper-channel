@@ -64,16 +64,22 @@ public class PnPaperChannelConfig {
     private boolean zipHandleActive;
 
     /**
-     * Per l'errore PNADDR001: True se il failureDetailCode D01 deve essere mandato a delivery push (specificando anche l'indirizzo),
+     * Per l'errore PNADDR001 flusso NR: True se il failureDetailCode D01 deve essere mandato a delivery push (specificando anche l'indirizzo),
+     * false se invece viene salvato l'errore sulla tabella degli errori (as-is)
+     * <p>
+     * Per l'errore PNADDR001 flusso postman: True se deve essere fatta la chiamata ai registri nazionali,
      * false se invece viene salvato l'errore sulla tabella degli errori (as-is)
      */
-    private boolean pnaddr001sendD01ToDeliveryPush;
+    private boolean pnaddr001continueFlow;
 
     /**
-     * Per l'errore PNADDR002: True se il failureDetailCode D01 deve essere mandato a delivery push (specificando anche l'indirizzo),
+     * Per l'errore PNADDR002 flusso NR: True se il failureDetailCode D01 deve essere mandato a delivery push (specificando anche l'indirizzo),
+     * false se invece viene salvato l'errore sulla tabella degli errori (as-is)
+     * <p>
+     * Per l'errore PNADDR002 flusso postman: True se deve essere fatta la chiamata ai registri nazionali,
      * false se invece viene salvato l'errore sulla tabella degli errori (as-is)
      */
-    private boolean pnaddr002sendD01ToDeliveryPush;
+    private boolean pnaddr002continueFlow;
 
     @PostConstruct
     public void init() {
