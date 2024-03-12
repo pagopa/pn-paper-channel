@@ -62,6 +62,7 @@ public class RetryableErrorMessageHandler extends SendToDeliveryPushHandler {
 
             PnRequestError pnRequestError = PnRequestError.builder()
                     .requestId(entity.getRequestId())
+                    .paId(entity.getRequestPaId())
                     .error(EXTERNAL_CHANNEL_API_EXCEPTION.getMessage())
                     .flowThrow(EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name())
                     .build();

@@ -93,12 +93,14 @@ class RetryableErrorMessageHandlerTest {
     void handleMessageHasNotOtherAttemptTest() {
 
         // Given
-        OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T16:33:00.000Z");
         PnDeliveryRequest pnDeliveryRequest = new PnDeliveryRequest();
         pnDeliveryRequest.setRequestId("request");
         pnDeliveryRequest.setStatusDetail(StatusCodeEnum.PROGRESS.getValue());
         pnDeliveryRequest.setAttachments(new ArrayList<>());
         pnDeliveryRequest.setProductType(ProductTypeEnum.AR.getValue());
+        pnDeliveryRequest.setRequestPaId("0123456789");
+
+        OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T16:33:00.000Z");
 
         PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto();
         paperRequest.setRequestId("request.PCRETRY_-2");
@@ -116,7 +118,13 @@ class RetryableErrorMessageHandlerTest {
         verify(mockExtChannel, timeout(2000).times(0)).sendEngageRequest(any(SendRequest.class), anyList());
 
         //verifico che viene salvata la richiesta andata in errore
-        verify(mockRequestError, timeout(2000).times(1)).created(any(PnRequestError.class));
+        verify(mockRequestError, timeout(2000).times(1))
+                .created(argThat(requestError ->
+                    requestError.getRequestId().equals(pnDeliveryRequest.getRequestId()) &&
+                    requestError.getPaId().equals(pnDeliveryRequest.getRequestPaId()) &&
+                    requestError.getError().equals(EXTERNAL_CHANNEL_API_EXCEPTION.getMessage()) &&
+                    requestError.getFlowThrow().equals(EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name())
+                ));
 
         //verifico che viene inviato l'evento a delivery-push
         verify(mockSqsSender, times(1)).pushSendEvent(any(SendEvent.class));

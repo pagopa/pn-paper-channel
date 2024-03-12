@@ -35,18 +35,25 @@ class NotRetryableWithoutSendErrorMessageHandlerTest {
         entity.setRequestId("requestId");
         entity.setStatusCode(StatusCodeEnum.PROGRESS.getValue());
         entity.setStatusDetail(StatusCodeEnum.PROGRESS.getValue());
+        entity.setRequestPaId("0123456789");
 
         PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto();
-        PnRequestError requestError = new PnRequestError();
-        requestError.setRequestId("requestId");
+        PnRequestError pnRequestError = new PnRequestError();
+        pnRequestError.setRequestId("requestId");
 
         // When
-        when(paperRequestErrorDAOMock.created(Mockito.any(PnRequestError.class))).thenReturn(Mono.just(requestError));
+        when(paperRequestErrorDAOMock.created(Mockito.any(PnRequestError.class))).thenReturn(Mono.just(pnRequestError));
 
         // Then
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
 
-        verify(paperRequestErrorDAOMock, timeout(1000).times(1)).created(Mockito.any(PnRequestError.class));
+        verify(paperRequestErrorDAOMock, timeout(1000).times(1))
+                .created(argThat(requestError ->
+                    requestError.getRequestId().equals(entity.getRequestId()) &&
+                    requestError.getPaId().equals(entity.getRequestPaId()) &&
+                    requestError.getError().equals(entity.getStatusCode()) &&
+                    requestError.getFlowThrow().equals(entity.getStatusDetail())
+                ));
     }
 }
 
