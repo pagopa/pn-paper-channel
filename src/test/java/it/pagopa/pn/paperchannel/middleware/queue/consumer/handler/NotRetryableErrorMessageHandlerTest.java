@@ -8,6 +8,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnRequestError;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import reactor.core.publisher.Mono;
 
 import java.time.OffsetDateTime;
@@ -31,10 +32,14 @@ class NotRetryableErrorMessageHandlerTest {
 
     @Test
     void handleMessageTest() {
+
+        // Given
         PnDeliveryRequest entity = new PnDeliveryRequest();
         entity.setRequestId("requestId");
         entity.setStatusCode(StatusCodeEnum.PROGRESS.getValue());
         entity.setStatusDetail(StatusCodeEnum.PROGRESS.getValue());
+        entity.setRequestPaId("0123456789");
+
         OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
         PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
                 .requestId("requestId")
@@ -42,12 +47,25 @@ class NotRetryableErrorMessageHandlerTest {
                 .statusDateTime(instant)
                 .clientRequestTimeStamp(instant);
 
-        when(paperRequestErrorDAOMock.created("requestId", "statusCode", "statusDetails"))
-                .thenReturn(Mono.just(new PnRequestError()));
+        PnRequestError pnRequestError = PnRequestError.builder()
+                .requestId(entity.getRequestId())
+                .error(entity.getStatusCode())
+                .flowThrow(entity.getStatusDetail())
+                .build();
 
+        // When
+        when(paperRequestErrorDAOMock.created(Mockito.any(PnRequestError.class)))
+                .thenReturn(Mono.just(pnRequestError));
+
+        // Then
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
 
         verify(paperRequestErrorDAOMock, timeout(1000).times(1))
-                .created("requestId", StatusCodeEnum.PROGRESS.getValue(), StatusCodeEnum.PROGRESS.getValue());
+                .created(argThat(requestError ->
+                    requestError.getRequestId().equals(entity.getRequestId()) &&
+                    requestError.getPaId().equals(entity.getRequestPaId()) &&
+                    requestError.getError().equals(entity.getStatusCode()) &&
+                    requestError.getFlowThrow().equals(entity.getStatusDetail())
+                ));
     }
 }

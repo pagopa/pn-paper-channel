@@ -14,6 +14,7 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnRequestError;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.model.*;
 import it.pagopa.pn.paperchannel.service.*;
@@ -268,8 +269,14 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
     }
 
     private Mono<Void> traceError(String requestId, String error, String flowType){
-        return this.paperRequestErrorDAO.created(requestId, error, flowType)
-                .then();
+
+        PnRequestError pnRequestError = PnRequestError.builder()
+                .requestId(requestId)
+                .error(error)
+                .flowThrow(flowType)
+                .build();
+
+        return this.paperRequestErrorDAO.created(pnRequestError).then();
     }
 
     private void pushPrepareEvent(PnDeliveryRequest request, Address address, String clientId, StatusCodeEnum statusCode, KOReason koReason){

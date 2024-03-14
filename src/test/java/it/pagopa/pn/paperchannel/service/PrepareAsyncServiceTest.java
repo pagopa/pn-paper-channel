@@ -20,6 +20,7 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnRequestError;
 import it.pagopa.pn.paperchannel.middleware.msclient.AddressManagerClient;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.KOReason;
@@ -154,7 +155,7 @@ class PrepareAsyncServiceTest {
                 }).verify();
 
         // VERIFICO CHE IN QUESTO CASO NON VENGA MAI CREATO IL RECORD DI ERRORE
-        Mockito.verify(paperRequestErrorDAO, Mockito.never()).created(Mockito.any(), Mockito.any(), Mockito.any());
+        Mockito.verify(paperRequestErrorDAO, Mockito.never()).created(Mockito.any(PnRequestError.class));
 
         // VERIFICO CHE È STATO INVIATO L'EVENTO DI KOUNREACHABLE A DELIVERY PUSH
         RequestDeliveryMapper.changeState(pnDeliveryRequest, StatusDeliveryEnum.UNTRACEABLE.getCode(),
@@ -311,7 +312,7 @@ class PrepareAsyncServiceTest {
             Mockito.verify(this.sqsSender).pushPrepareEvent(prepareEventArgumentCaptor.capture());
 
             // VERIFICO CHE IN QUESTO CASO NON VENGA MAI CREATO IL RECORD DI ERRORE
-            Mockito.verify(paperRequestErrorDAO, Mockito.never()).created(Mockito.any(), Mockito.any(), Mockito.any());
+            Mockito.verify(paperRequestErrorDAO, Mockito.never()).created(Mockito.any(PnRequestError.class));
 
             PrepareEvent prepareEventActual = prepareEventArgumentCaptor.getValue();
 

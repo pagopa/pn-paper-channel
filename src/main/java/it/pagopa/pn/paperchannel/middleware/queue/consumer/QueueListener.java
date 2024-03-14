@@ -10,6 +10,7 @@ import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnnationalregistries.v1.dto.AddressSQSMessageDto;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnRequestError;
 import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
 import it.pagopa.pn.paperchannel.middleware.queue.model.InternalEventHeader;
 import it.pagopa.pn.paperchannel.middleware.queue.model.ManualRetryEvent;
@@ -55,149 +56,43 @@ public class QueueListener {
         log.info("Headers : {}", headers);
         setMDCContext(headers);
         InternalEventHeader internalEventHeader = toInternalEventHeader(headers);
+
         if (internalEventHeader == null) return;
 
+        if (internalEventHeader.getEventType().equals(EventTypeEnum.NATIONAL_REGISTRIES_ERROR.name())) {
+            this.handleNationalRegistriesErrorEvent(internalEventHeader, node);
+        }
 
-        if (internalEventHeader.getEventType().equals(EventTypeEnum.NATIONAL_REGISTRIES_ERROR.name())){
+        else if (internalEventHeader.getEventType().equals(EventTypeEnum.MANUAL_RETRY_EXTERNAL_CHANNEL.name())) {
+            this.handleManualRetryExternalChannelEvent(node);
+        }
 
-            boolean noAttempt = (paperChannelConfig.getAttemptQueueNationalRegistries()-1) < internalEventHeader.getAttempt();
-            NationalRegistryError error = convertToObject(node, NationalRegistryError.class);
-            execution(error, noAttempt, internalEventHeader.getAttempt(), internalEventHeader.getExpired(), NationalRegistryError.class,
-                    entity -> {
-                        PnLogAudit pnLogAudit = new PnLogAudit();
-                        pnLogAudit.addsBeforeDiscard(entity.getIun(), String.format("requestId = %s finish retry to National Registry", entity.getRequestId()));
-                        paperRequestErrorDAO.created(entity.getRequestId(), "ERROR WITH RETRIEVE ADDRESS", EventTypeEnum.NATIONAL_REGISTRIES_ERROR.name())
-                                .subscribe();
-                        pnLogAudit.addsSuccessDiscard(entity.getIun(), String.format("requestId = %s finish retry to National Registry", entity.getRequestId()));
-                        return null;
-                    },
-                    entityAndAttempt -> {
-                        this.queueListenerService.nationalRegistriesErrorListener(entityAndAttempt.getFirst(), entityAndAttempt.getSecond());
-                        return null;
-                    });
+        else if (internalEventHeader.getEventType().equals(EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name())) {
+            this.handleExternalChannelErrorEvent(internalEventHeader, node);
+        }
 
-        } else if (internalEventHeader.getEventType().equals(EventTypeEnum.MANUAL_RETRY_EXTERNAL_CHANNEL.name())){
-            ManualRetryEvent manualRetryEvent = convertToObject(node, ManualRetryEvent.class);
-            this.queueListenerService.manualRetryExternalChannel(manualRetryEvent.getRequestId(), manualRetryEvent.getNewPcRetry());
-        } else if (internalEventHeader.getEventType().equals(EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name())){
+        else if (internalEventHeader.getEventType().equals(EventTypeEnum.SAFE_STORAGE_ERROR.name())) {
+            this.handleSafeStorageErrorEvent(internalEventHeader, node);
+        }
 
-            boolean noAttempt = (paperChannelConfig.getAttemptQueueExternalChannel()-1) < internalEventHeader.getAttempt();
-            ExternalChannelError error = convertToObject(node, ExternalChannelError.class);
-            execution(error, noAttempt, internalEventHeader.getAttempt(), internalEventHeader.getExpired(), ExternalChannelError.class,
-                    entity -> {
-                        PnLogAudit pnLogAudit = new PnLogAudit();
-                        pnLogAudit.addsBeforeDiscard(entity.getAnalogMail().getIun(), String.format("requestId = %s finish retry to External Channel", entity.getAnalogMail().getRequestId()));
-                        paperRequestErrorDAO.created(
-                                entity.getAnalogMail().getRequestId(),
-                                EXTERNAL_CHANNEL_LISTENER_EXCEPTION.getMessage(),
-                                EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name()
-                        ).subscribe();
-                        pnLogAudit.addsSuccessDiscard(entity.getAnalogMail().getIun(), String.format("requestId = %s finish retry to External Channel", entity.getAnalogMail().getRequestId()));
+        else if (internalEventHeader.getEventType().equals(EventTypeEnum.ADDRESS_MANAGER_ERROR.name())) {
+            this.handleAddressManagerErrorEvent(internalEventHeader, node);
+        }
 
-                        return null;
-                    },
-                    entityAndAttempt -> {
-                        SingleStatusUpdateDto dto = new SingleStatusUpdateDto();
-                        dto.setAnalogMail(entityAndAttempt.getFirst().getAnalogMail());
-                        this.queueListenerService.externalChannelListener(dto, entityAndAttempt.getSecond());
-                        return null;
-                    });
+        else if (internalEventHeader.getEventType().equals(EventTypeEnum.F24_ERROR.name())) {
+            this.handleF24ErrorEvent(internalEventHeader, node);
+        }
 
-        } else if (internalEventHeader.getEventType().equals(EventTypeEnum.SAFE_STORAGE_ERROR.name())){
+        else if (internalEventHeader.getEventType().equals(EventTypeEnum.ZIP_HANDLE_ERROR.name())) {
+            this.handleZipErrorEvent(internalEventHeader, node);
+        }
 
-            boolean noAttempt = (paperChannelConfig.getAttemptQueueSafeStorage()-1) < internalEventHeader.getAttempt();
-            PrepareAsyncRequest error = convertToObject(node, PrepareAsyncRequest.class);
-            execution(error, noAttempt, internalEventHeader.getAttempt(), internalEventHeader.getExpired(), PrepareAsyncRequest.class,
-                    entity -> {
-                        PnLogAudit pnLogAudit = new PnLogAudit();
-                        pnLogAudit.addsBeforeDiscard(entity.getIun(), String.format("requestId = %s finish retry to Safe Storage", entity.getRequestId()));
-                        paperRequestErrorDAO.created(
-                                        entity.getRequestId(),
-                                        DOCUMENT_NOT_DOWNLOADED.getMessage(),
-                                        EventTypeEnum.SAFE_STORAGE_ERROR.name())
-                                .subscribe();
-                        pnLogAudit.addsSuccessDiscard(entity.getIun(), String.format("requestId = %s finish retry to Safe Storage", entity.getRequestId()));
-                        return null;
-                    },
-                    entityAndAttempt -> {
-                        this.queueListenerService.internalListener(entityAndAttempt.getFirst(), entityAndAttempt.getSecond());
-                        return null;
-                    });
+        else if (internalEventHeader.getEventType().equals(EventTypeEnum.PREPARE_ASYNC_FLOW.name())) {
+            this.handlePrepareAsyncFlowEvent(internalEventHeader, node);
+        }
 
-        } else if (internalEventHeader.getEventType().equals(EventTypeEnum.ADDRESS_MANAGER_ERROR.name())){
-
-            boolean noAttempt = (paperChannelConfig.getAttemptQueueAddressManager()-1) < internalEventHeader.getAttempt();
-            PrepareAsyncRequest error = convertToObject(node, PrepareAsyncRequest.class);
-            execution(error, noAttempt, internalEventHeader.getAttempt(), internalEventHeader.getExpired(), PrepareAsyncRequest.class,
-                    entity -> {
-                        PnLogAudit pnLogAudit = new PnLogAudit();
-                        pnLogAudit.addsBeforeDiscard(entity.getIun(), String.format("requestId = %s finish retry address manager error ?", entity.getRequestId()));
-
-                        paperRequestErrorDAO.created(
-                                        entity.getRequestId(),
-                                        ADDRESS_MANAGER_ERROR.getMessage(),
-                                        EventTypeEnum.ADDRESS_MANAGER_ERROR.name())
-                                .subscribe();
-                        pnLogAudit.addsSuccessDiscard(entity.getIun(), String.format("requestId = %s finish retry address manager error", entity.getRequestId()));
-                        return null;
-                    },
-                    entityAndAttempt -> {
-                        this.queueListenerService.internalListener(entityAndAttempt.getFirst(), entityAndAttempt.getSecond());
-                        return null;
-                    });
-
-        } else if (internalEventHeader.getEventType().equals(EventTypeEnum.F24_ERROR.name())){
-
-            boolean noAttempt = (paperChannelConfig.getAttemptQueueF24()-1) < internalEventHeader.getAttempt();
-            F24Error error = convertToObject(node, F24Error.class);
-            execution(error, noAttempt, internalEventHeader.getAttempt(), internalEventHeader.getExpired(), F24Error.class,
-                    entity -> {
-                        PnLogAudit pnLogAudit = new PnLogAudit();
-                        pnLogAudit.addsBeforeDiscard(entity.getIun(), String.format("requestId = %s finish retry f24 error ?", entity.getRequestId()));
-
-                        paperRequestErrorDAO.created(
-                                entity.getRequestId(),
-                                entity.getMessage(),
-                                EventTypeEnum.F24_ERROR.name()).subscribe();
-
-                        pnLogAudit.addsSuccessDiscard(entity.getIun(), String.format("requestId = %s finish retry f24 error", entity.getRequestId()));
-                        return null;
-                    },
-                    entityAndAttempt -> {
-                        this.queueListenerService.f24ErrorListener(entityAndAttempt.getFirst(), entityAndAttempt.getSecond());
-                        return null;
-                    });
-
-        } else if (internalEventHeader.getEventType().equals(EventTypeEnum.ZIP_HANDLE_ERROR.name())){
-
-            boolean noAttempt = (paperChannelConfig.getAttemptQueueZipHandle() -1 ) < internalEventHeader.getAttempt();
-            var error = convertToObject(node, DematInternalEvent.class);
-            execution(error, noAttempt, internalEventHeader.getAttempt(), internalEventHeader.getExpired(), DematInternalEvent.class,
-                    entity -> {
-                        PnLogAudit pnLogAudit = new PnLogAudit();
-                        pnLogAudit.addsBeforeDiscard(entity.getIun(), String.format("requestId = %s finish retry zip handle error ?", entity.getRequestId()));
-
-                        paperRequestErrorDAO.created(
-                                entity.getRequestId(),
-                                entity.getErrorMessage(),
-                                EventTypeEnum.ZIP_HANDLE_ERROR.name()).subscribe();
-
-                        pnLogAudit.addsSuccessDiscard(entity.getIun(), String.format("requestId = %s finish retry zip handle error", entity.getRequestId()));
-                        return null;
-                    },
-                    entityAndAttempt -> {
-                        this.queueListenerService.dematZipInternalListener(entityAndAttempt.getFirst(), entityAndAttempt.getSecond());
-                        return null;
-                    });
-
-        } else if (internalEventHeader.getEventType().equals(EventTypeEnum.PREPARE_ASYNC_FLOW.name())){
-            log.info("Push internal queue - first time");
-            PrepareAsyncRequest request = convertToObject(node, PrepareAsyncRequest.class);
-            this.queueListenerService.internalListener(request, internalEventHeader.getAttempt());
-        } else if (internalEventHeader.getEventType().equals(EventTypeEnum.SEND_ZIP_HANDLE.name())){
-            log.info("Push dematZipInternal queue - first time");
-            var request = convertToObject(node, DematInternalEvent.class);
-            this.queueListenerService.dematZipInternalListener(request, internalEventHeader.getAttempt());
+        else if (internalEventHeader.getEventType().equals(EventTypeEnum.SEND_ZIP_HANDLE.name())) {
+            this.handleSendZipEvent(internalEventHeader, node);
         }
 
     }
@@ -223,6 +118,182 @@ public class QueueListener {
         this.queueListenerService.f24ResponseListener(body);
     }
 
+    private void handleNationalRegistriesErrorEvent(InternalEventHeader internalEventHeader, String node) {
+
+        boolean noAttempt = (paperChannelConfig.getAttemptQueueNationalRegistries()-1) < internalEventHeader.getAttempt();
+        NationalRegistryError error = convertToObject(node, NationalRegistryError.class);
+        execution(error, noAttempt, internalEventHeader.getAttempt(), internalEventHeader.getExpired(), NationalRegistryError.class,
+                entity -> {
+                    PnLogAudit pnLogAudit = new PnLogAudit();
+                    pnLogAudit.addsBeforeDiscard(entity.getIun(), String.format("requestId = %s finish retry to National Registry", entity.getRequestId()));
+
+                    PnRequestError pnRequestError = PnRequestError.builder()
+                            .requestId(entity.getRequestId())
+                            .error("ERROR WITH RETRIEVE ADDRESS")
+                            .flowThrow(EventTypeEnum.NATIONAL_REGISTRIES_ERROR.name())
+                            .build();
+
+                    paperRequestErrorDAO.created(pnRequestError).subscribe();
+
+                    pnLogAudit.addsSuccessDiscard(entity.getIun(), String.format("requestId = %s finish retry to National Registry", entity.getRequestId()));
+                    return null;
+                },
+                entityAndAttempt -> {
+                    this.queueListenerService.nationalRegistriesErrorListener(entityAndAttempt.getFirst(), entityAndAttempt.getSecond());
+                    return null;
+                });
+    }
+
+    private void handleManualRetryExternalChannelEvent(String node) {
+        ManualRetryEvent manualRetryEvent = convertToObject(node, ManualRetryEvent.class);
+        this.queueListenerService.manualRetryExternalChannel(manualRetryEvent.getRequestId(), manualRetryEvent.getNewPcRetry());
+    }
+
+    private void handleExternalChannelErrorEvent(InternalEventHeader internalEventHeader, String node) {
+
+        boolean noAttempt = (paperChannelConfig.getAttemptQueueExternalChannel()-1) < internalEventHeader.getAttempt();
+        ExternalChannelError error = convertToObject(node, ExternalChannelError.class);
+        execution(error, noAttempt, internalEventHeader.getAttempt(), internalEventHeader.getExpired(), ExternalChannelError.class,
+                entity -> {
+                    PnLogAudit pnLogAudit = new PnLogAudit();
+                    pnLogAudit.addsBeforeDiscard(entity.getAnalogMail().getIun(), String.format("requestId = %s finish retry to External Channel", entity.getAnalogMail().getRequestId()));
+
+                    PnRequestError pnRequestError = PnRequestError.builder()
+                            .requestId(entity.getAnalogMail().getRequestId())
+                            .error(EXTERNAL_CHANNEL_LISTENER_EXCEPTION.getMessage())
+                            .flowThrow(EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name())
+                            .build();
+
+                    paperRequestErrorDAO.created(pnRequestError).subscribe();
+
+                    pnLogAudit.addsSuccessDiscard(entity.getAnalogMail().getIun(), String.format("requestId = %s finish retry to External Channel", entity.getAnalogMail().getRequestId()));
+                    return null;
+                },
+                entityAndAttempt -> {
+                    SingleStatusUpdateDto dto = new SingleStatusUpdateDto();
+                    dto.setAnalogMail(entityAndAttempt.getFirst().getAnalogMail());
+                    this.queueListenerService.externalChannelListener(dto, entityAndAttempt.getSecond());
+                    return null;
+                });
+    }
+
+    private void handleSafeStorageErrorEvent(InternalEventHeader internalEventHeader, String node) {
+
+        boolean noAttempt = (paperChannelConfig.getAttemptQueueSafeStorage()-1) < internalEventHeader.getAttempt();
+        PrepareAsyncRequest error = convertToObject(node, PrepareAsyncRequest.class);
+        execution(error, noAttempt, internalEventHeader.getAttempt(), internalEventHeader.getExpired(), PrepareAsyncRequest.class,
+                entity -> {
+                    PnLogAudit pnLogAudit = new PnLogAudit();
+                    pnLogAudit.addsBeforeDiscard(entity.getIun(), String.format("requestId = %s finish retry to Safe Storage", entity.getRequestId()));
+
+                    PnRequestError pnRequestError = PnRequestError.builder()
+                            .requestId(entity.getRequestId())
+                            .error(DOCUMENT_NOT_DOWNLOADED.getMessage())
+                            .flowThrow(EventTypeEnum.SAFE_STORAGE_ERROR.name())
+                            .build();
+
+                    paperRequestErrorDAO.created(pnRequestError).subscribe();
+
+                    pnLogAudit.addsSuccessDiscard(entity.getIun(), String.format("requestId = %s finish retry to Safe Storage", entity.getRequestId()));
+                    return null;
+                },
+                entityAndAttempt -> {
+                    this.queueListenerService.internalListener(entityAndAttempt.getFirst(), entityAndAttempt.getSecond());
+                    return null;
+                });
+    }
+
+    private void handleAddressManagerErrorEvent(InternalEventHeader internalEventHeader, String node) {
+
+        boolean noAttempt = (paperChannelConfig.getAttemptQueueAddressManager()-1) < internalEventHeader.getAttempt();
+        PrepareAsyncRequest error = convertToObject(node, PrepareAsyncRequest.class);
+        execution(error, noAttempt, internalEventHeader.getAttempt(), internalEventHeader.getExpired(), PrepareAsyncRequest.class,
+                entity -> {
+                    PnLogAudit pnLogAudit = new PnLogAudit();
+                    pnLogAudit.addsBeforeDiscard(entity.getIun(), String.format("requestId = %s finish retry address manager error ?", entity.getRequestId()));
+
+                    PnRequestError pnRequestError = PnRequestError.builder()
+                            .requestId(entity.getRequestId())
+                            .error(ADDRESS_MANAGER_ERROR.getMessage())
+                            .flowThrow(EventTypeEnum.ADDRESS_MANAGER_ERROR.name())
+                            .build();
+
+                    paperRequestErrorDAO.created(pnRequestError).subscribe();
+
+                    pnLogAudit.addsSuccessDiscard(entity.getIun(), String.format("requestId = %s finish retry address manager error", entity.getRequestId()));
+                    return null;
+                },
+                entityAndAttempt -> {
+                    this.queueListenerService.internalListener(entityAndAttempt.getFirst(), entityAndAttempt.getSecond());
+                    return null;
+                });
+    }
+
+    private void handleF24ErrorEvent(InternalEventHeader internalEventHeader, String node) {
+
+        boolean noAttempt = (paperChannelConfig.getAttemptQueueF24()-1) < internalEventHeader.getAttempt();
+        F24Error error = convertToObject(node, F24Error.class);
+        execution(error, noAttempt, internalEventHeader.getAttempt(), internalEventHeader.getExpired(), F24Error.class,
+                entity -> {
+                    PnLogAudit pnLogAudit = new PnLogAudit();
+                    pnLogAudit.addsBeforeDiscard(entity.getIun(), String.format("requestId = %s finish retry f24 error ?", entity.getRequestId()));
+
+                    PnRequestError pnRequestError = PnRequestError.builder()
+                            .requestId(entity.getRequestId())
+                            .error(entity.getMessage())
+                            .flowThrow(EventTypeEnum.F24_ERROR.name())
+                            .build();
+
+                    paperRequestErrorDAO.created(pnRequestError).subscribe();
+
+                    pnLogAudit.addsSuccessDiscard(entity.getIun(), String.format("requestId = %s finish retry f24 error", entity.getRequestId()));
+                    return null;
+                },
+                entityAndAttempt -> {
+                    this.queueListenerService.f24ErrorListener(entityAndAttempt.getFirst(), entityAndAttempt.getSecond());
+                    return null;
+                });
+    }
+
+    private void handleZipErrorEvent(InternalEventHeader internalEventHeader, String node) {
+
+        boolean noAttempt = (paperChannelConfig.getAttemptQueueZipHandle() -1 ) < internalEventHeader.getAttempt();
+        var error = convertToObject(node, DematInternalEvent.class);
+        execution(error, noAttempt, internalEventHeader.getAttempt(), internalEventHeader.getExpired(), DematInternalEvent.class,
+                entity -> {
+                    PnLogAudit pnLogAudit = new PnLogAudit();
+                    pnLogAudit.addsBeforeDiscard(entity.getIun(), String.format("requestId = %s finish retry zip handle error ?", entity.getRequestId()));
+
+                    PnRequestError pnRequestError = PnRequestError.builder()
+                            .requestId(entity.getRequestId())
+                            .error(entity.getErrorMessage())
+                            .flowThrow(EventTypeEnum.ZIP_HANDLE_ERROR.name())
+                            .build();
+
+                    paperRequestErrorDAO.created(pnRequestError).subscribe();
+
+                    pnLogAudit.addsSuccessDiscard(entity.getIun(), String.format("requestId = %s finish retry zip handle error", entity.getRequestId()));
+                    return null;
+                },
+                entityAndAttempt -> {
+                    this.queueListenerService.dematZipInternalListener(entityAndAttempt.getFirst(), entityAndAttempt.getSecond());
+                    return null;
+                });
+    }
+
+    private void handlePrepareAsyncFlowEvent(InternalEventHeader internalEventHeader, String node) {
+        log.info("Push internal queue - first time");
+        PrepareAsyncRequest request = convertToObject(node, PrepareAsyncRequest.class);
+        this.queueListenerService.internalListener(request, internalEventHeader.getAttempt());
+    }
+
+    private void handleSendZipEvent(InternalEventHeader internalEventHeader, String node) {
+        log.info("Push dematZipInternal queue - first time");
+        var request = convertToObject(node, DematInternalEvent.class);
+        this.queueListenerService.dematZipInternalListener(request, internalEventHeader.getAttempt());
+    }
+
+
     private InternalEventHeader toInternalEventHeader(Map<String, Object> headers){
         if (headers.containsKey(PN_EVENT_HEADER_EVENT_TYPE) &&
                 headers.containsKey(PN_EVENT_HEADER_EXPIRED) &&
@@ -234,8 +305,8 @@ public class QueueListener {
             try {
                 headerAttempt = Integer.parseInt((String) headers.get(PN_EVENT_HEADER_ATTEMPT));
                 headerExpired = Instant.parse((String)headers.get(PN_EVENT_HEADER_EXPIRED));
-            } catch (NumberFormatException | DateTimeParseException ignored ){
-
+            } catch (NumberFormatException | DateTimeParseException ex ){
+                log.warn("QueueListener#toInternalEventHeader - Ignoring exception: {}", ex.getClass().getCanonicalName());
             }
             return InternalEventHeader.builder()
                     .expired(headerExpired)
