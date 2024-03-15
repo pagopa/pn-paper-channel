@@ -37,7 +37,8 @@ public class PrepareAsyncRequest {
 
 
     // Constructor used only national registry listener
-    public PrepareAsyncRequest(String correlationId, Address address) {
+    public PrepareAsyncRequest(String requestId, String correlationId, Address address) {
+        this.requestId = requestId;
         this.correlationId = correlationId;
         this.address = address;
     }
