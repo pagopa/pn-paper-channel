@@ -228,10 +228,10 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                             if (validatePhysicalAddressPayload(addressFromNational, entity.getRequestId())) {
                                 Address address = AddressMapper.fromNationalRegistry(addressFromNational.getPhysicalAddress());
                                 return this.retrieveRelatedAddress(entity.getRelatedRequestId(), address)
-                                        .map(updateAddress -> new PrepareAsyncRequest(entity.getCorrelationId(), updateAddress));
+                                        .map(updateAddress -> new PrepareAsyncRequest(entity.getRequestId(), entity.getCorrelationId(), updateAddress));
                             }
 
-                            return Mono.just(new PrepareAsyncRequest(addressAndEntity.getT2().getCorrelationId(), null));
+                            return Mono.just(new PrepareAsyncRequest(entity.getRequestId(), entity.getCorrelationId(), null));
                         })
                         .flatMap(prepareRequest -> {
                             this.sqsSender.pushToInternalQueue(prepareRequest);

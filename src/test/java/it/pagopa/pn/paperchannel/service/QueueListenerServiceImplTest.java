@@ -286,7 +286,11 @@ class QueueListenerServiceImplTest {
         this.queueListenerService.nationalRegistriesResponseListener(addressSQSMessageDto);
 
         // Mi aspetto che venga inviato l'evento con address vuoto nella coda interna
-        Mockito.verify(this.sqsSender,Mockito.times(1)).pushToInternalQueue(new PrepareAsyncRequest(addressSQSMessageDto.getCorrelationId(), null));
+        Mockito.verify(this.sqsSender,Mockito.times(1)).pushToInternalQueue(new PrepareAsyncRequest(
+                deliveryRequest.getRequestId(),
+                addressSQSMessageDto.getCorrelationId(),
+                null
+        ));
     }
 
     @Test
