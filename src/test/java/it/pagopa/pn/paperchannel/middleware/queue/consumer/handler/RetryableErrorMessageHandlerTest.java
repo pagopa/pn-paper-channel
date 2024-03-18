@@ -76,7 +76,7 @@ class RetryableErrorMessageHandlerTest {
         pnAddress.setCity("Milan");
         pnAddress.setCap("");
 
-        when(mockConfig.getAttemptQueueExternalChannel()).thenReturn(1);
+        when(mockConfig.getAttemptQueueExternalChannel()).thenReturn(3);
         when(mockAddressDAO.findAllByRequestId(currentRequestId)).thenReturn(Mono.just(List.of(pnAddress)));
         when(mockExtChannel.sendEngageRequest(any(SendRequest.class), anyList())).thenReturn(Mono.empty());
         assertDoesNotThrow(() -> handler.handleMessage(pnDeliveryRequest, paperRequest).block());
@@ -103,12 +103,12 @@ class RetryableErrorMessageHandlerTest {
         OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T16:33:00.000Z");
 
         PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto();
-        paperRequest.setRequestId("request.PCRETRY_-2");
+        paperRequest.setRequestId("request.PCRETRY_4");
         paperRequest.setStatusDateTime(instant);
         paperRequest.setClientRequestTimeStamp(instant);
 
         // When
-        when(mockConfig.getAttemptQueueExternalChannel()).thenReturn(-1);
+        when(mockConfig.getAttemptQueueExternalChannel()).thenReturn(3);
         when(mockRequestError.created(Mockito.any(PnRequestError.class))).thenReturn(Mono.just(new PnRequestError()));
 
         // Then
@@ -128,6 +128,41 @@ class RetryableErrorMessageHandlerTest {
 
         //verifico che viene inviato l'evento a delivery-push
         verify(mockSqsSender, times(1)).pushSendEvent(any(SendEvent.class));
+    }
+
+    @Test
+    void handleMessageHasOtherInfiniteAttemptTest() {
+
+        String currentRequestId = "REQUEST.PCRETRY_0";
+        String nextRequestId = "REQUEST.PCRETRY_1";
+        OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T16:33:00.000Z");
+        PnDeliveryRequest pnDeliveryRequest = new PnDeliveryRequest();
+        pnDeliveryRequest.setRequestId(currentRequestId);
+        pnDeliveryRequest.setStatusDetail(StatusCodeEnum.PROGRESS.getValue());
+        pnDeliveryRequest.setAttachments(new ArrayList<>());
+        pnDeliveryRequest.setProductType(ProductTypeEnum.AR.getValue());
+
+        PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto();
+        paperRequest.setRequestId(currentRequestId);
+        paperRequest.setStatusDateTime(instant);
+        paperRequest.setClientRequestTimeStamp(instant);
+
+        PnAddress pnAddress = new PnAddress();
+        pnAddress.setTypology(AddressTypeEnum.RECEIVER_ADDRESS.name());
+        pnAddress.setCity("Milan");
+        pnAddress.setCap("");
+
+        when(mockConfig.getAttemptQueueExternalChannel()).thenReturn(-1);
+        when(mockAddressDAO.findAllByRequestId(currentRequestId)).thenReturn(Mono.just(List.of(pnAddress)));
+        when(mockExtChannel.sendEngageRequest(any(SendRequest.class), anyList())).thenReturn(Mono.empty());
+        assertDoesNotThrow(() -> handler.handleMessage(pnDeliveryRequest, paperRequest).block());
+
+        //verifico che viene invocato ext-channels
+        verify(mockExtChannel, timeout(2000).times(1))
+                .sendEngageRequest(argThat( (SendRequest sr) -> sr.getRequestId().equals(nextRequestId)), anyList() );
+
+        //verifico che viene inviato l'evento a delivery-push
+        verify(mockSqsSender, times(1)).pushSendEvent(argThat((SendEvent se) -> se.getRequestId().equals(currentRequestId) ));
     }
 
 }

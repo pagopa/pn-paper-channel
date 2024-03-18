@@ -75,7 +75,7 @@ public class RetryableErrorMessageHandler extends SendToDeliveryPushHandler {
     }
 
     private boolean hasOtherAttempt(String requestId) {
-        return pnPaperChannelConfig.getAttemptQueueExternalChannel() != -1 || pnPaperChannelConfig.getAttemptQueueExternalChannel() < getRetryAttempt(requestId);
+        return pnPaperChannelConfig.getAttemptQueueExternalChannel() == -1 || pnPaperChannelConfig.getAttemptQueueExternalChannel() >= getRetryAttempt(requestId);
     }
 
     private int getRetryAttempt(String requestId) {
