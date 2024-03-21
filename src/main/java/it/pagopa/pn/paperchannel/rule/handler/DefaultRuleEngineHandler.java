@@ -8,7 +8,7 @@ import java.util.List;
 import static it.pagopa.pn.paperchannel.rule.model.ResultFilter.ResultFilterEnum.DISCARD;
 import static it.pagopa.pn.paperchannel.rule.model.ResultFilter.ResultFilterEnum.SUCCESS;
 
-public class DefaultRuleEngineHandler {
+public class DefaultRuleEngineHandler implements RuleEngineHandler {
 
 
     public ResultRuleEngine filter(List<RuleModel> rules, RuleContext ruleContext) {
