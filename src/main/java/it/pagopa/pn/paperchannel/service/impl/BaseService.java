@@ -77,7 +77,7 @@ public class BaseService extends GenericService {
                 })
                 .flatMap(Mono::just)
                 .onErrorResume(ex -> {
-                    pnLogAudit.addsWarningResolveService(iun, String.format("prepare requestId = %s, relatedRequestId = %s, correlationId = %s Response KO from National Registry service", requestId, relatedRequestId, correlationId));
+                    pnLogAudit.addsFailResolveService(iun, String.format("prepare requestId = %s, relatedRequestId = %s, correlationId = %s Response KO from National Registry service", requestId, relatedRequestId, correlationId));
                     log.warn("NationalRegistries finder address with correlationId {} in errors {}", correlationId, ex.getMessage());
                     return Mono.empty();
 

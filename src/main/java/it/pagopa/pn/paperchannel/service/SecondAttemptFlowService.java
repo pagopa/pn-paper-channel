@@ -89,7 +89,7 @@ public abstract class SecondAttemptFlowService {
                                 correlationId, PnLogger.EXTERNAL_SERVICES.PN_ADDRESS_MANAGER))
                 )
                 .doOnError(ex -> {
-                            pnLogAudit.addsWarningResolveService(iun, String.format("prepare requestId = %s, relatedRequestId = %s, correlationId = %s Response KO from %s", requestId, relatedRequestId, correlationId, PnLogger.EXTERNAL_SERVICES.PN_ADDRESS_MANAGER));
+                            pnLogAudit.addsFailResolveService(iun, String.format("prepare requestId = %s, relatedRequestId = %s, correlationId = %s Response KO from %s", requestId, relatedRequestId, correlationId, PnLogger.EXTERNAL_SERVICES.PN_ADDRESS_MANAGER));
                             log.warn("Address Manager deduplicates with correlationId {} in errors {}", correlationId, ex.getMessage());
                         }
                 );
