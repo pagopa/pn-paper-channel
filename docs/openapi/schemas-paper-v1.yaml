@@ -242,6 +242,11 @@ components:
           $ref: '#/components/schemas/AnalogAddress'
         proposalProductType:
           $ref: '#/components/schemas/ProposalTypeEnum'
+        notificationSentAt:
+          type: string
+          description: date and time referred to UTC
+          format: date-time
+          example: 2022-07-27T12:22:33.444Z
       allOf:
       - $ref: '#/components/schemas/PaperRequest'
     Problem:
