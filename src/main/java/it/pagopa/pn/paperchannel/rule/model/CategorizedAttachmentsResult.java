@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Data
-public class RuleEngineResult {
+public class CategorizedAttachmentsResult {
 
     private List<ResultFilter> acceptedAttachments = new ArrayList<>();
     private List<ResultFilter> discardedAttachments = new ArrayList<>();

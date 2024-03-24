@@ -11,9 +11,9 @@ import static it.pagopa.pn.paperchannel.rule.model.ResultFilter.ResultFilterEnum
 public class DefaultRuleEngineHandler implements RuleEngineHandler {
 
 
-    public RuleEngineResult filter(List<RuleModel> rules, RuleContext ruleContext) {
+    public CategorizedAttachmentsResult filter(List<RuleModel> rules, RuleContext ruleContext) {
         List<RuleAttachmentInfo> filteredAttachments = new ArrayList<>();
-        RuleEngineResult resultRuleEngine = new RuleEngineResult();
+        CategorizedAttachmentsResult resultRuleEngine = new CategorizedAttachmentsResult();
         for (RuleAttachmentInfo currentAttachment: ruleContext.getAttachments()) {
             boolean toAdd = true;
             ResultFilter result = null;
