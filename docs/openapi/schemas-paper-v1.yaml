@@ -120,7 +120,7 @@ components:
             type: string
             description: url con fileKey di safestorage
         categorizedAttachments:
-          $ref: '#/components/schemas/RuleEngineResult'
+          $ref: '#/components/schemas/CategorizedAttachmentsResult'
       allOf:
       - $ref: '#/components/schemas/PaperEvent'
 
@@ -438,7 +438,7 @@ components:
           type: string
         reasonDescription:
           type: string
-    RuleEngineResult:
+    CategorizedAttachmentsResult:
       type: object
       properties:
         acceptedAttachments:
