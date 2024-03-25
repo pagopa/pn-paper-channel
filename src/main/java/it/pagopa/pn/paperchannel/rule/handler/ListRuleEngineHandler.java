@@ -12,7 +12,7 @@ public class ListRuleEngineHandler<U extends List<RuleModel>, T, C extends ListC
 
      public List<R> filterItems(C context, List<T> items, U rules){
          // implementare logica di risoluzione degli handler
-         RuleHandler<T, C, R> handler = null;
+         Handler<T, C, R> handler = null;
          return listChainEngineHandler.filterItems(context, items, handler);
      }
 }

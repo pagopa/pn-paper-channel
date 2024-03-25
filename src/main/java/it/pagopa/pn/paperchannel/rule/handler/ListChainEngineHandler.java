@@ -10,7 +10,7 @@ public class ListChainEngineHandler<T, C extends ListChainContext<T>, R extends 
 
     private SimpleChainEngineHandler<T, C, R> simpleChainEngineHandler;
 
-    public List<R> filterItems(C context, List<T> items, RuleHandler<T, C, R> handler){
+    public List<R> filterItems(C context, List<T> items, Handler<T, C, R> handler){
         //implementare logica
         List<R> results = new ArrayList<>();
         for (T item:
