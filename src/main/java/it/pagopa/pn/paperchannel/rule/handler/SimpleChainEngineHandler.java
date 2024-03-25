@@ -4,7 +4,7 @@ import it.pagopa.pn.paperchannel.rule.model.ResultFilter;
 
 public abstract class SimpleChainEngineHandler<T, C, R extends ResultFilter> {
     public R filterItem(C context, T item, Handler<T, C, R> handler){
-        // implementare logica filtri
-        return null;
+        // richiama wrappando il filtro, tipo con log o altro
+        return handler.filter(item, context);
     }
 }
