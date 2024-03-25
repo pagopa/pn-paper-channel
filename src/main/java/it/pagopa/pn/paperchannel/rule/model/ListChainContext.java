@@ -6,4 +6,6 @@ public abstract class ListChainContext<T> {
 
     protected List<T> items;
 
+    protected List<ListChainResultFilter<T>> actualResults;
+
 }
