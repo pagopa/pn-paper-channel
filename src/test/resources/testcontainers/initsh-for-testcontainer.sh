@@ -17,4 +17,14 @@ done
 aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 sqs set-queue-attributes --queue-url local-ext-channels-outputs-test --attributes '{"RedrivePolicy": "{\"deadLetterTargetArn\":\"arn:aws:sqs:us-east-1:000000000000:local-ext-channels-outputs-test-DLQ\",\"maxReceiveCount\":\"2\"}", "DelaySeconds":"0", "VisibilityTimeout": "5"}'
 
 
-
+aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
+    dynamodb create-table \
+    --table-name AttachmentsConfig  \
+    --attribute-definitions \
+        AttributeName=configKey,AttributeType=S \
+        AttributeName=startValidity,AttributeType=S \
+    --key-schema \
+        AttributeName=configKey,KeyType=HASH \
+        AttributeName=startValidity,KeyType=RANGE \
+    --provisioned-throughput \
+        ReadCapacityUnits=10,WriteCapacityUnits=5
