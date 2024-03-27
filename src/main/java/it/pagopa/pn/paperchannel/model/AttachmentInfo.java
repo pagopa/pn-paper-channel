@@ -7,11 +7,13 @@ import lombok.ToString;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.Serializable;
+
 
 @Getter
 @Setter
 @ToString
-public class AttachmentInfo implements Comparable<AttachmentInfo> {
+public class AttachmentInfo implements Comparable<AttachmentInfo>, Serializable {
     private String id;
     private String documentType;
     private String url;
