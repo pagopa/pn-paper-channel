@@ -119,6 +119,8 @@ components:
           items:
             type: string
             description: url con fileKey di safestorage
+        categorizedAttachments:
+          $ref: '#/components/schemas/CategorizedAttachmentsResult'
       allOf:
       - $ref: '#/components/schemas/PaperEvent'
 
@@ -240,6 +242,11 @@ components:
           $ref: '#/components/schemas/AnalogAddress'
         proposalProductType:
           $ref: '#/components/schemas/ProposalTypeEnum'
+        notificationSentAt:
+          type: string
+          description: Date of creation of the notification, date and time referred to UTC
+          format: date-time
+          example: 2022-07-27T12:22:33.444Z
       allOf:
       - $ref: '#/components/schemas/PaperRequest'
     Problem:
@@ -419,3 +426,29 @@ components:
           type: string
           description: Data di produzione del documento.
           format: date-time
+    ResultFilterEnum:
+      type: string
+      enum:
+        - SUCCESS
+        - DISCARD
+        - NEXT
+    ResultFilter:
+      type: object
+      properties:
+        fileKey:
+          type: string
+        result:
+          $ref: '#/components/schemas/ResultFilterEnum'
+        reasonCode:
+          type: string
+        reasonDescription:
+          type: string
+    CategorizedAttachmentsResult:
+      type: object
+      properties:
+        acceptedAttachments:
+          items:
+            $ref: '#/components/schemas/ResultFilter'
+        discardedAttachments:
+          items:
+            $ref: '#/components/schemas/ResultFilter'
