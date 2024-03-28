@@ -3,6 +3,7 @@ package it.pagopa.pn.paperchannel.middleware.queue.consumer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.awspring.cloud.messaging.listener.SqsMessageDeletionPolicy;
 import io.awspring.cloud.messaging.listener.annotation.SqsListener;
+import it.pagopa.pn.api.dto.events.PnAttachmentsConfigEventPayload;
 import it.pagopa.pn.api.dto.events.PnF24PdfSetReadyEvent;
 import it.pagopa.pn.commons.utils.MDCUtils;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
@@ -116,6 +117,13 @@ public class QueueListener {
         PnF24PdfSetReadyEvent.Detail body = convertToObject(node, PnF24PdfSetReadyEvent.Detail.class);
         setMDCContext(headers);
         this.queueListenerService.f24ResponseListener(body);
+    }
+
+    @SqsListener(value = "${pn.paper-channel.queue-radd-alt}", deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)
+    public void pullRaddAlt(@Payload String node, @Headers Map<String,Object> headers){
+        var body = convertToObject(node, PnAttachmentsConfigEventPayload.class);
+        setMDCContext(headers);
+        this.queueListenerService.raddAltListener(body);
     }
 
     private void handleNationalRegistriesErrorEvent(InternalEventHeader internalEventHeader, String node) {

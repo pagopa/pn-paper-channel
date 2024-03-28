@@ -15,7 +15,7 @@ import java.util.List;
 @DynamoDbBean
 @Setter
 @ToString
-@EqualsAndHashCode
+@EqualsAndHashCode(exclude = { "createdAt", "updateAt" } )
 public class PnAttachmentsConfig {
 
     public static final String COL_CONFIG_KEY = "configKey";

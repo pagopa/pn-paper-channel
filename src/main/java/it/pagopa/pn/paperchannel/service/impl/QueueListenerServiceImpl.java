@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
+import it.pagopa.pn.api.dto.events.PnAttachmentsConfigEventPayload;
 import it.pagopa.pn.api.dto.events.PnF24PdfSetReadyEvent;
 import it.pagopa.pn.api.dto.events.PnF24PdfSetReadyEventItem;
 import it.pagopa.pn.commons.utils.MDCUtils;
@@ -53,6 +54,7 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
     private final ExternalChannelClient externalChannelClient;
     private final F24Service f24Service;
     private final DematZipService dematZipService;
+    private final AttachmentsConfigService attachmentsConfigService;
 
     public QueueListenerServiceImpl(RequestDeliveryDAO requestDeliveryDAO,
                                     CostDAO costDAO,
@@ -64,7 +66,8 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                                     PaperRequestErrorDAO paperRequestErrorDAO,
                                     ExternalChannelClient externalChannelClient,
                                     F24Service f24Service,
-                                    DematZipService dematZipService) {
+                                    DematZipService dematZipService,
+                                    AttachmentsConfigService attachmentsConfigService) {
 
         super(requestDeliveryDAO, costDAO, nationalRegistryClient, sqsSender);
 
@@ -75,6 +78,7 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
         this.externalChannelClient = externalChannelClient;
         this.f24Service = f24Service;
         this.dematZipService = dematZipService;
+        this.attachmentsConfigService = attachmentsConfigService;
     }
 
 
@@ -177,6 +181,22 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                                                 payload.getGeneratedPdfsUrls().stream().map(PnF24PdfSetReadyEventItem::getUri).toList()))
                 )
                 .block();
+    }
+
+    @Override
+    public void raddAltListener(PnAttachmentsConfigEventPayload data) {
+        final String PROCESS_NAME = "raddAltListener";
+        MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, data.getConfigKey());
+        log.logStartingProcess(PROCESS_NAME);
+        var monoResult = Mono.just(data)
+                .flatMap(request -> attachmentsConfigService.refreshConfig(data))
+                .doOnSuccess(resultFromAsync -> {
+                    log.info("End of raddAltListener");
+                    log.logEndingProcess(PROCESS_NAME);
+                })
+                .doOnError(ex -> log.error("Error in raddAltListener with configKey: {}", data.getConfigKey(), ex));
+
+        MDCUtils.addMDCToContextAndExecute(monoResult).block();
     }
 
     @Override
