@@ -33,9 +33,9 @@ public class PnAttachmentsConfigDAOImpl extends BaseDAO<PnAttachmentsConfig> imp
     }
 
     /**
-     * @param configKey    the partitionKey
+     * @param configKey the partitionKey
      * @param dateValidity startValidity <=  dateValidity <= endValidity
-     * @return
+     * @return the found configuration, or Mono.empty
      */
     @Override
     public Mono<PnAttachmentsConfig> findConfigInInterval(String configKey, Instant dateValidity) {
@@ -52,11 +52,21 @@ public class PnAttachmentsConfigDAOImpl extends BaseDAO<PnAttachmentsConfig> imp
         return getByFilter(queryConditional, null, values, filter).next();
     }
 
+    /**
+     * @param pnAttachmentsConfig the entity to be saved
+     * @return the saved entity
+     */
     @Override
     public Mono<PnAttachmentsConfig> putItem(PnAttachmentsConfig pnAttachmentsConfig) {
         return Mono.fromFuture(super.put(pnAttachmentsConfig));
     }
 
+    /**
+     *
+     * @param configKey the partitionKey that is used to retrieve all the records with that key and then delete them
+     * @param pnAttachmentsConfigs the new configurations to be saved.
+     * @return Mono.empty
+     */
     @Override
     public Mono<Void> putItemInTransaction(String configKey, List<PnAttachmentsConfig> pnAttachmentsConfigs) {
         final TransactWriteItemsEnhancedRequest.Builder builder = TransactWriteItemsEnhancedRequest.builder();
@@ -68,9 +78,15 @@ public class PnAttachmentsConfigDAOImpl extends BaseDAO<PnAttachmentsConfig> imp
                         builder.addPutItem(this.dynamoTable, pnAttachmentsConfig);
                     }
                     return Mono.fromFuture(dynamoDbEnhancedAsyncClient.transactWriteItems(builder.build()));
-                }));
+                }))
+                .doOnError(throwable -> log.error("Error in putItemInTransaction with key: {}", configKey, throwable));
     }
 
+    /**
+     *
+     * @param configKey the partitionKey that is used to retrieve all the records with that key and then delete them
+     * @return the found configurations, or Flux.empty
+     */
     @Override
     public Flux<PnAttachmentsConfig> findAllByConfigKey(String configKey) {
         Key.Builder keyBuilder = Key.builder().partitionValue(configKey);

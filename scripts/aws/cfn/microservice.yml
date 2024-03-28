@@ -666,6 +666,7 @@ Resources:
               - !Sub "${ClientDynamoTableArn}"
               - !Sub "${ClientDynamoTableArn}/*"
               - !Sub "${AttachmentsConfigDynamoTableArn}/*"
+              - !Sub "${AttachmentsConfigDynamoTableArn}/*"
           - Effect: Allow
             Action:
               - cloudwatch:PutMetricData
@@ -693,6 +694,7 @@ Resources:
             - !Ref TenderDynamoTableName
             - !Ref DeliveryFileDynamoTableName
             - !Ref RequestDeliveryDynamoTableName
+            - !Ref AttachmentsConfigDynamoTableArn
         RestApiStageArns: !Join
           - ','
           - - !GetAtt PaperChannelGatewayDeliveryDriver.Outputs.RestApiStageArn
