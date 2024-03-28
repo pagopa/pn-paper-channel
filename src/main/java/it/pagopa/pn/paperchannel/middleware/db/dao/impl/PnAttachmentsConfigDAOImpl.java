@@ -34,14 +34,14 @@ public class PnAttachmentsConfigDAOImpl extends BaseDAO<PnAttachmentsConfig> imp
 
     /**
      * @param configKey the partitionKey
-     * @param dateValidity startValidity <=  dateValidity <= endValidity
+     * @param dateValidity startValidity <=  dateValidity < endValidity
      * @return the found configuration, or Mono.empty
      */
     @Override
     public Mono<PnAttachmentsConfig> findConfigInInterval(String configKey, Instant dateValidity) {
         Key.Builder keyBuilder = Key.builder().partitionValue(configKey).sortValue(dateValidity.toString());
 
-        String filter = PnAttachmentsConfig.COL_END_VALIDITY + " >= :dateValidity" +
+        String filter = PnAttachmentsConfig.COL_END_VALIDITY + " > :dateValidity" +
                 " OR attribute_not_exists(endValidity)";
 
         Map<String, AttributeValue> values = new HashMap<>();
