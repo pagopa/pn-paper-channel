@@ -62,6 +62,7 @@ public class PnPaperChannelConfig {
     private String requestPaIdOverride;
     private Set<String> requiredDemats;
     private boolean zipHandleActive;
+    private Set<String> complexRefinementCodes;
 
     /**
      * Per l'errore PNADDR001 flusso NR: True se il failureDetailCode D01 deve essere mandato a delivery push (specificando anche l'indirizzo),

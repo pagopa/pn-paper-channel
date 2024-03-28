@@ -37,6 +37,7 @@
     "F24ClientRetryMaxAttempts": "0",
     "RequiredDemats": "23L",
     "ZipHandleActive": "false",
-    "Pnaddr002ContinueFlow": "true"
+    "Pnaddr002ContinueFlow": "true",
+    "ComplexRefinementCodes": "RECAG005C,RECAG006C,RECAG007C"
   }
 }
