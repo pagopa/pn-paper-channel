@@ -351,6 +351,11 @@ Parameters:
     Default: '23L,ARCAD'
     Description: 'Variable that defines all the mandatory demats related (for now) only to PNAG012 events, using format <DEMAT_1>,<DEMAT_2>,...,<DEMAT_N>'
 
+  ComplexRefinementCodes:
+    Type: String
+    Default: 'RECAG005C,RECAG006C,RECAG007C'
+    Description: 'Variable that defines all the 890 codes that must be managed using old complex flow'
+
   # OpenApi Bucket params
   MicroserviceBucketName:
     Type: String
@@ -573,6 +578,7 @@ Resources:
         ContainerEnvEntry59: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUEZIPHANDLE=${AttemptQueueZipHandle}'
         ContainerEnvEntry60: !Sub 'PN_PAPERCHANNEL_ZIPHANDLEACTIVE=${ZipHandleActive}'
         ContainerEnvEntry61: !Sub 'AWS_DYNAMODBATTACHMENTSCONFIGTABLE=${AttachmentsConfigDynamoTableName}'
+        ContainerEnvEntry62: !Sub 'PN_PAPERCHANNEL_COMPLEXREFINEMENTCODES=${ComplexRefinementCodes}'
         ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-PaperChannel-Secrets
         MappedPaths: '/paper-channel-bo/*,/paper-channel-private/*'
