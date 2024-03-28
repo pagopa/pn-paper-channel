@@ -665,7 +665,7 @@ Resources:
               - !Sub "${PaperEventsTableArn}/*"
               - !Sub "${ClientDynamoTableArn}"
               - !Sub "${ClientDynamoTableArn}/*"
-              - !Sub "${AttachmentsConfigDynamoTableArn}/*"
+              - !Sub "${AttachmentsConfigDynamoTableArn}"
               - !Sub "${AttachmentsConfigDynamoTableArn}/*"
           - Effect: Allow
             Action:
