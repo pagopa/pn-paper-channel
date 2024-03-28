@@ -294,6 +294,14 @@ Parameters:
     Type: String
     Description: 'ARN of dynamodb table containing configurations about attachments'
 
+  PaperEventErrorDynamoTableName:
+    Type: String
+    Description: 'Name of dynamodb table containing event errors'
+
+  PaperEventErrorDynamoTableArn:
+    Type: String
+    Description: 'ARN of dynamodb table containing out of order event errors'
+
   ExternalChannelsOutputsQueueName:
     Type: String
     Description: 'Push delivery-push messages to this Queue'
@@ -573,6 +581,7 @@ Resources:
         ContainerEnvEntry59: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUEZIPHANDLE=${AttemptQueueZipHandle}'
         ContainerEnvEntry60: !Sub 'PN_PAPERCHANNEL_ZIPHANDLEACTIVE=${ZipHandleActive}'
         ContainerEnvEntry61: !Sub 'AWS_DYNAMODBATTACHMENTSCONFIGTABLE=${AttachmentsConfigDynamoTableName}'
+        ContainerEnvEntry62: !Sub 'AWS_DYNAMODBPAPEREVENTERRORTABLE=${PaperEventErrorDynamoTableName}'
         ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-PaperChannel-Secrets
         MappedPaths: '/paper-channel-bo/*,/paper-channel-private/*'
@@ -667,6 +676,8 @@ Resources:
               - !Sub "${ClientDynamoTableArn}/*"
               - !Sub "${AttachmentsConfigDynamoTableArn}"
               - !Sub "${AttachmentsConfigDynamoTableArn}/*"
+              - !Sub "${PaperEventErrorDynamoTableArn}"
+              - !Sub "${PaperEventErrorDynamoTableArn}/*"
           - Effect: Allow
             Action:
               - cloudwatch:PutMetricData
@@ -695,6 +706,7 @@ Resources:
             - !Ref DeliveryFileDynamoTableName
             - !Ref RequestDeliveryDynamoTableName
             - !Ref AttachmentsConfigDynamoTableArn
+            - !Ref PaperEventErrorDynamoTableArn
         RestApiStageArns: !Join
           - ','
           - - !GetAtt PaperChannelGatewayDeliveryDriver.Outputs.RestApiStageArn
