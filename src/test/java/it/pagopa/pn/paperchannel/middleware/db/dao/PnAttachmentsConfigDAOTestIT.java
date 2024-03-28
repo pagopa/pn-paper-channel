@@ -23,15 +23,19 @@ class PnAttachmentsConfigDAOTestIT extends BaseTest {
     @Test
     void putItemAndFindAllByConfigKeyTest() {
         String geoKey = String.valueOf(random.nextInt(1000));
+        String anotherGeoKey = String.valueOf(random.nextInt(1000));
 
-        var pnAttachmentsConfig = buildPnAttachmentsConfig(geoKey, "2024-01-01T00:00:00.000Z", "2025-01-01T00:00:00.000Z");
+        var pnAttachmentsConfigOneFirstGeoKey = buildPnAttachmentsConfig(geoKey, "2024-01-01T00:00:00.000Z", "2025-01-01T00:00:00.000Z");
+        var pnAttachmentsConfigTwoFirstGeoKey = buildPnAttachmentsConfig(geoKey, "2025-01-02T00:00:00.000Z", "2025-02-01T00:00:00.000Z");
+        var pnAttachmentsConfigSecondGeoKey = buildPnAttachmentsConfig(anotherGeoKey, "2023-01-02T00:00:00.000Z", "2023-02-01T00:00:00.000Z");
 
-        pnAttachmentsConfigDAO.putItem(pnAttachmentsConfig).block();
+        pnAttachmentsConfigDAO.putItem(pnAttachmentsConfigOneFirstGeoKey).block();
+        pnAttachmentsConfigDAO.putItem(pnAttachmentsConfigTwoFirstGeoKey).block();
+        pnAttachmentsConfigDAO.putItem(pnAttachmentsConfigSecondGeoKey).block();
 
         final List<PnAttachmentsConfig> result = pnAttachmentsConfigDAO.findAllByConfigKey(geoKey).collectList().block();
 
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0)).isEqualTo(pnAttachmentsConfig);
+        assertThat(result).hasSize(2).isEqualTo(List.of(pnAttachmentsConfigOneFirstGeoKey, pnAttachmentsConfigTwoFirstGeoKey));
     }
 
     @Test

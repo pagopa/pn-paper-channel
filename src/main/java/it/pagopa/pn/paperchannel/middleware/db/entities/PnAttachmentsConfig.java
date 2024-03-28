@@ -26,6 +26,8 @@ public class PnAttachmentsConfig {
 
     public static final String COL_RULES = "rules";
 
+    public static final String COL_PARENT_REFERENCE = "parentReference";
+
     public static final String COL_CREATED_AT = "createdAt";
 
     public static final String COL_UPDATE_AT = "updateAt";
@@ -41,6 +43,9 @@ public class PnAttachmentsConfig {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_RULES)}))
     private List<PnAttachmentsRule> rules;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_PARENT_REFERENCE)}))
+    private String parentReference;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_CREATED_AT)}))
     private Instant createdAt;
