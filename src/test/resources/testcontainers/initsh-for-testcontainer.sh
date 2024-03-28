@@ -1,6 +1,6 @@
 echo "### CREATE AWS OBJECTS FOR IT TESTS ###"
 
-bash <(curl -s https://raw.githubusercontent.com/pagopa/pn-paper-channel/817a0f8b918d886413daeef09ca0d6264a251f2f/src/test/resources/testcontainers/init.sh)
+bash <(curl -s https://raw.githubusercontent.com/pagopa/pn-paper-channel/e4fa44b8488c53807bb6adce352b5cc70236523a/src/test/resources/testcontainers/init.sh)
 
 
 echo "### CREATE TEST IT QUEUES ###"
@@ -15,6 +15,3 @@ for qn in  $( echo $queues | tr " " "\n" ) ; do
 done
 
 aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 sqs set-queue-attributes --queue-url local-ext-channels-outputs-test --attributes '{"RedrivePolicy": "{\"deadLetterTargetArn\":\"arn:aws:sqs:us-east-1:000000000000:local-ext-channels-outputs-test-DLQ\",\"maxReceiveCount\":\"2\"}", "DelaySeconds":"0", "VisibilityTimeout": "5"}'
-
-
-
