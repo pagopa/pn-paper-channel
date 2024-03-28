@@ -179,6 +179,11 @@ public class HandlersFactory {
         map.put(ExternalChannelCodeEnum.RECRN015.name(), handler); // progress
 
         map.put(ExternalChannelCodeEnum.RECAG015.name(), handler); // progress
+
+        // send "inesito" events to delivery push as progresses
+        map.put(ExternalChannelCodeEnum.RECAG010.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECRS010.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECRN010.name(), handler);
     }
 
     private void addAggregatorStatusCodes(ConcurrentHashMap<String, MessageHandler> map, AggregatorMessageHandler handler) {
