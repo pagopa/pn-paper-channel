@@ -190,10 +190,7 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
         log.logStartingProcess(PROCESS_NAME);
         var monoResult = Mono.just(data)
                 .flatMap(request -> attachmentsConfigService.refreshConfig(data))
-                .doOnSuccess(resultFromAsync -> {
-                    log.info("End of raddAltListener");
-                    log.logEndingProcess(PROCESS_NAME);
-                })
+                .doOnSuccess(resultFromAsync -> log.logEndingProcess(PROCESS_NAME))
                 .doOnError(ex -> log.error("Error in raddAltListener with configKey: {}", data.getConfigKey(), ex));
 
         MDCUtils.addMDCToContextAndExecute(monoResult).block();
