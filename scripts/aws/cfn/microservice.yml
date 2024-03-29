@@ -332,6 +332,14 @@ Parameters:
     Type: String
     Description: 'Send and pull requests in this queue'
 
+  RaddAltToPaperChannelQueueName:
+    Type: String
+    Description: 'Pull radd-alt messages from this Queue'
+
+  RaddAltToPaperChannelQueueARN:
+    Type: String
+    Description: 'Pull radd-alt messages from this Queue'
+
   DateChargeCalculationModes:
     Type: String
     Description: 'Variable that determines which calculation mode to use,  in startConfigurationTime;calculationMode format.'
@@ -573,6 +581,7 @@ Resources:
         ContainerEnvEntry59: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUEZIPHANDLE=${AttemptQueueZipHandle}'
         ContainerEnvEntry60: !Sub 'PN_PAPERCHANNEL_ZIPHANDLEACTIVE=${ZipHandleActive}'
         ContainerEnvEntry61: !Sub 'AWS_DYNAMODBATTACHMENTSCONFIGTABLE=${AttachmentsConfigDynamoTableName}'
+        ContainerEnvEntry62: !Sub 'PN_PAPERCHANNEL_QUEUERADDALT=${RaddAltToPaperChannelQueueName}'
         ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-PaperChannel-Secrets
         MappedPaths: '/paper-channel-bo/*,/paper-channel-private/*'
@@ -618,6 +627,7 @@ Resources:
               - !Ref ScheduledRequestsQueueARN
               - !Ref NationalRegistries2PaperChannelQueueARN
               - !Ref F24ToPaperChannelQueueARN
+              - !Ref RaddAltToPaperChannelQueueARN
           - Effect: Allow
             Action:
               - events:PutEvents
@@ -714,6 +724,7 @@ Resources:
             - !Ref ScheduledRequestsQueueARN
             - !Ref NationalRegistries2PaperChannelQueueARN
             - !Ref F24ToPaperChannelQueueARN
+            - !Ref RaddAltToPaperChannelQueueARN
         LogGroupsNames: !Join
           - ','
           - - !Sub '/aws/ecs/${ProjectName}-paper-channel'   
