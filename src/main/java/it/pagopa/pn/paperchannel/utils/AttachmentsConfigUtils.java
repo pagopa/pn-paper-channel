@@ -52,6 +52,7 @@ public class AttachmentsConfigUtils {
         StringBuilder fileKeyNew = new StringBuilder();
 
         if (fileKey.contains(SAFESTORAGE_PREFIX)){
+            //clean safestorage://
             fileKeyNew.append(fileKey.replace(SAFESTORAGE_PREFIX, ""));
         }
         else {
@@ -60,6 +61,7 @@ public class AttachmentsConfigUtils {
 
         var queryParamStartIndex = fileKeyNew.indexOf("?");
         if(queryParamStartIndex != -1) {
+            //clean all query params
             fileKeyNew.delete(queryParamStartIndex, fileKeyNew.length());
         }
 
