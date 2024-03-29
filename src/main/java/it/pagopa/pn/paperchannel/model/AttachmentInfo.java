@@ -20,6 +20,7 @@ public class AttachmentInfo implements Comparable<AttachmentInfo> {
     private int numberOfPage;
     private String sha256;
     private String generatedFrom;
+    private String docTag;
 
     @Override
     public int compareTo(@NotNull AttachmentInfo attachmentInfo) {

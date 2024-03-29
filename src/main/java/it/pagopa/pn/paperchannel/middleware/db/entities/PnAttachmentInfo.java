@@ -29,6 +29,8 @@ public class PnAttachmentInfo {
 
     private static final String COL_GENERATEDFROM = "generatedFrom";
 
+    private static final String COL_DOC_TAG = "docTag";
+
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_ID)}))
     private String id;
 
@@ -52,4 +54,7 @@ public class PnAttachmentInfo {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_GENERATEDFROM)}))
     private String generatedFrom;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_DOC_TAG)}))
+    private String docTag;
 }
