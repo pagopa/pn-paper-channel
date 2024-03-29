@@ -123,6 +123,7 @@ public class QueueListener {
     public void pullRaddAlt(@Payload String node, @Headers Map<String,Object> headers){
         var body = convertToObject(node, PnAttachmentsConfigEventPayload.class);
         setMDCContext(headers);
+        log.debug("Handle message from raddAltListener with header {}, body:{}", headers, body);
         this.queueListenerService.raddAltListener(body);
     }
 
