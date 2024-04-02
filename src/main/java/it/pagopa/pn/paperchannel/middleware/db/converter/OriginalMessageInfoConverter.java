@@ -25,13 +25,7 @@ public class OriginalMessageInfoConverter implements AttributeConverter<Original
      * */
     @Override
     public AttributeValue transformFrom(OriginalMessageInfo pnEventOriginalMessage) {
-        AttributeValue attributeValue = null;
-
-        if (pnEventOriginalMessage.getEventType().equals(EventTypeEnum.REDRIVE_PAPER_PROGRESS_STATUS.name())) {
-            attributeValue = ((PaperProgressStatusEventOriginalMessageInfo) pnEventOriginalMessage).getAttributeValue();
-        }
-
-        return attributeValue;
+        return pnEventOriginalMessage.getAttributeValue();
     }
 
     /**
@@ -41,20 +35,22 @@ public class OriginalMessageInfoConverter implements AttributeConverter<Original
      *
      * @return                  Java object
      * */
-    @SuppressWarnings("CastCanBeRemovedNarrowingVariableType")
     @Override
     public OriginalMessageInfo transformTo(AttributeValue attributeValue) {
-        OriginalMessageInfo originalMessageInfo = null;
+        OriginalMessageInfo originalMessageInfo;
 
         Map<String, AttributeValue> attributeValueMap = attributeValue.m();
 
+        /* Use switch-case when cases will grow and use strategy in case of complex build definition */
         if (attributeValueMap.get(OriginalMessageInfo.COL_EVENT_TYPE).s().equals(EventTypeEnum.REDRIVE_PAPER_PROGRESS_STATUS.name())) {
             originalMessageInfo = new PaperProgressStatusEventOriginalMessageInfo();
-            originalMessageInfo.setEventType(attributeValueMap.get(OriginalMessageInfo.COL_EVENT_TYPE).s());
             ((PaperProgressStatusEventOriginalMessageInfo) originalMessageInfo).setStatusCode(attributeValueMap.get(PaperProgressStatusEventOriginalMessageInfo.COL_STATUS_CODE).s());
             ((PaperProgressStatusEventOriginalMessageInfo) originalMessageInfo).setStatusDescription(attributeValueMap.get(PaperProgressStatusEventOriginalMessageInfo.COL_STATUS_DESCRIPTION).s());
+        } else {
+            originalMessageInfo = new OriginalMessageInfo();
         }
 
+        originalMessageInfo.setEventType(attributeValueMap.get(OriginalMessageInfo.COL_EVENT_TYPE).s());
         return originalMessageInfo;
     }
 
