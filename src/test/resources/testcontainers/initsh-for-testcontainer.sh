@@ -4,7 +4,7 @@ bash <(curl -s https://raw.githubusercontent.com/pagopa/pn-paper-channel/d122771
 
 
 echo "### CREATE TEST IT QUEUES ###"
-queues="local-ext-channels-outputs-test local-ext-channels-outputs-test-DLQ"
+queues="local-ext-channels-outputs-test local-ext-channels-outputs-test-DLQ local-radd-alt-to-paper-channel"
 for qn in  $( echo $queues | tr " " "\n" ) ; do
     echo creating queue $qn ...
     aws --profile default --region us-east-1 --endpoint-url http://localstack:4566 \
