@@ -1,9 +1,9 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
-import it.pagopa.pn.paperchannel.service.SqsSender;
+import lombok.experimental.SuperBuilder;
 
-public class DirectlySendMessageHandler extends SendToDeliveryPushHandler {
-    public DirectlySendMessageHandler(SqsSender sqsSender) {
-        super(sqsSender);
-    }
-}
+/**
+ * Possiamo eliminare questa classe rendendo {@link SendToDeliveryPushHandler} non astratta?
+ * */
+@SuperBuilder
+public class DirectlySendMessageHandler extends SendToDeliveryPushHandler { }

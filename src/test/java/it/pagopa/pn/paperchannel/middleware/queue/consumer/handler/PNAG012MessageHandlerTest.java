@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
+import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.DiscoveredAddressDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
@@ -7,6 +8,7 @@ import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDiscoveredAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventDemat;
@@ -31,27 +33,41 @@ import static org.mockito.Mockito.*;
 
 class PNAG012MessageHandlerTest {
 
-    private EventDematDAO eventDematDAO;
-
-    private EventMetaDAO eventMetaDAO;
-
-    private SqsSender mockSqsSender;
-
     private PNAG012MessageHandler handler;
+
+    private EventDematDAO eventDematDAO;
+    private EventMetaDAO eventMetaDAO;
+    private SqsSender mockSqsSender;
+    private RequestDeliveryDAO requestDeliveryDAO;
+
+    private PnPaperChannelConfig mockConfig;
 
     @BeforeEach
     public void init() {
         long ttlDays = 365;
-        eventDematDAO = mock(EventDematDAO.class);
-        eventMetaDAO = mock(EventMetaDAO.class);
-        mockSqsSender = mock(SqsSender.class);
-
         Set<String> requiredDemats = Set.of(
                 DematDocumentTypeEnum.DEMAT_23L.getDocumentType(),
                 DematDocumentTypeEnum.DEMAT_ARCAD.getDocumentType()
         );
 
-        handler = new PNAG012MessageHandler(mockSqsSender, eventDematDAO, ttlDays, eventMetaDAO, ttlDays, requiredDemats, false);
+        eventDematDAO = mock(EventDematDAO.class);
+        eventMetaDAO = mock(EventMetaDAO.class);
+        mockSqsSender = mock(SqsSender.class);
+        requestDeliveryDAO = mock(RequestDeliveryDAO.class);
+
+        mockConfig = new PnPaperChannelConfig();
+        mockConfig.setTtlExecutionDaysDemat(ttlDays);
+        mockConfig.setTtlExecutionDaysMeta(ttlDays);
+        mockConfig.setZipHandleActive(false);
+        mockConfig.setRequiredDemats(requiredDemats);
+
+        handler = PNAG012MessageHandler.builder()
+                .sqsSender(mockSqsSender)
+                .eventDematDAO(eventDematDAO)
+                .eventMetaDAO(eventMetaDAO)
+                .requestDeliveryDAO(requestDeliveryDAO)
+                .pnPaperChannelConfig(mockConfig)
+                .build();
     }
 
     @Test
@@ -96,6 +112,8 @@ class PNAG012MessageHandlerTest {
 
         PnEventMeta pnEventMetaPNAG012 = createMETAForPNAG012Event(paperRequest, pnEventMetaRECAG012, 365L);
         when(eventMetaDAO.putIfAbsent(pnEventMetaPNAG012)).thenReturn(Mono.just(pnEventMetaPNAG012));
+
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(entity));
 
         // Then
         // eseguo l'handler
@@ -149,6 +167,8 @@ class PNAG012MessageHandlerTest {
 
         PnEventMeta pnEventMetaPNAG012 = createMETAForPNAG012Event(paperRequest, pnEventMetaRECAG012, 365L);
         when(eventMetaDAO.putIfAbsent(pnEventMetaPNAG012)).thenReturn(Mono.just(pnEventMetaPNAG012));
+
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(entity));
 
         // Then
         // eseguo l'handler
@@ -217,6 +237,8 @@ class PNAG012MessageHandlerTest {
 
         PnEventMeta pnEventMetaPNAG012 = createMETAForPNAG012Event(paperRequest, pnEventMetaRECAG012, 365L);
         when(eventMetaDAO.putIfAbsent(pnEventMetaPNAG012)).thenReturn(Mono.just(pnEventMetaPNAG012));
+
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(entity));
 
         // Then
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
@@ -412,6 +434,8 @@ class PNAG012MessageHandlerTest {
         PnEventMeta pnEventMetaPNAG012 = createMETAForPNAG012Event(paperRequest, pnEventMetaRECAG012, 365L);
         when(eventMetaDAO.putIfAbsent(pnEventMetaPNAG012)).thenReturn(Mono.just(pnEventMetaPNAG012));
 
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(entity));
+
         // Then
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
         verify(mockSqsSender, times(1)).pushSendEvent(any());
@@ -424,8 +448,9 @@ class PNAG012MessageHandlerTest {
          * */
 
         // Given
-        Set<String> requiredDemats = Collections.emptySet();
-        ReflectionTestUtils.setField(handler, "requiredDemats", requiredDemats);
+
+        mockConfig.setRequiredDemats(Collections.emptySet());
+        ReflectionTestUtils.setField(handler, "pnPaperChannelConfig", mockConfig);
 
         OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
         PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
@@ -467,6 +492,8 @@ class PNAG012MessageHandlerTest {
 
         PnEventMeta pnEventMetaPNAG012 = createMETAForPNAG012Event(paperRequest, pnEventMetaRECAG012, 365L);
         when(eventMetaDAO.putIfAbsent(pnEventMetaPNAG012)).thenReturn(Mono.just(pnEventMetaPNAG012));
+
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(entity));
 
         // Then
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());

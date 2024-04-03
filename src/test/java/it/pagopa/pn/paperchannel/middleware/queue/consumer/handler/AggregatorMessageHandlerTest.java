@@ -6,6 +6,7 @@ import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDiscoveredAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventDemat;
@@ -30,19 +31,27 @@ import static org.mockito.Mockito.*;
 class AggregatorMessageHandlerTest {
 
     private AggregatorMessageHandler handler;
+
     private SqsSender mockSqsSender;
     private EventDematDAO mockDematDao;
     private EventMetaDAO mockMetaDao;
+    private RequestDeliveryDAO requestDeliveryDAO;
 
     @BeforeEach
     public void init() {
         mockSqsSender = mock(SqsSender.class);
         mockMetaDao = mock(EventMetaDAO.class);
         mockDematDao = mock(EventDematDAO.class);
+        requestDeliveryDAO = mock(RequestDeliveryDAO.class);
 
         MetaDematCleaner  metaDematCleaner = new MetaDematCleaner(mockDematDao, mockMetaDao);
 
-        handler = new AggregatorMessageHandler(mockSqsSender, mockMetaDao, metaDematCleaner);
+        handler = AggregatorMessageHandler.builder()
+                .sqsSender(mockSqsSender)
+                .eventMetaDAO(mockMetaDao)
+                .metaDematCleaner(metaDematCleaner)
+                .requestDeliveryDAO(requestDeliveryDAO)
+                .build();
     }
 
     @Test
@@ -78,6 +87,7 @@ class AggregatorMessageHandlerTest {
         when(mockMetaDao.deleteBatch(any(String.class), any(String.class))).thenReturn(Mono.empty());
         when(mockDematDao.deleteBatch(any(String.class), any(String.class))).thenReturn(Mono.empty());
 
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(entity));
         // assertDoNotThrow with call
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
 
@@ -126,6 +136,8 @@ class AggregatorMessageHandlerTest {
         // deleteEventMeta
         when(mockMetaDao.deleteEventMeta(any(String.class), any(String.class))).thenReturn(Mono.empty());
 
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(entity));
+
         // assertDoNotThrow with call
         assertThrows(PnGenericException.class, () -> handler.handleMessage(entity, paperRequest).block());
 
@@ -166,6 +178,9 @@ class AggregatorMessageHandlerTest {
         // the batch deletes
         when(mockMetaDao.deleteBatch(any(String.class), any(String.class))).thenReturn(Mono.empty());
         when(mockDematDao.deleteBatch(any(String.class), any(String.class))).thenReturn(Mono.empty());
+
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(entity));
+
         // the SQS queue
         doThrow(new RuntimeException()).when(mockSqsSender).pushSendEvent(Mockito.any());
 
@@ -214,6 +229,8 @@ class AggregatorMessageHandlerTest {
         when(mockMetaDao.deleteBatch(any(String.class), any(String.class))).thenReturn(Mono.error(new RuntimeException()));
         when(mockDematDao.deleteBatch(any(String.class), any(String.class))).thenReturn(Mono.empty());
 
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(entity));
+
         // assertDoNotThrow with call
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
 
@@ -258,6 +275,8 @@ class AggregatorMessageHandlerTest {
         // the batch deletes
         when(mockMetaDao.deleteBatch(any(String.class), any(String.class))).thenReturn(Mono.empty());
         when(mockDematDao.deleteBatch(any(String.class), any(String.class))).thenReturn(Mono.error(new RuntimeException()));
+
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(entity));
 
         // assertDoNotThrow with call
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());

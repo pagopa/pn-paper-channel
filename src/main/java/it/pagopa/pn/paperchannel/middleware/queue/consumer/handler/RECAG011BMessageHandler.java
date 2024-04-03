@@ -1,9 +1,8 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
-import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
-import it.pagopa.pn.paperchannel.service.SqsSender;
+import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
@@ -11,14 +10,10 @@ import reactor.core.publisher.Mono;
 // 2. invocare l'handler di PNAG012
 
 @Slf4j
+@SuperBuilder
 public class RECAG011BMessageHandler extends SaveDematMessageHandler {
 
     private final PNAG012MessageHandler pnag012MessageHandler;
-
-    public RECAG011BMessageHandler(SqsSender sqsSender, EventDematDAO eventDematDAO, Long ttlDaysDemat, PNAG012MessageHandler pnag012MessageHandler, boolean zipHandleActive) {
-        super(sqsSender, eventDematDAO, ttlDaysDemat, zipHandleActive);
-        this.pnag012MessageHandler = pnag012MessageHandler;
-    }
 
     @Override
     public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {

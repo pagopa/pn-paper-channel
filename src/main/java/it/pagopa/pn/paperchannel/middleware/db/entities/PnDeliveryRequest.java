@@ -71,6 +71,8 @@ public class PnDeliveryRequest {
 
     public static final String COL_REWORK_NEEDED_COUNT = "reworkNeededCount";
 
+    public static final String COL_REFINED = "refined";
+
     @Getter(onMethod = @__({@DynamoDbPartitionKey,@DynamoDbAttribute(COL_REQUEST_ID)}))
     private String requestId;
 
@@ -141,5 +143,6 @@ public class PnDeliveryRequest {
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_REWORK_NEEDED_COUNT)}))
     private Integer reworkNeededCount;
 
-
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_REFINED)}))
+    private Boolean refined;
 }

@@ -7,20 +7,15 @@ import it.pagopa.pn.paperchannel.mapper.SendEventMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.service.SqsSender;
+import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
 @Slf4j
+@SuperBuilder
 public class RECRN011MessageHandler extends SaveMetadataMessageHandler {
 
     private final SqsSender sqsSender;
-
-
-    public RECRN011MessageHandler(SqsSender sqsSender, EventMetaDAO eventMetaDAO, Long ttlDays) {
-        super(eventMetaDAO, ttlDays);
-        this.sqsSender = sqsSender;
-    }
-
 
     @Override
     public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {

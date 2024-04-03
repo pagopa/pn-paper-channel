@@ -1,11 +1,13 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
+import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.mapper.SendEventMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
 import it.pagopa.pn.paperchannel.middleware.queue.consumer.MetaDematCleaner;
@@ -28,30 +30,38 @@ import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.buildMetaRequestId;
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.buildMetaStatusCode;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 class Complex890MessageHandlerTest {
 
-    private SqsSender sqsSender;
-
-    private EventMetaDAO eventMetaDAO;
-
-    private MetaDematCleaner metaDematCleaner;
-
     private Complex890MessageHandler handler;
 
-    private int DAYS_REFINEMENT = 10;
+    private SqsSender sqsSender;
+    private EventMetaDAO eventMetaDAO;
+    private RequestDeliveryDAO requestDeliveryDAO;
+
+    private final int DAYS_REFINEMENT = 10;
 
     @BeforeEach
     public void init() {
         sqsSender = mock(SqsSender.class);
         eventMetaDAO = mock(EventMetaDAO.class);
-        metaDematCleaner = mock(MetaDematCleaner.class);
+        requestDeliveryDAO = mock(RequestDeliveryDAO.class);
+
+        MetaDematCleaner metaDematCleaner = mock(MetaDematCleaner.class);
+
+        PnPaperChannelConfig mockConfig = new PnPaperChannelConfig();
+        mockConfig.setRefinementDuration(Duration.of(DAYS_REFINEMENT, ChronoUnit.DAYS));
 
         when(metaDematCleaner.clean(anyString())).thenReturn(Mono.empty());
 
-        handler = new Complex890MessageHandler(sqsSender, eventMetaDAO, metaDematCleaner, Duration.of(DAYS_REFINEMENT, ChronoUnit.DAYS));
+        handler = Complex890MessageHandler.builder()
+                .sqsSender(sqsSender)
+                .eventMetaDAO(eventMetaDAO)
+                .requestDeliveryDAO(requestDeliveryDAO)
+                .metaDematCleaner(metaDematCleaner)
+                .pnPaperChannelConfig(mockConfig)
+                .build();
     }
 
     //CASO 1.ii
@@ -160,6 +170,7 @@ class Complex890MessageHandlerTest {
         pnEventMetaRECAG005A.setStatusDateTime(Instant.parse("2023-03-16T17:07:00.000Z"));
 
         when(eventMetaDAO.findAllByRequestId(metadataRequestid)).thenReturn(Flux.just(pnEventMetaRECAG012, pnEventMetaRECAG011A, pnEventMetaRECAG005A));
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(entity));
 
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
 
@@ -206,6 +217,7 @@ class Complex890MessageHandlerTest {
         pnEventMetaRECAG005A.setStatusDateTime(Instant.parse("2023-03-16T17:07:00.000Z"));
 
         when(eventMetaDAO.findAllByRequestId(metadataRequestid)).thenReturn(Flux.just(pnEventMetaRECAG012, pnEventMetaRECAG011A, pnEventMetaRECAG005A));
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(entity));
 
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
 

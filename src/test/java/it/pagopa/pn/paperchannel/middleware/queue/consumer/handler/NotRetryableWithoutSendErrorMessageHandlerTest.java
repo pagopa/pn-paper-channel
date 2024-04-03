@@ -24,7 +24,9 @@ class NotRetryableWithoutSendErrorMessageHandlerTest {
     @BeforeEach
     public void init() {
         paperRequestErrorDAOMock = mock(PaperRequestErrorDAO.class);
-        handler = new NotRetriableWithoutSendErrorMessageHandler(paperRequestErrorDAOMock);
+        handler = NotRetriableWithoutSendErrorMessageHandler.builder()
+                .paperRequestErrorDAO(paperRequestErrorDAOMock)
+                .build();
     }
 
     @Test

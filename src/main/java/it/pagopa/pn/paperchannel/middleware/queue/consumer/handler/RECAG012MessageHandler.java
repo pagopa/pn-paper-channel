@@ -6,6 +6,7 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
 
+import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
@@ -20,14 +21,10 @@ import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
 // Poi, esegue il flusso PNAG012, al netto del superamento delle varie condizioni che si trovano nell'handler del PNAG012.
 // L'aggiunta della gestion del PNAG012 è stata fatta a seguito del task PN-8911.
 @Slf4j
+@SuperBuilder
 public class RECAG012MessageHandler extends SaveMetadataMessageHandler {
 
     private final PNAG012MessageHandler pnag012MessageHandler;
-
-    public RECAG012MessageHandler(EventMetaDAO eventMetaDAO, Long ttlDays, PNAG012MessageHandler pnag012MessageHandler) {
-        super(eventMetaDAO, ttlDays);
-        this.pnag012MessageHandler = pnag012MessageHandler;
-    }
 
     @Override
     public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {

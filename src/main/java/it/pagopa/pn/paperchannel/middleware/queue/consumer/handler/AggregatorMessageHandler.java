@@ -9,12 +9,13 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDiscoveredAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
 import it.pagopa.pn.paperchannel.middleware.queue.consumer.MetaDematCleaner;
-import it.pagopa.pn.paperchannel.service.SqsSender;
+import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.WRONG_EVENT_ORDER;
-import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
+import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.buildMetaRequestId;
+import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.buildMetaStatusCode;
 
 // Alla ricezione di questi tipi di eventi, che sono finali per lo specifico prodotto, paper-channel dovrà:
 // recuperare l’evento di pre-esito correlato (mediante accesso puntuale su hashkey META##RequestID e sortKey META##statusCode)
@@ -24,17 +25,11 @@ import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
 // cancellate le righe in tabella per legate al requestId per le entità META e DEMAT
 
 @Slf4j
+@SuperBuilder
 public class AggregatorMessageHandler extends SendToDeliveryPushHandler {
-    private final EventMetaDAO eventMetaDAO;
-    private final MetaDematCleaner metaDematCleaner;
 
-
-    public AggregatorMessageHandler(SqsSender sqsSender, EventMetaDAO eventMetaDAO, MetaDematCleaner metaDematCleaner) {
-        super(sqsSender);
-
-        this.eventMetaDAO = eventMetaDAO;
-        this.metaDematCleaner = metaDematCleaner;
-    }
+    protected final EventMetaDAO eventMetaDAO;
+    protected final MetaDematCleaner metaDematCleaner;
 
     @Override
     public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {

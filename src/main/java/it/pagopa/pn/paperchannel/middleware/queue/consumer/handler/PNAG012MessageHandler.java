@@ -1,15 +1,14 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
-import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventDemat;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
 import it.pagopa.pn.paperchannel.middleware.queue.model.PNAG012Wrapper;
-import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.DematDocumentTypeEnum;
 import it.pagopa.pn.paperchannel.utils.PnLogAudit;
+import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
@@ -32,6 +31,7 @@ import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
 //        2. effettuare PUT_IF_ABSENT di una nuova riga correlata all’evento PNAG012 in tabella impostando come statusDateTime quella recuperata al punto precedente
 //        3. inoltrare l’evento PNAG012 verso delivery_push (solo se la PUT_IF_ABSENT ha inserito il record)
 @Slf4j
+@SuperBuilder
 public class PNAG012MessageHandler extends SaveDematMessageHandler {
 
     protected static final String META_SORT_KEY_FILTER = buildMetaStatusCode(RECAG012_STATUS_CODE);
@@ -58,17 +58,6 @@ public class PNAG012MessageHandler extends SaveDematMessageHandler {
 
     private final EventMetaDAO eventMetaDAO;
 
-    private final Long ttlDaysMeta;
-
-    private final Set<String> requiredDemats;
-
-    public PNAG012MessageHandler(SqsSender sqsSender, EventDematDAO eventDematDAO, Long ttlDaysDemat, EventMetaDAO eventMetaDAO, Long ttlDaysMeta, Set<String> requiredDemats, boolean zipHandleActive) {
-        super(sqsSender, eventDematDAO, ttlDaysDemat, zipHandleActive);
-        this.eventMetaDAO = eventMetaDAO;
-        this.ttlDaysMeta = ttlDaysMeta;
-        this.requiredDemats = requiredDemats;
-    }
-
     @Override
     public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
         String metadataRequestIdFilter = buildMetaRequestId(paperRequest.getRequestId());
@@ -89,7 +78,7 @@ public class PNAG012MessageHandler extends SaveDematMessageHandler {
                                 }))
                 )
                 .doOnNext(pnEventMeta -> log.info("[{}] PnEventMeta found: {}", paperRequest.getRequestId(), pnEventMeta))
-                .map(pnEventMetaRECAG012 -> createMETAForPNAG012Event(paperRequest, pnEventMetaRECAG012, ttlDaysMeta))
+                .map(pnEventMetaRECAG012 -> createMETAForPNAG012Event(paperRequest, pnEventMetaRECAG012, pnPaperChannelConfig.getTtlExecutionDaysMeta()))
                 .flatMap(pnEventMetaPNAG012 -> this.pnag012Flow(pnEventMetaPNAG012, entity, paperRequest, pnLogAudit))
                 .doOnNext(pnag012Wrapper -> log.info("[{}] Sending PNAG012 to delivery push: {}", pnag012Wrapper.getPaperProgressStatusEventDtoPNAG012().getRequestId(), pnag012Wrapper.getPnDeliveryRequestPNAG012()))
                 .flatMap(pnag012Wrapper -> super.sendToDeliveryPush(pnag012Wrapper.getPnDeliveryRequestPNAG012(), pnag012Wrapper.getPaperProgressStatusEventDtoPNAG012()));
@@ -107,7 +96,7 @@ public class PNAG012MessageHandler extends SaveDematMessageHandler {
 
         Set<String> documentTypes = getDocumentTypesFromPnEventDemats(pnEventDematsFromDB);
 
-        return documentTypes.containsAll(requiredDemats);
+        return documentTypes.containsAll(pnPaperChannelConfig.getRequiredDemats());
     }
 
     private Mono<PNAG012Wrapper> pnag012Flow(PnEventMeta pnEventMetaPNAG012, PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest, PnLogAudit pnLogAudit) {

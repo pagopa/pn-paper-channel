@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
+import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.DiscoveredAddressDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
@@ -8,20 +9,19 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDiscoveredAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
 
 // handler salva metadati (vedere Gestione eventi di pre-esito)
-@RequiredArgsConstructor
 @Slf4j
+@SuperBuilder
 public class SaveMetadataMessageHandler implements MessageHandler {
 
     protected final EventMetaDAO eventMetaDAO;
-
-    private final Long ttlDays;
-
+    protected final PnPaperChannelConfig pnPaperChannelConfig;
 
     @Override
     public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
@@ -36,7 +36,7 @@ public class SaveMetadataMessageHandler implements MessageHandler {
         PnEventMeta pnEventMeta = new PnEventMeta();
         pnEventMeta.setMetaRequestId(buildMetaRequestId(paperRequest.getRequestId()));
         pnEventMeta.setMetaStatusCode(buildMetaStatusCode(paperRequest.getStatusCode()));
-        pnEventMeta.setTtl(paperRequest.getStatusDateTime().plusDays(ttlDays).toEpochSecond());
+        pnEventMeta.setTtl(paperRequest.getStatusDateTime().plusDays(pnPaperChannelConfig.getTtlExecutionDaysMeta()).toEpochSecond());
 
         pnEventMeta.setRequestId(paperRequest.getRequestId());
         pnEventMeta.setStatusCode(paperRequest.getStatusCode());
