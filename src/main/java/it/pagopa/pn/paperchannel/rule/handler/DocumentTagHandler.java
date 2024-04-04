@@ -22,8 +22,8 @@ public class DocumentTagHandler extends it.pagopa.pn.commons.rules.ListChainHand
     private List<String> typeWithSuccessResult;
 
     public DocumentTagHandler(PnRuleParams params){
-        typeWithNextResult = List.of(params.getTypeWithNextResult().split(","));
-        typeWithSuccessResult = List.of(params.getTypeWithSuccessResult().split(","));
+        typeWithNextResult = params == null || params.getTypeWithNextResult()==null?List.of():List.of(params.getTypeWithNextResult().split(","));
+        typeWithSuccessResult = params == null || params.getTypeWithSuccessResult()==null?List.of():List.of(params.getTypeWithSuccessResult().split(","));
     }
 
     @Override
