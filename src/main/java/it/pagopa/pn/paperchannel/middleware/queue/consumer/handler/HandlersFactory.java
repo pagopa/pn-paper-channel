@@ -100,43 +100,35 @@ public class HandlersFactory {
                 .requestDeliveryDAO(requestDeliveryDAO)
                 .pnPaperChannelConfig(pnPaperChannelConfig)
                 .build();
-         
-        MessageHandler recag012MessageHandler = RECAG012MessageHandler.builder()
+
+        RECAG012MessageHandler recag012MessageHandler = RECAG012MessageHandler.builder()
                 .eventMetaDAO(eventMetaDAO)
                 .pnPaperChannelConfig(pnPaperChannelConfig)
                 .pnag012MessageHandler(pnag012MessageHandler)
                 .build();
-        
-        MessageHandler recag011AMessageHandler = RECAG011AMessageHandler.builder()
+
+        RECAG011AMessageHandler recag011AMessageHandler = RECAG011AMessageHandler.builder()
                 .sqsSender(sqsSender)
                 .eventMetaDAO(eventMetaDAO)
                 .pnPaperChannelConfig(pnPaperChannelConfig)
                 .build();
-        
-        MessageHandler recag011BMessageHandler = RECAG011BMessageHandler.builder()
+
+        RECAG011BMessageHandler recag011BMessageHandler = RECAG011BMessageHandler.builder()
                 .sqsSender(sqsSender)
                 .eventDematDAO(eventDematDAO)
                 .requestDeliveryDAO(requestDeliveryDAO)
                 .pnPaperChannelConfig(pnPaperChannelConfig)
                 .pnag012MessageHandler(pnag012MessageHandler)
                 .build();
-        
-        MessageHandler recag008CMessageHandler = RECAG008CMessageHandler.builder()
+
+        RECAG008CMessageHandler recag008CMessageHandler = RECAG008CMessageHandler.builder()
                 .sqsSender(sqsSender)
                 .eventMetaDAO(eventMetaDAO)
                 .requestDeliveryDAO(requestDeliveryDAO)
                 .metaDematCleaner(metaDematCleaner)
-                .build();
-        
-        MessageHandler complex890MessageHandler = Complex890MessageHandler.builder()
-                .sqsSender(sqsSender)
-                .eventMetaDAO(eventMetaDAO)
-                .requestDeliveryDAO(requestDeliveryDAO)
-                .metaDematCleaner(metaDematCleaner)
-                .pnPaperChannelConfig(pnPaperChannelConfig)
                 .build();
 
-        MessageHandler recrn00xcMessageHandler = RECRN00XCMessageHandler.builder()
+        Complex890MessageHandler complex890MessageHandler = Complex890MessageHandler.builder()
                 .sqsSender(sqsSender)
                 .eventMetaDAO(eventMetaDAO)
                 .requestDeliveryDAO(requestDeliveryDAO)
@@ -144,12 +136,25 @@ public class HandlersFactory {
                 .pnPaperChannelConfig(pnPaperChannelConfig)
                 .build();
 
-        MessageHandler recrn011cMessageHandler = RECRN011MessageHandler.builder()
+        RECRN00XCMessageHandler recrn00xcMessageHandler = RECRN00XCMessageHandler.builder()
+                .sqsSender(sqsSender)
+                .eventMetaDAO(eventMetaDAO)
+                .requestDeliveryDAO(requestDeliveryDAO)
+                .metaDematCleaner(metaDematCleaner)
+                .pnPaperChannelConfig(pnPaperChannelConfig)
+                .build();
+
+        RECRN011MessageHandler recrn011cMessageHandler = RECRN011MessageHandler.builder()
                 .sqsSender(sqsSender)
                 .eventMetaDAO(eventMetaDAO)
                 .pnPaperChannelConfig(pnPaperChannelConfig)
                 .build();
 
+
+        Proxy890MessageHandler proxy890MessageHandler = Proxy890MessageHandler.builder()
+                .pnPaperChannelConfig(pnPaperChannelConfig)
+                .complex890MessageHandler(complex890MessageHandler)
+                .build();
 
         map = new ConcurrentHashMap<>();
 
@@ -169,9 +174,9 @@ public class HandlersFactory {
         map.put("RECAG011B", recag011BMessageHandler);
         map.put("RECAG008C", recag008CMessageHandler);
 
-        map.put("RECAG005C", complex890MessageHandler);
-        map.put("RECAG006C", complex890MessageHandler);
-        map.put("RECAG007C", complex890MessageHandler);
+        map.put("RECAG005C", proxy890MessageHandler);
+        map.put("RECAG006C", proxy890MessageHandler);
+        map.put("RECAG007C", proxy890MessageHandler);
         map.put("RECRN011", recrn011cMessageHandler);
 
         map.put("RECRN003C", recrn00xcMessageHandler);
