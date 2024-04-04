@@ -6,7 +6,7 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
 import it.pagopa.pn.paperchannel.middleware.queue.consumer.MetaDematCleaner;
-import it.pagopa.pn.paperchannel.service.SqsSender;
+import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
@@ -17,6 +17,7 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.WRONG_EVENT_
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
 
 @Slf4j
+@SuperBuilder
 public class RECAG008CMessageHandler extends SendToDeliveryPushHandler {
 
     static final String META_RECAG012_STATUS_CODE = buildMetaStatusCode(RECAG012_STATUS_CODE);
@@ -24,12 +25,6 @@ public class RECAG008CMessageHandler extends SendToDeliveryPushHandler {
 
     private final EventMetaDAO eventMetaDAO;
     private final MetaDematCleaner metaDematCleaner;
-
-    public RECAG008CMessageHandler(SqsSender sqsSender, EventMetaDAO eventMetaDAO, MetaDematCleaner metaDematCleaner) {
-        super(sqsSender);
-        this.eventMetaDAO = eventMetaDAO;
-        this.metaDematCleaner = metaDematCleaner;
-    }
 
     @Override
     public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {

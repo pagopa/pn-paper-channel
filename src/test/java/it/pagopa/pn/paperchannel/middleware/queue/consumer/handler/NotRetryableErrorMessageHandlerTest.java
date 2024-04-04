@@ -3,6 +3,7 @@ package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnRequestError;
 import it.pagopa.pn.paperchannel.service.SqsSender;
@@ -22,12 +23,19 @@ class NotRetryableErrorMessageHandlerTest {
 
     private PaperRequestErrorDAO paperRequestErrorDAOMock;
     private SqsSender mockSqsSender;
+    private RequestDeliveryDAO requestDeliveryDAO;
 
     @BeforeEach
     public void init() {
         mockSqsSender = mock(SqsSender.class);
         paperRequestErrorDAOMock = mock(PaperRequestErrorDAO.class);
-        handler = new NotRetryableErrorMessageHandler(mockSqsSender, paperRequestErrorDAOMock);
+        requestDeliveryDAO = mock(RequestDeliveryDAO.class);
+
+        handler = NotRetryableErrorMessageHandler.builder()
+                .sqsSender(mockSqsSender)
+                .paperRequestErrorDAO(paperRequestErrorDAOMock)
+                .requestDeliveryDAO(requestDeliveryDAO)
+                .build();
     }
 
     @Test
@@ -67,5 +75,7 @@ class NotRetryableErrorMessageHandlerTest {
                     requestError.getError().equals(entity.getStatusCode()) &&
                     requestError.getFlowThrow().equals(entity.getStatusDetail())
                 ));
+
+        verify(requestDeliveryDAO, never()).updateData(entity);
     }
 }

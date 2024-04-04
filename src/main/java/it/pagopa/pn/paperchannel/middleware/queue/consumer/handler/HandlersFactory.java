@@ -1,10 +1,7 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
-import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
-import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
-import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
-import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.*;
 import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
 import it.pagopa.pn.paperchannel.middleware.queue.consumer.MetaDematCleaner;
 import it.pagopa.pn.paperchannel.service.SqsSender;
@@ -36,29 +33,123 @@ public class HandlersFactory {
 
     private final MetaDematCleaner metaDematCleaner;
 
+    private final RequestDeliveryDAO requestDeliveryDAO;
+
     private ConcurrentHashMap<String, MessageHandler> map;
 
 
-    private final LogMessageHandler logExtChannelsMessageHandler = new LogMessageHandler();
+    private final LogMessageHandler logExtChannelsMessageHandler = LogMessageHandler.builder().build();
 
     @PostConstruct
     public void initializeHandlers() {
-        var saveMetadataMessageHandler = new SaveMetadataMessageHandler(eventMetaDAO, pnPaperChannelConfig.getTtlExecutionDaysMeta());
-        var saveDematMessageHandler = new SaveDematMessageHandler(sqsSender, eventDematDAO, pnPaperChannelConfig.getTtlExecutionDaysDemat(), pnPaperChannelConfig.isZipHandleActive());
-        var retryableErrorExtChannelsMessageHandler = new RetryableErrorMessageHandler(sqsSender, externalChannelClient, addressDAO, paperRequestErrorDAO, pnPaperChannelConfig);
-        var notRetryableErrorMessageHandler = new NotRetryableErrorMessageHandler(sqsSender, paperRequestErrorDAO);
-        var notRetriableWithoutSendErrorMessageHandler = new NotRetriableWithoutSendErrorMessageHandler(paperRequestErrorDAO);
-        var customAggregatorMessageHandler = new CustomAggregatorMessageHandler(sqsSender, eventMetaDAO, metaDematCleaner);
-        var aggregatorMessageHandler = new AggregatorMessageHandler(sqsSender, eventMetaDAO, metaDematCleaner);
-        var directlySendMessageHandler = new DirectlySendMessageHandler(sqsSender);
-        var pnag012MessageHandler = new PNAG012MessageHandler(sqsSender, eventDematDAO, pnPaperChannelConfig.getTtlExecutionDaysDemat(), eventMetaDAO, pnPaperChannelConfig.getTtlExecutionDaysMeta(), pnPaperChannelConfig.getRequiredDemats(), pnPaperChannelConfig.isZipHandleActive());
-        var recag012MessageHandler = new RECAG012MessageHandler(eventMetaDAO, pnPaperChannelConfig.getTtlExecutionDaysMeta(), pnag012MessageHandler);
-        var recag011AMessageHandler =  new RECAG011AMessageHandler(sqsSender, eventMetaDAO, pnPaperChannelConfig.getTtlExecutionDaysMeta());
-        var recag011BMessageHandler = new RECAG011BMessageHandler(sqsSender, eventDematDAO, pnPaperChannelConfig.getTtlExecutionDaysDemat(), pnag012MessageHandler, pnPaperChannelConfig.isZipHandleActive());
-        var recag008CMessageHandler = new RECAG008CMessageHandler(sqsSender, eventMetaDAO, metaDematCleaner);
-        var complex890MessageHandler = new Complex890MessageHandler(sqsSender, eventMetaDAO, metaDematCleaner, pnPaperChannelConfig.getRefinementDuration() );
-        var recrn00xcMessageHandler = new RECRN00XCMessageHandler(sqsSender, eventMetaDAO, metaDematCleaner, pnPaperChannelConfig.getRefinementDuration());
-        var recrn011cMessageHandler = new RECRN011MessageHandler(sqsSender, eventMetaDAO, pnPaperChannelConfig.getTtlExecutionDaysMeta());
+
+        SaveMetadataMessageHandler saveMetadataMessageHandler = SaveMetadataMessageHandler.builder()
+                .eventMetaDAO(eventMetaDAO)
+                .pnPaperChannelConfig(pnPaperChannelConfig)
+                .build();
+
+        SaveDematMessageHandler saveDematMessageHandler = SaveDematMessageHandler.builder()
+                .sqsSender(sqsSender)
+                .eventDematDAO(eventDematDAO)
+                .requestDeliveryDAO(requestDeliveryDAO)
+                .pnPaperChannelConfig(pnPaperChannelConfig)
+                .build();
+
+        RetryableErrorMessageHandler retryableErrorExtChannelsMessageHandler = RetryableErrorMessageHandler.builder()
+                .sqsSender(sqsSender)
+                .externalChannelClient(externalChannelClient)
+                .addressDAO(addressDAO)
+                .paperRequestErrorDAO(paperRequestErrorDAO)
+                .requestDeliveryDAO(requestDeliveryDAO)
+                .pnPaperChannelConfig(pnPaperChannelConfig)
+                .build();
+
+        NotRetryableErrorMessageHandler notRetryableErrorMessageHandler = NotRetryableErrorMessageHandler.builder()
+                .sqsSender(sqsSender)
+                .paperRequestErrorDAO(paperRequestErrorDAO)
+                .requestDeliveryDAO(requestDeliveryDAO)
+                .build();
+
+        NotRetriableWithoutSendErrorMessageHandler notRetriableWithoutSendErrorMessageHandler = NotRetriableWithoutSendErrorMessageHandler.builder()
+                .paperRequestErrorDAO(paperRequestErrorDAO)
+                .build();
+
+        CustomAggregatorMessageHandler customAggregatorMessageHandler = CustomAggregatorMessageHandler.builder()
+                .sqsSender(sqsSender)
+                .eventMetaDAO(eventMetaDAO)
+                .metaDematCleaner(metaDematCleaner)
+                .requestDeliveryDAO(requestDeliveryDAO)
+                .build();
+
+        AggregatorMessageHandler aggregatorMessageHandler = AggregatorMessageHandler.builder()
+                .sqsSender(sqsSender)
+                .eventMetaDAO(eventMetaDAO)
+                .metaDematCleaner(metaDematCleaner)
+                .requestDeliveryDAO(requestDeliveryDAO)
+                .build();
+
+        DirectlySendMessageHandler directlySendMessageHandler = DirectlySendMessageHandler.builder()
+                .sqsSender(sqsSender)
+                .requestDeliveryDAO(requestDeliveryDAO)
+                .build();
+         
+        PNAG012MessageHandler pnag012MessageHandler = PNAG012MessageHandler.builder()
+                .sqsSender(sqsSender)
+                .eventDematDAO(eventDematDAO)
+                .eventMetaDAO(eventMetaDAO)
+                .requestDeliveryDAO(requestDeliveryDAO)
+                .pnPaperChannelConfig(pnPaperChannelConfig)
+                .build();
+         
+        MessageHandler recag012MessageHandler = RECAG012MessageHandler.builder()
+                .eventMetaDAO(eventMetaDAO)
+                .pnPaperChannelConfig(pnPaperChannelConfig)
+                .pnag012MessageHandler(pnag012MessageHandler)
+                .build();
+        
+        MessageHandler recag011AMessageHandler = RECAG011AMessageHandler.builder()
+                .sqsSender(sqsSender)
+                .eventMetaDAO(eventMetaDAO)
+                .pnPaperChannelConfig(pnPaperChannelConfig)
+                .build();
+        
+        MessageHandler recag011BMessageHandler = RECAG011BMessageHandler.builder()
+                .sqsSender(sqsSender)
+                .eventDematDAO(eventDematDAO)
+                .requestDeliveryDAO(requestDeliveryDAO)
+                .pnPaperChannelConfig(pnPaperChannelConfig)
+                .pnag012MessageHandler(pnag012MessageHandler)
+                .build();
+        
+        MessageHandler recag008CMessageHandler = RECAG008CMessageHandler.builder()
+                .sqsSender(sqsSender)
+                .eventMetaDAO(eventMetaDAO)
+                .requestDeliveryDAO(requestDeliveryDAO)
+                .metaDematCleaner(metaDematCleaner)
+                .build();
+        
+        MessageHandler complex890MessageHandler = Complex890MessageHandler.builder()
+                .sqsSender(sqsSender)
+                .eventMetaDAO(eventMetaDAO)
+                .requestDeliveryDAO(requestDeliveryDAO)
+                .metaDematCleaner(metaDematCleaner)
+                .pnPaperChannelConfig(pnPaperChannelConfig)
+                .build();
+
+        MessageHandler recrn00xcMessageHandler = RECRN00XCMessageHandler.builder()
+                .sqsSender(sqsSender)
+                .eventMetaDAO(eventMetaDAO)
+                .requestDeliveryDAO(requestDeliveryDAO)
+                .metaDematCleaner(metaDematCleaner)
+                .pnPaperChannelConfig(pnPaperChannelConfig)
+                .build();
+
+        MessageHandler recrn011cMessageHandler = RECRN011MessageHandler.builder()
+                .sqsSender(sqsSender)
+                .eventMetaDAO(eventMetaDAO)
+                .pnPaperChannelConfig(pnPaperChannelConfig)
+                .build();
+
 
         map = new ConcurrentHashMap<>();
 

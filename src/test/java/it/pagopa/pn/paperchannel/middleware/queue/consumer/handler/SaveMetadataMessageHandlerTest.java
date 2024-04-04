@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
+import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
@@ -25,7 +26,14 @@ class SaveMetadataMessageHandlerTest {
     public void init() {
         mockDao = mock(EventMetaDAO.class);
         long ttlDays = 365;
-        handler = new SaveMetadataMessageHandler(mockDao, ttlDays);
+
+        PnPaperChannelConfig mockConfig = new PnPaperChannelConfig();
+        mockConfig.setTtlExecutionDaysMeta(ttlDays);
+
+        handler = SaveMetadataMessageHandler.builder()
+                .eventMetaDAO(mockDao)
+                .pnPaperChannelConfig(mockConfig)
+                .build();
     }
 
     @Test

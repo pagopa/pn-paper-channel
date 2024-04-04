@@ -1,11 +1,13 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
+import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.AttachmentDetailsDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.mapper.SendEventMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventDemat;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
@@ -35,28 +37,48 @@ import static org.mockito.Mockito.*;
 // Questa classe di test, testa sia l'handler RECAG011BMessageHandler che PNAG012MessageHandler
 class RECAG011BMessageHandlerTest {
 
-    private EventDematDAO eventDematDAO;
-
-    private EventMetaDAO eventMetaDAO;
-
-    private SqsSender mockSqsSender;
-
     private RECAG011BMessageHandler handler;
+
+    private EventDematDAO eventDematDAO;
+    private EventMetaDAO eventMetaDAO;
+    private SqsSender mockSqsSender;
+    private RequestDeliveryDAO requestDeliveryDAO;
 
     @BeforeEach
     public void init() {
         long ttlDays = 365;
+
         eventDematDAO = mock(EventDematDAO.class);
         eventMetaDAO = mock(EventMetaDAO.class);
         mockSqsSender = mock(SqsSender.class);
+        requestDeliveryDAO = mock(RequestDeliveryDAO.class);
 
         Set<String> requiredDemats = Set.of(
                 DematDocumentTypeEnum.DEMAT_23L.getDocumentType(),
                 DematDocumentTypeEnum.DEMAT_ARCAD.getDocumentType()
         );
 
-        PNAG012MessageHandler pnag012MessageHandler = new PNAG012MessageHandler(mockSqsSender, eventDematDAO, ttlDays, eventMetaDAO, ttlDays, requiredDemats, false);
-        handler = new RECAG011BMessageHandler(mockSqsSender, eventDematDAO, ttlDays, pnag012MessageHandler, false);
+        PnPaperChannelConfig mockConfig = new PnPaperChannelConfig();
+        mockConfig.setTtlExecutionDaysMeta(ttlDays);
+        mockConfig.setTtlExecutionDaysDemat(ttlDays);
+        mockConfig.setRequiredDemats(requiredDemats);
+        mockConfig.setZipHandleActive(false);
+
+        PNAG012MessageHandler pnag012MessageHandler = PNAG012MessageHandler.builder()
+                .sqsSender(mockSqsSender)
+                .eventDematDAO(eventDematDAO)
+                .eventMetaDAO(eventMetaDAO)
+                .requestDeliveryDAO(requestDeliveryDAO)
+                .pnPaperChannelConfig(mockConfig)
+                .build();
+
+        handler = RECAG011BMessageHandler.builder()
+                .sqsSender(mockSqsSender)
+                .eventDematDAO(eventDematDAO)
+                .requestDeliveryDAO(requestDeliveryDAO)
+                .pnPaperChannelConfig(mockConfig)
+                .pnag012MessageHandler(pnag012MessageHandler)
+                .build();
     }
 
     @Test
@@ -106,6 +128,8 @@ class RECAG011BMessageHandlerTest {
 
         when(eventMetaDAO.putIfAbsent(pnEventMeta)).thenReturn(Mono.just(pnEventMeta));
 
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(entity));
+
         // eseguo l'handler
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
 
@@ -128,7 +152,11 @@ class RECAG011BMessageHandlerTest {
         sendPNAG012Event.setClientRequestTimeStamp(sendEventArgumentCaptor.getAllValues().get(1).getClientRequestTimeStamp());
         assertThat(sendEventArgumentCaptor.getAllValues().get(1)).isEqualTo(sendPNAG012Event);
 
-
+        verify(requestDeliveryDAO, times(1)).updateData(argThat(pnDeliveryRequest -> {
+            assertThat(pnDeliveryRequest).isNotNull();
+            assertThat(pnDeliveryRequest.getRefined()).isTrue();
+            return true;
+        }));
     }
 
     @Test
@@ -189,7 +217,7 @@ class RECAG011BMessageHandlerTest {
         //mi aspetto che NON mandi il messaggio PNAG012 a delivery-push
         verify(mockSqsSender, times(0)).pushSendEvent(sendPNAG012Event);
 
-
+        verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
     }
 
     @Test
@@ -255,7 +283,7 @@ class RECAG011BMessageHandlerTest {
         //mi aspetto che NON mandi il messaggio PNAG012 a delivery-push
         verify(mockSqsSender, times(0)).pushSendEvent(sendPNAG012Event);
 
-
+        verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
     }
 
     @Test
@@ -319,7 +347,7 @@ class RECAG011BMessageHandlerTest {
         verify(mockSqsSender, times(1)).pushSendEvent(sendEventArgumentCaptor.capture());
         assertThat(sendEventArgumentCaptor.getAllValues().get(0).getStatusDetail()).isEqualTo("RECAG011B");
 
-
+        verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
     }
 
 

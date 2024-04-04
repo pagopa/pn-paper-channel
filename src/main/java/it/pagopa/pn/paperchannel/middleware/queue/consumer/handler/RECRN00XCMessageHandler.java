@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
+import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.DiscoveredAddressDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
@@ -11,11 +12,12 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnDiscoveredAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
 import it.pagopa.pn.paperchannel.middleware.queue.consumer.MetaDematCleaner;
 import it.pagopa.pn.paperchannel.middleware.queue.model.PNRN012Wrapper;
-import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.PnLogAudit;
+import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
+import javax.annotation.PostConstruct;
 import java.time.Duration;
 import java.time.Instant;
 
@@ -23,20 +25,17 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.WRONG_EVENT_
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
 
 @Slf4j
+@SuperBuilder
 public class RECRN00XCMessageHandler extends SendToDeliveryPushHandler {
+
     private final EventMetaDAO eventMetaDAO;
     private final MetaDematCleaner metaDematCleaner;
-    private final Duration refinementDuration;
+    private final PnPaperChannelConfig pnPaperChannelConfig;
 
-    public RECRN00XCMessageHandler(SqsSender sqsSender, EventMetaDAO eventMetaDAO, MetaDematCleaner metaDematCleaner, Duration refinementDuration) {
-        super(sqsSender);
-        this.eventMetaDAO = eventMetaDAO;
-        this.metaDematCleaner = metaDematCleaner;
-        this.refinementDuration = refinementDuration;
-
-        log.info("Refinement duration is {}", this.refinementDuration);
+    @PostConstruct
+    private void postConstruct() {
+        log.info("Refinement duration is {}", this.pnPaperChannelConfig.getRefinementDuration());
     }
-
 
     @Override
     public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
@@ -61,7 +60,7 @@ public class RECRN00XCMessageHandler extends SendToDeliveryPushHandler {
                     PnEventMeta eventrecrn00X = recrn011AndRecrn00X.getT2();
 
                     if (isThenGratherOrEquals10Days(eventrecrn00X.getStatusDateTime(), eventrecrn011.getStatusDateTime())) {
-                        PNRN012Wrapper pnrn012Wrapper = PNRN012Wrapper.buildPNRN012Wrapper(entity, paperRequest, eventrecrn011.getStatusDateTime().plus(refinementDuration));
+                        PNRN012Wrapper pnrn012Wrapper = PNRN012Wrapper.buildPNRN012Wrapper(entity, paperRequest, eventrecrn011.getStatusDateTime().plus(pnPaperChannelConfig.getRefinementDuration()));
                         var pnrn012PaperRequest = pnrn012Wrapper.getPaperProgressStatusEventDtoPNRN012();
                         var pnrn012DeliveryRequest = pnrn012Wrapper.getPnDeliveryRequestPNRN012();
 
@@ -101,7 +100,7 @@ public class RECRN00XCMessageHandler extends SendToDeliveryPushHandler {
 
     private boolean isThenGratherOrEquals10Days(Instant recrn00XTimestamp, Instant recrn011Timestamp){
         // sebbene 10gg sia il termine di esercizio, per collaudo fa comodo avere un tempo più contenuto
-        return Duration.between(recrn011Timestamp, recrn00XTimestamp).compareTo(refinementDuration) >= 0;
+        return Duration.between(recrn011Timestamp, recrn00XTimestamp).compareTo(pnPaperChannelConfig.getRefinementDuration()) >= 0;
     }
 
 }

@@ -6,18 +6,15 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnRequestError;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.PnLogAudit;
+import lombok.experimental.SuperBuilder;
 import reactor.core.publisher.Mono;
 
+@SuperBuilder
 public class NotRetryableErrorMessageHandler extends SendToDeliveryPushHandler {
 
     private static final String FINISH_RETRY_EXTERNAL_CHANNEL_MESSAGE = "requestId = %s finish retry to External Channel";
 
     private final PaperRequestErrorDAO paperRequestErrorDAO;
-
-    public NotRetryableErrorMessageHandler(SqsSender sqsSender, PaperRequestErrorDAO paperRequestErrorDAO) {
-        super(sqsSender);
-        this.paperRequestErrorDAO = paperRequestErrorDAO;
-    }
 
     @Override
     public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
