@@ -7,9 +7,12 @@ import it.pagopa.pn.paperchannel.exception.PnInvalidChainRuleException;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentsRule;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Import;
 import org.springframework.stereotype.Component;
 
 @Component
+@ComponentScan(basePackages = "it.pagopa.pn.commons.rules")
 public class PaperListChainEngine extends ListRuleEngineHandler<PnAttachmentsRule, PnAttachmentInfo, PnDeliveryRequest> {
 
     public PaperListChainEngine(ListChainEngineHandler<PnAttachmentInfo, PnDeliveryRequest> listChainEngineHandler) {
