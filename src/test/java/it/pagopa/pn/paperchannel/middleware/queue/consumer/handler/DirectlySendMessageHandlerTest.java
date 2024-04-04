@@ -5,12 +5,14 @@ import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.mapper.SendEventMapper;
+import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import reactor.core.publisher.Mono;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -24,11 +26,17 @@ class DirectlySendMessageHandlerTest {
     private DirectlySendMessageHandler handler;
 
     private SqsSender mockSqsSender;
+    private RequestDeliveryDAO requestDeliveryDAO;
 
     @BeforeEach
     public void init() {
         mockSqsSender = mock(SqsSender.class);
-        handler = new DirectlySendMessageHandler(mockSqsSender);
+        requestDeliveryDAO = mock(RequestDeliveryDAO.class);
+
+        handler = DirectlySendMessageHandler.builder()
+                .sqsSender(mockSqsSender)
+                .requestDeliveryDAO(requestDeliveryDAO)
+                .build();
     }
 
     @ParameterizedTest
@@ -45,6 +53,7 @@ class DirectlySendMessageHandlerTest {
         // expect exactly one call to delivery push sqs queue
         SendEvent sendEventExpected = SendEventMapper.createSendEventMessage(entity, paperProgressStatusEventDto);
         verify(mockSqsSender, times(1)).pushSendEvent(sendEventExpected);
+        verify(requestDeliveryDAO, never()).updateData(entity);
     }
 
     /**

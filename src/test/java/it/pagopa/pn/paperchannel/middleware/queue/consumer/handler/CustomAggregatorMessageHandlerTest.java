@@ -6,6 +6,7 @@ import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDiscoveredAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventDemat;
@@ -23,6 +24,7 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -30,20 +32,28 @@ import static org.mockito.Mockito.*;
 
 
 class CustomAggregatorMessageHandlerTest {
+
     private CustomAggregatorMessageHandler handler;
     private SqsSender mockSqsSender;
     private EventDematDAO mockDematDao;
     private EventMetaDAO mockMetaDao;
+    private RequestDeliveryDAO requestDeliveryDAO;
 
     @BeforeEach
     public void init() {
         mockSqsSender = mock(SqsSender.class);
         mockMetaDao = mock(EventMetaDAO.class);
         mockDematDao = mock(EventDematDAO.class);
+        requestDeliveryDAO = mock(RequestDeliveryDAO.class);
 
         MetaDematCleaner metaDematCleaner = new MetaDematCleaner(mockDematDao, mockMetaDao);
 
-        handler = new CustomAggregatorMessageHandler(mockSqsSender, mockMetaDao, metaDematCleaner);
+        handler = CustomAggregatorMessageHandler.builder()
+                .sqsSender(mockSqsSender)
+                .eventMetaDAO(mockMetaDao)
+                .metaDematCleaner(metaDematCleaner)
+                .requestDeliveryDAO(requestDeliveryDAO)
+                .build();
     }
 
     @Test
@@ -79,6 +89,8 @@ class CustomAggregatorMessageHandlerTest {
         when(mockMetaDao.deleteBatch(any(String.class), any(String.class))).thenReturn(Mono.empty());
         when(mockDematDao.deleteBatch(any(String.class), any(String.class))).thenReturn(Mono.empty());
 
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(entity));
+
         // assertDoNotThrow with call
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
 
@@ -91,6 +103,12 @@ class CustomAggregatorMessageHandlerTest {
         verify(mockDematDao, timeout(2000).times(1)).deleteBatch(any(String.class), any(String.class));
         // DeliveryPush send via SQS verification
         verify(mockSqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
+
+        verify(requestDeliveryDAO, times(1)).updateData(argThat(pnDeliveryRequest -> {
+            assertThat(pnDeliveryRequest).isNotNull();
+            assertThat(pnDeliveryRequest.getRefined()).isTrue();
+            return true;
+        }));
 
         // arricchimento
         assertEquals("failureCause1", caturedSendEvent.getValue().getDeliveryFailureCause());
@@ -134,6 +152,8 @@ class CustomAggregatorMessageHandlerTest {
         verify(mockMetaDao, timeout(2000).times(1)).getDeliveryEventMeta(any(String.class), any(String.class));
         // DeliveryPush send via SQS verification
         verify(mockSqsSender, timeout(2000).times(0)).pushSendEvent(any());
+
+        verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
     }
 
     @Test
@@ -166,6 +186,9 @@ class CustomAggregatorMessageHandlerTest {
         // the batch deletes
         when(mockMetaDao.deleteBatch(any(String.class), any(String.class))).thenReturn(Mono.empty());
         when(mockDematDao.deleteBatch(any(String.class), any(String.class))).thenReturn(Mono.empty());
+
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(entity));
+
         // the SQS queue
         doThrow(new RuntimeException()).when(mockSqsSender).pushSendEvent(Mockito.any());
 
@@ -181,6 +204,12 @@ class CustomAggregatorMessageHandlerTest {
         verify(mockMetaDao, timeout(2000).times(0)).deleteBatch(any(String.class), any(String.class));
         // deleteEventDemat call
         verify(mockDematDao, timeout(2000).times(0)).deleteBatch(any(String.class), any(String.class));
+
+        verify(requestDeliveryDAO, times(1)).updateData(argThat(pnDeliveryRequest -> {
+            assertThat(pnDeliveryRequest).isNotNull();
+            assertThat(pnDeliveryRequest.getRefined()).isTrue();
+            return true;
+        }));
     }
 
 

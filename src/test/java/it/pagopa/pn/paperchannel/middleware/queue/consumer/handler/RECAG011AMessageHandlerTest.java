@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
+import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
@@ -34,7 +35,14 @@ class RECAG011AMessageHandlerTest {
 
         long ttlDays = 365;
 
-        handler = new RECAG011AMessageHandler(mockSqsSender, mockDao, ttlDays);
+        PnPaperChannelConfig mockConfig = new PnPaperChannelConfig();
+        mockConfig.setTtlExecutionDaysMeta(ttlDays);
+
+        handler = RECAG011AMessageHandler.builder()
+                .sqsSender(mockSqsSender)
+                .eventMetaDAO(mockDao)
+                .pnPaperChannelConfig(mockConfig)
+                .build();
     }
 
     @Test

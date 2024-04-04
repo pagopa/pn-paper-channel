@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
+import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
@@ -16,19 +17,26 @@ import static org.mockito.Mockito.*;
 
 class RECAG012MessageHandlerTest {
 
-    private EventMetaDAO mockDao;
-
     private PNAG012MessageHandler mockPnag012MessageHandler;
-
     private SaveMetadataMessageHandler handler;
 
+    private EventMetaDAO mockDao;
 
     @BeforeEach
     public void init() {
+        long ttlDays = 365;
+
         mockDao = mock(EventMetaDAO.class);
         mockPnag012MessageHandler = mock(PNAG012MessageHandler.class);
-        long ttlDays = 365;
-        handler = new RECAG012MessageHandler(mockDao, ttlDays, mockPnag012MessageHandler);
+
+        PnPaperChannelConfig mockConfig = new PnPaperChannelConfig();
+        mockConfig.setTtlExecutionDaysMeta(ttlDays);
+
+        handler = RECAG012MessageHandler.builder()
+                .eventMetaDAO(mockDao)
+                .pnPaperChannelConfig(mockConfig)
+                .pnag012MessageHandler(mockPnag012MessageHandler)
+                .build();
     }
 
     @Test

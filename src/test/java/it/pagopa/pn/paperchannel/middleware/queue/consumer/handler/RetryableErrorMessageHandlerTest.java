@@ -8,6 +8,7 @@ import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendRequest;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnRequestError;
@@ -33,14 +34,11 @@ class RetryableErrorMessageHandlerTest {
     private RetryableErrorMessageHandler handler;
 
     private PnPaperChannelConfig mockConfig;
-
     private ExternalChannelClient mockExtChannel;
-
     private SqsSender mockSqsSender;
-
     private PaperRequestErrorDAO mockRequestError;
-
     private AddressDAO mockAddressDAO;
+    private RequestDeliveryDAO requestDeliveryDAO;
 
 
     @BeforeEach
@@ -49,9 +47,17 @@ class RetryableErrorMessageHandlerTest {
         mockExtChannel = mock(ExternalChannelClient.class);
         mockAddressDAO = mock(AddressDAO.class);
         mockRequestError = mock(PaperRequestErrorDAO.class);
+        requestDeliveryDAO = mock(RequestDeliveryDAO.class);
         mockConfig = mock(PnPaperChannelConfig.class);
 
-        handler = new RetryableErrorMessageHandler(mockSqsSender, mockExtChannel, mockAddressDAO, mockRequestError, mockConfig);
+        handler = RetryableErrorMessageHandler.builder()
+                .sqsSender(mockSqsSender)
+                .externalChannelClient(mockExtChannel)
+                .addressDAO(mockAddressDAO)
+                .paperRequestErrorDAO(mockRequestError)
+                .requestDeliveryDAO(requestDeliveryDAO)
+                .pnPaperChannelConfig(mockConfig)
+                .build();
     }
 
     @Test
@@ -87,6 +93,8 @@ class RetryableErrorMessageHandlerTest {
 
         //verifico che viene inviato l'evento a delivery-push
         verify(mockSqsSender, times(1)).pushSendEvent(argThat((SendEvent se) -> se.getRequestId().equals(currentRequestId) ));
+
+        verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
     }
 
     @Test
@@ -128,6 +136,8 @@ class RetryableErrorMessageHandlerTest {
 
         //verifico che viene inviato l'evento a delivery-push
         verify(mockSqsSender, times(1)).pushSendEvent(any(SendEvent.class));
+
+        verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
     }
 
 }
