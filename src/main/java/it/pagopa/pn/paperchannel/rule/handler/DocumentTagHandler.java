@@ -29,12 +29,14 @@ public class DocumentTagHandler extends it.pagopa.pn.commons.rules.ListChainHand
     @Override
     public Mono<FilterHandlerResult> filter(PnAttachmentInfo item, ListChainContext<PnAttachmentInfo, PnDeliveryRequest> ruleContext) {
 
+        String messagediagPrefix = "Il tag " + item.getDocTag();
+
         if (typeWithSuccessResult.contains(item.getDocTag()))
-            return Mono.just(new FilterHandlerResult(FilterHandlerResultEnum.SUCCESS, "DOC_TAG_REQUIRED", "Il tag " + item.getDocTag() + " rientra tra quelli da inviare obbligatoriamente"));
+            return Mono.just(new FilterHandlerResult(FilterHandlerResultEnum.SUCCESS, "DOC_TAG_REQUIRED", messagediagPrefix + " rientra tra quelli da inviare obbligatoriamente"));
         if (typeWithNextResult.contains(item.getDocTag()))
-            return Mono.just(new FilterHandlerResult(FilterHandlerResultEnum.NEXT, "DOC_TAG_ACCEPTED", "Il tag " + item.getDocTag() + " rientra tra quelli da inviare"));
+            return Mono.just(new FilterHandlerResult(FilterHandlerResultEnum.NEXT, "DOC_TAG_ACCEPTED", messagediagPrefix + " rientra tra quelli da inviare"));
 
 
-        return Mono.just(new FilterHandlerResult(FilterHandlerResultEnum.FAIL, "DOC_TAG_SKIPPED", "Il tag " + item.getDocTag() + " non rientra tra quelli da inviare"));
+        return Mono.just(new FilterHandlerResult(FilterHandlerResultEnum.FAIL, "DOC_TAG_SKIPPED", messagediagPrefix + " non rientra tra quelli da inviare"));
     }
 }
