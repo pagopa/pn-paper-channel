@@ -44,7 +44,6 @@ public class AttachmentsConfigServiceImpl extends GenericService implements Atta
 
     public Mono<PnDeliveryRequest> filterAttachmentsToSend(PnDeliveryRequest pnDeliveryRequest, List<PnAttachmentInfo> attachmentInfoList, PnAddress pnAddress) {
 
-
         return resolveRule( AttachmentsConfigUtils.buildPartitionKey(pnAddress.getCap(),ZIPCODE_PK_PREFIX), pnDeliveryRequest.getNotificationSentAt())
                 .flatMap(rules -> paperListChainEngine.filterItems(pnDeliveryRequest, attachmentInfoList, rules)
                         .collectList()
