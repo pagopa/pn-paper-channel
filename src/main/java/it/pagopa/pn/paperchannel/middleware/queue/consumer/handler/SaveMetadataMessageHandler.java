@@ -8,12 +8,12 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDiscoveredAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
-import lombok.RequiredArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
-import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
+import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.buildMetaRequestId;
+import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.buildMetaStatusCode;
 
 // handler salva metadati (vedere Gestione eventi di pre-esito)
 @Slf4j

@@ -15,10 +15,6 @@ public class NotRetriableWithoutSendErrorMessageHandler implements MessageHandle
 
     private final PaperRequestErrorDAO paperRequestErrorDAO;
 
-    public NotRetriableWithoutSendErrorMessageHandler(PaperRequestErrorDAO paperRequestErrorDAO) {
-        this.paperRequestErrorDAO = paperRequestErrorDAO;
-    }
-
     @Override
     public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
         PnLogAudit pnLogAudit = new PnLogAudit();

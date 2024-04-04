@@ -4,7 +4,6 @@ import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.mapper.RequestDeliveryMapper;
-import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;

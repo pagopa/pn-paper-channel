@@ -42,20 +42,20 @@ public class HandlersFactory {
 
     @PostConstruct
     public void initializeHandlers() {
-        
-        MessageHandler saveMetadataMessageHandler = SaveMetadataMessageHandler.builder()
+
+        SaveMetadataMessageHandler saveMetadataMessageHandler = SaveMetadataMessageHandler.builder()
                 .eventMetaDAO(eventMetaDAO)
                 .pnPaperChannelConfig(pnPaperChannelConfig)
                 .build();
-        
-        MessageHandler saveDematMessageHandler = SaveDematMessageHandler.builder()
+
+        SaveDematMessageHandler saveDematMessageHandler = SaveDematMessageHandler.builder()
                 .sqsSender(sqsSender)
                 .eventDematDAO(eventDematDAO)
                 .requestDeliveryDAO(requestDeliveryDAO)
                 .pnPaperChannelConfig(pnPaperChannelConfig)
                 .build();
-        
-        MessageHandler retryableErrorExtChannelsMessageHandler = RetryableErrorMessageHandler.builder()
+
+        RetryableErrorMessageHandler retryableErrorExtChannelsMessageHandler = RetryableErrorMessageHandler.builder()
                 .sqsSender(sqsSender)
                 .externalChannelClient(externalChannelClient)
                 .addressDAO(addressDAO)
@@ -63,32 +63,32 @@ public class HandlersFactory {
                 .requestDeliveryDAO(requestDeliveryDAO)
                 .pnPaperChannelConfig(pnPaperChannelConfig)
                 .build();
-        
-        MessageHandler notRetryableErrorMessageHandler = NotRetryableErrorMessageHandler.builder()
+
+        NotRetryableErrorMessageHandler notRetryableErrorMessageHandler = NotRetryableErrorMessageHandler.builder()
                 .sqsSender(sqsSender)
                 .paperRequestErrorDAO(paperRequestErrorDAO)
                 .requestDeliveryDAO(requestDeliveryDAO)
                 .build();
-        
-        MessageHandler notRetriableWithoutSendErrorMessageHandler = NotRetriableWithoutSendErrorMessageHandler.builder()
+
+        NotRetriableWithoutSendErrorMessageHandler notRetriableWithoutSendErrorMessageHandler = NotRetriableWithoutSendErrorMessageHandler.builder()
                 .paperRequestErrorDAO(paperRequestErrorDAO)
                 .build();
-        
-        MessageHandler customAggregatorMessageHandler = CustomAggregatorMessageHandler.builder()
+
+        CustomAggregatorMessageHandler customAggregatorMessageHandler = CustomAggregatorMessageHandler.builder()
                 .sqsSender(sqsSender)
                 .eventMetaDAO(eventMetaDAO)
                 .metaDematCleaner(metaDematCleaner)
                 .requestDeliveryDAO(requestDeliveryDAO)
                 .build();
-        
-        MessageHandler aggregatorMessageHandler = AggregatorMessageHandler.builder()
+
+        AggregatorMessageHandler aggregatorMessageHandler = AggregatorMessageHandler.builder()
                 .sqsSender(sqsSender)
                 .eventMetaDAO(eventMetaDAO)
                 .metaDematCleaner(metaDematCleaner)
                 .requestDeliveryDAO(requestDeliveryDAO)
                 .build();
-         
-        MessageHandler directlySendMessageHandler = DirectlySendMessageHandler.builder()
+
+        DirectlySendMessageHandler directlySendMessageHandler = DirectlySendMessageHandler.builder()
                 .sqsSender(sqsSender)
                 .requestDeliveryDAO(requestDeliveryDAO)
                 .build();
@@ -180,7 +180,7 @@ public class HandlersFactory {
         map.put("PNAG012", pnag012MessageHandler);
     }
 
-    private void addRetryableErrorStatusCodes(ConcurrentHashMap<String, MessageHandler> map, MessageHandler handler) {
+    private void addRetryableErrorStatusCodes(ConcurrentHashMap<String, MessageHandler> map, RetryableErrorMessageHandler handler) {
         map.put(ExternalChannelCodeEnum.RECRS006.name(), handler);
         map.put(ExternalChannelCodeEnum.RECRN006.name(), handler);
         map.put(ExternalChannelCodeEnum.RECAG004.name(), handler);
@@ -191,7 +191,7 @@ public class HandlersFactory {
         map.put(ExternalChannelCodeEnum.RECAG013.name(), handler);
     }
 
-    private void addNotRetryableErrorStatusCodes(ConcurrentHashMap<String, MessageHandler> map, MessageHandler handler) {
+    private void addNotRetryableErrorStatusCodes(ConcurrentHashMap<String, MessageHandler> map, NotRetryableErrorMessageHandler handler) {
         map.put(ExternalChannelCodeEnum.CON998.name(), handler);
         map.put(ExternalChannelCodeEnum.CON997.name(), handler);
         map.put(ExternalChannelCodeEnum.CON996.name(), handler);
@@ -199,11 +199,11 @@ public class HandlersFactory {
         map.put(ExternalChannelCodeEnum.CON993.name(), handler);
     }
 
-    private void addNotRetryableErrorStatusCodeWithoutSend(ConcurrentHashMap<String, MessageHandler> map, MessageHandler handler){
+    private void addNotRetryableErrorStatusCodeWithoutSend(ConcurrentHashMap<String, MessageHandler> map, NotRetriableWithoutSendErrorMessageHandler handler){
         map.put(ExternalChannelCodeEnum.P010.name(), handler);
     }
 
-    private void addSaveMetadataStatusCodes(ConcurrentHashMap<String, MessageHandler> map, MessageHandler handler) {
+    private void addSaveMetadataStatusCodes(ConcurrentHashMap<String, MessageHandler> map, SaveMetadataMessageHandler handler) {
         map.put("RECRS002A", handler);
         map.put("RECRS002D", handler);
         map.put("RECRS004A", handler);
@@ -228,7 +228,7 @@ public class HandlersFactory {
     }
 
 
-    private void addSaveDematStatusCodes(ConcurrentHashMap<String, MessageHandler> map, MessageHandler handler) {
+    private void addSaveDematStatusCodes(ConcurrentHashMap<String, MessageHandler> map, SaveDematMessageHandler handler) {
         map.put(ExternalChannelCodeEnum.RECRS002B.name(), handler);
         map.put(ExternalChannelCodeEnum.RECRS002E.name(), handler);
         map.put(ExternalChannelCodeEnum.RECRS004B.name(), handler);
@@ -254,7 +254,7 @@ public class HandlersFactory {
 
     }
 
-    private void addDirectlySendStatusCodes(ConcurrentHashMap<String, MessageHandler> map, MessageHandler handler) {
+    private void addDirectlySendStatusCodes(ConcurrentHashMap<String, MessageHandler> map, DirectlySendMessageHandler handler) {
 
 
         //caso CON080, RECRI001, RECRI002
@@ -277,7 +277,7 @@ public class HandlersFactory {
         map.put(ExternalChannelCodeEnum.RECRN010.name(), handler);
     }
 
-    private void addAggregatorStatusCodes(ConcurrentHashMap<String, MessageHandler> map, MessageHandler handler) {
+    private void addAggregatorStatusCodes(ConcurrentHashMap<String, MessageHandler> map, AggregatorMessageHandler handler) {
         map.put(ExternalChannelCodeEnum.RECRS002C.name(), handler);
         map.put(ExternalChannelCodeEnum.RECRS002F.name(), handler);
         map.put(ExternalChannelCodeEnum.RECRS004C.name(), handler);
@@ -296,7 +296,7 @@ public class HandlersFactory {
         map.put(ExternalChannelCodeEnum.RECRSI004C.name(), handler);
     }
 
-    private void addCustomAggregatorStatusCodes(ConcurrentHashMap<String, MessageHandler> map, MessageHandler handler){
+    private void addCustomAggregatorStatusCodes(ConcurrentHashMap<String, MessageHandler> map, CustomAggregatorMessageHandler handler){
         map.put(ExternalChannelCodeEnum.RECRN002C.name(), handler);
         map.put(ExternalChannelCodeEnum.RECAG003C.name(), handler);
     }

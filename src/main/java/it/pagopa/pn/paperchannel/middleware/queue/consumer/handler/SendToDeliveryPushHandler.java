@@ -23,15 +23,45 @@ public abstract class SendToDeliveryPushHandler implements MessageHandler {
 
     @Override
     public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
-        log.debug("[{}] Sending to delivery-push or event-bridge", paperRequest.getRequestId());
-        log.debug("[{}] Response of ExternalChannel from request id {}", paperRequest.getRequestId(), paperRequest);
-        SendEvent sendEvent = SendEventMapper.createSendEventMessage(entity, paperRequest);
+        return this.updateRefinedDeliveryRequestIfOK(entity)
+                .doOnNext(pnDeliveryRequest -> this.pushSendEvent(entity, paperRequest))
+                .then();
+    }
 
-        if (entity.getStatusDetail().equals(StatusCodeEnum.OK.getValue())) {
-            this.updateRefinedDeliveryRequest(entity);
+    /**
+     * Update delivery request setting refined field to true when statusDetail field is OK
+     *
+     * @param pnDeliveryRequest request to update
+     *
+     * @return Mono containing {@link PnDeliveryRequest} object
+     * */
+    private Mono<PnDeliveryRequest> updateRefinedDeliveryRequestIfOK(PnDeliveryRequest pnDeliveryRequest) {
+
+        if (StatusCodeEnum.OK.getValue().equals(pnDeliveryRequest.getStatusDetail())) {
+            log.debug("[{}] Updating DeliveryRequest with refinement information", pnDeliveryRequest.getRequestId());
+
+            pnDeliveryRequest.setRefined(true);
+            return this.requestDeliveryDAO
+                    .updateData(pnDeliveryRequest)
+                    .doOnError(ex -> log.warn("[{}] Error while setting request as refined", pnDeliveryRequest.getRequestId(), ex));
         }
 
-        if (Utility.isCallCenterEvoluto(entity.getRequestId())){
+        return Mono.just(pnDeliveryRequest);
+    }
+
+    /**
+     * Send event to event bridge or delivery push based on delivery request id
+     *
+     * @param pnDeliveryRequest delivery request
+     * @param paperRequest      progress event coming from ext-channel
+     * */
+    private void pushSendEvent(PnDeliveryRequest pnDeliveryRequest, PaperProgressStatusEventDto paperRequest) {
+        log.debug("[{}] Sending to delivery-push or event-bridge", paperRequest.getRequestId());
+        log.debug("[{}] Response of ExternalChannel from request id {}", paperRequest.getRequestId(), paperRequest);
+
+        SendEvent sendEvent = SendEventMapper.createSendEventMessage(pnDeliveryRequest, paperRequest);
+
+        if (Utility.isCallCenterEvoluto(pnDeliveryRequest.getRequestId())){
             String clientId = MDC.get(Const.CONTEXT_KEY_CLIENT_ID);
             log.debug("[{}] clientId from context", clientId);
             sqsSender.pushSendEventOnEventBridge(clientId, sendEvent);
@@ -40,22 +70,5 @@ public abstract class SendToDeliveryPushHandler implements MessageHandler {
             sqsSender.pushSendEvent(sendEvent);
             log.info("[{}] Sent to delivery-push: {}", paperRequest.getRequestId(), sendEvent);
         }
-        return Mono.empty();
-    }
-
-    /**
-     * Update delivery request setting refined field to true
-     *
-     * @param pnDeliveryRequest request to update
-     * */
-    private void updateRefinedDeliveryRequest(PnDeliveryRequest pnDeliveryRequest) {
-        log.debug("[{}] Updating DeliveryRequest with refinement information", pnDeliveryRequest.getRequestId());
-
-        pnDeliveryRequest.setRefined(true);
-
-        this.requestDeliveryDAO
-                .updateData(pnDeliveryRequest)
-                .doOnError(ex -> log.warn("[{}] Error while setting request as refined", pnDeliveryRequest.getRequestId(), ex))
-                .subscribe();
     }
 }
