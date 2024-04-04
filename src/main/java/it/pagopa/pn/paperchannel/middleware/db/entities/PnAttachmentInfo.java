@@ -6,11 +6,13 @@ import lombok.ToString;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 
+import java.io.Serializable;
+
 @DynamoDbBean
 @Getter
 @Setter
 @ToString
-public class PnAttachmentInfo {
+public class PnAttachmentInfo implements Serializable {
 
 
     private static final String COL_ID = "id";
@@ -30,6 +32,10 @@ public class PnAttachmentInfo {
     private static final String COL_GENERATEDFROM = "generatedFrom";
 
     private static final String COL_DOC_TAG = "docTag";
+
+    private static final String COL_FILTER_RESULT_CODE = "filterResultCode";
+
+    private static final String COL_FILTER_RESULT_DIAGNOSTIC = "filterResultDiagnostic";
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_ID)}))
     private String id;
@@ -57,4 +63,10 @@ public class PnAttachmentInfo {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_DOC_TAG)}))
     private String docTag;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_FILTER_RESULT_CODE)}))
+    private String filterResultCode;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_FILTER_RESULT_DIAGNOSTIC)}))
+    private String filterResultDiagnostic;
 }

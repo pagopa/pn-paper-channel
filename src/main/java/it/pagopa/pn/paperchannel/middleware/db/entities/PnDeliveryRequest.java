@@ -9,6 +9,7 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSecondaryPartitionKey;
 
+import java.io.Serializable;
 import java.time.Instant;
 import java.util.List;
 
@@ -17,7 +18,7 @@ import java.util.List;
 @Setter
 @ToString
 @NoArgsConstructor
-public class PnDeliveryRequest {
+public class PnDeliveryRequest implements Serializable {
 
     public static final String COL_REQUEST_ID = "requestId";
 
@@ -55,6 +56,8 @@ public class PnDeliveryRequest {
     private static final String COL_START_DATE = "startDate";
 
     private static final String COL_ATTACHMENTS = "attachments";
+
+    private static final String COL_REMOVED_ATTACHMENTS = "removedAttachments";
 
     private static final String COL_PRODUCT_TYPE = "productType";
 
@@ -147,5 +150,6 @@ public class PnDeliveryRequest {
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_NOTIFICATION_SENT_AT)}))
     private Instant notificationSentAt;
 
-
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_REMOVED_ATTACHMENTS)}))
+    private List<PnAttachmentInfo> removedAttachments;
 }

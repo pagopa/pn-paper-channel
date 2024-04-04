@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.db.entities;
 
+import it.pagopa.pn.commons.rules.model.RuleModel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -11,7 +12,7 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 @Setter
 @ToString
 @EqualsAndHashCode
-public class PnAttachmentsRule {
+public class PnAttachmentsRule implements RuleModel {
 
     private static final String COL_RULE_TYPE = "ruleType";
 

@@ -48,12 +48,13 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
     private final PaperAddressService paperAddressService;
     private final PaperCalculatorUtils paperCalculatorUtils;
     private final F24Service f24Service;
+    private final AttachmentsConfigService attachmentsConfigService;
 
     public PrepareAsyncServiceImpl(NationalRegistryClient nationalRegistryClient,
                                    RequestDeliveryDAO requestDeliveryDAO, SqsSender sqsQueueSender, CostDAO costDAO,
                                    SafeStorageService safeStorageService, AddressDAO addressDAO, PnPaperChannelConfig paperChannelConfig,
                                    PaperRequestErrorDAO paperRequestErrorDAO, PaperAddressService paperAddressService,
-                                   PaperCalculatorUtils paperCalculatorUtils, F24Service f24Service) {
+                                   PaperCalculatorUtils paperCalculatorUtils, F24Service f24Service, AttachmentsConfigService attachmentsConfigService) {
         super(requestDeliveryDAO, costDAO, nationalRegistryClient, sqsQueueSender);
         this.safeStorageService = safeStorageService;
         this.addressDAO = addressDAO;
@@ -62,6 +63,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
         this.paperAddressService = paperAddressService;
         this.paperCalculatorUtils = paperCalculatorUtils;
         this.f24Service = f24Service;
+        this.attachmentsConfigService = attachmentsConfigService;
     }
 
     @Override
@@ -73,7 +75,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
         final String requestId = request.getRequestId();
         Address addressFromNationalRegistry = request.getAddress();
 
-        Mono<PnDeliveryRequest> requestDeliveryEntityMono = null;
+        Mono<PnDeliveryRequest> requestDeliveryEntityMono;
         if (correlationId!= null) {
             log.info("Start async for {} correlation id", request.getCorrelationId());
             requestDeliveryEntityMono = requestDeliveryDAO.getByCorrelationId(correlationId, true);
@@ -134,7 +136,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                 null
         );
 
-        return getAttachmentsInfo(pnDeliveryRequest, request)
+        return getAttachmentsInfo(pnDeliveryRequest, request, correctAddress)
                 .flatMap(pnDeliveryRequestWithAttachmentOk -> {
                             this.pushPrepareEvent(pnDeliveryRequestWithAttachmentOk, AddressMapper.toDTO(correctAddress), request.getClientId(), StatusCodeEnum.OK, null);
                             return this.requestDeliveryDAO.updateData(pnDeliveryRequestWithAttachmentOk);
@@ -213,7 +215,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
     }
 
 
-    private Mono<PnDeliveryRequest> getAttachmentsInfo(PnDeliveryRequest deliveryRequest, PrepareAsyncRequest request){
+    private Mono<PnDeliveryRequest> getAttachmentsInfo(PnDeliveryRequest deliveryRequest, PrepareAsyncRequest request, PnAddress correctAddress){
 
         if(deliveryRequest.getAttachments().isEmpty() ||
                 !deliveryRequest.getAttachments().stream().filter(a ->a.getNumberOfPage()!=null && a.getNumberOfPage()>0).toList().isEmpty()){
@@ -252,16 +254,14 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                 .map(AttachmentMapper::toEntity)
                 .sequential()
                 .collectList()
-                .map(listAttachment -> {
-                    deliveryRequest.setAttachments(listAttachment);
-                    return deliveryRequest;
-                })
+                .flatMap(attachmentInfoList -> attachmentsConfigService.filterAttachmentsToSend(deliveryRequest, attachmentInfoList, correctAddress))
                 .onErrorResume(ex -> {
                     request.setIun(deliveryRequest.getIun());
                     this.sqsSender.pushInternalError(request, request.getAttemptRetry(), PrepareAsyncRequest.class);
                     return Mono.error(ex);
                 });
     }
+
 
 
     private void sendUnreachableEvent(PnDeliveryRequest request, String clientId, KOReason koReason){
