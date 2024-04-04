@@ -84,6 +84,8 @@ class SaveDematMessageHandlerTest {
         //mi aspetto che mandi il messaggio a delivery-push
         verify(mockSqsSender, times(1)).pushSendEvent(sendEventExpected);
 
+        // not call because it is a PROGRESS event
+        verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
     }
 
     @Test
@@ -117,6 +119,8 @@ class SaveDematMessageHandlerTest {
         //mi aspetto che non mandi il messaggio a delivery-push
         verify(mockSqsSender, times(0)).pushSendEvent(sendEventNotExpected);
 
+        // not call because it is a PROGRESS event
+        verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
     }
 
     @Test
@@ -163,7 +167,8 @@ class SaveDematMessageHandlerTest {
         verify(mockSqsSender, times(0)).pushSendEvent(sendEventCAD);
         //mi aspetto che mandi il messaggio a delivery-push per l'evento 23L
         verify(mockSqsSender, times(1)).pushSendEvent(sendEvent23L);
-
+        // not call because it is a PROGRESS event
+        verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
     }
 
     @Test
@@ -218,6 +223,8 @@ class SaveDematMessageHandlerTest {
         //mi aspetto che mandi l'evento dematInternalEvent sulla coda interna
         verify(mockSqsSender, times(1)).pushDematZipInternalEvent(any());
 
+        // not call because it is a PROGRESS event
+        verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
     }
 
     @Test
@@ -256,8 +263,10 @@ class SaveDematMessageHandlerTest {
         //mi aspetto che mandi il messaggio in event bridge per l'evento Plico
         verify(mockSqsSender, times(1)).pushSendEventOnEventBridge(Const.PREFIX_REQUEST_ID_SERVICE_DESK, sendEventPlico);
 
-        MDC.clear();
+        // not call because it is a PROGRESS event
+        verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
 
+        MDC.clear();
     }
 
     private PaperProgressStatusEventDto getPaperRequestForOneAttachment(

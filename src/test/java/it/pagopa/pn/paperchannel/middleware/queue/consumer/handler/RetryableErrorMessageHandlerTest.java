@@ -93,6 +93,8 @@ class RetryableErrorMessageHandlerTest {
 
         //verifico che viene inviato l'evento a delivery-push
         verify(mockSqsSender, times(1)).pushSendEvent(argThat((SendEvent se) -> se.getRequestId().equals(currentRequestId) ));
+
+        verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
     }
 
     @Test
@@ -134,6 +136,8 @@ class RetryableErrorMessageHandlerTest {
 
         //verifico che viene inviato l'evento a delivery-push
         verify(mockSqsSender, times(1)).pushSendEvent(any(SendEvent.class));
+
+        verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
     }
 
 }

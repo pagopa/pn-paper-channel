@@ -95,6 +95,8 @@ class Complex890MessageHandlerTest {
         verify(eventMetaDAO, times(0)).createOrUpdate(any(PnEventMeta.class));
 
         verify(sqsSender, times(0)).pushSendEvent(any(SendEvent.class));
+
+        verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
     }
 
     //CASO 2
@@ -134,6 +136,9 @@ class Complex890MessageHandlerTest {
         SendEvent sendEvent = SendEventMapper.createSendEventMessage(entity, paperRequest);
 
         verify(sqsSender, times(1)).pushSendEvent(sendEvent);
+
+        // Never because status code is a PROGRESS
+        verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
     }
 
     //CASO 3
@@ -182,6 +187,12 @@ class Complex890MessageHandlerTest {
         assertThat(sendEvent.getStatusCode()).isEqualTo(StatusCodeEnum.OK);
         assertThat(sendEvent.getStatusDetail()).isEqualTo("RECAG005C");
         assertThat(sendEventArgumentCaptor.getAllValues().get(0)).isEqualTo(sendEvent);
+
+        verify(requestDeliveryDAO, times(1)).updateData(argThat(pnDeliveryRequest -> {
+            assertThat(pnDeliveryRequest).isNotNull();
+            assertThat(pnDeliveryRequest.getRefined()).isTrue();
+            return true;
+        }));
     }
 
     @Test
@@ -240,5 +251,12 @@ class Complex890MessageHandlerTest {
         assertThat(sendEvent.getStatusCode()).isEqualTo(StatusCodeEnum.PROGRESS);
         assertThat(sendEvent.getStatusDetail()).isEqualTo("RECAG005C");
         assertThat(sendEventArgumentCaptor.getAllValues().get(1)).isEqualTo(sendEvent);
+
+        // Update is called once because only PNAG012 event is a feedback (OK)
+        verify(requestDeliveryDAO, times(1)).updateData(argThat(pnDeliveryRequest -> {
+            assertThat(pnDeliveryRequest).isNotNull();
+            assertThat(pnDeliveryRequest.getRefined()).isTrue();
+            return true;
+        }));
     }
 }

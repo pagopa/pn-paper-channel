@@ -152,7 +152,11 @@ class RECAG011BMessageHandlerTest {
         sendPNAG012Event.setClientRequestTimeStamp(sendEventArgumentCaptor.getAllValues().get(1).getClientRequestTimeStamp());
         assertThat(sendEventArgumentCaptor.getAllValues().get(1)).isEqualTo(sendPNAG012Event);
 
-
+        verify(requestDeliveryDAO, times(1)).updateData(argThat(pnDeliveryRequest -> {
+            assertThat(pnDeliveryRequest).isNotNull();
+            assertThat(pnDeliveryRequest.getRefined()).isTrue();
+            return true;
+        }));
     }
 
     @Test
@@ -213,7 +217,7 @@ class RECAG011BMessageHandlerTest {
         //mi aspetto che NON mandi il messaggio PNAG012 a delivery-push
         verify(mockSqsSender, times(0)).pushSendEvent(sendPNAG012Event);
 
-
+        verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
     }
 
     @Test
@@ -279,7 +283,7 @@ class RECAG011BMessageHandlerTest {
         //mi aspetto che NON mandi il messaggio PNAG012 a delivery-push
         verify(mockSqsSender, times(0)).pushSendEvent(sendPNAG012Event);
 
-
+        verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
     }
 
     @Test
@@ -343,7 +347,7 @@ class RECAG011BMessageHandlerTest {
         verify(mockSqsSender, times(1)).pushSendEvent(sendEventArgumentCaptor.capture());
         assertThat(sendEventArgumentCaptor.getAllValues().get(0).getStatusDetail()).isEqualTo("RECAG011B");
 
-
+        verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
     }
 
 

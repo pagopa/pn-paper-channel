@@ -26,6 +26,7 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
@@ -99,6 +100,12 @@ class RECRN00XCMessageHandlerTest {
 
         Mono<Void> mono = this.handler.handleMessage(entity, paperRequest);
         Assertions.assertDoesNotThrow(() -> mono.block());
+
+        verify(requestDeliveryDAO, times(1)).updateData(argThat(pnDeliveryRequest -> {
+            assertThat(pnDeliveryRequest).isNotNull();
+            assertThat(pnDeliveryRequest.getRefined()).isTrue();
+            return true;
+        }));
     }
 
 
@@ -141,6 +148,8 @@ class RECRN00XCMessageHandlerTest {
         SendEvent sendEvent = caturedSendEvent.getValue();
         Assertions.assertEquals(StatusCodeEnum.PROGRESS, sendEvent.getStatusCode());
         Assertions.assertEquals(statusRECRN003C, sendEvent.getStatusDetail());
+
+        verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
     }
 
 
@@ -187,6 +196,12 @@ class RECRN00XCMessageHandlerTest {
         assertEquals(StatusCodeEnum.OK, caturedSendEvent.getAllValues().get(0).getStatusCode());
         assertEquals("RECRN003C", caturedSendEvent.getAllValues().get(1).getStatusDetail());
         assertEquals(StatusCodeEnum.PROGRESS, caturedSendEvent.getAllValues().get(1).getStatusCode());
+
+        verify(requestDeliveryDAO, times(1)).updateData(argThat(pnDeliveryRequest -> {
+            assertThat(pnDeliveryRequest).isNotNull();
+            assertThat(pnDeliveryRequest.getRefined()).isTrue();
+            return true;
+        }));
     }
 
     private PnEventMeta getEventMeta(String statusCode, Instant time){

@@ -98,6 +98,9 @@ class AggregatorMessageHandlerTest {
         verify(mockMetaDao, timeout(2000).times(1)).deleteBatch(any(String.class), any(String.class));
         // deleteEventDemat call
         verify(mockDematDao, timeout(2000).times(1)).deleteBatch(any(String.class), any(String.class));
+
+        verify(requestDeliveryDAO, timeout(2000).times(1)).updateData(entity);
+
         // DeliveryPush send via SQS verification
         verify(mockSqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
 
@@ -136,16 +139,17 @@ class AggregatorMessageHandlerTest {
         // deleteEventMeta
         when(mockMetaDao.deleteEventMeta(any(String.class), any(String.class))).thenReturn(Mono.empty());
 
-        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(entity));
-
         // assertDoNotThrow with call
         assertThrows(PnGenericException.class, () -> handler.handleMessage(entity, paperRequest).block());
 
         // check invocations: verify
         // getDeliveryEventMeta call
         verify(mockMetaDao, timeout(2000).times(1)).getDeliveryEventMeta(any(String.class), any(String.class));
+
         // DeliveryPush send via SQS verification
         verify(mockSqsSender, timeout(2000).times(0)).pushSendEvent(any());
+
+        verify(requestDeliveryDAO, never()).updateData(entity);
     }
 
     @Test
@@ -196,6 +200,8 @@ class AggregatorMessageHandlerTest {
         verify(mockMetaDao, timeout(2000).times(0)).deleteBatch(any(String.class), any(String.class));
         // deleteEventDemat call
         verify(mockDematDao, timeout(2000).times(0)).deleteBatch(any(String.class), any(String.class));
+
+        verify(requestDeliveryDAO, timeout(2000).times(1)).updateData(any(PnDeliveryRequest.class));
     }
 
     @Test
@@ -243,6 +249,8 @@ class AggregatorMessageHandlerTest {
         verify(mockDematDao, timeout(2000).times(1)).deleteBatch(any(String.class), any(String.class));
         // DeliveryPush send via SQS verification
         verify(mockSqsSender, timeout(2000).times(1)).pushSendEvent(any(SendEvent.class));
+
+        verify(requestDeliveryDAO, timeout(2000).times(1)).updateData(any(PnDeliveryRequest.class));
     }
 
     @Test
@@ -290,6 +298,8 @@ class AggregatorMessageHandlerTest {
         verify(mockDematDao, timeout(2000).times(1)).deleteBatch(any(String.class), any(String.class));
         // DeliveryPush send via SQS verification
         verify(mockSqsSender, timeout(2000).times(1)).pushSendEvent(any(SendEvent.class));
+
+        verify(requestDeliveryDAO, timeout(2000).times(1)).updateData(any(PnDeliveryRequest.class));
     }
 
     private PnEventMeta createPnEventMeta() {

@@ -28,6 +28,7 @@ import java.util.Set;
 
 import static it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.PNAG012MessageHandler.*;
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.*;
 
@@ -123,6 +124,11 @@ class PNAG012MessageHandlerTest {
         verify(eventMetaDAO, times(1)).putIfAbsent(any(PnEventMeta.class));
         verify(mockSqsSender, times(1)).pushSendEvent(any(SendEvent.class));
 
+        verify(requestDeliveryDAO, times(1)).updateData(argThat(pnDeliveryRequest -> {
+            assertThat(pnDeliveryRequest).isNotNull();
+            assertThat(pnDeliveryRequest.getRefined()).isTrue();
+            return true;
+        }));
     }
 
     @Test
@@ -178,6 +184,11 @@ class PNAG012MessageHandlerTest {
         verify(eventMetaDAO, times(1)).putIfAbsent(any(PnEventMeta.class));
         verify(mockSqsSender, times(1)).pushSendEvent(any(SendEvent.class));
 
+        verify(requestDeliveryDAO, times(1)).updateData(argThat(pnDeliveryRequest -> {
+            assertThat(pnDeliveryRequest).isNotNull();
+            assertThat(pnDeliveryRequest.getRefined()).isTrue();
+            return true;
+        }));
     }
 
     @Test
@@ -246,6 +257,12 @@ class PNAG012MessageHandlerTest {
         verify(eventMetaDAO, times(1)).getDeliveryEventMeta(anyString(), anyString());
         verify(eventMetaDAO, times(1)).putIfAbsent(any(PnEventMeta.class));
         verify(mockSqsSender, times(1)).pushSendEvent(any(SendEvent.class));
+
+        verify(requestDeliveryDAO, times(1)).updateData(argThat(pnDeliveryRequest -> {
+            assertThat(pnDeliveryRequest).isNotNull();
+            assertThat(pnDeliveryRequest.getRefined()).isTrue();
+            return true;
+        }));
     }
 
     @Test
@@ -294,6 +311,7 @@ class PNAG012MessageHandlerTest {
         //mi aspetto che il flusso venga bloccato e quindi on invii l'evento a delivery-push
         verify(mockSqsSender, never()).pushSendEvent(any());
 
+        verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
     }
 
     @Test
@@ -345,6 +363,7 @@ class PNAG012MessageHandlerTest {
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
         verify(mockSqsSender, never()).pushSendEvent(any());
 
+        verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
     }
 
     @Test
@@ -385,6 +404,7 @@ class PNAG012MessageHandlerTest {
         verify(eventMetaDAO, never()).getDeliveryEventMeta(anyString(), anyString());
         verify(eventMetaDAO, never()).putIfAbsent(any(PnEventMeta.class));
         verify(mockSqsSender, never()).pushSendEvent(any(SendEvent.class));
+        verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
     }
 
     @Test
@@ -439,6 +459,12 @@ class PNAG012MessageHandlerTest {
         // Then
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
         verify(mockSqsSender, times(1)).pushSendEvent(any());
+
+        verify(requestDeliveryDAO, times(1)).updateData(argThat(pnDeliveryRequest -> {
+            assertThat(pnDeliveryRequest).isNotNull();
+            assertThat(pnDeliveryRequest.getRefined()).isTrue();
+            return true;
+        }));
     }
 
     @Test
@@ -498,6 +524,12 @@ class PNAG012MessageHandlerTest {
         // Then
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
         verify(mockSqsSender, times(1)).pushSendEvent(any());
+
+        verify(requestDeliveryDAO, times(1)).updateData(argThat(pnDeliveryRequest -> {
+            assertThat(pnDeliveryRequest).isNotNull();
+            assertThat(pnDeliveryRequest.getRefined()).isTrue();
+            return true;
+        }));
     }
 
     @Test
@@ -539,6 +571,7 @@ class PNAG012MessageHandlerTest {
         verify(eventMetaDAO, never()).getDeliveryEventMeta(any(), any());
         verify(mockSqsSender, never()).pushSendEvent(any());
 
+        verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
     }
 
     private PnEventMeta buildPnEventMeta(PaperProgressStatusEventDto paperRequest) {

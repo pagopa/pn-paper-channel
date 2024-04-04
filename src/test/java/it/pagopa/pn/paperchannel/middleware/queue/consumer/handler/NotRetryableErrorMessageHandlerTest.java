@@ -75,5 +75,7 @@ class NotRetryableErrorMessageHandlerTest {
                     requestError.getError().equals(entity.getStatusCode()) &&
                     requestError.getFlowThrow().equals(entity.getStatusDetail())
                 ));
+
+        verify(requestDeliveryDAO, never()).updateData(entity);
     }
 }

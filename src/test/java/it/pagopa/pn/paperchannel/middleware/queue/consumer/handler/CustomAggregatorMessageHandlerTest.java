@@ -24,6 +24,7 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -103,6 +104,12 @@ class CustomAggregatorMessageHandlerTest {
         // DeliveryPush send via SQS verification
         verify(mockSqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
 
+        verify(requestDeliveryDAO, times(1)).updateData(argThat(pnDeliveryRequest -> {
+            assertThat(pnDeliveryRequest).isNotNull();
+            assertThat(pnDeliveryRequest.getRefined()).isTrue();
+            return true;
+        }));
+
         // arricchimento
         assertEquals("failureCause1", caturedSendEvent.getValue().getDeliveryFailureCause());
         assertNotNull(caturedSendEvent.getValue().getDiscoveredAddress());
@@ -145,6 +152,8 @@ class CustomAggregatorMessageHandlerTest {
         verify(mockMetaDao, timeout(2000).times(1)).getDeliveryEventMeta(any(String.class), any(String.class));
         // DeliveryPush send via SQS verification
         verify(mockSqsSender, timeout(2000).times(0)).pushSendEvent(any());
+
+        verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
     }
 
     @Test
@@ -195,6 +204,12 @@ class CustomAggregatorMessageHandlerTest {
         verify(mockMetaDao, timeout(2000).times(0)).deleteBatch(any(String.class), any(String.class));
         // deleteEventDemat call
         verify(mockDematDao, timeout(2000).times(0)).deleteBatch(any(String.class), any(String.class));
+
+        verify(requestDeliveryDAO, times(1)).updateData(argThat(pnDeliveryRequest -> {
+            assertThat(pnDeliveryRequest).isNotNull();
+            assertThat(pnDeliveryRequest.getRefined()).isTrue();
+            return true;
+        }));
     }
 
 

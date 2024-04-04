@@ -14,6 +14,7 @@ import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
+import javax.annotation.PostConstruct;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -62,6 +63,11 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
     private final EventMetaDAO eventMetaDAO;
     private final MetaDematCleaner metaDematCleaner;
     private final PnPaperChannelConfig pnPaperChannelConfig;
+
+    @PostConstruct
+    private void postConstruct() {
+        log.info("Refinement duration is {}", this.pnPaperChannelConfig.getRefinementDuration());
+    }
 
     @Override
     public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
