@@ -53,8 +53,7 @@ public class Proxy890MessageHandlerTest {
         when(mockComplex890MessageHandler.handleMessage(entity, paperRequest)).thenReturn(Mono.empty());
 
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
-
-        //mi aspetto che faccia il flusso PNAG012
+        
         verify(mockComplex890MessageHandler, times(1)).handleMessage(entity, paperRequest);
 
     }
