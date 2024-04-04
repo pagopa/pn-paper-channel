@@ -63,7 +63,7 @@ class HandlersFactoryTest {
         Arguments logMessageCasesArguments = Arguments.of(logMessageCases, LogMessageHandler.class);
         Arguments recag012MessageCasesArguments = Arguments.of(recag012MessageCases, RECAG012MessageHandler.class);
         Arguments recag011bMessageCasesArguments = Arguments.of(recag011bMessageCases, RECAG011BMessageHandler.class);
-        Arguments complex890MessageCasesArguments = Arguments.of(complex890MessageCases, Complex890MessageHandler.class);
+        Arguments complex890MessageCasesArguments = Arguments.of(complex890MessageCases, Proxy890MessageHandler.class);
 
         return Stream.of(
                 directlySendMessageCasesArguments,
