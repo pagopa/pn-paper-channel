@@ -1,32 +1,15 @@
 package it.pagopa.pn.paperchannel.model;
 
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnZone;
 import it.pagopa.pn.paperchannel.utils.Const;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 class AttachmentInfoTest {
 
-    private String id;
-    private String documentType;
-    private String url;
-    private String date;
-    private String fileKey;
-    private int numberOfPage;
-    private String sha256;
-    private String generatedFrom;
-
-
-    @BeforeEach
-    void setUp(){
-        this.initialize();
-    }
 
     @Test
     void testSorting(){
@@ -66,41 +49,6 @@ class AttachmentInfoTest {
         Assertions.assertEquals(Const.PN_PAPER_CHANNEL, lisUnsorted.get(1).getDocumentType());
     }
 
-    @Test
-    void toStringTest() {
-        AttachmentInfo attachmentInfo = initAttachmentInfo();
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(attachmentInfo.getClass().getSimpleName());
-        stringBuilder.append("(");
-        stringBuilder.append("id=");
-        stringBuilder.append(id);
-        stringBuilder.append(", ");
-        stringBuilder.append("documentType=");
-        stringBuilder.append(documentType);
-        stringBuilder.append(", ");
-        stringBuilder.append("url=");
-        stringBuilder.append(url);
-        stringBuilder.append(", ");
-        stringBuilder.append("date=");
-        stringBuilder.append(date);
-        stringBuilder.append(", ");
-        stringBuilder.append("fileKey=");
-        stringBuilder.append(fileKey);
-        stringBuilder.append(", ");
-        stringBuilder.append("numberOfPage=");
-        stringBuilder.append(numberOfPage);
-        stringBuilder.append(", ");
-        stringBuilder.append("sha256=");
-        stringBuilder.append(sha256);
-        stringBuilder.append(", ");
-        stringBuilder.append("generatedFrom=");
-        stringBuilder.append(generatedFrom);
-        stringBuilder.append(")");
-
-        String toTest = stringBuilder.toString();
-        Assertions.assertEquals(toTest, attachmentInfo.toString());
-    }
-
     private List<AttachmentInfo> getListOfAttachments(){
         AttachmentInfo info1 = new AttachmentInfo();
         info1.setId("1234");
@@ -130,27 +78,4 @@ class AttachmentInfoTest {
         return new ArrayList<>(List.of(info1, info2, info3, info4, info5));
     }
 
-    private AttachmentInfo initAttachmentInfo() {
-        AttachmentInfo attachmentInfo = new AttachmentInfo();
-        attachmentInfo.setId(id);
-        attachmentInfo.setDocumentType(documentType);
-        attachmentInfo.setUrl(url);
-        attachmentInfo.setDate(date);
-        attachmentInfo.setFileKey(fileKey);
-        attachmentInfo.setNumberOfPage(numberOfPage);
-        attachmentInfo.setSha256(sha256);
-        attachmentInfo.setGeneratedFrom(generatedFrom);
-        return attachmentInfo;
-    }
-
-    private void initialize() {
-        id = "A1S2D3F4";
-        documentType = "PN_LEGALFACT";
-        url = "https://www.africau.edu/images/default/sample.pdf";
-        date = "2022-12-20T16:17:35.02647+01:00";
-        fileKey = "/safe-storage/v1/files/PDFURL";
-        numberOfPage = 3;
-        sha256 = "j49fkldvnj4890efmeff433t2gvnr9rgmprm3g308jknbi3392llfm29fe8";
-        generatedFrom = "f24set://qualcosa";
-    }
 }

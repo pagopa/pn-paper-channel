@@ -3,6 +3,7 @@ package it.pagopa.pn.paperchannel.mapper;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PrepareRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
+import it.pagopa.pn.paperchannel.utils.AttachmentsConfigUtils;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -23,6 +24,7 @@ public class RequestDeliveryMapper {
         entity.setStartDate(DateUtils.formatDate(Instant.now()));
         entity.setIun(request.getIun());
         entity.setRelatedRequestId(request.getRelatedRequestId());
+        entity.setNotificationSentAt(request.getNotificationSentAt());
 
         changeState(entity, IN_PROCESSING.getCode(), IN_PROCESSING.getDescription(), IN_PROCESSING.getDetail(), null, null);
 
@@ -32,6 +34,7 @@ public class RequestDeliveryMapper {
         entity.setAttachments(request.getAttachmentUrls().stream().map(key -> {
             PnAttachmentInfo pnAttachmentInfo = new PnAttachmentInfo();
             pnAttachmentInfo.setFileKey(key);
+            pnAttachmentInfo.setDocTag(AttachmentsConfigUtils.getDocTagFromFileKey(key));
             return pnAttachmentInfo;
         }).toList());
 

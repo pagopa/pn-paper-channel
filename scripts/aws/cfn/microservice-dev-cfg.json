@@ -37,6 +37,8 @@
     "F24ClientRetryMaxAttempts": "0",
     "RequiredDemats": "23L",
     "ZipHandleActive": "false",
-    "Pnaddr002ContinueFlow": "true"
+    "Pnaddr002ContinueFlow": "true",
+    "EnableDocFilterRuleEngine": "true",
+    "DefaultAttachmentConfigCap": "ZIP##DEFAULT"
   }
 }

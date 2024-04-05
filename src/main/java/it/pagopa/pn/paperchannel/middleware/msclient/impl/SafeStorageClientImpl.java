@@ -10,6 +10,7 @@ import it.pagopa.pn.paperchannel.generated.openapi.msclient.safestorage.model.Fi
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.safestorage_reactive.api.FileUploadApi;
 import it.pagopa.pn.paperchannel.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.paperchannel.model.FileCreationWithContentRequest;
+import it.pagopa.pn.paperchannel.utils.AttachmentsConfigUtils;
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -19,8 +20,6 @@ import reactor.util.retry.Retry;
 import java.net.ConnectException;
 import java.time.Duration;
 import java.util.concurrent.TimeoutException;
-
-import static it.pagopa.pn.paperchannel.service.impl.SafeStorageServiceImpl.SAFESTORAGE_PREFIX;
 
 
 @Component
@@ -39,9 +38,7 @@ public class SafeStorageClientImpl implements SafeStorageClient {
         log.logInvokingAsyncExternalService(PnLogger.EXTERNAL_SERVICES.PN_SAFE_STORAGE, PN_SAFE_STORAGE_DESCRIPTION, null);
         String reqFileKey = fileKey;
         log.info("Getting file with {} key", fileKey);
-        if (fileKey.contains(SAFESTORAGE_PREFIX)){
-            fileKey = fileKey.replace(SAFESTORAGE_PREFIX, "");
-        }
+        fileKey = AttachmentsConfigUtils.cleanFileKey(fileKey);
         log.debug("Req params : {}", fileKey);
 
         return fileDownloadApi.getFile(fileKey, this.pnPaperChannelConfig.getSafeStorageCxId(), false)

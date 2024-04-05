@@ -9,6 +9,8 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSecondaryPartitionKey;
 
+import java.io.Serializable;
+import java.time.Instant;
 import java.util.List;
 
 @DynamoDbBean
@@ -16,7 +18,7 @@ import java.util.List;
 @Setter
 @ToString
 @NoArgsConstructor
-public class PnDeliveryRequest {
+public class PnDeliveryRequest implements Serializable {
 
     public static final String COL_REQUEST_ID = "requestId";
 
@@ -55,6 +57,8 @@ public class PnDeliveryRequest {
 
     private static final String COL_ATTACHMENTS = "attachments";
 
+    private static final String COL_REMOVED_ATTACHMENTS = "removedAttachments";
+
     private static final String COL_PRODUCT_TYPE = "productType";
 
     private static final String COL_RELATED_REQUEST_ID = "relatedRequestId";
@@ -70,6 +74,8 @@ public class PnDeliveryRequest {
     public static final String COL_REWORK_NEEDED = "reworkNeeded";
 
     public static final String COL_REWORK_NEEDED_COUNT = "reworkNeededCount";
+
+    public static final String COL_NOTIFICATION_SENT_AT = "notificationSentAt";
 
     @Getter(onMethod = @__({@DynamoDbPartitionKey,@DynamoDbAttribute(COL_REQUEST_ID)}))
     private String requestId;
@@ -141,5 +147,9 @@ public class PnDeliveryRequest {
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_REWORK_NEEDED_COUNT)}))
     private Integer reworkNeededCount;
 
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_NOTIFICATION_SENT_AT)}))
+    private Instant notificationSentAt;
 
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_REMOVED_ATTACHMENTS)}))
+    private List<PnAttachmentInfo> removedAttachments;
 }

@@ -64,6 +64,8 @@ class PrepareAsyncServiceTest {
     @Mock
     private RequestDeliveryDAO requestDeliveryDAO;
     @Mock
+    private AttachmentsConfigService attachmentsConfigService;
+    @Mock
     private SqsSender sqsSender;
     @Mock
     private SafeStorageService safeStorageService;
@@ -287,6 +289,8 @@ class PrepareAsyncServiceTest {
                 .thenReturn(Mono.just(deliveryRequest));
 
         Mockito.when(this.requestDeliveryDAO.updateData(Mockito.any())).thenReturn(Mono.just(deliveryRequest));
+
+        Mockito.when(this.attachmentsConfigService.filterAttachmentsToSend(Mockito.any(), Mockito.anyList(), Mockito.any())).thenReturn(Mono.just(deliveryRequest));
 
         Mockito.when(this.addressDAO.findByRequestId(Mockito.anyString())).thenReturn(Mono.just(getAddress()));
         FileDownloadResponseDto f = new FileDownloadResponseDto();
