@@ -400,6 +400,19 @@ Parameters:
       - true
       - false
 
+  EnableDocFilterRuleEngine:
+    Description: Featureflag per abilitare/disabilitare l'algorimo di filtro dei documenti da inviare
+    Type: String
+    Default: true
+    AllowedValues:
+      - true
+      - false
+
+  DefaultAttachmentConfigCap:
+    Description: Codice di default per il parent di nuovi cap inseriti
+    Type: String
+    Default: 'ZIP##DEFAULT'
+
   HealthCheckTimeout:
     Description: health check timeout seconds
     Type: Number
