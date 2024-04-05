@@ -316,10 +316,10 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
 
     private Mono<SendResponse> getSendResponse(Address address, List<AttachmentInfo> attachments, ProductTypeEnum productType, boolean isReversePrinter){
         return this.paperCalculatorUtils.calculator(attachments, address, productType, isReversePrinter)
-                .map(amount -> {
+                .map(costWithDriver -> {
                     int totalPages = this.paperCalculatorUtils.getNumberOfPages(attachments, isReversePrinter, true);
-                    Integer amountPriceFormat = Utility.toCentsFormat(amount);
-                    log.debug("Amount : {}", amount);
+                    Integer amountPriceFormat = Utility.toCentsFormat(costWithDriver.getCost());
+                    log.debug("Amount : {}", costWithDriver.getCost());
                     log.debug("Total pages : {}", totalPages);
                     SendResponse response = new SendResponse();
                     response.setAmount(amountPriceFormat);

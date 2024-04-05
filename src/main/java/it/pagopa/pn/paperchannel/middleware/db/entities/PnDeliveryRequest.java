@@ -73,6 +73,10 @@ public class PnDeliveryRequest {
 
     public static final String COL_REFINED = "refined";
 
+    public static final String COL_DRIVER_CODE = "driverCode";
+
+    public static final String COL_TENDER_CODE = "tenderCode";
+
     @Getter(onMethod = @__({@DynamoDbPartitionKey,@DynamoDbAttribute(COL_REQUEST_ID)}))
     private String requestId;
 
@@ -145,4 +149,10 @@ public class PnDeliveryRequest {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_REFINED)}))
     private Boolean refined;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_DRIVER_CODE)}))
+    private String driverCode;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_TENDER_CODE)}))
+    private String tenderCode;
 }
