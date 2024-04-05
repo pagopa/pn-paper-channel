@@ -35,7 +35,9 @@ class RequestDeliveryDAOTestIT extends BaseTest {
         Mockito.when(dataVaultEncryption.encode(Mockito.any(), Mockito.any())).thenReturn("returnOk");
         Mockito.when(dataVaultEncryption.decode(Mockito.any())).thenReturn("returnOk");
         PnDeliveryRequest createRequest = this.requestDeliveryDAO.createWithAddress(request, address, null).block();
+
         assertNotNull(createRequest);
+        assertEquals(createRequest, request);
     }
 
     @Test
@@ -43,36 +45,48 @@ class RequestDeliveryDAOTestIT extends BaseTest {
         Mockito.when(dataVaultEncryption.encode(Mockito.any(), Mockito.any())).thenReturn("returnOk");
         Mockito.when(dataVaultEncryption.decode(Mockito.any())).thenReturn("returnOk");
         PnDeliveryRequest createRequest2 = this.requestDeliveryDAO.createWithAddress(request1, null, null).block();
+
         assertNotNull(createRequest2);
+        assertEquals(createRequest2, request1);
     }
+
     @Test
     void updateDataTest(){
         Mockito.when(dataVaultEncryption.encode(Mockito.any(), Mockito.any())).thenReturn("returnOk");
         Mockito.when(dataVaultEncryption.decode(Mockito.any())).thenReturn("returnOk");
         PnDeliveryRequest createRequest = this.requestDeliveryDAO.createWithAddress(request2, address, null).block();
         PnDeliveryRequest updateRequest = this.requestDeliveryDAO.updateData(duplicateRequest).block();
+
         assertNotNull(updateRequest);
+        assertEquals(createRequest, request2);
+        assertEquals(updateRequest, duplicateRequest);
     }
+
     @Test
     void getByRequestIdTest(){
         PnDeliveryRequest deliveryRequest = this.requestDeliveryDAO.getByRequestId(request.getRequestId()).block();
         assertNotNull(deliveryRequest);
     }
+
     @Test
     void getByRequestIdNotPresentTest(){
         String requestId = "id-123456";
         PnDeliveryRequest deliveryRequest = this.requestDeliveryDAO.getByRequestId(requestId).block();
+
         assertNull(deliveryRequest);
     }
+
     @Test
     void getByCorrelationIdTest(){
         PnDeliveryRequest deliveryRequest = this.requestDeliveryDAO.getByCorrelationId(duplicateRequest.getCorrelationId()).block();
         assertNotNull(deliveryRequest);
     }
+
     @Test
     void getByCorrelationIdNotPresentTest(){
         String correlationId = "idCor";
         PnDeliveryRequest deliveryRequest = this.requestDeliveryDAO.getByCorrelationId(correlationId).block();
+
         assertNull(deliveryRequest);
     }
 
@@ -85,12 +99,14 @@ class RequestDeliveryDAOTestIT extends BaseTest {
         request.setProductType("type");
         request.setFiscalCode("FRMTTR76M06B715E");
         request.setReceiverType("PF");
+        request.setRefined(false);
 
         request1.setRequestId("id-1212");
         request1.setProductType("reqeeww");
         request1.setCorrelationId("idcor-78867");
         request1.setReceiverType("PF");
         request1.setFiscalCode("FRMTTR76M06B715E");
+        request1.setRefined(false);
 
         request2.setRequestId("id-54321");
         request2.setProductType("req");
@@ -99,6 +115,7 @@ class RequestDeliveryDAOTestIT extends BaseTest {
         request2.setProductType("type");
         request2.setFiscalCode("FRMTTR76M06B715E");
         request2.setReceiverType("PF");
+        request2.setRefined(false);
 
         duplicateRequest.setRequestId("id-54321");
         duplicateRequest.setProductType("req");
@@ -107,6 +124,7 @@ class RequestDeliveryDAOTestIT extends BaseTest {
         duplicateRequest.setProductType("type");
         duplicateRequest.setFiscalCode("FRMTTR76M06B715E");
         duplicateRequest.setReceiverType("PF");
+        duplicateRequest.setRefined(false);
 
         address.setAddress("Via Aldo Moro");
         address.setCap("21004");

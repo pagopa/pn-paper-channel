@@ -390,7 +390,11 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
     private Mono<PnDeliveryRequest> saveRequestAndAddress(PrepareRequest prepareRequest, boolean reworkNeeded, Integer reworkNeededCount){
         String processName = "Save Request and Address";
         log.logStartingProcess(processName);
+
         PnDeliveryRequest pnDeliveryRequest = RequestDeliveryMapper.toEntity(prepareRequest);
+        // Init refined field as false
+        pnDeliveryRequest.setRefined(false);
+
         PnAddress receiverAddressEntity = null;
         PnAddress discoveredAddressEntity = null;
 
