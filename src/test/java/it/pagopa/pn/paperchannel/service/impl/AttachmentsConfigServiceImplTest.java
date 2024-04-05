@@ -170,6 +170,61 @@ class AttachmentsConfigServiceImplTest {
         Assertions.assertEquals(0, res.getRemovedAttachments().size());
     }
 
+
+    @Test
+    void filterAttachmentsToSend_rulenavigation() {
+        // GIVEN
+        PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest(StatusDeliveryEnum.IN_PROCESSING);
+
+
+        PnAddress pnAddress = new PnAddress();
+        pnAddress.setCap("30000");
+
+        List<ListFilterChainResult<PnAttachmentInfo>> filterChainResults =new ArrayList<>();
+        ListFilterChainResult<PnAttachmentInfo> filterChainResult = new ListFilterChainResult<PnAttachmentInfo>();
+        filterChainResult.setItem(pnDeliveryRequest.getAttachments().get(0));
+        filterChainResult.setSuccess(true);
+        filterChainResult.setCode("OK");
+        filterChainResult.setDiagnostic("oook");
+        filterChainResults.add(filterChainResult);
+        filterChainResult = new ListFilterChainResult<PnAttachmentInfo>();
+        filterChainResult.setItem(pnDeliveryRequest.getAttachments().get(1));
+        filterChainResult.setSuccess(true);
+        filterChainResult.setCode("OK");
+        filterChainResult.setDiagnostic("oook");
+        filterChainResults.add(filterChainResult);
+
+        List<PnAttachmentsRule> ruleParamsList = new ArrayList<>();
+        PnAttachmentsRule rule = new PnAttachmentsRule();
+        rule.setRuleType(DocumentTagHandler.RULE_TYPE);
+        PnRuleParams pnRuleParams = new PnRuleParams();
+        pnRuleParams.setTypeWithSuccessResult("AAR");
+        rule.setParams(pnRuleParams);
+        ruleParamsList.add(rule);
+        PnAttachmentsConfig pnAttachmentsConfig = new PnAttachmentsConfig();
+        pnAttachmentsConfig.setRules(ruleParamsList);
+        pnAttachmentsConfig.setConfigKey("ZIP##DEFAULT");
+
+        PnAttachmentsConfig pnAttachmentsConfig1 = new PnAttachmentsConfig();
+        pnAttachmentsConfig1.setRules(null);
+        pnAttachmentsConfig1.setConfigKey("ZIP#30000");
+        pnAttachmentsConfig1.setParentReference("ZIP##DEFAULT");
+
+        Mockito.when(pnAttachmentsConfigDAO.findConfigInInterval(Mockito.eq("ZIP##30000"), Mockito.any())).thenReturn(Mono.just(pnAttachmentsConfig1));
+        Mockito.when(pnAttachmentsConfigDAO.findConfigInInterval(Mockito.eq("ZIP##DEFAULT"), Mockito.any())).thenReturn(Mono.just(pnAttachmentsConfig));
+        Mockito.when(paperListChainEngine.filterItems(Mockito.any(), Mockito.anyList(), Mockito.anyList())).thenReturn(Flux.fromIterable(filterChainResults));
+        when(pnPaperChannelConfig.isEnabledocfilterruleengine()).thenReturn(true);
+
+        // WHEN
+        Mono<PnDeliveryRequest> mono = attachmentsConfigService.filterAttachmentsToSend(pnDeliveryRequest, pnDeliveryRequest.getAttachments(), pnAddress);
+        PnDeliveryRequest res = mono.block();
+
+        // THEN
+        Assertions.assertNotNull(res);
+        Assertions.assertEquals(2, res.getAttachments().size());
+        Assertions.assertEquals(0, res.getRemovedAttachments().size());
+    }
+
     @Test
     void filterAttachmentsToSend_missingcap() {
         // GIVEN
