@@ -39,6 +39,6 @@
     "ZipHandleActive": "false",
     "Pnaddr002ContinueFlow": "true",
     "EnableDocFilterRuleEngine": "true",
-    "DefaultAttachmentConfigCap": "DEFAULT##ZIP"
+    "DefaultAttachmentConfigCap": "ZIP##DEFAULT"
   }
 }
