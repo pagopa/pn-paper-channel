@@ -35,6 +35,8 @@ public class HandlersFactory {
 
     private final RequestDeliveryDAO requestDeliveryDAO;
 
+    private final PnEventErrorDAO pnEventErrorDAO;
+
     private ConcurrentHashMap<String, MessageHandler> map;
 
 
@@ -150,10 +152,16 @@ public class HandlersFactory {
                 .pnPaperChannelConfig(pnPaperChannelConfig)
                 .build();
 
+        Simple890MessageHandler simple890MessageHandler = Simple890MessageHandler.builder()
+                .sqsSender(sqsSender)
+                .requestDeliveryDAO(requestDeliveryDAO)
+                .build();
 
         Proxy890MessageHandler proxy890MessageHandler = Proxy890MessageHandler.builder()
                 .pnPaperChannelConfig(pnPaperChannelConfig)
                 .complex890MessageHandler(complex890MessageHandler)
+                .simple890MessageHandler(simple890MessageHandler)
+                .pnEventErrorDAO(pnEventErrorDAO)
                 .build();
 
         map = new ConcurrentHashMap<>();
