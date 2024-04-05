@@ -3,6 +3,7 @@ package it.pagopa.pn.paperchannel.service.impl;
 import it.pagopa.pn.api.dto.events.PnAttachmentsConfigEventPayload;
 import it.pagopa.pn.commons.rules.model.FilterChainResult;
 import it.pagopa.pn.commons.rules.model.ListFilterChainResult;
+import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.mapper.AttachmentsConfigMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PnAttachmentsConfigDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
@@ -21,6 +22,7 @@ import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 import static it.pagopa.pn.paperchannel.utils.AttachmentsConfigUtils.ZIPCODE_PK_PREFIX;
@@ -33,22 +35,30 @@ public class AttachmentsConfigServiceImpl extends GenericService implements Atta
     private final PnAttachmentsConfigDAO pnAttachmentsConfigDAO;
     private final PaperListChainEngine paperListChainEngine;
 
+    private final PnPaperChannelConfig pnPaperChannelConfig;
+
 
     public AttachmentsConfigServiceImpl(SqsSender sqsSender, RequestDeliveryDAO requestDeliveryDAO,
-                                        PnAttachmentsConfigDAO pnAttachmentsConfigDAO, PaperListChainEngine paperListChainEngine) {
+                                        PnAttachmentsConfigDAO pnAttachmentsConfigDAO, PaperListChainEngine paperListChainEngine, PnPaperChannelConfig pnPaperChannelConfig) {
         super(sqsSender, requestDeliveryDAO);
         this.pnAttachmentsConfigDAO = pnAttachmentsConfigDAO;
         this.paperListChainEngine = paperListChainEngine;
+        this.pnPaperChannelConfig = pnPaperChannelConfig;
     }
 
 
     public Mono<PnDeliveryRequest> filterAttachmentsToSend(PnDeliveryRequest pnDeliveryRequest, List<PnAttachmentInfo> attachmentInfoList, PnAddress pnAddress) {
 
-        return resolveRule( AttachmentsConfigUtils.buildPartitionKey(pnAddress.getCap(),ZIPCODE_PK_PREFIX), pnDeliveryRequest.getNotificationSentAt())
-                .flatMap(rules -> paperListChainEngine.filterItems(pnDeliveryRequest, attachmentInfoList, rules)
-                        .collectList()
-                        .map(attachmentFiltered -> sendFilteredAttachments(pnDeliveryRequest, attachmentFiltered)))
-                .switchIfEmpty(sendAllAttachments(pnDeliveryRequest, attachmentInfoList));
+        if (pnPaperChannelConfig.isEnabledocfilterruleengine()) {
+
+            return resolveRule(AttachmentsConfigUtils.buildPartitionKey(pnAddress.getCap(), ZIPCODE_PK_PREFIX), pnDeliveryRequest.getNotificationSentAt())
+                    .flatMap(rules -> paperListChainEngine.filterItems(pnDeliveryRequest, attachmentInfoList, rules)
+                            .collectList()
+                            .map(attachmentFiltered -> sendFilteredAttachments(pnDeliveryRequest, attachmentFiltered)))
+                    .switchIfEmpty(sendAllAttachments(pnDeliveryRequest, attachmentInfoList));
+        } else {
+            return sendAllAttachments(pnDeliveryRequest, attachmentInfoList);
+        }
     }
 
     @NotNull
@@ -76,6 +86,7 @@ public class AttachmentsConfigServiceImpl extends GenericService implements Atta
 
     private Mono<PnDeliveryRequest> sendAllAttachments(PnDeliveryRequest pnDeliveryRequest, List<PnAttachmentInfo> attachmentInfoList) {
         pnDeliveryRequest.setAttachments(attachmentInfoList);
+        pnDeliveryRequest.setRemovedAttachments(new ArrayList<>());
         log.info("sending all attachments list={}", attachmentInfoList);
         return Mono.just(pnDeliveryRequest);
     }
@@ -98,7 +109,7 @@ public class AttachmentsConfigServiceImpl extends GenericService implements Atta
             String configKey = payload.getConfigKey();
             String configType = payload.getConfigType();
             String partitionKey = AttachmentsConfigUtils.buildPartitionKey(configKey, configType);
-            var pnAttachmentsConfigs = AttachmentsConfigMapper.toPnAttachmentsConfig(configKey, configType, payload.getConfigs());
+            var pnAttachmentsConfigs = AttachmentsConfigMapper.toPnAttachmentsConfig(configKey, configType, payload.getConfigs(), pnPaperChannelConfig.getDefaultattachmentconfigcap());
             return pnAttachmentsConfigDAO.putItemInTransaction(partitionKey, pnAttachmentsConfigs);
         });
     }

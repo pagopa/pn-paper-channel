@@ -14,7 +14,7 @@ public class AttachmentsConfigMapper {
     }
 
 
-    public static PnAttachmentsConfig toPnAttachmentsConfig(String configKey, String configType, PnAttachmentsConfigEventItem pnConfigAttachmentsEventItem) {
+    public static PnAttachmentsConfig toPnAttachmentsConfig(String configKey, String configType, PnAttachmentsConfigEventItem pnConfigAttachmentsEventItem, String defaultCap) {
         if (pnConfigAttachmentsEventItem == null) {
             return null;
         }
@@ -25,18 +25,18 @@ public class AttachmentsConfigMapper {
         config.setEndValidity(pnConfigAttachmentsEventItem.getEndValidity());
         config.setCreatedAt(Instant.now());
         config.setRules(null);
-        config.setParentReference(null);
+        config.setParentReference(defaultCap);
 
         return config;
     }
 
-    public static List<PnAttachmentsConfig> toPnAttachmentsConfig(String configKey, String configType, List<PnAttachmentsConfigEventItem> pnConfigAttachmentsEventItems) {
+    public static List<PnAttachmentsConfig> toPnAttachmentsConfig(String configKey, String configType, List<PnAttachmentsConfigEventItem> pnConfigAttachmentsEventItems, String defaultCap) {
         if (CollectionUtils.isEmpty(pnConfigAttachmentsEventItems)) {
             return List.of();
         }
 
         return pnConfigAttachmentsEventItems.stream()
-                .map(item -> toPnAttachmentsConfig(configKey, configType, item))
+                .map(item -> toPnAttachmentsConfig(configKey, configType, item, defaultCap))
                 .toList();
     }
 }

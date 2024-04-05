@@ -5,6 +5,7 @@ import it.pagopa.pn.api.dto.events.PnAttachmentsConfigEventItem;
 import it.pagopa.pn.api.dto.events.PnAttachmentsConfigEventPayload;
 import it.pagopa.pn.commons.rules.model.FilterChainResult;
 import it.pagopa.pn.commons.rules.model.ListFilterChainResult;
+import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.mapper.AttachmentsConfigMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PnAttachmentsConfigDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.*;
@@ -43,6 +44,9 @@ class AttachmentsConfigServiceImplTest {
     private PaperListChainEngine paperListChainEngine;
 
 
+    @Mock
+    private PnPaperChannelConfig pnPaperChannelConfig;
+
     @InjectMocks
     private AttachmentsConfigServiceImpl attachmentsConfigService;
 
@@ -69,10 +73,11 @@ class AttachmentsConfigServiceImplTest {
                 .configs(List.of(itemOne, itemTwo))
                 .build();
 
-        var pnAttachmentsConfigs = AttachmentsConfigMapper.toPnAttachmentsConfig(configKey, configType, List.of(itemOne, itemTwo));
+        var pnAttachmentsConfigs = AttachmentsConfigMapper.toPnAttachmentsConfig(configKey, configType, List.of(itemOne, itemTwo), "default##zip");
 
         when(pnAttachmentsConfigDAO.putItemInTransaction(pk, pnAttachmentsConfigs))
                 .thenReturn(Mono.empty());
+        when(pnPaperChannelConfig.getDefaultattachmentconfigcap()).thenReturn("default##zip");
 
         StepVerifier.create(attachmentsConfigService.refreshConfig(payload))
                 .verifyComplete();
@@ -103,10 +108,11 @@ class AttachmentsConfigServiceImplTest {
                 .configs(List.of(itemOne, itemTwo))
                 .build();
 
-        var pnAttachmentsConfigs = AttachmentsConfigMapper.toPnAttachmentsConfig(configKey, configType, List.of(itemOne, itemTwo));
+        var pnAttachmentsConfigs = AttachmentsConfigMapper.toPnAttachmentsConfig(configKey, configType, List.of(itemOne, itemTwo), "default##zip");
 
         when(pnAttachmentsConfigDAO.putItemInTransaction(pk, pnAttachmentsConfigs))
                 .thenReturn(Mono.error(new RuntimeException("Error DB")));
+        when(pnPaperChannelConfig.getDefaultattachmentconfigcap()).thenReturn("default##zip");
 
         StepVerifier.create(attachmentsConfigService.refreshConfig(payload))
                 .expectError(RuntimeException.class)
@@ -152,6 +158,76 @@ class AttachmentsConfigServiceImplTest {
 
         Mockito.when(pnAttachmentsConfigDAO.findConfigInInterval(Mockito.any(), Mockito.any())).thenReturn(Mono.just(pnAttachmentsConfig));
         Mockito.when(paperListChainEngine.filterItems(Mockito.any(), Mockito.anyList(), Mockito.anyList())).thenReturn(Flux.fromIterable(filterChainResults));
+        when(pnPaperChannelConfig.isEnabledocfilterruleengine()).thenReturn(true);
+
+        // WHEN
+        Mono<PnDeliveryRequest> mono = attachmentsConfigService.filterAttachmentsToSend(pnDeliveryRequest, pnDeliveryRequest.getAttachments(), pnAddress);
+        PnDeliveryRequest res = mono.block();
+
+        // THEN
+        Assertions.assertNotNull(res);
+        Assertions.assertEquals(2, res.getAttachments().size());
+        Assertions.assertEquals(0, res.getRemovedAttachments().size());
+    }
+
+    @Test
+    void filterAttachmentsToSend_missingcap() {
+        // GIVEN
+        PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest(StatusDeliveryEnum.IN_PROCESSING);
+
+
+        PnAddress pnAddress = new PnAddress();
+        pnAddress.setCap("30000");
+
+
+
+        Mockito.when(pnAttachmentsConfigDAO.findConfigInInterval(Mockito.any(), Mockito.any())).thenReturn(Mono.empty());
+        when(pnPaperChannelConfig.isEnabledocfilterruleengine()).thenReturn(true);
+
+        // WHEN
+        Mono<PnDeliveryRequest> mono = attachmentsConfigService.filterAttachmentsToSend(pnDeliveryRequest, pnDeliveryRequest.getAttachments(), pnAddress);
+        PnDeliveryRequest res = mono.block();
+
+        // THEN
+        Assertions.assertNotNull(res);
+        Assertions.assertEquals(2, res.getAttachments().size());
+        Assertions.assertEquals(0, res.getRemovedAttachments().size());
+    }
+
+    @Test
+    void filterAttachmentsToSend_enginedisabled() {
+        // GIVEN
+        PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest(StatusDeliveryEnum.IN_PROCESSING);
+
+
+        PnAddress pnAddress = new PnAddress();
+        pnAddress.setCap("30000");
+
+        List<ListFilterChainResult<PnAttachmentInfo>> filterChainResults =new ArrayList<>();
+        ListFilterChainResult<PnAttachmentInfo> filterChainResult = new ListFilterChainResult<PnAttachmentInfo>();
+        filterChainResult.setItem(pnDeliveryRequest.getAttachments().get(0));
+        filterChainResult.setSuccess(false);
+        filterChainResult.setCode("OK");
+        filterChainResult.setDiagnostic("oook");
+        filterChainResults.add(filterChainResult);
+        filterChainResult = new ListFilterChainResult<PnAttachmentInfo>();
+        filterChainResult.setItem(pnDeliveryRequest.getAttachments().get(1));
+        filterChainResult.setSuccess(false);
+        filterChainResult.setCode("OK");
+        filterChainResult.setDiagnostic("oook");
+        filterChainResults.add(filterChainResult);
+
+        List<PnAttachmentsRule> ruleParamsList = new ArrayList<>();
+        PnAttachmentsRule rule = new PnAttachmentsRule();
+        rule.setRuleType(DocumentTagHandler.RULE_TYPE);
+        PnRuleParams pnRuleParams = new PnRuleParams();
+        pnRuleParams.setTypeWithSuccessResult("AAR");
+        rule.setParams(pnRuleParams);
+        ruleParamsList.add(rule);
+        PnAttachmentsConfig pnAttachmentsConfig = new PnAttachmentsConfig();
+        pnAttachmentsConfig.setRules(ruleParamsList);
+
+        when(pnPaperChannelConfig.isEnabledocfilterruleengine()).thenReturn(false);
 
         // WHEN
         Mono<PnDeliveryRequest> mono = attachmentsConfigService.filterAttachmentsToSend(pnDeliveryRequest, pnDeliveryRequest.getAttachments(), pnAddress);
@@ -199,6 +275,7 @@ class AttachmentsConfigServiceImplTest {
 
         Mockito.when(pnAttachmentsConfigDAO.findConfigInInterval(Mockito.any(), Mockito.any())).thenReturn(Mono.just(pnAttachmentsConfig));
         Mockito.when(paperListChainEngine.filterItems(Mockito.any(), Mockito.anyList(), Mockito.anyList())).thenReturn(Flux.fromIterable(filterChainResults));
+        when(pnPaperChannelConfig.isEnabledocfilterruleengine()).thenReturn(true);
 
         // WHEN
         Mono<PnDeliveryRequest> mono = attachmentsConfigService.filterAttachmentsToSend(pnDeliveryRequest, pnDeliveryRequest.getAttachments(), pnAddress);
