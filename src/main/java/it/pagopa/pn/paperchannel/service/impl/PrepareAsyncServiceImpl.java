@@ -84,18 +84,19 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
             requestDeliveryEntityMono = requestDeliveryDAO.getByRequestId(requestId, true);
         }
         return requestDeliveryEntityMono
-                .zipWhen(deliveryRequest -> {
+                .flatMap(deliveryRequest -> {
                     if (request.isF24ResponseFlow()) {
                         log.info("just returning find address because is on F24 response flow and there is no need to check address again");
-                        return this.addressDAO.findByRequestId(deliveryRequest.getRequestId());
+                        return this.addressDAO.findByRequestId(deliveryRequest.getRequestId()).zipWhen(pnAddress -> Mono.just(deliveryRequest));
                     }
                     else {
-                        return checkAndUpdateAddress(deliveryRequest, addressFromNationalRegistry, request);
+                        return checkAndUpdateAddress(deliveryRequest, addressFromNationalRegistry, request)
+                                .zipWhen(pnAddress -> attachmentsConfigService.filterAttachmentsToSend(deliveryRequest, deliveryRequest.getAttachments(), pnAddress));
                     }
                 }) // nel caso sia settato il flag di f24FlowResponse, vuol dire che ho già eseguito questo step.
                 .flatMap(pnDeliveryRequestWithAddress -> {
-                    var pnDeliveryRequest = pnDeliveryRequestWithAddress.getT1();
-                    var correctAddress = pnDeliveryRequestWithAddress.getT2();
+                    var pnDeliveryRequest = pnDeliveryRequestWithAddress.getT2();
+                    var correctAddress = pnDeliveryRequestWithAddress.getT1();
                     if (f24Service.checkDeliveryRequestAttachmentForF24(pnDeliveryRequest)) {
                         return f24Service.preparePDF(pnDeliveryRequest);
                     }
@@ -136,7 +137,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                 null
         );
 
-        return getAttachmentsInfo(pnDeliveryRequest, request, correctAddress)
+        return getAttachmentsInfo(pnDeliveryRequest, request)
                 .flatMap(pnDeliveryRequestWithAttachmentOk -> {
                             this.pushPrepareEvent(pnDeliveryRequestWithAttachmentOk, AddressMapper.toDTO(correctAddress), request.getClientId(), StatusCodeEnum.OK, null);
                             return this.requestDeliveryDAO.updateData(pnDeliveryRequestWithAttachmentOk);
@@ -215,7 +216,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
     }
 
 
-    private Mono<PnDeliveryRequest> getAttachmentsInfo(PnDeliveryRequest deliveryRequest, PrepareAsyncRequest request, PnAddress correctAddress){
+    private Mono<PnDeliveryRequest> getAttachmentsInfo(PnDeliveryRequest deliveryRequest, PrepareAsyncRequest request){
 
         if(deliveryRequest.getAttachments().isEmpty() ||
                 !deliveryRequest.getAttachments().stream().filter(a ->a.getNumberOfPage()!=null && a.getNumberOfPage()>0).toList().isEmpty()){
@@ -254,7 +255,10 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                 .map(AttachmentMapper::toEntity)
                 .sequential()
                 .collectList()
-                .flatMap(attachmentInfoList -> attachmentsConfigService.filterAttachmentsToSend(deliveryRequest, attachmentInfoList, correctAddress))
+                .map(listAttachment -> {
+                    deliveryRequest.setAttachments(listAttachment);
+                    return deliveryRequest;
+                })
                 .onErrorResume(ex -> {
                     request.setIun(deliveryRequest.getIun());
                     this.sqsSender.pushInternalError(request, request.getAttemptRetry(), PrepareAsyncRequest.class);
