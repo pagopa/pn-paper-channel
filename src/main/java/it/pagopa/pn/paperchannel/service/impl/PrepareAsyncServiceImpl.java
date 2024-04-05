@@ -235,6 +235,8 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                     AttachmentInfo info = AttachmentMapper.fromSafeStorage(fileResponseAndOrigAttachment.getT1());
                     info.setGeneratedFrom(fileResponseAndOrigAttachment.getT2().getGeneratedFrom()); // preservo l'eventuale generatedFrom
                     info.setDocTag(fileResponseAndOrigAttachment.getT2().getDocTag()); // preservo l'eventuale docTag
+                    info.setFilterResultCode(fileResponseAndOrigAttachment.getT2().getFilterResultCode()); // preservo
+                    info.setFilterResultDiagnostic(fileResponseAndOrigAttachment.getT2().getFilterResultDiagnostic()); // preservo
                     if (info.getUrl() == null)
                         return Flux.error(new PnGenericException(INVALID_SAFE_STORAGE, INVALID_SAFE_STORAGE.getMessage()));
                     return safeStorageService.downloadFile(info.getUrl())
