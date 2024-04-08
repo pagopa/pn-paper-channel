@@ -64,6 +64,8 @@ class PrepareAsyncServiceTest {
     @Mock
     private RequestDeliveryDAO requestDeliveryDAO;
     @Mock
+    private AttachmentsConfigService attachmentsConfigService;
+    @Mock
     private SqsSender sqsSender;
     @Mock
     private SafeStorageService safeStorageService;
@@ -120,6 +122,7 @@ class PrepareAsyncServiceTest {
         Mockito.doNothing().when(this.sqsSender).pushPrepareEvent(Mockito.any());
 
         Mockito.when(this.requestDeliveryDAO.updateData(Mockito.any())).thenReturn(Mono.just(getDeliveryRequest()));
+        Mockito.when(this.attachmentsConfigService.filterAttachmentsToSend(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(Mono.just(getDeliveryRequest()));
 
         request.setCorrelationId("FFPAPERTEST.IUN_FATY");
         PnDeliveryRequest deliveryRequest = this.prepareAsyncService.prepareAsync(request).block();
@@ -200,6 +203,9 @@ class PrepareAsyncServiceTest {
         Mockito.when(this.f24Service.checkDeliveryRequestAttachmentForF24(Mockito.any()))
                 .thenReturn(false);
 
+        Mockito.when(this.attachmentsConfigService.filterAttachmentsToSend(Mockito.any(), Mockito.any(), Mockito.any()))
+                .thenReturn(Mono.just(pnDeliveryRequest));
+
         request.setCorrelationId("FFPAPERTEST.IUN_FATY");
         pnDeliveryRequest.setAttachments(attachmentInfoList());
         StepVerifier.create(this.prepareAsyncService.prepareAsync(request))
@@ -254,6 +260,7 @@ class PrepareAsyncServiceTest {
 
         Mockito.when(this.f24Service.checkDeliveryRequestAttachmentForF24(Mockito.any(PnDeliveryRequest.class))).thenReturn(true);
         Mockito.when(this.f24Service.preparePDF(Mockito.any(PnDeliveryRequest.class))).thenReturn(Mono.just(updatedDeliveryRequest));
+        Mockito.when(this.attachmentsConfigService.filterAttachmentsToSend(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(Mono.just(updatedDeliveryRequest));
 
         PnDeliveryRequest res = this.prepareAsyncService.prepareAsync(request).block();
 

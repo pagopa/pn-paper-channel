@@ -91,7 +91,8 @@ public class PnAttachmentsConfigDAOImpl extends BaseDAO<PnAttachmentsConfig> imp
     public Flux<PnAttachmentsConfig> findAllByConfigKey(String configKey) {
         Key.Builder keyBuilder = Key.builder().partitionValue(configKey);
         return Flux.from(dynamoTable.query(QueryConditional.keyEqualTo(keyBuilder.build()))
-                .flatMapIterable(Page::items));
+                .flatMapIterable(Page::items))
+                .doOnNext(items -> log.info("retrieved attachmentconfig={}", items));
     }
 
 

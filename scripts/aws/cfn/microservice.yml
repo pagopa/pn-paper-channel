@@ -418,6 +418,19 @@ Parameters:
       - true
       - false
 
+  EnableDocFilterRuleEngine:
+    Description: Featureflag per abilitare/disabilitare l'algorimo di filtro dei documenti da inviare
+    Type: String
+    Default: true
+    AllowedValues:
+      - true
+      - false
+
+  DefaultAttachmentConfigCap:
+    Description: Codice di default per il parent di nuovi cap inseriti
+    Type: String
+    Default: 'ZIP##DEFAULT'
+
   HealthCheckTimeout:
     Description: health check timeout seconds
     Type: Number
@@ -600,9 +613,11 @@ Resources:
         ContainerEnvEntry60: !Sub 'PN_PAPERCHANNEL_ZIPHANDLEACTIVE=${ZipHandleActive}'
         ContainerEnvEntry61: !Sub 'AWS_DYNAMODBATTACHMENTSCONFIGTABLE=${AttachmentsConfigDynamoTableName}'
         ContainerEnvEntry62: !Sub 'PN_PAPERCHANNEL_QUEUERADDALT=${RaddAltToPaperChannelQueueName}'
-        ContainerEnvEntry63: !Sub 'AWS_DYNAMODBPAPEREVENTERRORTABLE=${PaperEventErrorDynamoTableName}'
-        ContainerEnvEntry64: !Sub 'PN_PAPERCHANNEL_COMPLEXREFINEMENTCODES=${ComplexRefinementCodes}'
-        ContainerEnvEntry65: !Sub 'PN_PAPERCHANNEL_ENABLESIMPLE890FLOW=${EnableSimple890Flow}'
+        ContainerEnvEntry63: !Sub 'PN_PAPERCHANNEL_ENABLEDOCFILTERRULEENGINE=${EnableDocFilterRuleEngine}'
+        ContainerEnvEntry64: !Sub 'PN_PAPERCHANNEL_DEFAULTATTACHMENTCONFIGCAP=${DefaultAttachmentConfigCap}'
+        ContainerEnvEntry65: !Sub 'AWS_DYNAMODBPAPEREVENTERRORTABLE=${PaperEventErrorDynamoTableName}'
+        ContainerEnvEntry66: !Sub 'PN_PAPERCHANNEL_COMPLEXREFINEMENTCODES=${ComplexRefinementCodes}'
+        ContainerEnvEntry67: !Sub 'PN_PAPERCHANNEL_ENABLESIMPLE890FLOW=${EnableSimple890Flow}'
         ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-PaperChannel-Secrets
         MappedPaths: '/paper-channel-bo/*,/paper-channel-private/*'

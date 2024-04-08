@@ -20,10 +20,6 @@ public interface SafeStorageService {
     String SAVED_STATUS = "SAVED";
 
 
-    default String getFileKeyFromUri(String uri) {
-        return uri.replace(SAFESTORAGE_PREFIX, "");
-    }
-
     default FileCreationWithContentRequest buildFileCreationWithContentRequest(byte[] bytesPdf) {
         FileCreationWithContentRequest request = new FileCreationWithContentRequest();
         request.setContentType(MediaType.APPLICATION_PDF_VALUE);

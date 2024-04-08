@@ -13,6 +13,7 @@ import it.pagopa.pn.paperchannel.model.DematInternalEvent;
 import it.pagopa.pn.paperchannel.service.DematZipService;
 import it.pagopa.pn.paperchannel.service.SafeStorageService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
+import it.pagopa.pn.paperchannel.utils.AttachmentsConfigUtils;
 import it.pagopa.pn.paperchannel.utils.ZipUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
@@ -49,7 +50,7 @@ public class DematZipServiceImpl extends GenericService implements DematZipServi
 
     @Override
     public Mono<Void> handle(DematInternalEvent dematInternalEvent) {
-        String fileKeyZip = safeStorageService.getFileKeyFromUri(dematInternalEvent.getAttachmentDetails().getUrl());
+        String fileKeyZip = AttachmentsConfigUtils.cleanFileKey(dematInternalEvent.getAttachmentDetails().getUrl());
         log.info("FileKey zip: {}", fileKeyZip);
         return safeStorageService.getFileRecursive(pnPaperChannelConfig.getAttemptSafeStorage(), fileKeyZip, BigDecimal.ZERO)
                 .doOnNext(fileDownloadResponseDto -> log.debug("Response from getFileRecursive: {}", fileDownloadResponseDto))

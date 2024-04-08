@@ -1,8 +1,6 @@
 package it.pagopa.pn.paperchannel.mapper;
 
-import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.AnalogAddress;
-import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PrepareEvent;
-import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.paperchannel.mapper.common.BaseMapper;
 import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
@@ -11,8 +9,11 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.KOReason;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
+import org.jetbrains.annotations.NotNull;
+import org.springframework.util.CollectionUtils;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 public class PrepareEventMapper {
@@ -50,14 +51,48 @@ public class PrepareEventMapper {
         entityEvent.setStatusDateTime(Instant.now());
         if (status == StatusCodeEnum.OK)
         {
-            // vado a popolare eventuali url generati da f24, mi baso sul fatto che abbiano il generatedFrom popolato
-            List<String> f24FileKeys = deliveryRequest.getAttachments().stream().filter(x -> x.getGeneratedFrom() != null).map(PnAttachmentInfo::getFileKey).toList();
-            if (!f24FileKeys.isEmpty())
-            {
-                entityEvent.setReplacedF24AttachmentUrls(f24FileKeys);
-            }
+            enrichWithReplacedF24AttachmentUrls(deliveryRequest, entityEvent);
+
+            enrichWithCategorizedAttachmentResults(deliveryRequest, entityEvent);
         }
         return entityEvent;
+    }
+
+    private static void enrichWithReplacedF24AttachmentUrls(PnDeliveryRequest deliveryRequest, PrepareEvent entityEvent) {
+        // vado a popolare eventuali url generati da f24, mi baso sul fatto che abbiano il generatedFrom popolato
+        // in questa lista, popolo sia gli f24 che verranno spediti, sia quelli eventualmente scartati
+        List<String> f24FileKeys = new ArrayList<>(deliveryRequest.getAttachments().stream().filter(x -> x.getGeneratedFrom() != null).map(PnAttachmentInfo::getFileKey).toList());
+        if (!CollectionUtils.isEmpty(deliveryRequest.getRemovedAttachments()))
+            f24FileKeys.addAll(deliveryRequest.getRemovedAttachments().stream().filter(x -> x.getGeneratedFrom() != null).map(PnAttachmentInfo::getFileKey).toList());
+
+        if (!f24FileKeys.isEmpty())
+        {
+            entityEvent.setReplacedF24AttachmentUrls(f24FileKeys);
+        }
+    }
+
+    private static void enrichWithCategorizedAttachmentResults(PnDeliveryRequest deliveryRequest, PrepareEvent entityEvent) {
+        CategorizedAttachmentsResult categorizedAttachmentsResult = new CategorizedAttachmentsResult();
+        categorizedAttachmentsResult.setAcceptedAttachments(deliveryRequest.getAttachments().stream().map(x -> mapToResultFilter(ResultFilterEnum.SUCCESS, x)).toList());
+
+        // se sono presenti documenti rimossi, popolo la lista corrispondente
+        if (!CollectionUtils.isEmpty(deliveryRequest.getRemovedAttachments())) {
+            categorizedAttachmentsResult.setDiscardedAttachments(deliveryRequest.getRemovedAttachments().stream().map(x -> mapToResultFilter(ResultFilterEnum.DISCARD, x)).toList());
+        } else {
+            categorizedAttachmentsResult.setDiscardedAttachments(new ArrayList<>());
+        }
+
+        entityEvent.setCategorizedAttachments(categorizedAttachmentsResult);
+    }
+
+    @NotNull
+    private static ResultFilter mapToResultFilter(ResultFilterEnum result, PnAttachmentInfo x) {
+        ResultFilter resultFilter = new ResultFilter();
+        resultFilter.setFileKey(x.getFileKey());
+        resultFilter.setResult(result);
+        resultFilter.setReasonCode(x.getFilterResultCode());
+        resultFilter.setReasonDescription(x.getFilterResultDiagnostic());
+        return resultFilter;
     }
 
     public static PrepareEvent toPrepareEvent(PnDeliveryRequest deliveryRequest, Address address, StatusCodeEnum status, KOReason koReason){

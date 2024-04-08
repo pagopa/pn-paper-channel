@@ -1,6 +1,7 @@
 package it.pagopa.pn.paperchannel.mapper;
 
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PrepareEvent;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ResultFilterEnum;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
@@ -67,6 +68,76 @@ class PrepareEventMapperTest {
         Assertions.assertNotNull(response);
         Assertions.assertEquals(2, response.getReplacedF24AttachmentUrls().size());
     }
+
+
+    @Test
+    void prepareEventMapperToPrepareEventTest_withresults () {
+        PnDeliveryRequest req = getDeliveryRequest(StatusDeliveryEnum.IN_PROCESSING);
+
+        PnAttachmentInfo f24 = new PnAttachmentInfo();
+        f24.setUrl("safestorage://1");
+        f24.setGeneratedFrom("f24set://qualcosa");
+        f24.setDocTag("PN_F24");
+        f24.setFilterResultDiagnostic("un diagnostico");
+        f24.setFilterResultCode("OK");
+        req.getAttachments().add(f24);
+
+        f24 = new PnAttachmentInfo();
+        f24.setUrl("safestorage://2");
+        f24.setGeneratedFrom("f24set://qualcosa");
+        f24.setFilterResultDiagnostic("un diagnostico");
+        f24.setFilterResultCode("OK");
+        req.getAttachments().add(f24);
+
+        PrepareEvent response= PrepareEventMapper.toPrepareEvent(req,getAddress(), StatusCodeEnum.OK, null);
+        Assertions.assertNotNull(response);
+        Assertions.assertEquals(2, response.getReplacedF24AttachmentUrls().size());
+        Assertions.assertNotNull(response.getCategorizedAttachments());
+        Assertions.assertEquals(3, response.getCategorizedAttachments().getAcceptedAttachments().size());
+        Assertions.assertEquals(0, response.getCategorizedAttachments().getDiscardedAttachments().size());
+    }
+
+
+    @Test
+    void prepareEventMapperToPrepareEventTest_withresultsdiscarded () {
+        PnDeliveryRequest req = getDeliveryRequest(StatusDeliveryEnum.IN_PROCESSING);
+
+        PnAttachmentInfo f24 = new PnAttachmentInfo();
+        f24.setUrl("safestorage://1");
+        f24.setFileKey("safestorage://1");
+        f24.setGeneratedFrom("f24set://qualcosa");
+        f24.setDocTag("PN_F24");
+        f24.setFilterResultDiagnostic("un diagnostico ok");
+        f24.setFilterResultCode("OK");
+        req.getAttachments().add(f24);
+
+        f24 = new PnAttachmentInfo();
+        f24.setUrl("safestorage://2");
+        f24.setFileKey("safestorage://2");
+        f24.setGeneratedFrom("f24set://qualcosa");
+        f24.setFilterResultDiagnostic("un diagnostico ko");
+        f24.setFilterResultCode("KO");
+        req.setRemovedAttachments(new ArrayList<>());
+        req.getRemovedAttachments().add(f24);
+
+        PrepareEvent response= PrepareEventMapper.toPrepareEvent(req,getAddress(), StatusCodeEnum.OK, null);
+        Assertions.assertNotNull(response);
+        Assertions.assertEquals(2, response.getReplacedF24AttachmentUrls().size());
+        Assertions.assertNotNull(response.getCategorizedAttachments());
+        Assertions.assertEquals(2, response.getCategorizedAttachments().getAcceptedAttachments().size());
+        Assertions.assertEquals(1, response.getCategorizedAttachments().getDiscardedAttachments().size());
+
+        Assertions.assertEquals(ResultFilterEnum.SUCCESS, response.getCategorizedAttachments().getAcceptedAttachments().get(1).getResult());
+        Assertions.assertEquals("OK", response.getCategorizedAttachments().getAcceptedAttachments().get(1).getReasonCode());
+        Assertions.assertEquals("un diagnostico ok", response.getCategorizedAttachments().getAcceptedAttachments().get(1).getReasonDescription());
+        Assertions.assertEquals("safestorage://1", response.getCategorizedAttachments().getAcceptedAttachments().get(1).getFileKey());
+
+        Assertions.assertEquals(ResultFilterEnum.SUCCESS, response.getCategorizedAttachments().getAcceptedAttachments().get(0).getResult());
+        Assertions.assertEquals("KO", response.getCategorizedAttachments().getDiscardedAttachments().get(0).getReasonCode());
+        Assertions.assertEquals("un diagnostico ko", response.getCategorizedAttachments().getDiscardedAttachments().get(0).getReasonDescription());
+        Assertions.assertEquals("safestorage://2", response.getCategorizedAttachments().getDiscardedAttachments().get(0).getFileKey());
+    }
+
 
     private PnDeliveryRequest getDeliveryRequest(StatusDeliveryEnum status){
         PnDeliveryRequest deliveryRequest= new PnDeliveryRequest();

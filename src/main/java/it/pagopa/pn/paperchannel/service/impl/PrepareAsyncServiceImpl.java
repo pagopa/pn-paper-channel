@@ -48,12 +48,13 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
     private final PaperAddressService paperAddressService;
     private final PaperCalculatorUtils paperCalculatorUtils;
     private final F24Service f24Service;
+    private final AttachmentsConfigService attachmentsConfigService;
 
     public PrepareAsyncServiceImpl(NationalRegistryClient nationalRegistryClient,
                                    RequestDeliveryDAO requestDeliveryDAO, SqsSender sqsQueueSender, CostDAO costDAO,
                                    SafeStorageService safeStorageService, AddressDAO addressDAO, PnPaperChannelConfig paperChannelConfig,
                                    PaperRequestErrorDAO paperRequestErrorDAO, PaperAddressService paperAddressService,
-                                   PaperCalculatorUtils paperCalculatorUtils, F24Service f24Service) {
+                                   PaperCalculatorUtils paperCalculatorUtils, F24Service f24Service, AttachmentsConfigService attachmentsConfigService) {
         super(requestDeliveryDAO, costDAO, nationalRegistryClient, sqsQueueSender);
         this.safeStorageService = safeStorageService;
         this.addressDAO = addressDAO;
@@ -62,6 +63,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
         this.paperAddressService = paperAddressService;
         this.paperCalculatorUtils = paperCalculatorUtils;
         this.f24Service = f24Service;
+        this.attachmentsConfigService = attachmentsConfigService;
     }
 
     @Override
@@ -73,7 +75,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
         final String requestId = request.getRequestId();
         Address addressFromNationalRegistry = request.getAddress();
 
-        Mono<PnDeliveryRequest> requestDeliveryEntityMono = null;
+        Mono<PnDeliveryRequest> requestDeliveryEntityMono;
         if (correlationId!= null) {
             log.info("Start async for {} correlation id", request.getCorrelationId());
             requestDeliveryEntityMono = requestDeliveryDAO.getByCorrelationId(correlationId, true);
@@ -82,18 +84,19 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
             requestDeliveryEntityMono = requestDeliveryDAO.getByRequestId(requestId, true);
         }
         return requestDeliveryEntityMono
-                .zipWhen(deliveryRequest -> {
+                .flatMap(deliveryRequest -> {
                     if (request.isF24ResponseFlow()) {
                         log.info("just returning find address because is on F24 response flow and there is no need to check address again");
-                        return this.addressDAO.findByRequestId(deliveryRequest.getRequestId());
+                        return this.addressDAO.findByRequestId(deliveryRequest.getRequestId()).zipWhen(pnAddress -> Mono.just(deliveryRequest));
                     }
                     else {
-                        return checkAndUpdateAddress(deliveryRequest, addressFromNationalRegistry, request);
+                        return checkAndUpdateAddress(deliveryRequest, addressFromNationalRegistry, request)
+                                .zipWhen(pnAddress -> attachmentsConfigService.filterAttachmentsToSend(deliveryRequest, deliveryRequest.getAttachments(), pnAddress));
                     }
                 }) // nel caso sia settato il flag di f24FlowResponse, vuol dire che ho già eseguito questo step.
                 .flatMap(pnDeliveryRequestWithAddress -> {
-                    var pnDeliveryRequest = pnDeliveryRequestWithAddress.getT1();
-                    var correctAddress = pnDeliveryRequestWithAddress.getT2();
+                    var pnDeliveryRequest = pnDeliveryRequestWithAddress.getT2();
+                    var correctAddress = pnDeliveryRequestWithAddress.getT1();
                     if (f24Service.checkDeliveryRequestAttachmentForF24(pnDeliveryRequest)) {
                         return f24Service.preparePDF(pnDeliveryRequest);
                     }
@@ -231,6 +234,9 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                 .flatMap(fileResponseAndOrigAttachment -> {
                     AttachmentInfo info = AttachmentMapper.fromSafeStorage(fileResponseAndOrigAttachment.getT1());
                     info.setGeneratedFrom(fileResponseAndOrigAttachment.getT2().getGeneratedFrom()); // preservo l'eventuale generatedFrom
+                    info.setDocTag(fileResponseAndOrigAttachment.getT2().getDocTag()); // preservo l'eventuale docTag
+                    info.setFilterResultCode(fileResponseAndOrigAttachment.getT2().getFilterResultCode()); // preservo
+                    info.setFilterResultDiagnostic(fileResponseAndOrigAttachment.getT2().getFilterResultDiagnostic()); // preservo
                     if (info.getUrl() == null)
                         return Flux.error(new PnGenericException(INVALID_SAFE_STORAGE, INVALID_SAFE_STORAGE.getMessage()));
                     return safeStorageService.downloadFile(info.getUrl())
@@ -261,6 +267,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                     return Mono.error(ex);
                 });
     }
+
 
 
     private void sendUnreachableEvent(PnDeliveryRequest request, String clientId, KOReason koReason){
