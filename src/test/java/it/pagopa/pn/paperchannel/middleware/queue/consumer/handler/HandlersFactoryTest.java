@@ -19,7 +19,7 @@ class HandlersFactoryTest {
     @BeforeEach
     public void init() {
         PnPaperChannelConfig mockConfig = mock(PnPaperChannelConfig.class);
-        handlersFactory = new HandlersFactory(null, null, null, mockConfig, null, null, null, null, null);
+        handlersFactory = new HandlersFactory(null, null, null, mockConfig, null, null, null, null, null, null);
         handlersFactory.initializeHandlers();
     }
 

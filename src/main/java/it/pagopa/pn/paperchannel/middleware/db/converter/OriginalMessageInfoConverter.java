@@ -8,6 +8,7 @@ import software.amazon.awssdk.enhanced.dynamodb.AttributeValueType;
 import software.amazon.awssdk.enhanced.dynamodb.EnhancedType;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
+import java.time.Instant;
 import java.util.Map;
 
 /**
@@ -43,9 +44,7 @@ public class OriginalMessageInfoConverter implements AttributeConverter<Original
 
         /* Use switch-case when cases will grow and use strategy in case of complex build definition */
         if (attributeValueMap.get(OriginalMessageInfo.COL_EVENT_TYPE).s().equals(EventTypeEnum.REDRIVE_PAPER_PROGRESS_STATUS.name())) {
-            originalMessageInfo = new PaperProgressStatusEventOriginalMessageInfo();
-            ((PaperProgressStatusEventOriginalMessageInfo) originalMessageInfo).setStatusCode(attributeValueMap.get(PaperProgressStatusEventOriginalMessageInfo.COL_STATUS_CODE).s());
-            ((PaperProgressStatusEventOriginalMessageInfo) originalMessageInfo).setStatusDescription(attributeValueMap.get(PaperProgressStatusEventOriginalMessageInfo.COL_STATUS_DESCRIPTION).s());
+            originalMessageInfo = this.buildPaperProgressStatusEventOriginalMessageInfo(attributeValueMap);
         } else {
             originalMessageInfo = new OriginalMessageInfo();
         }
@@ -62,5 +61,30 @@ public class OriginalMessageInfoConverter implements AttributeConverter<Original
     @Override
     public AttributeValueType attributeValueType() {
         return AttributeValueType.M;
+    }
+
+    private PaperProgressStatusEventOriginalMessageInfo buildPaperProgressStatusEventOriginalMessageInfo(Map<String, AttributeValue> attributeValueMap) {
+        PaperProgressStatusEventOriginalMessageInfo originalMessageInfo = new PaperProgressStatusEventOriginalMessageInfo();
+
+        originalMessageInfo.setStatusCode(AttributeValueConverter.getAttributeValueFromMap(attributeValueMap, PaperProgressStatusEventOriginalMessageInfo.COL_STATUS_CODE));
+        originalMessageInfo.setStatusDescription(AttributeValueConverter.getAttributeValueFromMap(attributeValueMap, PaperProgressStatusEventOriginalMessageInfo.COL_STATUS_DESCRIPTION));
+        originalMessageInfo.setRegisteredLetterCode(AttributeValueConverter.getAttributeValueFromMap(attributeValueMap, PaperProgressStatusEventOriginalMessageInfo.COL_REGISTERED_LETTER_CODE));
+        originalMessageInfo.setProductType(AttributeValueConverter.getAttributeValueFromMap(attributeValueMap, PaperProgressStatusEventOriginalMessageInfo.COL_PRODUCT_TYPE));
+
+        String statusDateTimeAsString = AttributeValueConverter.getAttributeValueFromMap(attributeValueMap, PaperProgressStatusEventOriginalMessageInfo.COL_STATUS_DATE_TIME);
+        String clientRequestTimeStampAsString = AttributeValueConverter.getAttributeValueFromMap(attributeValueMap, PaperProgressStatusEventOriginalMessageInfo.COL_CLIENT_REQUEST_TIMESTAMP);
+
+        Instant statusDateTime = statusDateTimeAsString != null
+            ? Instant.parse(statusDateTimeAsString)
+            : null;
+
+        Instant clientRequestTimeStamp = clientRequestTimeStampAsString != null
+            ? Instant.parse(clientRequestTimeStampAsString)
+            : null;
+
+        originalMessageInfo.setStatusDateTime(statusDateTime);
+        originalMessageInfo.setClientRequestTimeStamp(clientRequestTimeStamp);
+
+        return originalMessageInfo;
     }
 }

@@ -5,6 +5,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.OriginalMessageInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PaperProgressStatusEventOriginalMessageInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventError;
 import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
+import it.pagopa.pn.paperchannel.model.FlowTypeEnum;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,11 @@ class EventErrorDAOTestIT extends BaseTest {
         originalMessageInfo.setEventType(EventTypeEnum.REDRIVE_PAPER_PROGRESS_STATUS.name());
         originalMessageInfo.setStatusCode(RandomStringUtils.randomAlphanumeric(10));
         originalMessageInfo.setStatusDescription(RandomStringUtils.randomAlphanumeric(15));
+        originalMessageInfo.setRegisteredLetterCode(RandomStringUtils.randomAlphanumeric(15));
+        originalMessageInfo.setProductType(RandomStringUtils.randomAlphanumeric(3));
+
+        originalMessageInfo.setStatusDateTime(Instant.now());
+        originalMessageInfo.setClientRequestTimeStamp(Instant.now());
 
         PnEventError pnEventError1 = this.buildPnEventError("request1", originalMessageInfo);
         PnEventError pnEventError2 = this.buildPnEventError("request1", originalMessageInfo);
@@ -56,9 +62,13 @@ class EventErrorDAOTestIT extends BaseTest {
         originalMessageInfo.setEventType(EventTypeEnum.REDRIVE_PAPER_PROGRESS_STATUS.name());
         originalMessageInfo.setStatusCode(RandomStringUtils.randomAlphanumeric(10));
         originalMessageInfo.setStatusDescription(RandomStringUtils.randomAlphanumeric(15));
+        originalMessageInfo.setRegisteredLetterCode(RandomStringUtils.randomAlphanumeric(15));
+        originalMessageInfo.setProductType(RandomStringUtils.randomAlphanumeric(3));
+
+        originalMessageInfo.setStatusDateTime(Instant.now());
+        originalMessageInfo.setClientRequestTimeStamp(Instant.now());
 
         PnEventError pnEventError = this.buildPnEventError(requestId, originalMessageInfo);
-
 
         // When
         PnEventError eventError = this.pnEventErrorDAO.putItem(pnEventError).block();
@@ -79,6 +89,11 @@ class EventErrorDAOTestIT extends BaseTest {
         originalMessageInfo.setEventType(EventTypeEnum.REDRIVE_PAPER_PROGRESS_STATUS.name());
         originalMessageInfo.setStatusCode(RandomStringUtils.randomAlphanumeric(10));
         originalMessageInfo.setStatusDescription(RandomStringUtils.randomAlphanumeric(15));
+        originalMessageInfo.setRegisteredLetterCode(RandomStringUtils.randomAlphanumeric(15));
+        originalMessageInfo.setProductType(RandomStringUtils.randomAlphanumeric(3));
+
+        originalMessageInfo.setStatusDateTime(Instant.now());
+        originalMessageInfo.setClientRequestTimeStamp(Instant.now());
 
         PnEventError pnEventError = this.buildPnEventError(requestId, originalMessageInfo);
         this.pnEventErrorDAO.putItem(pnEventError).block();
@@ -113,6 +128,7 @@ class EventErrorDAOTestIT extends BaseTest {
         pnEventError.setStatusCode(RandomStringUtils.randomAlphanumeric(10));
         pnEventError.setOriginalMessageInfo(originalMessageInfo);
         pnEventError.setCreatedAt(currentTime);
+        pnEventError.setFlowType(FlowTypeEnum.COMPLEX_890.name());
         pnEventError.setDriverCode(RandomStringUtils.randomAlphanumeric(10));
         pnEventError.setTenderCode(RandomStringUtils.randomAlphanumeric(10));
 
