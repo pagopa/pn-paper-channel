@@ -98,6 +98,8 @@ public class AttachmentsConfigServiceImpl extends GenericService implements Atta
 
     private Mono<List<PnAttachmentsRule>> resolveRule(String key, Instant validityDate){
         return pnAttachmentsConfigDAO.findConfigInInterval(key, validityDate)
+                .doOnNext(pnAttachmentsConfig -> log.info("AttachmentsConfig found for: {}, {}: {}", key, validityDate, pnAttachmentsConfig))
+                .doOnDiscard(Object.class, o -> log.info("AttachmentsConfig not found for: {}, {}", key, validityDate))
                 .flatMap(x -> {
                     // se le regole sono vuote, e il parent è popolato (e diverso dalla key), risalgo la catena
                     if (CollectionUtils.isEmpty(x.getRules()) && x.getParentReference() != null && !x.getParentReference().equals(key)) {
