@@ -52,10 +52,15 @@ public class AttachmentsConfigServiceImpl extends GenericService implements Atta
         if (pnPaperChannelConfig.isEnabledocfilterruleengine()) {
 
             return resolveRule(AttachmentsConfigUtils.buildPartitionKey(pnAddress.getCap(), ZIPCODE_PK_PREFIX), pnDeliveryRequest.getNotificationSentAt())
-                    .flatMap(rules -> paperListChainEngine.filterItems(pnDeliveryRequest, attachmentInfoList, rules)
-                            .collectList()
-                            .map(attachmentFiltered -> sendFilteredAttachments(pnDeliveryRequest, attachmentFiltered)))
-                    .switchIfEmpty(sendAllAttachments(pnDeliveryRequest, attachmentInfoList));
+                    .defaultIfEmpty(List.of())
+                    .flatMap(rules -> {
+                                if (CollectionUtils.isEmpty(rules))
+                                    return sendAllAttachments(pnDeliveryRequest, attachmentInfoList);
+                                else
+                                    return paperListChainEngine.filterItems(pnDeliveryRequest, attachmentInfoList, rules)
+                                            .collectList()
+                                            .map(attachmentFiltered -> sendFilteredAttachments(pnDeliveryRequest, attachmentFiltered));
+                    } );
         } else {
             return sendAllAttachments(pnDeliveryRequest, attachmentInfoList);
         }
@@ -98,7 +103,7 @@ public class AttachmentsConfigServiceImpl extends GenericService implements Atta
                     if (CollectionUtils.isEmpty(x.getRules()) && x.getParentReference() != null && !x.getParentReference().equals(key)) {
                         return resolveRule(x.getParentReference(), validityDate);
                     }else {
-                        return Mono.just(x.getRules());
+                        return Mono.just(CollectionUtils.isEmpty(x.getRules())?List.of():x.getRules());
                     }
                 });
     }

@@ -6,6 +6,7 @@ import lombok.Setter;
 import lombok.ToString;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
 
 
 @Getter
@@ -21,7 +22,8 @@ public class AttachmentInfo implements Comparable<AttachmentInfo> {
     private String sha256;
     private String generatedFrom;
     private String docTag;
-
+    private String filterResultCode;
+    private String filterResultDiagnostic;
     @Override
     public int compareTo(@NotNull AttachmentInfo attachmentInfo) {
         boolean isThisAAR = StringUtils.equalsIgnoreCase(this.documentType, Const.PN_AAR);
