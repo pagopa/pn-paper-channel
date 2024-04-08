@@ -125,6 +125,8 @@ class RequestDeliveryDAOTestIT extends BaseTest {
         duplicateRequest.setFiscalCode("FRMTTR76M06B715E");
         duplicateRequest.setReceiverType("PF");
         duplicateRequest.setRefined(false);
+        duplicateRequest.setDriverCode("driverCode");
+        duplicateRequest.setTenderCode("tenderCode");
 
         address.setAddress("Via Aldo Moro");
         address.setCap("21004");

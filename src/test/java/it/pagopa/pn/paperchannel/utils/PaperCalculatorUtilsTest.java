@@ -7,6 +7,7 @@ import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.AttachmentInfo;
 import it.pagopa.pn.paperchannel.service.PaperTenderService;
 import it.pagopa.pn.paperchannel.utils.costutils.CostWithDriver;
+import org.apache.poi.ss.formula.functions.T;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,6 +25,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @ExtendWith(MockitoExtension.class)
 class PaperCalculatorUtilsTest {
+
+    private static final String DRIVER_CODE = "driverCode";
+    private static final String TENDER_CODE = "tenderCode";
 
     @InjectMocks
     private PaperCalculatorUtils paperCalculatorUtils;
@@ -58,7 +62,10 @@ class PaperCalculatorUtilsTest {
         CostWithDriver res = paperCalculatorUtils.calculator(attachmentUrls, address, ProductTypeEnum.AR, true).block();
 
         assert res != null;
+
         Assertions.assertEquals(1, res.getCost().intValue());
+        Assertions.assertEquals(DRIVER_CODE, res.getDriverCode());
+        Assertions.assertEquals(TENDER_CODE, res.getTenderCode());
     }
 
     //${peso busta} + ( ${numero di pagine} * ${peso pagina} )
@@ -92,7 +99,10 @@ class PaperCalculatorUtilsTest {
         CostWithDriver res = paperCalculatorUtils.calculator(attachmentUrls, address, ProductTypeEnum.AR, true).block();
 
         assert res != null;
+
         Assertions.assertEquals(1, res.getCost().intValue());
+        Assertions.assertEquals(DRIVER_CODE, res.getDriverCode());
+        Assertions.assertEquals(TENDER_CODE, res.getTenderCode());
     }
 
     //${peso busta} + ( ${numero di pagine} * ${peso pagina} )
@@ -134,7 +144,10 @@ class PaperCalculatorUtilsTest {
         CostWithDriver res = paperCalculatorUtils.calculator(attachmentUrls, address, ProductTypeEnum.AR, true).block();
 
         assert res != null;
+
         Assertions.assertEquals(12, res.getCost().intValue());
+        Assertions.assertEquals(DRIVER_CODE, res.getDriverCode());
+        Assertions.assertEquals(TENDER_CODE, res.getTenderCode());
     }
 
 
@@ -177,7 +190,10 @@ class PaperCalculatorUtilsTest {
         CostWithDriver res = paperCalculatorUtils.calculator(attachmentUrls, address, ProductTypeEnum.AR, true).block();
 
         assert res != null;
+
         Assertions.assertEquals(18, res.getCost().intValue());
+        Assertions.assertEquals(DRIVER_CODE, res.getDriverCode());
+        Assertions.assertEquals(TENDER_CODE, res.getTenderCode());
     }
 
     //${peso busta} + ( ${numero di pagine} * ${peso pagina} )
@@ -219,7 +235,10 @@ class PaperCalculatorUtilsTest {
         CostWithDriver res = paperCalculatorUtils.calculator(attachmentUrls, address, ProductTypeEnum.AR, true).block();
 
         assert res != null;
+
         Assertions.assertEquals(21, res.getCost().intValue());
+        Assertions.assertEquals(DRIVER_CODE, res.getDriverCode());
+        Assertions.assertEquals(TENDER_CODE, res.getTenderCode());
     }
 
     @Test
@@ -249,7 +268,10 @@ class PaperCalculatorUtilsTest {
         CostWithDriver res = paperCalculatorUtils.calculator(attachmentUrls, address, ProductTypeEnum.AR, true).block();
 
         assert res != null;
+
         Assertions.assertEquals(223,  (int)(res.getCost().floatValue()*100));
+        Assertions.assertEquals(DRIVER_CODE, res.getDriverCode());
+        Assertions.assertEquals(TENDER_CODE, res.getTenderCode());
     }
 
     @Test
@@ -400,6 +422,8 @@ class PaperCalculatorUtilsTest {
         dto.setPrice1000(BigDecimal.valueOf(6.00));
         dto.setPrice2000(BigDecimal.valueOf(7.00));
         dto.setPriceAdditional(BigDecimal.valueOf(2.00));
+        dto.setDriverCode(DRIVER_CODE);
+        dto.setTenderCode(TENDER_CODE);
         return dto;
     }
 
@@ -407,6 +431,8 @@ class PaperCalculatorUtilsTest {
         CostDTO dto = new CostDTO();
         dto.setPrice(BigDecimal.valueOf(2.23));
         dto.setPriceAdditional(BigDecimal.valueOf(1.97));
+        dto.setDriverCode(DRIVER_CODE);
+        dto.setTenderCode(TENDER_CODE);
         return dto;
     }
 }

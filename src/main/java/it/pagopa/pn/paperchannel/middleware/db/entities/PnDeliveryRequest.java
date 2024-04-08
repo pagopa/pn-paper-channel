@@ -18,6 +18,8 @@ import java.util.List;
 @NoArgsConstructor
 public class PnDeliveryRequest {
 
+    public static final String REQUEST_DELIVERY_DYNAMO_TABLE_NAME = "RequestDeliveryDynamoTable";
+
     public static final String COL_REQUEST_ID = "requestId";
 
     @ToString.Exclude
