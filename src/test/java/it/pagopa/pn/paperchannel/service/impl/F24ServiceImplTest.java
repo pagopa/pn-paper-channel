@@ -236,6 +236,9 @@ class F24ServiceImplTest {
 
         assertTrue(res.getAttachments().stream().map(PnAttachmentInfo::getFileKey).toList().containsAll(f24SetResolvedUrls));
         assertFalse(res.getAttachments().stream().map(PnAttachmentInfo::getFileKey).anyMatch(fileKey -> fileKey.startsWith(F24ServiceImpl.URL_PROTOCOL_F24)));
+        assertEquals(0, res.getAttachments().stream().filter(x -> x.getDocTag()==null).toList().size());
+        assertEquals(0, res.getAttachments().stream().filter(x -> x.getFilterResultDiagnostic()==null).toList().size());
+        assertEquals(0, res.getAttachments().stream().filter(x -> x.getFilterResultCode()==null).toList().size());
     }
 
     private PnDeliveryRequest getDeliveryRequest(String requestId, StatusDeliveryEnum status, List<PnAttachmentInfo> attachmentUrls){
@@ -306,6 +309,9 @@ class F24ServiceImplTest {
         pnAttachmentInfo.setId(RandomStringUtils.randomAscii(10));
         pnAttachmentInfo.setFileKey(fileKey);
         pnAttachmentInfo.setDocumentType(documentType);
+        pnAttachmentInfo.setDocTag("F24");
+        pnAttachmentInfo.setFilterResultCode("OK");
+        pnAttachmentInfo.setFilterResultDiagnostic("tuttoookkay");
 
         return pnAttachmentInfo;
     }
