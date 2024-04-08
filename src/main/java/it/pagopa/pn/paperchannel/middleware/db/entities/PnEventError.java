@@ -22,6 +22,7 @@ public class PnEventError {
     public static final String COL_STATUS_CODE = "statusCode";
     public static final String COL_ORIGINAL_MESSAGE_INFO = "originalMessage";
     public static final String COL_CREATED_AT = "createdAt";
+    public static final String COL_FLOW_TYPE = "flowType";
     public static final String COL_DRIVER_CODE = "driverCode";
     public static final String COL_TENDER_CODE = "tenderCode";
 
@@ -45,6 +46,9 @@ public class PnEventError {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_CREATED_AT)}))
     private Instant createdAt;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_FLOW_TYPE)}))
+    private String flowType;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_DRIVER_CODE)}))
     private String driverCode;

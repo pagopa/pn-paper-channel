@@ -7,6 +7,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PaperProgressStatusEvent
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventError;
 import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
+import it.pagopa.pn.paperchannel.model.FlowTypeEnum;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
@@ -31,6 +32,11 @@ public class Proxy890MessageHandler implements MessageHandler {
 
     @Override
     public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
+
+        FlowTypeEnum flowType = entity.getRefined() == null
+            ? FlowTypeEnum.COMPLEX_890
+            : FlowTypeEnum.SIMPLE_890;
+
         if(Boolean.TRUE.equals(entity.getRefined())){
             log.info("Proxying message to Simple890MessageHandler");
             return simple890MessageHandler.handleMessage(entity,paperRequest);
@@ -39,26 +45,37 @@ public class Proxy890MessageHandler implements MessageHandler {
             log.info("Proxying message to Complex890MessageHandler");
             return complex890MessageHandler.handleMessage(entity,paperRequest);
         }else {
-            log.info("Writing in PnEventError");
-            return buildAndSavePnEventError(entity,paperRequest).then();
+            log.info("Writing in PnEventError with flow type {}", flowType);
+            return buildAndSavePnEventError(entity, paperRequest, flowType).then();
         }
     }
 
-    private Mono<PnEventError> buildAndSavePnEventError(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest){
+    private Mono<PnEventError> buildAndSavePnEventError(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest, FlowTypeEnum flowType){
+
         PnEventError pnEventError = new PnEventError();
         pnEventError.setRequestId(entity.getRequestId());
         pnEventError.setStatusBusinessDateTime(paperRequest.getStatusDateTime().toInstant());
         pnEventError.setStatusCode(paperRequest.getStatusCode());
         pnEventError.setIun(paperRequest.getIun());
         pnEventError.setCreatedAt(Instant.now());
+        pnEventError.setFlowType(flowType.name());
 
+        pnEventError.setOriginalMessageInfo(this.buildPaperProgressStatusEventOriginalMessageInfo(paperRequest));
+
+        return pnEventErrorDAO.putItem(pnEventError);
+    }
+
+    private PaperProgressStatusEventOriginalMessageInfo buildPaperProgressStatusEventOriginalMessageInfo(PaperProgressStatusEventDto paperRequest) {
         PaperProgressStatusEventOriginalMessageInfo messageInfo = new PaperProgressStatusEventOriginalMessageInfo();
         messageInfo.setEventType(EventTypeEnum.REDRIVE_PAPER_PROGRESS_STATUS.name());
         messageInfo.setStatusCode(paperRequest.getStatusCode());
         messageInfo.setStatusDescription(paperRequest.getStatusDescription());
-        pnEventError.setOriginalMessageInfo(messageInfo);
+        messageInfo.setRegisteredLetterCode(paperRequest.getRegisteredLetterCode());
+        messageInfo.setProductType(paperRequest.getProductType());
+        messageInfo.setStatusDateTime(paperRequest.getStatusDateTime().toInstant());
+        messageInfo.setClientRequestTimeStamp(paperRequest.getClientRequestTimeStamp().toInstant());
 
-        return pnEventErrorDAO.putItem(pnEventError);
+        return messageInfo;
     }
 
 }

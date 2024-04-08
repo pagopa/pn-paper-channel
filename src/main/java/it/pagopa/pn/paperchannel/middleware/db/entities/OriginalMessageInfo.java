@@ -18,7 +18,7 @@ public class OriginalMessageInfo {
 
     public AttributeValue getAttributeValue() {
         return AttributeValue.fromM(
-                Map.of(COL_EVENT_TYPE, AttributeValue.fromS(this.eventType))
+            Map.of(COL_EVENT_TYPE, AttributeValue.fromS(this.eventType))
         );
     }
 }
