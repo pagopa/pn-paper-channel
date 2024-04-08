@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.db.entities;
 
+import it.pagopa.pn.paperchannel.middleware.db.converter.AttributeValueConverter;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -9,6 +10,7 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.Map;
 
 @DynamoDbBean
@@ -46,16 +48,17 @@ public class PaperProgressStatusEventOriginalMessageInfo extends OriginalMessage
 
     @Override
     public AttributeValue getAttributeValue() {
-        return AttributeValue.fromM(
-            Map.of(
-                COL_EVENT_TYPE, AttributeValue.fromS(this.eventType),
-                COL_STATUS_CODE, AttributeValue.fromS(this.statusCode),
-                COL_STATUS_DESCRIPTION, AttributeValue.fromS(this.statusDescription),
-                COL_REGISTERED_LETTER_CODE, AttributeValue.fromS(this.registeredLetterCode),
-                COL_PRODUCT_TYPE, AttributeValue.fromS(this.productType),
-                COL_STATUS_DATE_TIME, AttributeValue.fromS(this.statusDateTime != null ? this.statusDateTime.toString() : null),
-                COL_CLIENT_REQUEST_TIMESTAMP, AttributeValue.fromS(this.clientRequestTimeStamp != null ? this.clientRequestTimeStamp.toString() : null)
-            )
-        );
+        Map<String, AttributeValue> attributeValueMap = new HashMap<>();
+
+        AttributeValueConverter.addAttributeValueToMap(attributeValueMap, COL_EVENT_TYPE, this.eventType);
+        AttributeValueConverter.addAttributeValueToMap(attributeValueMap, COL_STATUS_CODE, this.statusCode);
+        AttributeValueConverter.addAttributeValueToMap(attributeValueMap, COL_STATUS_DESCRIPTION, this.statusDescription);
+        AttributeValueConverter.addAttributeValueToMap(attributeValueMap, COL_REGISTERED_LETTER_CODE, this.registeredLetterCode);
+        AttributeValueConverter.addAttributeValueToMap(attributeValueMap, COL_PRODUCT_TYPE, this.productType);
+
+        AttributeValueConverter.addAttributeValueToMap(attributeValueMap, COL_STATUS_DATE_TIME, this.statusDateTime != null ? this.statusDateTime.toString() : null);
+        AttributeValueConverter.addAttributeValueToMap(attributeValueMap, COL_CLIENT_REQUEST_TIMESTAMP, this.clientRequestTimeStamp != null ? this.clientRequestTimeStamp.toString() : null);
+
+        return AttributeValue.fromM(attributeValueMap);
     }
 }

@@ -66,17 +66,20 @@ public class OriginalMessageInfoConverter implements AttributeConverter<Original
     private PaperProgressStatusEventOriginalMessageInfo buildPaperProgressStatusEventOriginalMessageInfo(Map<String, AttributeValue> attributeValueMap) {
         PaperProgressStatusEventOriginalMessageInfo originalMessageInfo = new PaperProgressStatusEventOriginalMessageInfo();
 
-        originalMessageInfo.setStatusCode(attributeValueMap.get(PaperProgressStatusEventOriginalMessageInfo.COL_STATUS_CODE).s());
-        originalMessageInfo.setStatusDescription(attributeValueMap.get(PaperProgressStatusEventOriginalMessageInfo.COL_STATUS_DESCRIPTION).s());
-        originalMessageInfo.setRegisteredLetterCode(attributeValueMap.get(PaperProgressStatusEventOriginalMessageInfo.COL_REGISTERED_LETTER_CODE).s());
-        originalMessageInfo.setProductType(attributeValueMap.get(PaperProgressStatusEventOriginalMessageInfo.COL_PRODUCT_TYPE).s());
+        originalMessageInfo.setStatusCode(AttributeValueConverter.getAttributeValueFromMap(attributeValueMap, PaperProgressStatusEventOriginalMessageInfo.COL_STATUS_CODE));
+        originalMessageInfo.setStatusDescription(AttributeValueConverter.getAttributeValueFromMap(attributeValueMap, PaperProgressStatusEventOriginalMessageInfo.COL_STATUS_DESCRIPTION));
+        originalMessageInfo.setRegisteredLetterCode(AttributeValueConverter.getAttributeValueFromMap(attributeValueMap, PaperProgressStatusEventOriginalMessageInfo.COL_REGISTERED_LETTER_CODE));
+        originalMessageInfo.setProductType(AttributeValueConverter.getAttributeValueFromMap(attributeValueMap, PaperProgressStatusEventOriginalMessageInfo.COL_PRODUCT_TYPE));
 
-        Instant statusDateTime = attributeValueMap.get(PaperProgressStatusEventOriginalMessageInfo.COL_STATUS_DATE_TIME).s() != null
-            ? Instant.parse(attributeValueMap.get(PaperProgressStatusEventOriginalMessageInfo.COL_STATUS_DATE_TIME).s())
+        String statusDateTimeAsString = AttributeValueConverter.getAttributeValueFromMap(attributeValueMap, PaperProgressStatusEventOriginalMessageInfo.COL_STATUS_DATE_TIME);
+        String clientRequestTimeStampAsString = AttributeValueConverter.getAttributeValueFromMap(attributeValueMap, PaperProgressStatusEventOriginalMessageInfo.COL_CLIENT_REQUEST_TIMESTAMP);
+
+        Instant statusDateTime = statusDateTimeAsString != null
+            ? Instant.parse(statusDateTimeAsString)
             : null;
 
-        Instant clientRequestTimeStamp = attributeValueMap.get(PaperProgressStatusEventOriginalMessageInfo.COL_CLIENT_REQUEST_TIMESTAMP).s() != null
-            ? Instant.parse(attributeValueMap.get(PaperProgressStatusEventOriginalMessageInfo.COL_CLIENT_REQUEST_TIMESTAMP).s())
+        Instant clientRequestTimeStamp = clientRequestTimeStampAsString != null
+            ? Instant.parse(clientRequestTimeStampAsString)
             : null;
 
         originalMessageInfo.setStatusDateTime(statusDateTime);
