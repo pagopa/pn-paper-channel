@@ -3,10 +3,9 @@ package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
-import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PnEventErrorDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
+import it.pagopa.pn.paperchannel.model.FlowTypeEnum;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
@@ -14,9 +13,9 @@ import reactor.core.publisher.Mono;
 import java.time.OffsetDateTime;
 import java.util.Set;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.times;
 
 class Proxy890MessageHandlerTest {
 
@@ -179,8 +178,6 @@ class Proxy890MessageHandlerTest {
         entity.setRequestId("requestId");
         entity.setStatusCode("statusDetail");
         entity.setStatusDetail(StatusCodeEnum.OK.getValue());
-        entity.setRefined(false);
-
 
         when(pnEventErrorDAO.putItem(any())).thenReturn(Mono.empty());
 
@@ -192,7 +189,48 @@ class Proxy890MessageHandlerTest {
         verify(mockComplex890MessageHandler, times(0)).handleMessage(entity, paperRequest);
         verify(simple890MessageHandler,times(0)).handleMessage(entity,paperRequest);
 
-        verify(pnEventErrorDAO,times(1)).putItem(any());
+        verify(pnEventErrorDAO,times(1)).putItem(argThat(pnEventError -> {
+            assertThat(pnEventError.getRequestId()).isEqualTo(entity.getRequestId());
+            assertThat(pnEventError.getFlowType()).isEqualTo(FlowTypeEnum.COMPLEX_890.name());
+
+            return true;
+        }));
     }
 
+    @Test
+    void handleError_falseRefined_enableSimpleTrue_containsFalse() {
+        OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
+        String statusCode = "RECAG005C";
+
+        PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
+            .requestId("requestId")
+            .statusCode(statusCode)
+            .statusDateTime(instant)
+            .iun("122324")
+            .clientRequestTimeStamp(instant);
+
+
+        PnDeliveryRequest entity = new PnDeliveryRequest();
+        entity.setRequestId("requestId");
+        entity.setStatusCode("statusDetail");
+        entity.setStatusDetail(StatusCodeEnum.OK.getValue());
+        entity.setRefined(false);
+
+        when(pnEventErrorDAO.putItem(any())).thenReturn(Mono.empty());
+
+        when(pnPaperChannelConfig.isEnableSimple890Flow()).thenReturn(true);
+        when(pnPaperChannelConfig.getComplexRefinementCodes()).thenReturn(Set.of("RECAG005B"));
+
+        assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
+
+        verify(mockComplex890MessageHandler, times(0)).handleMessage(entity, paperRequest);
+        verify(simple890MessageHandler,times(0)).handleMessage(entity,paperRequest);
+
+        verify(pnEventErrorDAO,times(1)).putItem(argThat(pnEventError -> {
+            assertThat(pnEventError.getRequestId()).isEqualTo(entity.getRequestId());
+            assertThat(pnEventError.getFlowType()).isEqualTo(FlowTypeEnum.SIMPLE_890.name());
+
+            return true;
+        }));
+    }
 }

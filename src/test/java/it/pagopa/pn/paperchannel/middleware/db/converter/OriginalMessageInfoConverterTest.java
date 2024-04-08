@@ -55,6 +55,31 @@ class OriginalMessageInfoConverterTest {
     }
 
     @Test
+    void transformFromPaperProgressStatusEventOriginalMessageInfoWithNullFieldsTest() {
+
+        // Given
+        PaperProgressStatusEventOriginalMessageInfo messageInfo = new PaperProgressStatusEventOriginalMessageInfo();
+
+        messageInfo.setEventType(EventTypeEnum.REDRIVE_PAPER_PROGRESS_STATUS.name());
+
+        // When
+        Map<String, AttributeValue> messageInfoAttributeValueMap = this.originalMessageInfoConverter
+            .transformFrom(messageInfo)
+            .m();
+
+        // Then
+        assertThat(messageInfoAttributeValueMap).isNotNull();
+
+        assertThat(messageInfoAttributeValueMap.get(PaperProgressStatusEventOriginalMessageInfo.COL_EVENT_TYPE).s()).isEqualTo(messageInfo.getEventType());
+        assertThat(messageInfoAttributeValueMap.get(PaperProgressStatusEventOriginalMessageInfo.COL_STATUS_CODE)).isNull();
+        assertThat(messageInfoAttributeValueMap.get(PaperProgressStatusEventOriginalMessageInfo.COL_STATUS_DESCRIPTION)).isNull();
+        assertThat(messageInfoAttributeValueMap.get(PaperProgressStatusEventOriginalMessageInfo.COL_REGISTERED_LETTER_CODE)).isNull();
+        assertThat(messageInfoAttributeValueMap.get(PaperProgressStatusEventOriginalMessageInfo.COL_PRODUCT_TYPE)).isNull();
+        assertThat(messageInfoAttributeValueMap.get(PaperProgressStatusEventOriginalMessageInfo.COL_STATUS_DATE_TIME)).isNull();
+        assertThat(messageInfoAttributeValueMap.get(PaperProgressStatusEventOriginalMessageInfo.COL_CLIENT_REQUEST_TIMESTAMP)).isNull();
+    }
+
+    @Test
     void transformFromUnknownOriginalMessageInfoTest() {
 
         // Given
