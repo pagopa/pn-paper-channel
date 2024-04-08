@@ -189,8 +189,8 @@ class AttachmentsConfigServiceImplTest {
         filterChainResults.add(filterChainResult);
         filterChainResult = new ListFilterChainResult<PnAttachmentInfo>();
         filterChainResult.setItem(pnDeliveryRequest.getAttachments().get(1));
-        filterChainResult.setSuccess(true);
-        filterChainResult.setCode("OK");
+        filterChainResult.setSuccess(false);
+        filterChainResult.setCode("KO");
         filterChainResult.setDiagnostic("oook");
         filterChainResults.add(filterChainResult);
 
@@ -221,8 +221,73 @@ class AttachmentsConfigServiceImplTest {
 
         // THEN
         Assertions.assertNotNull(res);
-        Assertions.assertEquals(2, res.getAttachments().size());
-        Assertions.assertEquals(0, res.getRemovedAttachments().size());
+        Assertions.assertEquals(1, res.getAttachments().size());
+        Assertions.assertEquals(1, res.getRemovedAttachments().size());
+    }
+
+
+    @Test
+    void filterAttachmentsToSend_rulenavigation1() {
+        // GIVEN
+        PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest(StatusDeliveryEnum.IN_PROCESSING);
+
+
+        PnAddress pnAddress = new PnAddress();
+        pnAddress.setCap("30000");
+
+        List<ListFilterChainResult<PnAttachmentInfo>> filterChainResults =new ArrayList<>();
+        ListFilterChainResult<PnAttachmentInfo> filterChainResult = new ListFilterChainResult<PnAttachmentInfo>();
+        filterChainResult.setItem(pnDeliveryRequest.getAttachments().get(0));
+        filterChainResult.setSuccess(false);
+        filterChainResult.setCode("KO");
+        filterChainResult.setDiagnostic("oook");
+        filterChainResults.add(filterChainResult);
+        filterChainResult = new ListFilterChainResult<PnAttachmentInfo>();
+        filterChainResult.setItem(pnDeliveryRequest.getAttachments().get(1));
+        filterChainResult.setSuccess(true);
+        filterChainResult.setCode("OK");
+        filterChainResult.setDiagnostic("oook");
+        filterChainResults.add(filterChainResult);
+
+        List<PnAttachmentsRule> ruleParamsList = new ArrayList<>();
+        PnAttachmentsRule rule = new PnAttachmentsRule();
+        rule.setRuleType(DocumentTagHandler.RULE_TYPE);
+        PnRuleParams pnRuleParams = new PnRuleParams();
+        pnRuleParams.setTypeWithSuccessResult("AAR");
+        rule.setParams(pnRuleParams);
+        ruleParamsList.add(rule);
+        PnAttachmentsConfig pnAttachmentsConfig = new PnAttachmentsConfig();
+        pnAttachmentsConfig.setRules(ruleParamsList);
+        pnAttachmentsConfig.setConfigKey("ZIP##DEFAULT");
+
+        List<PnAttachmentsRule> ruleParamsList1 = new ArrayList<>();
+        PnAttachmentsRule rule1 = new PnAttachmentsRule();
+        rule1.setRuleType(DocumentTagHandler.RULE_TYPE);
+        PnRuleParams pnRuleParams1 = new PnRuleParams();
+        pnRuleParams1.setTypeWithSuccessResult("DOCUMENT");
+        rule1.setParams(pnRuleParams1);
+        ruleParamsList1.add(rule1);
+        PnAttachmentsConfig pnAttachmentsConfig1 = new PnAttachmentsConfig();
+        pnAttachmentsConfig1.setRules(ruleParamsList1);
+        pnAttachmentsConfig1.setConfigKey("ZIP#30000");
+        pnAttachmentsConfig1.setParentReference("ZIP##DEFAULT");
+
+        Mockito.when(pnAttachmentsConfigDAO.findConfigInInterval(Mockito.eq("ZIP##30000"), Mockito.any())).thenReturn(Mono.just(pnAttachmentsConfig1));
+        Mockito.when(paperListChainEngine.filterItems(Mockito.any(), Mockito.anyList(), Mockito.anyList())).thenReturn(Flux.fromIterable(filterChainResults));
+        when(pnPaperChannelConfig.isEnabledocfilterruleengine()).thenReturn(true);
+
+        // WHEN
+        Mono<PnDeliveryRequest> mono = attachmentsConfigService.filterAttachmentsToSend(pnDeliveryRequest, pnDeliveryRequest.getAttachments(), pnAddress);
+        PnDeliveryRequest res = mono.block();
+
+        // THEN
+        Assertions.assertNotNull(res);
+        Assertions.assertEquals(1, res.getAttachments().size());
+        Assertions.assertEquals(1, res.getRemovedAttachments().size());
+        Assertions.assertEquals(getPnAttachmentInfos().get(1).getFileKey(), res.getAttachments().get(0).getFileKey());  // ci deve essere il document
+        Assertions.assertEquals(getPnAttachmentInfos().get(0).getFileKey(), res.getRemovedAttachments().get(0).getFileKey()); // non ci deve essere aar
+        Assertions.assertEquals("OK", res.getAttachments().get(0).getFilterResultCode());
+        Assertions.assertEquals("KO", res.getRemovedAttachments().get(0).getFilterResultCode());
     }
 
     @Test
