@@ -40,7 +40,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 
@@ -562,7 +564,6 @@ class PaperMessagesServiceTest {
         request.setStatusCode(StatusDeliveryEnum.TAKING_CHARGE.getCode());
         request.setCost(1000000);
 
-
         //MOCK VALIDATOR
         sendRequestValidatorMockedStatic.when(() -> {
             SendRequestValidator.compareRequestCostEntity(Mockito.any(), Mockito.any());
@@ -571,6 +572,9 @@ class PaperMessagesServiceTest {
         //MOCK GET DELIVERY REQUEST
         Mockito.when(requestDeliveryDAO.getByRequestId("TST-IOR.2332"))
                 .thenReturn(Mono.just(request));
+
+        Mockito.when(paperTenderService.getCostFrom(Mockito.any(), Mockito.any(), Mockito.any()))
+            .thenReturn(Mono.just(getNationalCost()));
 
         SendRequest sendRequest = getRequest("TST-IOR.2332");
         sendRequest.setRequestPaId("request-pad-id");
@@ -581,7 +585,13 @@ class PaperMessagesServiceTest {
         int value = Assertions.assertThrows(PnGenericException.class, mono::block).getHttpStatus().value();
         Assertions.assertEquals(422, value);
 
-        Mockito.verify(requestDeliveryDAO).updateData(Mockito.any());
+        Mockito.verify(requestDeliveryDAO).updateData(argThat(pnDeliveryRequest -> {
+            assertThat(pnDeliveryRequest).isNotNull();
+            assertThat(pnDeliveryRequest.getDriverCode()).isEqualTo("driverCode");
+            assertThat(pnDeliveryRequest.getTenderCode()).isEqualTo("tenderCode");
+
+            return true;
+        }));
     }
 
     private void mocksExecutionPaperOK() {
@@ -763,6 +773,13 @@ class PaperMessagesServiceTest {
                     return true;
                 }).verifyComplete();
 
+        Mockito.verify(requestDeliveryDAO).updateData(argThat(pnDeliveryRequest -> {
+            assertThat(pnDeliveryRequest).isNotNull();
+            assertThat(pnDeliveryRequest.getDriverCode()).isEqualTo("driverCode");
+            assertThat(pnDeliveryRequest.getTenderCode()).isEqualTo("tenderCode");
+
+            return true;
+        }));
     }
 
     @Test
@@ -934,6 +951,8 @@ class PaperMessagesServiceTest {
         CostDTO dto = new CostDTO();
         dto.setPrice(BigDecimal.valueOf(1.00));
         dto.setPriceAdditional(BigDecimal.valueOf(2.00));
+        dto.setDriverCode("driverCode");
+        dto.setTenderCode("tenderCode");
         return dto;
     }
 
@@ -941,6 +960,8 @@ class PaperMessagesServiceTest {
         CostDTO dto = new CostDTO();
         dto.setPrice(BigDecimal.valueOf(2.23));
         dto.setPriceAdditional(BigDecimal.valueOf(1.97));
+        dto.setDriverCode("driverCode");
+        dto.setTenderCode("tenderCode");
         return dto;
     }
 

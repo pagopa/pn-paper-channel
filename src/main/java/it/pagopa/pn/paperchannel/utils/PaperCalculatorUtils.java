@@ -7,6 +7,7 @@ import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ProductTypeEnum
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.AttachmentInfo;
 import it.pagopa.pn.paperchannel.service.PaperTenderService;
+import it.pagopa.pn.paperchannel.utils.costutils.CostWithDriver;
 import lombok.AllArgsConstructor;
 import lombok.CustomLog;
 import org.apache.commons.lang3.StringUtils;
@@ -15,6 +16,7 @@ import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Objects;
 
 import static it.pagopa.pn.paperchannel.utils.Const.*;
 
@@ -31,7 +33,7 @@ public class PaperCalculatorUtils {
     private final PnPaperChannelConfig pnPaperChannelConfig;
     private final DateChargeCalculationModesUtils chargeCalculationModeUtils;
 
-    public Mono<BigDecimal> calculator(List<AttachmentInfo> attachments, Address address, ProductTypeEnum productType, boolean isReversePrinter){
+    public Mono<CostWithDriver> calculator(List<AttachmentInfo> attachments, Address address, ProductTypeEnum productType, boolean isReversePrinter){
         boolean isNational = StringUtils.isBlank(address.getCountry()) ||
                 StringUtils.equalsIgnoreCase(address.getCountry(), COUNTRY_IT) ||
                 StringUtils.equalsIgnoreCase(address.getCountry(), COUNTRY_ITALIA) ||
@@ -55,21 +57,40 @@ public class PaperCalculatorUtils {
      * @param zone eventuale zona recuperata dalla country (è valorizzato a null se è presente un CAP ed è italiano)
      * @param productType tipo di prodotto (AR, 890, etc)
      * @param isReversePrinter true, se il printType della request della SEND è di tipo BN_FRONTE_RETRO
-     * @return calcolo del costp della notifica
+     *
+     * @return calcolo del costp della notifica con le informazioni del recapitista
      */
-    private Mono<BigDecimal> getAmount(List<AttachmentInfo> attachments, String cap, String zone, String productType, boolean isReversePrinter){
+    private Mono<CostWithDriver> getAmount(List<AttachmentInfo> attachments, String cap, String zone, String productType, boolean isReversePrinter){
         String processName = "Get Amount";
         log.logStartingProcess(processName);
-        var calculationModeEnum = chargeCalculationModeUtils.getChargeCalculationMode();
-        log.debug("calculationMode found: {}", calculationModeEnum);
+
         return paperTenderService.getCostFrom(cap, zone, productType)
-                .map(contract ->
-                    switch (calculationModeEnum) {
-                        case AAR -> contract.getPrice();
-                        case COMPLETE -> getPriceForCOMPLETEMode(attachments, contract, isReversePrinter);
-                    }
-                )
+                .map(contract -> getCostWithDriver(contract, attachments, isReversePrinter))
                 .doOnNext(totalCost -> log.logEndingProcess(processName));
+    }
+
+    /**
+     * Retrieve the notification cost with the driver information
+     *
+     * @param contract          contract from which costs are calculated
+     * @param attachments       notification attachments for which calculate pages and costs
+     * @param isReversePrinter  true if print with BN_FRONTE_RETRO
+     *
+     * @return                  the amount cost of notification with driver information
+     * */
+    private CostWithDriver getCostWithDriver(CostDTO contract, List<AttachmentInfo> attachments, boolean isReversePrinter) {
+        ChargeCalculationModeEnum calculationModeEnum = chargeCalculationModeUtils.getChargeCalculationMode();
+        log.debug("calculationMode found: {}", calculationModeEnum);
+
+        BigDecimal amount = calculationModeEnum.equals(ChargeCalculationModeEnum.AAR)
+                ? contract.getPrice()
+                : getPriceForCOMPLETEMode(attachments, contract, isReversePrinter);
+
+        return CostWithDriver.builder()
+                .cost(amount)
+                .driverCode(contract.getDriverCode())
+                .tenderCode(contract.getTenderCode())
+                .build();
     }
 
     private BigDecimal getPriceForCOMPLETEMode(List<AttachmentInfo> attachments, CostDTO costDTO, boolean isReversePrinter){
