@@ -31,13 +31,13 @@ class DocumentTagHandlerTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "AAR, SUCCESS",
-            "DOCUMENT, NEXT",
-            "F24, NEXT",
-            "PIPPO, FAIL",
+            "AAR, SUCCESS,DOC_TAG_REQUIRED",
+            "DOCUMENT, NEXT,DOC_TAG_ACCEPTED",
+            "F24, NEXT,DOC_TAG_ACCEPTED",
+            "PIPPO, FAIL,DOC_TAG_SKIPPED",
     })
     @ExtendWith(MockitoExtension.class)
-    void filter(String docTag, String expectedResult) {
+    void filter(String docTag, String expectedResult, String expectedResultCode) {
         PnAttachmentInfo pnAttachmentInfo = new PnAttachmentInfo();
         pnAttachmentInfo.setDocTag(docTag);
 
@@ -46,5 +46,6 @@ class DocumentTagHandlerTest {
 
         Assertions.assertNotNull(r);
         Assertions.assertEquals(expectedResult, r.getResult().name());
+        Assertions.assertEquals(expectedResultCode, r.getCode());
     }
 }
