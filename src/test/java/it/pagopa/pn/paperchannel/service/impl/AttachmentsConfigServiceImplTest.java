@@ -6,6 +6,7 @@ import it.pagopa.pn.api.dto.events.PnAttachmentsConfigEventPayload;
 import it.pagopa.pn.commons.rules.model.FilterChainResult;
 import it.pagopa.pn.commons.rules.model.ListFilterChainResult;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
+import it.pagopa.pn.paperchannel.exception.PnInvalidChainRuleException;
 import it.pagopa.pn.paperchannel.mapper.AttachmentsConfigMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PnAttachmentsConfigDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.*;
@@ -407,6 +408,49 @@ class AttachmentsConfigServiceImplTest {
         Assertions.assertEquals(getPnAttachmentInfos().get(0).getFileKey(), res.getAttachments().get(0).getFileKey());
         Assertions.assertEquals(1, res.getRemovedAttachments().size());
         Assertions.assertEquals(getPnAttachmentInfos().get(1).getFileKey(), res.getRemovedAttachments().get(0).getFileKey());
+    }
+
+
+    @Test
+    void filterAttachmentsToSend_emptyattachmentstosend() {
+        // GIVEN
+        PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest(StatusDeliveryEnum.IN_PROCESSING);
+
+
+        PnAddress pnAddress = new PnAddress();
+        pnAddress.setCap("30000");
+
+        List<ListFilterChainResult<PnAttachmentInfo>> filterChainResults =new ArrayList<>();
+        ListFilterChainResult<PnAttachmentInfo> filterChainResult = new ListFilterChainResult<PnAttachmentInfo>();
+        filterChainResult.setItem(pnDeliveryRequest.getAttachments().get(0));
+        filterChainResult.setSuccess(false);
+        filterChainResult.setCode("KO");
+        filterChainResult.setDiagnostic("oook");
+        filterChainResults.add(filterChainResult);
+        filterChainResult = new ListFilterChainResult<PnAttachmentInfo>();
+        filterChainResult.setItem(pnDeliveryRequest.getAttachments().get(1));
+        filterChainResult.setSuccess(false);
+        filterChainResult.setCode("KO");
+        filterChainResult.setDiagnostic("oook");
+        filterChainResults.add(filterChainResult);
+
+        List<PnAttachmentsRule> ruleParamsList = new ArrayList<>();
+        PnAttachmentsRule rule = new PnAttachmentsRule();
+        rule.setRuleType(DocumentTagHandler.RULE_TYPE);
+        PnRuleParams pnRuleParams = new PnRuleParams();
+        pnRuleParams.setTypeWithSuccessResult("AAR");
+        rule.setParams(pnRuleParams);
+        ruleParamsList.add(rule);
+        PnAttachmentsConfig pnAttachmentsConfig = new PnAttachmentsConfig();
+        pnAttachmentsConfig.setRules(ruleParamsList);
+
+        Mockito.when(pnAttachmentsConfigDAO.findConfigInInterval(Mockito.any(), Mockito.any())).thenReturn(Mono.just(pnAttachmentsConfig));
+        Mockito.when(paperListChainEngine.filterItems(Mockito.any(), Mockito.anyList(), Mockito.anyList())).thenReturn(Flux.fromIterable(filterChainResults));
+        when(pnPaperChannelConfig.isEnabledocfilterruleengine()).thenReturn(true);
+
+        // WHEN
+        Mono<PnDeliveryRequest> mono = attachmentsConfigService.filterAttachmentsToSend(pnDeliveryRequest, pnDeliveryRequest.getAttachments(), pnAddress);
+        Assertions.assertThrows(PnInvalidChainRuleException.class, mono::block);
     }
 
     private PnDeliveryRequest getDeliveryRequest(StatusDeliveryEnum status){

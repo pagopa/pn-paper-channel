@@ -294,6 +294,8 @@ public class F24ServiceImpl extends GenericService implements F24Service {
                     newAttachment.setFileKey(url);
                     newAttachment.setGeneratedFrom(pnAttachmentInfo.getFileKey()); // url originale f24
                     newAttachment.setDocTag(pnAttachmentInfo.getDocTag());
+                    newAttachment.setFilterResultDiagnostic(pnAttachmentInfo.getFilterResultDiagnostic());
+                    newAttachment.setFilterResultCode(pnAttachmentInfo.getFilterResultCode());
                     attachments.add(newAttachment);
                 });
             }

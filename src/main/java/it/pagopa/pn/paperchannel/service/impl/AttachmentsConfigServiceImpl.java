@@ -4,6 +4,7 @@ import it.pagopa.pn.api.dto.events.PnAttachmentsConfigEventPayload;
 import it.pagopa.pn.commons.rules.model.FilterChainResult;
 import it.pagopa.pn.commons.rules.model.ListFilterChainResult;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
+import it.pagopa.pn.paperchannel.exception.PnInvalidChainRuleException;
 import it.pagopa.pn.paperchannel.mapper.AttachmentsConfigMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PnAttachmentsConfigDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
@@ -78,6 +79,13 @@ public class AttachmentsConfigServiceImpl extends GenericService implements Atta
         {
             log.info("filter has removed some attachments list={} removed={}", pnDeliveryRequest.getAttachments(), pnDeliveryRequest.getRemovedAttachments());
         }
+
+        if (CollectionUtils.isEmpty(pnDeliveryRequest.getAttachments()))
+        {
+            log.error("filter has removed ALL documents, it's a misconfiguration");
+            throw new PnInvalidChainRuleException("filter has removed ALL documents, it's a misconfiguration");
+        }
+
         return pnDeliveryRequest;
     }
 
