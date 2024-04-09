@@ -487,6 +487,13 @@ Resources:
           KeyType: "HASH"
         - AttributeName: "statusBusinessDateTime"
           KeyType: "RANGE"
+      GlobalSecondaryIndexes:
+        - IndexName: "flow-type-index"
+          KeySchema:
+            - AttributeName: "flowType"
+              KeyType: "HASH"
+          Projection:
+            ProjectionType: "ALL"
       KinesisStreamSpecification:
         StreamArn: !Ref CdcKinesisSourceStreamArn
       StreamSpecification:
