@@ -51,7 +51,7 @@ class HandlersFactoryTest {
         List<String> logMessageCases = List.of("UNKNOWN");
         List<String> recag012MessageCases = List.of("RECAG012");
         List<String> recag011bMessageCases = List.of("RECAG011B");
-        List<String> complex890MessageCases = List.of("RECAG005C", "RECAG006C", "RECAG007C");
+        List<String> complex890MessageCases = List.of("RECAG005C", "RECAG006C", "RECAG007C", "RECAG008C");
 
         /* Test method arguments */
         Arguments directlySendMessageCasesArguments = Arguments.of(directlySendMessageCases, DirectlySendMessageHandler.class);

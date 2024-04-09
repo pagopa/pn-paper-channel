@@ -8,9 +8,12 @@ import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.mapper.SendEventMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
+import it.pagopa.pn.paperchannel.middleware.queue.consumer.MetaDematCleaner;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import reactor.core.publisher.Mono;
+
 import java.time.OffsetDateTime;
 import java.util.List;
 
@@ -25,16 +28,19 @@ class Simple890MessageHandlerTest {
 
     private SqsSender mockSqsSender;
     private RequestDeliveryDAO requestDeliveryDAO;
+    private MetaDematCleaner metaDematCleaner;
 
 
     @BeforeEach
     public void init() {
         mockSqsSender = mock(SqsSender.class);
         requestDeliveryDAO = mock(RequestDeliveryDAO.class);
+        metaDematCleaner = mock(MetaDematCleaner.class);
 
         handler = Simple890MessageHandler.builder()
                 .requestDeliveryDAO(requestDeliveryDAO)
                 .sqsSender(mockSqsSender)
+                .metaDematCleaner(metaDematCleaner)
                 .build();
     }
 
@@ -56,6 +62,10 @@ class Simple890MessageHandlerTest {
         entity.setStatusCode(paperProgressStatusEventDto.getStatusCode());
         entity.setStatusDetail(StatusCodeEnum.OK.getValue());
 
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(entity));
+        doNothing().when(mockSqsSender).pushSendEvent(any(SendEvent.class));
+        when(metaDematCleaner.clean(anyString())).thenReturn(Mono.empty());
+
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperProgressStatusEventDto).block());
 
         // expect exactly one call to delivery push sqs queue
@@ -64,6 +74,7 @@ class Simple890MessageHandlerTest {
 
         verify(mockSqsSender, times(1)).pushSendEvent(sendEventExpected);
         verify(requestDeliveryDAO, never()).updateData(entity);
+        verify(metaDematCleaner, times(1)).clean(entity.getRequestId());
     }
 
 
