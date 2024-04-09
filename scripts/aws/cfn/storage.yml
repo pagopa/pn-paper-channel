@@ -482,6 +482,8 @@ Resources:
           AttributeType: "S"
         - AttributeName: "statusBusinessDateTime"
           AttributeType: "S"
+        - AttributeName: "flowType"
+          AttributeType: "S"
       KeySchema:
         - AttributeName: "requestId"
           KeyType: "HASH"
