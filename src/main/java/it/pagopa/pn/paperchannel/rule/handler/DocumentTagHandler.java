@@ -8,6 +8,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnRuleParams;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.apache.logging.log4j.util.Strings;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
@@ -31,6 +32,8 @@ public class DocumentTagHandler extends it.pagopa.pn.commons.rules.ListChainHand
 
         String messagediagPrefix = "Il tag " + item.getDocTag();
 
+        if (Strings.isBlank(item.getDocTag()))
+            return Mono.just(new FilterHandlerResult(FilterHandlerResultEnum.NEXT, "DOC_TAG_ACCEPTED", "Tag non presente viene considerato da inviare"));
         if (typeWithSuccessResult.contains(item.getDocTag()))
             return Mono.just(new FilterHandlerResult(FilterHandlerResultEnum.SUCCESS, "DOC_TAG_REQUIRED", messagediagPrefix + " rientra tra quelli da inviare obbligatoriamente"));
         if (typeWithNextResult.contains(item.getDocTag()))
