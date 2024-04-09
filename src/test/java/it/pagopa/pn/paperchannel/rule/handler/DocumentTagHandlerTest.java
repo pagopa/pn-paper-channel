@@ -35,7 +35,8 @@ class DocumentTagHandlerTest {
             "DOCUMENT, NEXT,DOC_TAG_ACCEPTED",
             "F24, NEXT,DOC_TAG_ACCEPTED",
             "PIPPO, FAIL,DOC_TAG_SKIPPED",
-    })
+            "NULL, NEXT,DOC_TAG_ACCEPTED",
+    }, nullValues = "NULL")
     @ExtendWith(MockitoExtension.class)
     void filter(String docTag, String expectedResult, String expectedResultCode) {
         PnAttachmentInfo pnAttachmentInfo = new PnAttachmentInfo();
