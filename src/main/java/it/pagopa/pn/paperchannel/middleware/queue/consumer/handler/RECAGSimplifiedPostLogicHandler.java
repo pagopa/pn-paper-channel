@@ -12,6 +12,7 @@ import it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum;
 import it.pagopa.pn.paperchannel.utils.PnLogAudit;
 import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import reactor.core.publisher.Mono;
 
 import java.time.ZoneOffset;
@@ -41,43 +42,56 @@ public class RECAGSimplifiedPostLogicHandler extends SendToDeliveryPushHandler {
         String metadataRequestIdFilter = buildMetaRequestId(paperRequest.getRequestId());
         String dematRequestId = buildDematRequestId(paperRequest.getRequestId());
 
-
         return this.checkAllRequiredAttachments(dematRequestId)
                 .flatMap(x -> this.retrieveRECAG012(metadataRequestIdFilter))
-                .flatMap(pnEventMetaRECAG012 -> {
-                    if (!Boolean.TRUE.equals(entity.getRefined()))
-                    {
-                        log.info("[{}] Request isn't refined, proceeding with sending OK status to delivery-push", entity.getRequestId());
-                        PnLogAudit pnLogAudit = new PnLogAudit();
+                .flatMap(pnEventMetaRECAG012 -> prepareDelayedRECAG012AndSendToDeliveryPush(entity, paperRequest, pnEventMetaRECAG012));
+    }
 
-                        // nelle nuova entità PnDeliveryRequest valorizzo solo i campi necessari per SendEvent (evento mandato a delivery-push)
-                        PnDeliveryRequest pnDeliveryRequestPNAG012 = new PnDeliveryRequest();
-                        pnDeliveryRequestPNAG012.setStatusDetail(StatusCodeEnum.OK.getValue()); //evento finale OK
-                        pnDeliveryRequestPNAG012.setStatusCode(pnEventMetaRECAG012.getStatusCode());
-                        pnDeliveryRequestPNAG012.setRequestId(paperRequest.getRequestId());
-                        pnDeliveryRequestPNAG012.setRefined(true);
+    @NotNull
+    private Mono<Void> prepareDelayedRECAG012AndSendToDeliveryPush(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest, PnEventMeta pnEventMetaRECAG012) {
+        if (Boolean.TRUE.equals(entity.getRefined()))
+        {
+            log.info("[{}] Request is already refined, nothing to do", entity.getRequestId());
+            return Mono.empty();
+        }
+        else
+        {
+            log.info("[{}] Request isn't refined, proceeding with sending OK status to delivery-push", entity.getRequestId());
+            PnLogAudit pnLogAudit = new PnLogAudit();
 
+            // nelle nuova entità PnDeliveryRequest valorizzo solo i campi necessari per SendEvent (evento mandato a delivery-push)
+            PnDeliveryRequest pnDeliveryRequestPNAG012 = preparePnDeliveryRequest(paperRequest, pnEventMetaRECAG012);
 
-                        // Costruisco un finto evento da inviare a delivery push
-                        PaperProgressStatusEventDto delayedRECAG012Event = new PaperProgressStatusEventDto();
-                        delayedRECAG012Event.setRequestId(paperRequest.getRequestId());
-                        delayedRECAG012Event.setRegisteredLetterCode(paperRequest.getRegisteredLetterCode());
-                        delayedRECAG012Event.setProductType(paperRequest.getProductType());
-                        delayedRECAG012Event.setIun(paperRequest.getIun());
-                        delayedRECAG012Event.setStatusDescription(PNAG012_STATUS_DESCRIPTION);
-                        delayedRECAG012Event.setStatusDateTime(pnEventMetaRECAG012.getStatusDateTime().atOffset(ZoneOffset.UTC));
-                        delayedRECAG012Event.setStatusCode(pnEventMetaRECAG012.getStatusCode());
+            // Costruisco un finto evento da inviare a delivery push
+            PaperProgressStatusEventDto delayedRECAG012Event = prepareDelayedRECAG012PaperProgressStatusEventDto(paperRequest, pnEventMetaRECAG012);
 
-                        pnLogAudit.addsBeforeReceive(paperRequest.getIun(), String.format("prepare requestId = %s Response from external-channel", paperRequest.getRequestId()));
-                        return sendToDeliveryPush(pnDeliveryRequestPNAG012,delayedRECAG012Event)
-                                .doOnNext(pnEventMetaRECAG012Updated -> logSuccessAuditLog(delayedRECAG012Event, pnDeliveryRequestPNAG012, pnLogAudit));
-                    }
-                    else
-                    {
-                        log.info("[{}] Request is already refined, nothing to do", entity.getRequestId());
-                        return Mono.empty();
-                    }
-                });
+            pnLogAudit.addsBeforeReceive(paperRequest.getIun(), String.format("prepare requestId = %s Response from external-channel", paperRequest.getRequestId()));
+            return sendToDeliveryPush(pnDeliveryRequestPNAG012, delayedRECAG012Event)
+                    .doOnNext(pnEventMetaRECAG012Updated -> logSuccessAuditLog(delayedRECAG012Event, pnDeliveryRequestPNAG012, pnLogAudit));
+        }
+    }
+
+    @NotNull
+    private static PaperProgressStatusEventDto prepareDelayedRECAG012PaperProgressStatusEventDto(PaperProgressStatusEventDto paperRequest, PnEventMeta pnEventMetaRECAG012) {
+        PaperProgressStatusEventDto delayedRECAG012Event = new PaperProgressStatusEventDto();
+        delayedRECAG012Event.setRequestId(paperRequest.getRequestId());
+        delayedRECAG012Event.setRegisteredLetterCode(paperRequest.getRegisteredLetterCode());
+        delayedRECAG012Event.setProductType(paperRequest.getProductType());
+        delayedRECAG012Event.setIun(paperRequest.getIun());
+        delayedRECAG012Event.setStatusDescription(PNAG012_STATUS_DESCRIPTION);
+        delayedRECAG012Event.setStatusDateTime(pnEventMetaRECAG012.getStatusDateTime().atOffset(ZoneOffset.UTC));
+        delayedRECAG012Event.setStatusCode(pnEventMetaRECAG012.getStatusCode());
+        return delayedRECAG012Event;
+    }
+
+    @NotNull
+    private static PnDeliveryRequest preparePnDeliveryRequest(PaperProgressStatusEventDto paperRequest, PnEventMeta pnEventMetaRECAG012) {
+        PnDeliveryRequest pnDeliveryRequestPNAG012 = new PnDeliveryRequest();
+        pnDeliveryRequestPNAG012.setStatusDetail(StatusCodeEnum.OK.getValue()); //evento finale OK
+        pnDeliveryRequestPNAG012.setStatusCode(pnEventMetaRECAG012.getStatusCode());
+        pnDeliveryRequestPNAG012.setRequestId(paperRequest.getRequestId());
+        pnDeliveryRequestPNAG012.setRefined(true);
+        return pnDeliveryRequestPNAG012;
     }
 
     /**
