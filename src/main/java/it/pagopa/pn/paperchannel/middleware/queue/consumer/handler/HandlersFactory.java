@@ -155,10 +155,12 @@ public class HandlersFactory {
         Simple890MessageHandler simple890MessageHandler = Simple890MessageHandler.builder()
                 .sqsSender(sqsSender)
                 .requestDeliveryDAO(requestDeliveryDAO)
+                .metaDematCleaner(metaDematCleaner)
                 .build();
 
         Proxy890MessageHandler proxy890MessageHandler = Proxy890MessageHandler.builder()
                 .pnPaperChannelConfig(pnPaperChannelConfig)
+                .recag008CMessageHandler(recag008CMessageHandler)
                 .complex890MessageHandler(complex890MessageHandler)
                 .simple890MessageHandler(simple890MessageHandler)
                 .pnEventErrorDAO(pnEventErrorDAO)
@@ -180,11 +182,12 @@ public class HandlersFactory {
         map.put("RECAG012", recag012MessageHandler);
         map.put("RECAG011A", recag011AMessageHandler);
         map.put("RECAG011B", recag011BMessageHandler);
-        map.put("RECAG008C", recag008CMessageHandler);
 
         map.put("RECAG005C", proxy890MessageHandler);
         map.put("RECAG006C", proxy890MessageHandler);
         map.put("RECAG007C", proxy890MessageHandler);
+        map.put("RECAG008C", proxy890MessageHandler);
+
         map.put("RECRN011", recrn011cMessageHandler);
 
         map.put("RECRN003C", recrn00xcMessageHandler);
