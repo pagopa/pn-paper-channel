@@ -8,6 +8,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventError;
 import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
 import it.pagopa.pn.paperchannel.model.FlowTypeEnum;
+import it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
@@ -19,7 +20,10 @@ import java.time.Instant;
 @Slf4j
 public class Proxy890MessageHandler implements MessageHandler {
 
+    /* Complex handlers */
     private final Complex890MessageHandler complex890MessageHandler;
+    private final RECAG008CMessageHandler recag008CMessageHandler;
+
     private final Simple890MessageHandler simple890MessageHandler;
     private final PnPaperChannelConfig pnPaperChannelConfig;
     private final PnEventErrorDAO pnEventErrorDAO;
@@ -42,11 +46,29 @@ public class Proxy890MessageHandler implements MessageHandler {
             return simple890MessageHandler.handleMessage(entity,paperRequest);
         }else if(!pnPaperChannelConfig.isEnableSimple890Flow() ||
                 pnPaperChannelConfig.getComplexRefinementCodes().contains(paperRequest.getStatusCode())) {
-            log.info("Proxying message to Complex890MessageHandler");
-            return complex890MessageHandler.handleMessage(entity,paperRequest);
+            return callComplexHandler(entity,paperRequest);
         }else {
             log.info("Writing in PnEventError with flow type {}", flowType);
             return buildAndSavePnEventError(entity, paperRequest, flowType).then();
+        }
+    }
+
+    /**
+     * Route paper progress status management to specific handler based on status code.
+     * In case of RECAG008C old flow must be managed using {@link RECAG008CMessageHandler},
+     * otherwise old flow must be managed using {@link Complex890MessageHandler}
+     *
+     * @param entity        delivery request
+     * @param paperRequest  current progress event
+     * */
+    private Mono<Void> callComplexHandler(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
+
+        if (paperRequest.getStatusCode().equals(ExternalChannelCodeEnum.RECAG008C.name())) {
+            log.info("Proxying message to RECAG008CMessageHandler");
+            return recag008CMessageHandler.handleMessage(entity,paperRequest);
+        } else {
+            log.info("Proxying message to Complex890MessageHandler");
+            return complex890MessageHandler.handleMessage(entity,paperRequest);
         }
     }
 
