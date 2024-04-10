@@ -84,7 +84,7 @@ public class RECAGSimplifiedPostLogicHandler extends SendToDeliveryPushHandler {
         delayedRECAG012Event.setIun(paperRequest.getIun());
         delayedRECAG012Event.setStatusDescription(PNAG012_STATUS_DESCRIPTION);
         delayedRECAG012Event.setStatusDateTime(pnEventMetaRECAG012.getStatusDateTime().atOffset(ZoneOffset.UTC));
-        delayedRECAG012Event.setStatusCode(pnEventMetaRECAG012.getMetaStatusCode());
+        delayedRECAG012Event.setStatusCode(pnEventMetaRECAG012.getStatusCode());
         delayedRECAG012Event.setDeliveryFailureCause(pnEventMetaRECAG012.getDeliveryFailureCause());
         return delayedRECAG012Event;
     }
@@ -110,7 +110,8 @@ public class RECAGSimplifiedPostLogicHandler extends SendToDeliveryPushHandler {
         {
             // ok l'evento è proprio quello che cercavo, non serve nemmeno andare in dynamo
             PnEventMeta pnEventMeta = new PnEventMeta();
-            pnEventMeta.setMetaStatusCode(paperRequest.getStatusCode());
+            pnEventMeta.setMetaStatusCode(buildMetaStatusCode(paperRequest.getStatusCode()));
+            pnEventMeta.setStatusCode(paperRequest.getStatusCode());
             pnEventMeta.setStatusDateTime(paperRequest.getStatusDateTime().toInstant());
 
             return Mono.just(pnEventMeta)
