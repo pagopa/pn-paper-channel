@@ -38,7 +38,7 @@
     "RequiredDemats": "23L",
     "ZipHandleActive": "false",
     "Pnaddr002ContinueFlow": "true",
-    "EnableDocFilterRuleEngine": "false",
+    "EnableDocFilterRuleEngine": "true",
     "DefaultAttachmentConfigCap": "ZIP##DEFAULT"
   }
 }
