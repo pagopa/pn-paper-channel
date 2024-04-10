@@ -109,6 +109,7 @@ public class HandlersFactory {
                 .eventDematDAO(eventDematDAO)
                 .eventMetaDAO(eventMetaDAO)
                 .requestDeliveryDAO(requestDeliveryDAO)
+                .pnPaperChannelConfig(pnPaperChannelConfig)
                 .build();
 
         ChainedMessageHandler recagxxxbMessageHandler = ChainedMessageHandler.builder()
