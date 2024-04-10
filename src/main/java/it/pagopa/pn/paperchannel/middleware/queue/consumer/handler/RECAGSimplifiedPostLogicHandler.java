@@ -40,7 +40,7 @@ public class RECAGSimplifiedPostLogicHandler extends SendToDeliveryPushHandler {
      *
      * @param entity deliveryRequest dell'evento
      * @param paperRequest evento ricevuto da ext-channel
-     * @return
+     * @return empty mono
      */
     @Override
     public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
@@ -63,7 +63,7 @@ public class RECAGSimplifiedPostLogicHandler extends SendToDeliveryPushHandler {
             PnLogAudit pnLogAudit = new PnLogAudit();
 
             // nelle nuova entità PnDeliveryRequest valorizzo solo i campi necessari per SendEvent (evento mandato a delivery-push)
-            PnDeliveryRequest pnDeliveryRequestPNAG012 = preparePnDeliveryRequest(paperRequest, pnEventMetaRECAG012);
+            PnDeliveryRequest pnDeliveryRequestPNAG012 = preparePnDeliveryRequest(entity, paperRequest);
 
             // Costruisco un finto evento da inviare a delivery push
             PaperProgressStatusEventDto delayedRECAG012Event = prepareDelayedRECAG012PaperProgressStatusEventDto(paperRequest, pnEventMetaRECAG012);
@@ -83,15 +83,16 @@ public class RECAGSimplifiedPostLogicHandler extends SendToDeliveryPushHandler {
         delayedRECAG012Event.setIun(paperRequest.getIun());
         delayedRECAG012Event.setStatusDescription(PNAG012_STATUS_DESCRIPTION);
         delayedRECAG012Event.setStatusDateTime(pnEventMetaRECAG012.getStatusDateTime().atOffset(ZoneOffset.UTC));
-        delayedRECAG012Event.setStatusCode(pnEventMetaRECAG012.getStatusCode());
+        delayedRECAG012Event.setStatusCode(pnEventMetaRECAG012.getMetaStatusCode());
+        delayedRECAG012Event.setDeliveryFailureCause(pnEventMetaRECAG012.getDeliveryFailureCause());
         return delayedRECAG012Event;
     }
 
     @NotNull
-    private static PnDeliveryRequest preparePnDeliveryRequest(PaperProgressStatusEventDto paperRequest, PnEventMeta pnEventMetaRECAG012) {
+    private static PnDeliveryRequest preparePnDeliveryRequest(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
         PnDeliveryRequest pnDeliveryRequestPNAG012 = new PnDeliveryRequest();
         pnDeliveryRequestPNAG012.setStatusDetail(StatusCodeEnum.OK.getValue()); //evento finale OK
-        pnDeliveryRequestPNAG012.setStatusCode(pnEventMetaRECAG012.getStatusCode());
+        pnDeliveryRequestPNAG012.setStatusCode(entity.getStatusDetail());
         pnDeliveryRequestPNAG012.setRequestId(paperRequest.getRequestId());
         pnDeliveryRequestPNAG012.setRefined(true);
         return pnDeliveryRequestPNAG012;
