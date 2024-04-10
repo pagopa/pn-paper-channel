@@ -51,6 +51,7 @@ class HandlersFactoryTest {
         List<String> logMessageCases = List.of("UNKNOWN");
         List<String> recag012MessageCases = List.of("RECAG012");
         List<String> recag011bMessageCases = List.of("RECAG011B");
+        List<String> recag007bMessageCases = List.of("RECAG007B");
         List<String> complex890MessageCases = List.of("RECAG005C", "RECAG006C", "RECAG007C");
 
         /* Test method arguments */
@@ -62,7 +63,8 @@ class HandlersFactoryTest {
         Arguments notRetryableMessageCasesArguments = Arguments.of(notRetryableMessageCases, NotRetryableErrorMessageHandler.class);
         Arguments logMessageCasesArguments = Arguments.of(logMessageCases, LogMessageHandler.class);
         Arguments recag012MessageCasesArguments = Arguments.of(recag012MessageCases, RECAG012MessageHandler.class);
-        Arguments recag011bMessageCasesArguments = Arguments.of(recag011bMessageCases, RECAG011BMessageHandler.class);
+        Arguments recag011bMessageCasesArguments = Arguments.of(recag011bMessageCases, ChainedMessageHandler.class);
+        Arguments recag007bMessageCasesArguments = Arguments.of(recag007bMessageCases, ChainedMessageHandler.class);
         Arguments complex890MessageCasesArguments = Arguments.of(complex890MessageCases, Proxy890MessageHandler.class);
 
         return Stream.of(
@@ -75,6 +77,7 @@ class HandlersFactoryTest {
                 logMessageCasesArguments,
                 recag012MessageCasesArguments,
                 recag011bMessageCasesArguments,
+                recag007bMessageCasesArguments,
                 complex890MessageCasesArguments
         );
     }

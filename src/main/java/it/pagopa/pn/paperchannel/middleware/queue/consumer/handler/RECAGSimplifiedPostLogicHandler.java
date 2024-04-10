@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
+import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
@@ -29,7 +30,7 @@ public class RECAGSimplifiedPostLogicHandler extends SendToDeliveryPushHandler {
 
     private final EventMetaDAO eventMetaDAO;
     private final EventDematDAO eventDematDAO;
-    private final Set<String> requiredDemats;
+    private final PnPaperChannelConfig pnPaperChannelConfig;
 
 
     /**
@@ -109,7 +110,7 @@ public class RECAGSimplifiedPostLogicHandler extends SendToDeliveryPushHandler {
         {
             // ok l'evento è proprio quello che cercavo, non serve nemmeno andare in dynamo
             PnEventMeta pnEventMeta = new PnEventMeta();
-            pnEventMeta.setStatusCode(paperRequest.getStatusCode());
+            pnEventMeta.setMetaStatusCode(paperRequest.getStatusCode());
             pnEventMeta.setStatusDateTime(paperRequest.getStatusDateTime().toInstant());
 
             return Mono.just(pnEventMeta)
@@ -133,11 +134,11 @@ public class RECAGSimplifiedPostLogicHandler extends SendToDeliveryPushHandler {
     private Mono<List<PnEventDemat>> checkAllRequiredAttachments(String requestId) {
         String dematRequestId = buildDematRequestId(requestId);
 
-        return eventDematDAO.findAllByKeys(dematRequestId, String.valueOf(requiredDemats.stream().toList())).collectList()
+        return eventDematDAO.findAllByRequestId(dematRequestId).collectList()
                 .doOnNext(pnEventDematsFromDB -> log.debug("Result of findAllByKeys: {}", pnEventDematsFromDB))
                 .filter(pnEventDematsFromDB -> {
                     Set<String> documentTypes = getDocumentTypesFromPnEventDemats(pnEventDematsFromDB);
-                    return documentTypes.containsAll(requiredDemats);
+                    return documentTypes.containsAll(pnPaperChannelConfig.getRequiredDemats());
                 })
                 .doOnDiscard(List.class, o -> log.info("Some required documents not found"))
                 .doOnNext(pnEventDematsFromDB -> log.info("[{}] All required documents found",dematRequestId));
@@ -145,7 +146,7 @@ public class RECAGSimplifiedPostLogicHandler extends SendToDeliveryPushHandler {
     }
 
 
-    protected Mono<Void> sendToDeliveryPush(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
+    private Mono<Void> sendToDeliveryPush(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
         return super.handleMessage(entity, paperRequest);
     }
 
