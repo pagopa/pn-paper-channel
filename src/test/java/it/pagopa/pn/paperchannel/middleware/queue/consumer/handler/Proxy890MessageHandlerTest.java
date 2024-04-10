@@ -194,7 +194,7 @@ class Proxy890MessageHandlerTest {
         verify(simple890MessageHandler,times(0)).handleMessage(entity,paperRequest);
 
         verify(pnEventErrorDAO,times(1)).putItem(argThat(pnEventError -> {
-            assertThat(pnEventError.getRequestId()).isEqualTo(entity.getRequestId());
+            assertThat(pnEventError.getRequestId()).isEqualTo(paperRequest.getRequestId());
             assertThat(pnEventError.getFlowType()).isEqualTo(FlowTypeEnum.COMPLEX_890.name());
 
             return true;
@@ -231,7 +231,7 @@ class Proxy890MessageHandlerTest {
         verify(simple890MessageHandler,times(0)).handleMessage(entity,paperRequest);
 
         verify(pnEventErrorDAO,times(1)).putItem(argThat(pnEventError -> {
-            assertThat(pnEventError.getRequestId()).isEqualTo(entity.getRequestId());
+            assertThat(pnEventError.getRequestId()).isEqualTo(paperRequest.getRequestId());
             assertThat(pnEventError.getFlowType()).isEqualTo(FlowTypeEnum.SIMPLE_890.name());
 
             return true;
@@ -361,7 +361,7 @@ class Proxy890MessageHandlerTest {
         verify(simple890MessageHandler,times(0)).handleMessage(entity,paperRequest);
 
         verify(pnEventErrorDAO,times(1)).putItem(argThat(pnEventError -> {
-            assertThat(pnEventError.getRequestId()).isEqualTo(entity.getRequestId());
+            assertThat(pnEventError.getRequestId()).isEqualTo(paperRequest.getRequestId());
             assertThat(pnEventError.getFlowType()).isEqualTo(FlowTypeEnum.SIMPLE_890.name());
 
             return true;

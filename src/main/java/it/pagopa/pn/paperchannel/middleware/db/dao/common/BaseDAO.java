@@ -109,12 +109,21 @@ public abstract class BaseDAO<T> {
     }
 
     protected CompletableFuture<T> get(String partitionKey, String sortKey){
+        return get(partitionKey, sortKey, false);
+    }
+
+
+    protected CompletableFuture<T> get(String partitionKey, String sortKey, boolean consistentRead){
         Key.Builder keyBuilder = Key.builder().partitionValue(partitionKey);
         if (!StringUtils.isBlank(sortKey)){
             keyBuilder.sortValue(sortKey);
         }
+        GetItemEnhancedRequest getItemEnhancedRequest = GetItemEnhancedRequest.builder()
+                .key(keyBuilder.build())
+                .consistentRead(consistentRead)
+                .build();
 
-        return dynamoTable.getItem(keyBuilder.build()).thenApply(data -> {
+        return dynamoTable.getItem(getItemEnhancedRequest).thenApply(data -> {
             log.logGetDynamoDBEntity(dynamoTable.tableName(), keyBuild(partitionKey, sortKey), data);
             return decode(data);
         });
@@ -146,9 +155,10 @@ public abstract class BaseDAO<T> {
         return dynamoDbAsyncClient.query(qeRequest.build()).thenApply(QueryResponse::count);
     }
 
-    protected Flux<T> getByFilter(QueryConditional conditional, String index, Map<String, AttributeValue> values, String filterExpression, Integer maxElements){
+    protected Flux<T> getByFilter(QueryConditional conditional, String index, Map<String, AttributeValue> values, String filterExpression, Integer maxElements, boolean consistentRead){
         QueryEnhancedRequest.Builder qeRequest = QueryEnhancedRequest
                 .builder()
+                .consistentRead(consistentRead)
                 .queryConditional(conditional);
         if (maxElements != null) {
             qeRequest.limit(maxElements);
@@ -161,6 +171,11 @@ public abstract class BaseDAO<T> {
         }
         return Flux.from(dynamoTable.query(qeRequest.build()).flatMapIterable(Page::items));
     }
+
+    protected Flux<T> getByFilter(QueryConditional conditional, String index, Map<String, AttributeValue> values, String filterExpression, Integer maxElements){
+        return getByFilter(conditional, index, values, filterExpression, maxElements, false);
+    }
+
 
     protected Flux<T> getByFilter(QueryConditional conditional, String index, Map<String, AttributeValue> values, String filterExpression){
         return getByFilter(conditional, index, values, filterExpression, null);
