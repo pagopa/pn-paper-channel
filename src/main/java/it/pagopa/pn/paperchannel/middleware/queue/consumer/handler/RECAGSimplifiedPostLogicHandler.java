@@ -119,7 +119,7 @@ public class RECAGSimplifiedPostLogicHandler extends SendToDeliveryPushHandler {
         else {
             String metadataRequestIdFilter = buildMetaRequestId(requestId);
 
-            return eventMetaDAO.getDeliveryEventMeta(metadataRequestIdFilter, ExternalChannelCodeEnum.RECAG012.name())
+            return eventMetaDAO.getDeliveryEventMeta(metadataRequestIdFilter, ExternalChannelCodeEnum.RECAG012.name(), true)
                     .doOnDiscard(List.class, o -> log.info("RECAG012 filter not found"))
                     .doOnNext(pnEventMetaRECAG012 -> log.info("[{}] RECAG012 found from db event={}", requestId, pnEventMetaRECAG012));
         }
@@ -134,7 +134,7 @@ public class RECAGSimplifiedPostLogicHandler extends SendToDeliveryPushHandler {
     private Mono<List<PnEventDemat>> checkAllRequiredAttachments(String requestId) {
         String dematRequestId = buildDematRequestId(requestId);
 
-        return eventDematDAO.findAllByRequestId(dematRequestId).collectList()
+        return eventDematDAO.findAllByRequestId(dematRequestId, true).collectList()
                 .doOnNext(pnEventDematsFromDB -> log.debug("Result of findAllByKeys: {}", pnEventDematsFromDB))
                 .filter(pnEventDematsFromDB -> {
                     Set<String> documentTypes = getDocumentTypesFromPnEventDemats(pnEventDematsFromDB);

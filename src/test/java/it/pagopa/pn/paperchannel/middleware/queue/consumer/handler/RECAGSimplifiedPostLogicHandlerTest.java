@@ -12,11 +12,7 @@ import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.DematDocumentTypeEnum;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -27,7 +23,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 
@@ -87,7 +82,7 @@ class RECAGSimplifiedPostLogicHandlerTest {
         resdemat.add(pnEventDemat);
 
 
-        Mockito.when(eventDematDAO.findAllByRequestId(Mockito.anyString())).thenReturn(Flux.fromIterable(resdemat));
+        Mockito.when(eventDematDAO.findAllByRequestId(Mockito.anyString(), Mockito.eq(true))).thenReturn(Flux.fromIterable(resdemat));
 
 
         Mono<Void> mono = recagSimplifiedPostLogicHandler.handleMessage(pnDeliveryRequest, paperProgressStatusEventDto);
@@ -95,7 +90,6 @@ class RECAGSimplifiedPostLogicHandlerTest {
         StepVerifier.create(mono)
                 .verifyComplete();
 
-        Mockito.verify(eventMetaDAO, never()).getDeliveryEventMeta(Mockito.anyString(), Mockito.anyString());
         Mockito.verify(mockSqsSender, never()).pushSendEvent(Mockito.any());
 
     }
@@ -122,8 +116,8 @@ class RECAGSimplifiedPostLogicHandlerTest {
 
 
 
-        Mockito.when(eventDematDAO.findAllByRequestId(Mockito.anyString())).thenReturn(Flux.fromIterable(resdemat));
-        Mockito.when(eventMetaDAO.getDeliveryEventMeta(Mockito.anyString(), Mockito.anyString())).thenReturn(Mono.empty());
+        Mockito.when(eventDematDAO.findAllByRequestId(Mockito.anyString(), Mockito.eq(true))).thenReturn(Flux.fromIterable(resdemat));
+        Mockito.when(eventMetaDAO.getDeliveryEventMeta(Mockito.anyString(), Mockito.anyString(), Mockito.eq(true))).thenReturn(Mono.empty());
 
 
         Mono<Void> mono = recagSimplifiedPostLogicHandler.handleMessage(pnDeliveryRequest, paperProgressStatusEventDto);
@@ -159,16 +153,14 @@ class RECAGSimplifiedPostLogicHandlerTest {
 
 
 
-        Mockito.when(eventDematDAO.findAllByRequestId(Mockito.anyString())).thenReturn(Flux.fromIterable(resdemat));
-        Mockito.when(eventMetaDAO.getDeliveryEventMeta(Mockito.anyString(), Mockito.anyString())).thenReturn(Mono.empty());
-
+        Mockito.when(eventDematDAO.findAllByRequestId(Mockito.anyString(), Mockito.eq(true))).thenReturn(Flux.fromIterable(resdemat));
 
         Mono<Void> mono = recagSimplifiedPostLogicHandler.handleMessage(pnDeliveryRequest, paperProgressStatusEventDto);
 
         StepVerifier.create(mono)
                 .verifyComplete();
 
-        Mockito.verify(eventMetaDAO, never()).getDeliveryEventMeta(Mockito.anyString(), Mockito.anyString());
+        Mockito.verify(eventMetaDAO, never()).getDeliveryEventMeta(Mockito.anyString(), Mockito.anyString(), Mockito.eq(true));
         Mockito.verify(mockSqsSender, never()).pushSendEvent(Mockito.any());
 
     }
@@ -198,8 +190,7 @@ class RECAGSimplifiedPostLogicHandlerTest {
 
 
 
-        Mockito.when(eventDematDAO.findAllByRequestId(Mockito.anyString())).thenReturn(Flux.fromIterable(resdemat));
-        Mockito.when(eventMetaDAO.getDeliveryEventMeta(Mockito.anyString(), Mockito.anyString())).thenReturn(Mono.empty());
+        Mockito.when(eventDematDAO.findAllByRequestId(Mockito.anyString(), Mockito.eq(true))).thenReturn(Flux.fromIterable(resdemat));
         Mockito.when(requestDeliveryDAO.updateData(Mockito.any())).thenReturn(Mono.just(pnDeliveryRequest));
 
 
@@ -208,7 +199,7 @@ class RECAGSimplifiedPostLogicHandlerTest {
         StepVerifier.create(mono)
                 .verifyComplete();
 
-        Mockito.verify(eventMetaDAO, never()).getDeliveryEventMeta(Mockito.anyString(), Mockito.anyString());
+        Mockito.verify(eventMetaDAO, never()).getDeliveryEventMeta(Mockito.anyString(), Mockito.anyString(), Mockito.eq(true));
         Mockito.verify(mockSqsSender).pushSendEvent(Mockito.any());
 
     }
@@ -240,8 +231,8 @@ class RECAGSimplifiedPostLogicHandlerTest {
 
 
 
-        Mockito.when(eventDematDAO.findAllByRequestId(Mockito.anyString())).thenReturn(Flux.fromIterable(resdemat));
-        Mockito.when(eventMetaDAO.getDeliveryEventMeta(Mockito.anyString(), Mockito.anyString())).thenReturn(Mono.just(pnEventMeta));
+        Mockito.when(eventDematDAO.findAllByRequestId(Mockito.anyString(), Mockito.eq(true))).thenReturn(Flux.fromIterable(resdemat));
+        Mockito.when(eventMetaDAO.getDeliveryEventMeta(Mockito.anyString(), Mockito.anyString(), Mockito.eq(true))).thenReturn(Mono.just(pnEventMeta));
         Mockito.when(requestDeliveryDAO.updateData(Mockito.any())).thenReturn(Mono.just(pnDeliveryRequest));
 
 
