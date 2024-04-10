@@ -32,18 +32,21 @@ public class RECAGSimplifiedPostLogicHandler extends SendToDeliveryPushHandler {
     private final Set<String> requiredDemats;
 
 
+    /**
+     * Il metodo prevede di inviare VS deliverypush un evento di OK se:
+     * - è arrivato l'evento di RECAG012
+     * - sono presenti tutti gli attachment obbligatori
+     * - la richiesta NON è già stata completata
+     *
+     * @param entity deliveryRequest dell'evento
+     * @param paperRequest evento ricevuto da ext-channel
+     * @return
+     */
     @Override
     public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
 
-        return handleRECAGXXXBPostLogic(entity, paperRequest);
-    }
-
-    public Mono<Void> handleRECAGXXXBPostLogic(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
-        String metadataRequestIdFilter = buildMetaRequestId(paperRequest.getRequestId());
-        String dematRequestId = buildDematRequestId(paperRequest.getRequestId());
-
-        return this.checkAllRequiredAttachments(dematRequestId)
-                .flatMap(x -> this.retrieveRECAG012(metadataRequestIdFilter))
+        return this.checkAllRequiredAttachments(paperRequest.getRequestId())
+                .flatMap(x -> this.retrieveRECAG012(paperRequest.getRequestId(), paperRequest))
                 .flatMap(pnEventMetaRECAG012 -> prepareDelayedRECAG012AndSendToDeliveryPush(entity, paperRequest, pnEventMetaRECAG012));
     }
 
@@ -97,23 +100,37 @@ public class RECAGSimplifiedPostLogicHandler extends SendToDeliveryPushHandler {
     /**
      * This method evaluates whether event RECAG012 already exists and returns it.
      *
-     * @param metadataRequestIdFilter the metas to check
+     * @param requestId the requestId
      * @return PnEventMeta of event PnEventMeta if found
      * */
-    private Mono<PnEventMeta> retrieveRECAG012(String metadataRequestIdFilter) {
+    private Mono<PnEventMeta> retrieveRECAG012(String requestId, PaperProgressStatusEventDto paperRequest) {
+        if (paperRequest.getStatusCode().equals(ExternalChannelCodeEnum.RECAG012.name()))
+        {
+            // ok l'evento è proprio quello che cercavo, non serve nemmeno andare in dynamo
+            PnEventMeta pnEventMeta = new PnEventMeta();
+            pnEventMeta.setStatusCode(paperRequest.getStatusCode());
+            pnEventMeta.setStatusDateTime(paperRequest.getStatusDateTime().toInstant());
 
-        return  eventMetaDAO.getDeliveryEventMeta(metadataRequestIdFilter, ExternalChannelCodeEnum.RECAG012.name())
-                .doOnDiscard(List.class, o -> log.info("RECAG012 filter not found"))
-                .doOnNext(pnEventMetaRECAG012 -> log.info("[{}] RECAG012 found event={}",metadataRequestIdFilter, pnEventMetaRECAG012));
+            return Mono.just(pnEventMeta)
+                    .doOnNext(pnEventMetaRECAG012 -> log.info("[{}] RECAG012 found event={}", requestId, pnEventMetaRECAG012));
+        }
+        else {
+            String metadataRequestIdFilter = buildMetaRequestId(requestId);
+
+            return eventMetaDAO.getDeliveryEventMeta(metadataRequestIdFilter, ExternalChannelCodeEnum.RECAG012.name())
+                    .doOnDiscard(List.class, o -> log.info("RECAG012 filter not found"))
+                    .doOnNext(pnEventMetaRECAG012 -> log.info("[{}] RECAG012 found from db event={}", requestId, pnEventMetaRECAG012));
+        }
     }
 
     /**
      * This method evaluates checking if all required demats are included as subset of pnEventDemats.
      *
-     * @param dematRequestId the demats to check
+     * @param requestId the requestID
      * @return List of all required demats are included, empty otherwise
      */
-    private Mono<List<PnEventDemat>> checkAllRequiredAttachments(String dematRequestId) {
+    private Mono<List<PnEventDemat>> checkAllRequiredAttachments(String requestId) {
+        String dematRequestId = buildDematRequestId(requestId);
 
         return eventDematDAO.findAllByKeys(dematRequestId, String.valueOf(requiredDemats.stream().toList())).collectList()
                 .doOnNext(pnEventDematsFromDB -> log.debug("Result of findAllByKeys: {}", pnEventDematsFromDB))
