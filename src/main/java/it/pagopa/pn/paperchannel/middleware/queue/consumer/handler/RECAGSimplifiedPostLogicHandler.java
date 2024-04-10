@@ -119,7 +119,7 @@ public class RECAGSimplifiedPostLogicHandler extends SendToDeliveryPushHandler {
         else {
             String metadataRequestIdFilter = buildMetaRequestId(requestId);
 
-            return eventMetaDAO.getDeliveryEventMeta(metadataRequestIdFilter, ExternalChannelCodeEnum.RECAG012.name(), true)
+            return eventMetaDAO.getDeliveryEventMeta(metadataRequestIdFilter, buildMetaStatusCode(ExternalChannelCodeEnum.RECAG012.name()), true)
                     .doOnDiscard(List.class, o -> log.info("RECAG012 filter not found"))
                     .doOnNext(pnEventMetaRECAG012 -> log.info("[{}] RECAG012 found from db event={}", requestId, pnEventMetaRECAG012));
         }
