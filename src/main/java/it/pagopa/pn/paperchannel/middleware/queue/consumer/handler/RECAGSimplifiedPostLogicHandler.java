@@ -64,7 +64,7 @@ public class RECAGSimplifiedPostLogicHandler extends SendToDeliveryPushHandler {
             PnLogAudit pnLogAudit = new PnLogAudit();
 
             // nelle nuova entità PnDeliveryRequest valorizzo solo i campi necessari per SendEvent (evento mandato a delivery-push)
-            PnDeliveryRequest pnDeliveryRequestPNAG012 = preparePnDeliveryRequest(entity, paperRequest);
+            PnDeliveryRequest pnDeliveryRequestPNAG012 = preparePnDeliveryRequest(entity);
 
             // Costruisco un finto evento da inviare a delivery push
             PaperProgressStatusEventDto delayedRECAG012Event = prepareDelayedRECAG012PaperProgressStatusEventDto(paperRequest, pnEventMetaRECAG012);
@@ -90,11 +90,11 @@ public class RECAGSimplifiedPostLogicHandler extends SendToDeliveryPushHandler {
     }
 
     @NotNull
-    private static PnDeliveryRequest preparePnDeliveryRequest(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
+    private static PnDeliveryRequest preparePnDeliveryRequest(PnDeliveryRequest entity) {
         PnDeliveryRequest pnDeliveryRequestPNAG012 = new PnDeliveryRequest();
         pnDeliveryRequestPNAG012.setStatusDetail(StatusCodeEnum.OK.getValue()); //evento finale OK
         pnDeliveryRequestPNAG012.setStatusCode(entity.getStatusDetail());
-        pnDeliveryRequestPNAG012.setRequestId(paperRequest.getRequestId());
+        pnDeliveryRequestPNAG012.setRequestId(entity.getRequestId());
         pnDeliveryRequestPNAG012.setRefined(true);
         return pnDeliveryRequestPNAG012;
     }

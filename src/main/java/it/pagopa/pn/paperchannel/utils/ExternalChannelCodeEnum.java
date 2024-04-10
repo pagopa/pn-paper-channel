@@ -86,7 +86,7 @@ public enum ExternalChannelCodeEnum {
 
     //890
     RECAG011B(Constants.PROGRESS),
-    RECAG012(Constants.PROGRESS),
+    RECAG012(Constants.OK),
 
     // "Inesito" events, respectively for 890, RS and AR product types
     RECAG010(Constants.PROGRESS),
