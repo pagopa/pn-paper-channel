@@ -62,7 +62,7 @@ class HandlersFactoryTest {
         Arguments retryableMessageCasesArguments = Arguments.of(retryableMessageCases, RetryableErrorMessageHandler.class);
         Arguments notRetryableMessageCasesArguments = Arguments.of(notRetryableMessageCases, NotRetryableErrorMessageHandler.class);
         Arguments logMessageCasesArguments = Arguments.of(logMessageCases, LogMessageHandler.class);
-        Arguments recag012MessageCasesArguments = Arguments.of(recag012MessageCases, RECAG012MessageHandler.class);
+        Arguments recag012MessageCasesArguments = Arguments.of(recag012MessageCases, ChainedMessageHandler.class);
         Arguments recag011bMessageCasesArguments = Arguments.of(recag011bMessageCases, ChainedMessageHandler.class);
         Arguments recag007bMessageCasesArguments = Arguments.of(recag007bMessageCases, ChainedMessageHandler.class);
         Arguments complex890MessageCasesArguments = Arguments.of(complex890MessageCases, Proxy890MessageHandler.class);

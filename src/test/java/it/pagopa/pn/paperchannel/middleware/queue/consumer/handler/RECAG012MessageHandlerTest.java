@@ -17,7 +17,6 @@ import static org.mockito.Mockito.*;
 
 class RECAG012MessageHandlerTest {
 
-    private PNAG012MessageHandler mockPnag012MessageHandler;
     private SaveMetadataMessageHandler handler;
 
     private EventMetaDAO mockDao;
@@ -27,7 +26,6 @@ class RECAG012MessageHandlerTest {
         long ttlDays = 365;
 
         mockDao = mock(EventMetaDAO.class);
-        mockPnag012MessageHandler = mock(PNAG012MessageHandler.class);
 
         PnPaperChannelConfig mockConfig = new PnPaperChannelConfig();
         mockConfig.setTtlExecutionDaysMeta(ttlDays);
@@ -35,7 +33,6 @@ class RECAG012MessageHandlerTest {
         handler = RECAG012MessageHandler.builder()
                 .eventMetaDAO(mockDao)
                 .pnPaperChannelConfig(mockConfig)
-                .pnag012MessageHandler(mockPnag012MessageHandler)
                 .build();
     }
 
@@ -58,15 +55,11 @@ class RECAG012MessageHandlerTest {
 
         when(mockDao.getDeliveryEventMeta("META##requestId", "META##RECAG012")).thenReturn(Mono.empty());
         when(mockDao.createOrUpdate(pnEventMeta)).thenReturn(Mono.just(pnEventMeta));
-        when(mockPnag012MessageHandler.handleMessage(entity, paperRequest)).thenReturn(Mono.empty());
 
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
 
         //mi aspetto che salvi l'evento
         verify(mockDao, times(1)).createOrUpdate(pnEventMeta);
-
-        //mi aspetto che faccia il flusso PNAG012
-        verify(mockPnag012MessageHandler, times(1)).handleMessage(entity, paperRequest);
 
     }
 
@@ -88,13 +81,10 @@ class RECAG012MessageHandlerTest {
         PnEventMeta pnEventMeta = handler.buildPnEventMeta(paperRequest);
 
         when(mockDao.getDeliveryEventMeta("META##requestId", "META##RECAG012")).thenReturn(Mono.just(pnEventMeta));
-        when(mockPnag012MessageHandler.handleMessage(entity, paperRequest)).thenReturn(Mono.empty());
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
 
         //mi aspetto che non salvi l'evento
         verify(mockDao, never()).createOrUpdate(pnEventMeta);
-        //mi aspetto che faccia lo stesso il flusso PNAG012
-        verify(mockPnag012MessageHandler, times(1)).handleMessage(entity, paperRequest);
 
     }
 
