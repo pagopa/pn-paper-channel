@@ -71,7 +71,7 @@ public class RECAGSimplifiedPostLogicHandler extends SendToDeliveryPushHandler {
 
             pnLogAudit.addsBeforeReceive(paperRequest.getIun(), String.format("prepare requestId = %s Response from external-channel", paperRequest.getRequestId()));
             return sendToDeliveryPush(pnDeliveryRequestPNAG012, delayedRECAG012Event)
-                    .doOnNext(pnEventMetaRECAG012Updated -> logSuccessAuditLog(delayedRECAG012Event, pnDeliveryRequestPNAG012, pnLogAudit));
+                    .doOnSuccess(pnEventMetaRECAG012Updated -> logSuccessAuditLog(delayedRECAG012Event, pnDeliveryRequestPNAG012, pnLogAudit));
         }
     }
 

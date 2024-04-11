@@ -116,11 +116,15 @@ public class HandlersFactory {
                 .handlers(List.of(saveDematMessageHandler, recagSimplifiedPostLogicHandler))
                 .build();
 
-        RECAG012MessageHandler recag012MessageHandler = RECAG012MessageHandler.builder()
+        RECAG012MessageHandler recag012SaveMetaMessageHandler = RECAG012MessageHandler.builder()
                 .eventMetaDAO(eventMetaDAO)
                 .pnPaperChannelConfig(pnPaperChannelConfig)
-                .pnag012MessageHandler(pnag012MessageHandler)
                 .build();
+
+        ChainedMessageHandler recag012MessageHandler = ChainedMessageHandler.builder()
+                .handlers(List.of(recag012SaveMetaMessageHandler, recagSimplifiedPostLogicHandler))
+                .build();
+
 
         RECAG011AMessageHandler recag011AMessageHandler = RECAG011AMessageHandler.builder()
                 .sqsSender(sqsSender)
@@ -185,7 +189,7 @@ public class HandlersFactory {
 
 
         //casi 890
-        map.put("RECAG012", recag012MessageHandler);
+        map.put(ExternalChannelCodeEnum.RECAG012.name(), recag012MessageHandler);
         map.put("RECAG011A", recag011AMessageHandler);
 
         map.put("RECAG005C", proxy890MessageHandler);
