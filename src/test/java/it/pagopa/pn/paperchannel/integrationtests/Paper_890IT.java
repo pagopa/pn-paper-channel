@@ -39,7 +39,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 @Slf4j
-@Disabled
 class Paper_890IT extends BaseTest {
 
     @Autowired
@@ -304,7 +303,6 @@ class Paper_890IT extends BaseTest {
     
 
     @Test
-    @Disabled
     void test_890_deliverStockDossierClose_RECAG005C_TRIS(){
         String iun = UUID.randomUUID().toString();
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
