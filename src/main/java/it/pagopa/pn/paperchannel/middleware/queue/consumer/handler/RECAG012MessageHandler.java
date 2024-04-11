@@ -23,12 +23,12 @@ import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.buildMetaStatusCode
 @SuperBuilder
 public class RECAG012MessageHandler extends SaveMetadataMessageHandler {
 
-
     @Override
     public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
         log.debug("[{}] RECAG012 handler start", paperRequest.getRequestId());
         String partitionKey =  buildMetaRequestId(paperRequest.getRequestId());
         String sortKey = buildMetaStatusCode(paperRequest.getStatusCode());
+
         return super.eventMetaDAO.getDeliveryEventMeta(partitionKey, sortKey)
                 .map(Optional::of)
                 .defaultIfEmpty(Optional.empty())
@@ -47,7 +47,7 @@ public class RECAG012MessageHandler extends SaveMetadataMessageHandler {
      * la prima volta l'evento RECAG012 oppure se l'evento che riceve è già presente in DB, con gli stessi campi valorizzati.
      * Se invece l'evento che riceve è già presente in DB ma con campi valorizzati diversamente, viene lanciata una eccezione.
      */
-    private Mono<PnDeliveryRequest> saveIfNotExistsInDB(Optional<PnEventMeta> optionalPnEventMeta, PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
+    protected Mono<PnDeliveryRequest> saveIfNotExistsInDB(Optional<PnEventMeta> optionalPnEventMeta, PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
         if(optionalPnEventMeta.isPresent()) {
             PnEventMeta pnEventMetaInDB = optionalPnEventMeta.get();
             PnEventMeta pnEventMetaNew = super.buildPnEventMeta(paperRequest);

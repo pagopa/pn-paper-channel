@@ -10,13 +10,14 @@ import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
 import it.pagopa.pn.paperchannel.model.FlowTypeEnum;
 import it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum;
 import lombok.Builder;
+import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
 import javax.annotation.PostConstruct;
 import java.time.Instant;
 
-@Builder
+@SuperBuilder
 @Slf4j
 public class Proxy890MessageHandler implements MessageHandler {
 
@@ -44,13 +45,17 @@ public class Proxy890MessageHandler implements MessageHandler {
         if(Boolean.TRUE.equals(entity.getRefined())){
             log.info("Proxying message to Simple890MessageHandler");
             return simple890MessageHandler.handleMessage(entity,paperRequest);
-        }else if(!pnPaperChannelConfig.isEnableSimple890Flow() ||
-                pnPaperChannelConfig.getComplexRefinementCodes().contains(paperRequest.getStatusCode())) {
+        } else if(Boolean.TRUE.equals(isComplexFlow(paperRequest))) {
             return callComplexHandler(entity,paperRequest);
-        }else {
+        } else {
             log.info("Writing in PnEventError with flow type {}", flowType);
             return buildAndSavePnEventError(paperRequest, flowType).then();
         }
+    }
+
+    protected Boolean isComplexFlow(PaperProgressStatusEventDto paperRequest) {
+        return pnPaperChannelConfig.getComplexRefinementCodes()
+            .contains(paperRequest.getStatusCode());
     }
 
     /**
