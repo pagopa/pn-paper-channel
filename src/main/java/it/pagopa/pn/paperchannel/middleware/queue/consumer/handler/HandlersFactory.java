@@ -116,10 +116,9 @@ public class HandlersFactory {
                 .handlers(List.of(saveDematMessageHandler, recagSimplifiedPostLogicHandler))
                 .build();
 
-        RECAG012MessageHandler recag012MessageHandler = RECAG012MessageHandler.builder()
+        RECAG012MessageHandler recag012SaveMetaMessageHandler = RECAG012MessageHandler.builder()
                 .eventMetaDAO(eventMetaDAO)
                 .pnPaperChannelConfig(pnPaperChannelConfig)
-                .pnag012MessageHandler(pnag012MessageHandler)
                 .build();
 
         ChainedMessageHandler recag012MessageHandler = ChainedMessageHandler.builder()
