@@ -49,7 +49,7 @@ public class Proxy890MessageHandler implements MessageHandler {
             return callComplexHandler(entity,paperRequest);
         }else {
             log.info("Writing in PnEventError with flow type {}", flowType);
-            return buildAndSavePnEventError(entity, paperRequest, flowType).then();
+            return buildAndSavePnEventError(paperRequest, flowType).then();
         }
     }
 
@@ -72,10 +72,10 @@ public class Proxy890MessageHandler implements MessageHandler {
         }
     }
 
-    private Mono<PnEventError> buildAndSavePnEventError(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest, FlowTypeEnum flowType){
+    private Mono<PnEventError> buildAndSavePnEventError(PaperProgressStatusEventDto paperRequest, FlowTypeEnum flowType){
 
         PnEventError pnEventError = new PnEventError();
-        pnEventError.setRequestId(entity.getRequestId());
+        pnEventError.setRequestId(paperRequest.getRequestId());
         pnEventError.setStatusBusinessDateTime(paperRequest.getStatusDateTime().toInstant());
         pnEventError.setStatusCode(paperRequest.getStatusCode());
         pnEventError.setIun(paperRequest.getIun());
