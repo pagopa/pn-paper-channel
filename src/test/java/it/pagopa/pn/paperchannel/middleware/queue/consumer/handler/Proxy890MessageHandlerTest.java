@@ -49,7 +49,7 @@ class Proxy890MessageHandlerTest {
     }
 
     @Test
-    void handleMessageComplex890_noRefined_enableSimpleFalse_containsTrue() {
+    void handleMessageComplex890_noRefined_containsTrue() {
         OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
         String statusCode = "RECAG005C";
 
@@ -64,11 +64,8 @@ class Proxy890MessageHandlerTest {
         entity.setRequestId("requestId");
         entity.setStatusCode("statusDetail");
         entity.setStatusDetail(StatusCodeEnum.OK.getValue());
-        entity.setRefined(false);
-
 
         when(mockComplex890MessageHandler.handleMessage(entity, paperRequest)).thenReturn(Mono.empty());
-        when(pnPaperChannelConfig.isEnableSimple890Flow()).thenReturn(false);
         when(pnPaperChannelConfig.getComplexRefinementCodes()).thenReturn(Set.of(statusCode));
 
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
@@ -79,7 +76,7 @@ class Proxy890MessageHandlerTest {
     }
 
     @Test
-    void handleMessageComplex890_noRefined_enableSimpleFalse_containsFalse() {
+    void handleMessageComplex890_noRefined_containsFalse() {
         OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
         String statusCode = "RECAG005C";
 
@@ -89,54 +86,27 @@ class Proxy890MessageHandlerTest {
                 .statusDateTime(instant)
                 .clientRequestTimeStamp(instant);
 
-
         PnDeliveryRequest entity = new PnDeliveryRequest();
         entity.setRequestId("requestId");
         entity.setStatusCode("statusDetail");
         entity.setStatusDetail(StatusCodeEnum.OK.getValue());
-        entity.setRefined(false);
 
-
-        when(mockComplex890MessageHandler.handleMessage(entity, paperRequest)).thenReturn(Mono.empty());
-        when(pnPaperChannelConfig.isEnableSimple890Flow()).thenReturn(false);
+        when(pnEventErrorDAO.putItem(any())).thenReturn(Mono.empty());
         when(pnPaperChannelConfig.getComplexRefinementCodes()).thenReturn(Set.of("RECAG005A"));
 
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
 
-        verify(mockComplex890MessageHandler, times(1)).handleMessage(entity, paperRequest);
+        verify(mockComplex890MessageHandler, times(0)).handleMessage(entity, paperRequest);
         verify(simple890MessageHandler,times(0)).handleMessage(entity,paperRequest);
 
+        verify(pnEventErrorDAO,times(1)).putItem(argThat(pnEventError -> {
+            assertThat(pnEventError.getRequestId()).isEqualTo(paperRequest.getRequestId());
+            assertThat(pnEventError.getFlowType()).isEqualTo(FlowTypeEnum.COMPLEX_890.name());
+
+            return true;
+        }));
+
     }
-
-    @Test
-    void handleMessageComplex890_noRefined_enableSimpleTrue_containsTrue() {
-        OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
-        String statusCode = "RECAG005C";
-
-        PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
-                .requestId("requestId")
-                .statusCode(statusCode)
-                .statusDateTime(instant)
-                .clientRequestTimeStamp(instant);
-
-
-        PnDeliveryRequest entity = new PnDeliveryRequest();
-        entity.setRequestId("requestId");
-        entity.setStatusCode("statusDetail");
-        entity.setStatusDetail(StatusCodeEnum.OK.getValue());
-        entity.setRefined(false);
-
-
-        when(mockComplex890MessageHandler.handleMessage(entity, paperRequest)).thenReturn(Mono.empty());
-        when(pnPaperChannelConfig.isEnableSimple890Flow()).thenReturn(true);
-        when(pnPaperChannelConfig.getComplexRefinementCodes()).thenReturn(Set.of(statusCode));
-
-        assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
-
-        verify(mockComplex890MessageHandler, times(1)).handleMessage(entity, paperRequest);
-        verify(simple890MessageHandler,times(0)).handleMessage(entity,paperRequest);
-    }
-
 
     @Test
     void handleSimple890_refinedTrue() {
@@ -153,7 +123,6 @@ class Proxy890MessageHandlerTest {
         entity.setStatusDetail(StatusCodeEnum.OK.getValue());
         entity.setRefined(true);
 
-
         when(simple890MessageHandler.handleMessage(entity, paperRequest)).thenReturn(Mono.empty());
         when(mockComplex890MessageHandler.handleMessage(entity, paperRequest)).thenReturn(Mono.empty());
 
@@ -166,7 +135,7 @@ class Proxy890MessageHandlerTest {
 
 
     @Test
-    void handleError_noRefined_enableSimpleTrue_containsFalse() {
+    void handleError_noRefined_containsFalse() {
         OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
         String statusCode = "RECAG005C";
 
@@ -176,7 +145,6 @@ class Proxy890MessageHandlerTest {
                 .statusDateTime(instant)
                 .iun("122324")
                 .clientRequestTimeStamp(instant);
-
 
         PnDeliveryRequest entity = new PnDeliveryRequest();
         entity.setRequestId("requestId");
@@ -202,7 +170,7 @@ class Proxy890MessageHandlerTest {
     }
 
     @Test
-    void handleError_falseRefined_enableSimpleTrue_containsFalse() {
+    void handleError_falseRefined_containsFalse() {
         OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
         String statusCode = "RECAG005C";
 
@@ -212,7 +180,6 @@ class Proxy890MessageHandlerTest {
             .statusDateTime(instant)
             .iun("122324")
             .clientRequestTimeStamp(instant);
-
 
         PnDeliveryRequest entity = new PnDeliveryRequest();
         entity.setRequestId("requestId");
@@ -239,7 +206,7 @@ class Proxy890MessageHandlerTest {
     }
 
     @Test
-    void handleMessageRecag008C_noRefined_enableSimpleFalse_containsTrue() {
+    void handleMessageRecag008C_noRefined_containsTrue() {
         OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
         String statusCode = "RECAG008C";
 
@@ -249,16 +216,12 @@ class Proxy890MessageHandlerTest {
             .statusDateTime(instant)
             .clientRequestTimeStamp(instant);
 
-
         PnDeliveryRequest entity = new PnDeliveryRequest();
         entity.setRequestId("requestId");
         entity.setStatusCode("statusDetail");
         entity.setStatusDetail(StatusCodeEnum.OK.getValue());
-        entity.setRefined(false);
-
 
         when(mockRECAG008CMessageHandler.handleMessage(entity, paperRequest)).thenReturn(Mono.empty());
-        when(pnPaperChannelConfig.isEnableSimple890Flow()).thenReturn(false);
         when(pnPaperChannelConfig.getComplexRefinementCodes()).thenReturn(Set.of(statusCode));
 
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
@@ -270,7 +233,7 @@ class Proxy890MessageHandlerTest {
     }
 
     @Test
-    void handleMessageRecag008C_noRefined_enableSimpleFalse_containsFalse() {
+    void handleMessageRecag008C_noRefined_containsFalse() {
         OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
         String statusCode = "RECAG008C";
 
@@ -280,58 +243,31 @@ class Proxy890MessageHandlerTest {
             .statusDateTime(instant)
             .clientRequestTimeStamp(instant);
 
-
         PnDeliveryRequest entity = new PnDeliveryRequest();
         entity.setRequestId("requestId");
         entity.setStatusCode("statusDetail");
         entity.setStatusDetail(StatusCodeEnum.OK.getValue());
-        entity.setRefined(false);
 
-
-        when(mockRECAG008CMessageHandler.handleMessage(entity, paperRequest)).thenReturn(Mono.empty());
-        when(pnPaperChannelConfig.isEnableSimple890Flow()).thenReturn(false);
+        when(pnEventErrorDAO.putItem(any())).thenReturn(Mono.empty());
         when(pnPaperChannelConfig.getComplexRefinementCodes()).thenReturn(Set.of("RECAG005C"));
 
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
 
-        verify(mockRECAG008CMessageHandler, times(1)).handleMessage(entity, paperRequest);
+        verify(mockRECAG008CMessageHandler, times(0)).handleMessage(entity, paperRequest);
+        verify(mockComplex890MessageHandler, times(0)).handleMessage(entity, paperRequest);
         verify(simple890MessageHandler,times(0)).handleMessage(entity,paperRequest);
-        verify(mockComplex890MessageHandler,times(0)).handleMessage(entity,paperRequest);
+
+        verify(pnEventErrorDAO,times(1)).putItem(argThat(pnEventError -> {
+            assertThat(pnEventError.getRequestId()).isEqualTo(paperRequest.getRequestId());
+            assertThat(pnEventError.getFlowType()).isEqualTo(FlowTypeEnum.COMPLEX_890.name());
+
+            return true;
+        }));
 
     }
 
     @Test
-    void handleMessageRecag008C_noRefined_enableSimpleTrue_containsTrue() {
-        OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
-        String statusCode = "RECAG008C";
-
-        PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
-            .requestId("requestId")
-            .statusCode(statusCode)
-            .statusDateTime(instant)
-            .clientRequestTimeStamp(instant);
-
-
-        PnDeliveryRequest entity = new PnDeliveryRequest();
-        entity.setRequestId("requestId");
-        entity.setStatusCode("statusDetail");
-        entity.setStatusDetail(StatusCodeEnum.OK.getValue());
-        entity.setRefined(false);
-
-
-        when(mockRECAG008CMessageHandler.handleMessage(entity, paperRequest)).thenReturn(Mono.empty());
-        when(pnPaperChannelConfig.isEnableSimple890Flow()).thenReturn(true);
-        when(pnPaperChannelConfig.getComplexRefinementCodes()).thenReturn(Set.of(statusCode));
-
-        assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
-
-        verify(mockRECAG008CMessageHandler, times(1)).handleMessage(entity, paperRequest);
-        verify(simple890MessageHandler,times(0)).handleMessage(entity,paperRequest);
-        verify(mockComplex890MessageHandler,times(0)).handleMessage(entity,paperRequest);
-    }
-
-    @Test
-    void handleErrorRecag008C_falseRefined_enableSimpleTrue_containsFalse() {
+    void handleErrorRecag008C_falseRefined_containsFalse() {
         OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
         String statusCode = "RECAG008C";
 
@@ -350,8 +286,6 @@ class Proxy890MessageHandlerTest {
         entity.setRefined(false);
 
         when(pnEventErrorDAO.putItem(any())).thenReturn(Mono.empty());
-
-        when(pnPaperChannelConfig.isEnableSimple890Flow()).thenReturn(true);
         when(pnPaperChannelConfig.getComplexRefinementCodes()).thenReturn(Set.of("RECAG005B"));
 
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
