@@ -81,6 +81,7 @@ public abstract class SendToDeliveryPushHandler implements MessageHandler {
                         .doOnNext(sqsSender::pushSingleStatusUpdateEvent)
                         .doOnNext(singleStatusUpdateDto -> log.debug("[{}] PnEventErrors sent SingleStatusUpdateDto={}", pnDeliveryRequest.getRequestId(), singleStatusUpdateDto))
                         .doOnError(ex -> log.error("[{}] PnEventErrors FAILED redrive", pnDeliveryRequest.getRequestId(), ex))  // viene volutamente trappata l'eccezione per evitare di far fallire il processing per colpa del redrive, che è un plus.
+                        .onErrorResume(ex -> Mono.empty())
                         .then();
 
             }
