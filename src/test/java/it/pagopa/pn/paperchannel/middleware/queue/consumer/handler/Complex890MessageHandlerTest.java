@@ -25,6 +25,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.buildMetaRequestId;
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.buildMetaStatusCode;
@@ -52,6 +53,7 @@ class Complex890MessageHandlerTest {
 
         PnPaperChannelConfig mockConfig = new PnPaperChannelConfig();
         mockConfig.setRefinementDuration(Duration.of(DAYS_REFINEMENT, ChronoUnit.DAYS));
+        mockConfig.setAllowedRedriveProgressStatusCodes(new ArrayList<>());
 
         when(metaDematCleaner.clean(anyString())).thenReturn(Mono.empty());
 

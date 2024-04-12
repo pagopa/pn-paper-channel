@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
+import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
@@ -23,6 +24,7 @@ import reactor.core.publisher.Mono;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -46,6 +48,9 @@ class CustomAggregatorMessageHandlerTest {
         mockDematDao = mock(EventDematDAO.class);
         requestDeliveryDAO = mock(RequestDeliveryDAO.class);
 
+        PnPaperChannelConfig pnPaperChannelConfig = mock(PnPaperChannelConfig.class);
+        Mockito.when(pnPaperChannelConfig.getAllowedRedriveProgressStatusCodes()).thenReturn(List.of());
+
         MetaDematCleaner metaDematCleaner = new MetaDematCleaner(mockDematDao, mockMetaDao);
 
         handler = CustomAggregatorMessageHandler.builder()
@@ -53,6 +58,7 @@ class CustomAggregatorMessageHandlerTest {
                 .eventMetaDAO(mockMetaDao)
                 .metaDematCleaner(metaDematCleaner)
                 .requestDeliveryDAO(requestDeliveryDAO)
+                .pnPaperChannelConfig(pnPaperChannelConfig)
                 .build();
     }
 
