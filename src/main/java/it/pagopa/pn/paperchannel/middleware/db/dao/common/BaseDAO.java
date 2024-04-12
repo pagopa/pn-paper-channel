@@ -16,6 +16,7 @@ import software.amazon.awssdk.enhanced.dynamodb.model.*;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
@@ -235,6 +236,22 @@ public abstract class BaseDAO<T> {
         for (String sortKey : sortKeys) {
             Key key = Key.builder().partitionValue(partitionKey).sortValue(sortKey).build();
             builder.addDeleteItem(key);
+        }
+
+        CompletableFuture<BatchWriteResult> batchWriteResultCompletableFuture = dynamoDbEnhancedAsyncClient.batchWriteItem(BatchWriteItemEnhancedRequest.builder()
+                .addWriteBatch(builder.build())
+                .build());
+
+
+        return Mono.fromFuture(batchWriteResultCompletableFuture).then();
+    }
+
+    protected Mono<Void> putBatch(List<T> entities) {
+        WriteBatch.Builder<T> builder = WriteBatch.builder(tClass)
+                .mappedTableResource(this.dynamoTable);
+
+        for (T entity : entities) {
+            builder.addPutItem(entity);
         }
 
         CompletableFuture<BatchWriteResult> batchWriteResultCompletableFuture = dynamoDbEnhancedAsyncClient.batchWriteItem(BatchWriteItemEnhancedRequest.builder()

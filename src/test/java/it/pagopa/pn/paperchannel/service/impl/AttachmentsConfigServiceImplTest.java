@@ -76,14 +76,14 @@ class AttachmentsConfigServiceImplTest {
 
         var pnAttachmentsConfigs = AttachmentsConfigMapper.toPnAttachmentsConfig(configKey, configType, List.of(itemOne, itemTwo), "default##zip");
 
-        when(pnAttachmentsConfigDAO.putItemInTransaction(pk, pnAttachmentsConfigs))
+        when(pnAttachmentsConfigDAO.refreshConfig(pk, pnAttachmentsConfigs))
                 .thenReturn(Mono.empty());
         when(pnPaperChannelConfig.getDefaultattachmentconfigcap()).thenReturn("default##zip");
 
         StepVerifier.create(attachmentsConfigService.refreshConfig(payload))
                 .verifyComplete();
 
-        verify(pnAttachmentsConfigDAO).putItemInTransaction(pk, pnAttachmentsConfigs);
+        verify(pnAttachmentsConfigDAO).refreshConfig(pk, pnAttachmentsConfigs);
 
     }
 
@@ -111,7 +111,7 @@ class AttachmentsConfigServiceImplTest {
 
         var pnAttachmentsConfigs = AttachmentsConfigMapper.toPnAttachmentsConfig(configKey, configType, List.of(itemOne, itemTwo), "default##zip");
 
-        when(pnAttachmentsConfigDAO.putItemInTransaction(pk, pnAttachmentsConfigs))
+        when(pnAttachmentsConfigDAO.refreshConfig(pk, pnAttachmentsConfigs))
                 .thenReturn(Mono.error(new RuntimeException("Error DB")));
         when(pnPaperChannelConfig.getDefaultattachmentconfigcap()).thenReturn("default##zip");
 
@@ -119,7 +119,7 @@ class AttachmentsConfigServiceImplTest {
                 .expectError(RuntimeException.class)
                 .verify();
 
-        verify(pnAttachmentsConfigDAO).putItemInTransaction(pk, pnAttachmentsConfigs);
+        verify(pnAttachmentsConfigDAO).refreshConfig(pk, pnAttachmentsConfigs);
 
     }
 
