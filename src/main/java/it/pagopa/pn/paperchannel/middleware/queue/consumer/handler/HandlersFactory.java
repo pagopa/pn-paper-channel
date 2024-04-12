@@ -7,6 +7,7 @@ import it.pagopa.pn.paperchannel.middleware.queue.consumer.MetaDematCleaner;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -14,8 +15,14 @@ import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum.*;
+
+/**
+ * TODO Refactor this class using Abstract Factory pattern dividing factories per business family (e.g. 890, AR)
+ * */
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class HandlersFactory {
 
     private final ExternalChannelClient externalChannelClient;
@@ -116,7 +123,16 @@ public class HandlersFactory {
                 .handlers(List.of(saveDematMessageHandler, recagSimplifiedPostLogicHandler))
                 .build();
 
-        RECAG012MessageHandler recag012MessageHandler = RECAG012MessageHandler.builder()
+        RECAG012MessageHandler recag012SaveMetaMessageHandler = RECAG012MessageHandler.builder()
+                .eventMetaDAO(eventMetaDAO)
+                .pnPaperChannelConfig(pnPaperChannelConfig)
+                .build();
+
+        ChainedMessageHandler recag012MessageHandler = ChainedMessageHandler.builder()
+                .handlers(List.of(recag012SaveMetaMessageHandler, recagSimplifiedPostLogicHandler))
+                .build();
+
+        OldRECAG012MessageHandler oldRECAG012MessageHandler = OldRECAG012MessageHandler.builder()
                 .eventMetaDAO(eventMetaDAO)
                 .pnPaperChannelConfig(pnPaperChannelConfig)
                 .pnag012MessageHandler(pnag012MessageHandler)
@@ -126,6 +142,13 @@ public class HandlersFactory {
                 .sqsSender(sqsSender)
                 .eventMetaDAO(eventMetaDAO)
                 .pnPaperChannelConfig(pnPaperChannelConfig)
+                .build();
+
+        RECAG011BMessageHandler recag011BMessageHandler = RECAG011BMessageHandler.builder()
+                .sqsSender(sqsSender)
+                .eventDematDAO(eventDematDAO)
+                .pnPaperChannelConfig(pnPaperChannelConfig)
+                .pnag012MessageHandler(pnag012MessageHandler)
                 .build();
 
         RECAG008CMessageHandler recag008CMessageHandler = RECAG008CMessageHandler.builder()
@@ -183,22 +206,50 @@ public class HandlersFactory {
         addDirectlySendStatusCodes(map, directlySendMessageHandler);
         addCustomAggregatorStatusCodes(map, customAggregatorMessageHandler);
 
-
         //casi 890
-        map.put("RECAG012", recag012MessageHandler);
         map.put("RECAG011A", recag011AMessageHandler);
 
-        map.put("RECAG005C", proxy890MessageHandler);
-        map.put("RECAG006C", proxy890MessageHandler);
-        map.put("RECAG007C", proxy890MessageHandler);
-        map.put("RECAG008C", proxy890MessageHandler);
+        map.put(RECAG012.name(), recag012MessageHandler);
 
-        map.put("RECRN011", recrn011cMessageHandler);
+        map.put(RECAG005C.name(), proxy890MessageHandler);
+        map.put(RECAG006C.name(), proxy890MessageHandler);
+        map.put(RECAG007C.name(), proxy890MessageHandler);
+        map.put(RECAG008C.name(), proxy890MessageHandler);
 
-        map.put("RECRN003C", recrn00xcMessageHandler);
-        map.put("RECRN004C", recrn00xcMessageHandler);
-        map.put("RECRN005C", recrn00xcMessageHandler);
-        map.put("PNAG012", pnag012MessageHandler);
+        map.put(RECRN011.name(), recrn011cMessageHandler);
+
+        map.put(RECRN003C.name(), recrn00xcMessageHandler);
+        map.put(RECRN004C.name(), recrn00xcMessageHandler);
+        map.put(RECRN005C.name(), recrn00xcMessageHandler);
+        map.put(PNAG012.name(), pnag012MessageHandler);
+
+        /* Override mapping handlers before simple 890 (PN-10501) - Remove when feature flag will be not necessary */
+        if (!pnPaperChannelConfig.isEnableSimple890Flow()) {
+
+            log.info("Using old 890 handlers because feature flag is disabled");
+
+            /* TODO use abstract factory to reduce comple-simple build complexity */
+            proxy890MessageHandler = ComplexProxy890MessageHandler.builder()
+                .pnPaperChannelConfig(pnPaperChannelConfig)
+                .recag008CMessageHandler(recag008CMessageHandler)
+                .complex890MessageHandler(complex890MessageHandler)
+                .simple890MessageHandler(simple890MessageHandler)
+                .pnEventErrorDAO(pnEventErrorDAO)
+                .build();
+
+            map.put(RECAG012.name(), oldRECAG012MessageHandler);
+
+            map.put(RECAG005B.name(), saveDematMessageHandler);
+            map.put(RECAG006B.name(), saveDematMessageHandler);
+            map.put(RECAG007B.name(), saveDematMessageHandler);
+            map.put(RECAG008B.name(), saveDematMessageHandler);
+            map.put(RECAG011B.name(), recag011BMessageHandler);
+
+            map.put(RECAG005C.name(), proxy890MessageHandler);
+            map.put(RECAG006C.name(), proxy890MessageHandler);
+            map.put(RECAG007C.name(), proxy890MessageHandler);
+            map.put(RECAG008C.name(), proxy890MessageHandler);
+        }
     }
 
     private void addRetryableErrorStatusCodes(ConcurrentHashMap<String, MessageHandler> map, RetryableErrorMessageHandler handler) {

@@ -39,7 +39,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 @Slf4j
-@Disabled
 class Paper_890IT extends BaseTest {
 
     @Autowired
@@ -250,8 +249,8 @@ class Paper_890IT extends BaseTest {
     void test_890_deliverStockDossierClose_RECAG005C(){
         StackWalker walker = StackWalker.getInstance();
         String methodName = walker.walk(frames -> frames
-                .findFirst()
-                .map(StackWalker.StackFrame::getMethodName)).orElse("");
+            .findFirst()
+            .map(StackWalker.StackFrame::getMethodName)).orElse("");
         String iun = UUID.randomUUID().toString();
         generateEvent("RECAG011A","","",null,"", Instant.parse("2023-03-05T17:07:00.000Z"), iun);
         generateEvent("RECAG011B","","", List.of("ARCAD"),"", null, iun);
@@ -301,7 +300,7 @@ class Paper_890IT extends BaseTest {
         assertEquals(StatusCodeEnum.PROGRESS, caturedSendEvent.getValue().getStatusCode());
 
     }
-    
+
 
     @Test
     @Disabled
@@ -333,8 +332,8 @@ class Paper_890IT extends BaseTest {
     void test_890_deliverStockDossierClose_RECAG006C_no11B(){
         StackWalker walker = StackWalker.getInstance();
         String methodName = walker.walk(frames -> frames
-                .findFirst()
-                .map(StackWalker.StackFrame::getMethodName)).orElseGet(() -> "");
+            .findFirst()
+            .map(StackWalker.StackFrame::getMethodName)).orElseGet(() -> "");
 
         String iun = UUID.randomUUID().toString();
         generateEvent("RECAG011A","","",null,"", Instant.parse("2023-03-05T17:07:00.000Z"), iun);
@@ -354,8 +353,8 @@ class Paper_890IT extends BaseTest {
     void test_890_deliverStockDossierClose_RECAG006C_no11B_After10Days(){
         StackWalker walker = StackWalker.getInstance();
         String methodName = walker.walk(frames -> frames
-                .findFirst()
-                .map(StackWalker.StackFrame::getMethodName)).orElseGet(() -> "");
+            .findFirst()
+            .map(StackWalker.StackFrame::getMethodName)).orElseGet(() -> "");
 
         String iun = UUID.randomUUID().toString();
         generateEvent("RECAG011A","","",null,"", Instant.parse("2023-03-05T17:07:00.000Z"), iun);
@@ -378,8 +377,8 @@ class Paper_890IT extends BaseTest {
     void test_890_deliverStockDossierClose_RECAG006C(){
         StackWalker walker = StackWalker.getInstance();
         String methodName = walker.walk(frames -> frames
-                .findFirst()
-                .map(StackWalker.StackFrame::getMethodName)).orElse("");
+            .findFirst()
+            .map(StackWalker.StackFrame::getMethodName)).orElse("");
         String iun = UUID.randomUUID().toString();
         generateEvent("RECAG011A","","",null,"", Instant.parse("2023-03-05T17:07:00.000Z"), iun);
         generateEvent("RECAG011B","","", List.of("ARCAD"),"", null, iun);
@@ -853,8 +852,8 @@ class Paper_890IT extends BaseTest {
     void test_890_deliverStockDossierClose_RECAG011B_RECAG005C(){
         StackWalker walker = StackWalker.getInstance();
         String methodName = walker.walk(frames -> frames
-                .findFirst()
-                .map(StackWalker.StackFrame::getMethodName)).orElse("");
+            .findFirst()
+            .map(StackWalker.StackFrame::getMethodName)).orElse("");
 
         String iun = UUID.randomUUID().toString();
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
@@ -875,8 +874,8 @@ class Paper_890IT extends BaseTest {
     void test_890_deliverStockDossierClose_RECAG011B_RECAG006C(){
         StackWalker walker = StackWalker.getInstance();
         String methodName = walker.walk(frames -> frames
-                .findFirst()
-                .map(StackWalker.StackFrame::getMethodName)).orElse("");
+            .findFirst()
+            .map(StackWalker.StackFrame::getMethodName)).orElse("");
         String iun = UUID.randomUUID().toString();
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
@@ -897,8 +896,8 @@ class Paper_890IT extends BaseTest {
     void test_890_refusedDossierClose_RECAG011B_RECAG007C(){
         StackWalker walker = StackWalker.getInstance();
         String methodName = walker.walk(frames -> frames
-                .findFirst()
-                .map(StackWalker.StackFrame::getMethodName)).orElse("");
+            .findFirst()
+            .map(StackWalker.StackFrame::getMethodName)).orElse("");
         String iun = UUID.randomUUID().toString();
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
@@ -936,10 +935,10 @@ class Paper_890IT extends BaseTest {
             List<AttachmentDetailsDto> attachments = new LinkedList<>();
             for(String elem: attach){
                 attachments.add(
-                        new AttachmentDetailsDto()
-                                .documentType(elem)
-                                .date(OffsetDateTime.now())
-                                .uri("https://safestorage.it"));
+                    new AttachmentDetailsDto()
+                        .documentType(elem)
+                        .date(OffsetDateTime.now())
+                        .uri("https://safestorage.it"));
             }
             analogMail.setAttachments(attachments);
         }
@@ -949,8 +948,8 @@ class Paper_890IT extends BaseTest {
             address.setAddress(discoveredAddress);
 
             DiscoveredAddressDto discoveredAddressDto =
-                    new BaseMapperImpl<>(PnDiscoveredAddress.class, DiscoveredAddressDto.class)
-                            .toDTO(address);
+                new BaseMapperImpl<>(PnDiscoveredAddress.class, DiscoveredAddressDto.class)
+                    .toDTO(address);
 
             analogMail.setDiscoveredAddress(discoveredAddressDto);
         }
@@ -973,7 +972,7 @@ class Paper_890IT extends BaseTest {
 
         afterSetForUpdate.setStatusDetail(ExternalChannelCodeEnum.getStatusCode(extChannelMessage.getAnalogMail().getStatusCode()));
         afterSetForUpdate.setStatusDescription(extChannelMessage.getAnalogMail().getProductType()
-                .concat(" - ").concat(extChannelMessage.getAnalogMail().getStatusCode()).concat(" - ").concat(extChannelMessage.getAnalogMail().getStatusDescription()));
+            .concat(" - ").concat(extChannelMessage.getAnalogMail().getStatusCode()).concat(" - ").concat(extChannelMessage.getAnalogMail().getStatusDescription()));
         afterSetForUpdate.setStatusDate(DateUtils.formatDate(extChannelMessage.getAnalogMail().getStatusDateTime().toInstant()));
 
         afterSetForUpdate.setStatusCode(extChannelMessage.getAnalogMail().getStatusCode());
