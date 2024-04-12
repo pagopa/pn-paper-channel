@@ -33,7 +33,7 @@ import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 
 @Slf4j
-public class BasePaperStock890IT extends BaseTest {
+public abstract class BasePaperStock890IT extends BaseTest {
 
     private static final String IUN = "NEQP-YAZD-XNGK-202312-L-1";
     private static final String REQUEST_ID = "PREPARE_ANALOG_DOMICILE.IUN_" + IUN + ".RECINDEX_0.SENTATTEMPTMADE_1";
