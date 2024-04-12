@@ -67,6 +67,7 @@ public class PnPaperChannelConfig {
     private boolean enableSimple890Flow;
     private boolean enabledocfilterruleengine;
     private String defaultattachmentconfigcap;
+    private List<String> allowedRedriveProgressStatusCodes;
 
     /**
      * Per l'errore PNADDR001 flusso NR: True se il failureDetailCode D01 deve essere mandato a delivery push (specificando anche l'indirizzo),
