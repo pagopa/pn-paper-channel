@@ -10,12 +10,11 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
-import software.amazon.awssdk.enhanced.dynamodb.model.Page;
-import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
-import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
+import software.amazon.awssdk.enhanced.dynamodb.model.*;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
+import java.lang.reflect.Array;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
@@ -80,6 +79,15 @@ public class PnAttachmentsConfigDAOImpl extends BaseDAO<PnAttachmentsConfig> imp
                     return Mono.fromFuture(dynamoDbEnhancedAsyncClient.transactWriteItems(builder.build()));
                 }))
                 .doOnError(throwable -> log.error("Error in putItemInTransaction with key: {}", configKey, throwable));
+    }
+
+    public Mono<Void> refreshConfig(String configKey, List<PnAttachmentsConfig> pnAttachmentsConfigs) {
+        return this.findAllByConfigKey(configKey)
+                .map(configToRemove -> configToRemove.getStartValidity().toString())
+                .collectList()
+                .doOnNext(sortKeysToRemove -> log.debug("Remove config with pk: {}, sk: {}", configKey, sortKeysToRemove))
+                .flatMap(sortKeysToRemove -> super.deleteBatch(configKey, sortKeysToRemove.toArray(new String[]{})))
+                .then(super.putBatch(pnAttachmentsConfigs));
     }
 
     /**
