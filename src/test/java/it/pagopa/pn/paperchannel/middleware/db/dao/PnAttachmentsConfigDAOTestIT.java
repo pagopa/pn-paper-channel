@@ -4,7 +4,6 @@ import it.pagopa.pn.paperchannel.config.BaseTest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentsConfig;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentsRule;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnRuleParams;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -122,7 +121,6 @@ class PnAttachmentsConfigDAOTestIT extends BaseTest {
 
     }
 
-    @Disabled //TODO capire perché da solo funziona ma con altri test fallisce
     @Test
     void refreshConfigWithSameRecordsInPutAndDeleteTest() {
         String geoKey = String.valueOf(random.nextInt(1000));
@@ -145,6 +143,25 @@ class PnAttachmentsConfigDAOTestIT extends BaseTest {
         result = pnAttachmentsConfigDAO.findAllByConfigKey(geoKey).collectList().block();
 
         assertThat(result).hasSize(2).isEqualTo(List.of(pnAttachmentsConfigNew, pnAttachmentsConfigNewTwo));
+
+    }
+
+    @Test
+    void refreshConfigWithNewRecordTest() {
+        String geoKey = String.valueOf(random.nextInt(1000));
+
+
+        List<PnAttachmentsConfig> result = pnAttachmentsConfigDAO.findAllByConfigKey(geoKey).collectList().block();
+
+        assertThat(result).isEmpty();
+
+        var pnAttachmentsConfigNew = buildPnAttachmentsConfig(geoKey, "2024-01-01T00:00:00.000Z", "2024-01-11T23:59:59.000Z");
+
+        pnAttachmentsConfigDAO.refreshConfig(geoKey, List.of(pnAttachmentsConfigNew)).block();
+
+        result = pnAttachmentsConfigDAO.findAllByConfigKey(geoKey).collectList().block();
+
+        assertThat(result).hasSize(1).isEqualTo(List.of(pnAttachmentsConfigNew));
 
     }
 
