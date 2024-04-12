@@ -96,6 +96,10 @@ public class QueueListener {
             this.handleSendZipEvent(internalEventHeader, node);
         }
 
+        else if (internalEventHeader.getEventType().equals(EventTypeEnum.REDRIVE_PAPER_PROGRESS_STATUS.name())) {
+            this.handleRedrivePaperProgressStatus(internalEventHeader, node);
+        }
+
     }
 
     @SqsListener(value = "${pn.paper-channel.queue-national-registries}", deletionPolicy = SqsMessageDeletionPolicy.ALWAYS)
@@ -302,6 +306,11 @@ public class QueueListener {
         this.queueListenerService.dematZipInternalListener(request, internalEventHeader.getAttempt());
     }
 
+    private void handleRedrivePaperProgressStatus(InternalEventHeader internalEventHeader, String node) {
+        log.info("Push redrive paper progress status queue - first time");
+        var request = convertToObject(node, SingleStatusUpdateDto.class);
+        this.queueListenerService.externalChannelListener(request, internalEventHeader.getAttempt());
+    }
 
     private InternalEventHeader toInternalEventHeader(Map<String, Object> headers){
         if (headers.containsKey(PN_EVENT_HEADER_EVENT_TYPE) &&
