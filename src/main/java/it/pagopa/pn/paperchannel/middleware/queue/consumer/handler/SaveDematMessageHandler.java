@@ -1,6 +1,5 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
-import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.PnDematNotValidException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.AttachmentDetailsDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
@@ -36,7 +35,6 @@ public class SaveDematMessageHandler extends SendToDeliveryPushHandler {
     );
 
     protected final EventDematDAO eventDematDAO;
-    protected final PnPaperChannelConfig pnPaperChannelConfig;
 
     @Override
     public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {

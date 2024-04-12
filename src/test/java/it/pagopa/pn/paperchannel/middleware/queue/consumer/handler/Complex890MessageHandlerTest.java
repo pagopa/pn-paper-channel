@@ -7,6 +7,7 @@ import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.mapper.SendEventMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.PnEventErrorDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
@@ -48,6 +49,7 @@ class Complex890MessageHandlerTest {
         sqsSender = mock(SqsSender.class);
         eventMetaDAO = mock(EventMetaDAO.class);
         requestDeliveryDAO = mock(RequestDeliveryDAO.class);
+        PnEventErrorDAO pneventDAO = mock(PnEventErrorDAO.class);
 
         MetaDematCleaner metaDematCleaner = mock(MetaDematCleaner.class);
 
@@ -63,6 +65,7 @@ class Complex890MessageHandlerTest {
                 .requestDeliveryDAO(requestDeliveryDAO)
                 .metaDematCleaner(metaDematCleaner)
                 .pnPaperChannelConfig(mockConfig)
+                .pnEventErrorDAO(pneventDAO)
                 .build();
     }
 

@@ -1,6 +1,5 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
-import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.mapper.SendEventMapper;
@@ -62,7 +61,6 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
 
     private final EventMetaDAO eventMetaDAO;
     private final MetaDematCleaner metaDematCleaner;
-    private final PnPaperChannelConfig pnPaperChannelConfig;
 
     @PostConstruct
     private void postConstruct() {

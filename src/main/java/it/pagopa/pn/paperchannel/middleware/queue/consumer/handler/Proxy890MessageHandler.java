@@ -9,7 +9,6 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventError;
 import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
 import it.pagopa.pn.paperchannel.model.FlowTypeEnum;
 import it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum;
-import lombok.Builder;
 import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;

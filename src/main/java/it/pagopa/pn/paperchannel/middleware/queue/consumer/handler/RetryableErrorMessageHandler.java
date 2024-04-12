@@ -1,7 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
 import it.pagopa.pn.commons.utils.MDCUtils;
-import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendRequest;
 import it.pagopa.pn.paperchannel.mapper.AttachmentMapper;
@@ -35,7 +34,6 @@ public class RetryableErrorMessageHandler extends SendToDeliveryPushHandler {
     private final ExternalChannelClient externalChannelClient;
     private final AddressDAO addressDAO;
     private final PaperRequestErrorDAO paperRequestErrorDAO;
-    private final PnPaperChannelConfig pnPaperChannelConfig;
 
     @Override
     public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {

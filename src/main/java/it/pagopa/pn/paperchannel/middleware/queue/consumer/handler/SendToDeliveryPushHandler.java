@@ -30,8 +30,8 @@ public abstract class SendToDeliveryPushHandler implements MessageHandler {
 
     protected final SqsSender sqsSender;
     protected final RequestDeliveryDAO requestDeliveryDAO;
-    private final PnPaperChannelConfig pnPaperChannelConfig;
-    private final PnEventErrorDAO pnEventErrorDAO;
+    protected final PnPaperChannelConfig pnPaperChannelConfig;
+    protected final PnEventErrorDAO pnEventErrorDAO;
 
     @Override
     public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
