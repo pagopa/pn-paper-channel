@@ -63,6 +63,7 @@ public class HandlersFactory {
                 .eventDematDAO(eventDematDAO)
                 .requestDeliveryDAO(requestDeliveryDAO)
                 .pnPaperChannelConfig(pnPaperChannelConfig)
+                .pnEventErrorDAO(pnEventErrorDAO)
                 .build();
 
         RetryableErrorMessageHandler retryableErrorExtChannelsMessageHandler = RetryableErrorMessageHandler.builder()
@@ -72,12 +73,15 @@ public class HandlersFactory {
                 .paperRequestErrorDAO(paperRequestErrorDAO)
                 .requestDeliveryDAO(requestDeliveryDAO)
                 .pnPaperChannelConfig(pnPaperChannelConfig)
+                .pnEventErrorDAO(pnEventErrorDAO)
                 .build();
 
         NotRetryableErrorMessageHandler notRetryableErrorMessageHandler = NotRetryableErrorMessageHandler.builder()
                 .sqsSender(sqsSender)
                 .paperRequestErrorDAO(paperRequestErrorDAO)
                 .requestDeliveryDAO(requestDeliveryDAO)
+                .pnPaperChannelConfig(pnPaperChannelConfig)
+                .pnEventErrorDAO(pnEventErrorDAO)
                 .build();
 
         NotRetriableWithoutSendErrorMessageHandler notRetriableWithoutSendErrorMessageHandler = NotRetriableWithoutSendErrorMessageHandler.builder()
@@ -89,6 +93,8 @@ public class HandlersFactory {
                 .eventMetaDAO(eventMetaDAO)
                 .metaDematCleaner(metaDematCleaner)
                 .requestDeliveryDAO(requestDeliveryDAO)
+                .pnPaperChannelConfig(pnPaperChannelConfig)
+                .pnEventErrorDAO(pnEventErrorDAO)
                 .build();
 
         AggregatorMessageHandler aggregatorMessageHandler = AggregatorMessageHandler.builder()
@@ -96,11 +102,15 @@ public class HandlersFactory {
                 .eventMetaDAO(eventMetaDAO)
                 .metaDematCleaner(metaDematCleaner)
                 .requestDeliveryDAO(requestDeliveryDAO)
+                .pnPaperChannelConfig(pnPaperChannelConfig)
+                .pnEventErrorDAO(pnEventErrorDAO)
                 .build();
 
         DirectlySendMessageHandler directlySendMessageHandler = DirectlySendMessageHandler.builder()
                 .sqsSender(sqsSender)
                 .requestDeliveryDAO(requestDeliveryDAO)
+                .pnPaperChannelConfig(pnPaperChannelConfig)
+                .pnEventErrorDAO(pnEventErrorDAO)
                 .build();
 
         PNAG012MessageHandler pnag012MessageHandler = PNAG012MessageHandler.builder()
@@ -109,6 +119,7 @@ public class HandlersFactory {
                 .eventMetaDAO(eventMetaDAO)
                 .requestDeliveryDAO(requestDeliveryDAO)
                 .pnPaperChannelConfig(pnPaperChannelConfig)
+                .pnEventErrorDAO(pnEventErrorDAO)
                 .build();
 
         RECAGSimplifiedPostLogicHandler recagSimplifiedPostLogicHandler = RECAGSimplifiedPostLogicHandler.builder()
@@ -117,6 +128,7 @@ public class HandlersFactory {
                 .eventMetaDAO(eventMetaDAO)
                 .requestDeliveryDAO(requestDeliveryDAO)
                 .pnPaperChannelConfig(pnPaperChannelConfig)
+                .pnEventErrorDAO(pnEventErrorDAO)
                 .build();
 
         ChainedMessageHandler recagxxxbMessageHandler = ChainedMessageHandler.builder()
@@ -149,6 +161,8 @@ public class HandlersFactory {
                 .eventDematDAO(eventDematDAO)
                 .pnPaperChannelConfig(pnPaperChannelConfig)
                 .pnag012MessageHandler(pnag012MessageHandler)
+                .pnPaperChannelConfig(pnPaperChannelConfig)
+                .pnEventErrorDAO(pnEventErrorDAO)
                 .build();
 
         RECAG008CMessageHandler recag008CMessageHandler = RECAG008CMessageHandler.builder()
@@ -156,6 +170,8 @@ public class HandlersFactory {
                 .eventMetaDAO(eventMetaDAO)
                 .requestDeliveryDAO(requestDeliveryDAO)
                 .metaDematCleaner(metaDematCleaner)
+                .pnPaperChannelConfig(pnPaperChannelConfig)
+                .pnEventErrorDAO(pnEventErrorDAO)
                 .build();
 
         Complex890MessageHandler complex890MessageHandler = Complex890MessageHandler.builder()
@@ -164,6 +180,7 @@ public class HandlersFactory {
                 .requestDeliveryDAO(requestDeliveryDAO)
                 .metaDematCleaner(metaDematCleaner)
                 .pnPaperChannelConfig(pnPaperChannelConfig)
+                .pnEventErrorDAO(pnEventErrorDAO)
                 .build();
 
         RECRN00XCMessageHandler recrn00xcMessageHandler = RECRN00XCMessageHandler.builder()
@@ -172,6 +189,7 @@ public class HandlersFactory {
                 .requestDeliveryDAO(requestDeliveryDAO)
                 .metaDematCleaner(metaDematCleaner)
                 .pnPaperChannelConfig(pnPaperChannelConfig)
+                .pnEventErrorDAO(pnEventErrorDAO)
                 .build();
 
         RECRN011MessageHandler recrn011cMessageHandler = RECRN011MessageHandler.builder()
@@ -184,6 +202,8 @@ public class HandlersFactory {
                 .sqsSender(sqsSender)
                 .requestDeliveryDAO(requestDeliveryDAO)
                 .metaDematCleaner(metaDematCleaner)
+                .pnPaperChannelConfig(pnPaperChannelConfig)
+                .pnEventErrorDAO(pnEventErrorDAO)
                 .build();
 
         Proxy890MessageHandler proxy890MessageHandler = Proxy890MessageHandler.builder()
@@ -191,6 +211,7 @@ public class HandlersFactory {
                 .recag008CMessageHandler(recag008CMessageHandler)
                 .complex890MessageHandler(complex890MessageHandler)
                 .simple890MessageHandler(simple890MessageHandler)
+                .pnEventErrorDAO(pnEventErrorDAO)
                 .pnEventErrorDAO(pnEventErrorDAO)
                 .build();
 
