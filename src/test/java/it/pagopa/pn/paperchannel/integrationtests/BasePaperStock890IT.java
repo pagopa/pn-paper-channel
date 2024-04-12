@@ -19,7 +19,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -33,7 +35,7 @@ import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 
 @Slf4j
-public class BasePaperStock890IT extends BaseTest {
+public abstract class BasePaperStock890IT extends BaseTest {
 
     private static final String IUN = "NEQP-YAZD-XNGK-202312-L-1";
     private static final String REQUEST_ID = "PREPARE_ANALOG_DOMICILE.IUN_" + IUN + ".RECINDEX_0.SENTATTEMPTMADE_1";
