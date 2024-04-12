@@ -2,11 +2,9 @@ package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
-import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PrepareEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.mapper.SendEventMapper;
-import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PnEventErrorDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.*;
@@ -15,14 +13,12 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -42,7 +38,7 @@ class SendToDeliveryPushHandlerTest {
     private PnPaperChannelConfig pnPaperChannelConfig;
 
     @BeforeEach
-    private void init(){
+    public void init(){
 
         eventErrorDAO = Mockito.mock(PnEventErrorDAO.class);
 
@@ -70,6 +66,7 @@ class SendToDeliveryPushHandlerTest {
         entity.setStatusDetail(StatusCodeEnum.PROGRESS.getValue());
 
         PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto();
+        paperRequest.setRequestId(entity.getRequestId());
         paperRequest.setStatusCode("some");
         paperRequest.setStatusDateTime(Instant.now().atOffset(ZoneOffset.UTC));
 
@@ -84,6 +81,7 @@ class SendToDeliveryPushHandlerTest {
 
         // not call because it is a PROGRESS event
         verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
+        verify(eventErrorDAO, never()).deleteItem(Mockito.anyString(), Mockito.any(Instant.class));
     }
 
     @Test
@@ -94,28 +92,27 @@ class SendToDeliveryPushHandlerTest {
         entity.setStatusDetail(StatusCodeEnum.OK.getValue());
 
         PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto();
+        paperRequest.setRequestId(entity.getRequestId());
         paperRequest.setStatusCode("someok");
         paperRequest.setStatusDateTime(Instant.now().atOffset(ZoneOffset.UTC));
-
 
         Mockito.when(requestDeliveryDAO.updateData(Mockito.any())).thenReturn(Mono.just(entity));
 
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
         SendEvent sendEventExpected = SendEventMapper.createSendEventMessage(entity, paperRequest);
 
-
         //mi aspetto che mandi il messaggio a delivery-push
         verify(mockSqsSender, times(1)).pushSendEvent(sendEventExpected);
         verify(mockSqsSender, never()).pushSingleStatusUpdateEvent(Mockito.any());
         verify(eventErrorDAO, never()).findEventErrorsByRequestId(Mockito.anyString());
 
-        // not call because it is a PROGRESS event
         ArgumentCaptor<PnDeliveryRequest> argumentCaptor = ArgumentCaptor.forClass(PnDeliveryRequest.class);
         verify(requestDeliveryDAO, times(1)).updateData(argumentCaptor.capture());
 
+        verify(eventErrorDAO, never()).deleteItem(Mockito.anyString(), Mockito.any(Instant.class));
+
         Assertions.assertTrue(argumentCaptor.getValue().getRefined());
     }
-
 
     @Test
     void handleMessage_ok_witherrorcodes_noerrortosend() {
@@ -125,6 +122,7 @@ class SendToDeliveryPushHandlerTest {
         entity.setStatusDetail(StatusCodeEnum.OK.getValue());
 
         PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto();
+        paperRequest.setRequestId(entity.getRequestId());
         paperRequest.setStatusCode("someok");
         paperRequest.setStatusDateTime(Instant.now().atOffset(ZoneOffset.UTC));
 
@@ -135,12 +133,11 @@ class SendToDeliveryPushHandlerTest {
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
         SendEvent sendEventExpected = SendEventMapper.createSendEventMessage(entity, paperRequest);
 
-
         //mi aspetto che mandi il messaggio a delivery-push
         verify(mockSqsSender, times(1)).pushSendEvent(sendEventExpected);
         verify(mockSqsSender, never()).pushSingleStatusUpdateEvent(Mockito.any());
+        verify(eventErrorDAO, never()).deleteItem(Mockito.anyString(), Mockito.any(Instant.class));
 
-        // not call because it is a PROGRESS event
         verify(requestDeliveryDAO, times(1)).updateData(any(PnDeliveryRequest.class));
     }
 
@@ -153,6 +150,7 @@ class SendToDeliveryPushHandlerTest {
         entity.setStatusDetail(StatusCodeEnum.OK.getValue());
 
         PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto();
+        paperRequest.setRequestId(entity.getRequestId());
         paperRequest.setStatusCode("someok");
         paperRequest.setStatusDateTime(Instant.now().atOffset(ZoneOffset.UTC));
 
@@ -163,9 +161,11 @@ class SendToDeliveryPushHandlerTest {
         paperProgressStatusEventOriginalMessageInfo.setStatusDateTime(Instant.now());
         paperProgressStatusEventOriginalMessageInfo.setClientRequestTimeStamp(Instant.now());
         paperProgressStatusEventOriginalMessageInfo.setStatusDescription("Some description");
+
+        error.setRequestId(paperRequest.getRequestId());
+        error.setStatusBusinessDateTime(Instant.now());
         error.setOriginalMessageInfo(paperProgressStatusEventOriginalMessageInfo);
         error.setStatusCode(paperProgressStatusEventOriginalMessageInfo.getStatusCode());
-
 
         Mockito.when(requestDeliveryDAO.updateData(Mockito.any())).thenReturn(Mono.just(entity));
         Mockito.when(pnPaperChannelConfig.getAllowedRedriveProgressStatusCodes()).thenReturn(List.of("SOME1"));
@@ -174,13 +174,13 @@ class SendToDeliveryPushHandlerTest {
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
         SendEvent sendEventExpected = SendEventMapper.createSendEventMessage(entity, paperRequest);
 
-
         //mi aspetto che mandi il messaggio a delivery-push
         verify(mockSqsSender, times(1)).pushSendEvent(sendEventExpected);
         verify(mockSqsSender, times(1)).pushSingleStatusUpdateEvent(Mockito.any());
+        verify(eventErrorDAO, times(1)).deleteItem(Mockito.anyString(), Mockito.any(Instant.class));
 
-        // not call because it is a PROGRESS event
         verify(requestDeliveryDAO, times(1)).updateData(any(PnDeliveryRequest.class));
+        verify(eventErrorDAO, times(1)).deleteItem(anyString(), any(Instant.class));
     }
 
 
@@ -192,6 +192,7 @@ class SendToDeliveryPushHandlerTest {
         entity.setStatusDetail(StatusCodeEnum.OK.getValue());
 
         PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto();
+        paperRequest.setRequestId(entity.getRequestId());
         paperRequest.setStatusCode("someok");
         paperRequest.setStatusDateTime(Instant.now().atOffset(ZoneOffset.UTC));
 
@@ -202,9 +203,11 @@ class SendToDeliveryPushHandlerTest {
         paperProgressStatusEventOriginalMessageInfo.setStatusDateTime(Instant.now());
         paperProgressStatusEventOriginalMessageInfo.setClientRequestTimeStamp(Instant.now());
         paperProgressStatusEventOriginalMessageInfo.setStatusDescription("Some description");
+
+        error.setRequestId(paperRequest.getRequestId());
+        error.setStatusBusinessDateTime(Instant.now());
         error.setOriginalMessageInfo(paperProgressStatusEventOriginalMessageInfo);
         error.setStatusCode(paperProgressStatusEventOriginalMessageInfo.getStatusCode());
-
 
         Mockito.when(requestDeliveryDAO.updateData(Mockito.any())).thenReturn(Mono.just(entity));
         Mockito.when(pnPaperChannelConfig.getAllowedRedriveProgressStatusCodes()).thenReturn(List.of("SOME2"));
@@ -213,15 +216,13 @@ class SendToDeliveryPushHandlerTest {
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
         SendEvent sendEventExpected = SendEventMapper.createSendEventMessage(entity, paperRequest);
 
-
         //mi aspetto che mandi il messaggio a delivery-push
         verify(mockSqsSender, times(1)).pushSendEvent(sendEventExpected);
         verify(mockSqsSender, times(0)).pushSingleStatusUpdateEvent(Mockito.any());
 
-        // not call because it is a PROGRESS event
         verify(requestDeliveryDAO, times(1)).updateData(any(PnDeliveryRequest.class));
+        verify(eventErrorDAO, never()).deleteItem(anyString(), any(Instant.class));
     }
-
 
     @Test
     void handleMessage_ok_witherrorcodes_1nottosend_badclass() {
@@ -231,14 +232,17 @@ class SendToDeliveryPushHandlerTest {
         entity.setStatusDetail(StatusCodeEnum.OK.getValue());
 
         PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto();
+        paperRequest.setRequestId(entity.getRequestId());
         paperRequest.setStatusCode("someok");
         paperRequest.setStatusDateTime(Instant.now().atOffset(ZoneOffset.UTC));
 
         PnEventError error = new PnEventError();
         OriginalMessageInfo paperProgressStatusEventOriginalMessageInfo = new OriginalMessageInfo();
         paperProgressStatusEventOriginalMessageInfo.setEventType("EVENT");
-        error.setStatusCode("SOME1");
 
+        error.setRequestId(paperRequest.getRequestId());
+        error.setStatusBusinessDateTime(Instant.now());
+        error.setStatusCode("SOME1");
 
         Mockito.when(requestDeliveryDAO.updateData(Mockito.any())).thenReturn(Mono.just(entity));
         Mockito.when(pnPaperChannelConfig.getAllowedRedriveProgressStatusCodes()).thenReturn(List.of("SOME1"));
@@ -247,12 +251,11 @@ class SendToDeliveryPushHandlerTest {
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
         SendEvent sendEventExpected = SendEventMapper.createSendEventMessage(entity, paperRequest);
 
-
         //mi aspetto che mandi il messaggio a delivery-push
         verify(mockSqsSender, times(1)).pushSendEvent(sendEventExpected);
         verify(mockSqsSender, times(0)).pushSingleStatusUpdateEvent(Mockito.any());
 
-        // not call because it is a PROGRESS event
         verify(requestDeliveryDAO, times(1)).updateData(any(PnDeliveryRequest.class));
+        verify(eventErrorDAO, never()).deleteItem(anyString(), any(Instant.class));
     }
 }
