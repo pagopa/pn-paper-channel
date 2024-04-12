@@ -6,6 +6,7 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.common.BaseDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentsConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
@@ -14,7 +15,6 @@ import software.amazon.awssdk.enhanced.dynamodb.model.*;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
-import java.lang.reflect.Array;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
@@ -86,8 +86,16 @@ public class PnAttachmentsConfigDAOImpl extends BaseDAO<PnAttachmentsConfig> imp
                 .map(configToRemove -> configToRemove.getStartValidity().toString())
                 .collectList()
                 .doOnNext(sortKeysToRemove -> log.debug("Remove config with pk: {}, sk: {}", configKey, sortKeysToRemove))
-                .flatMap(sortKeysToRemove -> super.deleteBatch(configKey, sortKeysToRemove.toArray(new String[]{})))
-                .then(super.putBatch(pnAttachmentsConfigs));
+                .flatMap(sortKeysToRemove -> {
+                    if(CollectionUtils.isEmpty(sortKeysToRemove)) {
+                        return Mono.empty();
+                    }
+                    return super.deleteBatch(configKey, sortKeysToRemove.toArray(new String[]{}));
+                })
+                .then(Mono.defer(() -> {
+                    log.debug("Add configs: {}", pnAttachmentsConfigs);
+                    return super.putBatch(pnAttachmentsConfigs);
+                }));
     }
 
     /**
