@@ -1,6 +1,5 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
-import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
@@ -30,8 +29,6 @@ public class RECAGSimplifiedPostLogicHandler extends SendToDeliveryPushHandler {
 
     private final EventMetaDAO eventMetaDAO;
     private final EventDematDAO eventDematDAO;
-    private final PnPaperChannelConfig pnPaperChannelConfig;
-
 
     /**
      * Il metodo prevede di inviare VS deliverypush un evento di OK se:

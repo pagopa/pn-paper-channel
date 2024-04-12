@@ -2,6 +2,7 @@ package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.api.dto.events.GenericEventHeader;
 import it.pagopa.pn.commons.utils.LogUtils;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PaperChannelUpdate;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PrepareEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
@@ -82,6 +83,22 @@ public class SqsQueueSender implements SqsSender {
                 .build();
 
         InternalPushEvent<DematInternalEvent> internalPushEvent = new InternalPushEvent<>(prepareHeader, dematZipInternalEvent);
+        this.internalQueueMomProducer.push(internalPushEvent);
+    }
+
+    @Override
+    public void pushSingleStatusUpdateEvent(SingleStatusUpdateDto singleStatusUpdateDto) {
+        InternalEventHeader prepareHeader= InternalEventHeader.builder()
+            .publisher(PUBLISHER_PREPARE)
+            .eventId(UUID.randomUUID().toString())
+            .createdAt(Instant.now())
+            .eventType(EventTypeEnum.REDRIVE_PAPER_PROGRESS_STATUS.name())
+            .clientId("")
+            .attempt(0)
+            .expired(Instant.now())
+            .build();
+
+        InternalPushEvent<SingleStatusUpdateDto> internalPushEvent = new InternalPushEvent<>(prepareHeader, singleStatusUpdateDto);
         this.internalQueueMomProducer.push(internalPushEvent);
     }
 
