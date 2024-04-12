@@ -93,26 +93,8 @@ class PaperComplexStock890IT extends BaseTest {
         generateEvent(RECAG005B, null);
         generateEvent(RECAG005C, null);
 
-        ArgumentCaptor<SendEvent> capturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
-
-        PnDeliveryRequest deliveryRequest = requestDeliveryDAO.getByRequestId(REQUEST_ID).block();
-
         // Then
-
-        /* Expected 3 events to delivery push */
-        verify(sqsSender, timeout(2000).times(3)).pushSendEvent(capturedSendEvent.capture());
-
-        /* Verify all events are sent with right status code */
-        capturedSendEvent.getAllValues().forEach(sendEvent -> {
-            StatusCodeEnum expectedStatusCode = assertionLookupTable.get(sendEvent.getStatusDetail());
-            assertEquals(expectedStatusCode, sendEvent.getStatusCode());
-        });
-
-        /* Delivery request expected to be refined */
-        assertNotNull(deliveryRequest);
-        assertEquals(true, deliveryRequest.getRefined());
-
-        log.info("Event: \n"+capturedSendEvent.getAllValues());
+        checkFlowCorrectness(assertionLookupTable, Boolean.TRUE);
     }
 
     @Test
@@ -131,29 +113,11 @@ class PaperComplexStock890IT extends BaseTest {
         generateEvent(RECAG005A, null);
         generateEvent(RECAG005B, null);
         
-        // Expect exception because RECAG011A and PNAG012 do not exist
+        // Expect exception because RECAG011A
         generateEvent(RECAG005C, PnGenericException.class);
 
-        ArgumentCaptor<SendEvent> capturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
-
-        PnDeliveryRequest deliveryRequest = requestDeliveryDAO.getByRequestId(REQUEST_ID).block();
-
         // Then
-
-        /* Expected 1 event to delivery push */
-        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(capturedSendEvent.capture());
-
-        /* Verify all events are sent with right status code */
-        capturedSendEvent.getAllValues().forEach(sendEvent -> {
-            StatusCodeEnum expectedStatusCode = assertionLookupTable.get(sendEvent.getStatusDetail());
-            assertEquals(expectedStatusCode, sendEvent.getStatusCode());
-        });
-
-        /* Delivery request expected to be refined */
-        assertNotNull(deliveryRequest);
-        assertEquals(false, deliveryRequest.getRefined());
-
-        log.info("Event: \n"+capturedSendEvent.getAllValues());
+        checkFlowCorrectness(assertionLookupTable, Boolean.FALSE);
     }
 
     @Test
@@ -179,26 +143,8 @@ class PaperComplexStock890IT extends BaseTest {
         generateEvent(RECAG005B, null);
         generateEvent(RECAG005C, null);
 
-        ArgumentCaptor<SendEvent> capturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
-
-        PnDeliveryRequest deliveryRequest = requestDeliveryDAO.getByRequestId(REQUEST_ID).block();
-
         // Then
-
-        /* Expected 3 events to delivery push */
-        verify(sqsSender, timeout(2000).times(3)).pushSendEvent(capturedSendEvent.capture());
-
-        /* Verify all events are sent with right status code */
-        capturedSendEvent.getAllValues().forEach(sendEvent -> {
-            StatusCodeEnum expectedStatusCode = assertionLookupTable.get(sendEvent.getStatusDetail());
-            assertEquals(expectedStatusCode, sendEvent.getStatusCode());
-        });
-
-        /* Delivery request expected to be refined */
-        assertNotNull(deliveryRequest);
-        assertEquals(true, deliveryRequest.getRefined());
-
-        log.info("Event: \n"+capturedSendEvent.getAllValues());
+        checkFlowCorrectness(assertionLookupTable, Boolean.TRUE);
     }
 
     @Test
@@ -227,26 +173,8 @@ class PaperComplexStock890IT extends BaseTest {
         generateEvent(RECAG005B, null);
         generateEvent(RECAG005C, null);
 
-        ArgumentCaptor<SendEvent> capturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
-
-        PnDeliveryRequest deliveryRequest = requestDeliveryDAO.getByRequestId(REQUEST_ID).block();
-
         // Then
-
-        /* Expected 4 events to delivery push */
-        verify(sqsSender, timeout(2000).times(4)).pushSendEvent(capturedSendEvent.capture());
-
-        /* Verify all events are sent with right status code */
-        capturedSendEvent.getAllValues().forEach(sendEvent -> {
-            StatusCodeEnum expectedStatusCode = assertionLookupTable.get(sendEvent.getStatusDetail());
-            assertEquals(expectedStatusCode, sendEvent.getStatusCode());
-        });
-
-        /* Delivery request expected to be refined */
-        assertNotNull(deliveryRequest);
-        assertEquals(true, deliveryRequest.getRefined());
-
-        log.info("Event: \n"+capturedSendEvent.getAllValues());
+        checkFlowCorrectness(assertionLookupTable, Boolean.TRUE);
     }
 
 
@@ -268,28 +196,12 @@ class PaperComplexStock890IT extends BaseTest {
         generateEvent(RECAG012, null);
         generateEvent(RECAG005A, null);
         generateEvent(RECAG005B, null);
+
+        // Expect exception because RECAG011A
         generateEvent(RECAG005C, PnGenericException.class);
 
-        ArgumentCaptor<SendEvent> capturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
-
-        PnDeliveryRequest deliveryRequest = requestDeliveryDAO.getByRequestId(REQUEST_ID).block();
-
         // Then
-
-        /* Expected 1 event to delivery push */
-        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(capturedSendEvent.capture());
-
-        /* Verify all events are sent with right status code */
-        capturedSendEvent.getAllValues().forEach(sendEvent -> {
-            StatusCodeEnum expectedStatusCode = assertionLookupTable.get(sendEvent.getStatusDetail());
-            assertEquals(expectedStatusCode, sendEvent.getStatusCode());
-        });
-
-        /* Delivery request expected to be refined */
-        assertNotNull(deliveryRequest);
-        assertEquals(false, deliveryRequest.getRefined());
-
-        log.info("Event: \n"+capturedSendEvent.getAllValues());
+        checkFlowCorrectness(assertionLookupTable, Boolean.FALSE);
     }
 
     @Test
@@ -313,26 +225,8 @@ class PaperComplexStock890IT extends BaseTest {
         generateEvent(RECAG005B, null);
         generateEvent(RECAG005C, null);
 
-        ArgumentCaptor<SendEvent> capturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
-
-        PnDeliveryRequest deliveryRequest = requestDeliveryDAO.getByRequestId(REQUEST_ID).block();
-
         // Then
-
-        /* Expected 4 events to delivery push */
-        verify(sqsSender, timeout(2000).times(4)).pushSendEvent(capturedSendEvent.capture());
-
-        /* Verify all events are sent with right status code */
-        capturedSendEvent.getAllValues().forEach(sendEvent -> {
-            StatusCodeEnum expectedStatusCode = assertionLookupTable.get(sendEvent.getStatusDetail());
-            assertEquals(expectedStatusCode, sendEvent.getStatusCode());
-        });
-
-        /* Delivery request expected to be refined */
-        assertNotNull(deliveryRequest);
-        assertEquals(true, deliveryRequest.getRefined());
-
-        log.info("Event: \n"+capturedSendEvent.getAllValues());
+        checkFlowCorrectness(assertionLookupTable, Boolean.TRUE);
     }
 
     @Test
@@ -353,26 +247,8 @@ class PaperComplexStock890IT extends BaseTest {
         generateEvent(RECAG011B, null);
         generateEvent(RECAG005C, null);
 
-        ArgumentCaptor<SendEvent> capturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
-
-        PnDeliveryRequest deliveryRequest = requestDeliveryDAO.getByRequestId(REQUEST_ID).block();
-
         // Then
-
-        /* Expected 3 events to delivery push */
-        verify(sqsSender, timeout(2000).times(3)).pushSendEvent(capturedSendEvent.capture());
-
-        /* Verify all events are sent with right status code */
-        capturedSendEvent.getAllValues().forEach(sendEvent -> {
-            StatusCodeEnum expectedStatusCode = assertionLookupTable.get(sendEvent.getStatusDetail());
-            assertEquals(expectedStatusCode, sendEvent.getStatusCode());
-        });
-
-        /* Delivery request expected to be refined */
-        assertNotNull(deliveryRequest);
-        assertEquals(true, deliveryRequest.getRefined());
-
-        log.info("Event: \n"+capturedSendEvent.getAllValues());
+        checkFlowCorrectness(assertionLookupTable, Boolean.TRUE);
     }
 
     @Test
@@ -396,24 +272,8 @@ class PaperComplexStock890IT extends BaseTest {
         generateEvent(RECAG011BCad, null);
         generateEvent(RECAG005C, null);
 
-        ArgumentCaptor<SendEvent> capturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
-
-        PnDeliveryRequest deliveryRequest = requestDeliveryDAO.getByRequestId(REQUEST_ID).block();
-
         // Then
-
-        /* Expected 3 events to delivery push */
-        verify(sqsSender, timeout(2000).times(3)).pushSendEvent(capturedSendEvent.capture());
-
-        /* Verify all events are sent with right status code */
-        capturedSendEvent.getAllValues().forEach(sendEvent -> {
-            StatusCodeEnum expectedStatusCode = assertionLookupTable.get(sendEvent.getStatusDetail());
-            assertEquals(expectedStatusCode, sendEvent.getStatusCode());
-        });
-
-        /* Delivery request expected to be refined */
-        assertNotNull(deliveryRequest);
-        assertEquals(true, deliveryRequest.getRefined());
+        checkFlowCorrectness(assertionLookupTable, Boolean.TRUE);
     }
 
     /* RECAG006C CASES */
@@ -438,26 +298,8 @@ class PaperComplexStock890IT extends BaseTest {
         generateEvent(RECAG006B, null);
         generateEvent(RECAG006C, null);
 
-        ArgumentCaptor<SendEvent> capturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
-
-        PnDeliveryRequest deliveryRequest = requestDeliveryDAO.getByRequestId(REQUEST_ID).block();
-
         // Then
-
-        /* Expected 3 events to delivery push */
-        verify(sqsSender, timeout(2000).times(3)).pushSendEvent(capturedSendEvent.capture());
-
-        /* Verify all events are sent with right status code */
-        capturedSendEvent.getAllValues().forEach(sendEvent -> {
-            StatusCodeEnum expectedStatusCode = assertionLookupTable.get(sendEvent.getStatusDetail());
-            assertEquals(expectedStatusCode, sendEvent.getStatusCode());
-        });
-
-        /* Delivery request expected to be refined */
-        assertNotNull(deliveryRequest);
-        assertEquals(true, deliveryRequest.getRefined());
-
-        log.info("Event: \n"+capturedSendEvent.getAllValues());
+        checkFlowCorrectness(assertionLookupTable, Boolean.TRUE);
     }
 
     @Test
@@ -475,28 +317,12 @@ class PaperComplexStock890IT extends BaseTest {
         // When
         generateEvent(RECAG006A, null);
         generateEvent(RECAG006B, null);
+
+        // Expect exception because RECAG011A
         generateEvent(RECAG006C, PnGenericException.class);
 
-        ArgumentCaptor<SendEvent> capturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
-
-        PnDeliveryRequest deliveryRequest = requestDeliveryDAO.getByRequestId(REQUEST_ID).block();
-
         // Then
-
-        /* Expected 1 event to delivery push */
-        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(capturedSendEvent.capture());
-
-        /* Verify all events are sent with right status code */
-        capturedSendEvent.getAllValues().forEach(sendEvent -> {
-            StatusCodeEnum expectedStatusCode = assertionLookupTable.get(sendEvent.getStatusDetail());
-            assertEquals(expectedStatusCode, sendEvent.getStatusCode());
-        });
-
-        /* Delivery request expected to be refined */
-        assertNotNull(deliveryRequest);
-        assertEquals(false, deliveryRequest.getRefined());
-
-        log.info("Event: \n"+capturedSendEvent.getAllValues());
+        checkFlowCorrectness(assertionLookupTable, Boolean.FALSE);
     }
 
     @Test
@@ -522,26 +348,8 @@ class PaperComplexStock890IT extends BaseTest {
         generateEvent(RECAG006B, null);
         generateEvent(RECAG006C, null);
 
-        ArgumentCaptor<SendEvent> capturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
-
-        PnDeliveryRequest deliveryRequest = requestDeliveryDAO.getByRequestId(REQUEST_ID).block();
-
         // Then
-
-        /* Expected 3 events to delivery push */
-        verify(sqsSender, timeout(2000).times(3)).pushSendEvent(capturedSendEvent.capture());
-
-        /* Verify all events are sent with right status code */
-        capturedSendEvent.getAllValues().forEach(sendEvent -> {
-            StatusCodeEnum expectedStatusCode = assertionLookupTable.get(sendEvent.getStatusDetail());
-            assertEquals(expectedStatusCode, sendEvent.getStatusCode());
-        });
-
-        /* Delivery request expected to be refined */
-        assertNotNull(deliveryRequest);
-        assertEquals(true, deliveryRequest.getRefined());
-
-        log.info("Event: \n"+capturedSendEvent.getAllValues());
+        checkFlowCorrectness(assertionLookupTable, Boolean.TRUE);
     }
 
     @Test
@@ -570,26 +378,8 @@ class PaperComplexStock890IT extends BaseTest {
         generateEvent(RECAG006B, null);
         generateEvent(RECAG006C, null);
 
-        ArgumentCaptor<SendEvent> capturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
-
-        PnDeliveryRequest deliveryRequest = requestDeliveryDAO.getByRequestId(REQUEST_ID).block();
-
         // Then
-
-        /* Expected 4 events to delivery push */
-        verify(sqsSender, timeout(2000).times(4)).pushSendEvent(capturedSendEvent.capture());
-
-        /* Verify all events are sent with right status code */
-        capturedSendEvent.getAllValues().forEach(sendEvent -> {
-            StatusCodeEnum expectedStatusCode = assertionLookupTable.get(sendEvent.getStatusDetail());
-            assertEquals(expectedStatusCode, sendEvent.getStatusCode());
-        });
-
-        /* Delivery request expected to be refined */
-        assertNotNull(deliveryRequest);
-        assertEquals(true, deliveryRequest.getRefined());
-
-        log.info("Event: \n"+capturedSendEvent.getAllValues());
+        checkFlowCorrectness(assertionLookupTable, Boolean.TRUE);
     }
 
 
@@ -611,28 +401,12 @@ class PaperComplexStock890IT extends BaseTest {
         generateEvent(RECAG012, null);
         generateEvent(RECAG006A, null);
         generateEvent(RECAG006B, null);
+
+        // Expect exception because RECAG011A
         generateEvent(RECAG006C, PnGenericException.class);
 
-        ArgumentCaptor<SendEvent> capturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
-
-        PnDeliveryRequest deliveryRequest = requestDeliveryDAO.getByRequestId(REQUEST_ID).block();
-
         // Then
-
-        /* Expected 1 event to delivery push */
-        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(capturedSendEvent.capture());
-
-        /* Verify all events are sent with right status code */
-        capturedSendEvent.getAllValues().forEach(sendEvent -> {
-            StatusCodeEnum expectedStatusCode = assertionLookupTable.get(sendEvent.getStatusDetail());
-            assertEquals(expectedStatusCode, sendEvent.getStatusCode());
-        });
-
-        /* Delivery request expected to be refined */
-        assertNotNull(deliveryRequest);
-        assertEquals(false, deliveryRequest.getRefined());
-
-        log.info("Event: \n"+capturedSendEvent.getAllValues());
+        checkFlowCorrectness(assertionLookupTable, Boolean.FALSE);
     }
 
     @Test
@@ -656,26 +430,8 @@ class PaperComplexStock890IT extends BaseTest {
         generateEvent(RECAG006B, null);
         generateEvent(RECAG006C, null);
 
-        ArgumentCaptor<SendEvent> capturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
-
-        PnDeliveryRequest deliveryRequest = requestDeliveryDAO.getByRequestId(REQUEST_ID).block();
-
         // Then
-
-        /* Expected 4 events to delivery push */
-        verify(sqsSender, timeout(2000).times(4)).pushSendEvent(capturedSendEvent.capture());
-
-        /* Verify all events are sent with right status code */
-        capturedSendEvent.getAllValues().forEach(sendEvent -> {
-            StatusCodeEnum expectedStatusCode = assertionLookupTable.get(sendEvent.getStatusDetail());
-            assertEquals(expectedStatusCode, sendEvent.getStatusCode());
-        });
-
-        /* Delivery request expected to be refined */
-        assertNotNull(deliveryRequest);
-        assertEquals(true, deliveryRequest.getRefined());
-
-        log.info("Event: \n"+capturedSendEvent.getAllValues());
+        checkFlowCorrectness(assertionLookupTable, Boolean.TRUE);
     }
 
     @Test
@@ -696,26 +452,8 @@ class PaperComplexStock890IT extends BaseTest {
         generateEvent(RECAG011B, null);
         generateEvent(RECAG006C, null);
 
-        ArgumentCaptor<SendEvent> capturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
-
-        PnDeliveryRequest deliveryRequest = requestDeliveryDAO.getByRequestId(REQUEST_ID).block();
-
         // Then
-
-        /* Expected 3 events to delivery push */
-        verify(sqsSender, timeout(2000).times(3)).pushSendEvent(capturedSendEvent.capture());
-
-        /* Verify all events are sent with right status code */
-        capturedSendEvent.getAllValues().forEach(sendEvent -> {
-            StatusCodeEnum expectedStatusCode = assertionLookupTable.get(sendEvent.getStatusDetail());
-            assertEquals(expectedStatusCode, sendEvent.getStatusCode());
-        });
-
-        /* Delivery request expected to be refined */
-        assertNotNull(deliveryRequest);
-        assertEquals(true, deliveryRequest.getRefined());
-
-        log.info("Event: \n"+capturedSendEvent.getAllValues());
+        checkFlowCorrectness(assertionLookupTable, Boolean.TRUE);
     }
 
     @Test
@@ -739,24 +477,8 @@ class PaperComplexStock890IT extends BaseTest {
         generateEvent(RECAG011BCad, null);
         generateEvent(RECAG006C, null);
 
-        ArgumentCaptor<SendEvent> capturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
-
-        PnDeliveryRequest deliveryRequest = requestDeliveryDAO.getByRequestId(REQUEST_ID).block();
-
         // Then
-
-        /* Expected 3 events to delivery push */
-        verify(sqsSender, timeout(2000).times(3)).pushSendEvent(capturedSendEvent.capture());
-
-        /* Verify all events are sent with right status code */
-        capturedSendEvent.getAllValues().forEach(sendEvent -> {
-            StatusCodeEnum expectedStatusCode = assertionLookupTable.get(sendEvent.getStatusDetail());
-            assertEquals(expectedStatusCode, sendEvent.getStatusCode());
-        });
-
-        /* Delivery request expected to be refined */
-        assertNotNull(deliveryRequest);
-        assertEquals(true, deliveryRequest.getRefined());
+        checkFlowCorrectness(assertionLookupTable, Boolean.TRUE);
     }
 
     /* RECAG007C CASES */
@@ -781,26 +503,8 @@ class PaperComplexStock890IT extends BaseTest {
         generateEvent(RECAG007B, null);
         generateEvent(RECAG007C, null);
 
-        ArgumentCaptor<SendEvent> capturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
-
-        PnDeliveryRequest deliveryRequest = requestDeliveryDAO.getByRequestId(REQUEST_ID).block();
-
         // Then
-
-        /* Expected 3 events to delivery push */
-        verify(sqsSender, timeout(2000).times(3)).pushSendEvent(capturedSendEvent.capture());
-
-        /* Verify all events are sent with right status code */
-        capturedSendEvent.getAllValues().forEach(sendEvent -> {
-            StatusCodeEnum expectedStatusCode = assertionLookupTable.get(sendEvent.getStatusDetail());
-            assertEquals(expectedStatusCode, sendEvent.getStatusCode());
-        });
-
-        /* Delivery request expected to be refined */
-        assertNotNull(deliveryRequest);
-        assertEquals(true, deliveryRequest.getRefined());
-
-        log.info("Event: \n"+capturedSendEvent.getAllValues());
+        checkFlowCorrectness(assertionLookupTable, Boolean.TRUE);
     }
 
     @Test
@@ -818,28 +522,12 @@ class PaperComplexStock890IT extends BaseTest {
         // When
         generateEvent(RECAG007A, null);
         generateEvent(RECAG007B, null);
+
+        // Expect exception because RECAG011A
         generateEvent(RECAG007C, PnGenericException.class);
 
-        ArgumentCaptor<SendEvent> capturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
-
-        PnDeliveryRequest deliveryRequest = requestDeliveryDAO.getByRequestId(REQUEST_ID).block();
-
         // Then
-
-        /* Expected 1 event to delivery push */
-        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(capturedSendEvent.capture());
-
-        /* Verify all events are sent with right status code */
-        capturedSendEvent.getAllValues().forEach(sendEvent -> {
-            StatusCodeEnum expectedStatusCode = assertionLookupTable.get(sendEvent.getStatusDetail());
-            assertEquals(expectedStatusCode, sendEvent.getStatusCode());
-        });
-
-        /* Delivery request expected to be refined */
-        assertNotNull(deliveryRequest);
-        assertEquals(false, deliveryRequest.getRefined());
-
-        log.info("Event: \n"+capturedSendEvent.getAllValues());
+        checkFlowCorrectness(assertionLookupTable, Boolean.FALSE);
     }
 
     @Test
@@ -865,26 +553,8 @@ class PaperComplexStock890IT extends BaseTest {
         generateEvent(RECAG007B, null);
         generateEvent(RECAG007C, null);
 
-        ArgumentCaptor<SendEvent> capturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
-
-        PnDeliveryRequest deliveryRequest = requestDeliveryDAO.getByRequestId(REQUEST_ID).block();
-
         // Then
-
-        /* Expected 3 events to delivery push */
-        verify(sqsSender, timeout(2000).times(3)).pushSendEvent(capturedSendEvent.capture());
-
-        /* Verify all events are sent with right status code */
-        capturedSendEvent.getAllValues().forEach(sendEvent -> {
-            StatusCodeEnum expectedStatusCode = assertionLookupTable.get(sendEvent.getStatusDetail());
-            assertEquals(expectedStatusCode, sendEvent.getStatusCode());
-        });
-
-        /* Delivery request expected to be refined */
-        assertNotNull(deliveryRequest);
-        assertEquals(true, deliveryRequest.getRefined());
-
-        log.info("Event: \n"+capturedSendEvent.getAllValues());
+        checkFlowCorrectness(assertionLookupTable, Boolean.TRUE);
     }
 
     @Test
@@ -913,26 +583,8 @@ class PaperComplexStock890IT extends BaseTest {
         generateEvent(RECAG007B, null);
         generateEvent(RECAG007C, null);
 
-        ArgumentCaptor<SendEvent> capturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
-
-        PnDeliveryRequest deliveryRequest = requestDeliveryDAO.getByRequestId(REQUEST_ID).block();
-
         // Then
-
-        /* Expected 4 events to delivery push */
-        verify(sqsSender, timeout(2000).times(4)).pushSendEvent(capturedSendEvent.capture());
-
-        /* Verify all events are sent with right status code */
-        capturedSendEvent.getAllValues().forEach(sendEvent -> {
-            StatusCodeEnum expectedStatusCode = assertionLookupTable.get(sendEvent.getStatusDetail());
-            assertEquals(expectedStatusCode, sendEvent.getStatusCode());
-        });
-
-        /* Delivery request expected to be refined */
-        assertNotNull(deliveryRequest);
-        assertEquals(true, deliveryRequest.getRefined());
-
-        log.info("Event: \n"+capturedSendEvent.getAllValues());
+        checkFlowCorrectness(assertionLookupTable, Boolean.TRUE);
     }
 
 
@@ -954,28 +606,12 @@ class PaperComplexStock890IT extends BaseTest {
         generateEvent(RECAG012, null);
         generateEvent(RECAG007A, null);
         generateEvent(RECAG007B, null);
+
+        // Expect exception because RECAG011A
         generateEvent(RECAG007C, PnGenericException.class);
 
-        ArgumentCaptor<SendEvent> capturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
-
-        PnDeliveryRequest deliveryRequest = requestDeliveryDAO.getByRequestId(REQUEST_ID).block();
-
         // Then
-
-        /* Expected 1 event to delivery push */
-        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(capturedSendEvent.capture());
-
-        /* Verify all events are sent with right status code */
-        capturedSendEvent.getAllValues().forEach(sendEvent -> {
-            StatusCodeEnum expectedStatusCode = assertionLookupTable.get(sendEvent.getStatusDetail());
-            assertEquals(expectedStatusCode, sendEvent.getStatusCode());
-        });
-
-        /* Delivery request expected to be refined */
-        assertNotNull(deliveryRequest);
-        assertEquals(false, deliveryRequest.getRefined());
-
-        log.info("Event: \n"+capturedSendEvent.getAllValues());
+        checkFlowCorrectness(assertionLookupTable, Boolean.FALSE);
     }
 
     @Test
@@ -999,26 +635,8 @@ class PaperComplexStock890IT extends BaseTest {
         generateEvent(RECAG007B, null);
         generateEvent(RECAG007C, null);
 
-        ArgumentCaptor<SendEvent> capturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
-
-        PnDeliveryRequest deliveryRequest = requestDeliveryDAO.getByRequestId(REQUEST_ID).block();
-
         // Then
-
-        /* Expected 4 events to delivery push */
-        verify(sqsSender, timeout(2000).times(4)).pushSendEvent(capturedSendEvent.capture());
-
-        /* Verify all events are sent with right status code */
-        capturedSendEvent.getAllValues().forEach(sendEvent -> {
-            StatusCodeEnum expectedStatusCode = assertionLookupTable.get(sendEvent.getStatusDetail());
-            assertEquals(expectedStatusCode, sendEvent.getStatusCode());
-        });
-
-        /* Delivery request expected to be refined */
-        assertNotNull(deliveryRequest);
-        assertEquals(true, deliveryRequest.getRefined());
-
-        log.info("Event: \n"+capturedSendEvent.getAllValues());
+        checkFlowCorrectness(assertionLookupTable, Boolean.TRUE);
     }
 
     @Test
@@ -1039,26 +657,8 @@ class PaperComplexStock890IT extends BaseTest {
         generateEvent(RECAG011B, null);
         generateEvent(RECAG007C, null);
 
-        ArgumentCaptor<SendEvent> capturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
-
-        PnDeliveryRequest deliveryRequest = requestDeliveryDAO.getByRequestId(REQUEST_ID).block();
-
         // Then
-
-        /* Expected 3 events to delivery push */
-        verify(sqsSender, timeout(2000).times(3)).pushSendEvent(capturedSendEvent.capture());
-
-        /* Verify all events are sent with right status code */
-        capturedSendEvent.getAllValues().forEach(sendEvent -> {
-            StatusCodeEnum expectedStatusCode = assertionLookupTable.get(sendEvent.getStatusDetail());
-            assertEquals(expectedStatusCode, sendEvent.getStatusCode());
-        });
-
-        /* Delivery request expected to be refined */
-        assertNotNull(deliveryRequest);
-        assertEquals(true, deliveryRequest.getRefined());
-
-        log.info("Event: \n"+capturedSendEvent.getAllValues());
+        checkFlowCorrectness(assertionLookupTable, Boolean.TRUE);
     }
 
     @Test
@@ -1082,24 +682,8 @@ class PaperComplexStock890IT extends BaseTest {
         generateEvent(RECAG011BCad, null);
         generateEvent(RECAG007C, null);
 
-        ArgumentCaptor<SendEvent> capturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
-
-        PnDeliveryRequest deliveryRequest = requestDeliveryDAO.getByRequestId(REQUEST_ID).block();
-
         // Then
-
-        /* Expected 3 events to delivery push */
-        verify(sqsSender, timeout(2000).times(3)).pushSendEvent(capturedSendEvent.capture());
-
-        /* Verify all events are sent with right status code */
-        capturedSendEvent.getAllValues().forEach(sendEvent -> {
-            StatusCodeEnum expectedStatusCode = assertionLookupTable.get(sendEvent.getStatusDetail());
-            assertEquals(expectedStatusCode, sendEvent.getStatusCode());
-        });
-
-        /* Delivery request expected to be refined */
-        assertNotNull(deliveryRequest);
-        assertEquals(true, deliveryRequest.getRefined());
+        checkFlowCorrectness(assertionLookupTable, Boolean.TRUE);
     }
 
     /* RECAG008C CASES */
@@ -1122,26 +706,8 @@ class PaperComplexStock890IT extends BaseTest {
         generateEvent(RECAG011B, null);
         generateEvent(RECAG008C, null);
 
-        ArgumentCaptor<SendEvent> capturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
-
-        PnDeliveryRequest deliveryRequest = requestDeliveryDAO.getByRequestId(REQUEST_ID).block();
-
         // Then
-
-        /* Expected 3 events to delivery push */
-        verify(sqsSender, timeout(2000).times(3)).pushSendEvent(capturedSendEvent.capture());
-
-        /* Verify all events are sent with right status code */
-        capturedSendEvent.getAllValues().forEach(sendEvent -> {
-            StatusCodeEnum expectedStatusCode = assertionLookupTable.get(sendEvent.getStatusDetail());
-            assertEquals(expectedStatusCode, sendEvent.getStatusCode());
-        });
-
-        /* Delivery request expected to be refined */
-        assertNotNull(deliveryRequest);
-        assertEquals(true, deliveryRequest.getRefined());
-
-        log.info("Event: \n"+capturedSendEvent.getAllValues());
+        checkFlowCorrectness(assertionLookupTable, Boolean.TRUE);
     }
 
     @Test
@@ -1170,26 +736,8 @@ class PaperComplexStock890IT extends BaseTest {
         generateEvent(RECAG008B, null);
         generateEvent(RECAG008C, null);
 
-        ArgumentCaptor<SendEvent> capturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
-
-        PnDeliveryRequest deliveryRequest = requestDeliveryDAO.getByRequestId(REQUEST_ID).block();
-
         // Then
-
-        /* Expected 4 events to delivery push */
-        verify(sqsSender, timeout(2000).times(4)).pushSendEvent(capturedSendEvent.capture());
-
-        /* Verify all events are sent with right status code */
-        capturedSendEvent.getAllValues().forEach(sendEvent -> {
-            StatusCodeEnum expectedStatusCode = assertionLookupTable.get(sendEvent.getStatusDetail());
-            assertEquals(expectedStatusCode, sendEvent.getStatusCode());
-        });
-
-        /* Delivery request expected to be refined */
-        assertNotNull(deliveryRequest);
-        assertEquals(true, deliveryRequest.getRefined());
-
-        log.info("Event: \n"+capturedSendEvent.getAllValues());
+        checkFlowCorrectness(assertionLookupTable, Boolean.TRUE);
     }
 
     @Test
@@ -1213,14 +761,19 @@ class PaperComplexStock890IT extends BaseTest {
         generateEvent(RECAG011BCad, null);
         generateEvent(RECAG008C, null);
 
+        // Then
+        checkFlowCorrectness(assertionLookupTable, Boolean.TRUE);
+    }
+
+    private void checkFlowCorrectness(Map<String, StatusCodeEnum> assertionLookupTable, Boolean isExpectedRefined) {
         ArgumentCaptor<SendEvent> capturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
         PnDeliveryRequest deliveryRequest = requestDeliveryDAO.getByRequestId(REQUEST_ID).block();
 
-        // Then
-
-        /* Expected 3 events to delivery push */
-        verify(sqsSender, timeout(2000).times(3)).pushSendEvent(capturedSendEvent.capture());
+        /* Expected events to delivery push */
+        verify(sqsSender, timeout(2000)
+            .times(assertionLookupTable.size()))
+            .pushSendEvent(capturedSendEvent.capture());
 
         /* Verify all events are sent with right status code */
         capturedSendEvent.getAllValues().forEach(sendEvent -> {
@@ -1230,7 +783,7 @@ class PaperComplexStock890IT extends BaseTest {
 
         /* Delivery request expected to be refined */
         assertNotNull(deliveryRequest);
-        assertEquals(true, deliveryRequest.getRefined());
+        assertEquals(isExpectedRefined, deliveryRequest.getRefined());
     }
 
 
