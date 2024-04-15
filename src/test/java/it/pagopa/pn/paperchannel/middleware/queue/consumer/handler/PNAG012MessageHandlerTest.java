@@ -128,7 +128,7 @@ class PNAG012MessageHandlerTest {
             assertThat(pnDeliveryRequest).isNotNull();
             assertThat(pnDeliveryRequest.getRefined()).isTrue();
             return true;
-        }));
+        }), eq(true));
     }
 
     @Test
@@ -188,7 +188,7 @@ class PNAG012MessageHandlerTest {
             assertThat(pnDeliveryRequest).isNotNull();
             assertThat(pnDeliveryRequest.getRefined()).isTrue();
             return true;
-        }));
+        }), eq(true));
     }
 
     @Test
@@ -262,7 +262,7 @@ class PNAG012MessageHandlerTest {
             assertThat(pnDeliveryRequest).isNotNull();
             assertThat(pnDeliveryRequest.getRefined()).isTrue();
             return true;
-        }));
+        }), eq(true));
     }
 
     @Test
@@ -464,7 +464,7 @@ class PNAG012MessageHandlerTest {
             assertThat(pnDeliveryRequest).isNotNull();
             assertThat(pnDeliveryRequest.getRefined()).isTrue();
             return true;
-        }));
+        }), eq(true));
     }
 
     @Test
@@ -529,7 +529,7 @@ class PNAG012MessageHandlerTest {
             assertThat(pnDeliveryRequest).isNotNull();
             assertThat(pnDeliveryRequest.getRefined()).isTrue();
             return true;
-        }));
+        }), eq(true));
     }
 
     @Test

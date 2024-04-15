@@ -105,7 +105,7 @@ class RECRN00XCMessageHandlerTest {
             assertThat(pnDeliveryRequest).isNotNull();
             assertThat(pnDeliveryRequest.getRefined()).isTrue();
             return true;
-        }));
+        }), eq(true));
     }
 
 
@@ -201,7 +201,7 @@ class RECRN00XCMessageHandlerTest {
             assertThat(pnDeliveryRequest).isNotNull();
             assertThat(pnDeliveryRequest.getRefined()).isTrue();
             return true;
-        }));
+        }), eq(true));
     }
 
     private PnEventMeta getEventMeta(String statusCode, Instant time){

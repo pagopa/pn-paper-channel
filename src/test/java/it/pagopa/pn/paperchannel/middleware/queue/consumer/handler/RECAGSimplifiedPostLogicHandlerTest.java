@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 
@@ -191,7 +192,7 @@ class RECAGSimplifiedPostLogicHandlerTest {
 
 
         Mockito.when(eventDematDAO.findAllByRequestId(Mockito.anyString(), Mockito.eq(true))).thenReturn(Flux.fromIterable(resdemat));
-        Mockito.when(requestDeliveryDAO.updateData(Mockito.any())).thenReturn(Mono.just(pnDeliveryRequest));
+        Mockito.when(requestDeliveryDAO.updateData(Mockito.any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(pnDeliveryRequest));
 
 
         Mono<Void> mono = recagSimplifiedPostLogicHandler.handleMessage(pnDeliveryRequest, paperProgressStatusEventDto);
@@ -233,7 +234,7 @@ class RECAGSimplifiedPostLogicHandlerTest {
 
         Mockito.when(eventDematDAO.findAllByRequestId(Mockito.anyString(), Mockito.eq(true))).thenReturn(Flux.fromIterable(resdemat));
         Mockito.when(eventMetaDAO.getDeliveryEventMeta(Mockito.anyString(), Mockito.anyString(), Mockito.eq(true))).thenReturn(Mono.just(pnEventMeta));
-        Mockito.when(requestDeliveryDAO.updateData(Mockito.any())).thenReturn(Mono.just(pnDeliveryRequest));
+        Mockito.when(requestDeliveryDAO.updateData(Mockito.any(), anyBoolean())).thenReturn(Mono.just(pnDeliveryRequest));
 
 
         Mono<Void> mono = recagSimplifiedPostLogicHandler.handleMessage(pnDeliveryRequest, paperProgressStatusEventDto);
