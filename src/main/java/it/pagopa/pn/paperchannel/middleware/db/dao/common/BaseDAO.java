@@ -101,8 +101,12 @@ public abstract class BaseDAO<T> {
     }
 
     protected CompletableFuture<T> update(T entity){
+        return update(entity, false);
+    }
+
+    protected CompletableFuture<T> update(T entity, boolean ignoreNulls){
         UpdateItemEnhancedRequest<T> updateRequest = UpdateItemEnhancedRequest
-                .builder(tClass).item(entity).build();
+            .builder(tClass).item(entity).ignoreNulls(ignoreNulls).build();
         return dynamoTable.updateItem(updateRequest).thenApply(t -> {
             log.logUpdateDynamoDBEntity(dynamoTable.tableName(), t);
             return t;

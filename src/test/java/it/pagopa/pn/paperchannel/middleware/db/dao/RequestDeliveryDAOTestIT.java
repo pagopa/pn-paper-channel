@@ -23,6 +23,7 @@ class RequestDeliveryDAOTestIT extends BaseTest {
     private final PnDeliveryRequest request1 = new PnDeliveryRequest();
     private final PnDeliveryRequest request2 = new PnDeliveryRequest();
     private final PnDeliveryRequest duplicateRequest = new PnDeliveryRequest();
+    private final PnDeliveryRequest requestWithEmptyFields = new PnDeliveryRequest();
     private final PnAddress address = new PnAddress();
 
     @BeforeEach
@@ -60,6 +61,48 @@ class RequestDeliveryDAOTestIT extends BaseTest {
         assertNotNull(updateRequest);
         assertEquals(createRequest, request2);
         assertEquals(updateRequest, duplicateRequest);
+    }
+
+    @Test
+    void updateDataTestWithoutIgnoringNulls(){
+        Mockito.when(dataVaultEncryption.encode(Mockito.any(), Mockito.any())).thenReturn("returnOk");
+        Mockito.when(dataVaultEncryption.decode(Mockito.any())).thenReturn("returnOk");
+
+        PnDeliveryRequest createRequest = this.requestDeliveryDAO.createWithAddress(request, address, null).block();
+        PnDeliveryRequest updateRequest = this.requestDeliveryDAO.updateData(requestWithEmptyFields).block();
+
+        assertNotNull(createRequest);
+        assertNotNull(updateRequest);
+        assertEquals(createRequest, request);
+        assertEquals(updateRequest, requestWithEmptyFields);
+
+        PnDeliveryRequest readRequestAfterUpdate = this.requestDeliveryDAO.getByRequestId(createRequest.getRequestId()).block();
+
+        assertNotNull(readRequestAfterUpdate);
+        assertEquals(createRequest.getRequestId(), readRequestAfterUpdate.getRequestId());
+        assertNotEquals(createRequest.getStatusCode(), readRequestAfterUpdate.getStatusCode());
+        assertNull(readRequestAfterUpdate.getProductType()); // was null during update
+    }
+
+    @Test
+    void updateDataTestWithIgnoringNulls(){
+        Mockito.when(dataVaultEncryption.encode(Mockito.any(), Mockito.any())).thenReturn("returnOk");
+        Mockito.when(dataVaultEncryption.decode(Mockito.any())).thenReturn("returnOk");
+
+        PnDeliveryRequest createRequest = this.requestDeliveryDAO.createWithAddress(request, address, null).block();
+        PnDeliveryRequest updateRequest = this.requestDeliveryDAO.updateData(requestWithEmptyFields, true).block();
+
+        assertNotNull(createRequest);
+        assertNotNull(updateRequest);
+        assertEquals(createRequest, request);
+        assertEquals(updateRequest, requestWithEmptyFields);
+
+        PnDeliveryRequest readRequestAfterUpdate = this.requestDeliveryDAO.getByRequestId(createRequest.getRequestId()).block();
+
+        assertNotNull(readRequestAfterUpdate);
+        assertEquals(createRequest.getRequestId(), readRequestAfterUpdate.getRequestId());
+        assertNotEquals(createRequest.getStatusCode(), readRequestAfterUpdate.getStatusCode());
+        assertEquals(readRequestAfterUpdate.getProductType(), createRequest.getProductType()); // was null during update
     }
 
     @Test
@@ -127,6 +170,9 @@ class RequestDeliveryDAOTestIT extends BaseTest {
         duplicateRequest.setRefined(false);
         duplicateRequest.setDriverCode("driverCode");
         duplicateRequest.setTenderCode("tenderCode");
+
+        requestWithEmptyFields.setRequestId("id-12345");
+        requestWithEmptyFields.setStatusCode("TEST");
 
         address.setAddress("Via Aldo Moro");
         address.setCap("21004");
