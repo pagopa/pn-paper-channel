@@ -15,6 +15,8 @@ public interface PnAttachmentsConfigDAO {
 
     Mono<Void> putItemInTransaction(String configKey, List<PnAttachmentsConfig> pnAttachmentsConfigs);
 
+    Mono<Void> refreshConfig(String configKey, List<PnAttachmentsConfig> pnAttachmentsConfigs);
+
     Flux<PnAttachmentsConfig> findAllByConfigKey(String configKey);
 
 }

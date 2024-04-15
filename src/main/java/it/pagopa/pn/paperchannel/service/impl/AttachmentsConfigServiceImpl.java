@@ -125,7 +125,7 @@ public class AttachmentsConfigServiceImpl extends GenericService implements Atta
             String configType = payload.getConfigType();
             String partitionKey = AttachmentsConfigUtils.buildPartitionKey(configKey, configType);
             var pnAttachmentsConfigs = AttachmentsConfigMapper.toPnAttachmentsConfig(configKey, configType, payload.getConfigs(), pnPaperChannelConfig.getDefaultattachmentconfigcap());
-            return pnAttachmentsConfigDAO.putItemInTransaction(partitionKey, pnAttachmentsConfigs);
+            return pnAttachmentsConfigDAO.refreshConfig(partitionKey, pnAttachmentsConfigs);
         });
     }
 }

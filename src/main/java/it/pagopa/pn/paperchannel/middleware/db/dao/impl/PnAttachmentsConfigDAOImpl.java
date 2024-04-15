@@ -6,13 +6,12 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.common.BaseDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentsConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
-import software.amazon.awssdk.enhanced.dynamodb.model.Page;
-import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
-import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
+import software.amazon.awssdk.enhanced.dynamodb.model.*;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
@@ -80,6 +79,23 @@ public class PnAttachmentsConfigDAOImpl extends BaseDAO<PnAttachmentsConfig> imp
                     return Mono.fromFuture(dynamoDbEnhancedAsyncClient.transactWriteItems(builder.build()));
                 }))
                 .doOnError(throwable -> log.error("Error in putItemInTransaction with key: {}", configKey, throwable));
+    }
+
+    public Mono<Void> refreshConfig(String configKey, List<PnAttachmentsConfig> pnAttachmentsConfigs) {
+        return this.findAllByConfigKey(configKey)
+                .map(configToRemove -> configToRemove.getStartValidity().toString())
+                .collectList()
+                .doOnNext(sortKeysToRemove -> log.debug("Remove config with pk: {}, sk: {}", configKey, sortKeysToRemove))
+                .flatMap(sortKeysToRemove -> {
+                    if(CollectionUtils.isEmpty(sortKeysToRemove)) {
+                        return Mono.empty();
+                    }
+                    return super.deleteBatch(configKey, sortKeysToRemove.toArray(new String[]{}));
+                })
+                .then(Mono.defer(() -> {
+                    log.debug("Add configs: {}", pnAttachmentsConfigs);
+                    return super.putBatch(pnAttachmentsConfigs);
+                }));
     }
 
     /**

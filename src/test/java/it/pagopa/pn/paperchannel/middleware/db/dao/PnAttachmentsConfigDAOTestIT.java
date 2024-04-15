@@ -93,7 +93,7 @@ class PnAttachmentsConfigDAOTestIT extends BaseTest {
     }
 
     @Test
-    void putItemInTransactionTest() {
+    void refreshConfigTest() {
         String geoKey = String.valueOf(random.nextInt(1000));
 
         var pnAttachmentsConfigOne = buildPnAttachmentsConfig(geoKey, "2024-01-01T00:00:00.000Z", "2024-01-11T23:59:59.000Z");
@@ -113,11 +113,55 @@ class PnAttachmentsConfigDAOTestIT extends BaseTest {
         var pnAttachmentsConfigNew = buildPnAttachmentsConfig(geoKey, "2024-01-02T00:00:00.000Z", "2024-02-02T00:00:00.000Z");
         var pnAttachmentsConfigNewTwo = buildPnAttachmentsConfig(geoKey, "2024-03-01T00:00:00.000Z", null);
 
-        pnAttachmentsConfigDAO.putItemInTransaction(geoKey, List.of(pnAttachmentsConfigNew, pnAttachmentsConfigNewTwo)).block();
+        pnAttachmentsConfigDAO.refreshConfig(geoKey, List.of(pnAttachmentsConfigNew, pnAttachmentsConfigNewTwo)).block();
 
         result = pnAttachmentsConfigDAO.findAllByConfigKey(geoKey).collectList().block();
 
         assertThat(result).hasSize(2).isEqualTo(List.of(pnAttachmentsConfigNew, pnAttachmentsConfigNewTwo));
+
+    }
+
+    @Test
+    void refreshConfigWithSameRecordsInPutAndDeleteTest() {
+        String geoKey = String.valueOf(random.nextInt(1000));
+
+        var pnAttachmentsConfigOne = buildPnAttachmentsConfig(geoKey, "2024-01-01T00:00:00.000Z", "2024-01-11T23:59:59.000Z");
+
+        pnAttachmentsConfigDAO.putItem(pnAttachmentsConfigOne).block();
+
+
+
+        List<PnAttachmentsConfig> result = pnAttachmentsConfigDAO.findAllByConfigKey(geoKey).collectList().block();
+
+        assertThat(result).hasSize(1).isEqualTo(List.of(pnAttachmentsConfigOne));
+
+        var pnAttachmentsConfigNew = buildPnAttachmentsConfig(geoKey, "2024-01-01T00:00:00.000Z", "2024-01-11T23:59:59.000Z");
+        var pnAttachmentsConfigNewTwo = buildPnAttachmentsConfig(geoKey, "2024-03-01T00:00:00.000Z", null);
+
+        pnAttachmentsConfigDAO.refreshConfig(geoKey, List.of(pnAttachmentsConfigNew, pnAttachmentsConfigNewTwo)).block();
+
+        result = pnAttachmentsConfigDAO.findAllByConfigKey(geoKey).collectList().block();
+
+        assertThat(result).hasSize(2).isEqualTo(List.of(pnAttachmentsConfigNew, pnAttachmentsConfigNewTwo));
+
+    }
+
+    @Test
+    void refreshConfigWithNewRecordTest() {
+        String geoKey = String.valueOf(random.nextInt(1000));
+
+
+        List<PnAttachmentsConfig> result = pnAttachmentsConfigDAO.findAllByConfigKey(geoKey).collectList().block();
+
+        assertThat(result).isEmpty();
+
+        var pnAttachmentsConfigNew = buildPnAttachmentsConfig(geoKey, "2024-01-01T00:00:00.000Z", "2024-01-11T23:59:59.000Z");
+
+        pnAttachmentsConfigDAO.refreshConfig(geoKey, List.of(pnAttachmentsConfigNew)).block();
+
+        result = pnAttachmentsConfigDAO.findAllByConfigKey(geoKey).collectList().block();
+
+        assertThat(result).hasSize(1).isEqualTo(List.of(pnAttachmentsConfigNew));
 
     }
 
