@@ -1,6 +1,5 @@
 package it.pagopa.pn.paperchannel.integrationtests;
 
-import it.pagopa.pn.commons.exceptions.PnHttpResponseException;
 import it.pagopa.pn.paperchannel.config.BaseTest;
 import it.pagopa.pn.paperchannel.encryption.impl.DataVaultEncryptionImpl;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.AttachmentDetailsDto;
@@ -8,6 +7,7 @@ import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
+import it.pagopa.pn.paperchannel.middleware.db.dao.PnEventErrorDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.queue.consumer.MetaDematCleaner;
@@ -35,8 +35,12 @@ import static org.mockito.Mockito.verify;
 @Slf4j
 public abstract class BasePaperStock890IT extends BaseTest {
 
-    private static final String IUN = "NEQP-YAZD-XNGK-202312-L-1";
-    private static final String REQUEST_ID = "PREPARE_ANALOG_DOMICILE.IUN_" + IUN + ".RECINDEX_0.SENTATTEMPTMADE_1";
+    protected static final String IUN = "NEQP-YAZD-XNGK-202312-L-1";
+    protected static final String REQUEST_ID = "PREPARE_ANALOG_DOMICILE.IUN_" + IUN + ".RECINDEX_0.SENTATTEMPTMADE_1";
+
+    private static final PnDeliveryRequest prototypeDeliveryRequest = CommonUtils.createPnDeliveryRequestWithRequestId(REQUEST_ID, IUN);
+
+    private static Boolean isTestStarted = Boolean.FALSE;
 
     @Autowired
     private PaperResultAsyncServiceImpl paperResultAsyncService;
@@ -48,10 +52,13 @@ public abstract class BasePaperStock890IT extends BaseTest {
     private MetaDematCleaner metaDematCleaner;
 
     @MockBean
-    private SqsSender sqsSender;
+    private DataVaultEncryptionImpl dataVaultEncryption;
+
+    @Autowired
+    protected PnEventErrorDAO pnEventErrorDAO;
 
     @MockBean
-    private DataVaultEncryptionImpl dataVaultEncryption;
+    protected SqsSender sqsSender;
 
     @BeforeEach
     public void setUp() {
@@ -64,18 +71,25 @@ public abstract class BasePaperStock890IT extends BaseTest {
     }
 
     private void buildAndCreateDeliveryRequest() {
-        PnDeliveryRequest pnDeliveryRequest = CommonUtils.createPnDeliveryRequestWithRequestId(REQUEST_ID, IUN);
 
-        try {
-            requestDeliveryDAO.createWithAddress(pnDeliveryRequest, null, null).block();
-        } catch (PnHttpResponseException e) {
-            log.info("Request delivery already exists, reset existing one");
-            requestDeliveryDAO.updateData(pnDeliveryRequest).block();
+        if (!isTestStarted) {
+            requestDeliveryDAO.createWithAddress(prototypeDeliveryRequest, null, null).block();
+            isTestStarted = Boolean.TRUE;
+        } else {
+            requestDeliveryDAO.updateData(prototypeDeliveryRequest).block();
         }
     }
 
     private void cleanEnvironment() {
+
+        /* Clean meta and demat table */
         this.metaDematCleaner.clean(REQUEST_ID).block();
+
+        /* Clean pn event error dao table */
+        this.pnEventErrorDAO.findEventErrorsByRequestId(REQUEST_ID)
+            .flatMap(pnEventError -> pnEventErrorDAO.deleteItem(pnEventError.getRequestId(), pnEventError.getStatusBusinessDateTime()))
+            .collectList()
+            .block();
     }
 
     protected void generateEvent(SingleStatusUpdateDto singleStatusUpdateDto, Class<? extends Exception> exception){

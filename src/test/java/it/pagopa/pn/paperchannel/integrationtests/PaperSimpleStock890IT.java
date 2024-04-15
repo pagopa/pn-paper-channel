@@ -3,6 +3,7 @@ package it.pagopa.pn.paperchannel.integrationtests;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventError;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -11,6 +12,11 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.timeout;
+import static org.mockito.Mockito.verify;
 
 @Slf4j
 @SpringBootTest(properties = {
@@ -246,17 +252,36 @@ class PaperSimpleStock890IT extends BasePaperStock890IT {
 
         Map<String, StatusCodeEnum> assertionLookupTable = Map.of(
             "RECAG011B", StatusCodeEnum.PROGRESS,
+            "RECAG005C", StatusCodeEnum.PROGRESS,
             "RECAG012", StatusCodeEnum.OK
         );
 
         // When
         generateEvent(RECAG012, null);
         generateEvent(RECAG005C, null);
+
+        /* Verify RECAG005 is an out of order and tracked on Dynamo */
+        List<PnEventError> beforeRedriveEventErrors = pnEventErrorDAO.findEventErrorsByRequestId(REQUEST_ID).collectList().block();
+
         generateEvent(RECAG011B23L, null);
+
+        /* Resend RECAG005 because of automatic redrive*/
+        generateEvent(RECAG005C, null);
+
         generateEvent(RECAG011BCad, null);
+
+        /* Verify RECAG005 is restored and deleted from Dynamo */
+        List<PnEventError> afterRedriveEventErrors = pnEventErrorDAO.findEventErrorsByRequestId(REQUEST_ID).collectList().block();
 
         // Then
         checkFlowCorrectness(assertionLookupTable, Boolean.TRUE);
+
+        /* Verify redrive out of order event */
+        verify(sqsSender, timeout(2000).times(1))
+            .pushSingleStatusUpdateEvent(any(SingleStatusUpdateDto.class));
+
+        assertThat(beforeRedriveEventErrors).isNotEmpty();
+        assertThat(afterRedriveEventErrors).isEmpty();
     }
 
     @Test
@@ -274,8 +299,13 @@ class PaperSimpleStock890IT extends BasePaperStock890IT {
         generateEvent(RECAG005C, null);
         generateEvent(RECAG011BCad, null);
 
+        List<PnEventError> eventErrors = pnEventErrorDAO.findEventErrorsByRequestId(REQUEST_ID).collectList().block();
+
         // Then
         checkFlowCorrectness(assertionLookupTable, Boolean.FALSE);
+
+        /* RECAG005C is out of order because of 23L missing */
+        assertThat(eventErrors).isNotEmpty();
     }
 
     @Test
@@ -526,17 +556,36 @@ class PaperSimpleStock890IT extends BasePaperStock890IT {
 
         Map<String, StatusCodeEnum> assertionLookupTable = Map.of(
             "RECAG011B", StatusCodeEnum.PROGRESS,
+            "RECAG006C", StatusCodeEnum.PROGRESS,
             "RECAG012", StatusCodeEnum.OK
         );
 
         // When
         generateEvent(RECAG012, null);
         generateEvent(RECAG006C, null);
+
+        /* Verify RECAG005 is an out of order and tracked on Dynamo */
+        List<PnEventError> beforeRedriveEventErrors = pnEventErrorDAO.findEventErrorsByRequestId(REQUEST_ID).collectList().block();
+
         generateEvent(RECAG011B23L, null);
+
+        /* Resend RECAG005 because of automatic redrive*/
+        generateEvent(RECAG006C, null);
+
         generateEvent(RECAG011BCad, null);
+
+        /* Verify RECAG005 is restored and deleted from Dynamo */
+        List<PnEventError> afterRedriveEventErrors = pnEventErrorDAO.findEventErrorsByRequestId(REQUEST_ID).collectList().block();
 
         // Then
         checkFlowCorrectness(assertionLookupTable, Boolean.TRUE);
+
+        /* Verify redrive out of order event */
+        verify(sqsSender, timeout(2000).times(1))
+            .pushSingleStatusUpdateEvent(any(SingleStatusUpdateDto.class));
+
+        assertThat(beforeRedriveEventErrors).isNotEmpty();
+        assertThat(afterRedriveEventErrors).isEmpty();
     }
 
     @Test
@@ -554,8 +603,13 @@ class PaperSimpleStock890IT extends BasePaperStock890IT {
         generateEvent(RECAG006C, null);
         generateEvent(RECAG011BCad, null);
 
+        List<PnEventError> eventErrors = pnEventErrorDAO.findEventErrorsByRequestId(REQUEST_ID).collectList().block();
+
         // Then
         checkFlowCorrectness(assertionLookupTable, Boolean.FALSE);
+
+        /* RECAG006C is out of order because of 23L missing */
+        assertThat(eventErrors).isNotEmpty();
     }
 
     @Test
@@ -861,5 +915,72 @@ class PaperSimpleStock890IT extends BasePaperStock890IT {
 
         // Then
         checkFlowCorrectness(assertionLookupTable, Boolean.TRUE);
+    }
+
+    @Test
+    void test_simple_890_stock_RECAG008C_missing_23L(){
+        // Given
+
+        SingleStatusUpdateDto RECAG012 = buildStatusUpdateDto("RECAG012",null, null);
+        SingleStatusUpdateDto RECAG008C = buildStatusUpdateDto("RECAG008C",null, null);
+        SingleStatusUpdateDto RECAG011BCad = buildStatusUpdateDto("RECAG011B", List.of("CAD"), null);
+
+        Map<String, StatusCodeEnum> assertionLookupTable = Map.of();
+
+        // When
+        generateEvent(RECAG012, null);
+        generateEvent(RECAG008C, null);
+        generateEvent(RECAG011BCad, null);
+
+        List<PnEventError> eventErrors = pnEventErrorDAO.findEventErrorsByRequestId(REQUEST_ID).collectList().block();
+
+        // Then
+        checkFlowCorrectness(assertionLookupTable, Boolean.FALSE);
+
+        /* RECAG006C is out of order because of 23L missing */
+        assertThat(eventErrors).isNotEmpty();
+    }
+
+    @Test
+    void test_simple_890_stock_RECAG008C_out_of_order(){
+        // Given
+
+        SingleStatusUpdateDto RECAG012 = buildStatusUpdateDto("RECAG012",null, null);
+        SingleStatusUpdateDto RECAG008C = buildStatusUpdateDto("RECAG008C",null, null);
+        SingleStatusUpdateDto RECAG008B23L = buildStatusUpdateDto("RECAG008B", List.of("23L"), null);
+        SingleStatusUpdateDto RECAG008BCad = buildStatusUpdateDto("RECAG008B", List.of("CAD"), null);
+
+        Map<String, StatusCodeEnum> assertionLookupTable = Map.of(
+            "RECAG008B", StatusCodeEnum.PROGRESS,
+            "RECAG008C", StatusCodeEnum.PROGRESS,
+            "RECAG012", StatusCodeEnum.OK
+        );
+
+        // When
+        generateEvent(RECAG012, null);
+        generateEvent(RECAG008C, null);
+
+        /* Verify RECAG008 is an out of order and tracked on Dynamo */
+        List<PnEventError> beforeRedriveEventErrors = pnEventErrorDAO.findEventErrorsByRequestId(REQUEST_ID).collectList().block();
+
+        generateEvent(RECAG008B23L, null);
+
+        /* Resend RECAG005 because of automatic redrive*/
+        generateEvent(RECAG008C, null);
+
+        generateEvent(RECAG008BCad, null);
+
+        /* Verify RECAG008 is restored and deleted from Dynamo */
+        List<PnEventError> afterRedriveEventErrors = pnEventErrorDAO.findEventErrorsByRequestId(REQUEST_ID).collectList().block();
+
+        // Then
+        checkFlowCorrectness(assertionLookupTable, Boolean.TRUE);
+
+        /* Verify redrive out of order event */
+        verify(sqsSender, timeout(2000).times(1))
+            .pushSingleStatusUpdateEvent(any(SingleStatusUpdateDto.class));
+
+        assertThat(beforeRedriveEventErrors).isNotEmpty();
+        assertThat(afterRedriveEventErrors).isEmpty();
     }
 }
