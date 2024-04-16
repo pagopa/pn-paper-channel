@@ -58,7 +58,7 @@ public abstract class SendToDeliveryPushHandler implements MessageHandler {
 
             pnDeliveryRequest.setRefined(true);
             return this.requestDeliveryDAO
-                    .updateData(pnDeliveryRequest)
+                    .updateData(pnDeliveryRequest, Boolean.TRUE)
                     .doOnError(ex -> log.warn("[{}] Error while setting request as refined", pnDeliveryRequest.getRequestId(), ex));
         }
 

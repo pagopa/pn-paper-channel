@@ -291,6 +291,7 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
         afterSetForUpdate.setStatusCode(extChannelMessage.getAnalogMail().getStatusCode());
         when(requestDeliveryDAO.getByRequestId(anyString())).thenReturn(Mono.just(pnDeliveryRequest));
         when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(afterSetForUpdate));
 
         // verifico che il flusso è stato completato con successo
         assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());
@@ -512,6 +513,7 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
         afterSetForUpdate.setStatusCode(extChannelMessage.getAnalogMail().getStatusCode());
         when(requestDeliveryDAO.getByRequestId(anyString())).thenReturn(Mono.just(pnDeliveryRequest));
         when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(afterSetForUpdate));
 
         // verifico che il flusso è stato completato con successo
         assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());
@@ -646,6 +648,7 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
         afterSetForUpdate.setStatusCode(extChannelMessage.getAnalogMail().getStatusCode());
         when(requestDeliveryDAO.getByRequestId(anyString())).thenReturn(Mono.just(pnDeliveryRequest));
         when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(afterSetForUpdate));
 
         // verifico che il flusso è stato completato con successo
         assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());

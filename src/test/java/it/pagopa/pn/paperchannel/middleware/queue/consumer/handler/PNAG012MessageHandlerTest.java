@@ -114,7 +114,7 @@ class PNAG012MessageHandlerTest {
         PnEventMeta pnEventMetaPNAG012 = createMETAForPNAG012Event(paperRequest, pnEventMetaRECAG012, 365L);
         when(eventMetaDAO.putIfAbsent(pnEventMetaPNAG012)).thenReturn(Mono.just(pnEventMetaPNAG012));
 
-        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(entity));
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
 
         // Then
         // eseguo l'handler
@@ -128,7 +128,7 @@ class PNAG012MessageHandlerTest {
             assertThat(pnDeliveryRequest).isNotNull();
             assertThat(pnDeliveryRequest.getRefined()).isTrue();
             return true;
-        }));
+        }), eq(true));
     }
 
     @Test
@@ -174,7 +174,7 @@ class PNAG012MessageHandlerTest {
         PnEventMeta pnEventMetaPNAG012 = createMETAForPNAG012Event(paperRequest, pnEventMetaRECAG012, 365L);
         when(eventMetaDAO.putIfAbsent(pnEventMetaPNAG012)).thenReturn(Mono.just(pnEventMetaPNAG012));
 
-        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(entity));
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
 
         // Then
         // eseguo l'handler
@@ -188,7 +188,7 @@ class PNAG012MessageHandlerTest {
             assertThat(pnDeliveryRequest).isNotNull();
             assertThat(pnDeliveryRequest.getRefined()).isTrue();
             return true;
-        }));
+        }), eq(true));
     }
 
     @Test
@@ -249,7 +249,7 @@ class PNAG012MessageHandlerTest {
         PnEventMeta pnEventMetaPNAG012 = createMETAForPNAG012Event(paperRequest, pnEventMetaRECAG012, 365L);
         when(eventMetaDAO.putIfAbsent(pnEventMetaPNAG012)).thenReturn(Mono.just(pnEventMetaPNAG012));
 
-        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(entity));
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
 
         // Then
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
@@ -262,7 +262,7 @@ class PNAG012MessageHandlerTest {
             assertThat(pnDeliveryRequest).isNotNull();
             assertThat(pnDeliveryRequest.getRefined()).isTrue();
             return true;
-        }));
+        }), eq(true));
     }
 
     @Test
@@ -454,7 +454,7 @@ class PNAG012MessageHandlerTest {
         PnEventMeta pnEventMetaPNAG012 = createMETAForPNAG012Event(paperRequest, pnEventMetaRECAG012, 365L);
         when(eventMetaDAO.putIfAbsent(pnEventMetaPNAG012)).thenReturn(Mono.just(pnEventMetaPNAG012));
 
-        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(entity));
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
 
         // Then
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
@@ -464,7 +464,7 @@ class PNAG012MessageHandlerTest {
             assertThat(pnDeliveryRequest).isNotNull();
             assertThat(pnDeliveryRequest.getRefined()).isTrue();
             return true;
-        }));
+        }), eq(true));
     }
 
     @Test
@@ -519,7 +519,7 @@ class PNAG012MessageHandlerTest {
         PnEventMeta pnEventMetaPNAG012 = createMETAForPNAG012Event(paperRequest, pnEventMetaRECAG012, 365L);
         when(eventMetaDAO.putIfAbsent(pnEventMetaPNAG012)).thenReturn(Mono.just(pnEventMetaPNAG012));
 
-        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(entity));
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
 
         // Then
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
@@ -529,7 +529,7 @@ class PNAG012MessageHandlerTest {
             assertThat(pnDeliveryRequest).isNotNull();
             assertThat(pnDeliveryRequest.getRefined()).isTrue();
             return true;
-        }));
+        }), eq(true));
     }
 
     @Test

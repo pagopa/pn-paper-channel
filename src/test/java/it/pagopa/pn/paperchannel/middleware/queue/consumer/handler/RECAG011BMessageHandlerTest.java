@@ -128,7 +128,7 @@ class RECAG011BMessageHandlerTest {
 
         when(eventMetaDAO.putIfAbsent(pnEventMeta)).thenReturn(Mono.just(pnEventMeta));
 
-        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(entity));
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
 
         // eseguo l'handler
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
@@ -156,7 +156,7 @@ class RECAG011BMessageHandlerTest {
             assertThat(pnDeliveryRequest).isNotNull();
             assertThat(pnDeliveryRequest.getRefined()).isTrue();
             return true;
-        }));
+        }), eq(true));
     }
 
     @Test

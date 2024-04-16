@@ -180,7 +180,7 @@ class Complex890MessageHandlerTest {
         pnEventMetaRECAG005A.setStatusDateTime(Instant.parse("2023-03-16T17:07:00.000Z"));
 
         when(eventMetaDAO.findAllByRequestId(metadataRequestid)).thenReturn(Flux.just(pnEventMetaRECAG012, pnEventMetaRECAG011A, pnEventMetaRECAG005A));
-        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(entity));
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
 
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
 
@@ -197,7 +197,7 @@ class Complex890MessageHandlerTest {
             assertThat(pnDeliveryRequest).isNotNull();
             assertThat(pnDeliveryRequest.getRefined()).isTrue();
             return true;
-        }));
+        }), eq(true));
     }
 
     @Test
@@ -233,7 +233,7 @@ class Complex890MessageHandlerTest {
         pnEventMetaRECAG005A.setStatusDateTime(Instant.parse("2023-03-16T17:07:00.000Z"));
 
         when(eventMetaDAO.findAllByRequestId(metadataRequestid)).thenReturn(Flux.just(pnEventMetaRECAG012, pnEventMetaRECAG011A, pnEventMetaRECAG005A));
-        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(entity));
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
 
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
 
@@ -262,6 +262,6 @@ class Complex890MessageHandlerTest {
             assertThat(pnDeliveryRequest).isNotNull();
             assertThat(pnDeliveryRequest.getRefined()).isTrue();
             return true;
-        }));
+        }), eq(true));
     }
 }

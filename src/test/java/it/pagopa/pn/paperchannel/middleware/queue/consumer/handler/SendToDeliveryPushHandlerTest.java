@@ -80,7 +80,7 @@ class SendToDeliveryPushHandlerTest {
         verify(eventErrorDAO, never()).findEventErrorsByRequestId(Mockito.anyString());
 
         // not call because it is a PROGRESS event
-        verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
+        verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class), eq(true));
         verify(eventErrorDAO, never()).deleteItem(Mockito.anyString(), Mockito.any(Instant.class));
     }
 
@@ -96,7 +96,7 @@ class SendToDeliveryPushHandlerTest {
         paperRequest.setStatusCode("someok");
         paperRequest.setStatusDateTime(Instant.now().atOffset(ZoneOffset.UTC));
 
-        Mockito.when(requestDeliveryDAO.updateData(Mockito.any())).thenReturn(Mono.just(entity));
+        Mockito.when(requestDeliveryDAO.updateData(Mockito.any(), anyBoolean())).thenReturn(Mono.just(entity));
 
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
         SendEvent sendEventExpected = SendEventMapper.createSendEventMessage(entity, paperRequest);
@@ -107,7 +107,7 @@ class SendToDeliveryPushHandlerTest {
         verify(eventErrorDAO, never()).findEventErrorsByRequestId(Mockito.anyString());
 
         ArgumentCaptor<PnDeliveryRequest> argumentCaptor = ArgumentCaptor.forClass(PnDeliveryRequest.class);
-        verify(requestDeliveryDAO, times(1)).updateData(argumentCaptor.capture());
+        verify(requestDeliveryDAO, times(1)).updateData(argumentCaptor.capture(), eq(true));
 
         verify(eventErrorDAO, never()).deleteItem(Mockito.anyString(), Mockito.any(Instant.class));
 
@@ -126,7 +126,7 @@ class SendToDeliveryPushHandlerTest {
         paperRequest.setStatusCode("someok");
         paperRequest.setStatusDateTime(Instant.now().atOffset(ZoneOffset.UTC));
 
-        Mockito.when(requestDeliveryDAO.updateData(Mockito.any())).thenReturn(Mono.just(entity));
+        Mockito.when(requestDeliveryDAO.updateData(Mockito.any(), anyBoolean())).thenReturn(Mono.just(entity));
         Mockito.when(pnPaperChannelConfig.getAllowedRedriveProgressStatusCodes()).thenReturn(List.of("SOME1"));
         Mockito.when(eventErrorDAO.findEventErrorsByRequestId(Mockito.anyString())).thenReturn(Flux.empty());
 
@@ -138,7 +138,7 @@ class SendToDeliveryPushHandlerTest {
         verify(mockSqsSender, never()).pushSingleStatusUpdateEvent(Mockito.any());
         verify(eventErrorDAO, never()).deleteItem(Mockito.anyString(), Mockito.any(Instant.class));
 
-        verify(requestDeliveryDAO, times(1)).updateData(any(PnDeliveryRequest.class));
+        verify(requestDeliveryDAO, times(1)).updateData(any(PnDeliveryRequest.class), eq(true));
     }
 
 
@@ -167,7 +167,7 @@ class SendToDeliveryPushHandlerTest {
         error.setOriginalMessageInfo(paperProgressStatusEventOriginalMessageInfo);
         error.setStatusCode(paperProgressStatusEventOriginalMessageInfo.getStatusCode());
 
-        Mockito.when(requestDeliveryDAO.updateData(Mockito.any())).thenReturn(Mono.just(entity));
+        Mockito.when(requestDeliveryDAO.updateData(Mockito.any(), anyBoolean())).thenReturn(Mono.just(entity));
         Mockito.when(pnPaperChannelConfig.getAllowedRedriveProgressStatusCodes()).thenReturn(List.of("SOME1"));
         Mockito.when(eventErrorDAO.findEventErrorsByRequestId(Mockito.any())).thenReturn(Flux.fromIterable(List.of(error)));
 
@@ -179,7 +179,7 @@ class SendToDeliveryPushHandlerTest {
         verify(mockSqsSender, times(1)).pushSingleStatusUpdateEvent(Mockito.any());
         verify(eventErrorDAO, times(1)).deleteItem(Mockito.anyString(), Mockito.any(Instant.class));
 
-        verify(requestDeliveryDAO, times(1)).updateData(any(PnDeliveryRequest.class));
+        verify(requestDeliveryDAO, times(1)).updateData(any(PnDeliveryRequest.class), eq(true));
         verify(eventErrorDAO, times(1)).deleteItem(anyString(), any(Instant.class));
     }
 
@@ -209,7 +209,7 @@ class SendToDeliveryPushHandlerTest {
         error.setOriginalMessageInfo(paperProgressStatusEventOriginalMessageInfo);
         error.setStatusCode(paperProgressStatusEventOriginalMessageInfo.getStatusCode());
 
-        Mockito.when(requestDeliveryDAO.updateData(Mockito.any())).thenReturn(Mono.just(entity));
+        Mockito.when(requestDeliveryDAO.updateData(Mockito.any(), anyBoolean())).thenReturn(Mono.just(entity));
         Mockito.when(pnPaperChannelConfig.getAllowedRedriveProgressStatusCodes()).thenReturn(List.of("SOME2"));
         Mockito.when(eventErrorDAO.findEventErrorsByRequestId(Mockito.any())).thenReturn(Flux.fromIterable(List.of(error)));
 
@@ -220,7 +220,7 @@ class SendToDeliveryPushHandlerTest {
         verify(mockSqsSender, times(1)).pushSendEvent(sendEventExpected);
         verify(mockSqsSender, times(0)).pushSingleStatusUpdateEvent(Mockito.any());
 
-        verify(requestDeliveryDAO, times(1)).updateData(any(PnDeliveryRequest.class));
+        verify(requestDeliveryDAO, times(1)).updateData(any(PnDeliveryRequest.class), eq(true));
         verify(eventErrorDAO, never()).deleteItem(anyString(), any(Instant.class));
     }
 
@@ -244,7 +244,7 @@ class SendToDeliveryPushHandlerTest {
         error.setStatusBusinessDateTime(Instant.now());
         error.setStatusCode("SOME1");
 
-        Mockito.when(requestDeliveryDAO.updateData(Mockito.any())).thenReturn(Mono.just(entity));
+        Mockito.when(requestDeliveryDAO.updateData(Mockito.any(), anyBoolean())).thenReturn(Mono.just(entity));
         Mockito.when(pnPaperChannelConfig.getAllowedRedriveProgressStatusCodes()).thenReturn(List.of("SOME1"));
         Mockito.when(eventErrorDAO.findEventErrorsByRequestId(Mockito.any())).thenReturn(Flux.fromIterable(List.of(error)));
 
@@ -255,7 +255,7 @@ class SendToDeliveryPushHandlerTest {
         verify(mockSqsSender, times(1)).pushSendEvent(sendEventExpected);
         verify(mockSqsSender, times(0)).pushSingleStatusUpdateEvent(Mockito.any());
 
-        verify(requestDeliveryDAO, times(1)).updateData(any(PnDeliveryRequest.class));
+        verify(requestDeliveryDAO, times(1)).updateData(any(PnDeliveryRequest.class), eq(true));
         verify(eventErrorDAO, never()).deleteItem(anyString(), any(Instant.class));
     }
 }

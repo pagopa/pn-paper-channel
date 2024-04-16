@@ -96,7 +96,7 @@ class RECRN00XCMessageHandlerTest {
         entity.setStatusDetail(statusRECRN003C);
         entity.setStatusCode(ExternalChannelCodeEnum.getStatusCode(paperRequest.getStatusCode()));
 
-        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(entity));
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
 
         Mono<Void> mono = this.handler.handleMessage(entity, paperRequest);
         Assertions.assertDoesNotThrow(() -> mono.block());
@@ -105,7 +105,7 @@ class RECRN00XCMessageHandlerTest {
             assertThat(pnDeliveryRequest).isNotNull();
             assertThat(pnDeliveryRequest.getRefined()).isTrue();
             return true;
-        }));
+        }), eq(true));
     }
 
 
@@ -183,7 +183,7 @@ class RECRN00XCMessageHandlerTest {
         entity.setStatusDetail(StatusCodeEnum.PROGRESS.getValue());
         entity.setStatusCode(ExternalChannelCodeEnum.getStatusCode(paperRequest.getStatusCode()));
 
-        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(entity));
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
 
         Mono<Void> mono = this.handler.handleMessage(entity, paperRequest);
         Assertions.assertDoesNotThrow(() -> mono.block());
@@ -201,7 +201,7 @@ class RECRN00XCMessageHandlerTest {
             assertThat(pnDeliveryRequest).isNotNull();
             assertThat(pnDeliveryRequest.getRefined()).isTrue();
             return true;
-        }));
+        }), eq(true));
     }
 
     private PnEventMeta getEventMeta(String statusCode, Instant time){
