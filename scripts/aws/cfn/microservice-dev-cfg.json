@@ -39,7 +39,7 @@
     "ZipHandleActive": "false",
     "Pnaddr002ContinueFlow": "true",
     "ComplexRefinementCodes": "RECAG007C",
-    "EnableSimple890Flow": "false",
+    "EnableSimple890Flow": "true",
     "EnableDocFilterRuleEngine": "true",
     "DefaultAttachmentConfigCap": "ZIP##DEFAULT"
   }
