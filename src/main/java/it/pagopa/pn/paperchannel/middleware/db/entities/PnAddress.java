@@ -14,6 +14,8 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortK
 @ToString
 public class PnAddress {
 
+    public static final String ADDRESS_DYNAMO_TABLE_NAME = "AddressDynamoTable";
+
     private static final String COL_REQUEST_ID = "requestId";
 
     private static final String COL_FULL_NAME = "fullName";

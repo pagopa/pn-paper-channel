@@ -59,6 +59,7 @@ class PaperNotRetryableIT extends BaseTest {
 
         when(requestDeliveryDAO.getByRequestId(anyString())).thenReturn(Mono.just(pnDeliveryRequest));
         when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(afterSetForUpdate));
 
         PnAddress pnAddress = new PnAddress();
         pnAddress.setTypology(AddressTypeEnum.RECEIVER_ADDRESS.name());

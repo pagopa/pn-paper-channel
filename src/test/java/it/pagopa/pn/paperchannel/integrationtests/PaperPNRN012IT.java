@@ -35,8 +35,9 @@ import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.TAKING_CHARGE;
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.RECRN011_STATUS_CODE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.Mockito.*;
 
 
 class PaperPNRN012IT extends BaseTest {
@@ -287,8 +288,8 @@ class PaperPNRN012IT extends BaseTest {
                 analogMail.getStatusDateTime().toInstant()
         );
 
-        Mockito.when(requestDeliveryDAO.updateData(Mockito.any()))
-                .thenReturn(Mono.just(forUpdate));
+        Mockito.when(requestDeliveryDAO.updateData(Mockito.any())).thenReturn(Mono.just(forUpdate));
+        Mockito.when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(forUpdate));
     }
 
     private PnDeliveryRequest getDeliveryRequest(String code, String detail, String description){

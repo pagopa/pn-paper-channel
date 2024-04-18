@@ -2,6 +2,8 @@ package it.pagopa.pn.paperchannel.service;
 
 
 import it.pagopa.pn.paperchannel.config.BaseTest;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.AnalogAddress;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PrepareEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
@@ -20,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 
 import java.time.Instant;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 
 class SqsQueueSenderTestIT extends BaseTest {
@@ -101,6 +104,26 @@ class SqsQueueSenderTestIT extends BaseTest {
     void rePushToExternalChannelErrorQueueTest(){
         ExternalChannelError error = new ExternalChannelError();
         this.sqsSender.rePushInternalError(error, 1, Instant.now().plus(200, ChronoUnit.MINUTES), ExternalChannelError.class);
+
+        Mockito.verify(internalQueueMomProducer, Mockito.times(1))
+                .push((InternalPushEvent) Mockito.any());
+    }
+
+
+    @Test
+    void pushSingleStatusUpdateEventTest(){
+        SingleStatusUpdateDto singleStatusUpdateDto = new SingleStatusUpdateDto();
+        PaperProgressStatusEventDto paperProgressStatusEventDto = new PaperProgressStatusEventDto();
+        paperProgressStatusEventDto.setRequestId("requestid");
+        paperProgressStatusEventDto.setStatusDateTime(Instant.now().atOffset(ZoneOffset.UTC));
+        paperProgressStatusEventDto.setStatusCode("CODE");
+        paperProgressStatusEventDto.setStatusDescription("DESCRIPTION");
+        paperProgressStatusEventDto.setRegisteredLetterCode("LETTER");
+        paperProgressStatusEventDto.setProductType("890");
+        paperProgressStatusEventDto.setClientRequestTimeStamp(Instant.now().atOffset(ZoneOffset.UTC));
+
+        singleStatusUpdateDto.setAnalogMail(paperProgressStatusEventDto);
+        this.sqsSender.pushSingleStatusUpdateEvent(singleStatusUpdateDto);
 
         Mockito.verify(internalQueueMomProducer, Mockito.times(1))
                 .push((InternalPushEvent) Mockito.any());

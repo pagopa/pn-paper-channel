@@ -78,6 +78,7 @@ class Paper_RS_AR_IT extends BaseTest {
         afterSetForUpdate.setStatusCode(extChannelMessage.getAnalogMail().getStatusCode());
         when(requestDeliveryDAO.getByRequestId(anyString())).thenReturn(Mono.just(pnDeliveryRequest));
         when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(afterSetForUpdate));
 
         // verifico che il flusso è stato completato con successo
         assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());
@@ -123,6 +124,7 @@ class Paper_RS_AR_IT extends BaseTest {
         afterSetForUpdate.setStatusCode(extChannelMessage.getAnalogMail().getStatusCode());
         when(requestDeliveryDAO.getByRequestId(anyString())).thenReturn(Mono.just(pnDeliveryRequest));
         when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(afterSetForUpdate));
 
         PnAddress pnAddress = new PnAddress();
         pnAddress.setTypology(AddressTypeEnum.RECEIVER_ADDRESS.name());
@@ -170,6 +172,7 @@ class Paper_RS_AR_IT extends BaseTest {
         afterSetForUpdate.setStatusCode(extChannelMessage.getAnalogMail().getStatusCode());
         when(requestDeliveryDAO.getByRequestId(anyString())).thenReturn(Mono.just(pnDeliveryRequest));
         when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(afterSetForUpdate));
 
         // verifico che il flusso della Giacenza RECRN011 è terminato con successo
         assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());
@@ -216,6 +219,7 @@ class Paper_RS_AR_IT extends BaseTest {
         afterSetForUpdate.setStatusCode(extChannelMessage.getAnalogMail().getStatusCode());
         when(requestDeliveryDAO.getByRequestId(anyString())).thenReturn(Mono.just(pnDeliveryRequest));
         when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(afterSetForUpdate));
 
         // verifico che il flusso è stato completato con successo
         assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());
@@ -245,6 +249,7 @@ class Paper_RS_AR_IT extends BaseTest {
         afterSetForUpdate.setStatusCode(extChannelMessage2.getAnalogMail().getStatusCode());
         when(requestDeliveryDAO.getByRequestId(anyString())).thenReturn(Mono.just(pnDeliveryRequest));
         when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(afterSetForUpdate));
 
         // verifico che il flusso è stato completato con successo
         assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage2, 0).block());
@@ -286,6 +291,7 @@ class Paper_RS_AR_IT extends BaseTest {
         afterSetForUpdate.setStatusCode(extChannelMessage3.getAnalogMail().getStatusCode());
         when(requestDeliveryDAO.getByRequestId(anyString())).thenReturn(Mono.just(pnDeliveryRequest));
         when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(afterSetForUpdate));
 
         // verifico che il flusso è stato completato con successo
         assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage3, 0).block());
@@ -615,6 +621,7 @@ class Paper_RS_AR_IT extends BaseTest {
 
         when(requestDeliveryDAO.getByRequestId(anyString())).thenReturn(Mono.just(pnDeliveryRequest));
         when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(afterSetForUpdate));
 
         // verifico che il flusso è stato completato con successo
         assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());

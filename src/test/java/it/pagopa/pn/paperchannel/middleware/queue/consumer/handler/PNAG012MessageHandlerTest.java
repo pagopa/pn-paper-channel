@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
+import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.DiscoveredAddressDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
@@ -7,6 +8,7 @@ import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDiscoveredAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventDemat;
@@ -26,32 +28,47 @@ import java.util.Set;
 
 import static it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.PNAG012MessageHandler.*;
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.*;
 
 class PNAG012MessageHandlerTest {
 
-    private EventDematDAO eventDematDAO;
-
-    private EventMetaDAO eventMetaDAO;
-
-    private SqsSender mockSqsSender;
-
     private PNAG012MessageHandler handler;
+
+    private EventDematDAO eventDematDAO;
+    private EventMetaDAO eventMetaDAO;
+    private SqsSender mockSqsSender;
+    private RequestDeliveryDAO requestDeliveryDAO;
+
+    private PnPaperChannelConfig mockConfig;
 
     @BeforeEach
     public void init() {
         long ttlDays = 365;
-        eventDematDAO = mock(EventDematDAO.class);
-        eventMetaDAO = mock(EventMetaDAO.class);
-        mockSqsSender = mock(SqsSender.class);
-
         Set<String> requiredDemats = Set.of(
                 DematDocumentTypeEnum.DEMAT_23L.getDocumentType(),
                 DematDocumentTypeEnum.DEMAT_ARCAD.getDocumentType()
         );
 
-        handler = new PNAG012MessageHandler(mockSqsSender, eventDematDAO, ttlDays, eventMetaDAO, ttlDays, requiredDemats, false);
+        eventDematDAO = mock(EventDematDAO.class);
+        eventMetaDAO = mock(EventMetaDAO.class);
+        mockSqsSender = mock(SqsSender.class);
+        requestDeliveryDAO = mock(RequestDeliveryDAO.class);
+
+        mockConfig = new PnPaperChannelConfig();
+        mockConfig.setTtlExecutionDaysDemat(ttlDays);
+        mockConfig.setTtlExecutionDaysMeta(ttlDays);
+        mockConfig.setZipHandleActive(false);
+        mockConfig.setRequiredDemats(requiredDemats);
+
+        handler = PNAG012MessageHandler.builder()
+                .sqsSender(mockSqsSender)
+                .eventDematDAO(eventDematDAO)
+                .eventMetaDAO(eventMetaDAO)
+                .requestDeliveryDAO(requestDeliveryDAO)
+                .pnPaperChannelConfig(mockConfig)
+                .build();
     }
 
     @Test
@@ -97,6 +114,8 @@ class PNAG012MessageHandlerTest {
         PnEventMeta pnEventMetaPNAG012 = createMETAForPNAG012Event(paperRequest, pnEventMetaRECAG012, 365L);
         when(eventMetaDAO.putIfAbsent(pnEventMetaPNAG012)).thenReturn(Mono.just(pnEventMetaPNAG012));
 
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
+
         // Then
         // eseguo l'handler
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
@@ -105,6 +124,11 @@ class PNAG012MessageHandlerTest {
         verify(eventMetaDAO, times(1)).putIfAbsent(any(PnEventMeta.class));
         verify(mockSqsSender, times(1)).pushSendEvent(any(SendEvent.class));
 
+        verify(requestDeliveryDAO, times(1)).updateData(argThat(pnDeliveryRequest -> {
+            assertThat(pnDeliveryRequest).isNotNull();
+            assertThat(pnDeliveryRequest.getRefined()).isTrue();
+            return true;
+        }), eq(true));
     }
 
     @Test
@@ -150,6 +174,8 @@ class PNAG012MessageHandlerTest {
         PnEventMeta pnEventMetaPNAG012 = createMETAForPNAG012Event(paperRequest, pnEventMetaRECAG012, 365L);
         when(eventMetaDAO.putIfAbsent(pnEventMetaPNAG012)).thenReturn(Mono.just(pnEventMetaPNAG012));
 
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
+
         // Then
         // eseguo l'handler
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
@@ -158,6 +184,11 @@ class PNAG012MessageHandlerTest {
         verify(eventMetaDAO, times(1)).putIfAbsent(any(PnEventMeta.class));
         verify(mockSqsSender, times(1)).pushSendEvent(any(SendEvent.class));
 
+        verify(requestDeliveryDAO, times(1)).updateData(argThat(pnDeliveryRequest -> {
+            assertThat(pnDeliveryRequest).isNotNull();
+            assertThat(pnDeliveryRequest.getRefined()).isTrue();
+            return true;
+        }), eq(true));
     }
 
     @Test
@@ -218,12 +249,20 @@ class PNAG012MessageHandlerTest {
         PnEventMeta pnEventMetaPNAG012 = createMETAForPNAG012Event(paperRequest, pnEventMetaRECAG012, 365L);
         when(eventMetaDAO.putIfAbsent(pnEventMetaPNAG012)).thenReturn(Mono.just(pnEventMetaPNAG012));
 
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
+
         // Then
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
 
         verify(eventMetaDAO, times(1)).getDeliveryEventMeta(anyString(), anyString());
         verify(eventMetaDAO, times(1)).putIfAbsent(any(PnEventMeta.class));
         verify(mockSqsSender, times(1)).pushSendEvent(any(SendEvent.class));
+
+        verify(requestDeliveryDAO, times(1)).updateData(argThat(pnDeliveryRequest -> {
+            assertThat(pnDeliveryRequest).isNotNull();
+            assertThat(pnDeliveryRequest.getRefined()).isTrue();
+            return true;
+        }), eq(true));
     }
 
     @Test
@@ -272,6 +311,7 @@ class PNAG012MessageHandlerTest {
         //mi aspetto che il flusso venga bloccato e quindi on invii l'evento a delivery-push
         verify(mockSqsSender, never()).pushSendEvent(any());
 
+        verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
     }
 
     @Test
@@ -323,6 +363,7 @@ class PNAG012MessageHandlerTest {
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
         verify(mockSqsSender, never()).pushSendEvent(any());
 
+        verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
     }
 
     @Test
@@ -363,6 +404,7 @@ class PNAG012MessageHandlerTest {
         verify(eventMetaDAO, never()).getDeliveryEventMeta(anyString(), anyString());
         verify(eventMetaDAO, never()).putIfAbsent(any(PnEventMeta.class));
         verify(mockSqsSender, never()).pushSendEvent(any(SendEvent.class));
+        verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
     }
 
     @Test
@@ -412,9 +454,17 @@ class PNAG012MessageHandlerTest {
         PnEventMeta pnEventMetaPNAG012 = createMETAForPNAG012Event(paperRequest, pnEventMetaRECAG012, 365L);
         when(eventMetaDAO.putIfAbsent(pnEventMetaPNAG012)).thenReturn(Mono.just(pnEventMetaPNAG012));
 
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
+
         // Then
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
         verify(mockSqsSender, times(1)).pushSendEvent(any());
+
+        verify(requestDeliveryDAO, times(1)).updateData(argThat(pnDeliveryRequest -> {
+            assertThat(pnDeliveryRequest).isNotNull();
+            assertThat(pnDeliveryRequest.getRefined()).isTrue();
+            return true;
+        }), eq(true));
     }
 
     @Test
@@ -424,8 +474,9 @@ class PNAG012MessageHandlerTest {
          * */
 
         // Given
-        Set<String> requiredDemats = Collections.emptySet();
-        ReflectionTestUtils.setField(handler, "requiredDemats", requiredDemats);
+
+        mockConfig.setRequiredDemats(Collections.emptySet());
+        ReflectionTestUtils.setField(handler, "pnPaperChannelConfig", mockConfig);
 
         OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
         PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
@@ -468,9 +519,17 @@ class PNAG012MessageHandlerTest {
         PnEventMeta pnEventMetaPNAG012 = createMETAForPNAG012Event(paperRequest, pnEventMetaRECAG012, 365L);
         when(eventMetaDAO.putIfAbsent(pnEventMetaPNAG012)).thenReturn(Mono.just(pnEventMetaPNAG012));
 
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
+
         // Then
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
         verify(mockSqsSender, times(1)).pushSendEvent(any());
+
+        verify(requestDeliveryDAO, times(1)).updateData(argThat(pnDeliveryRequest -> {
+            assertThat(pnDeliveryRequest).isNotNull();
+            assertThat(pnDeliveryRequest.getRefined()).isTrue();
+            return true;
+        }), eq(true));
     }
 
     @Test
@@ -512,6 +571,7 @@ class PNAG012MessageHandlerTest {
         verify(eventMetaDAO, never()).getDeliveryEventMeta(any(), any());
         verify(mockSqsSender, never()).pushSendEvent(any());
 
+        verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
     }
 
     private PnEventMeta buildPnEventMeta(PaperProgressStatusEventDto paperRequest) {

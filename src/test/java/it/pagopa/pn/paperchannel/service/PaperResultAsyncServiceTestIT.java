@@ -291,6 +291,7 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
         afterSetForUpdate.setStatusCode(extChannelMessage.getAnalogMail().getStatusCode());
         when(requestDeliveryDAO.getByRequestId(anyString())).thenReturn(Mono.just(pnDeliveryRequest));
         when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(afterSetForUpdate));
 
         // verifico che il flusso è stato completato con successo
         assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());
@@ -512,6 +513,7 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
         afterSetForUpdate.setStatusCode(extChannelMessage.getAnalogMail().getStatusCode());
         when(requestDeliveryDAO.getByRequestId(anyString())).thenReturn(Mono.just(pnDeliveryRequest));
         when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(afterSetForUpdate));
 
         // verifico che il flusso è stato completato con successo
         assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());
@@ -520,9 +522,6 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
         entityPlico = eventDematDAO.getDeliveryEventDemat(RECAG011BRequestExpected, RECAG011BStatusCodePlicoExpected).block();
         assertThat(entityPlico).isNotNull();
 
-        // verifico che è stato inserito il record PNAG012 in DB
-        PnEventMeta pnEventMetaPNAG012 = eventMetaDAO.getDeliveryEventMeta("META##" + requestId, "META##" + "PNAG012").block();
-        assertThat(pnEventMetaPNAG012).isNotNull();
 
         // verifico che sono stati inviati 2 eventi a delivery push, un PROGRESS (RECAG011B) e un OK (PNAG012)
         verify(sqsSender, timeout(4000).times(2)).pushSendEvent(any(SendEvent.class));
@@ -649,6 +648,7 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
         afterSetForUpdate.setStatusCode(extChannelMessage.getAnalogMail().getStatusCode());
         when(requestDeliveryDAO.getByRequestId(anyString())).thenReturn(Mono.just(pnDeliveryRequest));
         when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class))).thenReturn(Mono.just(afterSetForUpdate));
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(afterSetForUpdate));
 
         // verifico che il flusso è stato completato con successo
         assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());

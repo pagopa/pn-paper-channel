@@ -9,6 +9,7 @@ public interface RequestDeliveryDAO {
     Mono<PnDeliveryRequest> createWithAddress(PnDeliveryRequest request, PnAddress pnAddress, PnAddress discoveredAddress);
 
     Mono<PnDeliveryRequest> updateData(PnDeliveryRequest pnDeliveryRequest);
+    Mono<PnDeliveryRequest> updateData(PnDeliveryRequest pnDeliveryRequest, boolean ignorableNulls);
 
     Mono<PnDeliveryRequest> getByRequestId(String requestId);
     Mono<PnDeliveryRequest> getByRequestId(String requestId, boolean decode);

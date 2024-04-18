@@ -1,7 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
 import it.pagopa.pn.commons.utils.MDCUtils;
-import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendRequest;
 import it.pagopa.pn.paperchannel.mapper.AttachmentMapper;
@@ -14,9 +13,9 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnRequestError;
 import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
 import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
 import it.pagopa.pn.paperchannel.model.AttachmentInfo;
-import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.PnLogAudit;
+import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import reactor.core.publisher.Mono;
@@ -27,29 +26,14 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.EXTERNAL_CHA
 
 // handler per stati gialli: Retry su ExtCh con suffisso +1, invio dello stato in progress verso DP
 @Slf4j
-//@RequiredArgsConstructor
+@SuperBuilder
 public class RetryableErrorMessageHandler extends SendToDeliveryPushHandler {
 
     private static final String REQUEST_TO_EXTERNAL_CHANNEL = "prepare requestId = %s, trace_id = %s  request to External Channel";
 
     private final ExternalChannelClient externalChannelClient;
-
     private final AddressDAO addressDAO;
-
     private final PaperRequestErrorDAO paperRequestErrorDAO;
-
-    private final PnPaperChannelConfig pnPaperChannelConfig;
-
-    public RetryableErrorMessageHandler(SqsSender sqsSender, ExternalChannelClient externalChannelClient,
-                                        AddressDAO addressDAO, PaperRequestErrorDAO paperRequestErrorDAO,
-                                        PnPaperChannelConfig pnPaperChannelConfig) {
-        super(sqsSender);
-        this.externalChannelClient = externalChannelClient;
-        this.addressDAO = addressDAO;
-        this.paperRequestErrorDAO = paperRequestErrorDAO;
-        this.pnPaperChannelConfig = pnPaperChannelConfig;
-    }
-
 
     @Override
     public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {

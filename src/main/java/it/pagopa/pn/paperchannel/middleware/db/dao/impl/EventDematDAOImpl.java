@@ -33,8 +33,14 @@ public class EventDematDAOImpl extends BaseDAO<PnEventDemat> implements EventDem
 
     @Override
     public Flux<PnEventDemat> findAllByRequestId(String dematRequestId) {
+        return findAllByRequestId(dematRequestId, false);
+    }
+
+
+    @Override
+    public Flux<PnEventDemat> findAllByRequestId(String dematRequestId, boolean consistentRead) {
         QueryConditional keyConditional = CONDITION_EQUAL_TO.apply(Key.builder().partitionValue(dematRequestId).build());
-        return getByFilter(keyConditional, null, null, null);
+        return getByFilter(keyConditional, null, null, null, null, consistentRead);
     }
 
     @Override
