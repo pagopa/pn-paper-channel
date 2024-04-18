@@ -5,6 +5,7 @@ import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDiscoveredAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventDemat;
@@ -28,19 +29,27 @@ import static org.mockito.Mockito.*;
 
 class RECAG008CMessageHandlerTest {
     private RECAG008CMessageHandler handler;
+
     private SqsSender mockSqsSender;
     private EventDematDAO mockDematDao;
     private EventMetaDAO mockMetaDao;
+    private RequestDeliveryDAO requestDeliveryDAO;
 
     @BeforeEach
     public void init() {
         mockSqsSender = mock(SqsSender.class);
         mockMetaDao = mock(EventMetaDAO.class);
         mockDematDao = mock(EventDematDAO.class);
+        requestDeliveryDAO = mock(RequestDeliveryDAO.class);
 
         MetaDematCleaner metaDematCleaner = new MetaDematCleaner(mockDematDao, mockMetaDao);
 
-        handler = new RECAG008CMessageHandler(mockSqsSender, mockMetaDao, metaDematCleaner);
+        handler = RECAG008CMessageHandler.builder()
+                .sqsSender(mockSqsSender)
+                .eventMetaDAO(mockMetaDao)
+                .requestDeliveryDAO(requestDeliveryDAO)
+                .metaDematCleaner(metaDematCleaner)
+                .build();
     }
 
     @Test
@@ -90,6 +99,8 @@ class RECAG008CMessageHandlerTest {
         verify(mockDematDao, timeout(2000).times(1)).deleteBatch(any(String.class), any(String.class));
         // DeliveryPush send via SQS verification
         verify(mockSqsSender, timeout(2000).times(1)).pushSendEvent(any(SendEvent.class));
+
+        verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
     }
 
     @Test
@@ -141,6 +152,8 @@ class RECAG008CMessageHandlerTest {
         verify(mockDematDao, timeout(2000).times(0)).deleteBatch(any(String.class), any(String.class));
         // DeliveryPush send via SQS verification
         verify(mockSqsSender, timeout(2000).times(1)).pushSendEvent(any(SendEvent.class));
+
+        verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
     }
 
     private PnEventMeta createPnEventMeta() {

@@ -345,8 +345,8 @@ public class F24ServiceImpl extends GenericService implements F24Service {
                         receiverAddress,
                         ProductTypeEnum.fromValue(deliveryRequest.getProductType()),
                         StringUtils.equals(deliveryRequest.getPrintType(), Const.BN_FRONTE_RETRO)))
-                .map(analogCost -> {
-                    pnAttachmentInfo.setAnalogCost(Utility.toCentsFormat(analogCost));
+                .map(costWithDriver -> {
+                    pnAttachmentInfo.setAnalogCost(Utility.toCentsFormat(costWithDriver.getCost()));
                     return pnAttachmentInfo;
                 })
                 .doOnNext(analogCost -> logAuditSuccessLogic("preparePDF requestId = %s, relatedRequestId = %s Receiver address is present on DB, computed cost " + analogCost, deliveryRequest, pnLogAudit));

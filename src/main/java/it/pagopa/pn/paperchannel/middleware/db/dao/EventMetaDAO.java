@@ -10,6 +10,7 @@ public interface EventMetaDAO {
     Mono<PnEventMeta> putIfAbsent(PnEventMeta pnEventMeta);
 
     Mono<PnEventMeta> getDeliveryEventMeta(String metaRequestId, String metaStatusCode);
+    Mono<PnEventMeta> getDeliveryEventMeta(String metaRequestId, String metaStatusCode, boolean consistentRead);
 
     Flux<PnEventMeta> findAllByRequestId(String metaRequestId);
 

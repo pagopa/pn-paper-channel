@@ -1,10 +1,12 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
 
+import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDiscoveredAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
@@ -24,6 +26,7 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
@@ -35,9 +38,12 @@ class RECRN00XCMessageHandlerTest {
     private static final String statusRECRN003C = "RECRN003C";
     private static final String requestId = "1234LL-GGGG-SSSS";
     private static final String META_STRING = "META##";
+
     private RECRN00XCMessageHandler handler;
+
     private SqsSender sqsSender;
     private EventMetaDAO eventMetaDAO;
+    private RequestDeliveryDAO requestDeliveryDAO;
 
     private final int DAYS_REFINEMENT = 10;
 
@@ -45,11 +51,22 @@ class RECRN00XCMessageHandlerTest {
     void setUp(){
         sqsSender = mock(SqsSender.class);
         eventMetaDAO = mock(EventMetaDAO.class);
+        requestDeliveryDAO = mock(RequestDeliveryDAO.class);
+
         MetaDematCleaner metaDematCleaner = mock(MetaDematCleaner.class);
 
         when(metaDematCleaner.clean(requestId)).thenReturn(Mono.empty());
 
-        handler = new RECRN00XCMessageHandler(sqsSender, eventMetaDAO, metaDematCleaner, Duration.of(DAYS_REFINEMENT, ChronoUnit.DAYS));
+        PnPaperChannelConfig mockConfig = new PnPaperChannelConfig();
+        mockConfig.setRefinementDuration(Duration.of(DAYS_REFINEMENT, ChronoUnit.DAYS));
+
+        handler = RECRN00XCMessageHandler.builder()
+                .sqsSender(sqsSender)
+                .eventMetaDAO(eventMetaDAO)
+                .requestDeliveryDAO(requestDeliveryDAO)
+                .metaDematCleaner(metaDematCleaner)
+                .pnPaperChannelConfig(mockConfig)
+                .build();
     }
 
     @Test
@@ -79,8 +96,16 @@ class RECRN00XCMessageHandlerTest {
         entity.setStatusDetail(statusRECRN003C);
         entity.setStatusCode(ExternalChannelCodeEnum.getStatusCode(paperRequest.getStatusCode()));
 
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
+
         Mono<Void> mono = this.handler.handleMessage(entity, paperRequest);
         Assertions.assertDoesNotThrow(() -> mono.block());
+
+        verify(requestDeliveryDAO, times(1)).updateData(argThat(pnDeliveryRequest -> {
+            assertThat(pnDeliveryRequest).isNotNull();
+            assertThat(pnDeliveryRequest.getRefined()).isTrue();
+            return true;
+        }), eq(true));
     }
 
 
@@ -123,6 +148,8 @@ class RECRN00XCMessageHandlerTest {
         SendEvent sendEvent = caturedSendEvent.getValue();
         Assertions.assertEquals(StatusCodeEnum.PROGRESS, sendEvent.getStatusCode());
         Assertions.assertEquals(statusRECRN003C, sendEvent.getStatusDetail());
+
+        verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
     }
 
 
@@ -144,8 +171,6 @@ class RECRN00XCMessageHandlerTest {
 
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
-
-
         PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
                 .requestId(requestId)
                 .statusCode(statusRECRN003C)
@@ -158,6 +183,8 @@ class RECRN00XCMessageHandlerTest {
         entity.setStatusDetail(StatusCodeEnum.PROGRESS.getValue());
         entity.setStatusCode(ExternalChannelCodeEnum.getStatusCode(paperRequest.getStatusCode()));
 
+        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
+
         Mono<Void> mono = this.handler.handleMessage(entity, paperRequest);
         Assertions.assertDoesNotThrow(() -> mono.block());
 
@@ -169,6 +196,12 @@ class RECRN00XCMessageHandlerTest {
         assertEquals(StatusCodeEnum.OK, caturedSendEvent.getAllValues().get(0).getStatusCode());
         assertEquals("RECRN003C", caturedSendEvent.getAllValues().get(1).getStatusDetail());
         assertEquals(StatusCodeEnum.PROGRESS, caturedSendEvent.getAllValues().get(1).getStatusCode());
+
+        verify(requestDeliveryDAO, times(1)).updateData(argThat(pnDeliveryRequest -> {
+            assertThat(pnDeliveryRequest).isNotNull();
+            assertThat(pnDeliveryRequest.getRefined()).isTrue();
+            return true;
+        }), eq(true));
     }
 
     private PnEventMeta getEventMeta(String statusCode, Instant time){

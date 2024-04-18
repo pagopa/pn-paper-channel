@@ -96,11 +96,16 @@ public class RequestDeliveryDAOImpl extends BaseDAO<PnDeliveryRequest> implement
 
     @Override
     public Mono<PnDeliveryRequest> updateData(PnDeliveryRequest pnDeliveryRequest) {
+        return updateData(pnDeliveryRequest, false);
+    }
+
+    @Override
+    public Mono<PnDeliveryRequest> updateData(PnDeliveryRequest pnDeliveryRequest, boolean ignorableNulls) {
         return Mono.fromFuture(this.dynamoTable.getItem(pnDeliveryRequest).thenApply(item -> item))
-                .flatMap(entityDB -> {
-                    pnDeliveryRequest.setFiscalCode(entityDB.getFiscalCode());
-                    return Mono.fromFuture(this.update(pnDeliveryRequest).thenApply(saved -> pnDeliveryRequest));
-                });
+            .flatMap(entityDB -> {
+                pnDeliveryRequest.setFiscalCode(entityDB.getFiscalCode());
+                return Mono.fromFuture(this.update(pnDeliveryRequest, ignorableNulls).thenApply(saved -> pnDeliveryRequest));
+            });
     }
 
     @Override

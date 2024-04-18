@@ -7,8 +7,8 @@ import it.pagopa.pn.paperchannel.mapper.DematInternalEventMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventDemat;
-import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.Utility;
+import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Flux;
@@ -17,14 +17,15 @@ import reactor.core.publisher.Mono;
 import java.util.ArrayList;
 import java.util.List;
 
-import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
+import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.buildDematRequestId;
+import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.buildDocumentTypeStatusCode;
 
 //Tutti gli eventi, fatta eccezione di quelli evidenziati (*), dovranno essere memorizzati nella tabella come entità DEMAT.
 // Tutti gli eventi che contengono dematerializzazioni del tipo (Plico, 23L, Indagine, AR) dovranno essere inviati come
 // eventi PROGRESS verso delivery-push (oltre che salvati a db)
 @Slf4j
+@SuperBuilder
 public class SaveDematMessageHandler extends SendToDeliveryPushHandler {
-
 
     private static final List<String> ATTACHMENT_TYPES_SEND_TO_DELIVERY_PUSH = List.of(
             "Plico",
@@ -34,18 +35,6 @@ public class SaveDematMessageHandler extends SendToDeliveryPushHandler {
     );
 
     protected final EventDematDAO eventDematDAO;
-
-    private final Long ttlDays;
-
-    private final boolean zipHandleActive;
-
-    public SaveDematMessageHandler(SqsSender sqsSender, EventDematDAO eventDematDAO, Long ttlDays, boolean zipHandleActive) {
-        super(sqsSender);
-        this.eventDematDAO = eventDematDAO;
-        this.ttlDays = ttlDays;
-        this.zipHandleActive = zipHandleActive;
-    }
-
 
     @Override
     public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
@@ -95,7 +84,7 @@ public class SaveDematMessageHandler extends SendToDeliveryPushHandler {
         PnEventDemat pnEventDemat = new PnEventDemat();
         pnEventDemat.setDematRequestId(buildDematRequestId(paperRequest.getRequestId()));
         pnEventDemat.setDocumentTypeStatusCode(buildDocumentTypeStatusCode(attachmentDetailsDto.getDocumentType(), paperRequest.getStatusCode()));
-        pnEventDemat.setTtl(paperRequest.getStatusDateTime().plusDays(ttlDays).toEpochSecond());
+        pnEventDemat.setTtl(paperRequest.getStatusDateTime().plusDays(pnPaperChannelConfig.getTtlExecutionDaysDemat()).toEpochSecond());
 
         pnEventDemat.setRequestId(paperRequest.getRequestId());
         pnEventDemat.setStatusCode(paperRequest.getStatusCode());
@@ -116,7 +105,7 @@ public class SaveDematMessageHandler extends SendToDeliveryPushHandler {
     }
 
     private boolean isZipHandleFlow(String requestId, AttachmentDetailsDto attachmentDetailsDto) {
-        return zipHandleActive &&
+        return pnPaperChannelConfig.isZipHandleActive() &&
                 Utility.isNotCallCenterEvoluto(requestId) &&
                 isAZipFile(attachmentDetailsDto) &&
                 isAttachmentMappedAsProgress(attachmentDetailsDto.getDocumentType());

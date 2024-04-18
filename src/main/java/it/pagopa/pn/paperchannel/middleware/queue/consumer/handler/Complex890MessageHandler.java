@@ -8,11 +8,12 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
 import it.pagopa.pn.paperchannel.middleware.queue.consumer.MetaDematCleaner;
 import it.pagopa.pn.paperchannel.middleware.queue.model.PNAG012Wrapper;
-import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.PnLogAudit;
+import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
+import javax.annotation.PostConstruct;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -49,6 +50,7 @@ import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
 */
 
 @Slf4j
+@SuperBuilder
 public class Complex890MessageHandler extends SendToDeliveryPushHandler {
 
     private static final String META_RECAG012_STATUS_CODE = buildMetaStatusCode(RECAG012_STATUS_CODE);
@@ -58,18 +60,11 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
     private static final String META_RECAG011A_STATUS_CODE = buildMetaStatusCode(RECAG011A_STATUS_CODE);
 
     private final EventMetaDAO eventMetaDAO;
-
     private final MetaDematCleaner metaDematCleaner;
 
-    private final Duration refinementDuration;
-
-    public Complex890MessageHandler(SqsSender sqsSender, EventMetaDAO eventMetaDAO, MetaDematCleaner metaDematCleaner, Duration refinementDuration) {
-        super(sqsSender);
-        this.eventMetaDAO = eventMetaDAO;
-        this.metaDematCleaner = metaDematCleaner;
-        this.refinementDuration = refinementDuration;
-
-        log.info("Refinement duration is {}", this.refinementDuration);
+    @PostConstruct
+    private void postConstruct() {
+        log.info("Refinement duration is {}", this.pnPaperChannelConfig.getRefinementDuration());
     }
 
     @Override
@@ -133,16 +128,16 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
 
         if (lessThanTenDaysBetweenRECAG00XAAndRECAG011A(recag011ADateTime, recag00XADateTime)) {
             // 3 a
-            log.info("[{}] (statusDateTime[META##RECAG00_A] - statusDateTime[META##RECAG011A]) < {}", paperRequest.getRequestId(), refinementDuration);
+            log.info("[{}] (statusDateTime[META##RECAG00_A] - statusDateTime[META##RECAG011A]) < {}", paperRequest.getRequestId(), pnPaperChannelConfig.getRefinementDuration());
 
             return super.handleMessage(entity, paperRequest) // original event sent as final
                     .then(Mono.just(pnEventMetas));
         } else if (recag011ADateTime != null) { // if check only for not having a warning when calling .plus
             // 3 b
-            log.info("[{}] (statusDateTime[META##RECAG00_A] - statusDateTime[META##RECAG011A]) >= {}", paperRequest.getRequestId(), refinementDuration);
+            log.info("[{}] (statusDateTime[META##RECAG00_A] - statusDateTime[META##RECAG011A]) >= {}", paperRequest.getRequestId(), pnPaperChannelConfig.getRefinementDuration());
 
             PnLogAudit pnLogAudit = new PnLogAudit();
-            PNAG012Wrapper pnag012Wrapper = PNAG012Wrapper.buildPNAG012Wrapper(entity, paperRequest, recag011ADateTime.plus(refinementDuration));
+            PNAG012Wrapper pnag012Wrapper = PNAG012Wrapper.buildPNAG012Wrapper(entity, paperRequest, recag011ADateTime.plus(pnPaperChannelConfig.getRefinementDuration()));
             var pnag012PaperRequest = pnag012Wrapper.getPaperProgressStatusEventDtoPNAG012();
             var pnag012DeliveryRequest = pnag012Wrapper.getPnDeliveryRequestPNAG012();
 
@@ -170,7 +165,7 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
 
     boolean lessThanTenDaysBetweenRECAG00XAAndRECAG011A(Instant recag011ADateTime, Instant recag00XADateTime) {
         // sebbene 10gg sia il termine di esercizio, per collaudo fa comodo avere un tempo più contenuto
-        return Duration.between(recag011ADateTime, recag00XADateTime).compareTo(refinementDuration) < 0;
+        return Duration.between(recag011ADateTime, recag00XADateTime).compareTo(pnPaperChannelConfig.getRefinementDuration()) < 0;
     }
 
     boolean missingRequiredDateTimes(Instant recag011ADateTime, Instant recag00XADateTime) {

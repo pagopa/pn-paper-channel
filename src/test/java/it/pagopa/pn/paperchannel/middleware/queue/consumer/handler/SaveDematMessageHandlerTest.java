@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
+import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.PnDematNotValidException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.AttachmentDetailsDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
@@ -7,6 +8,7 @@ import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.mapper.SendEventMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventDemat;
 import it.pagopa.pn.paperchannel.service.SqsSender;
@@ -25,23 +27,34 @@ import static org.mockito.Mockito.*;
 
 class SaveDematMessageHandlerTest {
 
-    private EventDematDAO mockDao;
-
-    private SqsSender mockSqsSender;
-
     private SaveDematMessageHandler handler;
+
+    private EventDematDAO mockDao;
+    private SqsSender mockSqsSender;
+    private RequestDeliveryDAO requestDeliveryDAO;
+    private PnPaperChannelConfig mockConfig;
 
 
     @BeforeEach
     public void init() {
         mockDao = mock(EventDematDAO.class);
         mockSqsSender = mock(SqsSender.class);
+        requestDeliveryDAO = mock(RequestDeliveryDAO.class);
+
+        mockConfig = new PnPaperChannelConfig();
+        mockConfig.setTtlExecutionDaysDemat(14L);
+        mockConfig.setZipHandleActive(false);
+
+        handler = SaveDematMessageHandler.builder()
+                .sqsSender(mockSqsSender)
+                .eventDematDAO(mockDao)
+                .requestDeliveryDAO(requestDeliveryDAO)
+                .pnPaperChannelConfig(mockConfig)
+                .build();
     }
 
     @Test
     void handleMessageWithDocumentTypePlicoTest() {
-        handler = new SaveDematMessageHandler(mockSqsSender, mockDao, 365L, false);
-
         OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
         PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
                 .requestId("requestId")
@@ -71,12 +84,12 @@ class SaveDematMessageHandlerTest {
         //mi aspetto che mandi il messaggio a delivery-push
         verify(mockSqsSender, times(1)).pushSendEvent(sendEventExpected);
 
+        // not call because it is a PROGRESS event
+        verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
     }
 
     @Test
     void handleMessageWithDocumentTypeCADTest() {
-        handler = new SaveDematMessageHandler(mockSqsSender, mockDao, 365L, false);
-
         OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
         PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
                 .requestId("requestId")
@@ -106,12 +119,12 @@ class SaveDematMessageHandlerTest {
         //mi aspetto che non mandi il messaggio a delivery-push
         verify(mockSqsSender, times(0)).pushSendEvent(sendEventNotExpected);
 
+        // not call because it is a PROGRESS event
+        verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
     }
 
     @Test
     void handleMessageWithDocumentTypeCADAnd23LTest() {
-        handler = new SaveDematMessageHandler(mockSqsSender, mockDao, 365L, false);
-
         OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
         PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
                 .requestId("requestId")
@@ -154,13 +167,12 @@ class SaveDematMessageHandlerTest {
         verify(mockSqsSender, times(0)).pushSendEvent(sendEventCAD);
         //mi aspetto che mandi il messaggio a delivery-push per l'evento 23L
         verify(mockSqsSender, times(1)).pushSendEvent(sendEvent23L);
-
+        // not call because it is a PROGRESS event
+        verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
     }
 
     @Test
     void handleMessageWithoutAttachmentsTest() {
-        handler = new SaveDematMessageHandler(mockSqsSender, mockDao, 365L, false);
-
         OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
         PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
                 .requestId("requestId")
@@ -181,7 +193,8 @@ class SaveDematMessageHandlerTest {
 
     @Test
     void handleMessageWithDocumentTypePlicoWithZipHandleActiveTrueTest() {
-        handler = new SaveDematMessageHandler(mockSqsSender, mockDao, 365L, true);
+
+        mockConfig.setZipHandleActive(true);
 
         OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
         PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
@@ -210,11 +223,14 @@ class SaveDematMessageHandlerTest {
         //mi aspetto che mandi l'evento dematInternalEvent sulla coda interna
         verify(mockSqsSender, times(1)).pushDematZipInternalEvent(any());
 
+        // not call because it is a PROGRESS event
+        verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
     }
 
     @Test
     void handleMessageWithDocumentTypePlicoWithZipHandleActiveTrueButMessageFromCallCenterEvolutoTest() {
-        handler = new SaveDematMessageHandler(mockSqsSender, mockDao, 365L, true);
+
+        mockConfig.setZipHandleActive(true);
 
         OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
         PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
@@ -247,8 +263,10 @@ class SaveDematMessageHandlerTest {
         //mi aspetto che mandi il messaggio in event bridge per l'evento Plico
         verify(mockSqsSender, times(1)).pushSendEventOnEventBridge(Const.PREFIX_REQUEST_ID_SERVICE_DESK, sendEventPlico);
 
-        MDC.clear();
+        // not call because it is a PROGRESS event
+        verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
 
+        MDC.clear();
     }
 
     private PaperProgressStatusEventDto getPaperRequestForOneAttachment(

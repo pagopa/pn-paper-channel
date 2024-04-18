@@ -5,17 +5,15 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnRequestError;
 import it.pagopa.pn.paperchannel.utils.PnLogAudit;
+import lombok.Builder;
 import reactor.core.publisher.Mono;
 
+@Builder
 public class NotRetriableWithoutSendErrorMessageHandler implements MessageHandler {
 
     private static final String FINISH_RETRY_EXTERNAL_CHANNEL_MESSAGE = "requestId = %s finish retry to External Channel";
 
     private final PaperRequestErrorDAO paperRequestErrorDAO;
-
-    public NotRetriableWithoutSendErrorMessageHandler(PaperRequestErrorDAO paperRequestErrorDAO) {
-        this.paperRequestErrorDAO = paperRequestErrorDAO;
-    }
 
     @Override
     public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {

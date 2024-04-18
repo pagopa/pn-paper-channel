@@ -20,6 +20,8 @@ import java.util.List;
 @NoArgsConstructor
 public class PnDeliveryRequest implements Serializable {
 
+    public static final String REQUEST_DELIVERY_DYNAMO_TABLE_NAME = "RequestDeliveryDynamoTable";
+
     public static final String COL_REQUEST_ID = "requestId";
 
     @ToString.Exclude
@@ -74,6 +76,12 @@ public class PnDeliveryRequest implements Serializable {
     public static final String COL_REWORK_NEEDED = "reworkNeeded";
 
     public static final String COL_REWORK_NEEDED_COUNT = "reworkNeededCount";
+
+    public static final String COL_REFINED = "refined";
+
+    public static final String COL_DRIVER_CODE = "driverCode";
+
+    public static final String COL_TENDER_CODE = "tenderCode";
 
     public static final String COL_NOTIFICATION_SENT_AT = "notificationSentAt";
 
@@ -146,6 +154,15 @@ public class PnDeliveryRequest implements Serializable {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_REWORK_NEEDED_COUNT)}))
     private Integer reworkNeededCount;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_REFINED)}))
+    private Boolean refined;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_DRIVER_CODE)}))
+    private String driverCode;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_TENDER_CODE)}))
+    private String tenderCode;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_NOTIFICATION_SENT_AT)}))
     private Instant notificationSentAt;

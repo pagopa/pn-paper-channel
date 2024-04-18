@@ -24,4 +24,5 @@ public class AwsPropertiesConfig extends AwsConfigs {
     private String dynamodbPaperEventsTable;
     private String dynamodbClientTable;
     private String dynamodbAttachmentsConfigTable;
+    private String dynamodbPaperEventErrorTable;
 }

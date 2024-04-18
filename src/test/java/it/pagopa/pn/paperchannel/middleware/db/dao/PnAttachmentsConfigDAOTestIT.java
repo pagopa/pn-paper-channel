@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Random;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -18,12 +18,10 @@ class PnAttachmentsConfigDAOTestIT extends BaseTest {
     @Autowired
     private PnAttachmentsConfigDAO pnAttachmentsConfigDAO;
 
-    private final Random random = new Random();
-
     @Test
     void putItemAndFindAllByConfigKeyTest() {
-        String geoKey = String.valueOf(random.nextInt(1000));
-        String anotherGeoKey = String.valueOf(random.nextInt(1000));
+        String geoKey = UUID.randomUUID().toString();
+        String anotherGeoKey = UUID.randomUUID().toString();
 
         var pnAttachmentsConfigOneFirstGeoKey = buildPnAttachmentsConfig(geoKey, "2024-01-01T00:00:00.000Z", "2025-01-01T00:00:00.000Z");
         var pnAttachmentsConfigTwoFirstGeoKey = buildPnAttachmentsConfig(geoKey, "2025-01-02T00:00:00.000Z", "2025-02-01T00:00:00.000Z");
@@ -41,7 +39,7 @@ class PnAttachmentsConfigDAOTestIT extends BaseTest {
     @Test
     void findMoreRecentByConfigKeyOneTest() {
         Instant notificationSentAt = Instant.parse("2024-01-10T00:00:00.000Z");
-        String geoKey = String.valueOf(random.nextInt(1000));
+        String geoKey = UUID.randomUUID().toString();
 
         var pnAttachmentsConfigOne = buildPnAttachmentsConfig(geoKey, "2024-01-01T00:00:00.000Z", "2024-01-11T23:59:59.000Z");
         var pnAttachmentsConfigTwo = buildPnAttachmentsConfig(geoKey, "2024-01-12T00:00:00.000Z", "2024-02-01T23:59:59.000Z");
@@ -59,7 +57,7 @@ class PnAttachmentsConfigDAOTestIT extends BaseTest {
     @Test
     void findMoreRecentByConfigKeyTwoTest() {
         Instant notificationSentAt = Instant.parse("2024-01-12T00:00:00.000Z");
-        String geoKey = String.valueOf(random.nextInt(1000));
+        String geoKey = UUID.randomUUID().toString();
 
         var pnAttachmentsConfigOne = buildPnAttachmentsConfig(geoKey, "2024-01-01T00:00:00.000Z", "2024-01-11T23:59:59.000Z");
         var pnAttachmentsConfigTwo = buildPnAttachmentsConfig(geoKey, "2024-01-12T00:00:00.000Z", "2024-02-01T23:59:59.000Z");
@@ -77,7 +75,7 @@ class PnAttachmentsConfigDAOTestIT extends BaseTest {
     @Test
     void findMoreRecentByConfigKeyThreeTest() {
         Instant notificationSentAt = Instant.parse("2024-03-01T00:00:00.000Z");
-        String geoKey = String.valueOf(random.nextInt(1000));
+        String geoKey = UUID.randomUUID().toString();
 
         var pnAttachmentsConfigOne = buildPnAttachmentsConfig(geoKey, "2024-01-01T00:00:00.000Z", "2024-01-11T23:59:59.000Z");
         var pnAttachmentsConfigTwo = buildPnAttachmentsConfig(geoKey, "2024-01-12T00:00:00.000Z", "2024-02-01T23:59:59.000Z");
@@ -94,7 +92,7 @@ class PnAttachmentsConfigDAOTestIT extends BaseTest {
 
     @Test
     void refreshConfigTest() {
-        String geoKey = String.valueOf(random.nextInt(1000));
+        String geoKey = UUID.randomUUID().toString();
 
         var pnAttachmentsConfigOne = buildPnAttachmentsConfig(geoKey, "2024-01-01T00:00:00.000Z", "2024-01-11T23:59:59.000Z");
         var pnAttachmentsConfigTwo = buildPnAttachmentsConfig(geoKey, "2024-01-12T00:00:00.000Z", "2024-02-01T23:59:59.000Z");
@@ -123,7 +121,7 @@ class PnAttachmentsConfigDAOTestIT extends BaseTest {
 
     @Test
     void refreshConfigWithSameRecordsInPutAndDeleteTest() {
-        String geoKey = String.valueOf(random.nextInt(1000));
+        String geoKey = UUID.randomUUID().toString();
 
         var pnAttachmentsConfigOne = buildPnAttachmentsConfig(geoKey, "2024-01-01T00:00:00.000Z", "2024-01-11T23:59:59.000Z");
 
@@ -148,8 +146,7 @@ class PnAttachmentsConfigDAOTestIT extends BaseTest {
 
     @Test
     void refreshConfigWithNewRecordTest() {
-        String geoKey = String.valueOf(random.nextInt(1000));
-
+        String geoKey = UUID.randomUUID().toString();
 
         List<PnAttachmentsConfig> result = pnAttachmentsConfigDAO.findAllByConfigKey(geoKey).collectList().block();
 

@@ -62,7 +62,13 @@ public class EventMetaDAOImpl extends BaseDAO<PnEventMeta> implements EventMetaD
 
     @Override
     public Mono<PnEventMeta> getDeliveryEventMeta(String metaRequestId, String metaStatusCode) {
-        return Mono.fromFuture(this.get(metaRequestId, metaStatusCode).thenApply(item -> item));
+        return getDeliveryEventMeta(metaRequestId, metaStatusCode, false);
+    }
+
+
+    @Override
+    public Mono<PnEventMeta> getDeliveryEventMeta(String metaRequestId, String metaStatusCode, boolean consistentRead) {
+        return Mono.fromFuture(this.get(metaRequestId, metaStatusCode, consistentRead).thenApply(item -> item));
     }
 
     @Override

@@ -294,6 +294,14 @@ Parameters:
     Type: String
     Description: 'ARN of dynamodb table containing configurations about attachments'
 
+  PaperEventErrorDynamoTableName:
+    Type: String
+    Description: 'Name of dynamodb table containing event errors'
+
+  PaperEventErrorDynamoTableArn:
+    Type: String
+    Description: 'ARN of dynamodb table containing out of order event errors'
+
   ExternalChannelsOutputsQueueName:
     Type: String
     Description: 'Push delivery-push messages to this Queue'
@@ -358,6 +366,16 @@ Parameters:
     Type: String
     Default: '23L,ARCAD'
     Description: 'Variable that defines all the mandatory demats related (for now) only to PNAG012 events, using format <DEMAT_1>,<DEMAT_2>,...,<DEMAT_N>'
+
+  ComplexRefinementCodes:
+    Type: String
+    Default: 'RECAG005C,RECAG006C,RECAG007C'
+    Description: 'Variable that defines all the 890 codes that must be managed using old complex flow'
+
+  EnableSimple890Flow:
+    Type: String
+    Description: 'Variable that defines whether to enable the simplified workflow'
+    Default: 'false'
 
   # OpenApi Bucket params
   MicroserviceBucketName:
@@ -597,6 +615,9 @@ Resources:
         ContainerEnvEntry62: !Sub 'PN_PAPERCHANNEL_QUEUERADDALT=${RaddAltToPaperChannelQueueName}'
         ContainerEnvEntry63: !Sub 'PN_PAPERCHANNEL_ENABLEDOCFILTERRULEENGINE=${EnableDocFilterRuleEngine}'
         ContainerEnvEntry64: !Sub 'PN_PAPERCHANNEL_DEFAULTATTACHMENTCONFIGCAP=${DefaultAttachmentConfigCap}'
+        ContainerEnvEntry65: !Sub 'AWS_DYNAMODBPAPEREVENTERRORTABLE=${PaperEventErrorDynamoTableName}'
+        ContainerEnvEntry66: !Sub 'PN_PAPERCHANNEL_COMPLEXREFINEMENTCODES=${ComplexRefinementCodes}'
+        ContainerEnvEntry67: !Sub 'PN_PAPERCHANNEL_ENABLESIMPLE890FLOW=${EnableSimple890Flow}'
         ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-PaperChannel-Secrets
         MappedPaths: '/paper-channel-bo/*,/paper-channel-private/*'
@@ -692,6 +713,8 @@ Resources:
               - !Sub "${ClientDynamoTableArn}/*"
               - !Sub "${AttachmentsConfigDynamoTableArn}"
               - !Sub "${AttachmentsConfigDynamoTableArn}/*"
+              - !Sub "${PaperEventErrorDynamoTableArn}"
+              - !Sub "${PaperEventErrorDynamoTableArn}/*"
           - Effect: Allow
             Action:
               - cloudwatch:PutMetricData
@@ -720,6 +743,7 @@ Resources:
             - !Ref DeliveryFileDynamoTableName
             - !Ref RequestDeliveryDynamoTableName
             - !Ref AttachmentsConfigDynamoTableArn
+            - !Ref PaperEventErrorDynamoTableArn
         RestApiStageArns: !Join
           - ','
           - - !GetAtt PaperChannelGatewayDeliveryDriver.Outputs.RestApiStageArn

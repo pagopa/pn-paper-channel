@@ -15,7 +15,7 @@ class LogMessageHandlerTest {
 
     @BeforeEach
     public void init() {
-        handler = new LogMessageHandler();
+        handler = LogMessageHandler.builder().build();
     }
 
     @Test
