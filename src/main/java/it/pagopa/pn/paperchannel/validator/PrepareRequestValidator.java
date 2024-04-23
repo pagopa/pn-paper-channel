@@ -9,6 +9,7 @@ import it.pagopa.pn.paperchannel.utils.Utility;
 import lombok.CustomLog;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
+import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -105,9 +106,13 @@ public class PrepareRequestValidator {
             // 2) in caso di check tra prepare seconda raccomandata e vs prepare prima raccomandata, qui sicuramente le liste
             //    son diverse perchè nella prima prepare ho già generato gli f24 mentre nella seconda no (e le filekey potrebbero essere diversi, cambia il costo).
             // NB: new arraylist perchè sennò il tolist è immutabile
-            List<String> fromDb = new ArrayList<>(pnDeliveryEntity.getAttachments().stream()
-                    .filter(x -> x.getGeneratedFrom() == null && !x.getFileKey().startsWith(F24ServiceImpl.URL_PROTOCOL_F24))
-                    .map(PnAttachmentInfo::getFileKey).toList());
+            List<String> fromDb = getFileKeyExcludingF24(pnDeliveryEntity.getAttachments());
+
+            //nella prepare secondo tentativo, vengono mandati da delivery-push tutti gli attachment, quindi questi ultimi devono essere
+            //confrontati con tutti gli attachments dell'entità con ATTEMPT=0 (compresi gli eventuali removedAttachments)
+            List<String> attachmentsRemovedFromDb = getFileKeyExcludingF24(pnDeliveryEntity.getRemovedAttachments());
+            fromDb.addAll(attachmentsRemovedFromDb);
+
 
             List<String> fromRequest = new ArrayList<>(prepareRequest.getAttachmentUrls().stream()
                     .filter(x -> !x.startsWith(F24ServiceImpl.URL_PROTOCOL_F24))
@@ -131,6 +136,15 @@ public class PrepareRequestValidator {
                 });
             }
         }
+    }
+
+    private static List<String> getFileKeyExcludingF24(List<PnAttachmentInfo> pnAttachments) {
+        if(CollectionUtils.isEmpty(pnAttachments)) {
+            return new ArrayList<>();
+        }
+        return new ArrayList<>(pnAttachments.stream()
+                .filter(x -> x.getGeneratedFrom() == null && !x.getFileKey().startsWith(F24ServiceImpl.URL_PROTOCOL_F24))
+                .map(PnAttachmentInfo::getFileKey).toList());
     }
 
 
