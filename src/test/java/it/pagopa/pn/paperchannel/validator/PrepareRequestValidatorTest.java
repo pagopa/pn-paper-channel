@@ -15,10 +15,11 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThatNoException;
 
 class PrepareRequestValidatorTest {
 
@@ -33,8 +34,8 @@ class PrepareRequestValidatorTest {
 
     @Test
     void prepareRequestValidatorOKTest() {
-        PrepareRequestValidator.compareRequestEntity(prepareRequest, deliveryRequest, true, true);
-        assertTrue(true);
+       assertThatNoException().isThrownBy(() ->
+               PrepareRequestValidator.compareRequestEntity(prepareRequest, deliveryRequest, true, true));
     }
 
     @Test
@@ -67,6 +68,7 @@ class PrepareRequestValidatorTest {
         PnAttachmentInfo pnAttachmentInfo = new PnAttachmentInfo();
         pnAttachmentInfo.setFileKey("safestorage://123");
         deliveryRequest.setAttachments(new ArrayList<>(List.of(pnAttachmentInfo)));
+        deliveryRequest.setRemovedAttachments(null);
 
         Assertions.assertDoesNotThrow(() -> PrepareRequestValidator.compareRequestEntity(prepareRequest, deliveryRequest, true, true));
         Assertions.assertDoesNotThrow(() -> PrepareRequestValidator.compareRequestEntity(prepareRequest, deliveryRequest, true, false));
@@ -99,6 +101,7 @@ class PrepareRequestValidatorTest {
 
 
         deliveryRequest.setAttachments(new ArrayList<>(List.of(pnAttachmentInfo)));
+        deliveryRequest.setRemovedAttachments(null);
 
 
         Assertions.assertDoesNotThrow(() -> PrepareRequestValidator.compareRequestEntity(prepareRequest, deliveryRequest, true, true));
@@ -142,6 +145,7 @@ class PrepareRequestValidatorTest {
         pnAttachmentInfo1.setGeneratedFrom("f24set://abcd");
 
         deliveryRequest.setAttachments(new ArrayList<>(List.of(pnAttachmentInfo,pnAttachmentInfo1)));
+        deliveryRequest.setRemovedAttachments(null);
 
 
         Assertions.assertDoesNotThrow(() -> PrepareRequestValidator.compareRequestEntity(prepareRequest, deliveryRequest, true, true));
@@ -164,6 +168,16 @@ class PrepareRequestValidatorTest {
     }
 
     private void setDeliveryRequest(){
+        var attachmentInfo = new PnAttachmentInfo();
+        attachmentInfo.setFileKey("safestorage://aar.pdf");
+        attachmentInfo.setDate(Instant.now().toString());
+        attachmentInfo.setDocumentType("AAR");
+        attachmentInfo.setUrl("safestorage://aar.pdf");
+        var attachmentInfoRemoved = new PnAttachmentInfo();
+        attachmentInfoRemoved.setFileKey("safestorage://document.pdf");
+        attachmentInfoRemoved.setDate(Instant.now().toString());
+        attachmentInfoRemoved.setDocumentType("AAR");
+        attachmentInfoRemoved.setUrl("safestorage://document.pdf");
         deliveryRequest = new PnDeliveryRequest();
         deliveryRequest.setRequestId("ABC-1234");
         deliveryRequest.setHashedFiscalCode(Utility.convertToHash("MDF1234JJJSSKK"));
@@ -173,11 +187,20 @@ class PrepareRequestValidatorTest {
         deliveryRequest.setProposalProductType("AR");
         deliveryRequest.setProductType("RN-AR");
         deliveryRequest.setPrintType("FRONTE-RETRO");
+        deliveryRequest.setAttachments(List.of(
+                attachmentInfo
+        ));
+        deliveryRequest.setRemovedAttachments(List.of(
+                attachmentInfoRemoved
+        ));
     }
 
     private void setPrepareRequest(){
         prepareRequest = new PrepareRequest();
-        List<String> attachmentUrls = new ArrayList<>();
+        List<String> attachmentUrls = List.of(
+                "safestorage://aar.pdf",
+                "safestorage://document.pdf"
+        );
         AnalogAddress analogAddress= AddressMapper.toPojo(getAddress());
         prepareRequest.setRequestId("ABC-1234");
         prepareRequest.setReceiverFiscalCode("MDF1234JJJSSKK");
