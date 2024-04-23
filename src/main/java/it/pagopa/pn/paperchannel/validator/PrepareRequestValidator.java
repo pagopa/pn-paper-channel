@@ -106,11 +106,11 @@ public class PrepareRequestValidator {
             // 2) in caso di check tra prepare seconda raccomandata e vs prepare prima raccomandata, qui sicuramente le liste
             //    son diverse perchè nella prima prepare ho già generato gli f24 mentre nella seconda no (e le filekey potrebbero essere diversi, cambia il costo).
             // NB: new arraylist perchè sennò il tolist è immutabile
-            List<String> fromDb = getFileKetExcludingF24(pnDeliveryEntity.getAttachments());
+            List<String> fromDb = getFileKeyExcludingF24(pnDeliveryEntity.getAttachments());
 
             //nella prepare secondo tentativo, vengono mandati da delivery-push tutti gli attachment, quindi questi ultimi devono essere
             //confrontati con tutti gli attachments dell'entità con ATTEMPT=0 (compresi gli eventuali removedAttachments)
-            List<String> attachmentsRemovedFromDb = getFileKetExcludingF24(pnDeliveryEntity.getRemovedAttachments());
+            List<String> attachmentsRemovedFromDb = getFileKeyExcludingF24(pnDeliveryEntity.getRemovedAttachments());
             fromDb.addAll(attachmentsRemovedFromDb);
 
 
@@ -138,7 +138,7 @@ public class PrepareRequestValidator {
         }
     }
 
-    private static List<String> getFileKetExcludingF24(List<PnAttachmentInfo> pnAttachments) {
+    private static List<String> getFileKeyExcludingF24(List<PnAttachmentInfo> pnAttachments) {
         if(CollectionUtils.isEmpty(pnAttachments)) {
             return new ArrayList<>();
         }
