@@ -5,6 +5,7 @@ import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PrepareRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.service.impl.F24ServiceImpl;
+import it.pagopa.pn.paperchannel.utils.AttachmentsConfigUtils;
 import it.pagopa.pn.paperchannel.utils.Utility;
 import lombok.CustomLog;
 import org.apache.commons.lang3.StringUtils;
@@ -116,6 +117,7 @@ public class PrepareRequestValidator {
 
             List<String> fromRequest = new ArrayList<>(prepareRequest.getAttachmentUrls().stream()
                     .filter(x -> !x.startsWith(F24ServiceImpl.URL_PROTOCOL_F24))
+                    .map(AttachmentsConfigUtils::cleanFileKey)
                     .toList());
 
             if (!AttachmentValidator.checkBetweenLists(fromRequest, fromDb)) {
@@ -144,7 +146,9 @@ public class PrepareRequestValidator {
         }
         return new ArrayList<>(pnAttachments.stream()
                 .filter(x -> x.getGeneratedFrom() == null && !x.getFileKey().startsWith(F24ServiceImpl.URL_PROTOCOL_F24))
-                .map(PnAttachmentInfo::getFileKey).toList());
+                .map(PnAttachmentInfo::getFileKey)
+                .map(AttachmentsConfigUtils::cleanFileKey)
+                .toList());
     }
 
 
