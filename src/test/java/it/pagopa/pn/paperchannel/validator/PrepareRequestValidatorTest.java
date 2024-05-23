@@ -167,6 +167,80 @@ class PrepareRequestValidatorTest {
 
     }
 
+
+    @Test
+    void prepareRequestValidatorAttachmentTest_4() {
+        List<String> errors = new ArrayList<>();
+
+
+        prepareRequest.setAttachmentUrls(new ArrayList<>(List.of("safestorage://123?docTag=AAR", "f24set://abcd")));
+
+        PnAttachmentInfo pnAttachmentInfo = new PnAttachmentInfo();
+        pnAttachmentInfo.setFileKey("safestorage://123");
+
+        PnAttachmentInfo pnAttachmentInfo1 = new PnAttachmentInfo();
+        pnAttachmentInfo1.setFileKey("safestorage://456");
+        pnAttachmentInfo1.setGeneratedFrom("f24set://abcd");
+
+        deliveryRequest.setAttachments(new ArrayList<>(List.of(pnAttachmentInfo,pnAttachmentInfo1)));
+        deliveryRequest.setRemovedAttachments(null);
+
+        // qui mi aspetto che il check passi, differiscono solo per il docTag
+        Assertions.assertDoesNotThrow(() -> PrepareRequestValidator.compareRequestEntity(prepareRequest, deliveryRequest, false, false));
+
+        pnAttachmentInfo = new PnAttachmentInfo();
+        pnAttachmentInfo.setFileKey("safestorage://123-madiverso?docTag=AAR");
+        pnAttachmentInfo1 = new PnAttachmentInfo();
+        pnAttachmentInfo1.setFileKey("safestorage://456");
+        pnAttachmentInfo1.setGeneratedFrom("f24set://abcd");
+
+        deliveryRequest.setAttachments(new ArrayList<>(List.of(pnAttachmentInfo,pnAttachmentInfo1)));
+
+        // qui mi aspetto che il check NON passi, differiscono anche per la filekey
+        PnGenericException ex = Assertions.assertThrows(PnInputValidatorException.class,
+                () -> PrepareRequestValidator.compareRequestEntity(prepareRequest, deliveryRequest, false, false));
+        Assertions.assertNotNull(errors);
+        Assertions.assertEquals(ExceptionTypeEnum.DIFFERENT_DATA_REQUEST.getMessage(), ex.getMessage());
+
+    }
+
+
+    @Test
+    void prepareRequestValidatorAttachmentTest_5() {
+        List<String> errors = new ArrayList<>();
+
+
+        prepareRequest.setAttachmentUrls(new ArrayList<>(List.of("safestorage://123?docTag=AAR", "f24set://abcd")));
+
+        PnAttachmentInfo pnAttachmentInfo = new PnAttachmentInfo();
+        pnAttachmentInfo.setFileKey("safestorage://123?docTag=AAR");
+
+        PnAttachmentInfo pnAttachmentInfo1 = new PnAttachmentInfo();
+        pnAttachmentInfo1.setFileKey("safestorage://456");
+        pnAttachmentInfo1.setGeneratedFrom("f24set://abcd");
+
+        deliveryRequest.setAttachments(new ArrayList<>(List.of(pnAttachmentInfo,pnAttachmentInfo1)));
+        deliveryRequest.setRemovedAttachments(null);
+
+        // qui mi aspetto che il check passi, sono uguali anche con il doctag
+        Assertions.assertDoesNotThrow(() -> PrepareRequestValidator.compareRequestEntity(prepareRequest, deliveryRequest, false, false));
+
+        pnAttachmentInfo = new PnAttachmentInfo();
+        pnAttachmentInfo.setFileKey("safestorage://123-madiverso?docTag=AAR");
+        pnAttachmentInfo1 = new PnAttachmentInfo();
+        pnAttachmentInfo1.setFileKey("safestorage://456");
+        pnAttachmentInfo1.setGeneratedFrom("f24set://abcd");
+
+        deliveryRequest.setAttachments(new ArrayList<>(List.of(pnAttachmentInfo,pnAttachmentInfo1)));
+
+        // qui mi aspetto che il check NON passi, differiscono anche per la filekey
+        PnGenericException ex = Assertions.assertThrows(PnInputValidatorException.class,
+                () -> PrepareRequestValidator.compareRequestEntity(prepareRequest, deliveryRequest, false, false));
+        Assertions.assertNotNull(errors);
+        Assertions.assertEquals(ExceptionTypeEnum.DIFFERENT_DATA_REQUEST.getMessage(), ex.getMessage());
+
+    }
+
     private void setDeliveryRequest(){
         var attachmentInfo = new PnAttachmentInfo();
         attachmentInfo.setFileKey("safestorage://aar.pdf");

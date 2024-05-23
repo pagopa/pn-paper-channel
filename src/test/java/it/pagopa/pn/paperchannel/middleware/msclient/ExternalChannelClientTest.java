@@ -33,6 +33,8 @@ class ExternalChannelClientTest  extends BaseTest.WithMockServer {
     void testOK() {
         AttachmentInfo attachmentInfo = new AttachmentInfo();
         attachmentInfo.setDocumentType(PN_AAR);
+        attachmentInfo.setFileKey("safestorage://PN_AAR-0002-GR7Z-3UBM-81QT-1QWV?docTag=AAR");
+        attachmentInfo.setSha256("234567890");
         externalChannelClient.sendEngageRequest(sendRequest, List.of(attachmentInfo)).block();
         StepVerifier.create(externalChannelClient.sendEngageRequest(sendRequest, List.of(attachmentInfo)))
                         .verifyComplete();
@@ -47,7 +49,7 @@ class ExternalChannelClientTest  extends BaseTest.WithMockServer {
     }
 
     private void inizialize(){
-        attachmentUrls.add("safestorage://PN_AAR-0002-GR7Z-3UBM-81QT-1QWV");
+        attachmentUrls.add("safestorage://PN_AAR-0002-GR7Z-3UBM-81QT-1QWV?docTag=AAR");
 
         analogAddress.setAddress("via roma");
         analogAddress.setAddressRow2("via lazio");

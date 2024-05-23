@@ -45,13 +45,17 @@ public class AttachmentsConfigUtils {
     }
 
     public static String cleanFileKey(String fileKey) {
+        return cleanFileKey(fileKey, true);
+    }
+
+    public static String cleanFileKey(String fileKey, boolean cleanSafestoragePrefix) {
         if (fileKey == null) {
             return null;
         }
 
         StringBuilder fileKeyNew = new StringBuilder();
 
-        if (fileKey.contains(SAFESTORAGE_PREFIX)){
+        if (cleanSafestoragePrefix && fileKey.contains(SAFESTORAGE_PREFIX)){
             //clean safestorage://
             fileKeyNew.append(fileKey.replace(SAFESTORAGE_PREFIX, ""));
         }
@@ -67,4 +71,5 @@ public class AttachmentsConfigUtils {
 
         return fileKeyNew.toString();
     }
+
 }
