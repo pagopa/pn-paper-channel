@@ -43,7 +43,7 @@
     "EnableDocFilterRuleEngine": "true",
     "DefaultAttachmentConfigCap": "ZIP##DEFAULT",
     "PnCronAnalyzer": "* */1 * * * *",
-    "WireTapLogActivation": "true",
-    "MountEfs": "true"
+    "WireTapLogActivation": "false",
+    "MountEfs": "false"
   }
 }
