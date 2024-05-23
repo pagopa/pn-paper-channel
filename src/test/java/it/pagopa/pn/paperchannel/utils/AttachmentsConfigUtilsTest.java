@@ -12,11 +12,27 @@ class AttachmentsConfigUtilsTest {
             "safestorage://fileKey.pdf?docTag=DOCUMNET, fileKey.pdf", //WithSafeStoragePrefixAndDocTag
             "safestorage://fileKey.pdf, fileKey.pdf", //WithSafeStoragePrefix
             "safestorage://fileKey.pdf?docTag=DOCUMNET&another=value, fileKey.pdf", //WithSafeStoragePrefixAndMoreQueryParams
+            "f24set://123456789/1?docTag=F_24&another=value, f24set://123456789/1", //WithF24prefix
             "fileKey.pdf, fileKey.pdf", //WithStringAlreadyCleaned
             "NULL, NULL", //WithStringAlreadyCleaned
     }, nullValues = {"NULL"})
     void cleanFileKeyTest(String fileKey, String expected) {
         var result = AttachmentsConfigUtils.cleanFileKey(fileKey);
+        assertThat(result).isEqualTo(expected);
+    }
+
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "safestorage://fileKey.pdf?docTag=DOCUMNET, safestorage://fileKey.pdf", //WithSafeStoragePrefixAndDocTag
+            "safestorage://fileKey.pdf, safestorage://fileKey.pdf", //WithSafeStoragePrefix
+            "safestorage://fileKey.pdf?docTag=DOCUMNET&another=value, safestorage://fileKey.pdf", //WithSafeStoragePrefixAndMoreQueryParams
+            "f24set://123456789/1?docTag=F_24&another=value, f24set://123456789/1", //WithF24prefix
+            "fileKey.pdf, fileKey.pdf", //WithStringAlreadyCleaned
+            "NULL, NULL", //WithStringAlreadyCleaned
+    }, nullValues = {"NULL"})
+    void cleanFileKeyNoSafestorageTest(String fileKey, String expected) {
+        var result = AttachmentsConfigUtils.cleanFileKey(fileKey, false);
         assertThat(result).isEqualTo(expected);
     }
 

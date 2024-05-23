@@ -9,6 +9,7 @@ import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.common.BaseClient;
 import it.pagopa.pn.paperchannel.model.AttachmentInfo;
+import it.pagopa.pn.paperchannel.utils.AttachmentsConfigUtils;
 import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import lombok.CustomLog;
@@ -80,7 +81,7 @@ public class ExternalChannelClientImpl extends BaseClient implements ExternalCha
             attachmentsDto.setDocumentType(StringUtils.equals(a.getDocumentType(), PN_AAR) ? Const.AAR : Const.ATTO);
             attachmentsDto.setSha256(a.getSha256());
             attachmentsDto.setOrder(new BigDecimal(i.getAndIncrement()));
-            attachmentsDto.setUri(a.getFileKey());
+            attachmentsDto.setUri(AttachmentsConfigUtils.cleanFileKey(a.getFileKey(), false));
             dto.getAttachments().add(attachmentsDto);
         });
 
