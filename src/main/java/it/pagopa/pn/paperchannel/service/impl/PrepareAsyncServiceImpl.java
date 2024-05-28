@@ -224,8 +224,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
         }
 
         return Flux.fromStream(deliveryRequest.getAttachments().stream())
-                .parallel()
-                .flatMap( attachment -> safeStorageService.getFileRecursive(
+                .flatMapSequential( attachment -> safeStorageService.getFileRecursive(
                         paperChannelConfig.getAttemptSafeStorage(),
                         attachment.getFileKey(),
                         new BigDecimal(0))
@@ -255,7 +254,6 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
 
                 })
                 .map(AttachmentMapper::toEntity)
-                .sequential()
                 .collectList()
                 .map(listAttachment -> {
                     deliveryRequest.setAttachments(listAttachment);
