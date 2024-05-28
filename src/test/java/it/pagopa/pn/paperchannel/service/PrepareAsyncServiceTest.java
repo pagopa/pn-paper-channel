@@ -356,7 +356,7 @@ class PrepareAsyncServiceTest {
         Mockito.when(this.attachmentsConfigService.filterAttachmentsToSend(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(deliveryRequest));
 
-        for (int i = 0; i< attachmentInfo.size(); i++){
+        for (int i = 0; i< attachmentInfo.size(); i++) {
             FileDownloadResponseDto f = new FileDownloadResponseDto();
             f.setKey(attachmentInfo.get(i).getFileKey());
             f.setChecksum(attachmentInfo.get(i).getChecksum());
@@ -366,11 +366,15 @@ class PrepareAsyncServiceTest {
             f.getDownload().setUrl(attachmentInfo.get(i).getUrl());
             f.setContentLength(new BigDecimal(100));
 
-            lenient().when(safeStorageService.getFileRecursive(Mockito.any(), eq(String.valueOf(attachmentInfo.get(i).getFileKey())), Mockito.any())).thenReturn(Mono.just(f).delayElement(Duration.ofMillis(5)));
+            lenient().when(safeStorageService.getFileRecursive(Mockito.any(), eq(String.valueOf(attachmentInfo.get(i).getFileKey())), Mockito.any())).thenReturn(Mono.just(f).delayElement(Duration.ofMillis(i%5)));
+
+            try {
+                Mockito.when(safeStorageService.downloadFile("http://1234" + i)).thenReturn(Mono.just(PDDocument.load(readFakePdf())).delayElement(Duration.ofMillis(i%5)));
+            } catch (IOException e) {
+                Assertions.fail(e);
+            }
         }
 
-        try {
-            Mockito.when(safeStorageService.downloadFile("http://1234")).thenReturn(Mono.just(PDDocument.load(readFakePdf())));
 
             this.prepareAsyncService.prepareAsync(request).block();
 
@@ -382,9 +386,7 @@ class PrepareAsyncServiceTest {
                 assertEquals(attachmentInfo.get(i).getFileKey(), res.getAttachments().get(i).getFileKey());
             }
 
-        } catch (IOException e) {
-            Assertions.fail(e);
-        }
+
     }
 
     public byte[] readFakePdf(){
@@ -462,7 +464,7 @@ class PrepareAsyncServiceTest {
             PnAttachmentInfo attachmentInfo = new PnAttachmentInfo();
             attachmentInfo.setId("PAPERTEST.IUN-2023041520230302-101111.RECINDEX_0");
             attachmentInfo.setDate("2019-11-07T09:03:08Z");
-            attachmentInfo.setUrl("http://1234");
+            attachmentInfo.setUrl("http://1234" + i);
             attachmentInfo.setDocumentType("pdf");
             attachmentInfo.setFileKey(String.valueOf(i));
             attachmentInfo.setNumberOfPage(0);

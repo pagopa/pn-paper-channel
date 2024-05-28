@@ -230,7 +230,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                         new BigDecimal(0))
                         .map(r -> Tuples.of(r, attachment)) // mi serve l'attachment originale
                 )
-                .flatMap(fileResponseAndOrigAttachment -> {
+                .flatMapSequential(fileResponseAndOrigAttachment -> {
                     AttachmentInfo info = AttachmentMapper.fromSafeStorage(fileResponseAndOrigAttachment.getT1());
                     info.setGeneratedFrom(fileResponseAndOrigAttachment.getT2().getGeneratedFrom()); // preservo l'eventuale generatedFrom
                     info.setDocTag(fileResponseAndOrigAttachment.getT2().getDocTag()); // preservo l'eventuale docTag
