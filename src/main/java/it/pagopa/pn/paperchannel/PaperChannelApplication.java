@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel;
 
+import it.pagopa.pn.commons.configs.listeners.TaskIdApplicationListener;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -13,7 +14,9 @@ import org.springframework.web.bind.annotation.RestController;
 public class PaperChannelApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(PaperChannelApplication.class, args);
+        SpringApplication app = new SpringApplication(PaperChannelApplication.class);
+        app.addListeners(new TaskIdApplicationListener());
+        app.run(args);
     }
 
 
