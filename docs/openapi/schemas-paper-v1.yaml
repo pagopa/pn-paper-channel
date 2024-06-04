@@ -247,9 +247,6 @@ components:
           description: Date of creation of the notification, date and time referred to UTC
           format: date-time
           example: 2022-07-27T12:22:33.444Z
-        aarWithRadd:
-          type: boolean
-          description: Se true, indica che la notifica fa parte della sperimentazione RADD
       allOf:
       - $ref: '#/components/schemas/PaperRequest'
     Problem:
