@@ -51,7 +51,7 @@ public class AttachmentsConfigServiceImpl extends GenericService implements Atta
 
     public Mono<PnDeliveryRequest> filterAttachmentsToSend(PnDeliveryRequest pnDeliveryRequest, List<PnAttachmentInfo> attachmentInfoList, PnAddress pnAddress) {
 
-        if (isZipCoverageEnabled(pnDeliveryRequest, pnAddress)) {
+        if (checkZipCoverage(pnDeliveryRequest, pnAddress)) {
 
             return resolveRule(AttachmentsConfigUtils.buildPartitionKey(pnAddress.getCap(), ZIPCODE_PK_PREFIX), pnDeliveryRequest.getNotificationSentAt())
                     .defaultIfEmpty(List.of())
@@ -68,7 +68,7 @@ public class AttachmentsConfigServiceImpl extends GenericService implements Atta
         }
     }
 
-    private boolean isZipCoverageEnabled(PnDeliveryRequest pnDeliveryRequest, PnAddress pnAddress) {
+    private boolean checkZipCoverage(PnDeliveryRequest pnDeliveryRequest, PnAddress pnAddress) {
         return pnPaperChannelConfig.isEnabledocfilterruleengine()
                 &&
                 Utility.isNational(pnAddress.getCountry())
