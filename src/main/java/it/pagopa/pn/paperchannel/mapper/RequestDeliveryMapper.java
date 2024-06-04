@@ -31,6 +31,7 @@ public class RequestDeliveryMapper {
         entity.setFiscalCode(request.getReceiverFiscalCode());
         entity.setPrintType(request.getPrintType());
         entity.setReceiverType(request.getReceiverType());
+        entity.setAarWithRadd(request.getAarWithRadd());
         entity.setAttachments(request.getAttachmentUrls().stream().map(key -> {
             PnAttachmentInfo pnAttachmentInfo = new PnAttachmentInfo();
             pnAttachmentInfo.setFileKey(key);
