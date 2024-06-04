@@ -84,7 +84,7 @@ class PaperMessagesRestV1ControllerTest{
 
     private SendRequest getSendRequest() {
         SendRequest sendRequest =new SendRequest();
-        List<String> attachmentUrls = new ArrayList<>();
+        List<String> attachmentUrls = new ArrayList<String>();
         AnalogAddress analogAddress= new AnalogAddress();
         String s ="url12345";
         attachmentUrls.add(s);
@@ -140,7 +140,6 @@ class PaperMessagesRestV1ControllerTest{
         prepareRequest.setProposalProductType(ProposalTypeEnum.AR);
         prepareRequest.setReceiverFiscalCode("FRMTTR76M06B715E");
         prepareRequest.setReceiverType("PF");
-        prepareRequest.setAarWithRadd(true);
         return prepareRequest;
     }
 }
