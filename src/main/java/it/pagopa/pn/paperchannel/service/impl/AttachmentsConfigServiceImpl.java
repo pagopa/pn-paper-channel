@@ -71,9 +71,9 @@ public class AttachmentsConfigServiceImpl extends GenericService implements Atta
     private boolean checkZipCoverage(PnDeliveryRequest pnDeliveryRequest, PnAddress pnAddress) {
         return pnPaperChannelConfig.isEnabledocfilterruleengine()
                 &&
-                Utility.isNational(pnAddress.getCountry())
+                Boolean.TRUE.equals(pnDeliveryRequest.getAarWithRadd())
                 &&
-                Boolean.TRUE.equals(pnDeliveryRequest.getAarWithRadd());
+                Utility.isNational(pnAddress.getCountry());
     }
 
     @NotNull
