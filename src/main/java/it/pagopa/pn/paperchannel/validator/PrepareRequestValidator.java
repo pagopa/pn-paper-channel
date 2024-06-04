@@ -49,6 +49,8 @@ public class PrepareRequestValidator {
 
         validateReceiverAddress(prepareRequest, pnDeliveryEntity, firstAttempt, errors);
 
+        validateAarWithRadd(prepareRequest, pnDeliveryEntity, errors);
+
         if (!errors.isEmpty()) {
             log.logCheckingOutcome(VALIDATION_NAME, false, errors.toString());
             throw new PnInputValidatorException(DIFFERENT_DATA_REQUEST, DIFFERENT_DATA_REQUEST.getMessage(), HttpStatus.CONFLICT, errors);
@@ -164,6 +166,17 @@ public class PrepareRequestValidator {
                 errors.add("Address");
                 log.debug("Comparison between request and entity failed, different data: Address");
             }
+        }
+    }
+
+    private static void validateAarWithRadd(PrepareRequest prepareRequest, PnDeliveryRequest pnDeliveryEntity, List<String> errors) {
+        boolean valid = pnDeliveryEntity.getAarWithRadd() == null //per retrocompatibilità, nel caso la precedente PREPARE non avesse già questo parametro a disposizione
+                ||
+                pnDeliveryEntity.getAarWithRadd().equals(prepareRequest.getAarWithRadd());
+
+        if (!valid) {
+            errors.add("AarWithRadd");
+            log.debug("Comparison between request and entity failed, different data: AarWithRadd");
         }
     }
 
