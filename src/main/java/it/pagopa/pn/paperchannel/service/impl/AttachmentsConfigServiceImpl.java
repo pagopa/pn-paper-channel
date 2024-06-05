@@ -52,7 +52,7 @@ public class AttachmentsConfigServiceImpl extends GenericService implements Atta
     public Mono<PnDeliveryRequest> filterAttachmentsToSend(PnDeliveryRequest pnDeliveryRequest, List<PnAttachmentInfo> attachmentInfoList, PnAddress pnAddress) {
 
         if (checkZipCoverage(pnDeliveryRequest, pnAddress)) {
-
+            log.debug("Perform checkZipCoverage");
             return resolveRule(AttachmentsConfigUtils.buildPartitionKey(pnAddress.getCap(), ZIPCODE_PK_PREFIX), pnDeliveryRequest.getNotificationSentAt())
                     .defaultIfEmpty(List.of())
                     .flatMap(rules -> {
@@ -64,6 +64,7 @@ public class AttachmentsConfigServiceImpl extends GenericService implements Atta
                                             .map(attachmentFiltered -> sendFilteredAttachments(pnDeliveryRequest, attachmentFiltered));
                     } );
         } else {
+            log.debug("Skip checkZipCoverage");
             return sendAllAttachments(pnDeliveryRequest, attachmentInfoList);
         }
     }
