@@ -335,8 +335,8 @@ class PrepareAsyncServiceTest {
     @DisplayName("prepareAsyncTestOrderedAttachments")
     void prepareAsyncTestOrderedAttachments(){
         PnDeliveryRequest deliveryRequest = getDeliveryRequest();
-        List<PnAttachmentInfo> attachmentInfo = orderedAttachmentInfoList();
-        deliveryRequest.setAttachments(attachmentInfo);
+        List<PnAttachmentInfo> attachmentInfoList = orderedAttachmentInfoList();
+        deliveryRequest.setAttachments(attachmentInfoList);
 
         request.setCorrelationId("FFPAPERTEST.IUN_FATY");
 
@@ -356,17 +356,17 @@ class PrepareAsyncServiceTest {
         Mockito.when(this.attachmentsConfigService.filterAttachmentsToSend(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(deliveryRequest));
 
-        for (int i = 0; i< attachmentInfo.size(); i++) {
+        for (int i = 0; i< attachmentInfoList.size(); i++) {
             FileDownloadResponseDto f = new FileDownloadResponseDto();
-            f.setKey(attachmentInfo.get(i).getFileKey());
-            f.setChecksum(attachmentInfo.get(i).getChecksum());
-            f.setDocumentType(attachmentInfo.get(i).getDocumentType());
+            f.setKey(attachmentInfoList.get(i).getFileKey());
+            f.setChecksum(attachmentInfoList.get(i).getChecksum());
+            f.setDocumentType(attachmentInfoList.get(i).getDocumentType());
             f.setDownload(new FileDownloadInfoDto());
             assert f.getDownload() != null;
-            f.getDownload().setUrl(attachmentInfo.get(i).getUrl());
+            f.getDownload().setUrl(attachmentInfoList.get(i).getUrl());
             f.setContentLength(new BigDecimal(100));
 
-            lenient().when(safeStorageService.getFileRecursive(Mockito.any(), eq(String.valueOf(attachmentInfo.get(i).getFileKey())), Mockito.any())).thenReturn(Mono.just(f).delayElement(Duration.ofMillis(i%5)));
+            lenient().when(safeStorageService.getFileRecursive(Mockito.any(), eq(String.valueOf(attachmentInfoList.get(i).getFileKey())), Mockito.any())).thenReturn(Mono.just(f).delayElement(Duration.ofMillis(i%5)));
 
             try {
                 Mockito.when(safeStorageService.downloadFile("http://1234" + i)).thenReturn(Mono.just(PDDocument.load(readFakePdf())).delayElement(Duration.ofMillis(i%5)));
@@ -382,8 +382,8 @@ class PrepareAsyncServiceTest {
             verify(this.requestDeliveryDAO).updateData(argumentCaptor.capture());
             PnDeliveryRequest res = argumentCaptor.getValue();
 
-            for (int i = 0; i< attachmentInfo.size(); i++){
-                assertEquals(attachmentInfo.get(i).getFileKey(), res.getAttachments().get(i).getFileKey());
+            for (int i = 0; i< attachmentInfoList.size(); i++){
+                assertEquals(attachmentInfoList.get(i).getFileKey(), res.getAttachments().get(i).getFileKey());
             }
 
 
@@ -461,14 +461,14 @@ class PrepareAsyncServiceTest {
     private List<PnAttachmentInfo> orderedAttachmentInfoList(){
         List<PnAttachmentInfo> attachmentInfoList = new ArrayList<>();
         for (int i = 0; i < 50; i++) {
-            PnAttachmentInfo attachmentInfo = new PnAttachmentInfo();
-            attachmentInfo.setId("PAPERTEST.IUN-2023041520230302-101111.RECINDEX_0");
-            attachmentInfo.setDate("2019-11-07T09:03:08Z");
-            attachmentInfo.setUrl("http://1234" + i);
-            attachmentInfo.setDocumentType("pdf");
-            attachmentInfo.setFileKey(String.valueOf(i));
-            attachmentInfo.setNumberOfPage(0);
-            attachmentInfoList.add(attachmentInfo);
+            PnAttachmentInfo attachment = new PnAttachmentInfo();
+            attachment.setId("PAPERTEST.IUN-2023041520230302-101111.RECINDEX_0");
+            attachment.setDate("2019-11-07T09:03:08Z");
+            attachment.setUrl("http://1234" + i);
+            attachment.setDocumentType("pdf");
+            attachment.setFileKey(String.valueOf(i));
+            attachment.setNumberOfPage(0);
+            attachmentInfoList.add(attachment);
         }
         return attachmentInfoList;
     }
