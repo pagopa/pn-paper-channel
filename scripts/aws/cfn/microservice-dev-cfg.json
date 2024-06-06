@@ -41,6 +41,9 @@
     "ComplexRefinementCodes": "RECAG007C",
     "EnableSimple890Flow": "true",
     "EnableDocFilterRuleEngine": "true",
-    "DefaultAttachmentConfigCap": "ZIP##DEFAULT"
+    "DefaultAttachmentConfigCap": "ZIP##DEFAULT",
+    "PnCronAnalyzer": "* */1 * * * *",
+    "WireTapLogActivation": "false",
+    "MountEfs": "false"
   }
 }
