@@ -369,7 +369,7 @@ class PrepareAsyncServiceTest {
             lenient().when(safeStorageService.getFileRecursive(Mockito.any(), eq(String.valueOf(attachmentInfoList.get(i).getFileKey())), Mockito.any())).thenReturn(Mono.just(f).delayElement(Duration.ofMillis(i%5)));
 
             try {
-                Mockito.when(safeStorageService.downloadFile("http://1234" + i)).thenReturn(Mono.just(PDDocument.load(readFakePdf())).delayElement(Duration.ofMillis(i%5)));
+                Mockito.when(safeStorageService.downloadFile("http://1234" + i)).thenReturn(Mono.just(PDDocument.load(readFakePdf())).delayElement(Duration.ofMillis((i+1)%5)));
             } catch (IOException e) {
                 Assertions.fail(e);
             }
@@ -464,9 +464,9 @@ class PrepareAsyncServiceTest {
             PnAttachmentInfo attachment = new PnAttachmentInfo();
             attachment.setId("PAPERTEST.IUN-2023041520230302-101111.RECINDEX_0");
             attachment.setDate("2019-11-07T09:03:08Z");
-            attachment.setUrl("http://1234" + i);
+            attachment.setUrl("http://1234" + (49-i));
             attachment.setDocumentType("pdf");
-            attachment.setFileKey(String.valueOf(i));
+            attachment.setFileKey(String.valueOf((49-i)));
             attachment.setNumberOfPage(0);
             attachmentInfoList.add(attachment);
         }
