@@ -224,38 +224,37 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
         }
 
         return Flux.fromStream(deliveryRequest.getAttachments().stream())
-                .parallel()
-                .flatMap( attachment -> safeStorageService.getFileRecursive(
+                .flatMapSequential( attachment -> safeStorageService.getFileRecursive(
                         paperChannelConfig.getAttemptSafeStorage(),
                         attachment.getFileKey(),
                         new BigDecimal(0))
                         .map(r -> Tuples.of(r, attachment)) // mi serve l'attachment originale
-                )
-                .flatMap(fileResponseAndOrigAttachment -> {
-                    AttachmentInfo info = AttachmentMapper.fromSafeStorage(fileResponseAndOrigAttachment.getT1());
-                    info.setGeneratedFrom(fileResponseAndOrigAttachment.getT2().getGeneratedFrom()); // preservo l'eventuale generatedFrom
-                    info.setDocTag(fileResponseAndOrigAttachment.getT2().getDocTag()); // preservo l'eventuale docTag
-                    info.setFilterResultCode(fileResponseAndOrigAttachment.getT2().getFilterResultCode()); // preservo
-                    info.setFilterResultDiagnostic(fileResponseAndOrigAttachment.getT2().getFilterResultDiagnostic()); // preservo
-                    if (info.getUrl() == null)
-                        return Flux.error(new PnGenericException(INVALID_SAFE_STORAGE, INVALID_SAFE_STORAGE.getMessage()));
-                    return safeStorageService.downloadFile(info.getUrl())
-                            .map(pdDocument -> {
-                                try {
-                                    if (pdDocument.getDocumentInformation() != null && pdDocument.getDocumentInformation().getCreationDate() != null) {
-                                        info.setDate(DateUtils.formatDate(pdDocument.getDocumentInformation().getCreationDate().toInstant()));
-                                    }
-                                    info.setNumberOfPage(pdDocument.getNumberOfPages());
-                                    pdDocument.close();
-                                } catch (IOException e) {
-                                    throw new PnGenericException(INVALID_SAFE_STORAGE, INVALID_SAFE_STORAGE.getMessage());
-                                }
-                                return info;
-                            });
+                        .flatMap(fileResponseAndOrigAttachment -> {
+                            AttachmentInfo info = AttachmentMapper.fromSafeStorage(fileResponseAndOrigAttachment.getT1());
+                            info.setGeneratedFrom(fileResponseAndOrigAttachment.getT2().getGeneratedFrom()); // preservo l'eventuale generatedFrom
+                            info.setDocTag(fileResponseAndOrigAttachment.getT2().getDocTag()); // preservo l'eventuale docTag
+                            info.setFilterResultCode(fileResponseAndOrigAttachment.getT2().getFilterResultCode()); // preservo
+                            info.setFilterResultDiagnostic(fileResponseAndOrigAttachment.getT2().getFilterResultDiagnostic()); // preservo
+                            if (info.getUrl() == null)
+                                return Mono.error(new PnGenericException(INVALID_SAFE_STORAGE, INVALID_SAFE_STORAGE.getMessage()));
+                            return safeStorageService.downloadFile(info.getUrl())
+                                    .map(pdDocument -> {
+                                        try {
+                                            if (pdDocument.getDocumentInformation() != null && pdDocument.getDocumentInformation().getCreationDate() != null) {
+                                                info.setDate(DateUtils.formatDate(pdDocument.getDocumentInformation().getCreationDate().toInstant()));
+                                            }
+                                            info.setNumberOfPage(pdDocument.getNumberOfPages());
+                                            pdDocument.close();
+                                        } catch (IOException e) {
+                                            throw new PnGenericException(INVALID_SAFE_STORAGE, INVALID_SAFE_STORAGE.getMessage());
+                                        }
+                                        return info;
+                                    });
 
-                })
+                        })
+                )
+                .doOnNext(x -> log.info("processed attachment={}", x))
                 .map(AttachmentMapper::toEntity)
-                .sequential()
                 .collectList()
                 .map(listAttachment -> {
                     deliveryRequest.setAttachments(listAttachment);
