@@ -10,8 +10,6 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
-import java.util.UUID;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -155,6 +153,7 @@ class RequestDeliveryDAOTestIT extends BaseTest {
         request.setFiscalCode("FRMTTR76M06B715E");
         request.setReceiverType("PF");
         request.setRefined(false);
+        request.setAarWithRadd(true);
 
         return request;
     }

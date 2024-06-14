@@ -16,7 +16,6 @@ import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Objects;
 
 import static it.pagopa.pn.paperchannel.utils.Const.*;
 
@@ -25,19 +24,13 @@ import static it.pagopa.pn.paperchannel.utils.Const.*;
 @AllArgsConstructor
 public class PaperCalculatorUtils {
 
-    private static final String COUNTRY_IT = "it";
-    private static final String COUNTRY_ITALIA = "italia";
-    private static final String COUNTRY_ITALY = "italy";
 
     private final PaperTenderService paperTenderService;
     private final PnPaperChannelConfig pnPaperChannelConfig;
     private final DateChargeCalculationModesUtils chargeCalculationModeUtils;
 
     public Mono<CostWithDriver> calculator(List<AttachmentInfo> attachments, Address address, ProductTypeEnum productType, boolean isReversePrinter){
-        boolean isNational = StringUtils.isBlank(address.getCountry()) ||
-                StringUtils.equalsIgnoreCase(address.getCountry(), COUNTRY_IT) ||
-                StringUtils.equalsIgnoreCase(address.getCountry(), COUNTRY_ITALIA) ||
-                StringUtils.equalsIgnoreCase(address.getCountry(), COUNTRY_ITALY);
+        boolean isNational = Utility.isNational(address.getCountry());
 
         if (StringUtils.isNotBlank(address.getCap()) && isNational) {
             return getAmount(attachments, address.getCap(), null, getProductType(address, productType), isReversePrinter)
@@ -128,10 +121,7 @@ public class PaperCalculatorUtils {
 
     protected String getProductType(Address address, ProductTypeEnum productTypeEnum){
         String productType = "";
-        boolean isNational = StringUtils.isBlank(address.getCountry()) ||
-                StringUtils.equalsIgnoreCase(address.getCountry(), COUNTRY_IT) ||
-                StringUtils.equalsIgnoreCase(address.getCountry(), COUNTRY_ITALIA) ||
-                StringUtils.equalsIgnoreCase(address.getCountry(), COUNTRY_ITALY);
+        boolean isNational = Utility.isNational(address.getCountry());
 
         if (StringUtils.isNotBlank(address.getCap()) && isNational) {
             if (productTypeEnum.equals(ProductTypeEnum.AR)) {
@@ -153,10 +143,7 @@ public class PaperCalculatorUtils {
 
     public String getProposalProductType(Address address, String productType){
         String proposalProductType = "";
-        boolean isNational = StringUtils.isBlank(address.getCountry()) ||
-                StringUtils.equalsIgnoreCase(address.getCountry(), COUNTRY_IT) ||
-                StringUtils.equalsIgnoreCase(address.getCountry(), COUNTRY_ITALIA) ||
-                StringUtils.equalsIgnoreCase(address.getCountry(), COUNTRY_ITALY);
+        boolean isNational = Utility.isNational(address.getCountry());
         //nazionale
         if (StringUtils.isNotBlank(address.getCap()) && isNational) {
             if(productType.equals(RACCOMANDATA_SEMPLICE)){
