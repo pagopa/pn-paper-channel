@@ -85,6 +85,8 @@ public class PnDeliveryRequest implements Serializable {
 
     public static final String COL_NOTIFICATION_SENT_AT = "notificationSentAt";
 
+    public static final String COL_AAR_WITH_RADD = "aarWithRadd";
+
     @Getter(onMethod = @__({@DynamoDbPartitionKey,@DynamoDbAttribute(COL_REQUEST_ID)}))
     private String requestId;
 
@@ -169,4 +171,7 @@ public class PnDeliveryRequest implements Serializable {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_REMOVED_ATTACHMENTS)}))
     private List<PnAttachmentInfo> removedAttachments;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_AAR_WITH_RADD)}))
+    private Boolean aarWithRadd;
 }

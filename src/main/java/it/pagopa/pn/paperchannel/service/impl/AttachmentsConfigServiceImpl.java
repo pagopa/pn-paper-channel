@@ -16,6 +16,7 @@ import it.pagopa.pn.paperchannel.rule.handler.PaperListChainEngine;
 import it.pagopa.pn.paperchannel.service.AttachmentsConfigService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.AttachmentsConfigUtils;
+import it.pagopa.pn.paperchannel.utils.Utility;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
@@ -50,8 +51,8 @@ public class AttachmentsConfigServiceImpl extends GenericService implements Atta
 
     public Mono<PnDeliveryRequest> filterAttachmentsToSend(PnDeliveryRequest pnDeliveryRequest, List<PnAttachmentInfo> attachmentInfoList, PnAddress pnAddress) {
 
-        if (pnPaperChannelConfig.isEnabledocfilterruleengine()) {
-
+        if (checkZipCoverage(pnDeliveryRequest, pnAddress)) {
+            log.debug("Perform checkZipCoverage");
             return resolveRule(AttachmentsConfigUtils.buildPartitionKey(pnAddress.getCap(), ZIPCODE_PK_PREFIX), pnDeliveryRequest.getNotificationSentAt())
                     .defaultIfEmpty(List.of())
                     .flatMap(rules -> {
@@ -63,8 +64,17 @@ public class AttachmentsConfigServiceImpl extends GenericService implements Atta
                                             .map(attachmentFiltered -> sendFilteredAttachments(pnDeliveryRequest, attachmentFiltered));
                     } );
         } else {
+            log.debug("Skip checkZipCoverage");
             return sendAllAttachments(pnDeliveryRequest, attachmentInfoList);
         }
+    }
+
+    private boolean checkZipCoverage(PnDeliveryRequest pnDeliveryRequest, PnAddress pnAddress) {
+        return pnPaperChannelConfig.isEnabledocfilterruleengine()
+                &&
+                Boolean.TRUE.equals(pnDeliveryRequest.getAarWithRadd())
+                &&
+                Utility.isNational(pnAddress.getCountry());
     }
 
     @NotNull
