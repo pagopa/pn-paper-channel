@@ -6,8 +6,10 @@ import it.pagopa.pn.api.dto.events.PnF24PdfSetReadyEventPayload;
 import it.pagopa.pn.commons.exceptions.PnExceptionsCodes;
 import it.pagopa.pn.commons.exceptions.PnInternalException;
 import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
+import it.pagopa.pn.paperchannel.exception.InvalidEventOrderException;
 import it.pagopa.pn.paperchannel.exception.PnF24FlowException;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnnationalregistries.v1.dto.AddressSQSMessageDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnnationalregistries.v1.dto.AddressSQSMessagePhysicalAddressDto;
@@ -23,6 +25,7 @@ import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.service.impl.QueueListenerServiceImpl;
 import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
+import it.pagopa.pn.paperchannel.utils.FeedbackStatus;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -67,7 +70,6 @@ class QueueListenerServiceImplTest {
 
     @Mock
     private ExternalChannelClient externalChannelClient;
-
 
     @Test
     void internalListenerTest(){
@@ -440,6 +442,56 @@ class QueueListenerServiceImplTest {
         catch(PnGenericException ex){
             Assertions.assertEquals(EXTERNAL_CHANNEL_LISTENER_EXCEPTION, ex.getExceptionType());
         }
+    }
+
+    @Test
+    void externalChannelListenerInvalidEventExceptionDuplicatesTest(){
+        // Given
+        FeedbackStatus feedbackStatus = new FeedbackStatus(
+                "RECRN001C",
+                "RECRN001C",
+                "2024-06-26T16:12:56Z",
+                "2024-06-26T16:12:56Z",
+                null, null);
+
+        PaperProgressStatusEventDto paperProgressStatusEvent = new PaperProgressStatusEventDto();
+        paperProgressStatusEvent.setRequestId("testRequestId");
+
+        SingleStatusUpdateDto data = new SingleStatusUpdateDto();
+        data.setAnalogMail(paperProgressStatusEvent);
+
+        // When
+        Mockito.when(this.paperResultAsyncService.resultAsyncBackground(Mockito.any(), Mockito.any()))
+                .thenReturn(Mono.error(
+                        new InvalidEventOrderException(WRONG_EVENT_ORDER, "test", feedbackStatus)));
+        // Then
+        Assertions.assertDoesNotThrow(() ->
+                this.queueListenerService.externalChannelListener(data,10));
+    }
+
+    @Test
+    void externalChannelListenerInvalidEventExceptionNotDuplicatesTest(){
+        // Given
+        FeedbackStatus feedbackStatus = new FeedbackStatus(
+                "RECRN002C",
+                "RECRN002F",
+                "2024-06-26T16:12:56Z",
+                "2024-07-27T16:12:56Z",
+                null, null);
+
+        PaperProgressStatusEventDto paperProgressStatusEvent = new PaperProgressStatusEventDto();
+        paperProgressStatusEvent.setRequestId("testRequestId");
+
+        SingleStatusUpdateDto data = new SingleStatusUpdateDto();
+        data.setAnalogMail(paperProgressStatusEvent);
+
+        // When
+        Mockito.when(this.paperResultAsyncService.resultAsyncBackground(Mockito.any(), Mockito.any()))
+                .thenReturn(Mono.error(
+                        new InvalidEventOrderException(WRONG_EVENT_ORDER, "test", feedbackStatus)));
+        // Then
+        Assertions.assertThrowsExactly(PnGenericException.class, () ->
+                this.queueListenerService.externalChannelListener(data,10));
     }
 
     @Test
