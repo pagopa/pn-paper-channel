@@ -35,6 +35,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
 import java.util.List;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
@@ -450,8 +451,8 @@ class QueueListenerServiceImplTest {
         FeedbackStatus feedbackStatus = new FeedbackStatus(
                 "RECRN001C",
                 "RECRN001C",
-                "2024-06-26T16:12:56Z",
-                "2024-06-26T16:12:56Z",
+                Instant.parse("2024-06-26T16:12:56Z"),
+                Instant.parse("2024-06-26T16:12:56Z"),
                 null, null);
 
         PaperProgressStatusEventDto paperProgressStatusEvent = new PaperProgressStatusEventDto();
@@ -475,8 +476,8 @@ class QueueListenerServiceImplTest {
         FeedbackStatus feedbackStatus = new FeedbackStatus(
                 "RECRN002C",
                 "RECRN002F",
-                "2024-06-26T16:12:56Z",
-                "2024-07-27T16:12:56Z",
+                Instant.parse("2024-06-26T16:12:56Z"),
+                Instant.parse("2024-07-27T16:12:56Z"),
                 null, null);
 
         PaperProgressStatusEventDto paperProgressStatusEvent = new PaperProgressStatusEventDto();
