@@ -404,10 +404,14 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
      * @return true if the exception indicates a duplicate event, false otherwise.
      */
     private static boolean isDuplicateFeedback(InvalidEventOrderException invalidEventEx){
+        if (invalidEventEx == null || invalidEventEx.getFeedbackStatus() == null) {
+            return false; // If invalidEventEx or feedbackStatus is null, return false
+        }
+
         FeedbackStatus feedback = invalidEventEx.getFeedbackStatus();
         return invalidEventEx.getExceptionType() == ExceptionTypeEnum.WRONG_EVENT_ORDER
-                && feedback.oldFeedbackStatusCode().equals(feedback.newFeedbackStatusCode())
+                && Objects.equals(feedback.oldFeedbackStatusCode(), feedback.newFeedbackStatusCode())
                 && Objects.equals(feedback.oldFeedbackDeliveryFailureCause(), feedback.newFeedbackDeliveryFailureCause())
-                && feedback.oldFeedbackStatusDateTime().equals(feedback.newFeedbackStatusDateTime());
+                && Objects.equals(feedback.oldFeedbackStatusDateTime(), feedback.newFeedbackStatusDateTime());
     }
 }
