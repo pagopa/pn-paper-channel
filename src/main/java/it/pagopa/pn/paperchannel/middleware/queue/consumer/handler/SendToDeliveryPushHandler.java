@@ -2,6 +2,7 @@ package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
+import it.pagopa.pn.paperchannel.exception.InvalidEventOrderException;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.SingleStatusUpdateDto;
@@ -38,7 +39,7 @@ public abstract class SendToDeliveryPushHandler implements MessageHandler {
 
     @Override
     public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
-        return this.updateRefinedDeliveryRequestIfOK(entity)
+        return this.updateRefinedDeliveryRequestIfOK(entity, paperRequest)
                 .doOnNext(pnDeliveryRequest -> this.pushSendEvent(entity, paperRequest))
                 .flatMap(pnDeliveryRequest -> processPnEventErrorsRedrive(pnDeliveryRequest, paperRequest))
                 .then();
@@ -51,12 +52,22 @@ public abstract class SendToDeliveryPushHandler implements MessageHandler {
      *
      * @return Mono containing {@link PnDeliveryRequest} object
      * */
-    private Mono<PnDeliveryRequest> updateRefinedDeliveryRequestIfOK(PnDeliveryRequest pnDeliveryRequest) {
-
-        if (StatusCodeEnum.OK.getValue().equals(pnDeliveryRequest.getStatusDetail())) {
+    private Mono<PnDeliveryRequest> updateRefinedDeliveryRequestIfOK(PnDeliveryRequest pnDeliveryRequest, PaperProgressStatusEventDto paperRequest) {
+        if (StatusCodeEnum.OK.getValue().equals(pnDeliveryRequest.getStatusDetail())
+                || StatusCodeEnum.KO.getValue().equals(pnDeliveryRequest.getStatusDetail())) {
             log.debug("[{}] Updating DeliveryRequest with refinement information", pnDeliveryRequest.getRequestId());
 
-            pnDeliveryRequest.setRefined(true);
+            if (pnDeliveryRequest.getFeedbackStatusCode() != null) {
+                throw InvalidEventOrderException.from(pnDeliveryRequest, paperRequest,
+                        "[{" + paperRequest.getRequestId() + "}] Wrong feedback event detected for {"
+                                + paperRequest + "}");
+            }
+
+            pnDeliveryRequest.setRefined(Boolean.TRUE);
+            pnDeliveryRequest.setFeedbackStatusCode(paperRequest.getStatusCode());
+            pnDeliveryRequest.setFeedbackDeliveryFailureCause(paperRequest.getDeliveryFailureCause());
+            pnDeliveryRequest.setFeedbackStatusDateTime(paperRequest.getStatusDateTime().toInstant());
+
             return this.requestDeliveryDAO
                     .updateData(pnDeliveryRequest, Boolean.TRUE)
                     .doOnError(ex -> log.warn("[{}] Error while setting request as refined", pnDeliveryRequest.getRequestId(), ex));
