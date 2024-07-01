@@ -29,6 +29,15 @@ public class InvalidEventOrderException extends RuntimeException {
         this.feedbackStatus = feedbackStatus;
     }
 
+    /**
+     * Creates an instance of InvalidEventOrderException using the provided delivery request and
+     * paper request.
+     *
+     * @param pnDeliveryRequest The PnDeliveryRequest containing the previous feedback details.
+     * @param paperRequest      The PaperProgressStatusEventDto containing the new feedback details.
+     * @param message           A custom message that can include contextual information such as the requestId.
+     * @return                  An instance of InvalidEventOrderException fully populated with error details.
+     */
     public static InvalidEventOrderException from(PnDeliveryRequest pnDeliveryRequest,
                        PaperProgressStatusEventDto paperRequest,
                        String message) {
