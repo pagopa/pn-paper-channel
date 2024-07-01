@@ -1,5 +1,7 @@
 package it.pagopa.pn.paperchannel.exception;
 
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.utils.FeedbackStatus;
 import lombok.Getter;
 
@@ -27,4 +29,20 @@ public class InvalidEventOrderException extends RuntimeException {
         this.feedbackStatus = feedbackStatus;
     }
 
+    public static InvalidEventOrderException from(PnDeliveryRequest pnDeliveryRequest,
+                       PaperProgressStatusEventDto paperRequest,
+                       String message) {
+        return new InvalidEventOrderException(
+                ExceptionTypeEnum.WRONG_EVENT_ORDER,
+                message,
+                new FeedbackStatus(
+                        pnDeliveryRequest.getFeedbackStatusCode(),
+                        paperRequest.getStatusCode(),
+                        pnDeliveryRequest.getFeedbackStatusDateTime(),
+                        paperRequest.getStatusDateTime().toInstant(),
+                        pnDeliveryRequest.getFeedbackDeliveryFailureCause(),
+                        paperRequest.getDeliveryFailureCause()
+                )
+        );
+    }
 }
