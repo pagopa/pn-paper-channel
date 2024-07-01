@@ -29,10 +29,14 @@ public class RECAG008CMessageHandler extends SendToDeliveryPushHandler {
     public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
         return eventMetaDAO.findAllByRequestId(buildMetaRequestId(paperRequest.getRequestId()))
                 .collectList()
-                .filter(pnEventMetas ->
-                        this.correctPreviousEventMeta(pnEventMetas, paperRequest.getRequestId(), entity, paperRequest))
+                .flatMap(pnEventMetas -> {
+                    if (!correctPreviousEventMeta(pnEventMetas, paperRequest.getRequestId())) {
+                        return Mono.error(InvalidEventOrderException.from(entity, paperRequest,
+                    "[{" + paperRequest.getRequestId() + "}] Problem with RECAG012 or PNAG012 presence!"));
+                    }
+                    return Mono.just(pnEventMetas);
+                })
                 .doOnNext(pnEventMetas -> log.info("[{}] Found correct previous states", paperRequest.getRequestId()))
-
                 // send to DeliveryPush (only if the needed metas are found)
                 .flatMap(pnEventMetas -> super.handleMessage(entity, paperRequest).then(Mono.just(pnEventMetas)))
 
@@ -40,8 +44,7 @@ public class RECAG008CMessageHandler extends SendToDeliveryPushHandler {
                 .flatMap(ignored -> metaDematCleaner.clean(paperRequest.getRequestId()));
     }
 
-    private Boolean correctPreviousEventMeta(List<PnEventMeta> pnEventMetas, String requestId,
-                                             PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest)
+    private Boolean correctPreviousEventMeta(List<PnEventMeta> pnEventMetas, String requestId)
     {
         Optional<PnEventMeta> elRECAG012 = pnEventMetas.stream()
                 .filter(pnEventMeta -> META_RECAG012_STATUS_CODE.equals(pnEventMeta.getMetaStatusCode()))
@@ -54,12 +57,6 @@ public class RECAG008CMessageHandler extends SendToDeliveryPushHandler {
         log.info("[{}] RECAG012 presence {}, PNAG012 presence {}", requestId, elRECAG012.isPresent(), elPNAG012.isPresent());
 
         // presence check and error log
-        final boolean ok = elRECAG012.isPresent() && elPNAG012.isPresent();
-        if (!ok) {
-            throw InvalidEventOrderException.from(entity, paperRequest,
-                    "[{" + requestId + "}] Problem with RECAG012 or PNAG012 presence!");
-        }
-
-        return true;
+        return elRECAG012.isPresent() && elPNAG012.isPresent();
     }
 }
