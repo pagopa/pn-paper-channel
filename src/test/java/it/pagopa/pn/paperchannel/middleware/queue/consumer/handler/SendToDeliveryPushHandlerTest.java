@@ -1,6 +1,7 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
+import it.pagopa.pn.paperchannel.exception.InvalidEventOrderException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
@@ -257,5 +258,28 @@ class SendToDeliveryPushHandlerTest {
 
         verify(requestDeliveryDAO, times(1)).updateData(any(PnDeliveryRequest.class), eq(true));
         verify(eventErrorDAO, never()).deleteItem(anyString(), any(Instant.class));
+    }
+
+    @Test
+    void handleMessage_ko_throws_InvalidEventOrderException(){
+        // Arrange
+        PnDeliveryRequest entity = new PnDeliveryRequest();
+        entity.setRequestId("requestId");
+        entity.setStatusCode("statusDetail");
+        entity.setStatusDetail(StatusCodeEnum.OK.getValue());
+        entity.setFeedbackStatusCode("RECRN001C");
+
+        PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto();
+        paperRequest.setRequestId(entity.getRequestId());
+        paperRequest.setStatusCode("RECRN001A");
+        paperRequest.setStatusDateTime(Instant.now().atOffset(ZoneOffset.UTC));
+
+        // Act / Assert
+        InvalidEventOrderException exception = assertThrows(InvalidEventOrderException.class,
+                ()-> handler.handleMessage(entity, paperRequest).block());
+
+        // Assert feedback status
+        assertEquals("RECRN001C", exception.getFeedbackStatus().oldFeedbackStatusCode());
+        assertEquals("RECRN001A", exception.getFeedbackStatus().newFeedbackStatusCode());
     }
 }
