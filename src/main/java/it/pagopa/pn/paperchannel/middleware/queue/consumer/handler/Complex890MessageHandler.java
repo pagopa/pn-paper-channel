@@ -1,6 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
-import it.pagopa.pn.paperchannel.exception.PnGenericException;
+import it.pagopa.pn.paperchannel.exception.InvalidEventOrderException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.mapper.SendEventMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
@@ -18,7 +18,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.WRONG_EVENT_ORDER;
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
 
 
@@ -104,7 +103,9 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
 
         if (containsPNAG012 && (!containsRECAG012)) {  // presente META##PNAG012 ma NON META##RECAG012
 //            CASO 1.ii
-            throw new PnGenericException(WRONG_EVENT_ORDER, "[{" + paperRequest.getRequestId() + "}] META##PNAG012 is present but META##RECAG012 is not present");
+            throw InvalidEventOrderException.from(entity, paperRequest,
+                    "[{" + paperRequest.getRequestId() +
+                            "}] META##PNAG012 is present but META##RECAG012 is not present");
         }
         else if (containsPNAG012 /*&& containsRECAG012*/) { // presenti META##RECAG012  e META##PNAG012
 //            CASO 2
@@ -123,7 +124,9 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
                                                      PaperProgressStatusEventDto paperRequest, Instant recag011ADateTime,
                                                      Instant recag00XADateTime) {
         if (missingRequiredDateTimes(recag011ADateTime, recag00XADateTime)) {
-            throw new PnGenericException(WRONG_EVENT_ORDER, "[{" + paperRequest.getRequestId() + "}] needed META##RECAG00_A is present and/or META##RECAG011A not present");
+            throw InvalidEventOrderException.from(entity, paperRequest,
+                    "[{" + paperRequest.getRequestId() +
+                            "}] needed META##RECAG00_A is present and/or META##RECAG011A not present");
         }
 
         if (lessThanTenDaysBetweenRECAG00XAAndRECAG011A(recag011ADateTime, recag00XADateTime)) {
@@ -149,7 +152,9 @@ public class Complex890MessageHandler extends SendToDeliveryPushHandler {
                     .then(Mono.just(pnEventMetas));
         }
         else {
-            throw new PnGenericException(WRONG_EVENT_ORDER, "[{" + paperRequest.getRequestId() + "}] needed META##RECAG00_A is present and/or META##RECAG011A not present");
+            throw InvalidEventOrderException.from(entity, paperRequest,
+                    "[{" + paperRequest.getRequestId() +
+                            "}] needed META##RECAG00_A is present and/or META##RECAG011A not present");
         }
     }
 

@@ -1,6 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
-import it.pagopa.pn.paperchannel.exception.PnGenericException;
+import it.pagopa.pn.paperchannel.exception.InvalidEventOrderException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
@@ -13,7 +13,6 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 import java.util.Optional;
 
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.WRONG_EVENT_ORDER;
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
 
 @Slf4j
@@ -30,7 +29,8 @@ public class RECAG008CMessageHandler extends SendToDeliveryPushHandler {
     public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
         return eventMetaDAO.findAllByRequestId(buildMetaRequestId(paperRequest.getRequestId()))
                 .collectList()
-                .filter(pnEventMetas -> this.correctPreviousEventMeta(pnEventMetas, paperRequest.getRequestId()))
+                .filter(pnEventMetas ->
+                        this.correctPreviousEventMeta(pnEventMetas, paperRequest.getRequestId(), entity, paperRequest))
                 .doOnNext(pnEventMetas -> log.info("[{}] Found correct previous states", paperRequest.getRequestId()))
 
                 // send to DeliveryPush (only if the needed metas are found)
@@ -40,7 +40,8 @@ public class RECAG008CMessageHandler extends SendToDeliveryPushHandler {
                 .flatMap(ignored -> metaDematCleaner.clean(paperRequest.getRequestId()));
     }
 
-    private Boolean correctPreviousEventMeta(List<PnEventMeta> pnEventMetas, String requestId)
+    private Boolean correctPreviousEventMeta(List<PnEventMeta> pnEventMetas, String requestId,
+                                             PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest)
     {
         Optional<PnEventMeta> elRECAG012 = pnEventMetas.stream()
                 .filter(pnEventMeta -> META_RECAG012_STATUS_CODE.equals(pnEventMeta.getMetaStatusCode()))
@@ -55,7 +56,8 @@ public class RECAG008CMessageHandler extends SendToDeliveryPushHandler {
         // presence check and error log
         final boolean ok = elRECAG012.isPresent() && elPNAG012.isPresent();
         if (!ok) {
-            throw new PnGenericException(WRONG_EVENT_ORDER, "[{" + requestId + "}] Problem with RECAG012 or PNAG012 presence!");
+            throw InvalidEventOrderException.from(entity, paperRequest,
+                    "[{" + requestId + "}] Problem with RECAG012 or PNAG012 presence!");
         }
 
         return true;
