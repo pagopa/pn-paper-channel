@@ -1,6 +1,6 @@
 package it.pagopa.pn.paperchannel.integrationtests;
 
-import it.pagopa.pn.paperchannel.exception.PnGenericException;
+import it.pagopa.pn.paperchannel.exception.InvalidEventOrderException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventError;
@@ -676,7 +676,7 @@ class PaperSimpleStock890IT extends BasePaperStock890IT {
         generateEvent(RECAG007B, null);
 
         // Expect exception because RECAG011A
-        generateEvent(RECAG007C, PnGenericException.class);
+        generateEvent(RECAG007C, InvalidEventOrderException.class);
 
         // Then
         checkFlowCorrectness(assertionLookupTable, Boolean.FALSE);

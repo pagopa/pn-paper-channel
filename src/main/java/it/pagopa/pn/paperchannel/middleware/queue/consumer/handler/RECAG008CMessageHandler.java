@@ -1,6 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
-import it.pagopa.pn.paperchannel.exception.PnGenericException;
+import it.pagopa.pn.paperchannel.exception.InvalidEventOrderException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
@@ -13,7 +13,6 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 import java.util.Optional;
 
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.WRONG_EVENT_ORDER;
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
 
 @Slf4j
@@ -30,9 +29,14 @@ public class RECAG008CMessageHandler extends SendToDeliveryPushHandler {
     public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
         return eventMetaDAO.findAllByRequestId(buildMetaRequestId(paperRequest.getRequestId()))
                 .collectList()
-                .filter(pnEventMetas -> this.correctPreviousEventMeta(pnEventMetas, paperRequest.getRequestId()))
+                .flatMap(pnEventMetas -> {
+                    if (!correctPreviousEventMeta(pnEventMetas, paperRequest.getRequestId())) {
+                        return Mono.error(InvalidEventOrderException.from(entity, paperRequest,
+                    "[{" + paperRequest.getRequestId() + "}] Problem with RECAG012 or PNAG012 presence!"));
+                    }
+                    return Mono.just(pnEventMetas);
+                })
                 .doOnNext(pnEventMetas -> log.info("[{}] Found correct previous states", paperRequest.getRequestId()))
-
                 // send to DeliveryPush (only if the needed metas are found)
                 .flatMap(pnEventMetas -> super.handleMessage(entity, paperRequest).then(Mono.just(pnEventMetas)))
 
@@ -53,11 +57,6 @@ public class RECAG008CMessageHandler extends SendToDeliveryPushHandler {
         log.info("[{}] RECAG012 presence {}, PNAG012 presence {}", requestId, elRECAG012.isPresent(), elPNAG012.isPresent());
 
         // presence check and error log
-        final boolean ok = elRECAG012.isPresent() && elPNAG012.isPresent();
-        if (!ok) {
-            throw new PnGenericException(WRONG_EVENT_ORDER, "[{" + requestId + "}] Problem with RECAG012 or PNAG012 presence!");
-        }
-
-        return true;
+        return elRECAG012.isPresent() && elPNAG012.isPresent();
     }
 }

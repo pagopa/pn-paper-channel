@@ -1,6 +1,6 @@
 package it.pagopa.pn.paperchannel.integrationtests;
 
-import it.pagopa.pn.paperchannel.exception.PnGenericException;
+import it.pagopa.pn.paperchannel.exception.InvalidEventOrderException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import lombok.extern.slf4j.Slf4j;
@@ -62,7 +62,7 @@ class PaperComplexStock890IT extends BasePaperStock890IT {
         generateEvent(RECAG005B, null);
         
         // Expect exception because RECAG011A
-        generateEvent(RECAG005C, PnGenericException.class);
+        generateEvent(RECAG005C, InvalidEventOrderException.class);
 
         // Then
         checkFlowCorrectness(assertionLookupTable, Boolean.FALSE);
@@ -146,7 +146,7 @@ class PaperComplexStock890IT extends BasePaperStock890IT {
         generateEvent(RECAG005B, null);
 
         // Expect exception because RECAG011A
-        generateEvent(RECAG005C, PnGenericException.class);
+        generateEvent(RECAG005C, InvalidEventOrderException.class);
 
         // Then
         checkFlowCorrectness(assertionLookupTable, Boolean.FALSE);
@@ -267,7 +267,7 @@ class PaperComplexStock890IT extends BasePaperStock890IT {
         generateEvent(RECAG006B, null);
 
         // Expect exception because RECAG011A
-        generateEvent(RECAG006C, PnGenericException.class);
+        generateEvent(RECAG006C, InvalidEventOrderException.class);
 
         // Then
         checkFlowCorrectness(assertionLookupTable, Boolean.FALSE);
@@ -351,7 +351,7 @@ class PaperComplexStock890IT extends BasePaperStock890IT {
         generateEvent(RECAG006B, null);
 
         // Expect exception because RECAG011A
-        generateEvent(RECAG006C, PnGenericException.class);
+        generateEvent(RECAG006C, InvalidEventOrderException.class);
 
         // Then
         checkFlowCorrectness(assertionLookupTable, Boolean.FALSE);
@@ -472,7 +472,7 @@ class PaperComplexStock890IT extends BasePaperStock890IT {
         generateEvent(RECAG007B, null);
 
         // Expect exception because RECAG011A
-        generateEvent(RECAG007C, PnGenericException.class);
+        generateEvent(RECAG007C, InvalidEventOrderException.class);
 
         // Then
         checkFlowCorrectness(assertionLookupTable, Boolean.FALSE);
@@ -556,7 +556,7 @@ class PaperComplexStock890IT extends BasePaperStock890IT {
         generateEvent(RECAG007B, null);
 
         // Expect exception because RECAG011A
-        generateEvent(RECAG007C, PnGenericException.class);
+        generateEvent(RECAG007C, InvalidEventOrderException.class);
 
         // Then
         checkFlowCorrectness(assertionLookupTable, Boolean.FALSE);
