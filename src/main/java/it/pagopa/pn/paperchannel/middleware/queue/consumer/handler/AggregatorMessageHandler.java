@@ -1,6 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
-import it.pagopa.pn.paperchannel.exception.PnGenericException;
+import it.pagopa.pn.paperchannel.exception.InvalidEventOrderException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.DiscoveredAddressDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
@@ -13,7 +13,6 @@ import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.WRONG_EVENT_ORDER;
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.buildMetaRequestId;
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.buildMetaStatusCode;
 
@@ -40,7 +39,8 @@ public class AggregatorMessageHandler extends SendToDeliveryPushHandler {
         return eventMetaDAO.getDeliveryEventMeta(buildMetaRequestId(paperRequest.getRequestId()),
                         preClosingMetaStatus)
                 .switchIfEmpty(Mono.defer(() -> {
-                    throw new PnGenericException(WRONG_EVENT_ORDER, "[{" + paperRequest.getRequestId() + "}] Missing EventMeta for {" + paperRequest + "}");
+                    throw InvalidEventOrderException.from(entity, paperRequest,
+                            "[{" + paperRequest.getRequestId() + "}] Missing EventMeta for {" + paperRequest + "}");
                 }))
                 .map(relatedMeta -> enrichEvent(paperRequest, relatedMeta))
 

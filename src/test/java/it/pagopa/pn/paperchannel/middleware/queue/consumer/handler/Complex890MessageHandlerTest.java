@@ -1,7 +1,7 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
-import it.pagopa.pn.paperchannel.exception.PnGenericException;
+import it.pagopa.pn.paperchannel.exception.InvalidEventOrderException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
@@ -94,7 +94,7 @@ class Complex890MessageHandlerTest {
         when(eventMetaDAO.findAllByRequestId(metadataRequestid)).thenReturn(Flux.just(pnEventMetaPNAG012));
 
         StepVerifier.create(handler.handleMessage(entity, paperRequest))
-                        .expectError(PnGenericException.class)
+                        .expectError(InvalidEventOrderException.class)
                                 .verify();
 
         verify(eventMetaDAO, times(0)).createOrUpdate(any(PnEventMeta.class));

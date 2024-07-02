@@ -1,7 +1,7 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
-import it.pagopa.pn.paperchannel.exception.PnGenericException;
+import it.pagopa.pn.paperchannel.exception.InvalidEventOrderException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
@@ -151,7 +151,7 @@ class CustomAggregatorMessageHandlerTest {
         when(mockMetaDao.deleteEventMeta(any(String.class), any(String.class))).thenReturn(Mono.empty());
 
         // assertDoNotThrow with call
-        assertThrows(PnGenericException.class, () -> handler.handleMessage(entity, paperRequest).block());
+        assertThrows(InvalidEventOrderException.class, () -> handler.handleMessage(entity, paperRequest).block());
 
         // check invocations: verify
         // getDeliveryEventMeta call
