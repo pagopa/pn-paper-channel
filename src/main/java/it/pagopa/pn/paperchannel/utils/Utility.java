@@ -27,6 +27,10 @@ public class Utility {
     public static final String POSTMAN_REQUEST_PREFIX = "PST_ADDRESS_";
     public static final String NATIONAL_REGISTRIES_REQUEST_PREFIX = "NRG_ADDRESS_";
 
+    private static final String COUNTRY_IT = "it";
+    private static final String COUNTRY_ITALIA = "italia";
+    private static final String COUNTRY_ITALY = "italy";
+
     private Utility() {
         throw new IllegalCallerException();
     }
@@ -236,6 +240,13 @@ public class Utility {
                             correlationId,
                             serviceName));
         }
+    }
+
+    public static boolean isNational(String country) {
+       return StringUtils.isBlank(country) ||
+                StringUtils.equalsIgnoreCase(country, COUNTRY_IT) ||
+                StringUtils.equalsIgnoreCase(country, COUNTRY_ITALIA) ||
+                StringUtils.equalsIgnoreCase(country, COUNTRY_ITALY);
     }
 
 }

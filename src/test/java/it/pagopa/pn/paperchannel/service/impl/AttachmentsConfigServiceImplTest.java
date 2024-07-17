@@ -3,7 +3,6 @@ package it.pagopa.pn.paperchannel.service.impl;
 import it.pagopa.pn.api.dto.events.ConfigTypeEnum;
 import it.pagopa.pn.api.dto.events.PnAttachmentsConfigEventItem;
 import it.pagopa.pn.api.dto.events.PnAttachmentsConfigEventPayload;
-import it.pagopa.pn.commons.rules.model.FilterChainResult;
 import it.pagopa.pn.commons.rules.model.ListFilterChainResult;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.PnInvalidChainRuleException;
@@ -28,11 +27,11 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AttachmentsConfigServiceImplTest {
@@ -453,6 +452,128 @@ class AttachmentsConfigServiceImplTest {
         Assertions.assertThrows(PnInvalidChainRuleException.class, mono::block);
     }
 
+    @Test
+    void filterAttachmentsToSendSkippedBecauseAarWithRaddFalse() {
+        // GIVEN
+        PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest(StatusDeliveryEnum.IN_PROCESSING);
+        pnDeliveryRequest.setAarWithRadd(false);
+
+
+        PnAddress pnAddress = new PnAddress();
+        pnAddress.setCap("30000");
+
+        when(pnPaperChannelConfig.isEnabledocfilterruleengine()).thenReturn(true);
+
+        // WHEN
+        Mono<PnDeliveryRequest> mono = attachmentsConfigService.filterAttachmentsToSend(pnDeliveryRequest, pnDeliveryRequest.getAttachments(), pnAddress);
+        PnDeliveryRequest res = mono.block();
+
+        // THEN
+        Assertions.assertNotNull(res);
+        Assertions.assertEquals(2, res.getAttachments().size());
+        Assertions.assertEquals(0, res.getRemovedAttachments().size());
+        verify(pnAttachmentsConfigDAO, never()).findConfigInInterval(any(), any());
+    }
+
+    @Test
+    void filterAttachmentsToSendSkippedBecauseAarWithRaddNull() {
+        // GIVEN
+        PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest(StatusDeliveryEnum.IN_PROCESSING);
+        pnDeliveryRequest.setAarWithRadd(null);
+
+
+        PnAddress pnAddress = new PnAddress();
+        pnAddress.setCap("30000");
+
+        when(pnPaperChannelConfig.isEnabledocfilterruleengine()).thenReturn(true);
+
+        // WHEN
+        Mono<PnDeliveryRequest> mono = attachmentsConfigService.filterAttachmentsToSend(pnDeliveryRequest, pnDeliveryRequest.getAttachments(), pnAddress);
+        PnDeliveryRequest res = mono.block();
+
+        // THEN
+        Assertions.assertNotNull(res);
+        Assertions.assertEquals(2, res.getAttachments().size());
+        Assertions.assertEquals(0, res.getRemovedAttachments().size());
+        verify(pnAttachmentsConfigDAO, never()).findConfigInInterval(any(), any());
+    }
+
+    @Test
+    void filterAttachmentsToSendSkippedBecauseCountryIsNotNational() {
+        // GIVEN
+        PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest(StatusDeliveryEnum.IN_PROCESSING);
+
+
+        PnAddress pnAddress = new PnAddress();
+        pnAddress.setCap("30000");
+        pnAddress.setCountry("SPAGNA");
+
+        when(pnPaperChannelConfig.isEnabledocfilterruleengine()).thenReturn(true);
+
+        // WHEN
+        Mono<PnDeliveryRequest> mono = attachmentsConfigService.filterAttachmentsToSend(pnDeliveryRequest, pnDeliveryRequest.getAttachments(), pnAddress);
+        PnDeliveryRequest res = mono.block();
+
+        // THEN
+        Assertions.assertNotNull(res);
+        Assertions.assertEquals(2, res.getAttachments().size());
+        Assertions.assertEquals(0, res.getRemovedAttachments().size());
+        verify(pnAttachmentsConfigDAO, never()).findConfigInInterval(any(), any());
+    }
+
+    @Test
+    void filterAttachmentsToSendOkWithCountryItalia() {
+        // GIVEN
+        PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest(StatusDeliveryEnum.IN_PROCESSING);
+
+        PnAddress pnAddress = new PnAddress();
+        pnAddress.setCap("30000");
+        pnAddress.setCountry("ITALIA");
+
+        PnAttachmentsRule rule = new PnAttachmentsRule();
+        rule.setRuleType(DocumentTagHandler.RULE_TYPE);
+        final PnRuleParams params = new PnRuleParams();
+        params.setTypeWithNextResult("AAR");
+        rule.setParams(params);
+        PnAttachmentsConfig pnAttachmentsConfig = new PnAttachmentsConfig();
+        pnAttachmentsConfig.setConfigKey("ZIP##DEFAULT");
+        pnAttachmentsConfig.setStartValidity(Instant.now().minus(1, ChronoUnit.DAYS));
+        pnAttachmentsConfig.setRules(List.of(rule));
+
+        List<ListFilterChainResult<PnAttachmentInfo>> filterChainResults =new ArrayList<>();
+        ListFilterChainResult<PnAttachmentInfo> filterChainResult = new ListFilterChainResult<PnAttachmentInfo>();
+        filterChainResult.setItem(pnDeliveryRequest.getAttachments().get(0));
+        filterChainResult.setSuccess(true);
+        filterChainResult.setCode("OK");
+        filterChainResult.setDiagnostic("oook");
+        filterChainResults.add(filterChainResult);
+        filterChainResult = new ListFilterChainResult<>();
+        filterChainResult.setItem(pnDeliveryRequest.getAttachments().get(1));
+        filterChainResult.setSuccess(false);
+        filterChainResult.setCode("KO");
+        filterChainResult.setDiagnostic("ko");
+        filterChainResults.add(filterChainResult);
+
+        when(pnPaperChannelConfig.isEnabledocfilterruleengine()).thenReturn(true);
+        when(pnAttachmentsConfigDAO.findConfigInInterval("ZIP##30000", pnDeliveryRequest.getNotificationSentAt()))
+                .thenReturn(Mono.just(pnAttachmentsConfig));
+        when(paperListChainEngine.filterItems(pnDeliveryRequest, pnDeliveryRequest.getAttachments(), pnAttachmentsConfig.getRules()))
+                .thenReturn(Flux.fromIterable(filterChainResults));
+
+        // WHEN
+        Mono<PnDeliveryRequest> mono = attachmentsConfigService.filterAttachmentsToSend(pnDeliveryRequest, pnDeliveryRequest.getAttachments(), pnAddress);
+        PnDeliveryRequest res = mono.block();
+
+        // THEN
+        Assertions.assertNotNull(res);
+        Assertions.assertEquals(1, res.getAttachments().size());
+        Assertions.assertEquals(1, res.getRemovedAttachments().size());
+        verify(pnAttachmentsConfigDAO).findConfigInInterval("ZIP##30000", pnDeliveryRequest.getNotificationSentAt());
+        verify(paperListChainEngine).filterItems(any(), any(), eq(pnAttachmentsConfig.getRules()));
+    }
+
+
+
     private PnDeliveryRequest getDeliveryRequest(StatusDeliveryEnum status){
         PnDeliveryRequest deliveryRequest= new PnDeliveryRequest();
         List<PnAttachmentInfo> attachmentUrls = getPnAttachmentInfos();
@@ -485,6 +606,7 @@ class AttachmentsConfigServiceImplTest {
         deliveryRequest.setProductType("RN_AR");
         deliveryRequest.setAttachments(attachmentUrls);
         deliveryRequest.setNotificationSentAt(Instant.EPOCH.plusMillis(57));
+        deliveryRequest.setAarWithRadd(true);
         return deliveryRequest;
     }
 
