@@ -211,11 +211,8 @@ class CustomAggregatorMessageHandlerTest {
         // deleteEventDemat call
         verify(mockDematDao, timeout(2000).times(0)).deleteBatch(any(String.class), any(String.class));
 
-        verify(requestDeliveryDAO, times(1)).updateData(argThat(pnDeliveryRequest -> {
-            assertThat(pnDeliveryRequest).isNotNull();
-            assertThat(pnDeliveryRequest.getRefined()).isTrue();
-            return true;
-        }), eq(true));
+        // No update because of sqs failure
+        verify(requestDeliveryDAO, timeout(2000).times(0)).updateData(any(PnDeliveryRequest.class), anyBoolean());
     }
 
 
