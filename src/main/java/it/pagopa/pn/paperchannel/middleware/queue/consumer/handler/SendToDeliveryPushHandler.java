@@ -39,30 +39,41 @@ public abstract class SendToDeliveryPushHandler implements MessageHandler {
 
     @Override
     public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
-        return this.updateRefinedDeliveryRequestIfOK(entity, paperRequest)
-                .doOnNext(pnDeliveryRequest -> this.pushSendEvent(entity, paperRequest))
-                .flatMap(pnDeliveryRequest -> processPnEventErrorsRedrive(pnDeliveryRequest, paperRequest))
+        return StatusCodeEnum.PROGRESS.getValue().equals(entity.getStatusDetail())
+                ? handleProgressMessage(entity, paperRequest)
+                : handleFeedbackMessage(entity, paperRequest);
+    }
+
+    private Mono<Void> handleProgressMessage(PnDeliveryRequest pnDeliveryRequest, PaperProgressStatusEventDto paperRequest) {
+        return Mono.just(pnDeliveryRequest)
+                .doOnNext(r -> this.pushSendEvent(pnDeliveryRequest, paperRequest))
+                .then();
+    }
+
+    private Mono<Void> handleFeedbackMessage(PnDeliveryRequest pnDeliveryRequest, PaperProgressStatusEventDto paperRequest) {
+        if(pnDeliveryRequest.getFeedbackStatusCode() != null) {
+            return Mono.error(
+                InvalidEventOrderException.from(pnDeliveryRequest, paperRequest,
+                    "[{" + paperRequest.getRequestId() + "}] Wrong feedback event detected for {"
+                            + paperRequest + "}")
+            );
+        }
+
+        return Mono.just(pnDeliveryRequest)
+                .doOnNext(r -> this.pushSendEvent(pnDeliveryRequest, paperRequest))
+                .flatMap(r -> this.updateRefinedDeliveryRequest(pnDeliveryRequest, paperRequest))
+                .flatMap(r -> processPnEventErrorsRedrive(pnDeliveryRequest, paperRequest))
                 .then();
     }
 
     /**
-     * Update delivery request setting refined field to true when statusDetail field is OK
+     * Update delivery request setting refined field to true when statusDetail field is OK or KO
      *
      * @param pnDeliveryRequest request to update
      *
      * @return Mono containing {@link PnDeliveryRequest} object
      * */
-    private Mono<PnDeliveryRequest> updateRefinedDeliveryRequestIfOK(PnDeliveryRequest pnDeliveryRequest, PaperProgressStatusEventDto paperRequest) {
-        if (StatusCodeEnum.OK.getValue().equals(pnDeliveryRequest.getStatusDetail())
-                || StatusCodeEnum.KO.getValue().equals(pnDeliveryRequest.getStatusDetail())) {
-            log.debug("[{}] Updating DeliveryRequest with refinement information", pnDeliveryRequest.getRequestId());
-
-            if (pnDeliveryRequest.getFeedbackStatusCode() != null) {
-                throw InvalidEventOrderException.from(pnDeliveryRequest, paperRequest,
-                        "[{" + paperRequest.getRequestId() + "}] Wrong feedback event detected for {"
-                                + paperRequest + "}");
-            }
-
+    private Mono<PnDeliveryRequest> updateRefinedDeliveryRequest(PnDeliveryRequest pnDeliveryRequest, PaperProgressStatusEventDto paperRequest) {
             pnDeliveryRequest.setRefined(Boolean.TRUE);
             pnDeliveryRequest.setFeedbackStatusCode(paperRequest.getStatusCode());
             pnDeliveryRequest.setFeedbackDeliveryFailureCause(paperRequest.getDeliveryFailureCause());
@@ -71,9 +82,6 @@ public abstract class SendToDeliveryPushHandler implements MessageHandler {
             return this.requestDeliveryDAO
                     .updateData(pnDeliveryRequest, Boolean.TRUE)
                     .doOnError(ex -> log.warn("[{}] Error while setting request as refined", pnDeliveryRequest.getRequestId(), ex));
-        }
-
-        return Mono.just(pnDeliveryRequest);
     }
 
     private Mono<Void> processPnEventErrorsRedrive(PnDeliveryRequest pnDeliveryRequest, PaperProgressStatusEventDto paperRequest) {
