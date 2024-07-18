@@ -114,7 +114,7 @@ class PNAG012MessageHandlerTest {
         PnEventMeta pnEventMetaPNAG012 = createMETAForPNAG012Event(paperRequest, pnEventMetaRECAG012, 365L);
         when(eventMetaDAO.putIfAbsent(pnEventMetaPNAG012)).thenReturn(Mono.just(pnEventMetaPNAG012));
 
-        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
+        when(requestDeliveryDAO.updateConditionalOnFeedbackStatus(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
 
         // Then
         // eseguo l'handler
@@ -124,9 +124,10 @@ class PNAG012MessageHandlerTest {
         verify(eventMetaDAO, times(1)).putIfAbsent(any(PnEventMeta.class));
         verify(mockSqsSender, times(1)).pushSendEvent(any(SendEvent.class));
 
-        verify(requestDeliveryDAO, times(1)).updateData(argThat(pnDeliveryRequest -> {
+        verify(requestDeliveryDAO, times(1)).updateConditionalOnFeedbackStatus(argThat(pnDeliveryRequest -> {
             assertThat(pnDeliveryRequest).isNotNull();
             assertThat(pnDeliveryRequest.getRefined()).isTrue();
+            assertThat(pnDeliveryRequest.getFeedbackStatusCode()).isEqualTo(PNAG012_STATUS_CODE);
             return true;
         }), eq(true));
     }
@@ -174,7 +175,7 @@ class PNAG012MessageHandlerTest {
         PnEventMeta pnEventMetaPNAG012 = createMETAForPNAG012Event(paperRequest, pnEventMetaRECAG012, 365L);
         when(eventMetaDAO.putIfAbsent(pnEventMetaPNAG012)).thenReturn(Mono.just(pnEventMetaPNAG012));
 
-        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
+        when(requestDeliveryDAO.updateConditionalOnFeedbackStatus(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
 
         // Then
         // eseguo l'handler
@@ -184,9 +185,10 @@ class PNAG012MessageHandlerTest {
         verify(eventMetaDAO, times(1)).putIfAbsent(any(PnEventMeta.class));
         verify(mockSqsSender, times(1)).pushSendEvent(any(SendEvent.class));
 
-        verify(requestDeliveryDAO, times(1)).updateData(argThat(pnDeliveryRequest -> {
+        verify(requestDeliveryDAO, times(1)).updateConditionalOnFeedbackStatus(argThat(pnDeliveryRequest -> {
             assertThat(pnDeliveryRequest).isNotNull();
             assertThat(pnDeliveryRequest.getRefined()).isTrue();
+            assertThat(pnDeliveryRequest.getFeedbackStatusCode()).isEqualTo(PNAG012_STATUS_CODE);
             return true;
         }), eq(true));
     }
@@ -249,7 +251,7 @@ class PNAG012MessageHandlerTest {
         PnEventMeta pnEventMetaPNAG012 = createMETAForPNAG012Event(paperRequest, pnEventMetaRECAG012, 365L);
         when(eventMetaDAO.putIfAbsent(pnEventMetaPNAG012)).thenReturn(Mono.just(pnEventMetaPNAG012));
 
-        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
+        when(requestDeliveryDAO.updateConditionalOnFeedbackStatus(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
 
         // Then
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
@@ -258,9 +260,10 @@ class PNAG012MessageHandlerTest {
         verify(eventMetaDAO, times(1)).putIfAbsent(any(PnEventMeta.class));
         verify(mockSqsSender, times(1)).pushSendEvent(any(SendEvent.class));
 
-        verify(requestDeliveryDAO, times(1)).updateData(argThat(pnDeliveryRequest -> {
+        verify(requestDeliveryDAO, times(1)).updateConditionalOnFeedbackStatus(argThat(pnDeliveryRequest -> {
             assertThat(pnDeliveryRequest).isNotNull();
             assertThat(pnDeliveryRequest.getRefined()).isTrue();
+            assertThat(pnDeliveryRequest.getFeedbackStatusCode()).isEqualTo(PNAG012_STATUS_CODE);
             return true;
         }), eq(true));
     }
@@ -454,15 +457,16 @@ class PNAG012MessageHandlerTest {
         PnEventMeta pnEventMetaPNAG012 = createMETAForPNAG012Event(paperRequest, pnEventMetaRECAG012, 365L);
         when(eventMetaDAO.putIfAbsent(pnEventMetaPNAG012)).thenReturn(Mono.just(pnEventMetaPNAG012));
 
-        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
+        when(requestDeliveryDAO.updateConditionalOnFeedbackStatus(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
 
         // Then
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
         verify(mockSqsSender, times(1)).pushSendEvent(any());
 
-        verify(requestDeliveryDAO, times(1)).updateData(argThat(pnDeliveryRequest -> {
+        verify(requestDeliveryDAO, times(1)).updateConditionalOnFeedbackStatus(argThat(pnDeliveryRequest -> {
             assertThat(pnDeliveryRequest).isNotNull();
             assertThat(pnDeliveryRequest.getRefined()).isTrue();
+            assertThat(pnDeliveryRequest.getFeedbackStatusCode()).isEqualTo(PNAG012_STATUS_CODE);
             return true;
         }), eq(true));
     }
@@ -519,15 +523,16 @@ class PNAG012MessageHandlerTest {
         PnEventMeta pnEventMetaPNAG012 = createMETAForPNAG012Event(paperRequest, pnEventMetaRECAG012, 365L);
         when(eventMetaDAO.putIfAbsent(pnEventMetaPNAG012)).thenReturn(Mono.just(pnEventMetaPNAG012));
 
-        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
+        when(requestDeliveryDAO.updateConditionalOnFeedbackStatus(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
 
         // Then
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
         verify(mockSqsSender, times(1)).pushSendEvent(any());
 
-        verify(requestDeliveryDAO, times(1)).updateData(argThat(pnDeliveryRequest -> {
+        verify(requestDeliveryDAO, times(1)).updateConditionalOnFeedbackStatus(argThat(pnDeliveryRequest -> {
             assertThat(pnDeliveryRequest).isNotNull();
             assertThat(pnDeliveryRequest.getRefined()).isTrue();
+            assertThat(pnDeliveryRequest.getFeedbackStatusCode()).isEqualTo(PNAG012_STATUS_CODE);
             return true;
         }), eq(true));
     }

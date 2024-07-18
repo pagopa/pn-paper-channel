@@ -290,6 +290,7 @@ class PaperPNRN012IT extends BaseTest {
 
         Mockito.when(requestDeliveryDAO.updateData(Mockito.any())).thenReturn(Mono.just(forUpdate));
         Mockito.when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(forUpdate));
+        Mockito.when(requestDeliveryDAO.updateConditionalOnFeedbackStatus(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(forUpdate));
     }
 
     private PnDeliveryRequest getDeliveryRequest(String code, String detail, String description){

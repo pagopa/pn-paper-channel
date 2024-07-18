@@ -28,8 +28,7 @@ import java.util.Set;
 
 import static it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.PNAG012MessageHandler.DEMAT_SORT_KEYS_FILTER;
 import static it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.PNAG012MessageHandler.META_SORT_KEY_FILTER;
-import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.RECAG011B_STATUS_CODE;
-import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.createMETAForPNAG012Event;
+import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.*;
@@ -128,7 +127,7 @@ class RECAG011BMessageHandlerTest {
 
         when(eventMetaDAO.putIfAbsent(pnEventMeta)).thenReturn(Mono.just(pnEventMeta));
 
-        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
+        when(requestDeliveryDAO.updateConditionalOnFeedbackStatus(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
 
         // eseguo l'handler
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
@@ -152,9 +151,10 @@ class RECAG011BMessageHandlerTest {
         sendPNAG012Event.setClientRequestTimeStamp(sendEventArgumentCaptor.getAllValues().get(1).getClientRequestTimeStamp());
         assertThat(sendEventArgumentCaptor.getAllValues().get(1)).isEqualTo(sendPNAG012Event);
 
-        verify(requestDeliveryDAO, times(1)).updateData(argThat(pnDeliveryRequest -> {
+        verify(requestDeliveryDAO, times(1)).updateConditionalOnFeedbackStatus(argThat(pnDeliveryRequest -> {
             assertThat(pnDeliveryRequest).isNotNull();
             assertThat(pnDeliveryRequest.getRefined()).isTrue();
+            assertThat(pnDeliveryRequest.getFeedbackStatusCode()).isEqualTo(PNAG012_STATUS_CODE);
             return true;
         }), eq(true));
     }

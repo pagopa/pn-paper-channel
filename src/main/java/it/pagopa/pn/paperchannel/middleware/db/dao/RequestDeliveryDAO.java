@@ -11,6 +11,8 @@ public interface RequestDeliveryDAO {
     Mono<PnDeliveryRequest> updateData(PnDeliveryRequest pnDeliveryRequest);
     Mono<PnDeliveryRequest> updateData(PnDeliveryRequest pnDeliveryRequest, boolean ignorableNulls);
 
+    Mono<PnDeliveryRequest> updateConditionalOnFeedbackStatus(PnDeliveryRequest pnDeliveryRequest, boolean ignorableNulls);
+
     Mono<PnDeliveryRequest> getByRequestId(String requestId);
     Mono<PnDeliveryRequest> getByRequestId(String requestId, boolean decode);
     Mono<PnDeliveryRequest> getByCorrelationId(String requestId, boolean decode);

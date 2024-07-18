@@ -12,7 +12,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import reactor.core.publisher.Mono;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -53,7 +52,7 @@ class DirectlySendMessageHandlerTest {
         // expect exactly one call to delivery push sqs queue
         SendEvent sendEventExpected = SendEventMapper.createSendEventMessage(entity, paperProgressStatusEventDto);
         verify(mockSqsSender, times(1)).pushSendEvent(sendEventExpected);
-        verify(requestDeliveryDAO, never()).updateData(entity);
+        verify(requestDeliveryDAO, never()).updateConditionalOnFeedbackStatus(any(PnDeliveryRequest.class), anyBoolean());
     }
 
     /**
