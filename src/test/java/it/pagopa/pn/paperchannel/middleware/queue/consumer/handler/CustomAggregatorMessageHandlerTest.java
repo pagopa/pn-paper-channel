@@ -95,7 +95,7 @@ class CustomAggregatorMessageHandlerTest {
         when(mockMetaDao.deleteBatch(any(String.class), any(String.class))).thenReturn(Mono.empty());
         when(mockDematDao.deleteBatch(any(String.class), any(String.class))).thenReturn(Mono.empty());
 
-        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
+        when(requestDeliveryDAO.updateConditionalOnFeedbackStatus(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
 
         // assertDoNotThrow with call
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
@@ -110,7 +110,7 @@ class CustomAggregatorMessageHandlerTest {
         // DeliveryPush send via SQS verification
         verify(mockSqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
 
-        verify(requestDeliveryDAO, times(1)).updateData(argThat(pnDeliveryRequest -> {
+        verify(requestDeliveryDAO, times(1)).updateConditionalOnFeedbackStatus(argThat(pnDeliveryRequest -> {
             assertThat(pnDeliveryRequest).isNotNull();
             assertThat(pnDeliveryRequest.getRefined()).isTrue();
             return true;
@@ -193,7 +193,7 @@ class CustomAggregatorMessageHandlerTest {
         when(mockMetaDao.deleteBatch(any(String.class), any(String.class))).thenReturn(Mono.empty());
         when(mockDematDao.deleteBatch(any(String.class), any(String.class))).thenReturn(Mono.empty());
 
-        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
+        when(requestDeliveryDAO.updateConditionalOnFeedbackStatus(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
 
         // the SQS queue
         doThrow(new RuntimeException()).when(mockSqsSender).pushSendEvent(Mockito.any());

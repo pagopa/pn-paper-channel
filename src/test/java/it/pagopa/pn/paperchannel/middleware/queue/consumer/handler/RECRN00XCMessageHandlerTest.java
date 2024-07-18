@@ -96,14 +96,15 @@ class RECRN00XCMessageHandlerTest {
         entity.setStatusDetail(statusRECRN003C);
         entity.setStatusCode(ExternalChannelCodeEnum.getStatusCode(paperRequest.getStatusCode()));
 
-        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
+        when(requestDeliveryDAO.updateConditionalOnFeedbackStatus(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
 
         Mono<Void> mono = this.handler.handleMessage(entity, paperRequest);
         Assertions.assertDoesNotThrow(() -> mono.block());
 
-        verify(requestDeliveryDAO, times(1)).updateData(argThat(pnDeliveryRequest -> {
+        verify(requestDeliveryDAO, times(1)).updateConditionalOnFeedbackStatus(argThat(pnDeliveryRequest -> {
             assertThat(pnDeliveryRequest).isNotNull();
             assertThat(pnDeliveryRequest.getRefined()).isTrue();
+            assertThat(pnDeliveryRequest.getFeedbackStatusCode()).isEqualTo("PNRN012");
             return true;
         }), eq(true));
     }
@@ -149,7 +150,7 @@ class RECRN00XCMessageHandlerTest {
         Assertions.assertEquals(StatusCodeEnum.PROGRESS, sendEvent.getStatusCode());
         Assertions.assertEquals(statusRECRN003C, sendEvent.getStatusDetail());
 
-        verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
+        verify(requestDeliveryDAO, never()).updateConditionalOnFeedbackStatus(any(PnDeliveryRequest.class), anyBoolean());
     }
 
 
@@ -183,7 +184,7 @@ class RECRN00XCMessageHandlerTest {
         entity.setStatusDetail(StatusCodeEnum.PROGRESS.getValue());
         entity.setStatusCode(ExternalChannelCodeEnum.getStatusCode(paperRequest.getStatusCode()));
 
-        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
+        when(requestDeliveryDAO.updateConditionalOnFeedbackStatus(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
 
         Mono<Void> mono = this.handler.handleMessage(entity, paperRequest);
         Assertions.assertDoesNotThrow(() -> mono.block());
@@ -197,9 +198,10 @@ class RECRN00XCMessageHandlerTest {
         assertEquals("RECRN003C", caturedSendEvent.getAllValues().get(1).getStatusDetail());
         assertEquals(StatusCodeEnum.PROGRESS, caturedSendEvent.getAllValues().get(1).getStatusCode());
 
-        verify(requestDeliveryDAO, times(1)).updateData(argThat(pnDeliveryRequest -> {
+        verify(requestDeliveryDAO, times(1)).updateConditionalOnFeedbackStatus(argThat(pnDeliveryRequest -> {
             assertThat(pnDeliveryRequest).isNotNull();
             assertThat(pnDeliveryRequest.getRefined()).isTrue();
+            assertThat(pnDeliveryRequest.getFeedbackStatusCode()).isEqualTo("PNRN012");
             return true;
         }), eq(true));
     }
