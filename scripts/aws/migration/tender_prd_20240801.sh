@@ -4,7 +4,7 @@
 
 # URL dell'ALB di PN Core (si può copiare lo script su un bastion host di PN Core oppure creare un tunnel in locale tramite SSM)
 _BASEURI=$1
-_GARA="$(date '+%Y%m%d%H%M%S')-AnaglogCost2024-v2"
+_GARA="$(date '+%Y%m%d%H%M%S')-AnaglogCost2024-v20240801"
 _FSU_UUID="01114601006-FSU"
 _POSTE_UUID="01114601006"
 _POSTSERVICE_UUID="07532740722"
