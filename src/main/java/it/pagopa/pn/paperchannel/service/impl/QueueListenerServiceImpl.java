@@ -4,9 +4,7 @@ import it.pagopa.pn.api.dto.events.PnAttachmentsConfigEventPayload;
 import it.pagopa.pn.api.dto.events.PnF24PdfSetReadyEvent;
 import it.pagopa.pn.api.dto.events.PnF24PdfSetReadyEventItem;
 import it.pagopa.pn.commons.utils.MDCUtils;
-import it.pagopa.pn.paperchannel.exception.PnAddressFlowException;
-import it.pagopa.pn.paperchannel.exception.PnF24FlowException;
-import it.pagopa.pn.paperchannel.exception.PnGenericException;
+import it.pagopa.pn.paperchannel.exception.*;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnnationalregistries.v1.dto.AddressSQSMessageDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendRequest;
@@ -26,7 +24,9 @@ import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
 import it.pagopa.pn.paperchannel.model.*;
 import it.pagopa.pn.paperchannel.service.*;
 import it.pagopa.pn.paperchannel.utils.Const;
+import it.pagopa.pn.paperchannel.utils.FeedbackStatus;
 import it.pagopa.pn.paperchannel.utils.PnLogAudit;
+
 import lombok.CustomLog;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.MDC;
@@ -35,6 +35,7 @@ import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 
 import java.util.List;
+import java.util.Objects;
 
 import static it.pagopa.pn.commons.log.PnLogger.EXTERNAL_SERVICES.PN_NATIONAL_REGISTRIES;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
@@ -312,6 +313,18 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                             log.logEndingProcess(PROCESS_NAME);
                         })
                         .onErrorResume(ex -> {
+                            if (ex instanceof InvalidEventOrderException invalidEventEx
+                                    && isDuplicateFeedback(invalidEventEx)) {
+                                    log.warn("RequestID: {}, StatusCode: {}, StatusDateTime: {}, " +
+                                                    "Message: event with status code {} \n" +
+                                                    "has already been processed and feedback has been provided.",
+                                            data.getAnalogMail().getRequestId(),
+                                            invalidEventEx.getFeedbackStatus().newFeedbackStatusCode(),
+                                            invalidEventEx.getFeedbackStatus().newFeedbackStatusDateTime(),
+                                            invalidEventEx.getFeedbackStatus().newFeedbackStatusCode());
+                                    return Mono.empty(); // Discard the duplicate event
+                            }
+
                             log.error(ex.getMessage());
                             throw new PnGenericException(EXTERNAL_CHANNEL_LISTENER_EXCEPTION, EXTERNAL_CHANNEL_LISTENER_EXCEPTION.getMessage());
                         }))
@@ -382,5 +395,23 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
 
     private boolean isDeliveryRequestInNationalRegistryWaitingStatus(PnDeliveryRequest deliveryRequest) {
         return NATIONAL_REGISTRY_WAITING.getCode().equalsIgnoreCase(deliveryRequest.getStatusCode());
+    }
+
+    /**
+     * Checks if an InvalidEventOrderException represents a duplicate event.
+     *
+     * @param invalidEventEx the InvalidEventOrderException to check
+     * @return true if the exception indicates a duplicate event, false otherwise.
+     */
+    private static boolean isDuplicateFeedback(InvalidEventOrderException invalidEventEx){
+        if (invalidEventEx == null || invalidEventEx.getFeedbackStatus() == null) {
+            return false; // If invalidEventEx or feedbackStatus is null, return false
+        }
+
+        FeedbackStatus feedback = invalidEventEx.getFeedbackStatus();
+        return invalidEventEx.getExceptionType() == ExceptionTypeEnum.WRONG_EVENT_ORDER
+                && Objects.equals(feedback.oldFeedbackStatusCode(), feedback.newFeedbackStatusCode())
+                && Objects.equals(feedback.oldFeedbackDeliveryFailureCause(), feedback.newFeedbackDeliveryFailureCause())
+                && Objects.equals(feedback.oldFeedbackStatusDateTime(), feedback.newFeedbackStatusDateTime());
     }
 }

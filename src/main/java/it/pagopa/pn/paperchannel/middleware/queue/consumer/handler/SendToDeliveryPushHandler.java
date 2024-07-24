@@ -2,6 +2,7 @@ package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
+import it.pagopa.pn.paperchannel.exception.InvalidEventOrderException;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.SingleStatusUpdateDto;
@@ -38,43 +39,84 @@ public abstract class SendToDeliveryPushHandler implements MessageHandler {
 
     @Override
     public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
-        return this.updateRefinedDeliveryRequestIfOK(entity)
-                .doOnNext(pnDeliveryRequest -> this.pushSendEvent(entity, paperRequest))
-                .flatMap(pnDeliveryRequest -> processPnEventErrorsRedrive(pnDeliveryRequest, paperRequest))
+        return StatusCodeEnum.PROGRESS.getValue().equals(entity.getStatusDetail())
+                ? handleProgressMessage(entity, paperRequest)
+                : handleFeedbackMessage(entity, paperRequest);
+    }
+
+    /**
+     * Handle progress messages decoupling its logic from feedback logic
+     *
+     * @param pnDeliveryRequest the delivery request
+     * @param paperRequest      the paper request containing original event
+     *
+     * */
+    private Mono<Void> handleProgressMessage(PnDeliveryRequest pnDeliveryRequest, PaperProgressStatusEventDto paperRequest) {
+        return Mono.just(pnDeliveryRequest)
+                .doOnNext(r -> this.pushSendEvent(pnDeliveryRequest, paperRequest))
                 .then();
     }
 
     /**
-     * Update delivery request setting refined field to true when statusDetail field is OK
+     * Handle final messages decoupling its logic from progress logic
+     *
+     * @param pnDeliveryRequest the delivery request
+     * @param paperRequest      the paper request containing original event
+     *
+     * */
+    private Mono<Void> handleFeedbackMessage(PnDeliveryRequest pnDeliveryRequest, PaperProgressStatusEventDto paperRequest) {
+        if(pnDeliveryRequest.getFeedbackStatusCode() != null) {
+            return Mono.error(
+                InvalidEventOrderException.from(pnDeliveryRequest, paperRequest,
+                    "[{" + paperRequest.getRequestId() + "}] Wrong feedback event detected for {"
+                            + paperRequest + "}")
+            );
+        }
+
+        return Mono.just(pnDeliveryRequest)
+                .doOnNext(r -> this.pushSendEvent(pnDeliveryRequest, paperRequest))
+                .flatMap(r -> this.updateRefinedDeliveryRequest(pnDeliveryRequest, paperRequest))
+                .flatMap(r -> this.processPnEventErrorsRedrive(r, paperRequest))
+                .then();
+    }
+
+    /**
+     * Update delivery request attributes related to feedbacks
      *
      * @param pnDeliveryRequest request to update
      *
      * @return Mono containing {@link PnDeliveryRequest} object
      * */
-    private Mono<PnDeliveryRequest> updateRefinedDeliveryRequestIfOK(PnDeliveryRequest pnDeliveryRequest) {
+    private Mono<PnDeliveryRequest> updateRefinedDeliveryRequest(PnDeliveryRequest pnDeliveryRequest, PaperProgressStatusEventDto paperRequest) {
+            pnDeliveryRequest.setRefined(Boolean.TRUE);
+            pnDeliveryRequest.setFeedbackStatusCode(paperRequest.getStatusCode());
+            pnDeliveryRequest.setFeedbackDeliveryFailureCause(paperRequest.getDeliveryFailureCause());
+            pnDeliveryRequest.setFeedbackStatusDateTime(paperRequest.getStatusDateTime().toInstant());
 
-        if (StatusCodeEnum.OK.getValue().equals(pnDeliveryRequest.getStatusDetail())) {
-            log.debug("[{}] Updating DeliveryRequest with refinement information", pnDeliveryRequest.getRequestId());
-
-            pnDeliveryRequest.setRefined(true);
             return this.requestDeliveryDAO
-                    .updateData(pnDeliveryRequest, Boolean.TRUE)
-                    .doOnError(ex -> log.warn("[{}] Error while setting request as refined", pnDeliveryRequest.getRequestId(), ex));
-        }
-
-        return Mono.just(pnDeliveryRequest);
+                .updateConditionalOnFeedbackStatus(pnDeliveryRequest, Boolean.TRUE)
+                .switchIfEmpty(Mono.error(
+                    InvalidEventOrderException.from(pnDeliveryRequest, paperRequest,
+                        "[{" + paperRequest.getRequestId() + "}] Wrong feedback event detected for {"
+                            + paperRequest + "}")
+                ));
     }
 
+    /**
+     * This method checks if there are out of order events which are possible to automatically redrive reading from PnEventError Dynamo table.
+     * It also applies a whitelist processing logic, working on a specific set of event codes (RECAGXXXC) defined in {@link PnPaperChannelConfig}.
+     *
+     * @param pnDeliveryRequest the delivery request
+     * @param paperRequest      the paper request containing original event
+     *
+     * */
     private Mono<Void> processPnEventErrorsRedrive(PnDeliveryRequest pnDeliveryRequest, PaperProgressStatusEventDto paperRequest) {
         if (StatusCodeEnum.OK.getValue().equals(pnDeliveryRequest.getStatusDetail())) {
             log.info("[{}] Processing PnEventErrors for request", pnDeliveryRequest.getRequestId());
+
             List<String> allowedRedriveProgressStatusCodes = pnPaperChannelConfig.getAllowedRedriveProgressStatusCodes();
+
             if (!CollectionUtils.isEmpty(allowedRedriveProgressStatusCodes)) {
-                // nel caso in cui siano presenti da configurazione dei codici da riprocessare, procedo con la ricerca
-                // in dynamo e il successivo invio in coda.
-                // NB: si noti che a oggi, solo i codici RECAGxxxC sono supportati, in quanto il mapper da entity->dto_coda
-                // non ripristina tutte le properties, motivo per cui questa configurazione è un salvagente nel caso siano presenti (in futuro) altri codici.
-                // Quindi dovesse essere necessario estendere questo meccanismo anche ad altri codici, va eventualmente rivisto il mapper e poi aggiornata la lista degli alloweRedrive
                 return pnEventErrorDAO.findEventErrorsByRequestId(paperRequest.getRequestId())
                         .filter(pnEventError -> allowedRedriveProgressStatusCodes.contains(pnEventError.getStatusCode()))
                         .doOnDiscard(PnEventError.class, pnEventError -> log.debug("[{}] PnEventErrors for request is not on allowedRedriveProgressStatusCodes PnEventError={}", pnDeliveryRequest.getRequestId(), pnEventError))
@@ -83,13 +125,16 @@ public abstract class SendToDeliveryPushHandler implements MessageHandler {
                             pnEventError,
                             mapPnEventErrorToSingleStatusUpdate(pnEventError)
                         ))
+
                         .doOnNext(pnEventErrorWithSingleStatusUpdate -> sqsSender.pushSingleStatusUpdateEvent(pnEventErrorWithSingleStatusUpdate.getT2()))
                         .doOnNext(pnEventErrorWithSingleStatusUpdate -> log.debug("[{}] PnEventErrors sent SingleStatusUpdateDto={}", pnDeliveryRequest.getRequestId(), pnEventErrorWithSingleStatusUpdate.getT2()))
                         .flatMap(pnEventErrorWithSingleStatusUpdate -> {
                             PnEventError pnEventError = pnEventErrorWithSingleStatusUpdate.getT1();
                             return pnEventErrorDAO.deleteItem(pnEventError.getRequestId(), pnEventError.getStatusBusinessDateTime());
                         })
-                        .doOnError(ex -> log.error("[{}] PnEventErrors FAILED redrive", pnDeliveryRequest.getRequestId(), ex))  // viene volutamente trappata l'eccezione per evitare di far fallire il processing per colpa del redrive, che è un plus.
+
+                        // trap the exception to avoid failures related to this plus redrive mechanism
+                        .doOnError(ex -> log.error("[{}] PnEventErrors FAILED redrive", pnDeliveryRequest.getRequestId(), ex))
                         .onErrorResume(ex -> Mono.empty())
                         .then();
             }
@@ -116,11 +161,10 @@ public abstract class SendToDeliveryPushHandler implements MessageHandler {
 
             singleStatusUpdateDto.setAnalogMail(paperProgressStatusEventDto);
             return singleStatusUpdateDto;
-        }else {
+        } else {
             log.error("PnEventError is not istanceof PaperProgressStatusEventOriginalMessageInfo, skipping redrive PnEventError={}", pnEventError);
             throw new PnGenericException(ExceptionTypeEnum.MAPPER_ERROR, "PnEventError is not and instance of PaperProgressStatusEventOriginalMessageInfo");
         }
-
     }
 
     /**

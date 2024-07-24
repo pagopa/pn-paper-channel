@@ -1,6 +1,7 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
+import it.pagopa.pn.paperchannel.exception.InvalidEventOrderException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
@@ -80,7 +81,7 @@ class SendToDeliveryPushHandlerTest {
         verify(eventErrorDAO, never()).findEventErrorsByRequestId(Mockito.anyString());
 
         // not call because it is a PROGRESS event
-        verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class), eq(true));
+        verify(requestDeliveryDAO, never()).updateConditionalOnFeedbackStatus(any(PnDeliveryRequest.class), eq(true));
         verify(eventErrorDAO, never()).deleteItem(Mockito.anyString(), Mockito.any(Instant.class));
     }
 
@@ -96,7 +97,7 @@ class SendToDeliveryPushHandlerTest {
         paperRequest.setStatusCode("someok");
         paperRequest.setStatusDateTime(Instant.now().atOffset(ZoneOffset.UTC));
 
-        Mockito.when(requestDeliveryDAO.updateData(Mockito.any(), anyBoolean())).thenReturn(Mono.just(entity));
+        Mockito.when(requestDeliveryDAO.updateConditionalOnFeedbackStatus(Mockito.any(), anyBoolean())).thenReturn(Mono.just(entity));
 
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
         SendEvent sendEventExpected = SendEventMapper.createSendEventMessage(entity, paperRequest);
@@ -107,7 +108,7 @@ class SendToDeliveryPushHandlerTest {
         verify(eventErrorDAO, never()).findEventErrorsByRequestId(Mockito.anyString());
 
         ArgumentCaptor<PnDeliveryRequest> argumentCaptor = ArgumentCaptor.forClass(PnDeliveryRequest.class);
-        verify(requestDeliveryDAO, times(1)).updateData(argumentCaptor.capture(), eq(true));
+        verify(requestDeliveryDAO, times(1)).updateConditionalOnFeedbackStatus(argumentCaptor.capture(), eq(true));
 
         verify(eventErrorDAO, never()).deleteItem(Mockito.anyString(), Mockito.any(Instant.class));
 
@@ -126,7 +127,7 @@ class SendToDeliveryPushHandlerTest {
         paperRequest.setStatusCode("someok");
         paperRequest.setStatusDateTime(Instant.now().atOffset(ZoneOffset.UTC));
 
-        Mockito.when(requestDeliveryDAO.updateData(Mockito.any(), anyBoolean())).thenReturn(Mono.just(entity));
+        Mockito.when(requestDeliveryDAO.updateConditionalOnFeedbackStatus(Mockito.any(), anyBoolean())).thenReturn(Mono.just(entity));
         Mockito.when(pnPaperChannelConfig.getAllowedRedriveProgressStatusCodes()).thenReturn(List.of("SOME1"));
         Mockito.when(eventErrorDAO.findEventErrorsByRequestId(Mockito.anyString())).thenReturn(Flux.empty());
 
@@ -138,7 +139,7 @@ class SendToDeliveryPushHandlerTest {
         verify(mockSqsSender, never()).pushSingleStatusUpdateEvent(Mockito.any());
         verify(eventErrorDAO, never()).deleteItem(Mockito.anyString(), Mockito.any(Instant.class));
 
-        verify(requestDeliveryDAO, times(1)).updateData(any(PnDeliveryRequest.class), eq(true));
+        verify(requestDeliveryDAO, times(1)).updateConditionalOnFeedbackStatus(any(PnDeliveryRequest.class), eq(true));
     }
 
 
@@ -167,7 +168,7 @@ class SendToDeliveryPushHandlerTest {
         error.setOriginalMessageInfo(paperProgressStatusEventOriginalMessageInfo);
         error.setStatusCode(paperProgressStatusEventOriginalMessageInfo.getStatusCode());
 
-        Mockito.when(requestDeliveryDAO.updateData(Mockito.any(), anyBoolean())).thenReturn(Mono.just(entity));
+        Mockito.when(requestDeliveryDAO.updateConditionalOnFeedbackStatus(Mockito.any(), anyBoolean())).thenReturn(Mono.just(entity));
         Mockito.when(pnPaperChannelConfig.getAllowedRedriveProgressStatusCodes()).thenReturn(List.of("SOME1"));
         Mockito.when(eventErrorDAO.findEventErrorsByRequestId(Mockito.any())).thenReturn(Flux.fromIterable(List.of(error)));
 
@@ -179,7 +180,7 @@ class SendToDeliveryPushHandlerTest {
         verify(mockSqsSender, times(1)).pushSingleStatusUpdateEvent(Mockito.any());
         verify(eventErrorDAO, times(1)).deleteItem(Mockito.anyString(), Mockito.any(Instant.class));
 
-        verify(requestDeliveryDAO, times(1)).updateData(any(PnDeliveryRequest.class), eq(true));
+        verify(requestDeliveryDAO, times(1)).updateConditionalOnFeedbackStatus(any(PnDeliveryRequest.class), eq(true));
         verify(eventErrorDAO, times(1)).deleteItem(anyString(), any(Instant.class));
     }
 
@@ -209,7 +210,7 @@ class SendToDeliveryPushHandlerTest {
         error.setOriginalMessageInfo(paperProgressStatusEventOriginalMessageInfo);
         error.setStatusCode(paperProgressStatusEventOriginalMessageInfo.getStatusCode());
 
-        Mockito.when(requestDeliveryDAO.updateData(Mockito.any(), anyBoolean())).thenReturn(Mono.just(entity));
+        Mockito.when(requestDeliveryDAO.updateConditionalOnFeedbackStatus(Mockito.any(), anyBoolean())).thenReturn(Mono.just(entity));
         Mockito.when(pnPaperChannelConfig.getAllowedRedriveProgressStatusCodes()).thenReturn(List.of("SOME2"));
         Mockito.when(eventErrorDAO.findEventErrorsByRequestId(Mockito.any())).thenReturn(Flux.fromIterable(List.of(error)));
 
@@ -220,7 +221,7 @@ class SendToDeliveryPushHandlerTest {
         verify(mockSqsSender, times(1)).pushSendEvent(sendEventExpected);
         verify(mockSqsSender, times(0)).pushSingleStatusUpdateEvent(Mockito.any());
 
-        verify(requestDeliveryDAO, times(1)).updateData(any(PnDeliveryRequest.class), eq(true));
+        verify(requestDeliveryDAO, times(1)).updateConditionalOnFeedbackStatus(any(PnDeliveryRequest.class), eq(true));
         verify(eventErrorDAO, never()).deleteItem(anyString(), any(Instant.class));
     }
 
@@ -244,7 +245,7 @@ class SendToDeliveryPushHandlerTest {
         error.setStatusBusinessDateTime(Instant.now());
         error.setStatusCode("SOME1");
 
-        Mockito.when(requestDeliveryDAO.updateData(Mockito.any(), anyBoolean())).thenReturn(Mono.just(entity));
+        Mockito.when(requestDeliveryDAO.updateConditionalOnFeedbackStatus(Mockito.any(), anyBoolean())).thenReturn(Mono.just(entity));
         Mockito.when(pnPaperChannelConfig.getAllowedRedriveProgressStatusCodes()).thenReturn(List.of("SOME1"));
         Mockito.when(eventErrorDAO.findEventErrorsByRequestId(Mockito.any())).thenReturn(Flux.fromIterable(List.of(error)));
 
@@ -255,7 +256,30 @@ class SendToDeliveryPushHandlerTest {
         verify(mockSqsSender, times(1)).pushSendEvent(sendEventExpected);
         verify(mockSqsSender, times(0)).pushSingleStatusUpdateEvent(Mockito.any());
 
-        verify(requestDeliveryDAO, times(1)).updateData(any(PnDeliveryRequest.class), eq(true));
+        verify(requestDeliveryDAO, times(1)).updateConditionalOnFeedbackStatus(any(PnDeliveryRequest.class), eq(true));
         verify(eventErrorDAO, never()).deleteItem(anyString(), any(Instant.class));
+    }
+
+    @Test
+    void handleMessage_ko_throws_InvalidEventOrderException(){
+        // Arrange
+        PnDeliveryRequest entity = new PnDeliveryRequest();
+        entity.setRequestId("requestId");
+        entity.setStatusCode("statusDetail");
+        entity.setStatusDetail(StatusCodeEnum.OK.getValue());
+        entity.setFeedbackStatusCode("RECRN001C");
+
+        PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto();
+        paperRequest.setRequestId(entity.getRequestId());
+        paperRequest.setStatusCode("RECRN002C");
+        paperRequest.setStatusDateTime(Instant.now().atOffset(ZoneOffset.UTC));
+
+        // Act / Assert
+        InvalidEventOrderException exception = assertThrows(InvalidEventOrderException.class,
+                ()-> handler.handleMessage(entity, paperRequest).block());
+
+        // Assert feedback status
+        assertEquals("RECRN001C", exception.getFeedbackStatus().oldFeedbackStatusCode());
+        assertEquals("RECRN002C", exception.getFeedbackStatus().newFeedbackStatusCode());
     }
 }

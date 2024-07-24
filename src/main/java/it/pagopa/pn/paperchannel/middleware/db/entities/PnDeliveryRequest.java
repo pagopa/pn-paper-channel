@@ -87,6 +87,12 @@ public class PnDeliveryRequest implements Serializable {
 
     public static final String COL_AAR_WITH_RADD = "aarWithRadd";
 
+    public static final String COL_FEEDBACK_STATUS_CODE = "feedbackStatusCode";
+
+    public static final String COL_FEEDBACK_DELIVERY_FAILURE_CAUSE = "feedbackDeliveryFailureCause";
+
+    public static final String COL_FEEDBACK_STATUS_DATE_TIME = "feedbackStatusDateTime";
+
     @Getter(onMethod = @__({@DynamoDbPartitionKey,@DynamoDbAttribute(COL_REQUEST_ID)}))
     private String requestId;
 
@@ -174,4 +180,13 @@ public class PnDeliveryRequest implements Serializable {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_AAR_WITH_RADD)}))
     private Boolean aarWithRadd;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_FEEDBACK_STATUS_CODE)}))
+    private String feedbackStatusCode;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_FEEDBACK_DELIVERY_FAILURE_CAUSE)}))
+    private String feedbackDeliveryFailureCause;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_FEEDBACK_STATUS_DATE_TIME)}))
+    private Instant feedbackStatusDateTime;
 }

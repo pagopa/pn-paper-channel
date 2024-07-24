@@ -1,7 +1,7 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
-import it.pagopa.pn.paperchannel.exception.PnGenericException;
+import it.pagopa.pn.paperchannel.exception.InvalidEventOrderException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
@@ -94,14 +94,14 @@ class Complex890MessageHandlerTest {
         when(eventMetaDAO.findAllByRequestId(metadataRequestid)).thenReturn(Flux.just(pnEventMetaPNAG012));
 
         StepVerifier.create(handler.handleMessage(entity, paperRequest))
-                        .expectError(PnGenericException.class)
+                        .expectError(InvalidEventOrderException.class)
                                 .verify();
 
         verify(eventMetaDAO, times(0)).createOrUpdate(any(PnEventMeta.class));
 
         verify(sqsSender, times(0)).pushSendEvent(any(SendEvent.class));
 
-        verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
+        verify(requestDeliveryDAO, never()).updateConditionalOnFeedbackStatus(any(PnDeliveryRequest.class), anyBoolean());
     }
 
     //CASO 2
@@ -143,7 +143,7 @@ class Complex890MessageHandlerTest {
         verify(sqsSender, times(1)).pushSendEvent(sendEvent);
 
         // Never because status code is a PROGRESS
-        verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
+        verify(requestDeliveryDAO, never()).updateConditionalOnFeedbackStatus(any(PnDeliveryRequest.class), anyBoolean());
     }
 
     //CASO 3
@@ -180,7 +180,7 @@ class Complex890MessageHandlerTest {
         pnEventMetaRECAG005A.setStatusDateTime(Instant.parse("2023-03-16T17:07:00.000Z"));
 
         when(eventMetaDAO.findAllByRequestId(metadataRequestid)).thenReturn(Flux.just(pnEventMetaRECAG012, pnEventMetaRECAG011A, pnEventMetaRECAG005A));
-        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
+        when(requestDeliveryDAO.updateConditionalOnFeedbackStatus(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
 
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
 
@@ -193,7 +193,7 @@ class Complex890MessageHandlerTest {
         assertThat(sendEvent.getStatusDetail()).isEqualTo("RECAG005C");
         assertThat(sendEventArgumentCaptor.getAllValues().get(0)).isEqualTo(sendEvent);
 
-        verify(requestDeliveryDAO, times(1)).updateData(argThat(pnDeliveryRequest -> {
+        verify(requestDeliveryDAO, times(1)).updateConditionalOnFeedbackStatus(argThat(pnDeliveryRequest -> {
             assertThat(pnDeliveryRequest).isNotNull();
             assertThat(pnDeliveryRequest.getRefined()).isTrue();
             return true;
@@ -233,7 +233,7 @@ class Complex890MessageHandlerTest {
         pnEventMetaRECAG005A.setStatusDateTime(Instant.parse("2023-03-16T17:07:00.000Z"));
 
         when(eventMetaDAO.findAllByRequestId(metadataRequestid)).thenReturn(Flux.just(pnEventMetaRECAG012, pnEventMetaRECAG011A, pnEventMetaRECAG005A));
-        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
+        when(requestDeliveryDAO.updateConditionalOnFeedbackStatus(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
 
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
 
@@ -258,7 +258,7 @@ class Complex890MessageHandlerTest {
         assertThat(sendEventArgumentCaptor.getAllValues().get(1)).isEqualTo(sendEvent);
 
         // Update is called once because only PNAG012 event is a feedback (OK)
-        verify(requestDeliveryDAO, times(1)).updateData(argThat(pnDeliveryRequest -> {
+        verify(requestDeliveryDAO, times(1)).updateConditionalOnFeedbackStatus(argThat(pnDeliveryRequest -> {
             assertThat(pnDeliveryRequest).isNotNull();
             assertThat(pnDeliveryRequest.getRefined()).isTrue();
             return true;
