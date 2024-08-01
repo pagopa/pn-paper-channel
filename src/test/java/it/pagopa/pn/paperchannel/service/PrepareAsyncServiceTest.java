@@ -22,10 +22,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnRequestError;
 import it.pagopa.pn.paperchannel.middleware.msclient.AddressManagerClient;
-import it.pagopa.pn.paperchannel.model.Address;
-import it.pagopa.pn.paperchannel.model.KOReason;
-import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
-import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
+import it.pagopa.pn.paperchannel.model.*;
 import it.pagopa.pn.paperchannel.service.impl.PrepareAsyncServiceImpl;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import it.pagopa.pn.paperchannel.utils.PaperCalculatorUtils;
@@ -41,6 +38,7 @@ import reactor.test.StepVerifier;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,6 +47,9 @@ import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.F24_WAITING;
 import static it.pagopa.pn.paperchannel.utils.Const.RACCOMANDATA_SEMPLICE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class PrepareAsyncServiceTest {
@@ -330,6 +331,64 @@ class PrepareAsyncServiceTest {
         }
     }
 
+    @Test
+    @DisplayName("prepareAsyncTestOrderedAttachments")
+    void prepareAsyncTestOrderedAttachments(){
+        PnDeliveryRequest deliveryRequest = getDeliveryRequest();
+        List<PnAttachmentInfo> attachmentInfoList = orderedAttachmentInfoList();
+        deliveryRequest.setAttachments(attachmentInfoList);
+
+        request.setCorrelationId("FFPAPERTEST.IUN_FATY");
+
+        Mockito.when(this.requestDeliveryDAO.getByCorrelationId(Mockito.any(), Mockito.anyBoolean()))
+                .thenReturn(Mono.just(deliveryRequest));
+        Mockito.when(this.paperAddressService.getCorrectAddress(Mockito.any(), Mockito.any(), Mockito.any()))
+                .thenReturn(Mono.just(new Address()));
+        Mockito.when(this.addressDAO.create(Mockito.any()))
+                .thenReturn(Mono.just(getAddress()));
+        Mockito.when(this.f24Service.checkDeliveryRequestAttachmentForF24(Mockito.any()))
+                .thenReturn(false);
+
+        Mockito.doNothing().when(this.sqsSender).pushPrepareEvent(Mockito.any());
+
+        Mockito.when(this.requestDeliveryDAO.updateData(Mockito.any()))
+                .thenReturn(Mono.just(deliveryRequest));
+        Mockito.when(this.attachmentsConfigService.filterAttachmentsToSend(Mockito.any(), Mockito.any(), Mockito.any()))
+                .thenReturn(Mono.just(deliveryRequest));
+
+        for (int i = 0; i< attachmentInfoList.size(); i++) {
+            FileDownloadResponseDto f = new FileDownloadResponseDto();
+            f.setKey(attachmentInfoList.get(i).getFileKey());
+            f.setChecksum(attachmentInfoList.get(i).getChecksum());
+            f.setDocumentType(attachmentInfoList.get(i).getDocumentType());
+            f.setDownload(new FileDownloadInfoDto());
+            assert f.getDownload() != null;
+            f.getDownload().setUrl(attachmentInfoList.get(i).getUrl());
+            f.setContentLength(new BigDecimal(100));
+
+            lenient().when(safeStorageService.getFileRecursive(Mockito.any(), eq(String.valueOf(attachmentInfoList.get(i).getFileKey())), Mockito.any())).thenReturn(Mono.just(f).delayElement(Duration.ofMillis(i%5)));
+
+            try {
+                Mockito.when(safeStorageService.downloadFile("http://1234" + i)).thenReturn(Mono.just(PDDocument.load(readFakePdf())).delayElement(Duration.ofMillis((i+1)%5)));
+            } catch (IOException e) {
+                Assertions.fail(e);
+            }
+        }
+
+
+            this.prepareAsyncService.prepareAsync(request).block();
+
+            ArgumentCaptor<PnDeliveryRequest> argumentCaptor = ArgumentCaptor.forClass(PnDeliveryRequest.class);
+            verify(this.requestDeliveryDAO).updateData(argumentCaptor.capture());
+            PnDeliveryRequest res = argumentCaptor.getValue();
+
+            for (int i = 0; i< attachmentInfoList.size(); i++){
+                assertEquals(attachmentInfoList.get(i).getFileKey(), res.getAttachments().get(i).getFileKey());
+            }
+
+
+    }
+
     public byte[] readFakePdf(){
         Resource resource = new ClassPathResource("zip/test.pdf");
         try {
@@ -396,6 +455,21 @@ class PrepareAsyncServiceTest {
         attachmentInfo.setNumberOfPage(0);
         attachmentInfoList.add(attachmentInfo);
         pnDeliveryRequest.setAttachments(attachmentInfoList);
+        return attachmentInfoList;
+    }
+
+    private List<PnAttachmentInfo> orderedAttachmentInfoList(){
+        List<PnAttachmentInfo> attachmentInfoList = new ArrayList<>();
+        for (int i = 0; i < 50; i++) {
+            PnAttachmentInfo attachment = new PnAttachmentInfo();
+            attachment.setId("PAPERTEST.IUN-2023041520230302-101111.RECINDEX_0");
+            attachment.setDate("2019-11-07T09:03:08Z");
+            attachment.setUrl("http://1234" + (49-i));
+            attachment.setDocumentType("pdf");
+            attachment.setFileKey(String.valueOf((49-i)));
+            attachment.setNumberOfPage(0);
+            attachmentInfoList.add(attachment);
+        }
         return attachmentInfoList;
     }
 
