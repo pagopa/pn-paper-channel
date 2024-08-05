@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import java.util.List;
+import java.util.*;
 
 /**
  * This component handles the configuration for the SendProgressMeta feature flag.
@@ -29,44 +29,46 @@ public class SendProgressMetaConfig {
         CON018;
     }
 
+    private Set<SendProgressMetaEnum> enabledFlags;
+
     /**
-     * Validates the SendProgressMeta configuration.
-     * Ensures that only allowed values are present and if DISABLE is present, it is the only value.
+     * Validates the SendProgressMeta configuration and initializes the enabled flags.
+     * This method is automatically called after dependency injection.
      *
      * @throws IllegalStateException if the configuration is invalid
      */
     @PostConstruct
     public void validateConfiguration() {
         List<String> configValues = config.getSendProgressMeta();
-        if (configValues != null && !configValues.isEmpty()) {
-            boolean hasDisable = configValues.contains(SendProgressMetaEnum.DISABLE.name());
-            for (String value : configValues) {
-                try {
-                    SendProgressMetaEnum.valueOf(value);
-                } catch (IllegalArgumentException e) {
-                    throw new IllegalStateException("Invalid value in SendProgressMeta config: " + value, e);
+        if (configValues == null || configValues.isEmpty()) {
+            enabledFlags = Collections.emptySet();
+            return;
+        }
+
+        Set<SendProgressMetaEnum> parsedFlags = new HashSet<>();
+        boolean hasDisable = false;
+
+        for (String value : configValues) {
+            try {
+                SendProgressMetaEnum flag = SendProgressMetaEnum.valueOf(value);
+                parsedFlags.add(flag);
+                if (flag == SendProgressMetaEnum.DISABLE) {
+                    hasDisable = true;
                 }
-            }
-            if (hasDisable && configValues.size() > 1) {
-                throw new IllegalStateException("SendProgressMeta config contains DISABLE along with other values");
+            } catch (IllegalArgumentException e) {
+                log.error("Invalid value in SendProgressMeta config: {}", value);
+                throw new IllegalStateException("Invalid value in SendProgressMeta config: " + value, e);
             }
         }
+
+        if (hasDisable && parsedFlags.size() > 1) {
+            log.error("SendProgressMeta config contains DISABLE along with other values");
+            throw new IllegalStateException("SendProgressMeta config contains DISABLE along with other values");
+        }
+
+        enabledFlags = hasDisable ? Collections.emptySet() : EnumSet.copyOf(parsedFlags);
     }
 
-    /**
-     * Retrieves the list of enabled flags from the configuration.
-     *
-     * @return a list of enabled flags
-     */
-    private List<String> getEnabledFlags() {
-        List<String> configValues = config.getSendProgressMeta();
-        if (configValues == null ||
-                configValues.isEmpty() ||
-                configValues.contains(SendProgressMetaEnum.DISABLE.name())) {
-            return List.of();
-        }
-        return configValues;
-    }
 
     /**
      * Checks if the META flag is enabled.
@@ -74,7 +76,7 @@ public class SendProgressMetaConfig {
      * @return true if META is enabled, false otherwise
      */
     public boolean isMetaEnabled() {
-        return getEnabledFlags().contains(SendProgressMetaEnum.META.name());
+        return enabledFlags.contains(SendProgressMetaEnum.META);
     }
 
     /**
@@ -83,7 +85,7 @@ public class SendProgressMetaConfig {
      * @return true if RECAG012 is enabled, false otherwise
      */
     public boolean isRECAG012Enabled() {
-        return getEnabledFlags().contains(SendProgressMetaEnum.RECAG012.name());
+        return enabledFlags.contains(SendProgressMetaEnum.RECAG012);
     }
 
     /**
@@ -92,7 +94,7 @@ public class SendProgressMetaConfig {
      * @return true if CON018 is enabled, false otherwise
      */
     public boolean isCCON018Enabled() {
-        return getEnabledFlags().contains(SendProgressMetaEnum.CON018.name());
+        return enabledFlags.contains(SendProgressMetaEnum.CON018);
     }
 
     /**
@@ -101,6 +103,6 @@ public class SendProgressMetaConfig {
      * @return true if the feature is disabled, false otherwise
      */
     public boolean isDisabled() {
-        return getEnabledFlags().isEmpty();
+        return enabledFlags.isEmpty();
     }
 }
