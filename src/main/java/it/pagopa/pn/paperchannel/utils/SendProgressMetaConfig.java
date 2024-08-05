@@ -23,9 +23,9 @@ public class SendProgressMetaConfig {
      * Enumeration of possible values for the SendProgressMeta feature flag.
      */
     public enum SendProgressMetaEnum {
-        DISABLE,
+        DISABLED,
         META,
-        RECAG012,
+        RECAG012A,
         CON018;
     }
 
@@ -52,7 +52,7 @@ public class SendProgressMetaConfig {
             try {
                 SendProgressMetaEnum flag = SendProgressMetaEnum.valueOf(value);
                 parsedFlags.add(flag);
-                if (flag == SendProgressMetaEnum.DISABLE) {
+                if (flag == SendProgressMetaEnum.DISABLED) {
                     hasDisable = true;
                 }
             } catch (IllegalArgumentException e) {
@@ -80,12 +80,12 @@ public class SendProgressMetaConfig {
     }
 
     /**
-     * Checks if the RECAG012 flag is enabled.
+     * Checks if the RECAG012A flag is enabled.
      *
-     * @return true if RECAG012 is enabled, false otherwise
+     * @return true if RECAG012A is enabled, false otherwise
      */
-    public boolean isRECAG012Enabled() {
-        return enabledFlags.contains(SendProgressMetaEnum.RECAG012);
+    public boolean isRECAG012AEnabled() {
+        return enabledFlags.contains(SendProgressMetaEnum.RECAG012A);
     }
 
     /**
