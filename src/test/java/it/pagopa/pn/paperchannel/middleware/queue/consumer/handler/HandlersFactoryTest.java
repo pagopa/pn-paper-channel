@@ -1,6 +1,7 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
+import it.pagopa.pn.paperchannel.utils.SendProgressMetaConfig;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -17,140 +18,88 @@ class HandlersFactoryTest {
     private HandlersFactory handlersFactory;
 
     private final PnPaperChannelConfig mockConfig = mock(PnPaperChannelConfig.class);
+    private final SendProgressMetaConfig mockSendProgressMetaConfig = mock(SendProgressMetaConfig.class);
 
     @ParameterizedTest
-    @MethodSource(value = "getHandlerTestCasesWithSimple890Enabled")
-    void getHandlerTestWithSimple890Enabled(List<String> progressStatusEventCodes, Class<? extends MessageHandler> clazz) {
-
+    @MethodSource("getHandlerTestCases")
+    void getHandlerTest(boolean enableSimple890Flow, boolean enableProgressMeta, List<String> statusCodes, Class<? extends MessageHandler> expectedHandlerClass) {
         // Given
-        handlersFactory = new HandlersFactory(null, null, null, mockConfig, null, null, null, null, null, null);
+        handlersFactory = new HandlersFactory(null, null, null,
+                mockConfig, null, null, null, null,
+                null, null, mockSendProgressMetaConfig);
 
         // When
-        when(mockConfig.isEnableSimple890Flow()).thenReturn(true);
+        when(mockConfig.isEnableSimple890Flow()).thenReturn(enableSimple890Flow);
+        when(mockSendProgressMetaConfig.isMetaEnabled()).thenReturn(enableProgressMeta);
 
         handlersFactory.initializeHandlers();
 
         // Then
-        assertThat(progressStatusEventCodes)
+        assertThat(statusCodes)
                 .hasSizeGreaterThan(0)
-                .allMatch(statusCode -> clazz.isInstance(handlersFactory.getHandler(statusCode)));
-    }
-
-    @ParameterizedTest
-    @MethodSource(value = "getHandlerTestCasesWithSimple890Disabled")
-    void getHandlerTestWithSimple890Disabled(List<String> progressStatusEventCodes, Class<? extends MessageHandler> clazz) {
-
-        // Given
-        handlersFactory = new HandlersFactory(null, null, null, mockConfig, null, null, null, null, null, null);
-
-        // When
-        when(mockConfig.isEnableSimple890Flow()).thenReturn(false);
-
-        handlersFactory.initializeHandlers();
-
-        // Then
-        assertThat(progressStatusEventCodes)
-            .hasSizeGreaterThan(0)
-            .allMatch(statusCode -> clazz.isInstance(handlersFactory.getHandler(statusCode)));
+                .allMatch(statusCode -> expectedHandlerClass.isInstance(handlersFactory.getHandler(statusCode)));
     }
 
     /**
-     * Build test argument cases for {@link HandlersFactoryTest#getHandlerTestWithSimple890Enabled}
-     * */
-    private static Stream<Arguments> getHandlerTestCasesWithSimple890Enabled() {
-
-        /* Test inputs */
-        List<String> directlySendMessageCases = List.of(
-                "CON080", "RECRI001", "RECRI002", "RECRS001C", "RECRS003C",
-                "RECRS015", "RECRN015", "RECAG015", "RECAG010", "RECRS010", "RECRN010"
-        );
-
-        List<String> saveMetadataMessageCases = List.of("RECRS002A");
-        List<String> saveDematMessageCases = List.of("RECRS002B");
-        List<String> aggregatorMessageCases = List.of("RECRS002C");
-        List<String> retryableMessageCases = List.of("RECRS006");
-        List<String> notRetryableMessageCases = List.of("CON998");
-        List<String> logMessageCases = List.of("UNKNOWN");
-        List<String> recag012MessageCases = List.of("RECAG012");
-        List<String> recag011bMessageCases = List.of("RECAG011B");
-        List<String> recag007bMessageCases = List.of("RECAG007B");
-        List<String> complex890MessageCases = List.of("RECAG005C", "RECAG006C", "RECAG007C", "RECAG008C");
-
-        /* Test method arguments */
-        Arguments directlySendMessageCasesArguments = Arguments.of(directlySendMessageCases, DirectlySendMessageHandler.class);
-        Arguments saveMetadataMessageCasesArguments = Arguments.of(saveMetadataMessageCases, SaveMetadataMessageHandler.class);
-        Arguments saveDematMessageCasesArguments = Arguments.of(saveDematMessageCases, SaveDematMessageHandler.class);
-        Arguments aggregatorMessageCasesArguments = Arguments.of(aggregatorMessageCases, AggregatorMessageHandler.class);
-        Arguments retryableMessageCasesArguments = Arguments.of(retryableMessageCases, RetryableErrorMessageHandler.class);
-        Arguments notRetryableMessageCasesArguments = Arguments.of(notRetryableMessageCases, NotRetryableErrorMessageHandler.class);
-        Arguments logMessageCasesArguments = Arguments.of(logMessageCases, LogMessageHandler.class);
-        Arguments recag012MessageCasesArguments = Arguments.of(recag012MessageCases, ChainedMessageHandler.class);
-        Arguments recag011bMessageCasesArguments = Arguments.of(recag011bMessageCases, ChainedMessageHandler.class);
-        Arguments recag007bMessageCasesArguments = Arguments.of(recag007bMessageCases, ChainedMessageHandler.class);
-        Arguments complex890MessageCasesArguments = Arguments.of(complex890MessageCases, Proxy890MessageHandler.class);
-
+     * Generates a stream of test cases for different handler scenarios based on all feature flags combinations.
+     */
+    private static Stream<Arguments> getHandlerTestCases() {
         return Stream.of(
-                directlySendMessageCasesArguments,
-                saveMetadataMessageCasesArguments,
-                saveDematMessageCasesArguments,
-                aggregatorMessageCasesArguments,
-                retryableMessageCasesArguments,
-                notRetryableMessageCasesArguments,
-                logMessageCasesArguments,
-                recag012MessageCasesArguments,
-                recag011bMessageCasesArguments,
-                recag007bMessageCasesArguments,
-                complex890MessageCasesArguments
-        );
+                getTestCases(true, true),
+                getTestCases(true, false),
+                getTestCases(false, true),
+                getTestCases(false, false)
+        ).flatMap(stream -> stream);
     }
 
     /**
-     * Build test argument cases for {@link HandlersFactoryTest#getHandlerTestWithSimple890Enabled}
-     * */
-    private static Stream<Arguments> getHandlerTestCasesWithSimple890Disabled() {
+     * Generates a stream of test cases for different handler scenarios based on feature flags.
+     *
+     * @param enableSimple890Flow A boolean flag indicating whether the Simple890 flow is enabled.
+     * @param enableProgressMeta A boolean flag indicating whether send progress metadata is enabled.
+     * @return A Stream of Arguments
+     */
+    private static Stream<Arguments> getTestCases(boolean enableSimple890Flow, boolean enableProgressMeta) {
+        record TestCase(String name, List<String> codes, Class<? extends MessageHandler> handlerClass) {}
 
-        /* Test inputs */
-        List<String> directlySendMessageCases = List.of(
-            "CON080", "RECRI001", "RECRI002", "RECRS001C", "RECRS003C",
-            "RECRS015", "RECRN015", "RECAG015", "RECAG010", "RECRS010", "RECRN010"
+        List<TestCase> commonCases = List.of(
+                new TestCase("SendToDeliveryPush",
+                        List.of("CON080", "RECRI001", "RECRI002", "RECRS001C", "RECRS003C",
+                            "RECRS015", "RECRN015", "RECAG015", "RECAG010", "RECRS010", "RECRN010"),
+                        SendToDeliveryPushHandler.class),
+                new TestCase("SaveDemat", List.of("RECRS002B"), SaveDematMessageHandler.class),
+                new TestCase("Aggregator", List.of("RECRS002C"), AggregatorMessageHandler.class),
+                new TestCase("Retryable", List.of("RECRS006"), RetryableErrorMessageHandler.class),
+                new TestCase("NotRetryable", List.of("CON998"), NotRetryableErrorMessageHandler.class),
+                new TestCase("Log", List.of("UNKNOWN"), LogMessageHandler.class),
+                new TestCase("Complex890", List.of("RECAG005C", "RECAG006C", "RECAG007C", "RECAG008C"),
+                        Proxy890MessageHandler.class)
         );
 
-        List<String> saveMetadataMessageCases = List.of("RECRS002A");
-        List<String> saveDematMessageCases = List.of("RECRS002B");
-        List<String> aggregatorMessageCases = List.of("RECRS002C");
-        List<String> retryableMessageCases = List.of("RECRS006");
-        List<String> notRetryableMessageCases = List.of("CON998");
-        List<String> logMessageCases = List.of("UNKNOWN");
-        List<String> recag012MessageCases = List.of("RECAG012");
-        List<String> recag011bMessageCases = List.of("RECAG011B");
-        List<String> recag007bMessageCases = List.of("RECAG007B");
-        List<String> complex890MessageCases = List.of("RECAG005C", "RECAG006C", "RECAG007C", "RECAG008C");
+        List<TestCase> simple890DependentCases = List.of(
+                new TestCase("RECAG012", List.of("RECAG012"),
+                        enableSimple890Flow ? ChainedMessageHandler.class : OldRECAG012MessageHandler.class),
+                new TestCase("RECAG011B", List.of("RECAG011B"),
+                        enableSimple890Flow ? ChainedMessageHandler.class : RECAG011BMessageHandler.class),
+                new TestCase("RECAG007B", List.of("RECAG007B"),
+                        enableSimple890Flow ? ChainedMessageHandler.class : SaveDematMessageHandler.class)
+        );
 
-        /* Test method arguments */
-        Arguments directlySendMessageCasesArguments = Arguments.of(directlySendMessageCases, DirectlySendMessageHandler.class);
-        Arguments saveMetadataMessageCasesArguments = Arguments.of(saveMetadataMessageCases, SaveMetadataMessageHandler.class);
-        Arguments saveDematMessageCasesArguments = Arguments.of(saveDematMessageCases, SaveDematMessageHandler.class);
-        Arguments aggregatorMessageCasesArguments = Arguments.of(aggregatorMessageCases, AggregatorMessageHandler.class);
-        Arguments retryableMessageCasesArguments = Arguments.of(retryableMessageCases, RetryableErrorMessageHandler.class);
-        Arguments notRetryableMessageCasesArguments = Arguments.of(notRetryableMessageCases, NotRetryableErrorMessageHandler.class);
-        Arguments logMessageCasesArguments = Arguments.of(logMessageCases, LogMessageHandler.class);
-        Arguments recag012MessageCasesArguments = Arguments.of(recag012MessageCases, OldRECAG012MessageHandler.class);
-        Arguments recag011bMessageCasesArguments = Arguments.of(recag011bMessageCases, RECAG011BMessageHandler.class);
-        Arguments recag007bMessageCasesArguments = Arguments.of(recag007bMessageCases, SaveDematMessageHandler.class);
-        Arguments complex890MessageCasesArguments = Arguments.of(complex890MessageCases, Proxy890MessageHandler.class);
+        List<TestCase> progressMetaDependentCases = List.of(
+                new TestCase("SaveMetadata",
+                        List.of("RECRS002A", "RECRS002D", "RECRN001A", "RECRN002A", "RECRN002D", "RECAG001A",
+                                "RECAG002A", "RECAG003A", "RECAG003D", "RECRS004A", "RECRS005A", "RECRN003A",
+                                "RECRN004A", "RECRN005A", "RECAG005A", "RECAG006A", "RECAG007A", "RECAG008A",
+                                "RECRSI004A", "RECRI003A", "RECRI004A"),
+                        enableProgressMeta ? ChainedMessageHandler.class : SaveMetadataMessageHandler.class)
+        );
 
         return Stream.of(
-            directlySendMessageCasesArguments,
-            saveMetadataMessageCasesArguments,
-            saveDematMessageCasesArguments,
-            aggregatorMessageCasesArguments,
-            retryableMessageCasesArguments,
-            notRetryableMessageCasesArguments,
-            logMessageCasesArguments,
-            recag012MessageCasesArguments,
-            recag011bMessageCasesArguments,
-            recag007bMessageCasesArguments,
-            complex890MessageCasesArguments
-        );
+                        commonCases.stream(),
+                        simple890DependentCases.stream(),
+                        progressMetaDependentCases.stream())
+                .flatMap(s -> s)
+                .map(testCase -> Arguments.of(enableSimple890Flow, enableProgressMeta,
+                        testCase.codes, testCase.handlerClass));
     }
 }
