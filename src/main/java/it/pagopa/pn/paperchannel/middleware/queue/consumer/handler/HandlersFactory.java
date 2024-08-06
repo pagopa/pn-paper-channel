@@ -387,7 +387,7 @@ public class HandlersFactory {
         map.put(ExternalChannelCodeEnum.RECRN010.name(), handler);
     }
 
-    private void addAggregatorStatusCodes(ConcurrentHashMap<String, MessageHandler> map, MessageHandler handler) {
+    private void addAggregatorStatusCodes(ConcurrentHashMap<String, MessageHandler> map, AggregatorMessageHandler handler) {
         map.put(ExternalChannelCodeEnum.RECRS002C.name(), handler);
         map.put(ExternalChannelCodeEnum.RECRS002F.name(), handler);
         map.put(ExternalChannelCodeEnum.RECRS004C.name(), handler);
