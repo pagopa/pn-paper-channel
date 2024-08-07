@@ -222,7 +222,7 @@ public class HandlersFactory {
         ChainedMessageHandler saveMetadataSendMessageHandler = ChainedMessageHandler.builder()
                 .handlers(List.of(saveMetadataMessageHandler, sendToDeliveryPushHandler))
                 .build();
-        // SendProgressMeta feature flag
+        // SendProgressMeta feature flag (PN-12284)
         MessageHandler currentSaveMetadataHandler = sendProgressMetaConfig.isMetaEnabled()
                 ? saveMetadataSendMessageHandler
                 : saveMetadataMessageHandler;
@@ -282,6 +282,10 @@ public class HandlersFactory {
             map.put(RECAG006C.name(), proxy890MessageHandler);
             map.put(RECAG007C.name(), proxy890MessageHandler);
             map.put(RECAG008C.name(), proxy890MessageHandler);
+        }
+        // SendProgressMeta feature flag (PN-12284)
+        if(sendProgressMetaConfig.isCON018Enabled()){
+            map.put(CON018.name(), sendToDeliveryPushHandler);
         }
     }
 

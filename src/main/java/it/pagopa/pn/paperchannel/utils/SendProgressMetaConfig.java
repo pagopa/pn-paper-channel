@@ -93,7 +93,7 @@ public class SendProgressMetaConfig {
      *
      * @return true if CON018 is enabled, false otherwise
      */
-    public boolean isCCON018Enabled() {
+    public boolean isCON018Enabled() {
         return enabledFlags.contains(SendProgressMetaEnum.CON018);
     }
 

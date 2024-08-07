@@ -31,7 +31,7 @@ class SendProgressMetaConfigTest {
         assertDoesNotThrow(() -> sendProgressMetaConfig.validateConfiguration());
         assertTrue(sendProgressMetaConfig.isMetaEnabled());
         assertTrue(sendProgressMetaConfig.isRECAG012AEnabled());
-        assertFalse(sendProgressMetaConfig.isCCON018Enabled());
+        assertFalse(sendProgressMetaConfig.isCON018Enabled());
         assertFalse(sendProgressMetaConfig.isDisabled());
     }
 
@@ -65,7 +65,7 @@ class SendProgressMetaConfigTest {
         assertDoesNotThrow(() -> sendProgressMetaConfig.validateConfiguration());
         assertFalse(sendProgressMetaConfig.isMetaEnabled());
         assertFalse(sendProgressMetaConfig.isRECAG012AEnabled());
-        assertFalse(sendProgressMetaConfig.isCCON018Enabled());
+        assertFalse(sendProgressMetaConfig.isCON018Enabled());
         assertTrue(sendProgressMetaConfig.isDisabled());
     }
 
@@ -79,7 +79,7 @@ class SendProgressMetaConfigTest {
         assertDoesNotThrow(() -> sendProgressMetaConfig.validateConfiguration());
         assertFalse(sendProgressMetaConfig.isMetaEnabled());
         assertFalse(sendProgressMetaConfig.isRECAG012AEnabled());
-        assertFalse(sendProgressMetaConfig.isCCON018Enabled());
+        assertFalse(sendProgressMetaConfig.isCON018Enabled());
         assertTrue(sendProgressMetaConfig.isDisabled());
     }
 
@@ -93,7 +93,7 @@ class SendProgressMetaConfigTest {
         assertDoesNotThrow(() -> sendProgressMetaConfig.validateConfiguration());
         assertFalse(sendProgressMetaConfig.isMetaEnabled());
         assertFalse(sendProgressMetaConfig.isRECAG012AEnabled());
-        assertFalse(sendProgressMetaConfig.isCCON018Enabled());
+        assertFalse(sendProgressMetaConfig.isCON018Enabled());
         assertTrue(sendProgressMetaConfig.isDisabled());
     }
 }
