@@ -30,7 +30,7 @@ import java.util.List;
 
 @Slf4j
 @SuperBuilder
-public abstract class SendToDeliveryPushHandler implements MessageHandler {
+public class SendToDeliveryPushHandler implements MessageHandler {
 
     protected final SqsSender sqsSender;
     protected final RequestDeliveryDAO requestDeliveryDAO;
