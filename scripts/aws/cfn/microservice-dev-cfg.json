@@ -45,6 +45,6 @@
     "PnCronAnalyzer": "* */1 * * * *",
     "WireTapLogActivation": "false",
     "MountEfs": "false",
-    "SendProgressMeta": "META;RECAG012A;CON018"
+    "SendProgressMeta": "META,RECAG012A,CON018"
   }
 }
