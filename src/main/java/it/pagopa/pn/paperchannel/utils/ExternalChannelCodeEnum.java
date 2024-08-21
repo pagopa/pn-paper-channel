@@ -56,10 +56,29 @@ public enum ExternalChannelCodeEnum {
     RECRN011(Constants.PROGRESS),
 
     //META STATUS CODE
+    RECRN001A(Constants.PROGRESS),
+    RECRN002A(Constants.PROGRESS),
+    RECRN002D(Constants.PROGRESS),
     RECRN003A(Constants.PROGRESS),
     RECRN004A(Constants.PROGRESS),
     RECRN005A(Constants.PROGRESS),
-
+    RECRS002A(Constants.PROGRESS),
+    RECRS002D(Constants.PROGRESS),
+    RECRS004A(Constants.PROGRESS),
+    RECRS005A(Constants.PROGRESS),
+    RECAG001A(Constants.PROGRESS),
+    RECAG002A(Constants.PROGRESS),
+    RECAG003A(Constants.PROGRESS),
+    RECAG003D(Constants.PROGRESS),
+    RECAG005A(Constants.PROGRESS),
+    RECAG006A(Constants.PROGRESS),
+    RECAG007A(Constants.PROGRESS),
+    RECAG008A(Constants.PROGRESS),
+    RECRSI004A(Constants.PROGRESS),
+    RECRI003A(Constants.PROGRESS),
+    RECRI004A(Constants.PROGRESS),
+    CON018(Constants.PROGRESS),
+    RECAG012A(Constants.PROGRESS),
 
     //DEMAT STATUS CODE
     RECRS002B(Constants.PROGRESS),

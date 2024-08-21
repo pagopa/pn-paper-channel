@@ -6,6 +6,7 @@ import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
 import it.pagopa.pn.paperchannel.middleware.queue.consumer.MetaDematCleaner;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum;
+import it.pagopa.pn.paperchannel.utils.SendProgressMetaConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -13,7 +14,9 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import javax.validation.constraints.NotNull;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 
 import static it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum.*;
 
@@ -45,6 +48,8 @@ public class HandlersFactory {
 
     private final PnEventErrorDAO pnEventErrorDAO;
 
+    private final SendProgressMetaConfig sendProgressMetaConfig;
+
     private ConcurrentHashMap<String, MessageHandler> map;
 
 
@@ -52,11 +57,6 @@ public class HandlersFactory {
 
     @PostConstruct
     public void initializeHandlers() {
-
-        SaveMetadataMessageHandler saveMetadataMessageHandler = SaveMetadataMessageHandler.builder()
-                .eventMetaDAO(eventMetaDAO)
-                .pnPaperChannelConfig(pnPaperChannelConfig)
-                .build();
 
         SaveDematMessageHandler saveDematMessageHandler = SaveDematMessageHandler.builder()
                 .sqsSender(sqsSender)
@@ -106,7 +106,7 @@ public class HandlersFactory {
                 .pnEventErrorDAO(pnEventErrorDAO)
                 .build();
 
-        DirectlySendMessageHandler directlySendMessageHandler = DirectlySendMessageHandler.builder()
+        SendToDeliveryPushHandler sendToDeliveryPushHandler = SendToDeliveryPushHandler.builder()
                 .sqsSender(sqsSender)
                 .requestDeliveryDAO(requestDeliveryDAO)
                 .pnPaperChannelConfig(pnPaperChannelConfig)
@@ -140,14 +140,42 @@ public class HandlersFactory {
                 .pnPaperChannelConfig(pnPaperChannelConfig)
                 .build();
 
-        ChainedMessageHandler recag012MessageHandler = ChainedMessageHandler.builder()
-                .handlers(List.of(recag012SaveMetaMessageHandler, recagSimplifiedPostLogicHandler))
+        RECAG012AMessageHandler recag012AMessageHandler = RECAG012AMessageHandler.builder()
+                .sqsSender(sqsSender)
+                .requestDeliveryDAO(requestDeliveryDAO)
+                .pnPaperChannelConfig(pnPaperChannelConfig)
+                .pnEventErrorDAO(pnEventErrorDAO)
                 .build();
 
-        OldRECAG012MessageHandler oldRECAG012MessageHandler = OldRECAG012MessageHandler.builder()
+        ChainedMessageHandler recag012MessageHandler = ChainedMessageHandler.builder()
+                .handlers(
+                    Stream.of(
+                        recag012SaveMetaMessageHandler,
+                        recagSimplifiedPostLogicHandler,
+                        // SendProgressMeta feature flag (PN-12284)
+                        sendProgressMetaConfig.isRECAG012AEnabled() ? recag012AMessageHandler : null
+                    )
+                    .filter(Objects::nonNull)
+                    .toList()
+                )
+                .build();
+
+        OldRECAG012MessageHandler baseOldRECAG012MessageHandler = OldRECAG012MessageHandler.builder()
                 .eventMetaDAO(eventMetaDAO)
                 .pnPaperChannelConfig(pnPaperChannelConfig)
                 .pnag012MessageHandler(pnag012MessageHandler)
+                .build();
+
+        MessageHandler oldRECAG012MessageHandler = ChainedMessageHandler.builder()
+                .handlers(
+                    Stream.of(
+                        baseOldRECAG012MessageHandler,
+                        // SendProgressMeta feature flag (PN-12284)
+                        sendProgressMetaConfig.isRECAG012AEnabled() ? recag012AMessageHandler : null
+                    )
+                    .filter(Objects::nonNull)
+                    .toList()
+                )
                 .build();
 
         RECAG011AMessageHandler recag011AMessageHandler = RECAG011AMessageHandler.builder()
@@ -215,6 +243,24 @@ public class HandlersFactory {
                 .pnEventErrorDAO(pnEventErrorDAO)
                 .build();
 
+        // Metadata handlers
+        SaveMetadataMessageHandler baseSaveMetadataMessageHandler = SaveMetadataMessageHandler.builder()
+                .eventMetaDAO(eventMetaDAO)
+                .pnPaperChannelConfig(pnPaperChannelConfig)
+                .build();
+
+        ChainedMessageHandler saveMetadataMessageHandler = ChainedMessageHandler.builder()
+                .handlers(
+                    Stream.of(
+                        baseSaveMetadataMessageHandler,
+                        // SendProgressMeta feature flag (PN-12284)
+                        sendProgressMetaConfig.isMetaEnabled() ? sendToDeliveryPushHandler : null
+                    )
+                    .filter(Objects::nonNull)
+                    .toList()
+                )
+                .build();
+
         map = new ConcurrentHashMap<>();
 
         addRetryableErrorStatusCodes(map, retryableErrorExtChannelsMessageHandler);
@@ -224,7 +270,7 @@ public class HandlersFactory {
         addSaveDematStatusCodes(map, saveDematMessageHandler);
         addRecagxxxbSaveDematStatusCodes(map, recagxxxbMessageHandler);
         addAggregatorStatusCodes(map, aggregatorMessageHandler);
-        addDirectlySendStatusCodes(map, directlySendMessageHandler);
+        addDirectlySendStatusCodes(map, sendToDeliveryPushHandler);
         addCustomAggregatorStatusCodes(map, customAggregatorMessageHandler);
 
         //casi 890
@@ -271,6 +317,10 @@ public class HandlersFactory {
             map.put(RECAG007C.name(), proxy890MessageHandler);
             map.put(RECAG008C.name(), proxy890MessageHandler);
         }
+        // SendProgressMeta feature flag (PN-12284)
+        if(sendProgressMetaConfig.isCON018Enabled()){
+            map.put(CON018.name(), sendToDeliveryPushHandler);
+        }
     }
 
     private void addRetryableErrorStatusCodes(ConcurrentHashMap<String, MessageHandler> map, RetryableErrorMessageHandler handler) {
@@ -296,28 +346,28 @@ public class HandlersFactory {
         map.put(ExternalChannelCodeEnum.P010.name(), handler);
     }
 
-    private void addSaveMetadataStatusCodes(ConcurrentHashMap<String, MessageHandler> map, SaveMetadataMessageHandler handler) {
-        map.put("RECRS002A", handler);
-        map.put("RECRS002D", handler);
-        map.put("RECRS004A", handler);
-        map.put("RECRS005A", handler);
-        map.put("RECRN001A", handler);
-        map.put("RECRN002A", handler);
-        map.put("RECRN002D", handler);
-        map.put("RECRN003A", handler);
-        map.put("RECRN004A", handler);
-        map.put("RECRN005A", handler);
-        map.put("RECAG001A", handler);
-        map.put("RECAG002A", handler);
-        map.put("RECAG003A", handler);
-        map.put("RECAG003D", handler);
-        map.put("RECAG005A", handler);
-        map.put("RECAG006A", handler);
-        map.put("RECAG007A", handler);
-        map.put("RECAG008A", handler);
-        map.put("RECRI003A", handler);
-        map.put("RECRI004A", handler);
-        map.put("RECRSI004A", handler);
+    private void addSaveMetadataStatusCodes(ConcurrentHashMap<String, MessageHandler> map, ChainedMessageHandler handler) {
+        map.put(ExternalChannelCodeEnum.RECRS002A.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECRS002D.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECRS004A.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECRS005A.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECRN001A.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECRN002A.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECRN002D.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECRN003A.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECRN004A.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECRN005A.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECAG001A.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECAG002A.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECAG003A.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECAG003D.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECAG005A.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECAG006A.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECAG007A.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECAG008A.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECRI003A.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECRI004A.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECRSI004A.name(), handler);
     }
 
 
@@ -352,7 +402,7 @@ public class HandlersFactory {
         map.put(ExternalChannelCodeEnum.RECAG011B.name(), handler);
     }
 
-    private void addDirectlySendStatusCodes(ConcurrentHashMap<String, MessageHandler> map, DirectlySendMessageHandler handler) {
+    private void addDirectlySendStatusCodes(ConcurrentHashMap<String, MessageHandler> map, SendToDeliveryPushHandler handler) {
 
 
         //caso CON080, RECRI001, RECRI002
