@@ -67,12 +67,14 @@ class RequestDeliveryDAOTestIT extends BaseTest {
     }
 
     @Test
-    void updateDataTestWithoutIgnoringNulls(){
+    @Order(3)
+    void updateDataWithoutIgnoringNullsTest(){
 
         // Given
         PnDeliveryRequest partialDeliveryRequest = new PnDeliveryRequest();
         partialDeliveryRequest.setRequestId(REQUEST_WITH_ADDRESS_ID);
         partialDeliveryRequest.setStatusCode("TEST");
+        partialDeliveryRequest.setFeedbackStatusCode(null);
 
         // When
         Mockito.when(dataVaultEncryption.encode(Mockito.any(), Mockito.any())).thenReturn("returnOk");
@@ -91,7 +93,8 @@ class RequestDeliveryDAOTestIT extends BaseTest {
     }
 
     @Test
-    void updateDataTestWithIgnoringNulls(){
+    @Order(4)
+    void updateDataWithIgnoringNullsTest(){
 
         // Given
         PnDeliveryRequest partialDeliveryRequest = new PnDeliveryRequest();
@@ -112,6 +115,77 @@ class RequestDeliveryDAOTestIT extends BaseTest {
         assertNotNull(readRequestAfterUpdate);
         assertEquals(REQUEST_WITHOUT_ADDRESS_ID, readRequestAfterUpdate.getRequestId());
         assertNotNull(readRequestAfterUpdate.getProductType()); // was null during update
+    }
+
+    @Test
+    @Order(5)
+    void updateConditionalWhenFeedbackNotExistsStatusTest(){
+
+        // Given
+        PnDeliveryRequest partialDeliveryRequest = new PnDeliveryRequest();
+        partialDeliveryRequest.setRequestId(REQUEST_WITHOUT_ADDRESS_ID);
+        partialDeliveryRequest.setStatusCode("TEST");
+        partialDeliveryRequest.setFeedbackStatusCode("TEST");
+
+        // When
+        Mockito.when(dataVaultEncryption.encode(Mockito.any(), Mockito.any())).thenReturn("returnOk");
+        Mockito.when(dataVaultEncryption.decode(Mockito.any())).thenReturn("returnOk");
+
+        PnDeliveryRequest updateRequest = this.requestDeliveryDAO.updateConditionalOnFeedbackStatus(partialDeliveryRequest, true).block();
+
+        assertNotNull(updateRequest);
+        assertEquals(updateRequest, partialDeliveryRequest);
+
+        PnDeliveryRequest readRequestAfterUpdate = this.requestDeliveryDAO.getByRequestId(partialDeliveryRequest.getRequestId()).block();
+
+        assertNotNull(readRequestAfterUpdate);
+        assertEquals(REQUEST_WITHOUT_ADDRESS_ID, readRequestAfterUpdate.getRequestId());
+        assertEquals("TEST", readRequestAfterUpdate.getStatusCode());
+        assertEquals("TEST", readRequestAfterUpdate.getFeedbackStatusCode());
+        assertNotNull(readRequestAfterUpdate.getProductType()); // was null during update
+    }
+
+    @Test
+    @Order(6)
+    void updateConditionalWhenFeedbackIsNullStatusTest(){
+
+        // Given
+        PnDeliveryRequest partialDeliveryRequest = new PnDeliveryRequest();
+        partialDeliveryRequest.setRequestId(REQUEST_WITH_ADDRESS_ID);
+        partialDeliveryRequest.setFeedbackStatusCode("TEST");
+
+        // When
+        Mockito.when(dataVaultEncryption.encode(Mockito.any(), Mockito.any())).thenReturn("returnOk");
+        Mockito.when(dataVaultEncryption.decode(Mockito.any())).thenReturn("returnOk");
+
+        PnDeliveryRequest updateRequest = this.requestDeliveryDAO.updateConditionalOnFeedbackStatus(partialDeliveryRequest, true).block();
+
+        assertNotNull(updateRequest);
+        assertEquals(updateRequest, partialDeliveryRequest);
+
+        PnDeliveryRequest readRequestAfterUpdate = this.requestDeliveryDAO.getByRequestId(partialDeliveryRequest.getRequestId()).block();
+
+        assertNotNull(readRequestAfterUpdate);
+        assertEquals(REQUEST_WITH_ADDRESS_ID, readRequestAfterUpdate.getRequestId());
+        assertEquals("TEST", readRequestAfterUpdate.getFeedbackStatusCode());
+    }
+
+    @Test
+    @Order(7)
+    void updateConditionalFailOnFeedbackStatusTest(){
+
+        // Given
+        PnDeliveryRequest partialDeliveryRequest = new PnDeliveryRequest();
+        partialDeliveryRequest.setRequestId(REQUEST_WITHOUT_ADDRESS_ID); // same request with already set feedback
+        partialDeliveryRequest.setStatusCode("TEST");
+        partialDeliveryRequest.setFeedbackStatusCode("TEST");
+
+        // When
+        Mockito.when(dataVaultEncryption.encode(Mockito.any(), Mockito.any())).thenReturn("returnOk");
+        Mockito.when(dataVaultEncryption.decode(Mockito.any())).thenReturn("returnOk");
+
+        PnDeliveryRequest updateRequest = this.requestDeliveryDAO.updateConditionalOnFeedbackStatus(partialDeliveryRequest, true).block();
+        assertNull(updateRequest);
     }
 
     @Test

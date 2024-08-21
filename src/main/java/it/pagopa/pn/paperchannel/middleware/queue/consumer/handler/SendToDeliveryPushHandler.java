@@ -94,8 +94,12 @@ public class SendToDeliveryPushHandler implements MessageHandler {
             pnDeliveryRequest.setFeedbackStatusDateTime(paperRequest.getStatusDateTime().toInstant());
 
             return this.requestDeliveryDAO
-                    .updateData(pnDeliveryRequest, Boolean.TRUE)
-                    .doOnError(ex -> log.warn("[{}] Error while updating pnDeliveryRequest", pnDeliveryRequest.getRequestId(), ex));
+                .updateConditionalOnFeedbackStatus(pnDeliveryRequest, Boolean.TRUE)
+                .switchIfEmpty(Mono.error(
+                    InvalidEventOrderException.from(pnDeliveryRequest, paperRequest,
+                        "[{" + paperRequest.getRequestId() + "}] Wrong feedback event detected for {"
+                            + paperRequest + "}")
+                ));
     }
 
     /**

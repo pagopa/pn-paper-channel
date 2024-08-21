@@ -227,8 +227,8 @@ public class RECAG012ChainedMessageHandler {
         when(mockEventMetaDAO.getDeliveryEventMeta(anyString(),anyString()))
                 .thenReturn(Mono.empty());
 
-        when(mockRequestDeliveryDAO.updateData(any(), anyBoolean())).thenReturn(Mono.just(entity));
-
+        when(mockRequestDeliveryDAO.updateConditionalOnFeedbackStatus(any(), anyBoolean()))
+                .thenReturn(Mono.just(entity));
 
         PnEventDemat pnEventDemat = new PnEventDemat();
         pnEventDemat.setDocumentType("23L");
@@ -253,7 +253,8 @@ public class RECAG012ChainedMessageHandler {
         verify(mockPnEventErrorDAO, never()).findEventErrorsByRequestId( anyString());
 
         // Update delivery request to track feedback of RECAGSimplifiedPostLogicHandler
-        verify(mockRequestDeliveryDAO, times(1)).updateData(any(PnDeliveryRequest.class), eq(true));
+        verify(mockRequestDeliveryDAO, times(1))
+                .updateConditionalOnFeedbackStatus(any(PnDeliveryRequest.class), eq(true));
         verify(mockPnEventErrorDAO, never()).deleteItem(anyString(), any(Instant.class));
     }
 }

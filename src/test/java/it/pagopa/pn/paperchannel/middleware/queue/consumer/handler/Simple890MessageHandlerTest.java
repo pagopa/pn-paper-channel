@@ -62,7 +62,7 @@ class Simple890MessageHandlerTest {
         entity.setStatusCode(paperProgressStatusEventDto.getStatusCode());
         entity.setStatusDetail(StatusCodeEnum.OK.getValue());
 
-        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
+        when(requestDeliveryDAO.updateConditionalOnFeedbackStatus(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
         doNothing().when(mockSqsSender).pushSendEvent(any(SendEvent.class));
         when(metaDematCleaner.clean(anyString())).thenReturn(Mono.empty());
 

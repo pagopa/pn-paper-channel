@@ -93,7 +93,7 @@ class AggregatorMessageHandlerTest {
         when(mockMetaDao.deleteBatch(any(String.class), any(String.class))).thenReturn(Mono.empty());
         when(mockDematDao.deleteBatch(any(String.class), any(String.class))).thenReturn(Mono.empty());
 
-        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
+        when(requestDeliveryDAO.updateConditionalOnFeedbackStatus(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
         // assertDoNotThrow with call
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
 
@@ -105,7 +105,7 @@ class AggregatorMessageHandlerTest {
         // deleteEventDemat call
         verify(mockDematDao, timeout(2000).times(1)).deleteBatch(any(String.class), any(String.class));
 
-        verify(requestDeliveryDAO, timeout(2000).times(1)).updateData(entity, true);
+        verify(requestDeliveryDAO, timeout(2000).times(1)).updateConditionalOnFeedbackStatus(entity, true);
 
         // DeliveryPush send via SQS verification
         verify(mockSqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
@@ -189,7 +189,7 @@ class AggregatorMessageHandlerTest {
         when(mockMetaDao.deleteBatch(any(String.class), any(String.class))).thenReturn(Mono.empty());
         when(mockDematDao.deleteBatch(any(String.class), any(String.class))).thenReturn(Mono.empty());
 
-        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
+        when(requestDeliveryDAO.updateConditionalOnFeedbackStatus(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
 
         // the SQS queue
         doThrow(new RuntimeException()).when(mockSqsSender).pushSendEvent(Mockito.any());
@@ -242,7 +242,7 @@ class AggregatorMessageHandlerTest {
         when(mockMetaDao.deleteBatch(any(String.class), any(String.class))).thenReturn(Mono.error(new RuntimeException()));
         when(mockDematDao.deleteBatch(any(String.class), any(String.class))).thenReturn(Mono.empty());
 
-        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
+        when(requestDeliveryDAO.updateConditionalOnFeedbackStatus(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
 
         // assertDoNotThrow with call
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
@@ -257,7 +257,7 @@ class AggregatorMessageHandlerTest {
         // DeliveryPush send via SQS verification
         verify(mockSqsSender, timeout(2000).times(1)).pushSendEvent(any(SendEvent.class));
 
-        verify(requestDeliveryDAO, timeout(2000).times(1)).updateData(any(PnDeliveryRequest.class), anyBoolean());
+        verify(requestDeliveryDAO, timeout(2000).times(1)).updateConditionalOnFeedbackStatus(any(PnDeliveryRequest.class), anyBoolean());
     }
 
     @Test
@@ -291,7 +291,7 @@ class AggregatorMessageHandlerTest {
         when(mockMetaDao.deleteBatch(any(String.class), any(String.class))).thenReturn(Mono.empty());
         when(mockDematDao.deleteBatch(any(String.class), any(String.class))).thenReturn(Mono.error(new RuntimeException()));
 
-        when(requestDeliveryDAO.updateData(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
+        when(requestDeliveryDAO.updateConditionalOnFeedbackStatus(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
 
         // assertDoNotThrow with call
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
@@ -306,7 +306,7 @@ class AggregatorMessageHandlerTest {
         // DeliveryPush send via SQS verification
         verify(mockSqsSender, timeout(2000).times(1)).pushSendEvent(any(SendEvent.class));
 
-        verify(requestDeliveryDAO, timeout(2000).times(1)).updateData(any(PnDeliveryRequest.class), anyBoolean());
+        verify(requestDeliveryDAO, timeout(2000).times(1)).updateConditionalOnFeedbackStatus(any(PnDeliveryRequest.class), anyBoolean());
     }
 
     private PnEventMeta createPnEventMeta() {
