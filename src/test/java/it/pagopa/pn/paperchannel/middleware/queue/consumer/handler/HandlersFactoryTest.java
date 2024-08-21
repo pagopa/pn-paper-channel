@@ -24,7 +24,8 @@ class HandlersFactoryTest {
     enum FeatureFlag {
         SIMPLE_890_FLOW,
         SEND_PROGRESS_META,
-        SEND_PROGRESS_META_CON018
+        SEND_PROGRESS_META_CON018,
+        SEND_PROGRESS_META_RECAG012A
     }
     record FFTestCases(EnumSet<FeatureFlag> enabledFeatureFlags, List<TestCase> testCases) {}
     record TestCase(String name, List<String> codes, Class<? extends MessageHandler> handlerClass) {}
@@ -45,6 +46,8 @@ class HandlersFactoryTest {
                 .thenReturn(featureFlags.contains(FeatureFlag.SEND_PROGRESS_META));
         when(mockSendProgressMetaConfig.isCON018Enabled())
                 .thenReturn(featureFlags.contains(FeatureFlag.SEND_PROGRESS_META_CON018));
+        when(mockSendProgressMetaConfig.isRECAG012AEnabled())
+                .thenReturn(featureFlags.contains(FeatureFlag.SEND_PROGRESS_META_RECAG012A));
 
         handlersFactory.initializeHandlers();
 
@@ -88,7 +91,7 @@ class HandlersFactoryTest {
             new FFTestCases(
                     EnumSet.noneOf(FeatureFlag.class),
                     List.of(
-                            new TestCase("RECAG012", List.of("RECAG012"), OldRECAG012MessageHandler.class),
+                            new TestCase("RECAG012", List.of("RECAG012"), ChainedMessageHandler.class),
                             new TestCase("RECAG011B", List.of("RECAG011B"), RECAG011BMessageHandler.class),
                             new TestCase("RECAG007B", List.of("RECAG007B"), SaveDematMessageHandler.class)
                     )),
@@ -112,15 +115,31 @@ class HandlersFactoryTest {
                                             "RECAG001A","RECAG002A", "RECAG003A", "RECAG003D", "RECRS004A", "RECRS005A",
                                             "RECRN003A", "RECRN004A", "RECRN005A", "RECAG005A", "RECAG006A", "RECAG007A",
                                             "RECAG008A", "RECRSI004A", "RECRI003A", "RECRI004A"),
-                                    SaveMetadataMessageHandler.class)
+                                    ChainedMessageHandler.class)
                     )),
             // SEND_PROGRESS_META SEND_PROGRESS_META_CCON018 ENABLE cases
             new FFTestCases(
                     EnumSet.of(FeatureFlag.SEND_PROGRESS_META, FeatureFlag.SEND_PROGRESS_META_CON018),
                     List.of(
                             new TestCase("CON018", List.of("CON018"), SendToDeliveryPushHandler.class)
+                    )),
+            // SEND_PROGRESS_META SEND_PROGRESS_META_RECAG012A ENABLE cases
+            new FFTestCases(
+                    EnumSet.of(
+                            FeatureFlag.SIMPLE_890_FLOW,
+                            FeatureFlag.SEND_PROGRESS_META,
+                            FeatureFlag.SEND_PROGRESS_META_RECAG012A),
+                    List.of(
+                            new TestCase("RECAG012A", List.of("RECAG012"), ChainedMessageHandler.class)
+                    )),
+            new FFTestCases(
+                    EnumSet.of(
+                            FeatureFlag.SEND_PROGRESS_META,
+                            FeatureFlag.SEND_PROGRESS_META_RECAG012A),
+                    List.of(
+                            new TestCase("RECAG012A", List.of("RECAG012"), ChainedMessageHandler.class)
                     ))
-            );
+        );
 
         return cases.flatMap(ffTestCases -> ffTestCases.testCases().stream()
                 .map(testCase ->

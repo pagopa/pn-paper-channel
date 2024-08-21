@@ -383,9 +383,9 @@ Parameters:
       AllowedValues:
         - 'DISABLED'
         - 'META'
-        - 'META;RECAG012A'
-        - 'META;CON018'
-        - 'META;RECAG012A;CON018'
+        - 'META,RECAG012A'
+        - 'META,CON018'
+        - 'META,RECAG012A,CON018'
       Description: 'Configuration for the feature flag SendProgressMeta'
 
   # Logging parameters

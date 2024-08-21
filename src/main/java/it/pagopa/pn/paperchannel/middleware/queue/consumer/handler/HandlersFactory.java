@@ -14,7 +14,9 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import javax.validation.constraints.NotNull;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 
 import static it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum.*;
 
@@ -138,14 +140,42 @@ public class HandlersFactory {
                 .pnPaperChannelConfig(pnPaperChannelConfig)
                 .build();
 
-        ChainedMessageHandler recag012MessageHandler = ChainedMessageHandler.builder()
-                .handlers(List.of(recag012SaveMetaMessageHandler, recagSimplifiedPostLogicHandler))
+        RECAG012AMessageHandler recag012AMessageHandler = RECAG012AMessageHandler.builder()
+                .sqsSender(sqsSender)
+                .requestDeliveryDAO(requestDeliveryDAO)
+                .pnPaperChannelConfig(pnPaperChannelConfig)
+                .pnEventErrorDAO(pnEventErrorDAO)
                 .build();
 
-        OldRECAG012MessageHandler oldRECAG012MessageHandler = OldRECAG012MessageHandler.builder()
+        ChainedMessageHandler recag012MessageHandler = ChainedMessageHandler.builder()
+                .handlers(
+                    Stream.of(
+                        recag012SaveMetaMessageHandler,
+                        recagSimplifiedPostLogicHandler,
+                        // SendProgressMeta feature flag (PN-12284)
+                        sendProgressMetaConfig.isRECAG012AEnabled() ? recag012AMessageHandler : null
+                    )
+                    .filter(Objects::nonNull)
+                    .toList()
+                )
+                .build();
+
+        OldRECAG012MessageHandler baseOldRECAG012MessageHandler = OldRECAG012MessageHandler.builder()
                 .eventMetaDAO(eventMetaDAO)
                 .pnPaperChannelConfig(pnPaperChannelConfig)
                 .pnag012MessageHandler(pnag012MessageHandler)
+                .build();
+
+        MessageHandler oldRECAG012MessageHandler = ChainedMessageHandler.builder()
+                .handlers(
+                    Stream.of(
+                        baseOldRECAG012MessageHandler,
+                        // SendProgressMeta feature flag (PN-12284)
+                        sendProgressMetaConfig.isRECAG012AEnabled() ? recag012AMessageHandler : null
+                    )
+                    .filter(Objects::nonNull)
+                    .toList()
+                )
                 .build();
 
         RECAG011AMessageHandler recag011AMessageHandler = RECAG011AMessageHandler.builder()
@@ -214,25 +244,29 @@ public class HandlersFactory {
                 .build();
 
         // Metadata handlers
-        SaveMetadataMessageHandler saveMetadataMessageHandler = SaveMetadataMessageHandler.builder()
+        SaveMetadataMessageHandler baseSaveMetadataMessageHandler = SaveMetadataMessageHandler.builder()
                 .eventMetaDAO(eventMetaDAO)
                 .pnPaperChannelConfig(pnPaperChannelConfig)
                 .build();
 
-        ChainedMessageHandler saveMetadataSendMessageHandler = ChainedMessageHandler.builder()
-                .handlers(List.of(saveMetadataMessageHandler, sendToDeliveryPushHandler))
+        ChainedMessageHandler saveMetadataMessageHandler = ChainedMessageHandler.builder()
+                .handlers(
+                    Stream.of(
+                        baseSaveMetadataMessageHandler,
+                        // SendProgressMeta feature flag (PN-12284)
+                        sendProgressMetaConfig.isMetaEnabled() ? sendToDeliveryPushHandler : null
+                    )
+                    .filter(Objects::nonNull)
+                    .toList()
+                )
                 .build();
-        // SendProgressMeta feature flag (PN-12284)
-        MessageHandler currentSaveMetadataHandler = sendProgressMetaConfig.isMetaEnabled()
-                ? saveMetadataSendMessageHandler
-                : saveMetadataMessageHandler;
 
         map = new ConcurrentHashMap<>();
 
         addRetryableErrorStatusCodes(map, retryableErrorExtChannelsMessageHandler);
         addNotRetryableErrorStatusCodes(map, notRetryableErrorMessageHandler);
         addNotRetryableErrorStatusCodeWithoutSend(map, notRetriableWithoutSendErrorMessageHandler);
-        addSaveMetadataStatusCodes(map, currentSaveMetadataHandler);
+        addSaveMetadataStatusCodes(map, saveMetadataMessageHandler);
         addSaveDematStatusCodes(map, saveDematMessageHandler);
         addRecagxxxbSaveDematStatusCodes(map, recagxxxbMessageHandler);
         addAggregatorStatusCodes(map, aggregatorMessageHandler);
@@ -312,7 +346,7 @@ public class HandlersFactory {
         map.put(ExternalChannelCodeEnum.P010.name(), handler);
     }
 
-    private void addSaveMetadataStatusCodes(ConcurrentHashMap<String, MessageHandler> map, MessageHandler handler) {
+    private void addSaveMetadataStatusCodes(ConcurrentHashMap<String, MessageHandler> map, ChainedMessageHandler handler) {
         map.put(ExternalChannelCodeEnum.RECRS002A.name(), handler);
         map.put(ExternalChannelCodeEnum.RECRS002D.name(), handler);
         map.put(ExternalChannelCodeEnum.RECRS004A.name(), handler);
