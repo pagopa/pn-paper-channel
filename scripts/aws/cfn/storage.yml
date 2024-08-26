@@ -507,6 +507,98 @@ Resources:
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: true
 
+  PaperChannelTenderDynamoTable:
+    Type: AWS::DynamoDB::Table
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Properties:
+      TableName: !Sub '${ProjectName}-PaperChannelTender'
+      AttributeDefinitions:
+        - AttributeName: "tenderId"
+          AttributeType: "S"
+        - AttributeName: "activationDate"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "tenderId"
+          KeyType: "HASH"
+        - AttributeName: "activationDate"
+          KeyType: "RANGE"
+      KinesisStreamSpecification:
+        StreamArn: !Ref CdcKinesisSourceStreamArn
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+      BillingMode: "PAY_PER_REQUEST"
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
+  PaperChannelGeokeyDynamoTable:
+    Type: AWS::DynamoDB::Table
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Properties:
+      TableName: !Sub '${ProjectName}-PaperChannelGeokey'
+      AttributeDefinitions:
+        - AttributeName: "tender_product_geokey"
+          AttributeType: "S"
+        - AttributeName: "activationDate"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "tender_product_geokey"
+          KeyType: "HASH"
+        - AttributeName: "activationDate"
+          KeyType: "RANGE"
+      KinesisStreamSpecification:
+        StreamArn: !Ref CdcKinesisSourceStreamArn
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+      BillingMode: "PAY_PER_REQUEST"
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
+  PaperChannelDeliveryDriverDynamoTable:
+    Type: AWS::DynamoDB::Table
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Properties:
+      TableName: !Sub '${ProjectName}-PaperChannelDeliveryDriver'
+      AttributeDefinitions:
+        - AttributeName: "deliveryDriverId"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "deliveryDriverId"
+          KeyType: "HASH"
+      KinesisStreamSpecification:
+        StreamArn: !Ref CdcKinesisSourceStreamArn
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+      BillingMode: "PAY_PER_REQUEST"
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
+  PaperChannelCostDynamoTable:
+    Type: AWS::DynamoDB::Table
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Properties:
+      TableName: !Sub '${ProjectName}-PaperChannelCost'
+      AttributeDefinitions:
+        - AttributeName: "tenderId"
+          AttributeType: "S"
+        - AttributeName: "product_lot_zone"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "tenderId"
+          KeyType: "HASH"
+        - AttributeName: "product_lot_zone"
+          KeyType: "RANGE"
+      KinesisStreamSpecification:
+        StreamArn: !Ref CdcKinesisSourceStreamArn
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+      BillingMode: "PAY_PER_REQUEST"
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
   PnPaperChannelLogGroup:
     Type: AWS::CloudFormation::Stack
     UpdateReplacePolicy: Retain
@@ -642,6 +734,38 @@ Outputs:
   PaperEventErrorDynamoTableArn:
     Description: ARN of dynamodb table containing out of order event errors
     Value: !Sub '${PaperEventErrorDynamoTable.Arn}'
+
+  PaperChannelTenderDynamoTableName:
+    Description: Name of dynamodb table containing tenders
+    Value: !Ref PaperChannelTenderDynamoTable
+
+  PaperChannelTenderDynamoTableArn:
+    Description: ARN of dynamodb table containing tenders
+    Value: !Sub '${PaperChannelTenderDynamoTable.Arn}'
+
+  PaperChannelGeokeyDynamoTableName:
+    Description: Name of dynamodb table containing geokey
+    Value: !Ref PaperChannelGeokeyDynamoTable
+
+  PaperChannelGeokeyDynamoTableArn:
+    Description: ARN of dynamodb table containing geokey
+    Value: !Sub '${PaperChannelGeokeyDynamoTable.Arn}'
+
+  PaperChannelDeliveryDriverDynamoTableName:
+    Description: Name of dynamodb table containing information about deliveries driver
+    Value: !Ref PaperChannelDeliveryDriverDynamoTable
+
+  PaperChannelDeliveryDriverDynamoTableArn:
+    Description: ARN of dynamodb table containing information about deliveries driver
+    Value: !Sub '${PaperChannelDeliveryDriverDynamoTable.Arn}'
+
+  PaperChannelCostDynamoTableName:
+    Description: Name of dynamodb table containing costs
+    Value: !Ref PaperChannelCostDynamoTable
+
+  PaperChannelCostDynamoTableArn:
+    Description: ARN of dynamodb table containing costs
+    Value: !Sub '${PaperChannelCostDynamoTable.Arn}'
 
   # Log group exports
   EcsLogGroup:
