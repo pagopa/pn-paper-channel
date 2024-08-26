@@ -409,6 +409,11 @@ Parameters:
     Description: 'Variable that defines whether to enable the simplified workflow'
     Default: 'false'
 
+  EnableTenderFeatureFlow:
+    Type: String
+    Description: 'Variable that defines whether to enable the new tender worflow'
+    Default: 'false'
+
   SendProgressMeta:
       Type: String
       Default: 'DISABLED'
@@ -694,9 +699,10 @@ Resources:
         ContainerEnvEntry69: !Sub 'AWS_DYNAMODBPAPEREVENTERRORTABLE=${PaperChannelCostDynamoTableName}'
         ContainerEnvEntry70: !Sub 'PN_PAPERCHANNEL_COMPLEXREFINEMENTCODES=${ComplexRefinementCodes}'
         ContainerEnvEntry71: !Sub 'PN_PAPERCHANNEL_ENABLESIMPLE890FLOW=${EnableSimple890Flow}'
-        ContainerEnvEntry72: !Sub 'PN_CRON_ANALYZER=${PnCronAnalyzer}'
-        ContainerEnvEntry73: !Sub 'WIRE_TAP_LOG=${WireTapLogActivation}'
-        ContainerEnvEntry74: !Sub 'PN_PAPERCHANNEL_SENDPROGRESSMETA=${SendProgressMeta}'
+        ContainerEnvEntry72: !Sub 'PN_PAPERCHANNEL_ENABLETENDERFEATUREFLOW=${EnableTenderFeatureFlow}'
+        ContainerEnvEntry73: !Sub 'PN_CRON_ANALYZER=${PnCronAnalyzer}'
+        ContainerEnvEntry74: !Sub 'WIRE_TAP_LOG=${WireTapLogActivation}'
+        ContainerEnvEntry75: !Sub 'PN_PAPERCHANNEL_SENDPROGRESSMETA=${SendProgressMeta}'
         ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-PaperChannel-Secrets
         MappedPaths: '/paper-channel-bo/*,/paper-channel-private/*'

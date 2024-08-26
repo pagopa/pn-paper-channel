@@ -68,6 +68,7 @@ public class PnPaperChannelConfig {
     private Set<String> complexRefinementCodes;
     private boolean enableSimple890Flow;
     private boolean enabledocfilterruleengine;
+    private boolean enableTenderFeatureFlow;
     private String defaultattachmentconfigcap;
     private List<String> allowedRedriveProgressStatusCodes;
     private List<String> SendProgressMeta;
