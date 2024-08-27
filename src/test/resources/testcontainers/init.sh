@@ -359,10 +359,10 @@ aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     dynamodb create-table \
     --table-name PaperChannelGeokeyDynamoTable \
     --attribute-definitions \
-        AttributeName=tender_product_geokey,AttributeType=S \
+        AttributeName=tenderProductGeokey,AttributeType=S \
         AttributeName=activationDate,AttributeType=S \
     --key-schema \
-        AttributeName=tender_product_geokey,KeyType=HASH \
+        AttributeName=tenderProductGeokey,KeyType=HASH \
         AttributeName=activationDate,KeyType=RANGE \
     --provisioned-throughput \
         ReadCapacityUnits=5,WriteCapacityUnits=5 \
@@ -382,10 +382,10 @@ aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     --table-name PaperChannelCostDynamoTable \
     --attribute-definitions \
         AttributeName=tenderId,AttributeType=S \
-        AttributeName=product_lot_zone,AttributeType=S \
+        AttributeName=productLotZone,AttributeType=S \
     --key-schema \
         AttributeName=tenderId,KeyType=HASH \
-        AttributeName=product_lot_zone,KeyType=RANGE \
+        AttributeName=productLotZone,KeyType=RANGE \
     --provisioned-throughput \
         ReadCapacityUnits=5,WriteCapacityUnits=5 \
 

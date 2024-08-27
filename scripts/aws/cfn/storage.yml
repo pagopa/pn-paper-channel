@@ -538,12 +538,12 @@ Resources:
     Properties:
       TableName: !Sub '${ProjectName}-PaperChannelGeokey'
       AttributeDefinitions:
-        - AttributeName: "tender_product_geokey"
+        - AttributeName: "tenderProductGeokey"
           AttributeType: "S"
         - AttributeName: "activationDate"
           AttributeType: "S"
       KeySchema:
-        - AttributeName: "tender_product_geokey"
+        - AttributeName: "tenderProductGeokey"
           KeyType: "HASH"
         - AttributeName: "activationDate"
           KeyType: "RANGE"
@@ -584,12 +584,12 @@ Resources:
       AttributeDefinitions:
         - AttributeName: "tenderId"
           AttributeType: "S"
-        - AttributeName: "product_lot_zone"
+        - AttributeName: "productLotZone"
           AttributeType: "S"
       KeySchema:
         - AttributeName: "tenderId"
           KeyType: "HASH"
-        - AttributeName: "product_lot_zone"
+        - AttributeName: "productLotZone"
           KeyType: "RANGE"
       KinesisStreamSpecification:
         StreamArn: !Ref CdcKinesisSourceStreamArn

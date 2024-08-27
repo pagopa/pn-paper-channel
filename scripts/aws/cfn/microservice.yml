@@ -409,10 +409,10 @@ Parameters:
     Description: 'Variable that defines whether to enable the simplified workflow'
     Default: 'false'
 
-  EnableTenderFeatureFlow:
+  EnableSimplifiedTenderFlow:
     Type: String
-    Description: 'Variable that defines whether to enable the new tender worflow'
-    Default: 'false'
+    Description: 'Variable that defines whether to enable the new tender workflow'
+    Default: 'true'
 
   SendProgressMeta:
       Type: String
@@ -699,7 +699,7 @@ Resources:
         ContainerEnvEntry69: !Sub 'AWS_DYNAMODBPAPEREVENTERRORTABLE=${PaperChannelCostDynamoTableName}'
         ContainerEnvEntry70: !Sub 'PN_PAPERCHANNEL_COMPLEXREFINEMENTCODES=${ComplexRefinementCodes}'
         ContainerEnvEntry71: !Sub 'PN_PAPERCHANNEL_ENABLESIMPLE890FLOW=${EnableSimple890Flow}'
-        ContainerEnvEntry72: !Sub 'PN_PAPERCHANNEL_ENABLETENDERFEATUREFLOW=${EnableTenderFeatureFlow}'
+        ContainerEnvEntry72: !Sub 'PN_PAPERCHANNEL_ENABLESIMPLIFIEDTENDERFLOW=${EnableSimplifiedTenderFlow}'
         ContainerEnvEntry73: !Sub 'PN_CRON_ANALYZER=${PnCronAnalyzer}'
         ContainerEnvEntry74: !Sub 'WIRE_TAP_LOG=${WireTapLogActivation}'
         ContainerEnvEntry75: !Sub 'PN_PAPERCHANNEL_SENDPROGRESSMETA=${SendProgressMeta}'
