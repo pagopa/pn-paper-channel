@@ -343,7 +343,51 @@ aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
 
         ]"
 
+aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
+    dynamodb create-table \
+    --table-name PaperChannelTenderDynamoTable \
+    --attribute-definitions \
+        AttributeName=tenderId,AttributeType=S \
+        AttributeName=activationDate,AttributeType=S \
+    --key-schema \
+        AttributeName=tenderId,KeyType=HASH \
+        AttributeName=activationDate,KeyType=RANGE \
+    --provisioned-throughput \
+        ReadCapacityUnits=5,WriteCapacityUnits=5 \
 
+aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
+    dynamodb create-table \
+    --table-name PaperChannelGeokeyDynamoTable \
+    --attribute-definitions \
+        AttributeName=tenderProductGeokey,AttributeType=S \
+        AttributeName=activationDate,AttributeType=S \
+    --key-schema \
+        AttributeName=tenderProductGeokey,KeyType=HASH \
+        AttributeName=activationDate,KeyType=RANGE \
+    --provisioned-throughput \
+        ReadCapacityUnits=5,WriteCapacityUnits=5 \
+
+aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
+    dynamodb create-table \
+    --table-name PaperChannelDeliveryDriverDynamoTable \
+    --attribute-definitions \
+        AttributeName=deliveryDriverId,AttributeType=S \
+    --key-schema \
+        AttributeName=deliveryDriverId,KeyType=HASH \
+    --provisioned-throughput \
+        ReadCapacityUnits=5,WriteCapacityUnits=5 \
+
+aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
+    dynamodb create-table \
+    --table-name PaperChannelCostDynamoTable \
+    --attribute-definitions \
+        AttributeName=tenderId,AttributeType=S \
+        AttributeName=productLotZone,AttributeType=S \
+    --key-schema \
+        AttributeName=tenderId,KeyType=HASH \
+        AttributeName=productLotZone,KeyType=RANGE \
+    --provisioned-throughput \
+        ReadCapacityUnits=5,WriteCapacityUnits=5 \
 
 aws  --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     dynamodb put-item \
