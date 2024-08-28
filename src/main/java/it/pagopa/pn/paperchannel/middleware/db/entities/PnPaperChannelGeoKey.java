@@ -11,7 +11,6 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortK
 import java.time.Instant;
 
 
-@Getter
 @Setter
 @ToString
 @DynamoDbBean

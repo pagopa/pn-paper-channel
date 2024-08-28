@@ -7,7 +7,6 @@ import java.time.Instant;
 
 
 class PnPaperChannelGeoKeyTest {
-    private String tender_product_geokey;
     private Instant activationDate;
     private String tenderId;
     private String product;
@@ -31,9 +30,6 @@ class PnPaperChannelGeoKeyTest {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(channelGeoKey.getClass().getSimpleName());
         stringBuilder.append("(");
-        stringBuilder.append("tender_product_geokey=");
-        stringBuilder.append(tender_product_geokey);
-        stringBuilder.append(", ");
         stringBuilder.append("activationDate=");
         stringBuilder.append(activationDate);
         stringBuilder.append(", ");
@@ -79,9 +75,7 @@ class PnPaperChannelGeoKeyTest {
 
         // ASSERT
         Assertions.assertNotNull(channelGeoKey);
-        Assertions.assertTrue(tenderProductGeokey.contains(product));
-        Assertions.assertTrue(tenderProductGeokey.contains(lot));
-        Assertions.assertTrue(tenderProductGeokey.contains(zone));
+        Assertions.assertEquals(String.join("#", tenderId, product, geokey), tenderProductGeokey);
     }
 
     private PnPaperChannelGeoKey initPaperChannelGeoKey() {
@@ -99,7 +93,6 @@ class PnPaperChannelGeoKeyTest {
     }
 
     private void initialize() {
-        tender_product_geokey = "tender_product_geokey";
         activationDate = Instant.now();
         tenderId = "tenderId";
         product = "AR";

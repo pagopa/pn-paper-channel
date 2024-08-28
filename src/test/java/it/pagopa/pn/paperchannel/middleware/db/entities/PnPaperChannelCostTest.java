@@ -1,6 +1,5 @@
 package it.pagopa.pn.paperchannel.middleware.db.entities;
 
-import it.pagopa.pn.paperchannel.model.Range;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,7 +17,7 @@ class PnPaperChannelCostTest {
     private String deliveryDriverName;
     private String deliveryDriverId;
     private BigDecimal dematerializationCost;
-    private List<Range> rangedCosts;
+    private List<PnRange> rangedCosts;
     private Instant createdAt;
 
 
@@ -79,9 +78,7 @@ class PnPaperChannelCostTest {
 
         //ASSERT
         Assertions.assertNotNull(channelCost);
-        Assertions.assertTrue(productLotZone.contains(product));
-        Assertions.assertTrue(productLotZone.contains(lot));
-        Assertions.assertTrue(productLotZone.contains(zone));
+        Assertions.assertEquals(String.join("#", product, lot, zone), productLotZone);
     }
 
     private PnPaperChannelCost initPaperChannelCost() {

@@ -10,16 +10,14 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbParti
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey;
 import java.math.BigDecimal;
 import java.time.Instant;
-import it.pagopa.pn.paperchannel.model.Range;
 import java.util.*;
 
 
-@Getter
+@Setter
 @ToString
 @DynamoDbBean
 @EqualsAndHashCode
 public class PnPaperChannelCost {
-    @Setter
     @Getter(onMethod = @__({@DynamoDbPartitionKey, @DynamoDbAttribute("tenderId")}))
     private String tenderId;
 
@@ -34,35 +32,27 @@ public class PnPaperChannelCost {
         return String.join("#", product, lot, zone);
     }
 
-    @Setter
     @Getter(onMethod = @__({@DynamoDbAttribute("product")}))
     private String product;
 
-    @Setter
     @Getter(onMethod = @__({@DynamoDbAttribute("lot")}))
     private String lot;
 
-    @Setter
     @Getter(onMethod = @__({@DynamoDbAttribute("zone")}))
     private String zone;
 
-    @Setter
     @Getter(onMethod = @__({@DynamoDbAttribute("deliveryDriverNam")}))
     private String deliveryDriverName;
 
-    @Setter
     @Getter(onMethod = @__({@DynamoDbAttribute("deliveryDriverId")}))
     private String deliveryDriverId;
 
-    @Setter
     @Getter(onMethod = @__({@DynamoDbAttribute("dematerializationCost")}))
     private BigDecimal dematerializationCost;
 
-    @Setter
     @Getter(onMethod = @__({@DynamoDbAttribute("rangedCosts")}))
-    private List<Range> rangedCosts;
+    private List<PnRange> rangedCosts;
 
-    @Setter
     @Getter(onMethod = @__({@DynamoDbAttribute("createdAt")}))
     private Instant createdAt;
 }
