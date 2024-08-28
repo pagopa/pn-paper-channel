@@ -65,6 +65,15 @@ class PnPaperChannelCostTest {
         Assertions.assertEquals(toTest, channelCost.toString());
     }
 
+    @Test
+    void getProductLotZoneTest() {
+        PnPaperChannelCost channelCost = initPaperChannelCost();
+        Assertions.assertNotNull(channelCost);
+        Assertions.assertTrue(channelCost.getProductLotZone().contains(product));
+        Assertions.assertTrue(channelCost.getProductLotZone().contains(lot));
+        Assertions.assertTrue(channelCost.getProductLotZone().contains(zone));
+    }
+
     private PnPaperChannelCost initPaperChannelCost() {
         PnPaperChannelCost channelCost = new PnPaperChannelCost();
         channelCost.setTenderId(tenderId);
