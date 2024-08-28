@@ -24,7 +24,7 @@ public class PnPaperChannelCost {
     private String tenderId;
 
     @DynamoDbSortKey
-    @DynamoDbAttribute("product_lot_zone")
+    @DynamoDbAttribute("productLotZone")
     public String getProductLotZone() {
         return String.join("#", product, lot, zone);
     }

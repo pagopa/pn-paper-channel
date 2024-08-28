@@ -17,8 +17,11 @@ import java.time.Instant;
 @DynamoDbBean
 @EqualsAndHashCode
 public class PnPaperChannelGeoKey {
-    @Getter(onMethod = @__({@DynamoDbPartitionKey, @DynamoDbAttribute("tender_product_geokey")}))
-    private String tender_product_geokey;
+    @DynamoDbPartitionKey
+    @DynamoDbAttribute("tenderProductGeokey")
+    public String getTenderProductGeokey() {
+        return String.join("#", tenderId, product, geokey);
+    }
 
     @Getter(onMethod = @__({@DynamoDbSortKey, @DynamoDbAttribute("activationDate")}))
     private Instant activationDate;
