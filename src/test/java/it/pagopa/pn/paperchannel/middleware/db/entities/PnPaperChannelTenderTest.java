@@ -28,6 +28,7 @@ class PnPaperChannelTenderTest {
 
     @Test
     void toStringTest() {
+        //ARRANGE
         PnPaperChannelTender channelTender = initPaperChannelTender();
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(channelTender.getClass().getSimpleName());
@@ -66,7 +67,10 @@ class PnPaperChannelTenderTest {
         stringBuilder.append(createdAt);
         stringBuilder.append(")");
 
+        //ACT
         String toTest = stringBuilder.toString();
+
+        //ASSERT
         Assertions.assertEquals(toTest, channelTender.toString());
     }
 

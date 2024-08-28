@@ -24,6 +24,7 @@ class PnPaperChannelDeliveryDriverTest {
 
     @Test
     void toStringTest() {
+        //ARRANGE
         PnPaperChannelDeliveryDriver channelDeliveryDriver = initPaperChannelDeliveryDriver();
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(channelDeliveryDriver.getClass().getSimpleName());
@@ -53,7 +54,10 @@ class PnPaperChannelDeliveryDriverTest {
         stringBuilder.append(createdAt);
         stringBuilder.append(")");
 
+        //ACT
         String toTest = stringBuilder.toString();
+
+        //ASSERT
         Assertions.assertEquals(toTest, channelDeliveryDriver.toString());
     }
 

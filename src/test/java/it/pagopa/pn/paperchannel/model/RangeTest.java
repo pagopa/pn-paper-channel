@@ -19,6 +19,7 @@ class RangeTest {
 
     @Test
     void setGetTest() {
+        //ARRANGE
         Range range = initRange();
         Assertions.assertNotNull(range);
         Assertions.assertEquals(cost, range.getCost());
@@ -29,10 +30,12 @@ class RangeTest {
         Integer minWeight = 2;
         Integer maxWeight = 4;
 
+        //ACT
         range.setCost(cost);
         range.setMinWeight(minWeight);
         range.setMaxWeight(maxWeight);
 
+        //ASSERT
         Assertions.assertEquals(cost, range.getCost());
         Assertions.assertEquals(minWeight, range.getMinWeight());
         Assertions.assertEquals(maxWeight, range.getMaxWeight());

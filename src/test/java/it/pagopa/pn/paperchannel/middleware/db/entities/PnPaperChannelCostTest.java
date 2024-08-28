@@ -29,6 +29,7 @@ class PnPaperChannelCostTest {
 
     @Test
     void toStringTest() {
+        //ARRANGE
         PnPaperChannelCost channelCost = initPaperChannelCost();
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(channelCost.getClass().getSimpleName());
@@ -61,17 +62,26 @@ class PnPaperChannelCostTest {
         stringBuilder.append(createdAt);
         stringBuilder.append(")");
 
+        //ACT
         String toTest = stringBuilder.toString();
+
+        //ASSERT
         Assertions.assertEquals(toTest, channelCost.toString());
     }
 
     @Test
     void getProductLotZoneTest() {
+        //ARRANGE
         PnPaperChannelCost channelCost = initPaperChannelCost();
+
+        // ACT
+        String productLotZone = channelCost.getProductLotZone();
+
+        //ASSERT
         Assertions.assertNotNull(channelCost);
-        Assertions.assertTrue(channelCost.getProductLotZone().contains(product));
-        Assertions.assertTrue(channelCost.getProductLotZone().contains(lot));
-        Assertions.assertTrue(channelCost.getProductLotZone().contains(zone));
+        Assertions.assertTrue(productLotZone.contains(product));
+        Assertions.assertTrue(productLotZone.contains(lot));
+        Assertions.assertTrue(productLotZone.contains(zone));
     }
 
     private PnPaperChannelCost initPaperChannelCost() {
