@@ -24,9 +24,9 @@ public class PnPaperChannelCost {
     private String tenderId;
 
     /**
-     * Gets compound product lot zone.
+     * Gets compound key product lot zone.
      *
-     * @return the compound product lot zone
+     * @return the compound key product lot zone
      */
     @DynamoDbSortKey
     @DynamoDbAttribute("productLotZone")
