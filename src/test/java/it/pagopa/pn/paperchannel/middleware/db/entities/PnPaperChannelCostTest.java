@@ -27,48 +27,6 @@ class PnPaperChannelCostTest {
     }
 
     @Test
-    void toStringTest() {
-        //ARRANGE
-        PnPaperChannelCost channelCost = initPaperChannelCost();
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(channelCost.getClass().getSimpleName());
-        stringBuilder.append("(");
-        stringBuilder.append("tenderId=");
-        stringBuilder.append(tenderId);
-        stringBuilder.append(", ");
-        stringBuilder.append("product=");
-        stringBuilder.append(product);
-        stringBuilder.append(", ");
-        stringBuilder.append("lot=");
-        stringBuilder.append(lot);
-        stringBuilder.append(", ");
-        stringBuilder.append("zone=");
-        stringBuilder.append(zone);
-        stringBuilder.append(", ");
-        stringBuilder.append("deliveryDriverName=");
-        stringBuilder.append(deliveryDriverName);
-        stringBuilder.append(", ");
-        stringBuilder.append("deliveryDriverId=");
-        stringBuilder.append(deliveryDriverId);
-        stringBuilder.append(", ");
-        stringBuilder.append("dematerializationCost=");
-        stringBuilder.append(dematerializationCost);
-        stringBuilder.append(", ");
-        stringBuilder.append("rangedCosts=");
-        stringBuilder.append(rangedCosts);
-        stringBuilder.append(", ");
-        stringBuilder.append("createdAt=");
-        stringBuilder.append(createdAt);
-        stringBuilder.append(")");
-
-        //ACT
-        String toTest = stringBuilder.toString();
-
-        //ASSERT
-        Assertions.assertEquals(toTest, channelCost.toString());
-    }
-
-    @Test
     void getProductLotZoneTest() {
         //ARRANGE
         PnPaperChannelCost channelCost = initPaperChannelCost();

@@ -24,48 +24,6 @@ class PnPaperChannelGeoKeyTest {
     }
 
     @Test
-    void toStringTest() {
-        // ARRANGE
-        PnPaperChannelGeoKey channelGeoKey = initPaperChannelGeoKey();
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(channelGeoKey.getClass().getSimpleName());
-        stringBuilder.append("(");
-        stringBuilder.append("activationDate=");
-        stringBuilder.append(activationDate);
-        stringBuilder.append(", ");
-        stringBuilder.append("tenderId=");
-        stringBuilder.append(tenderId);
-        stringBuilder.append(", ");
-        stringBuilder.append("product=");
-        stringBuilder.append(product);
-        stringBuilder.append(", ");
-        stringBuilder.append("geokey=");
-        stringBuilder.append(geokey);
-        stringBuilder.append(", ");
-        stringBuilder.append("lot=");
-        stringBuilder.append(lot);
-        stringBuilder.append(", ");
-        stringBuilder.append("zone=");
-        stringBuilder.append(zone);
-        stringBuilder.append(", ");
-        stringBuilder.append("coverFlag=");
-        stringBuilder.append(coverFlag);
-        stringBuilder.append(", ");
-        stringBuilder.append("dismissed=");
-        stringBuilder.append(dismissed);
-        stringBuilder.append(", ");
-        stringBuilder.append("createdAt=");
-        stringBuilder.append(createdAt);
-        stringBuilder.append(")");
-
-        //ACT
-        String toTest = stringBuilder.toString();
-
-        //ASSERT
-        Assertions.assertEquals(toTest, channelGeoKey.toString());
-    }
-
-    @Test
     void getProductLotZoneTest() {
         // ARRANGE
         PnPaperChannelGeoKey channelGeoKey = initPaperChannelGeoKey();

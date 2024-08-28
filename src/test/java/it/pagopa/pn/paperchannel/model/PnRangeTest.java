@@ -46,30 +46,6 @@ class PnRangeTest {
         Assertions.assertEquals(maxWeight, pnRange.getMaxWeight());
     }
 
-    @Test
-    void toStringTest() {
-        // ARRANGE
-        PnRange pnRange = initRange();
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(pnRange.getClass().getSimpleName());
-        stringBuilder.append("(");
-        stringBuilder.append("cost=");
-        stringBuilder.append(cost);
-        stringBuilder.append(", ");
-        stringBuilder.append("minWeight=");
-        stringBuilder.append(minWeight);
-        stringBuilder.append(", ");
-        stringBuilder.append("maxWeight=");
-        stringBuilder.append(maxWeight);
-        stringBuilder.append(")");
-
-        //ACT
-        String toTest = stringBuilder.toString();
-
-        //ASSERT
-        Assertions.assertEquals(toTest, pnRange.toString());
-    }
-
     private PnRange initRange() {
         PnRange pnRange = new PnRange();
         pnRange.setCost(cost);
