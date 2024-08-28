@@ -23,6 +23,11 @@ public class PnPaperChannelCost {
     @Getter(onMethod = @__({@DynamoDbPartitionKey, @DynamoDbAttribute("tenderId")}))
     private String tenderId;
 
+    /**
+     * Gets compound product lot zone.
+     *
+     * @return the compound product lot zone
+     */
     @DynamoDbSortKey
     @DynamoDbAttribute("productLotZone")
     public String getProductLotZone() {

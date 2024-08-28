@@ -17,6 +17,11 @@ import java.time.Instant;
 @DynamoDbBean
 @EqualsAndHashCode
 public class PnPaperChannelGeoKey {
+    /**
+     * Get compound tender product geokey.
+     *
+     * @return the compound tender product geokey
+     */
     @DynamoDbPartitionKey
     @DynamoDbAttribute("tenderProductGeokey")
     public String getTenderProductGeokey() {
