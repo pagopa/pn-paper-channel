@@ -36,7 +36,6 @@ class PaperCalculatorUtilsTest {
     private PaperTenderService paperTenderService;
     @Mock
     private PnPaperChannelConfig pnPaperChannelConfig;
-    private PnPaperChannelConfig realPnPaperChannelConfig;
     @Mock
     private DateChargeCalculationModesUtils dateChargeCalculationModesUtils;
 
