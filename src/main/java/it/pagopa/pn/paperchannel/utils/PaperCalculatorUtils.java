@@ -11,14 +11,12 @@ import it.pagopa.pn.paperchannel.utils.costutils.CostWithDriver;
 import lombok.AllArgsConstructor;
 import lombok.CustomLog;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
-
 import java.math.BigDecimal;
 import java.util.List;
-
 import static it.pagopa.pn.paperchannel.utils.Const.*;
+
 
 @Component
 @CustomLog
@@ -56,10 +54,12 @@ public class PaperCalculatorUtils {
         String processName = "Get Amount";
         log.logStartingProcess(processName);
 
-        //Simplified tender flow
+        //TODO Simplified tender flow
         if(pnPaperChannelConfig.isEnableSimplifiedTenderFlow()) {
+            log.info("SimplifiedTenderFlow");
             return Mono.empty();
         }
+        log.info("OldTenderFlow");
         return paperTenderService.getCostFrom(cap, zone, productType)
                 .map(contract -> getCostWithDriver(contract, attachments, isReversePrinter))
                 .doOnNext(totalCost -> log.logEndingProcess(processName));
