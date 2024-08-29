@@ -11,6 +11,7 @@ import it.pagopa.pn.paperchannel.utils.costutils.CostWithDriver;
 import lombok.AllArgsConstructor;
 import lombok.CustomLog;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
@@ -23,8 +24,6 @@ import static it.pagopa.pn.paperchannel.utils.Const.*;
 @CustomLog
 @AllArgsConstructor
 public class PaperCalculatorUtils {
-
-
     private final PaperTenderService paperTenderService;
     private final PnPaperChannelConfig pnPaperChannelConfig;
     private final DateChargeCalculationModesUtils chargeCalculationModeUtils;
@@ -51,12 +50,16 @@ public class PaperCalculatorUtils {
      * @param productType tipo di prodotto (AR, 890, etc)
      * @param isReversePrinter true, se il printType della request della SEND è di tipo BN_FRONTE_RETRO
      *
-     * @return calcolo del costp della notifica con le informazioni del recapitista
+     * @return calcolo del costo della notifica con le informazioni del recapitista
      */
     private Mono<CostWithDriver> getAmount(List<AttachmentInfo> attachments, String cap, String zone, String productType, boolean isReversePrinter){
         String processName = "Get Amount";
         log.logStartingProcess(processName);
 
+        //Simplified tender flow
+        if(pnPaperChannelConfig.isEnableSimplifiedTenderFlow()) {
+            return Mono.empty();
+        }
         return paperTenderService.getCostFrom(cap, zone, productType)
                 .map(contract -> getCostWithDriver(contract, attachments, isReversePrinter))
                 .doOnNext(totalCost -> log.logEndingProcess(processName));
