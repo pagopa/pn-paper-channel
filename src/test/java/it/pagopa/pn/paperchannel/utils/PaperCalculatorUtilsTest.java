@@ -7,7 +7,6 @@ import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.AttachmentInfo;
 import it.pagopa.pn.paperchannel.service.PaperTenderService;
 import it.pagopa.pn.paperchannel.utils.costutils.CostWithDriver;
-import org.apache.poi.ss.formula.functions.T;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,6 +21,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.times;
+
 
 @ExtendWith(MockitoExtension.class)
 class PaperCalculatorUtilsTest {
@@ -37,6 +38,7 @@ class PaperCalculatorUtilsTest {
     private PnPaperChannelConfig pnPaperChannelConfig;
     @Mock
     private DateChargeCalculationModesUtils dateChargeCalculationModesUtils;
+
 
     @Test
     void calculator() {
@@ -410,7 +412,45 @@ class PaperCalculatorUtilsTest {
         assertEquals(2, numberOfPages);
     }
 
+    @Test
+    void calculateWhenFeatureFlagIsTrue() {
+        //ARRANGE
+        Mockito.when(pnPaperChannelConfig.isEnableSimplifiedTenderFlow()).thenReturn(true);
+        List<AttachmentInfo> attachmentUrls = new ArrayList<>();
+        Address address = new Address();
+        address.setCountry("italia");
+        address.setCap("00100");
 
+        //ACT
+        CostWithDriver cost = paperCalculatorUtils.calculator(attachmentUrls, address, ProductTypeEnum.AR, true).block();
+
+        //ASSERTION
+        Assertions.assertNull(cost);
+        Mockito.verify(paperTenderService, times(0)).getCostFrom(Mockito.any(String.class), Mockito.any(String.class), Mockito.any(String.class));
+    }
+
+    @Test
+    void calculateWhenFeatureFlagIsFalse() {
+        //ARRANGE
+        Mockito.when(pnPaperChannelConfig.isEnableSimplifiedTenderFlow()).thenReturn(false);
+
+        Mockito.when(paperTenderService.getCostFrom(Mockito.any(), Mockito.any(), Mockito.any()))
+                .thenReturn(Mono.just(getNationalCost()));
+
+        Mockito.when(dateChargeCalculationModesUtils.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.AAR);
+
+        List<AttachmentInfo> attachmentUrls = new ArrayList<>();
+        Address address = new Address();
+        address.setCountry("italia");
+        address.setCap("00100");
+
+        //ACT
+        CostWithDriver cost = paperCalculatorUtils.calculator(attachmentUrls, address, ProductTypeEnum.AR, true).block();
+
+        //ASSERTION
+        Assertions.assertNotNull(cost);
+        Mockito.verify(paperTenderService, times(1)).getCostFrom(Mockito.any(String.class), Mockito.any(), Mockito.any(String.class));
+    }
 
     private CostDTO getNationalCost() {
         CostDTO dto = new CostDTO();
