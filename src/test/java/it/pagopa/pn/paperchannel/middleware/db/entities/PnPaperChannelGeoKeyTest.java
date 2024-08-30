@@ -37,11 +37,8 @@ class PnPaperChannelGeoKeyTest {
     }
 
     private PnPaperChannelGeoKey initPaperChannelGeoKey() {
-        PnPaperChannelGeoKey channelGeoKey = new PnPaperChannelGeoKey();
+        PnPaperChannelGeoKey channelGeoKey = new PnPaperChannelGeoKey(tenderId, product, geokey);
         channelGeoKey.setActivationDate(activationDate);
-        channelGeoKey.setTenderId(tenderId);
-        channelGeoKey.setProduct(product);
-        channelGeoKey.setGeokey(geokey);
         channelGeoKey.setLot(lot);
         channelGeoKey.setZone(zone);
         channelGeoKey.setCoverFlag(coverFlag);

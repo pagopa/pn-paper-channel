@@ -1,9 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.db.entities;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
@@ -15,17 +12,10 @@ import java.time.Instant;
 @ToString
 @DynamoDbBean
 @EqualsAndHashCode
+@NoArgsConstructor
 public class PnPaperChannelGeoKey {
-    /**
-     * Get compound key tender product geokey.
-     *
-     * @return the compound key tender product geokey
-     */
-    @DynamoDbPartitionKey
-    @DynamoDbAttribute("tenderProductGeokey")
-    public String getTenderProductGeokey() {
-        return String.join("#", tenderId, product, geokey);
-    }
+    @Getter(onMethod = @__({@DynamoDbPartitionKey, @DynamoDbAttribute("tenderProductGeokey")}))
+    private String tenderProductGeokey;
 
     @Getter(onMethod = @__({@DynamoDbSortKey, @DynamoDbAttribute("activationDate")}))
     private Instant activationDate;
@@ -53,4 +43,12 @@ public class PnPaperChannelGeoKey {
 
     @Getter(onMethod = @__({@DynamoDbAttribute("createdAt")}))
     private Instant createdAt;
+
+    public PnPaperChannelGeoKey(String tenderId, String product, String geokey) {
+        this.tenderId = tenderId;
+        this.product = product;
+        this.geokey = geokey;
+        this.tenderProductGeokey = String.join("#", tenderId, product, geokey);
+    }
+
 }
