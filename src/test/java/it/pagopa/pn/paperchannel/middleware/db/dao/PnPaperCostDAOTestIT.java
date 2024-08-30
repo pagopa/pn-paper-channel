@@ -31,7 +31,7 @@ class PnPaperCostDAOTestIT extends BaseTest {
 
 
     @Test
-    void testGetActiveTender() {
+    void testGetCostFrom() {
         // Act: Recupero del PaperCost dal database
         Mono<PnPaperChannelCost> result = pnPaperCostDAO.getCostFrom(TENDER_ID, PRODUCT, LOT, ZONE);
 
