@@ -10,7 +10,7 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 @RestController
-public class PaperCalculatorRestV1Controller implements PaperCalculatorApi {
+public class PaperCalculatorRestV2Controller implements PaperCalculatorApi {
 
     @Override
     public Mono<ResponseEntity<ShipmentCalculateResponse>> calculateCost(String tenderId,
