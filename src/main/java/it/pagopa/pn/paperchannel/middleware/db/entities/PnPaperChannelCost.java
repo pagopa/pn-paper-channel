@@ -1,9 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.db.entities;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
@@ -17,20 +14,13 @@ import java.util.*;
 @ToString
 @DynamoDbBean
 @EqualsAndHashCode
+@NoArgsConstructor
 public class PnPaperChannelCost {
     @Getter(onMethod = @__({@DynamoDbPartitionKey, @DynamoDbAttribute("tenderId")}))
     private String tenderId;
 
-    /**
-     * Gets compound key product lot zone.
-     *
-     * @return the compound key product lot zone
-     */
-    @DynamoDbSortKey
-    @DynamoDbAttribute("productLotZone")
-    public String getProductLotZone() {
-        return String.join("#", product, lot, zone);
-    }
+    @Getter(onMethod = @__({@DynamoDbSortKey, @DynamoDbAttribute("productLotZone")}))
+    private String productLotZone;
 
     @Getter(onMethod = @__({@DynamoDbAttribute("product")}))
     private String product;
@@ -41,7 +31,7 @@ public class PnPaperChannelCost {
     @Getter(onMethod = @__({@DynamoDbAttribute("zone")}))
     private String zone;
 
-    @Getter(onMethod = @__({@DynamoDbAttribute("deliveryDriverNam")}))
+    @Getter(onMethod = @__({@DynamoDbAttribute("deliveryDriverName")}))
     private String deliveryDriverName;
 
     @Getter(onMethod = @__({@DynamoDbAttribute("deliveryDriverId")}))
@@ -55,4 +45,13 @@ public class PnPaperChannelCost {
 
     @Getter(onMethod = @__({@DynamoDbAttribute("createdAt")}))
     private Instant createdAt;
+
+    public PnPaperChannelCost(String tenderId, String product, String lot, String zone) {
+        this.tenderId = tenderId;
+        this.product = product;
+        this.lot = lot;
+        this.zone = zone;
+        this.productLotZone = String.join("#", product, lot, zone);
+    }
+
 }

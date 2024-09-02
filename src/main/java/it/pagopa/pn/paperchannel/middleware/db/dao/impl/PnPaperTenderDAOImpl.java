@@ -1,0 +1,52 @@
+package it.pagopa.pn.paperchannel.middleware.db.dao.impl;
+
+import it.pagopa.pn.paperchannel.config.AwsPropertiesConfig;
+import it.pagopa.pn.paperchannel.middleware.db.dao.PnPaperTenderDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.common.BaseDAO;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnPaperChannelTender;
+import org.springframework.stereotype.Repository;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
+import software.amazon.awssdk.enhanced.dynamodb.Expression;
+import software.amazon.awssdk.enhanced.dynamodb.model.Page;
+import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
+import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+
+import java.time.Instant;
+import java.util.Comparator;
+
+
+@Repository
+public class PnPaperTenderDAOImpl extends BaseDAO<PnPaperChannelTender> implements PnPaperTenderDAO {
+
+    public PnPaperTenderDAOImpl(DynamoDbEnhancedAsyncClient dynamoDbEnhancedAsyncClient,
+                                DynamoDbAsyncClient dynamoDbAsyncClient, AwsPropertiesConfig awsPropertiesConfig) {
+        super(dynamoDbEnhancedAsyncClient, dynamoDbAsyncClient,
+                awsPropertiesConfig.getDynamodbPaperChannelTenderTable(), PnPaperChannelTender.class);
+    }
+
+
+    @Override
+    public Mono<PnPaperChannelTender> createOrUpdate(PnPaperChannelTender pnTender) {
+        return Mono.fromFuture(put(pnTender).thenApply(item -> item));
+    }
+
+
+    @Override
+    public Mono<PnPaperChannelTender> getActiveTender() {
+        Expression filterExpression = Expression.builder()
+                .expression("activationDate < :now")
+                .putExpressionValue(":now", AttributeValue.builder().s(Instant.now().toString()).build())
+                .build();
+
+        ScanEnhancedRequest scanRequest = ScanEnhancedRequest.builder()
+                .filterExpression(filterExpression)
+                .build();
+
+        return Flux.from(super.dynamoTable.scan(scanRequest).flatMapIterable(Page::items))
+                .sort(Comparator.comparing(PnPaperChannelTender::getActivationDate).reversed())
+                .next();
+    }
+}

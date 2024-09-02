@@ -40,11 +40,7 @@ class PnPaperChannelCostTest {
     }
 
     private PnPaperChannelCost initPaperChannelCost() {
-        PnPaperChannelCost channelCost = new PnPaperChannelCost();
-        channelCost.setTenderId(tenderId);
-        channelCost.setProduct(product);
-        channelCost.setLot(lot);
-        channelCost.setZone(zone);
+        PnPaperChannelCost channelCost = new PnPaperChannelCost(tenderId, product, lot, zone);
         channelCost.setDeliveryDriverName(deliveryDriverName);
         channelCost.setDeliveryDriverId(deliveryDriverId);
         channelCost.setDematerializationCost(dematerializationCost);
