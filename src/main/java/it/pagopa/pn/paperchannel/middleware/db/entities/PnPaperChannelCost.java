@@ -31,7 +31,7 @@ public class PnPaperChannelCost {
     @Getter(onMethod = @__({@DynamoDbAttribute("zone")}))
     private String zone;
 
-    @Getter(onMethod = @__({@DynamoDbAttribute("deliveryDriverNam")}))
+    @Getter(onMethod = @__({@DynamoDbAttribute("deliveryDriverName")}))
     private String deliveryDriverName;
 
     @Getter(onMethod = @__({@DynamoDbAttribute("deliveryDriverId")}))
