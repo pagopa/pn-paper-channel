@@ -4,7 +4,6 @@ import it.pagopa.pn.paperchannel.config.AwsPropertiesConfig;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PnPaperGeoKeyDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.BaseDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnPaperChannelGeoKey;
-import lombok.val;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
@@ -38,7 +37,7 @@ public class PnPaperGeoKeyDAOImpl extends BaseDAO<PnPaperChannelGeoKey> implemen
     @Override
     public Mono<PnPaperChannelGeoKey> getGeoKey(String tenderId, String product, String geoKey) {
 
-        val paperChannelGeoKey = new PnPaperChannelGeoKey(tenderId, product, geoKey);
+        var paperChannelGeoKey = new PnPaperChannelGeoKey(tenderId, product, geoKey);
 
         QueryConditional keyConditional = CONDITION_BETWEEN.apply(
                 new Keys(
@@ -59,7 +58,7 @@ public class PnPaperGeoKeyDAOImpl extends BaseDAO<PnPaperChannelGeoKey> implemen
 
         values.put(":isDismissed", AttributeValue.builder().bool(Boolean.FALSE).build());
 
-        return super.getByFilter(keyConditional, null, values, filterExpression, null, true)
+        return super.getByFilter(keyConditional, null, values, filterExpression, null, false)
                 .sort(Comparator.comparing(PnPaperChannelGeoKey::getActivationDate).reversed())
                 .next();
     }

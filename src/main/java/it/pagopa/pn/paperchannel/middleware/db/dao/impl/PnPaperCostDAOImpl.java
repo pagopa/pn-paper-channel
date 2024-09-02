@@ -30,7 +30,7 @@ public class PnPaperCostDAOImpl extends BaseDAO<PnPaperChannelCost> implements P
     }
 
     @Override
-    public Mono<PnPaperChannelCost> getCostFrom(String tenderId, String product, String lot, String zone) {
+    public Mono<PnPaperChannelCost> getCostByTenderIdProductLotZone(String tenderId, String product, String lot, String zone) {
 
         val paperChannelCost = new PnPaperChannelCost(tenderId, product, lot, zone);
 
