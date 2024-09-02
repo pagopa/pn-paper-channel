@@ -145,7 +145,7 @@ public class PaperCalculatorUtils {
 
         BigDecimal priceOfProduct = costDTO.getBasePriceFromProductType(productType);
         BigDecimal pricePlico = priceOfProduct.add(costDTO.getDematerializationCost()).add(totPricePages);
-        BigDecimal vatPlico = pricePlico.multiply(BigDecimal.valueOf(costDTO.getVat())).multiply(BigDecimal.valueOf(costDTO.getNonDeductibleVat()));
+        BigDecimal vatPlico = pricePlico.multiply(BigDecimal.valueOf(costDTO.getVat()/100)).multiply(BigDecimal.valueOf(costDTO.getNonDeductibleVat()/100));
         BigDecimal pricePlicoWithVat = pricePlico.add(vatPlico);
 
         BigDecimal completedPrice = pricePlicoWithVat.add(costDTO.getFee());
