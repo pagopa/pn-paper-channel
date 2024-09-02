@@ -46,6 +46,6 @@
     "WireTapLogActivation": "false",
     "MountEfs": "false",
     "SendProgressMeta": "META,RECAG012A,CON018",
-    "EnableSimplifiedTenderFlow": "true"
+    "EnableSimplifiedTenderFlow": "false"
   }
 }
