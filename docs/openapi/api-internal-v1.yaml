@@ -275,6 +275,52 @@ paths:
                 "400":
                   description: Malformed update status
 
+  /paper-channel-private/v1/tenders/{tenderId}/cost/calculate:
+    post:
+      tags:
+        - PaperCalculator
+      summary: Calcolo del costo di una spedizione
+      description: "Questa operazione sottomette ad paper-channel una richiesta di\
+        \ simulazione di calcolo del costo analogico di una spedizione, in base\
+        \ agli input forniti. Paper Channel deve validare i parametri di input e\
+        \ calcolare il costo della spedizione che deve essere restituito al chiamante."
+      operationId: calculateCost
+      parameters:
+        - name: tenderId
+          in: path
+          required: true
+          style: simple
+          explode: false
+          schema:
+            maxLength: 100
+            minLength: 5
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShipmentCalculateRequest'
+        required: true
+      responses:
+        "200":
+          description: Risposta positiva di calcolo del costo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShipmentCalculateResponse'
+        "400":
+          description: Errore di validazione sintattica della richiesta
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+        "404":
+          description: Indica che la richiesta con tenderId non è stata trovata
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+
 components:
 
   #############################################################################################
@@ -284,6 +330,14 @@ components:
 
     pathRequestId:
       name: requestId
+      in: path
+      required: true
+      schema:
+        type: string
+        minLength: 5
+        maxLength: 100
+    tenderId:
+      name: tenderId
       in: path
       required: true
       schema:
@@ -351,6 +405,13 @@ components:
           schema:
             $ref: 'remote-refs.yaml#/components/schemas/Problem'
 
+    ShipmentCalculateResponse:
+      description: Risposta positiva di calcolo del costo
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ShipmentCalculateResponse'
+
   schemas:
 
     ######################################################
@@ -383,6 +444,40 @@ components:
       $ref: 'schemas-paper-v1.yaml#/components/schemas/SendEvent'
     PrepareRequest:
       $ref: 'schemas-paper-v1.yaml#/components/schemas/PrepareRequest'
+
+    ShipmentCalculateRequest:
+      type: object
+      properties:
+        product:
+          type: string
+          description: Prodotto Postale
+          example: AR
+          enum:
+            - AR
+            - RS
+            - 890
+            - RIR
+            - RIS
+        geokey:
+          type: string
+          description: CAP o Stato Estero
+          example: 00100
+        numPages:
+          type: integer
+          description: Numero di fogli di cui è composta la spedizione
+          format: int32
+          example: 5
+        isReversePrinter:
+          type: boolean
+          description: Indica se la stampa è fronte-retro
+    ShipmentCalculateResponse:
+      type: object
+      properties:
+        cost:
+          type: integer
+          description: Costo calcolato alla spedizione in eurocents
+          format: int32
+          example: 350
 
 #  securitySchemes:        # ONLY EXTERNAL
 #    ApiKeyAuth:           # ONLY EXTERNAL
