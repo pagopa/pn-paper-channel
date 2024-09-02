@@ -51,7 +51,7 @@ public class PaperTenderServiceImpl implements PaperTenderService {
         return this.pnPaperTenderDAO.getActiveTender()
                 .switchIfEmpty(Mono.error(new PnGenericException(ACTIVE_TENDER_NOT_FOUND, ACTIVE_TENDER_NOT_FOUND.getMessage())))
                 .flatMap(tender -> pnPaperGeoKeyDAO.getGeoKey(tender.getTenderId(), productType, geoKeyValue)
-                        .flatMap(geoKey -> pnPaperCostDAO.getCostFrom(geoKey.getTenderId(), productType, geoKey.getLot(), geoKey.getZone()))
+                        .flatMap(geoKey -> pnPaperCostDAO.getCostByTenderIdProductLotZone(geoKey.getTenderId(), productType, geoKey.getLot(), geoKey.getZone()))
                         .map(paperCost -> {
                             log.logEndingProcess(processName);
                             return PnPaperChannelCostMapper.toDTO(tender, paperCost);
