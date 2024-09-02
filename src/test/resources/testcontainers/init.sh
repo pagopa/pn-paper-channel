@@ -345,7 +345,7 @@ aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
 
 aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     dynamodb create-table \
-    --table-name PaperChannelTenderDynamoTable \
+    --table-name pn-PaperChannelTender \
     --attribute-definitions \
         AttributeName=tenderId,AttributeType=S \
         AttributeName=activationDate,AttributeType=S \
@@ -357,7 +357,7 @@ aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
 
 aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     dynamodb create-table \
-    --table-name PaperChannelGeokeyDynamoTable \
+    --table-name pn-PaperChannelGeokey \
     --attribute-definitions \
         AttributeName=tenderProductGeokey,AttributeType=S \
         AttributeName=activationDate,AttributeType=S \
@@ -369,7 +369,7 @@ aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
 
 aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     dynamodb create-table \
-    --table-name PaperChannelDeliveryDriverDynamoTable \
+    --table-name pn-PaperChannelDeliveryDriver \
     --attribute-definitions \
         AttributeName=deliveryDriverId,AttributeType=S \
     --key-schema \
@@ -379,7 +379,7 @@ aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
 
 aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     dynamodb create-table \
-    --table-name PaperChannelCostDynamoTable \
+    --table-name pn-PaperChannelCost \
     --attribute-definitions \
         AttributeName=tenderId,AttributeType=S \
         AttributeName=productLotZone,AttributeType=S \

@@ -31,9 +31,9 @@ class PnPaperCostDAOTestIT extends BaseTest {
 
 
     @Test
-    void testGetActiveTender() {
+    void testGetCostByTenderIdProductLotZone() {
         // Act: Recupero del PaperCost dal database
-        Mono<PnPaperChannelCost> result = pnPaperCostDAO.getCostFrom(TENDER_ID, PRODUCT, LOT, ZONE);
+        Mono<PnPaperChannelCost> result = pnPaperCostDAO.getCostByTenderIdProductLotZone(TENDER_ID, PRODUCT, LOT, ZONE);
 
         // Assert: Verifica che il GeoKey sia stato recuperato correttamente
         StepVerifier.create(result)

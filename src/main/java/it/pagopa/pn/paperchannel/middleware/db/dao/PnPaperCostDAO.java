@@ -7,7 +7,7 @@ public interface PnPaperCostDAO {
 
     Mono<PnPaperChannelCost> createOrUpdate(PnPaperChannelCost pnPaperChannelCost);
 
-    Mono<PnPaperChannelCost> getCostFrom(String tenderId, String product, String lot, String zone);
+    Mono<PnPaperChannelCost>  getCostByTenderIdProductLotZone(String tenderId, String product, String lot, String zone);
 
 
 }
