@@ -115,7 +115,7 @@ paths:
               schema:
                 $ref: 'remote-refs.yaml#/components/schemas/Problem'
         "404":
-          description: Indica che la richiesta con requestId non è stata trovata
+          description: Indica che la richiesta con tenderId non è stata trovata oppure che il cap/zona inviata non esistono oppure sono stati dismessi
           content:
             application/problem+json:
               schema:
@@ -455,7 +455,7 @@ components:
           enum:
             - AR
             - RS
-            - 890
+            - '890'
             - RIR
             - RIS
         geokey:
@@ -470,13 +470,18 @@ components:
         isReversePrinter:
           type: boolean
           description: Indica se la stampa è fronte-retro
+        weight:
+          type: integer
+          description: Indica il peso del plico
+          format: int32
+          example: 15
     ShipmentCalculateResponse:
       type: object
       properties:
         cost:
-          type: integer
+          type: number
           description: Costo calcolato alla spedizione in eurocents
-          format: int32
+          format: float
           example: 350
 
 #  securitySchemes:        # ONLY EXTERNAL
