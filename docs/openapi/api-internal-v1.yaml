@@ -275,7 +275,7 @@ paths:
                 "400":
                   description: Malformed update status
 
-  /paper-channel-private/v1/tenders/{tenderId}/cost/calculate:
+  /paper-channel-private/v2/tenders/{tenderId}/cost/calculate:
     post:
       tags:
         - PaperCalculator
