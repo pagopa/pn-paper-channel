@@ -44,6 +44,7 @@ public class PaperTenderServiceImpl implements PaperTenderService {
     }
 
 
+    @Override
     public Mono<PnPaperChannelCostDTO> getSimplifiedCost(String cap, String zone, String productType) {
         String processName = "Get New Cost From";
         log.logStartingProcess(processName);
