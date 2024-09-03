@@ -479,9 +479,9 @@ components:
       type: object
       properties:
         cost:
-          type: number
+          type: integer
           description: Costo calcolato alla spedizione in eurocents
-          format: float
+          format: int32
           example: 350
 
 #  securitySchemes:        # ONLY EXTERNAL
