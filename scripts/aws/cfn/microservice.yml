@@ -412,7 +412,7 @@ Parameters:
   EnableSimplifiedTenderFlow:
     Type: String
     Description: 'Variable that defines whether to enable the new tender workflow'
-    Default: 'true'
+    Default: 'false'
 
   SendProgressMeta:
       Type: String
