@@ -5,8 +5,11 @@ import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.CostDTO;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ProductTypeEnum;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.AttachmentInfo;
+import it.pagopa.pn.paperchannel.model.PnPaperChannelCostDTO;
+import it.pagopa.pn.paperchannel.model.PnPaperChannelRangeDTO;
 import it.pagopa.pn.paperchannel.service.PaperTenderService;
 import it.pagopa.pn.paperchannel.utils.costutils.CostWithDriver;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.times;
 
 
+@Slf4j
 @ExtendWith(MockitoExtension.class)
 class PaperCalculatorUtilsTest {
 
@@ -39,6 +43,141 @@ class PaperCalculatorUtilsTest {
     @Mock
     private DateChargeCalculationModesUtils dateChargeCalculationModesUtils;
 
+
+    @Test
+    void testSimplifiedCalculatorReversePrinterWithAAR() {
+        //Arrange
+        List<AttachmentInfo> attachmentUrls = new ArrayList<>();
+        AttachmentInfo pnAttachmentInfo = new AttachmentInfo();
+        pnAttachmentInfo.setDate("");
+        pnAttachmentInfo.setFileKey("http://localhost:8080");
+        pnAttachmentInfo.setId("");
+        pnAttachmentInfo.setNumberOfPage(5);
+        pnAttachmentInfo.setDocumentType("");
+        pnAttachmentInfo.setUrl("");
+        attachmentUrls.add(pnAttachmentInfo);
+        AttachmentInfo attachmentAAR = new AttachmentInfo();
+        attachmentAAR.setDate("");
+        attachmentAAR.setFileKey("http://localhost:8080");
+        attachmentAAR.setId("");
+        attachmentAAR.setNumberOfPage(5);
+        attachmentAAR.setDocumentType(Const.PN_AAR);
+        attachmentAAR.setUrl("");
+        attachmentUrls.add(attachmentAAR);
+
+
+        Address address = new Address();
+        address.setCap("00100");
+        address.setCountry("it");
+
+        var costDTO = getPaperChannelCostDTO();
+
+        costDTO.setProduct("RS");
+
+        Mockito.when(pnPaperChannelConfig.isEnableSimplifiedTenderFlow()).thenReturn(true);
+        Mockito.when(pnPaperChannelConfig.getPaperWeight()).thenReturn(5);
+        Mockito.when(dateChargeCalculationModesUtils.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.COMPLETE);
+
+
+        Mockito.when(paperTenderService.getSimplifiedCost(address.getCap(), null, costDTO.getProduct()))
+                .thenReturn(Mono.just(costDTO));
+
+
+        // Act
+        CostWithDriver res = paperCalculatorUtils.calculator(attachmentUrls, address, ProductTypeEnum.RS, true).block();
+
+
+        //Assert
+        Assertions.assertNotNull(res);
+        Assertions.assertEquals(BigDecimal.valueOf(0.66), res.getCost());
+        Assertions.assertEquals(costDTO.getDeliveryDriverId(), res.getDriverCode());
+        Assertions.assertEquals(costDTO.getTenderId(), res.getTenderCode());
+
+    }
+
+    @Test
+    void testSimplifiedCalculatorReversePrinter() {
+        // Arrange
+        List<AttachmentInfo> attachmentUrls = new ArrayList<>();
+        AttachmentInfo pnAttachmentInfo = new AttachmentInfo();
+        pnAttachmentInfo.setDate("");
+        pnAttachmentInfo.setFileKey("http://localhost:8080");
+        pnAttachmentInfo.setId("");
+        pnAttachmentInfo.setNumberOfPage(5);
+        pnAttachmentInfo.setDocumentType("");
+        pnAttachmentInfo.setUrl("");
+        attachmentUrls.add(pnAttachmentInfo);
+
+        Address address = new Address();
+        address.setCap("00100");
+        address.setCountry("it");
+
+        var costDTO = getPaperChannelCostDTO();
+
+        costDTO.setProduct("RS");
+
+        Mockito.when(pnPaperChannelConfig.isEnableSimplifiedTenderFlow()).thenReturn(true);
+        Mockito.when(pnPaperChannelConfig.getPaperWeight()).thenReturn(5);
+        Mockito.when(dateChargeCalculationModesUtils.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.COMPLETE);
+
+
+        Mockito.when(paperTenderService.getSimplifiedCost(address.getCap(), null, costDTO.getProduct()))
+                .thenReturn(Mono.just(costDTO));
+
+
+        // Act
+        CostWithDriver res = paperCalculatorUtils.calculator(attachmentUrls, address, ProductTypeEnum.RS, true).block();
+
+
+        // Assert
+        Assertions.assertNotNull(res);
+        Assertions.assertEquals(BigDecimal.valueOf(0.39), res.getCost());
+        Assertions.assertEquals(costDTO.getDeliveryDriverId(), res.getDriverCode());
+        Assertions.assertEquals(costDTO.getTenderId(), res.getTenderCode());
+
+    }
+
+    @Test
+    void testSimplifiedCalculatorOnlyFront() {
+        // Arrange
+        List<AttachmentInfo> attachmentUrls = new ArrayList<>();
+        AttachmentInfo pnAttachmentInfo = new AttachmentInfo();
+        pnAttachmentInfo.setDate("");
+        pnAttachmentInfo.setFileKey("http://localhost:8080");
+        pnAttachmentInfo.setId("");
+        pnAttachmentInfo.setNumberOfPage(5);
+        pnAttachmentInfo.setDocumentType("");
+        pnAttachmentInfo.setUrl("");
+        attachmentUrls.add(pnAttachmentInfo);
+
+        Address address = new Address();
+        address.setCap("00100");
+        address.setCountry("it");
+
+        var costDTO = getPaperChannelCostDTO();
+
+        costDTO.setProduct("RS");
+
+        Mockito.when(pnPaperChannelConfig.isEnableSimplifiedTenderFlow()).thenReturn(true);
+        Mockito.when(pnPaperChannelConfig.getPaperWeight()).thenReturn(5);
+        Mockito.when(dateChargeCalculationModesUtils.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.COMPLETE);
+
+
+        Mockito.when(paperTenderService.getSimplifiedCost(address.getCap(), null, costDTO.getProduct()))
+                .thenReturn(Mono.just(costDTO));
+
+
+
+        CostWithDriver res = paperCalculatorUtils.calculator(attachmentUrls, address, ProductTypeEnum.RS, false).block();
+
+
+
+        Assertions.assertNotNull(res);
+        Assertions.assertEquals(BigDecimal.valueOf(0.66), res.getCost());
+        Assertions.assertEquals(costDTO.getDeliveryDriverId(), res.getDriverCode());
+        Assertions.assertEquals(costDTO.getTenderId(), res.getTenderCode());
+
+    }
 
     @Test
     void calculator() {
@@ -412,46 +551,6 @@ class PaperCalculatorUtilsTest {
         assertEquals(2, numberOfPages);
     }
 
-    @Test
-    void calculateWhenFeatureFlagIsTrue() {
-        //ARRANGE
-        Mockito.when(pnPaperChannelConfig.isEnableSimplifiedTenderFlow()).thenReturn(true);
-        List<AttachmentInfo> attachmentUrls = new ArrayList<>();
-        Address address = new Address();
-        address.setCountry("italia");
-        address.setCap("00100");
-
-        //ACT
-        CostWithDriver cost = paperCalculatorUtils.calculator(attachmentUrls, address, ProductTypeEnum.AR, true).block();
-
-        //ASSERTION
-        Assertions.assertNull(cost);
-        Mockito.verify(paperTenderService, times(0)).getCostFrom(Mockito.any(String.class), Mockito.any(String.class), Mockito.any(String.class));
-    }
-
-    @Test
-    void calculateWhenFeatureFlagIsFalse() {
-        //ARRANGE
-        Mockito.when(pnPaperChannelConfig.isEnableSimplifiedTenderFlow()).thenReturn(false);
-
-        Mockito.when(paperTenderService.getCostFrom(Mockito.any(), Mockito.any(), Mockito.any()))
-                .thenReturn(Mono.just(getNationalCost()));
-
-        Mockito.when(dateChargeCalculationModesUtils.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.AAR);
-
-        List<AttachmentInfo> attachmentUrls = new ArrayList<>();
-        Address address = new Address();
-        address.setCountry("italia");
-        address.setCap("00100");
-
-        //ACT
-        CostWithDriver cost = paperCalculatorUtils.calculator(attachmentUrls, address, ProductTypeEnum.AR, true).block();
-
-        //ASSERTION
-        Assertions.assertNotNull(cost);
-        Mockito.verify(paperTenderService, times(1)).getCostFrom(Mockito.any(String.class), Mockito.any(), Mockito.any(String.class));
-    }
-
     private CostDTO getNationalCost() {
         CostDTO dto = new CostDTO();
         dto.setPrice(BigDecimal.valueOf(1.00));
@@ -475,4 +574,65 @@ class PaperCalculatorUtilsTest {
         dto.setTenderCode(TENDER_CODE);
         return dto;
     }
+
+
+    private PnPaperChannelCostDTO getPaperChannelCostDTO() {
+        var dto = new PnPaperChannelCostDTO();
+
+        dto.setTenderId("TENDER_ID");
+        dto.setProductLotZone("PRODUCT_LOT_ZONE");
+        dto.setProduct("RS");
+        dto.setLot("23");
+        dto.setZone("EU");
+        dto.setDeliveryDriverName("Poste");
+        dto.setDeliveryDriverId("POSTE");
+        dto.setDematerializationCost(BigDecimal.valueOf(0.09876));
+        dto.setVat(22);
+        dto.setNonDeductibleVat(35);
+        dto.setPagePrice(BigDecimal.valueOf(0.12345));
+        dto.setBasePriceAR(BigDecimal.valueOf(0.05945));
+        dto.setBasePriceRS(BigDecimal.valueOf(0.01234));
+        dto.setBasePrice890(BigDecimal.valueOf(0.09432));
+        dto.setFee(BigDecimal.valueOf(0.50025));
+
+
+        var rangeDto1 = new PnPaperChannelRangeDTO();
+        rangeDto1.setCost(BigDecimal.valueOf(0.00123));
+        rangeDto1.setMinWeight(0);
+        rangeDto1.setMaxWeight(20);
+
+        var rangeDto2 = new PnPaperChannelRangeDTO();
+        rangeDto2.setCost(BigDecimal.valueOf(0.00987));
+        rangeDto2.setMinWeight(21);
+        rangeDto2.setMaxWeight(50);
+
+        var rangeDto3 = new PnPaperChannelRangeDTO();
+        rangeDto3.setCost(BigDecimal.valueOf(0.01234));
+        rangeDto3.setMinWeight(51);
+        rangeDto3.setMaxWeight(100);
+
+        var rangeDto4 = new PnPaperChannelRangeDTO();
+        rangeDto4.setCost(BigDecimal.valueOf(0.09876));
+        rangeDto4.setMinWeight(101);
+        rangeDto4.setMaxWeight(250);
+
+        var rangeDto5 = new PnPaperChannelRangeDTO();
+        rangeDto5.setCost(BigDecimal.valueOf(0.12512));
+        rangeDto5.setMinWeight(251);
+        rangeDto5.setMaxWeight(350);
+
+        var rangeDto6 = new PnPaperChannelRangeDTO();
+        rangeDto6.setCost(BigDecimal.valueOf(0.43209));
+        rangeDto6.setMinWeight(351);
+        rangeDto6.setMaxWeight(1000);
+
+        var rangeDto7 = new PnPaperChannelRangeDTO();
+        rangeDto7.setCost(BigDecimal.valueOf(0.80123));
+        rangeDto7.setMinWeight(1001);
+        rangeDto7.setMaxWeight(2000);
+
+        dto.setRangedCosts(List.of(rangeDto1, rangeDto2, rangeDto3, rangeDto4, rangeDto5, rangeDto6, rangeDto7));
+        return dto;
+    }
+
 }

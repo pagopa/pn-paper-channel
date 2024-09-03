@@ -15,6 +15,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import static it.pagopa.pn.paperchannel.utils.Const.*;
 
@@ -36,7 +37,6 @@ public class PaperCalculatorUtils {
         }
         return paperTenderService.getZoneFromCountry(address.getCountry())
                 .flatMap(zone -> getAmount(attachments,null, zone, getProductType(address, productType), isReversePrinter).map(item -> item));
-
     }
 
     /**
@@ -137,7 +137,7 @@ public class PaperCalculatorUtils {
 
 
         BigDecimal rangePriceFromWeight = costDTO.getBasePriceForWeight(totPagesWeight);
-        BigDecimal priceTotPages = costDTO.getPagePrice().multiply(BigDecimal.valueOf(totPagesIgnoringAAR));
+        BigDecimal priceTotPages = costDTO.getPagePrice().multiply(BigDecimal.valueOf(totPagesIgnoringAAR-1));
         BigDecimal totPricePages = rangePriceFromWeight.add(priceTotPages);
 
         log.info("Calculating cost Simplified COMPLETE mode, totPages={}, totPagesWeight={} rangePriceFromWeight={}, totPricePages={}, priceTotPages={}",
@@ -145,15 +145,13 @@ public class PaperCalculatorUtils {
 
         BigDecimal priceOfProduct = costDTO.getBasePriceFromProductType(productType);
         BigDecimal pricePlico = priceOfProduct.add(costDTO.getDematerializationCost()).add(totPricePages);
-        BigDecimal vatPlico = pricePlico.multiply(BigDecimal.valueOf(costDTO.getVat()/100)).multiply(BigDecimal.valueOf(costDTO.getNonDeductibleVat()/100));
-        BigDecimal pricePlicoWithVat = pricePlico.add(vatPlico);
-
-        BigDecimal completedPrice = pricePlicoWithVat.add(costDTO.getFee());
+        BigDecimal vatPlico = pricePlico.multiply(BigDecimal.valueOf(costDTO.getVat()/100.0)).multiply(BigDecimal.valueOf(costDTO.getNonDeductibleVat()/100.0));
+        BigDecimal completedPrice = pricePlico.add(vatPlico);
 
 
-        log.info("Calculating cost Simplified COMPLETE mode, priceOfProduct={}, pricePlico={}, vatPlico={}, pricePlicoWithVat={}, completedPrice={}",
-                priceOfProduct, pricePlico, vatPlico, pricePlicoWithVat, completedPrice);
-        return completedPrice;
+        log.info("Calculating cost Simplified COMPLETE mode, priceOfProduct={}, pricePlico={}, vatPlico={}, completedPrice={}",
+                priceOfProduct, pricePlico, vatPlico, completedPrice);
+        return completedPrice.setScale(2, RoundingMode.HALF_UP);
     }
 
 
