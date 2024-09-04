@@ -3,6 +3,8 @@ package it.pagopa.pn.paperchannel.utils;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.CostDTO;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ProductTypeEnum;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ShipmentCalculateRequest;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ShipmentCalculateResponse;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.AttachmentInfo;
 import it.pagopa.pn.paperchannel.model.PnPaperChannelCostDTO;
@@ -134,6 +136,38 @@ class PaperCalculatorUtilsTest {
         Assertions.assertEquals(costDTO.getDeliveryDriverId(), res.getDriverCode());
         Assertions.assertEquals(costDTO.getTenderId(), res.getTenderCode());
 
+    }
+
+    @Test
+    void testCostSimulator() {
+        // ARRANGE
+        List<AttachmentInfo> attachmentUrls = new ArrayList<>();
+        AttachmentInfo pnAttachmentInfo = new AttachmentInfo();
+        pnAttachmentInfo.setNumberOfPage(5);
+        attachmentUrls.add(pnAttachmentInfo);
+
+        var costDTO = getPaperChannelCostDTO();
+
+        Mockito.when(paperTenderService.getCostFromTenderId(Mockito.any(String.class), Mockito.any(String.class), Mockito.any(String.class)))
+                .thenReturn(Mono.just(costDTO));
+
+        // ACT
+        ShipmentCalculateResponse response = paperCalculatorUtils.costSimulator(getPaperChannelCostDTO().getTenderId(), getShipmentCalculateRequest()).block();
+
+        // ASSERT
+        Assertions.assertNotNull(response);
+        Assertions.assertEquals(BigDecimal.valueOf(39).intValue(), response.getCost().intValue());
+    }
+
+    private ShipmentCalculateRequest getShipmentCalculateRequest(){
+        ShipmentCalculateRequest request = new ShipmentCalculateRequest();
+        request.setGeokey("EU");
+        request.setProduct(ShipmentCalculateRequest.ProductEnum.RS);
+        request.setNumPages(5);
+        request.setIsReversePrinter(true);
+        request.setPageWeight(pnPaperChannelConfig.getPaperWeight());
+
+        return request;
     }
 
     @Test
@@ -548,6 +582,11 @@ class PaperCalculatorUtilsTest {
         Integer numberOfPages = paperCalculatorUtils.getNumberOfPages(attachmentUrls, true, false);
         System.out.println(numberOfPages);
         assertEquals(2, numberOfPages);
+    }
+
+    @Test
+    void costSimulatorTest() {
+
     }
 
     private CostDTO getNationalCost() {

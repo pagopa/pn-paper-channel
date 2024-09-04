@@ -64,6 +64,22 @@ public class PaperTenderServiceImpl implements PaperTenderService {
     }
 
     @Override
+    public Mono<PnPaperChannelCostDTO> getCostFromTenderId(String tenderId, String geokey, String productType) {
+        String processName = "Get Cost From TenderId";
+        log.logStartingProcess(processName);
+        return pnPaperTenderDAO.getTenderById(tenderId)
+                .switchIfEmpty(Mono.error(new PnGenericException(TENDER_NOT_EXISTED, TENDER_NOT_EXISTED.getMessage())))
+                .flatMap(enTender -> pnPaperGeoKeyDAO.getGeoKey(tenderId, productType, geokey)
+                        .switchIfEmpty(Mono.error(new PnGenericException(GEOKEY_NOT_FOUND, GEOKEY_NOT_FOUND.getMessage())))
+                        .flatMap(enGeokey -> pnPaperCostDAO.getCostByTenderIdProductLotZone(tenderId, productType, enGeokey.getLot(), enGeokey.getZone()))
+                        .switchIfEmpty(Mono.error(new PnGenericException(COST_DRIVER_OR_FSU_NOT_FOUND, COST_DRIVER_OR_FSU_NOT_FOUND.getMessage())))
+                        .map(enCost -> {
+                            log.logEndingProcess(processName);
+                            return PnPaperChannelCostMapper.toDTO(enTender, enCost);
+                        }));
+    }
+
+    @Override
     public Mono<String> getZoneFromCountry(String country) {
         String processName = "Get Zone From Country";
         log.logStartingProcess(processName);

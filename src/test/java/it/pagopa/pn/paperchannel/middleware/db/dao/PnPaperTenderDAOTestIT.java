@@ -7,14 +7,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
-
 import java.time.Instant;
-
 import static org.junit.jupiter.api.Assertions.*;
+
 
 class PnPaperTenderDAOTestIT extends BaseTest {
     private static final String TENDER_ID = "GARA_2024";
     private static final Instant ACTIVATION_DATA = Instant.now().minusSeconds(3600);
+
 
     @Autowired
     private PnPaperTenderDAO pnPaperTenderDAO;
@@ -27,7 +27,6 @@ class PnPaperTenderDAOTestIT extends BaseTest {
 
     @Test
     void testGetActiveTender() {
-
         // Act: Azione - Recupero del tender attivo
         Mono<PnPaperChannelTender> result = pnPaperTenderDAO.getActiveTender();
 
@@ -41,8 +40,22 @@ class PnPaperTenderDAOTestIT extends BaseTest {
                 .verifyComplete();
     }
 
-    private void arrangeDB() {
+    @Test
+    void getTenderById() {
+        // Act: Azione - Recupero del tender
+        Mono<PnPaperChannelTender> result = pnPaperTenderDAO.getTenderById(TENDER_ID);
 
+        // Assert: Verifica - Controllare che il tender sia stato recuperato correttamente
+        StepVerifier.create(result)
+                .assertNext(tender -> {
+                    assertNotNull(tender);
+                    assertTrue(tender.getActivationDate().isBefore(Instant.now()));
+                    assertEquals(ACTIVATION_DATA, tender.getActivationDate());
+                })
+                .verifyComplete();
+    }
+
+    private void arrangeDB() {
         var testArrange = new PnPaperChannelTender();
         testArrange.setTenderId(TENDER_ID);
         testArrange.setActivationDate(ACTIVATION_DATA); // Un ora fa
@@ -63,7 +76,5 @@ class PnPaperTenderDAOTestIT extends BaseTest {
         testArrange.setTenderId(TENDER_ID);
         testArrange.setActivationDate(Instant.now().minusSeconds(3600*14)); // 14 ora fa
         pnPaperTenderDAO.createOrUpdate(testArrange).block();
-
     }
-
 }

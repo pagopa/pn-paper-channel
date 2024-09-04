@@ -447,6 +447,11 @@ components:
 
     ShipmentCalculateRequest:
       type: object
+      required:
+        - product
+        - geokey
+        - numPages
+        - isReversePrinter
       properties:
         product:
           type: string
@@ -470,9 +475,9 @@ components:
         isReversePrinter:
           type: boolean
           description: Indica se la stampa è fronte-retro
-        weight:
+        pageWeight:
           type: integer
-          description: Indica il peso del plico
+          description: Indica il peso unitario di una pagina
           format: int32
           example: 15
     ShipmentCalculateResponse:
