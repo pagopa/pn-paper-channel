@@ -1,6 +1,7 @@
 package it.pagopa.pn.paperchannel.model;
 
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,8 +13,7 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 import static it.pagopa.pn.paperchannel.utils.Const.*;
 
 
-@Getter
-@Setter
+@Data
 public class PnPaperChannelCostDTO {
     private String tenderId;
     private String productLotZone;

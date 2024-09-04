@@ -14,8 +14,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.ACTIVE_TENDER_NOT_FOUND;
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.COST_DRIVER_OR_FSU_NOT_FOUND;
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 
 @CustomLog
 @Service
@@ -52,7 +51,11 @@ public class PaperTenderServiceImpl implements PaperTenderService {
         return this.pnPaperTenderDAO.getActiveTender()
                 .switchIfEmpty(Mono.error(new PnGenericException(ACTIVE_TENDER_NOT_FOUND, ACTIVE_TENDER_NOT_FOUND.getMessage())))
                 .flatMap(tender -> pnPaperGeoKeyDAO.getGeoKey(tender.getTenderId(), productType, geoKeyValue)
+                        .switchIfEmpty(Mono.error(new PnGenericException(GEOKEY_NOT_FOUND, GEOKEY_NOT_FOUND.getMessage())))
+                        .doOnNext(geoKey -> log.info("Geokey finded {}", geoKey))
                         .flatMap(geoKey -> pnPaperCostDAO.getCostByTenderIdProductLotZone(geoKey.getTenderId(), productType, geoKey.getLot(), geoKey.getZone()))
+                        .switchIfEmpty(Mono.error(new PnGenericException(COST_DRIVER_OR_FSU_NOT_FOUND, COST_DRIVER_OR_FSU_NOT_FOUND.getMessage())))
+                        .doOnNext(paperCost -> log.info("Cost finded {}", paperCost))
                         .map(paperCost -> {
                             log.logEndingProcess(processName);
                             return PnPaperChannelCostMapper.toDTO(tender, paperCost);

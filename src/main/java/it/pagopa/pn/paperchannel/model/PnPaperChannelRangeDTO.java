@@ -1,13 +1,13 @@
 package it.pagopa.pn.paperchannel.model;
 
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
 
 
-@Getter
-@Setter
+@Data
 public class PnPaperChannelRangeDTO {
     private BigDecimal cost;
     private Integer minWeight;
