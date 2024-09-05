@@ -2,6 +2,7 @@ package it.pagopa.pn.paperchannel.utils;
 
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.CostDTO;
+import it.pagopa.pn.paperchannel.model.PnPaperChannelCostDTO;
 import it.pagopa.pn.paperchannel.utils.costutils.CostRanges;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ProductTypeEnum;
 import it.pagopa.pn.paperchannel.model.Address;
@@ -13,18 +14,16 @@ import lombok.CustomLog;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
-
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
-
 import static it.pagopa.pn.paperchannel.utils.Const.*;
+
 
 @Component
 @CustomLog
 @AllArgsConstructor
 public class PaperCalculatorUtils {
-
-
     private final PaperTenderService paperTenderService;
     private final PnPaperChannelConfig pnPaperChannelConfig;
     private final DateChargeCalculationModesUtils chargeCalculationModeUtils;
@@ -32,13 +31,19 @@ public class PaperCalculatorUtils {
     public Mono<CostWithDriver> calculator(List<AttachmentInfo> attachments, Address address, ProductTypeEnum productType, boolean isReversePrinter){
         boolean isNational = Utility.isNational(address.getCountry());
 
+        if(pnPaperChannelConfig.isEnableSimplifiedTenderFlow()) {
+            log.info("SimplifiedTenderFlow");
+            return paperTenderService.getSimplifiedCost(address.getCap(), address.getCountry(), getProductType(address, productType))
+                    .map(contract -> getSimplifiedCostWithDriver(contract, attachments, getProductType(address, productType), isReversePrinter));
+        }
+        log.info("OldTenderFlow");
+
         if (StringUtils.isNotBlank(address.getCap()) && isNational) {
             return getAmount(attachments, address.getCap(), null, getProductType(address, productType), isReversePrinter)
                     .map(item -> item);
         }
         return paperTenderService.getZoneFromCountry(address.getCountry())
                 .flatMap(zone -> getAmount(attachments,null, zone, getProductType(address, productType), isReversePrinter).map(item -> item));
-
     }
 
     /**
@@ -51,7 +56,7 @@ public class PaperCalculatorUtils {
      * @param productType tipo di prodotto (AR, 890, etc)
      * @param isReversePrinter true, se il printType della request della SEND è di tipo BN_FRONTE_RETRO
      *
-     * @return calcolo del costp della notifica con le informazioni del recapitista
+     * @return calcolo del costo della notifica con le informazioni del recapitista
      */
     private Mono<CostWithDriver> getAmount(List<AttachmentInfo> attachments, String cap, String zone, String productType, boolean isReversePrinter){
         String processName = "Get Amount";
@@ -60,6 +65,31 @@ public class PaperCalculatorUtils {
         return paperTenderService.getCostFrom(cap, zone, productType)
                 .map(contract -> getCostWithDriver(contract, attachments, isReversePrinter))
                 .doOnNext(totalCost -> log.logEndingProcess(processName));
+    }
+
+    /**
+     * Retrieve the notification cost with the driver information
+     *
+     * @param contract          contract from which costs are calculated
+     * @param attachments       notification attachments for which calculate pages and costs
+     * @param productType       type of product based on address (AR, 890, etc)
+     * @param isReversePrinter  true if print with BN_FRONTE_RETRO
+     *
+     * @return                  the amount cost of notification with driver information
+     * */
+    private CostWithDriver getSimplifiedCostWithDriver(PnPaperChannelCostDTO contract, List<AttachmentInfo> attachments, String productType, boolean isReversePrinter) {
+        ChargeCalculationModeEnum calculationModeEnum = chargeCalculationModeUtils.getChargeCalculationMode();
+        log.debug("calculationMode found: {}", calculationModeEnum);
+
+        BigDecimal amount = calculationModeEnum.equals(ChargeCalculationModeEnum.AAR)
+                ? contract.getBasePriceAR()
+                : getSimplifiedPriceForCOMPLETEMode(attachments, contract, productType, isReversePrinter);
+
+        return CostWithDriver.builder()
+                .cost(amount)
+                .driverCode(contract.getDeliveryDriverId())
+                .tenderCode(contract.getTenderId())
+                .build();
     }
 
     /**
@@ -99,6 +129,33 @@ public class PaperCalculatorUtils {
     }
 
 
+
+    private BigDecimal getSimplifiedPriceForCOMPLETEMode(List<AttachmentInfo> attachments, PnPaperChannelCostDTO costDTO, String productType,  boolean isReversePrinter){
+        log.info("Calculating cost Simplified COMPLETE mode, costDTO={}", costDTO);
+        Integer totPagesIgnoringAAR = getNumberOfPages(attachments, isReversePrinter, false);
+        Integer totPages = getNumberOfPages(attachments, isReversePrinter, true);
+        int totPagesWeight = getLetterWeight(totPages);
+        int totPlicoWeight = totPagesWeight + pnPaperChannelConfig.getLetterWeight();
+
+        BigDecimal rangePriceFromWeight = costDTO.getBasePriceForWeight(totPlicoWeight);
+        BigDecimal priceTotPages = costDTO.getPagePrice().multiply(BigDecimal.valueOf(totPagesIgnoringAAR).subtract(BigDecimal.ONE));
+        BigDecimal totPricePages = rangePriceFromWeight.add(priceTotPages);
+
+        log.info("Calculating cost Simplified COMPLETE mode, totPages={}, totPagesWeight={} rangePriceFromWeight={}, totPricePages={}, priceTotPages={}",
+                totPages, totPagesWeight, rangePriceFromWeight, priceTotPages, totPricePages);
+
+        BigDecimal priceOfProduct = costDTO.getBasePriceFromProductType(productType);
+        BigDecimal pricePlico = priceOfProduct.add(costDTO.getDematerializationCost()).add(totPricePages).add(costDTO.getFee());
+        BigDecimal vatPlico = pricePlico.multiply(BigDecimal.valueOf(costDTO.getVat()/100.0)).multiply(BigDecimal.valueOf(costDTO.getNonDeductibleVat()/100.0));
+        BigDecimal completedPrice = pricePlico.add(vatPlico);
+
+
+        log.info("Calculating cost Simplified COMPLETE mode, priceOfProduct={}, pricePlico={}, vatPlico={}, completedPrice={}",
+                priceOfProduct, pricePlico, vatPlico, completedPrice);
+        return completedPrice.setScale(2, RoundingMode.HALF_UP);
+    }
+
+
     public int getLetterWeight(int numberOfPages){
         int weightPaper = this.pnPaperChannelConfig.getPaperWeight();
         int weightLetter = this.pnPaperChannelConfig.getLetterWeight();
@@ -115,6 +172,7 @@ public class PaperCalculatorUtils {
             return (!includeAAR && StringUtils.equals(attachment.getDocumentType(), Const.PN_AAR)) ? numberOfPages-1 : numberOfPages;
         }).reduce(0, Integer::sum);
     }
+
 
 
 
