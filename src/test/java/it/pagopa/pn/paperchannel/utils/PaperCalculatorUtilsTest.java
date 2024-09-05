@@ -3,8 +3,6 @@ package it.pagopa.pn.paperchannel.utils;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.CostDTO;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ProductTypeEnum;
-import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ShipmentCalculateRequest;
-import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ShipmentCalculateResponse;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.AttachmentInfo;
 import it.pagopa.pn.paperchannel.model.PnPaperChannelCostDTO;
@@ -31,7 +29,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @Slf4j
 @ExtendWith(MockitoExtension.class)
 class PaperCalculatorUtilsTest {
-
     private static final String DRIVER_CODE = "driverCode";
     private static final String TENDER_CODE = "tenderCode";
 
@@ -93,7 +90,6 @@ class PaperCalculatorUtilsTest {
         Assertions.assertEquals(BigDecimal.valueOf(1.20).setScale(2, RoundingMode.UNNECESSARY), res.getCost());
         Assertions.assertEquals(costDTO.getDeliveryDriverId(), res.getDriverCode());
         Assertions.assertEquals(costDTO.getTenderId(), res.getTenderCode());
-
     }
 
     @Test
@@ -135,7 +131,6 @@ class PaperCalculatorUtilsTest {
         Assertions.assertEquals(BigDecimal.valueOf(0.93), res.getCost());
         Assertions.assertEquals(costDTO.getDeliveryDriverId(), res.getDriverCode());
         Assertions.assertEquals(costDTO.getTenderId(), res.getTenderCode());
-
     }
 
     @Test
@@ -162,22 +157,17 @@ class PaperCalculatorUtilsTest {
         Mockito.when(pnPaperChannelConfig.isEnableSimplifiedTenderFlow()).thenReturn(true);
         Mockito.when(pnPaperChannelConfig.getPaperWeight()).thenReturn(5);
         Mockito.when(dateChargeCalculationModesUtils.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.COMPLETE);
-
-
         Mockito.when(paperTenderService.getSimplifiedCost(address.getCap(), address.getCountry(), costDTO.getProduct()))
                 .thenReturn(Mono.just(costDTO));
 
-
-
+        // Act
         CostWithDriver res = paperCalculatorUtils.calculator(attachmentUrls, address, ProductTypeEnum.RS, false).block();
 
-
-
+        // Assert
         Assertions.assertNotNull(res);
         Assertions.assertEquals(BigDecimal.valueOf(1.20).setScale(2, RoundingMode.UNNECESSARY), res.getCost());
         Assertions.assertEquals(costDTO.getDeliveryDriverId(), res.getDriverCode());
         Assertions.assertEquals(costDTO.getTenderId(), res.getTenderCode());
-
     }
 
     @Test
@@ -216,7 +206,6 @@ class PaperCalculatorUtilsTest {
     //nel test: 1 + (0 * 2) = 1 (essendo il peso 10, si va nel primo range, dove: dto.setPrice(BigDecimal.valueOf(1.00));)
     @Test
     void calculatorWithOneCOMPLETE() {
-
         List<AttachmentInfo> attachmentUrls = new ArrayList<>();
         AttachmentInfo pnAttachmentInfo = new AttachmentInfo();
         pnAttachmentInfo.setDate("");

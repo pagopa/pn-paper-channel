@@ -167,8 +167,8 @@ public class PaperCalculatorUtils {
         BigDecimal priceTotPages = costDTO.getPagePrice().multiply(BigDecimal.valueOf(totPagesIgnoringAAR).subtract(BigDecimal.ONE));
         BigDecimal totPricePages = rangePriceFromWeight.add(priceTotPages);
 
-        log.info("Calculating cost Simplified COMPLETE mode, totPages={}, totPagesWeight={} rangePriceFromWeight={}, totPricePages={}, priceTotPages={}",
-                totPages, totPagesWeight, rangePriceFromWeight, priceTotPages, totPricePages);
+        log.info("Calculating cost Simplified COMPLETE mode, totPages={}, totPlicoWeight={} rangePriceFromWeight={}, totPricePages={}, priceTotPages={}",
+                totPages, totPlicoWeight, rangePriceFromWeight, priceTotPages, totPricePages);
 
         BigDecimal priceOfProduct = costDTO.getBasePriceFromProductType(productType);
         BigDecimal pricePlico = priceOfProduct.add(costDTO.getDematerializationCost()).add(totPricePages).add(costDTO.getFee());
