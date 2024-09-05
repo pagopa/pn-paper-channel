@@ -450,7 +450,7 @@ components:
       required:
         - product
         - geokey
-        - numPages
+        - numSides
         - isReversePrinter
       properties:
         product:
@@ -467,9 +467,9 @@ components:
           type: string
           description: CAP o Stato Estero
           example: 00100
-        numPages:
+        numSides:
           type: integer
-          description: Numero di fogli di cui è composta la spedizione
+          description: Numero di facciate che compongono il documento
           format: int32
           example: 5
         isReversePrinter:
@@ -477,7 +477,7 @@ components:
           description: Indica se la stampa è fronte-retro
         pageWeight:
           type: integer
-          description: Indica il peso unitario di una pagina
+          description: Indica il peso del foglio
           format: int32
           example: 15
     ShipmentCalculateResponse:
