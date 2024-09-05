@@ -31,6 +31,13 @@ public class PaperCalculatorUtils {
     public Mono<CostWithDriver> calculator(List<AttachmentInfo> attachments, Address address, ProductTypeEnum productType, boolean isReversePrinter){
         boolean isNational = Utility.isNational(address.getCountry());
 
+        if(pnPaperChannelConfig.isEnableSimplifiedTenderFlow()) {
+            log.info("SimplifiedTenderFlow");
+            return paperTenderService.getSimplifiedCost(address.getCap(), address.getCountry(), getProductType(address, productType))
+                    .map(contract -> getSimplifiedCostWithDriver(contract, attachments, getProductType(address, productType), isReversePrinter));
+        }
+        log.info("OldTenderFlow");
+
         if (StringUtils.isNotBlank(address.getCap()) && isNational) {
             return getAmount(attachments, address.getCap(), null, getProductType(address, productType), isReversePrinter)
                     .map(item -> item);
@@ -55,12 +62,6 @@ public class PaperCalculatorUtils {
         String processName = "Get Amount";
         log.logStartingProcess(processName);
 
-        if(pnPaperChannelConfig.isEnableSimplifiedTenderFlow()) {
-            log.info("SimplifiedTenderFlow");
-            return paperTenderService.getSimplifiedCost(cap, zone, productType)
-                    .map(contract -> getSimplifiedCostWithDriver(contract, attachments, productType, isReversePrinter));
-        }
-        log.info("OldTenderFlow");
         return paperTenderService.getCostFrom(cap, zone, productType)
                 .map(contract -> getCostWithDriver(contract, attachments, isReversePrinter))
                 .doOnNext(totalCost -> log.logEndingProcess(processName));

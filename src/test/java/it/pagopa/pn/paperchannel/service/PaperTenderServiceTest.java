@@ -132,7 +132,8 @@ class PaperTenderServiceTest {
     void getSimplifiedCost_shouldThrowException_whenNoActiveTenderFound() {
         // Arrange
         String cap = "12345";
-        String zone = "ZONE_1";
+        String zone =
+                "Francia";
         String productType = "AR";
 
         when(pnPaperTenderDAO.getActiveTender()).thenReturn(Mono.empty());
@@ -168,7 +169,7 @@ class PaperTenderServiceTest {
         PnPaperChannelGeoKey mockGeokey = new PnPaperChannelGeoKey("TENDER_ID", "AR", "00001");
         mockGeokey.setActivationDate(Instant.now().minusSeconds(3600*24));
         mockGeokey.setLot("LOT_1");
-        mockGeokey.setZone("ZONE_1");
+        mockGeokey.setZone("Francia");
         mockGeokey.setCoverFlag(true);
         mockGeokey.setDismissed(false);
         mockGeokey.setCreatedAt(Instant.now().minusSeconds(3444));

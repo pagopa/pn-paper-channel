@@ -78,7 +78,7 @@ class PaperCalculatorUtilsTest {
         Mockito.when(dateChargeCalculationModesUtils.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.COMPLETE);
 
 
-        Mockito.when(paperTenderService.getSimplifiedCost(address.getCap(), null, costDTO.getProduct()))
+        Mockito.when(paperTenderService.getSimplifiedCost(address.getCap(), address.getCountry(), costDTO.getProduct()))
                 .thenReturn(Mono.just(costDTO));
 
 
@@ -120,7 +120,7 @@ class PaperCalculatorUtilsTest {
         Mockito.when(dateChargeCalculationModesUtils.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.COMPLETE);
 
 
-        Mockito.when(paperTenderService.getSimplifiedCost(address.getCap(), null, costDTO.getProduct()))
+        Mockito.when(paperTenderService.getSimplifiedCost(address.getCap(), address.getCountry(), costDTO.getProduct()))
                 .thenReturn(Mono.just(costDTO));
 
 
@@ -162,7 +162,7 @@ class PaperCalculatorUtilsTest {
         Mockito.when(dateChargeCalculationModesUtils.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.COMPLETE);
 
 
-        Mockito.when(paperTenderService.getSimplifiedCost(address.getCap(), null, costDTO.getProduct()))
+        Mockito.when(paperTenderService.getSimplifiedCost(address.getCap(), address.getCountry(), costDTO.getProduct()))
                 .thenReturn(Mono.just(costDTO));
 
 
