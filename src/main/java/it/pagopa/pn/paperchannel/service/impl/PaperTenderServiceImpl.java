@@ -49,12 +49,12 @@ public class PaperTenderServiceImpl implements PaperTenderService {
         log.logStartingProcess(processName);
         String geoKeyValue = StringUtils.isNotEmpty(cap) ? cap : zone;
         return this.pnPaperTenderDAO.getActiveTender()
-                .switchIfEmpty(Mono.error(new PnGenericException(ACTIVE_TENDER_NOT_FOUND, ACTIVE_TENDER_NOT_FOUND.getMessage())))
+                .switchIfEmpty(Mono.error(new PnGenericException(ACTIVE_TENDER_NOT_FOUND, ACTIVE_TENDER_NOT_FOUND.getMessage(), HttpStatus.NOT_FOUND)))
                 .flatMap(tender -> pnPaperGeoKeyDAO.getGeoKey(tender.getTenderId(), productType, geoKeyValue)
-                        .switchIfEmpty(Mono.error(new PnGenericException(GEOKEY_NOT_FOUND, GEOKEY_NOT_FOUND.getMessage())))
+                        .switchIfEmpty(Mono.error(new PnGenericException(GEOKEY_NOT_FOUND, GEOKEY_NOT_FOUND.getMessage(), HttpStatus.NOT_FOUND)))
                         .doOnNext(geoKey -> log.info("Geokey finded {}", geoKey))
                         .flatMap(geoKey -> pnPaperCostDAO.getCostByTenderIdProductLotZone(geoKey.getTenderId(), productType, geoKey.getLot(), geoKey.getZone()))
-                        .switchIfEmpty(Mono.error(new PnGenericException(COST_DRIVER_OR_FSU_NOT_FOUND, COST_DRIVER_OR_FSU_NOT_FOUND.getMessage())))
+                        .switchIfEmpty(Mono.error(new PnGenericException(COST_DRIVER_OR_FSU_NOT_FOUND, COST_DRIVER_OR_FSU_NOT_FOUND.getMessage(), HttpStatus.NOT_FOUND)))
                         .doOnNext(paperCost -> log.info("Cost finded {}", paperCost))
                         .map(paperCost -> {
                             log.logEndingProcess(processName);

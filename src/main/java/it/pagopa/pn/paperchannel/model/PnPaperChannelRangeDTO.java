@@ -1,9 +1,6 @@
 package it.pagopa.pn.paperchannel.model;
 
 import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
-
 import java.math.BigDecimal;
 
 

@@ -2,13 +2,9 @@ package it.pagopa.pn.paperchannel.model;
 
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
-
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 import static it.pagopa.pn.paperchannel.utils.Const.*;
 
@@ -52,8 +48,5 @@ public class PnPaperChannelCostDTO {
                 .findFirst()
                 .map(PnPaperChannelRangeDTO::getCost)
                 .orElseThrow(() -> new PnGenericException(COST_OUF_OF_RANGE, String.format("Weight %s exceeded 2000 gr", totPagesWeight)));
-
     }
-
-
 }

@@ -36,6 +36,13 @@ public class PaperCalculatorUtils {
     public Mono<CostWithDriver> calculator(List<AttachmentInfo> attachments, Address address, ProductTypeEnum productType, boolean isReversePrinter){
         boolean isNational = Utility.isNational(address.getCountry());
 
+        if(pnPaperChannelConfig.isEnableSimplifiedTenderFlow()) {
+            log.info("SimplifiedTenderFlow");
+            return paperTenderService.getSimplifiedCost(address.getCap(), address.getCountry(), getProductType(address, productType))
+                    .map(contract -> getSimplifiedCostWithDriver(contract, attachments, getProductType(address, productType), isReversePrinter));
+        }
+        log.info("OldTenderFlow");
+
         if (StringUtils.isNotBlank(address.getCap()) && isNational) {
             return getAmount(attachments, address.getCap(), null, getProductType(address, productType), isReversePrinter)
                     .map(item -> item);
@@ -79,12 +86,6 @@ public class PaperCalculatorUtils {
         String processName = "Get Amount";
         log.logStartingProcess(processName);
 
-        if(pnPaperChannelConfig.isEnableSimplifiedTenderFlow()) {
-            log.info("SimplifiedTenderFlow");
-            return paperTenderService.getSimplifiedCost(cap, zone, productType)
-                    .map(contract -> getSimplifiedCostWithDriver(contract, attachments, productType, isReversePrinter));
-        }
-        log.info("OldTenderFlow");
         return paperTenderService.getCostFrom(cap, zone, productType)
                 .map(contract -> getCostWithDriver(contract, attachments, isReversePrinter))
                 .doOnNext(totalCost -> log.logEndingProcess(processName));
@@ -155,13 +156,14 @@ public class PaperCalculatorUtils {
         Integer totPagesIgnoringAAR = getNumberOfPages(attachments, isReversePrinter, false);
         Integer totPages = getNumberOfPages(attachments, isReversePrinter, true);
         int totPagesWeight = getLetterWeight(totPages);
-        return getSimplifiedAmount(totPagesWeight, totPagesIgnoringAAR, totPages, costDTO, productType);
+        int totPlicoWeight = totPagesWeight + pnPaperChannelConfig.getLetterWeight();
+        return getSimplifiedAmount(totPlicoWeight, totPagesIgnoringAAR, totPages, costDTO, productType);
     }
 
-    private BigDecimal getSimplifiedAmount(Integer totPagesWeight, Integer totPagesIgnoringAAR, Integer totPages, PnPaperChannelCostDTO costDTO, String productType){
+    private BigDecimal getSimplifiedAmount(Integer totPlicoWeight, Integer totPagesIgnoringAAR, Integer totPages, PnPaperChannelCostDTO costDTO, String productType) {
         log.info("Calculating cost Simplified COMPLETE mode, costDTO={}", costDTO);
 
-        BigDecimal rangePriceFromWeight = costDTO.getBasePriceForWeight(totPagesWeight);
+        BigDecimal rangePriceFromWeight = costDTO.getBasePriceForWeight(totPlicoWeight);
         BigDecimal priceTotPages = costDTO.getPagePrice().multiply(BigDecimal.valueOf(totPagesIgnoringAAR).subtract(BigDecimal.ONE));
         BigDecimal totPricePages = rangePriceFromWeight.add(priceTotPages);
 
@@ -169,7 +171,7 @@ public class PaperCalculatorUtils {
                 totPages, totPagesWeight, rangePriceFromWeight, priceTotPages, totPricePages);
 
         BigDecimal priceOfProduct = costDTO.getBasePriceFromProductType(productType);
-        BigDecimal pricePlico = priceOfProduct.add(costDTO.getDematerializationCost()).add(totPricePages);
+        BigDecimal pricePlico = priceOfProduct.add(costDTO.getDematerializationCost()).add(totPricePages).add(costDTO.getFee());
         BigDecimal vatPlico = pricePlico.multiply(BigDecimal.valueOf(costDTO.getVat()/100.0)).multiply(BigDecimal.valueOf(costDTO.getNonDeductibleVat()/100.0));
         BigDecimal completedPrice = pricePlico.add(vatPlico);
 
@@ -178,6 +180,7 @@ public class PaperCalculatorUtils {
                 priceOfProduct, pricePlico, vatPlico, completedPrice);
         return completedPrice.setScale(2, RoundingMode.HALF_UP);
     }
+
 
     public int getLetterWeight(int numberOfPages){
         int weightPaper = this.pnPaperChannelConfig.getPaperWeight();
@@ -246,7 +249,7 @@ public class PaperCalculatorUtils {
         return proposalProductType;
     }
 
-    public String getProposalProductType(Address address, String productType) {
+    public String getProposalProductType(Address address, String productType){
         String proposalProductType = "";
         boolean isNational = Utility.isNational(address.getCountry());
         //nazionale

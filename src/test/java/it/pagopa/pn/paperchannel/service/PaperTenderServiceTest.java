@@ -10,7 +10,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -18,6 +17,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 
@@ -91,9 +91,9 @@ class PaperTenderServiceTest {
     void getSimplifiedCost_shouldReturnPnPaperChannelCostDTO_whenValidInputsAreProvided() {
         String cap = "000001";
         // Arrange
-        PnPaperChannelTender mockTender = mockPnPaperTender("TENDER_ID");
-        PnPaperChannelGeoKey mockGeoKey = mockPnPaperGeokey("TENDER_ID");
-        PnPaperChannelCost mockPaperCost = mockPnPaperCost("TENDER_ID");
+        PnPaperChannelTender mockTender = mockPnPaperTender();
+        PnPaperChannelGeoKey mockGeoKey = mockPnPaperGeokey();
+        PnPaperChannelCost mockPaperCost = mockPnPaperCost();
 
         PnPaperChannelCostDTO expectedDTO = new PnPaperChannelCostDTO();
         expectedDTO.setTenderId(mockTender.getTenderId());
@@ -129,13 +129,17 @@ class PaperTenderServiceTest {
     void getSimplifiedCost_shouldThrowException_whenNoActiveTenderFound() {
         // Arrange
         String cap = "12345";
-        String zone = "ZONE_1";
+        String zone =
+                "Francia";
         String productType = "AR";
 
         when(pnPaperTenderDAO.getActiveTender()).thenReturn(Mono.empty());
 
-        //Act & Assert
-        assertThrows(PnGenericException.class, () -> paperTenderService.getSimplifiedCost(cap, zone, productType).block());
+        // Act
+        Mono<PnPaperChannelCostDTO> result = paperTenderService.getSimplifiedCost(cap, zone, productType);
+
+        //Assert
+        assertThrows(PnGenericException.class, result::block);
 
         verify(pnPaperTenderDAO, times(1)).getActiveTender();
         verify(pnPaperGeoKeyDAO, never()).getGeoKey(anyString(), anyString(), anyString());
@@ -265,9 +269,9 @@ class PaperTenderServiceTest {
         Mockito.verify(pnPaperCostDAO, times(1)).getCostByTenderIdProductLotZone(tenderId, product, lot, zone);
     }
 
-    private PnPaperChannelTender mockPnPaperTender(String tenderId) {
+    private PnPaperChannelTender mockPnPaperTender() {
         PnPaperChannelTender mockTender = new PnPaperChannelTender();
-        mockTender.setTenderId(tenderId);
+        mockTender.setTenderId("TENDER_ID");
         mockTender.setActivationDate(Instant.now().minusSeconds(3600*24));
         mockTender.setTenderName("TENDER NAME");
         mockTender.setVat(22);
@@ -281,19 +285,19 @@ class PaperTenderServiceTest {
         return mockTender;
     }
 
-    private PnPaperChannelGeoKey mockPnPaperGeokey(String tenderId) {
-        PnPaperChannelGeoKey mockGeokey = new PnPaperChannelGeoKey(tenderId, "AR", "00001");
+    private PnPaperChannelGeoKey mockPnPaperGeokey() {
+        PnPaperChannelGeoKey mockGeokey = new PnPaperChannelGeoKey("TENDER_ID", "AR", "00001");
         mockGeokey.setActivationDate(Instant.now().minusSeconds(3600*24));
         mockGeokey.setLot("LOT_1");
-        mockGeokey.setZone("ZONE_1");
+        mockGeokey.setZone("Francia");
         mockGeokey.setCoverFlag(true);
         mockGeokey.setDismissed(false);
         mockGeokey.setCreatedAt(Instant.now().minusSeconds(3444));
         return mockGeokey;
     }
 
-    private PnPaperChannelCost mockPnPaperCost(String tenderId) {
-        PnPaperChannelCost mockCost = new PnPaperChannelCost(tenderId, "AR", "LOT_1", "ZONE_1");
+    private PnPaperChannelCost mockPnPaperCost() {
+        PnPaperChannelCost mockCost = new PnPaperChannelCost("TENDER_ID", "AR", "LOT_1", "ZONE_1");
         mockCost.setDeliveryDriverId("DELIVERY_ID");
         mockCost.setDeliveryDriverName("DELIVERY_NAME");
         mockCost.setDematerializationCost(BigDecimal.valueOf(0.90));

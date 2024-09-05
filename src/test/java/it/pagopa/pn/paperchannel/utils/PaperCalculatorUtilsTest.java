@@ -21,6 +21,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import static it.pagopa.pn.paperchannel.utils.Const.*;
@@ -79,7 +80,7 @@ class PaperCalculatorUtilsTest {
         Mockito.when(dateChargeCalculationModesUtils.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.COMPLETE);
 
 
-        Mockito.when(paperTenderService.getSimplifiedCost(address.getCap(), null, costDTO.getProduct()))
+        Mockito.when(paperTenderService.getSimplifiedCost(address.getCap(), address.getCountry(), costDTO.getProduct()))
                 .thenReturn(Mono.just(costDTO));
 
 
@@ -89,7 +90,7 @@ class PaperCalculatorUtilsTest {
 
         //Assert
         Assertions.assertNotNull(res);
-        Assertions.assertEquals(BigDecimal.valueOf(0.66), res.getCost());
+        Assertions.assertEquals(BigDecimal.valueOf(1.20).setScale(2, RoundingMode.UNNECESSARY), res.getCost());
         Assertions.assertEquals(costDTO.getDeliveryDriverId(), res.getDriverCode());
         Assertions.assertEquals(costDTO.getTenderId(), res.getTenderCode());
 
@@ -121,7 +122,7 @@ class PaperCalculatorUtilsTest {
         Mockito.when(dateChargeCalculationModesUtils.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.COMPLETE);
 
 
-        Mockito.when(paperTenderService.getSimplifiedCost(address.getCap(), null, costDTO.getProduct()))
+        Mockito.when(paperTenderService.getSimplifiedCost(address.getCap(), address.getCountry(), costDTO.getProduct()))
                 .thenReturn(Mono.just(costDTO));
 
 
@@ -131,37 +132,10 @@ class PaperCalculatorUtilsTest {
 
         // Assert
         Assertions.assertNotNull(res);
-        Assertions.assertEquals(BigDecimal.valueOf(0.39), res.getCost());
+        Assertions.assertEquals(BigDecimal.valueOf(0.93), res.getCost());
         Assertions.assertEquals(costDTO.getDeliveryDriverId(), res.getDriverCode());
         Assertions.assertEquals(costDTO.getTenderId(), res.getTenderCode());
 
-    }
-
-    @Test
-    void testCostSimulator() {
-        // ARRANGE
-        var costDTO = getPaperChannelCostDTO();
-
-        Mockito.when(paperTenderService.getCostFromTenderId(Mockito.any(String.class), Mockito.any(String.class), Mockito.any(String.class)))
-                .thenReturn(Mono.just(costDTO));
-
-        // ACT
-        ShipmentCalculateResponse response = paperCalculatorUtils.costSimulator(getPaperChannelCostDTO().getTenderId(), getShipmentCalculateRequest()).block();
-
-        // ASSERT
-        Assertions.assertNotNull(response);
-        Assertions.assertEquals(BigDecimal.valueOf(39).intValue(), response.getCost().intValue());
-    }
-
-    private ShipmentCalculateRequest getShipmentCalculateRequest(){
-        ShipmentCalculateRequest request = new ShipmentCalculateRequest();
-        request.setGeokey("00100");
-        request.setProduct(ShipmentCalculateRequest.ProductEnum.RS);
-        request.setNumSides(5);
-        request.setIsReversePrinter(true);
-        request.setPageWeight(pnPaperChannelConfig.getPaperWeight());
-
-        return request;
     }
 
     @Test
@@ -190,7 +164,7 @@ class PaperCalculatorUtilsTest {
         Mockito.when(dateChargeCalculationModesUtils.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.COMPLETE);
 
 
-        Mockito.when(paperTenderService.getSimplifiedCost(address.getCap(), null, costDTO.getProduct()))
+        Mockito.when(paperTenderService.getSimplifiedCost(address.getCap(), address.getCountry(), costDTO.getProduct()))
                 .thenReturn(Mono.just(costDTO));
 
 
@@ -200,7 +174,7 @@ class PaperCalculatorUtilsTest {
 
 
         Assertions.assertNotNull(res);
-        Assertions.assertEquals(BigDecimal.valueOf(0.66), res.getCost());
+        Assertions.assertEquals(BigDecimal.valueOf(1.20).setScale(2, RoundingMode.UNNECESSARY), res.getCost());
         Assertions.assertEquals(costDTO.getDeliveryDriverId(), res.getDriverCode());
         Assertions.assertEquals(costDTO.getTenderId(), res.getTenderCode());
 
@@ -599,11 +573,6 @@ class PaperCalculatorUtilsTest {
         assertEquals(2, numberOfPages);
     }
 
-    @Test
-    void costSimulatorTest() {
-
-    }
-
     private CostDTO getNationalCost() {
         CostDTO dto = new CostDTO();
         dto.setPrice(BigDecimal.valueOf(1.00));
@@ -634,7 +603,7 @@ class PaperCalculatorUtilsTest {
 
         dto.setTenderId("TENDER_ID");
         dto.setProductLotZone("PRODUCT_LOT_ZONE");
-        dto.setProduct(RACCOMANDATA_SEMPLICE);
+        dto.setProduct("RS");
         dto.setLot("23");
         dto.setZone("EU");
         dto.setDeliveryDriverName("Poste");
@@ -687,4 +656,5 @@ class PaperCalculatorUtilsTest {
         dto.setRangedCosts(List.of(rangeDto1, rangeDto2, rangeDto3, rangeDto4, rangeDto5, rangeDto6, rangeDto7));
         return dto;
     }
+
 }
