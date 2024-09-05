@@ -2,8 +2,6 @@ package it.pagopa.pn.paperchannel.model;
 
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.Instant;
