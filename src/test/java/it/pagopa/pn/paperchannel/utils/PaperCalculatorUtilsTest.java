@@ -140,11 +140,6 @@ class PaperCalculatorUtilsTest {
     @Test
     void testCostSimulator() {
         // ARRANGE
-        List<AttachmentInfo> attachmentUrls = new ArrayList<>();
-        AttachmentInfo pnAttachmentInfo = new AttachmentInfo();
-        pnAttachmentInfo.setNumberOfPage(5);
-        attachmentUrls.add(pnAttachmentInfo);
-
         var costDTO = getPaperChannelCostDTO();
 
         Mockito.when(paperTenderService.getCostFromTenderId(Mockito.any(String.class), Mockito.any(String.class), Mockito.any(String.class)))

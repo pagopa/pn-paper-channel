@@ -97,7 +97,7 @@ public class PaperCalculatorRestV2ControllerTest {
                 .isNotFound()
                 .expectBody()
                 .jsonPath("$.title").isEqualTo(TENDER_NOT_EXISTED.getTitle())
-                .jsonPath("$.detail").isEqualTo(TENDER_NOT_EXISTED.getMessage());;
+                .jsonPath("$.detail").isEqualTo(TENDER_NOT_EXISTED.getMessage());
     }
 
     @Test
@@ -117,7 +117,7 @@ public class PaperCalculatorRestV2ControllerTest {
                 .isNotFound()
                 .expectBody()
                 .jsonPath("$.title").isEqualTo(GEOKEY_NOT_FOUND.getTitle())
-                .jsonPath("$.detail").isEqualTo(GEOKEY_NOT_FOUND.getMessage());;
+                .jsonPath("$.detail").isEqualTo(GEOKEY_NOT_FOUND.getMessage());
     }
 
     @Test
@@ -137,7 +137,7 @@ public class PaperCalculatorRestV2ControllerTest {
                 .isNotFound()
                 .expectBody()
                 .jsonPath("$.title").isEqualTo(COST_DRIVER_OR_FSU_NOT_FOUND.getTitle())
-                .jsonPath("$.detail").isEqualTo(COST_DRIVER_OR_FSU_NOT_FOUND.getMessage());;
+                .jsonPath("$.detail").isEqualTo(COST_DRIVER_OR_FSU_NOT_FOUND.getMessage());
     }
 
     private ShipmentCalculateRequest getShipmentCalculateRequest(){

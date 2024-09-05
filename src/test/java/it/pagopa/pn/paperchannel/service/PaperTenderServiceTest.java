@@ -47,7 +47,7 @@ class PaperTenderServiceTest {
         when(tenderDAO.findActiveTender()).thenReturn(Mono.empty());
         StepVerifier.create(this.paperTenderService.getCostFrom(null, "ZONE_1", "AR"))
                 .expectErrorMatches((ex) -> {
-                    assertTrue(ex instanceof PnGenericException);
+                    assertInstanceOf(PnGenericException.class, ex);
                     assertEquals(ACTIVE_TENDER_NOT_FOUND, ((PnGenericException) ex).getExceptionType());
                     return true;
                 }).verify();
@@ -60,7 +60,7 @@ class PaperTenderServiceTest {
                         .thenReturn(Mono.empty());
         StepVerifier.create(this.paperTenderService.getCostFrom("89321", null, "AR"))
                 .expectErrorMatches((ex) -> {
-                    assertTrue(ex instanceof PnGenericException);
+                    assertInstanceOf(PnGenericException.class, ex);
                     assertEquals(COST_DRIVER_OR_FSU_NOT_FOUND, ((PnGenericException) ex).getExceptionType());
                     return true;
                 }).verify();
