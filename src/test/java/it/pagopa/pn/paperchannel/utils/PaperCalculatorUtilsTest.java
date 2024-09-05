@@ -20,6 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -88,7 +89,7 @@ class PaperCalculatorUtilsTest {
 
         //Assert
         Assertions.assertNotNull(res);
-        Assertions.assertEquals(BigDecimal.valueOf(0.66), res.getCost());
+        Assertions.assertEquals(BigDecimal.valueOf(1.20).setScale(2, RoundingMode.UNNECESSARY), res.getCost());
         Assertions.assertEquals(costDTO.getDeliveryDriverId(), res.getDriverCode());
         Assertions.assertEquals(costDTO.getTenderId(), res.getTenderCode());
 
@@ -130,7 +131,7 @@ class PaperCalculatorUtilsTest {
 
         // Assert
         Assertions.assertNotNull(res);
-        Assertions.assertEquals(BigDecimal.valueOf(0.39), res.getCost());
+        Assertions.assertEquals(BigDecimal.valueOf(0.93), res.getCost());
         Assertions.assertEquals(costDTO.getDeliveryDriverId(), res.getDriverCode());
         Assertions.assertEquals(costDTO.getTenderId(), res.getTenderCode());
 
@@ -172,7 +173,7 @@ class PaperCalculatorUtilsTest {
 
 
         Assertions.assertNotNull(res);
-        Assertions.assertEquals(BigDecimal.valueOf(0.66), res.getCost());
+        Assertions.assertEquals(BigDecimal.valueOf(1.20).setScale(2, RoundingMode.UNNECESSARY), res.getCost());
         Assertions.assertEquals(costDTO.getDeliveryDriverId(), res.getDriverCode());
         Assertions.assertEquals(costDTO.getTenderId(), res.getTenderCode());
 

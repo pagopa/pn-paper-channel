@@ -135,9 +135,9 @@ public class PaperCalculatorUtils {
         Integer totPagesIgnoringAAR = getNumberOfPages(attachments, isReversePrinter, false);
         Integer totPages = getNumberOfPages(attachments, isReversePrinter, true);
         int totPagesWeight = getLetterWeight(totPages);
+        int totPlicoWeight = totPagesWeight + pnPaperChannelConfig.getLetterWeight();
 
-
-        BigDecimal rangePriceFromWeight = costDTO.getBasePriceForWeight(totPagesWeight);
+        BigDecimal rangePriceFromWeight = costDTO.getBasePriceForWeight(totPlicoWeight);
         BigDecimal priceTotPages = costDTO.getPagePrice().multiply(BigDecimal.valueOf(totPagesIgnoringAAR).subtract(BigDecimal.ONE));
         BigDecimal totPricePages = rangePriceFromWeight.add(priceTotPages);
 
@@ -145,7 +145,7 @@ public class PaperCalculatorUtils {
                 totPages, totPagesWeight, rangePriceFromWeight, priceTotPages, totPricePages);
 
         BigDecimal priceOfProduct = costDTO.getBasePriceFromProductType(productType);
-        BigDecimal pricePlico = priceOfProduct.add(costDTO.getDematerializationCost()).add(totPricePages);
+        BigDecimal pricePlico = priceOfProduct.add(costDTO.getDematerializationCost()).add(totPricePages).add(costDTO.getFee());
         BigDecimal vatPlico = pricePlico.multiply(BigDecimal.valueOf(costDTO.getVat()/100.0)).multiply(BigDecimal.valueOf(costDTO.getNonDeductibleVat()/100.0));
         BigDecimal completedPrice = pricePlico.add(vatPlico);
 
