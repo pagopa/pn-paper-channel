@@ -20,11 +20,10 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-
+import static it.pagopa.pn.paperchannel.utils.Const.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
@@ -161,9 +160,9 @@ class PaperCalculatorUtilsTest {
 
     private ShipmentCalculateRequest getShipmentCalculateRequest(){
         ShipmentCalculateRequest request = new ShipmentCalculateRequest();
-        request.setGeokey("EU");
+        request.setGeokey("00100");
         request.setProduct(ShipmentCalculateRequest.ProductEnum.RS);
-        request.setNumPages(5);
+        request.setNumSides(5);
         request.setIsReversePrinter(true);
         request.setPageWeight(pnPaperChannelConfig.getPaperWeight());
 
@@ -532,6 +531,27 @@ class PaperCalculatorUtilsTest {
         assertEquals("890", res3);
     }
 
+    @Test
+    void getProposalProductTypeWithGeokey() {
+        String geokey = "00100";
+
+        String resRS = paperCalculatorUtils.getProposalProductType(geokey, RACCOMANDATA_SEMPLICE);
+        assertEquals(ProductTypeEnum.RS.getValue(), resRS);
+        String res890 = paperCalculatorUtils.getProposalProductType(geokey, RACCOMANDATA_890);
+        assertEquals(ProductTypeEnum._890.getValue(), res890);
+        String resAR = paperCalculatorUtils.getProposalProductType(geokey, RACCOMANDATA_AR);
+        assertEquals(ProductTypeEnum.AR.getValue(), resAR);
+
+        geokey = "ZONE_1";
+
+        String res1 = paperCalculatorUtils.getProposalProductType(geokey, RACCOMANDATA_SEMPLICE);
+        assertEquals(ProductTypeEnum.RIS.getValue(), res1);
+        String res2 = paperCalculatorUtils.getProposalProductType(geokey, RACCOMANDATA_890);
+        assertEquals(ProductTypeEnum.RIR.getValue(), res2);
+        String res3 = paperCalculatorUtils.getProposalProductType(geokey, RACCOMANDATA_AR);
+        assertEquals(ProductTypeEnum.RIR.getValue(), res3);
+    }
+
     //(numero di pagine degli atti 4, ma reversPrinter=true per cui 2 effettive + 1 AAR)
     @Test
     void getNumberOfPagesIncludeAARTrueTest() {
@@ -619,7 +639,7 @@ class PaperCalculatorUtilsTest {
 
         dto.setTenderId("TENDER_ID");
         dto.setProductLotZone("PRODUCT_LOT_ZONE");
-        dto.setProduct("RS");
+        dto.setProduct(RACCOMANDATA_SEMPLICE);
         dto.setLot("23");
         dto.setZone("EU");
         dto.setDeliveryDriverName("Poste");
@@ -672,5 +692,4 @@ class PaperCalculatorUtilsTest {
         dto.setRangedCosts(List.of(rangeDto1, rangeDto2, rangeDto3, rangeDto4, rangeDto5, rangeDto6, rangeDto7));
         return dto;
     }
-
 }

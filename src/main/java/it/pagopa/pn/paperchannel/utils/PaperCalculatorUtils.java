@@ -19,6 +19,8 @@ import reactor.core.publisher.Mono;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
+import java.util.regex.Pattern;
+
 import static it.pagopa.pn.paperchannel.utils.Const.*;
 
 
@@ -29,6 +31,7 @@ public class PaperCalculatorUtils {
     private final PaperTenderService paperTenderService;
     private final PnPaperChannelConfig pnPaperChannelConfig;
     private final DateChargeCalculationModesUtils chargeCalculationModeUtils;
+
 
     public Mono<CostWithDriver> calculator(List<AttachmentInfo> attachments, Address address, ProductTypeEnum productType, boolean isReversePrinter){
         boolean isNational = Utility.isNational(address.getCountry());
@@ -45,7 +48,7 @@ public class PaperCalculatorUtils {
         String geokey = request.getGeokey();
         String product = getProposalProductType(geokey, request.getProduct().getValue());
         return paperTenderService.getCostFromTenderId(tenderId, geokey, product)
-                .map(costDTO -> getCostSimulated(costDTO, request.getNumPages(), request.getPageWeight(), product, request.getIsReversePrinter()))
+                .map(costDTO -> getCostSimulated(costDTO, request.getNumSides(), request.getPageWeight(), product, request.getIsReversePrinter()))
                 .map(cost -> {
                     ShipmentCalculateResponse response = new ShipmentCalculateResponse();
                     response.setCost(cost.multiply(BigDecimal.valueOf(100)).intValue());
@@ -53,13 +56,12 @@ public class PaperCalculatorUtils {
                 });
     }
 
-    private BigDecimal getCostSimulated(PnPaperChannelCostDTO costDTO, Integer pageNumber, Integer pageWeight, String productType, boolean isReversePrinter) {
-        Integer finalNumbersPage = isReversePrinter ? (int) Math.ceil(((double) pageNumber)/2) : pageNumber;
+    private BigDecimal getCostSimulated(PnPaperChannelCostDTO costDTO, Integer numSides, Integer pageWeight, String productType, boolean isReversePrinter) {
+        Integer numbersPage = isReversePrinter ? (int) Math.ceil(((double) numSides)/2) : numSides;
         Integer finalPageWeight = pageWeight == null ? pnPaperChannelConfig.getPaperWeight() : pageWeight;
-        Integer totalPagesWeight = finalNumbersPage * finalPageWeight;
-        return getSimplifiedAmount(totalPagesWeight, finalNumbersPage, finalNumbersPage, costDTO, productType);
+        Integer totalPagesWeight = numbersPage * finalPageWeight;
+        return getSimplifiedAmount(totalPagesWeight, numbersPage, numbersPage, costDTO, productType);
     }
-
 
     /**
      * Algoritmo del calcolo del costo per modalità COMPLETE:
@@ -177,14 +179,11 @@ public class PaperCalculatorUtils {
         return completedPrice.setScale(2, RoundingMode.HALF_UP);
     }
 
-
     public int getLetterWeight(int numberOfPages){
         int weightPaper = this.pnPaperChannelConfig.getPaperWeight();
         int weightLetter = this.pnPaperChannelConfig.getLetterWeight();
         return (weightPaper * numberOfPages) + weightLetter;
     }
-
-
 
     public Integer getNumberOfPages(List<AttachmentInfo> attachments, boolean isReversePrinter, boolean includeAAR){
         if (attachments == null || attachments.isEmpty()) return 0;
@@ -194,10 +193,6 @@ public class PaperCalculatorUtils {
             return (!includeAAR && StringUtils.equals(attachment.getDocumentType(), Const.PN_AAR)) ? numberOfPages-1 : numberOfPages;
         }).reduce(0, Integer::sum);
     }
-
-
-
-
 
     protected String getProductType(Address address, ProductTypeEnum productTypeEnum){
         String productType = "";
@@ -221,11 +216,12 @@ public class PaperCalculatorUtils {
         return productType;
     }
 
-
     public String getProposalProductType(String geokey, String productType) {
         String proposalProductType = "";
 
-        boolean isNational = geokey.contains("");
+        String regex = "^\\d+$";
+        boolean isNational =  Pattern.matches(regex, geokey);
+
         //nazionale
         if (isNational) {
             if(productType.equals(RACCOMANDATA_SEMPLICE)){

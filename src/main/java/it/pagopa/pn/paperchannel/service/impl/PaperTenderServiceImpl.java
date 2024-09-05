@@ -1,6 +1,5 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
-
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.CostDTO;
 import it.pagopa.pn.paperchannel.mapper.CostMapper;
@@ -11,10 +10,11 @@ import it.pagopa.pn.paperchannel.service.PaperTenderService;
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
-
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
+
 
 @CustomLog
 @Service
@@ -68,11 +68,11 @@ public class PaperTenderServiceImpl implements PaperTenderService {
         String processName = "Get Cost From TenderId";
         log.logStartingProcess(processName);
         return pnPaperTenderDAO.getTenderById(tenderId)
-                .switchIfEmpty(Mono.error(new PnGenericException(TENDER_NOT_EXISTED, TENDER_NOT_EXISTED.getMessage())))
+                .switchIfEmpty(Mono.error(new PnGenericException(TENDER_NOT_EXISTED, TENDER_NOT_EXISTED.getMessage(), HttpStatus.NOT_FOUND)))
                 .flatMap(enTender -> pnPaperGeoKeyDAO.getGeoKey(tenderId, productType, geokey)
-                        .switchIfEmpty(Mono.error(new PnGenericException(GEOKEY_NOT_FOUND, GEOKEY_NOT_FOUND.getMessage())))
+                        .switchIfEmpty(Mono.error(new PnGenericException(GEOKEY_NOT_FOUND, GEOKEY_NOT_FOUND.getMessage(), HttpStatus.NOT_FOUND)))
                         .flatMap(enGeokey -> pnPaperCostDAO.getCostByTenderIdProductLotZone(tenderId, productType, enGeokey.getLot(), enGeokey.getZone()))
-                        .switchIfEmpty(Mono.error(new PnGenericException(COST_DRIVER_OR_FSU_NOT_FOUND, COST_DRIVER_OR_FSU_NOT_FOUND.getMessage())))
+                        .switchIfEmpty(Mono.error(new PnGenericException(COST_DRIVER_OR_FSU_NOT_FOUND, COST_DRIVER_OR_FSU_NOT_FOUND.getMessage(), HttpStatus.NOT_FOUND)))
                         .map(enCost -> {
                             log.logEndingProcess(processName);
                             return PnPaperChannelCostMapper.toDTO(enTender, enCost);

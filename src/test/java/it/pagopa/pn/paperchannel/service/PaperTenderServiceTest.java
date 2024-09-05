@@ -1,7 +1,6 @@
 package it.pagopa.pn.paperchannel.service;
 
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
-import it.pagopa.pn.paperchannel.exception.PnInputValidatorException;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.CostDTO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.*;
 import it.pagopa.pn.paperchannel.middleware.db.entities.*;
@@ -171,7 +170,7 @@ class PaperTenderServiceTest {
         // ACT
         PnPaperChannelCostDTO pnPaperChannelCostDTO = paperTenderService.getCostFromTenderId(tenderId, geokey, product).block();
 
-        //ASSERTIONS
+        //ASSERT
         assertNotNull(pnPaperChannelCostDTO);
         assertEquals(expectedDTO.getTenderId(), pnPaperChannelCostDTO.getTenderId());
         assertEquals(expectedDTO.getProduct(), pnPaperChannelCostDTO.getProduct());
@@ -194,7 +193,7 @@ class PaperTenderServiceTest {
         Mockito.when(pnPaperTenderDAO.getTenderById(tenderId))
                 .thenReturn(Mono.empty());
 
-        //ACT & ASSERTION
+        //ACT & ASSERT
         StepVerifier.create(paperTenderService.getCostFromTenderId(tenderId, geokey, product))
                 .expectErrorMatches((exception) -> {
                     assertInstanceOf(PnGenericException.class, exception);
@@ -206,6 +205,64 @@ class PaperTenderServiceTest {
         Mockito.verify(pnPaperTenderDAO, times(1)).getTenderById(tenderId);
         Mockito.verify(pnPaperGeoKeyDAO, times(0)).getGeoKey(tenderId, product, geokey);
         Mockito.verify(pnPaperCostDAO, times(0)).getCostByTenderIdProductLotZone(tenderId, product, lot, zone);
+    }
+
+    @Test
+    void getCostFromTenderIdThrowExceptionWhenGeokeyIsNotFound() {
+        //ARRANGE
+        String tenderId = "GARA_2024";
+        String product = "RS";
+        String geokey = "00100";
+        String lot = "1";
+        String zone = "ZONE_1";
+
+        Mockito.when(pnPaperTenderDAO.getTenderById(tenderId))
+                .thenReturn(Mono.just(mockPnPaperTender(tenderId)));
+        Mockito.when(pnPaperGeoKeyDAO.getGeoKey(tenderId, product, geokey))
+                .thenReturn(Mono.empty());
+
+        //ACT & ASSERT
+        StepVerifier.create(paperTenderService.getCostFromTenderId(tenderId, geokey, product))
+                .expectErrorMatches((exception) -> {
+                    assertInstanceOf(PnGenericException.class, exception);
+                    assertEquals(GEOKEY_NOT_FOUND.getMessage(), exception.getMessage());
+                    return true;
+                })
+                .verify();
+
+        Mockito.verify(pnPaperTenderDAO, times(1)).getTenderById(tenderId);
+        Mockito.verify(pnPaperGeoKeyDAO, times(1)).getGeoKey(tenderId, product, geokey);
+        Mockito.verify(pnPaperCostDAO, times(0)).getCostByTenderIdProductLotZone(tenderId, product, lot, zone);
+    }
+
+    @Test
+    void getCostFromTenderIdThrowExceptionWhenCostIsNotFound() {
+        //ARRANGE
+        String tenderId = "GARA_2024";
+        String product = "RS";
+        String geokey = "00100";
+        String lot = "LOT_1";
+        String zone = "ZONE_1";
+
+        Mockito.when(pnPaperTenderDAO.getTenderById(tenderId))
+                .thenReturn(Mono.just(mockPnPaperTender(tenderId)));
+        Mockito.when(pnPaperGeoKeyDAO.getGeoKey(tenderId, product, geokey))
+                .thenReturn(Mono.just(mockPnPaperGeokey(tenderId)));
+        Mockito.when(pnPaperCostDAO.getCostByTenderIdProductLotZone(tenderId, product, lot, zone))
+                .thenReturn(Mono.empty());
+
+        //ACT & ASSERT
+        StepVerifier.create(paperTenderService.getCostFromTenderId(tenderId, geokey, product))
+                .expectErrorMatches((exception) -> {
+                    assertInstanceOf(PnGenericException.class, exception);
+                    assertEquals(COST_DRIVER_OR_FSU_NOT_FOUND.getMessage(), exception.getMessage());
+                    return true;
+                })
+                .verify();
+
+        Mockito.verify(pnPaperTenderDAO, times(1)).getTenderById(tenderId);
+        Mockito.verify(pnPaperGeoKeyDAO, times(1)).getGeoKey(tenderId, product, geokey);
+        Mockito.verify(pnPaperCostDAO, times(1)).getCostByTenderIdProductLotZone(tenderId, product, lot, zone);
     }
 
     private PnPaperChannelTender mockPnPaperTender(String tenderId) {
@@ -273,5 +330,4 @@ class PaperTenderServiceTest {
         when(costDAO.getByCapOrZoneAndProductType(tender.getTenderCode(),  null, cost.getZone(), cost.getProductType()))
                 .thenReturn(Mono.just(cost));
     }
-
 }
