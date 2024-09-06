@@ -3,7 +3,6 @@ package it.pagopa.pn.paperchannel.middleware.db.dao.impl;
 import it.pagopa.pn.paperchannel.config.AwsPropertiesConfig;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PnPaperTenderDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.BaseDAO;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnPaperChannelGeoKey;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnPaperChannelTender;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
@@ -16,11 +15,8 @@ import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-
 import java.time.Instant;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
 
 
 @Repository
@@ -39,6 +35,11 @@ public class PnPaperTenderDAOImpl extends BaseDAO<PnPaperChannelTender> implemen
     }
 
 
+    /**
+     * Retrieve the active tender
+     *
+     * @return  the entity of tender
+     **/
     @Override
     public Mono<PnPaperChannelTender> getActiveTender() {
         Expression filterExpression = Expression.builder()
@@ -55,6 +56,14 @@ public class PnPaperTenderDAOImpl extends BaseDAO<PnPaperChannelTender> implemen
                 .next();
     }
 
+
+    /**
+     * Retrieve a specific tender
+     *
+     * @param tenderId  the id of a tender
+     *
+     * @return          the entity of tender
+     **/
     @Override
     public Mono<PnPaperChannelTender> getTenderById(String tenderId) {
         QueryConditional keyConditional = CONDITION_BETWEEN.apply(

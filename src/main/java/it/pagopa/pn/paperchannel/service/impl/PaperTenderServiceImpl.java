@@ -63,6 +63,15 @@ public class PaperTenderServiceImpl implements PaperTenderService {
                 );
     }
 
+    /**
+     * Retrieve the cost based on a specific tenderId, geokey and productType
+     *
+     * @param tenderId     the id of a tender
+     * @param geokey       identifier of a CAP or Country
+     * @param productType  type of product (AR, 890, etc)
+     *
+     * @return             DTO containing cost
+     * */
     @Override
     public Mono<PnPaperChannelCostDTO> getCostFromTenderId(String tenderId, String geokey, String productType) {
         String processName = "Get Cost From TenderId";
