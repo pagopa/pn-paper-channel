@@ -1,11 +1,11 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
-
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.CostDTO;
 import it.pagopa.pn.paperchannel.mapper.CostMapper;
 import it.pagopa.pn.paperchannel.mapper.PnPaperChannelCostMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.*;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnPaperChannelTender;
 import it.pagopa.pn.paperchannel.model.PnPaperChannelCostDTO;
 import it.pagopa.pn.paperchannel.service.PaperTenderService;
 import lombok.CustomLog;
@@ -14,8 +14,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
-
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
+
 
 @CustomLog
 @Service
@@ -43,15 +43,43 @@ public class PaperTenderServiceImpl implements PaperTenderService {
                 );
     }
 
-
+    /**
+     * Retrieve the cost based on a specific tenderId, geokey and productType
+     *
+     * @param cap          identifier of national city
+     * @param zone         identifier of a geographic set of contries
+     * @param productType  type of product (AR, 890, etc)
+     *
+     * @return             DTO containing cost
+     * */
     @Override
     public Mono<PnPaperChannelCostDTO> getSimplifiedCost(String cap, String zone, String productType) {
         String processName = "Get New Cost From";
         log.logStartingProcess(processName);
         String geoKeyValue = StringUtils.isNotEmpty(cap) ? cap : zone;
-        return this.pnPaperTenderDAO.getActiveTender()
-                .switchIfEmpty(Mono.error(new PnGenericException(ACTIVE_TENDER_NOT_FOUND, ACTIVE_TENDER_NOT_FOUND.getMessage(), HttpStatus.NOT_FOUND)))
-                .flatMap(tender -> pnPaperGeoKeyDAO.getGeoKey(tender.getTenderId(), productType, geoKeyValue)
+        return getCostFromTenderId(null, geoKeyValue, productType);
+    }
+
+    /**
+     * Retrieve the cost based on a specific tenderId, geokey and productType
+     *
+     * @param tenderId     the id of a tender
+     * @param geokey       identifier of a CAP or Country
+     * @param productType  type of product (AR, 890, etc)
+     *
+     * @return             DTO containing cost
+     * */
+    @Override
+    public Mono<PnPaperChannelCostDTO> getCostFromTenderId(String tenderId, String geokey, String productType) {
+        String processName = "Get Cost From TenderId";
+        log.logStartingProcess(processName);
+        Mono<PnPaperChannelTender> getTender = StringUtils.isEmpty(tenderId)
+                ?
+                    this.pnPaperTenderDAO.getActiveTender().switchIfEmpty(Mono.error(new PnGenericException(ACTIVE_TENDER_NOT_FOUND, ACTIVE_TENDER_NOT_FOUND.getMessage(), HttpStatus.NOT_FOUND)))
+                :
+                    this.pnPaperTenderDAO.getTenderById(tenderId).switchIfEmpty(Mono.error(new PnGenericException(TENDER_NOT_EXISTED, TENDER_NOT_EXISTED.getMessage(), HttpStatus.NOT_FOUND)));
+        return getTender
+                .flatMap(tender -> pnPaperGeoKeyDAO.getGeoKey(tender.getTenderId(), productType, geokey)
                         .switchIfEmpty(Mono.error(new PnGenericException(GEOKEY_NOT_FOUND, GEOKEY_NOT_FOUND.getMessage(), HttpStatus.NOT_FOUND)))
                         .doOnNext(geoKey -> log.info("Geokey finded {}", geoKey))
                         .flatMap(geoKey -> pnPaperCostDAO.getCostByTenderIdProductLotZone(geoKey.getTenderId(), productType, geoKey.getLot(), geoKey.getZone()))

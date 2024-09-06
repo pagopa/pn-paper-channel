@@ -18,19 +18,17 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
-
+import static it.pagopa.pn.paperchannel.utils.Const.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
 @Slf4j
 @ExtendWith(MockitoExtension.class)
 class PaperCalculatorUtilsTest {
-
     private static final String DRIVER_CODE = "driverCode";
     private static final String TENDER_CODE = "tenderCode";
 
@@ -92,7 +90,6 @@ class PaperCalculatorUtilsTest {
         Assertions.assertEquals(BigDecimal.valueOf(1.20).setScale(2, RoundingMode.UNNECESSARY), res.getCost());
         Assertions.assertEquals(costDTO.getDeliveryDriverId(), res.getDriverCode());
         Assertions.assertEquals(costDTO.getTenderId(), res.getTenderCode());
-
     }
 
     @Test
@@ -134,7 +131,6 @@ class PaperCalculatorUtilsTest {
         Assertions.assertEquals(BigDecimal.valueOf(0.93), res.getCost());
         Assertions.assertEquals(costDTO.getDeliveryDriverId(), res.getDriverCode());
         Assertions.assertEquals(costDTO.getTenderId(), res.getTenderCode());
-
     }
 
     @Test
@@ -161,22 +157,17 @@ class PaperCalculatorUtilsTest {
         Mockito.when(pnPaperChannelConfig.isEnableSimplifiedTenderFlow()).thenReturn(true);
         Mockito.when(pnPaperChannelConfig.getPaperWeight()).thenReturn(5);
         Mockito.when(dateChargeCalculationModesUtils.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.COMPLETE);
-
-
         Mockito.when(paperTenderService.getSimplifiedCost(address.getCap(), address.getCountry(), costDTO.getProduct()))
                 .thenReturn(Mono.just(costDTO));
 
-
-
+        // Act
         CostWithDriver res = paperCalculatorUtils.calculator(attachmentUrls, address, ProductTypeEnum.RS, false).block();
 
-
-
+        // Assert
         Assertions.assertNotNull(res);
         Assertions.assertEquals(BigDecimal.valueOf(1.20).setScale(2, RoundingMode.UNNECESSARY), res.getCost());
         Assertions.assertEquals(costDTO.getDeliveryDriverId(), res.getDriverCode());
         Assertions.assertEquals(costDTO.getTenderId(), res.getTenderCode());
-
     }
 
     @Test
@@ -215,7 +206,6 @@ class PaperCalculatorUtilsTest {
     //nel test: 1 + (0 * 2) = 1 (essendo il peso 10, si va nel primo range, dove: dto.setPrice(BigDecimal.valueOf(1.00));)
     @Test
     void calculatorWithOneCOMPLETE() {
-
         List<AttachmentInfo> attachmentUrls = new ArrayList<>();
         AttachmentInfo pnAttachmentInfo = new AttachmentInfo();
         pnAttachmentInfo.setDate("");
@@ -497,6 +487,27 @@ class PaperCalculatorUtilsTest {
         assertEquals("RS", res2);
         String res3 = paperCalculatorUtils.getProposalProductType(address, ProductTypeEnum._890.getValue());
         assertEquals("890", res3);
+    }
+
+    @Test
+    void getProposalProductTypeWithGeokey() {
+        String geokey = "00100";
+
+        String resRS = paperCalculatorUtils.getProposalProductType(geokey, RACCOMANDATA_SEMPLICE);
+        assertEquals(ProductTypeEnum.RS.getValue(), resRS);
+        String res890 = paperCalculatorUtils.getProposalProductType(geokey, RACCOMANDATA_890);
+        assertEquals(ProductTypeEnum._890.getValue(), res890);
+        String resAR = paperCalculatorUtils.getProposalProductType(geokey, RACCOMANDATA_AR);
+        assertEquals(ProductTypeEnum.AR.getValue(), resAR);
+
+        geokey = "ZONE_1";
+
+        String res1 = paperCalculatorUtils.getProposalProductType(geokey, RACCOMANDATA_SEMPLICE);
+        assertEquals(ProductTypeEnum.RIS.getValue(), res1);
+        String res2 = paperCalculatorUtils.getProposalProductType(geokey, RACCOMANDATA_890);
+        assertEquals(ProductTypeEnum.RIR.getValue(), res2);
+        String res3 = paperCalculatorUtils.getProposalProductType(geokey, RACCOMANDATA_AR);
+        assertEquals(ProductTypeEnum.RIR.getValue(), res3);
     }
 
     //(numero di pagine degli atti 4, ma reversPrinter=true per cui 2 effettive + 1 AAR)

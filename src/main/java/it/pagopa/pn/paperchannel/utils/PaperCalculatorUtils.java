@@ -2,6 +2,8 @@ package it.pagopa.pn.paperchannel.utils;
 
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.CostDTO;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ShipmentCalculateRequest;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ShipmentCalculateResponse;
 import it.pagopa.pn.paperchannel.model.PnPaperChannelCostDTO;
 import it.pagopa.pn.paperchannel.utils.costutils.CostRanges;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ProductTypeEnum;
@@ -17,6 +19,7 @@ import reactor.core.publisher.Mono;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
+import java.util.regex.Pattern;
 import static it.pagopa.pn.paperchannel.utils.Const.*;
 
 
@@ -27,6 +30,7 @@ public class PaperCalculatorUtils {
     private final PaperTenderService paperTenderService;
     private final PnPaperChannelConfig pnPaperChannelConfig;
     private final DateChargeCalculationModesUtils chargeCalculationModeUtils;
+
 
     public Mono<CostWithDriver> calculator(List<AttachmentInfo> attachments, Address address, ProductTypeEnum productType, boolean isReversePrinter){
         boolean isNational = Utility.isNational(address.getCountry());
@@ -44,6 +48,44 @@ public class PaperCalculatorUtils {
         }
         return paperTenderService.getZoneFromCountry(address.getCountry())
                 .flatMap(zone -> getAmount(attachments,null, zone, getProductType(address, productType), isReversePrinter).map(item -> item));
+    }
+
+    /**
+     * Retrieve simulation cost of notification through parameters specified into request
+     *
+     * @param tenderId  the id of a tender
+     * @param request   request containing all parameters needs to calculate cost
+     *
+     * @return          response containing the final cost provided by simulation
+     **/
+    public Mono<ShipmentCalculateResponse> costSimulator(String tenderId, ShipmentCalculateRequest request) {
+        String geokey = request.getGeokey();
+        String product = getProposalProductType(geokey, request.getProduct().getValue());
+        return paperTenderService.getCostFromTenderId(tenderId, geokey, product)
+                .map(costDTO -> getCostSimulated(costDTO, request.getNumSides(), request.getPageWeight(), product, request.getIsReversePrinter()))
+                .map(cost -> {
+                    ShipmentCalculateResponse response = new ShipmentCalculateResponse();
+                    response.setCost(cost.multiply(BigDecimal.valueOf(100)).intValue());
+                    return response;
+                });
+    }
+
+    /**
+     * Provides parameters needs to getSimplifiedAmount() method for completing cost calculation
+     *
+     * @param contract          contract from which costs are calculated
+     * @param numSides          number of faces that make up the document
+     * @param pageWeight        weight of the single sheet
+     * @param productType       type of product based on address (AR, 890, etc)
+     * @param isReversePrinter  true if print with BN_FRONTE_RETRO
+     *
+     * @return                  the amount final cost of notification
+     **/
+    private BigDecimal getCostSimulated(PnPaperChannelCostDTO contract, Integer numSides, Integer pageWeight, String productType, boolean isReversePrinter) {
+        Integer numbersPage = isReversePrinter ? (int) Math.ceil(((double) numSides)/2) : numSides;
+        Integer finalPageWeight = pageWeight == null ? pnPaperChannelConfig.getPaperWeight() : pageWeight;
+        Integer totalPagesWeight = numbersPage * finalPageWeight;
+        return getSimplifiedAmount(totalPagesWeight, numbersPage, numbersPage, contract, productType);
     }
 
     /**
@@ -128,41 +170,50 @@ public class PaperCalculatorUtils {
         return completedPrice;
     }
 
-
-
-    private BigDecimal getSimplifiedPriceForCOMPLETEMode(List<AttachmentInfo> attachments, PnPaperChannelCostDTO costDTO, String productType,  boolean isReversePrinter){
-        log.info("Calculating cost Simplified COMPLETE mode, costDTO={}", costDTO);
+    private BigDecimal getSimplifiedPriceForCOMPLETEMode(List<AttachmentInfo> attachments, PnPaperChannelCostDTO costDTO, String productType,  boolean isReversePrinter) {
         Integer totPagesIgnoringAAR = getNumberOfPages(attachments, isReversePrinter, false);
         Integer totPages = getNumberOfPages(attachments, isReversePrinter, true);
         int totPagesWeight = getLetterWeight(totPages);
         int totPlicoWeight = totPagesWeight + pnPaperChannelConfig.getLetterWeight();
+        return getSimplifiedAmount(totPlicoWeight, totPagesIgnoringAAR, totPages, costDTO, productType);
+    }
 
-        BigDecimal rangePriceFromWeight = costDTO.getBasePriceForWeight(totPlicoWeight);
-        BigDecimal priceTotPages = costDTO.getPagePrice().multiply(BigDecimal.valueOf(totPagesIgnoringAAR).subtract(BigDecimal.ONE));
+    /**
+     * Applies formula to calculate complete cost of notification
+     *
+     * @param totPlicoWeight       amount of total weight of plico
+     * @param totPagesIgnoringAAR  amount of total pages without AAR
+     * @param totPages             amount of total pages
+     * @param contract             contract from which costs are calculated
+     * @param productType          type of product based on address (AR, 890, etc)
+     *
+     * @return                     the amount final cost of notification
+     **/
+    private BigDecimal getSimplifiedAmount(Integer totPlicoWeight, Integer totPagesIgnoringAAR, Integer totPages, PnPaperChannelCostDTO contract, String productType) {
+        log.info("Calculating cost Simplified COMPLETE mode, costDTO={}", contract);
+
+        BigDecimal rangePriceFromWeight = contract.getBasePriceForWeight(totPlicoWeight);
+        BigDecimal priceTotPages = contract.getPagePrice().multiply(BigDecimal.valueOf(totPagesIgnoringAAR).subtract(BigDecimal.ONE));
         BigDecimal totPricePages = rangePriceFromWeight.add(priceTotPages);
 
-        log.info("Calculating cost Simplified COMPLETE mode, totPages={}, totPagesWeight={} rangePriceFromWeight={}, totPricePages={}, priceTotPages={}",
-                totPages, totPagesWeight, rangePriceFromWeight, priceTotPages, totPricePages);
+        log.info("Calculating cost Simplified COMPLETE mode, totPages={}, totPlicoWeight={} rangePriceFromWeight={}, totPricePages={}, priceTotPages={}",
+                totPages, totPlicoWeight, rangePriceFromWeight, priceTotPages, totPricePages);
 
-        BigDecimal priceOfProduct = costDTO.getBasePriceFromProductType(productType);
-        BigDecimal pricePlico = priceOfProduct.add(costDTO.getDematerializationCost()).add(totPricePages).add(costDTO.getFee());
-        BigDecimal vatPlico = pricePlico.multiply(BigDecimal.valueOf(costDTO.getVat()/100.0)).multiply(BigDecimal.valueOf(costDTO.getNonDeductibleVat()/100.0));
+        BigDecimal priceOfProduct = contract.getBasePriceFromProductType(productType);
+        BigDecimal pricePlico = priceOfProduct.add(contract.getDematerializationCost()).add(totPricePages).add(contract.getFee());
+        BigDecimal vatPlico = pricePlico.multiply(BigDecimal.valueOf(contract.getVat()/100.0)).multiply(BigDecimal.valueOf(contract.getNonDeductibleVat()/100.0));
         BigDecimal completedPrice = pricePlico.add(vatPlico);
-
 
         log.info("Calculating cost Simplified COMPLETE mode, priceOfProduct={}, pricePlico={}, vatPlico={}, completedPrice={}",
                 priceOfProduct, pricePlico, vatPlico, completedPrice);
         return completedPrice.setScale(2, RoundingMode.HALF_UP);
     }
 
-
     public int getLetterWeight(int numberOfPages){
         int weightPaper = this.pnPaperChannelConfig.getPaperWeight();
         int weightLetter = this.pnPaperChannelConfig.getLetterWeight();
         return (weightPaper * numberOfPages) + weightLetter;
     }
-
-
 
     public Integer getNumberOfPages(List<AttachmentInfo> attachments, boolean isReversePrinter, boolean includeAAR){
         if (attachments == null || attachments.isEmpty()) return 0;
@@ -172,10 +223,6 @@ public class PaperCalculatorUtils {
             return (!includeAAR && StringUtils.equals(attachment.getDocumentType(), Const.PN_AAR)) ? numberOfPages-1 : numberOfPages;
         }).reduce(0, Integer::sum);
     }
-
-
-
-
 
     protected String getProductType(Address address, ProductTypeEnum productTypeEnum){
         String productType = "";
@@ -197,6 +244,36 @@ public class PaperCalculatorUtils {
             }
         }
         return productType;
+    }
+
+    public String getProposalProductType(String geokey, String productType) {
+        String proposalProductType = "";
+
+        String regex = "^\\d+$";
+        boolean isNational =  Pattern.matches(regex, geokey);
+
+        //nazionale
+        if (isNational) {
+            if(productType.equals(RACCOMANDATA_SEMPLICE)){
+                proposalProductType = ProductTypeEnum.RS.getValue();
+            }
+            if(productType.equals(RACCOMANDATA_890)){
+                proposalProductType = ProductTypeEnum._890.getValue();
+            }
+            if(productType.equals(RACCOMANDATA_AR)){
+                proposalProductType = ProductTypeEnum.AR.getValue();
+            }
+        }
+        //internazionale
+        else {
+            if(productType.equals(RACCOMANDATA_SEMPLICE)){
+                proposalProductType = ProductTypeEnum.RIS.getValue();
+            }
+            if(productType.equals(RACCOMANDATA_AR) || productType.equals(RACCOMANDATA_890)){
+                proposalProductType = ProductTypeEnum.RIR.getValue();
+            }
+        }
+        return proposalProductType;
     }
 
     public String getProposalProductType(Address address, String productType){
