@@ -773,6 +773,7 @@ Resources:
               - dynamodb:TransactGetItems
               - dynamodb:TransactWriteItems
               - dynamodb:UpdateItem
+              - dynamodb:Scan
             Resource:
               - !Sub "${RequestDeliveryDynamoTableArn}"
               - !Sub "${RequestDeliveryDynamoTableArn}/*"
