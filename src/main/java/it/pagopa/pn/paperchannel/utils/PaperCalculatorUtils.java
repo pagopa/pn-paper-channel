@@ -1,6 +1,7 @@
 package it.pagopa.pn.paperchannel.utils;
 
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
+import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.CostDTO;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ShipmentCalculateRequest;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ShipmentCalculateResponse;
@@ -20,6 +21,8 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 import java.util.regex.Pattern;
+
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.INVALID_PRODUCT_TYPE;
 import static it.pagopa.pn.paperchannel.utils.Const.*;
 
 
@@ -59,6 +62,9 @@ public class PaperCalculatorUtils {
      * @return          response containing the final cost provided by simulation
      **/
     public Mono<ShipmentCalculateResponse> costSimulator(String tenderId, ShipmentCalculateRequest request) {
+        if(request.getProduct() == null) {
+            throw new PnGenericException(INVALID_PRODUCT_TYPE, INVALID_PRODUCT_TYPE.getMessage());
+        }
         String geokey = request.getGeokey();
         String product = getProposalProductType(geokey, request.getProduct().getValue());
         return paperTenderService.getCostFromTenderId(tenderId, geokey, product)
