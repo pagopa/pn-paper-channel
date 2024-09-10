@@ -45,6 +45,23 @@ public class PaperCalculatorRestV2ControllerTest {
     }
 
     @Test
+    void testCostSimulatorThrowExceptionWhenProductTypeIsWrong() {
+        //ARRANGE
+        String tenderId = "GARA_2024";
+        ShipmentCalculateRequest shipmentCalculateRequest = getShipmentCalculateRequest();
+        shipmentCalculateRequest.setProduct(null);
+        String path = "/paper-channel-private/v2/tenders/".concat(tenderId).concat("/cost/calculate");
+
+        //ACT & ASSERT
+        webTestClient.post()
+                .uri(uriBuilder -> uriBuilder.path(path).build())
+                .bodyValue(shipmentCalculateRequest)
+                .exchange()
+                .expectStatus()
+                .isBadRequest();
+    }
+
+    @Test
     void testCostSimulator400ThrowExceptionWhenParametersNotFound() {
         //ARRANGE
         String tenderId = "GARA";
