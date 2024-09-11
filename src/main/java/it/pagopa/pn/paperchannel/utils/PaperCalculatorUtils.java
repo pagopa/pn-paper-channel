@@ -84,7 +84,7 @@ public class PaperCalculatorUtils {
     private BigDecimal getCostSimulated(PnPaperChannelCostDTO contract, Integer numSides, Integer pageWeight, String productType, boolean isReversePrinter) {
         Integer numbersPage = isReversePrinter ? (int) Math.ceil(((double) numSides)/2) : numSides;
         Integer finalPageWeight = pageWeight == null ? pnPaperChannelConfig.getPaperWeight() : pageWeight;
-        Integer totalPagesWeight = numbersPage * finalPageWeight;
+        Integer totalPagesWeight = (numbersPage * finalPageWeight) + pnPaperChannelConfig.getLetterWeight();
         return getSimplifiedAmount(totalPagesWeight, numbersPage, numbersPage, contract, productType);
     }
 
@@ -174,8 +174,7 @@ public class PaperCalculatorUtils {
         Integer totPagesIgnoringAAR = getNumberOfPages(attachments, isReversePrinter, false);
         Integer totPages = getNumberOfPages(attachments, isReversePrinter, true);
         int totPagesWeight = getLetterWeight(totPages);
-        int totPlicoWeight = totPagesWeight + pnPaperChannelConfig.getLetterWeight();
-        return getSimplifiedAmount(totPlicoWeight, totPagesIgnoringAAR, totPages, costDTO, productType);
+        return getSimplifiedAmount(totPagesWeight, totPagesIgnoringAAR, totPages, costDTO, productType);
     }
 
     /**
