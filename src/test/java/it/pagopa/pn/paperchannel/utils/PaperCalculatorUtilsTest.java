@@ -3,6 +3,8 @@ package it.pagopa.pn.paperchannel.utils;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.CostDTO;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ProductTypeEnum;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ShipmentCalculateRequest;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ShipmentCalculateResponse;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.AttachmentInfo;
 import it.pagopa.pn.paperchannel.model.PnPaperChannelCostDTO;
@@ -18,10 +20,12 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
+
 import static it.pagopa.pn.paperchannel.utils.Const.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -409,7 +413,7 @@ class PaperCalculatorUtilsTest {
     void getLetterWeight() {
         Mockito.when(pnPaperChannelConfig.getLetterWeight()).thenReturn(100);
         Mockito.when(pnPaperChannelConfig.getPaperWeight()).thenReturn(200);
-        int res = paperCalculatorUtils.getLetterWeight(3);
+        int res = paperCalculatorUtils.getLetterWeight(3, pnPaperChannelConfig.getPaperWeight(), pnPaperChannelConfig.getLetterWeight());
         assertEquals(700, res);
     }
 
@@ -560,6 +564,27 @@ class PaperCalculatorUtilsTest {
         Integer numberOfPages = paperCalculatorUtils.getNumberOfPages(attachmentUrls, true, false);
         System.out.println(numberOfPages);
         assertEquals(2, numberOfPages);
+    }
+
+    @Test
+    void costSimulatorTest() {
+        String geokey = "00100";
+        PnPaperChannelCostDTO paperChannelCostDTO = getPaperChannelCostDTO();
+        ShipmentCalculateRequest shipmentCalculateRequest = new ShipmentCalculateRequest();
+        shipmentCalculateRequest.setGeokey(geokey);
+        shipmentCalculateRequest.setIsReversePrinter(true);
+        shipmentCalculateRequest.setPageWeight(5);
+        shipmentCalculateRequest.setNumSides(5);
+        shipmentCalculateRequest.setProduct(ShipmentCalculateRequest.ProductEnum.fromValue(paperChannelCostDTO.getProduct()));
+        Mockito.when(paperTenderService.getCostFromTenderId(paperChannelCostDTO.getTenderId(), shipmentCalculateRequest.getGeokey(), paperChannelCostDTO.getProduct()))
+                .thenReturn(Mono.just(paperChannelCostDTO));
+
+        // Act
+        ShipmentCalculateResponse res = paperCalculatorUtils.costSimulator(paperChannelCostDTO.getTenderId(), shipmentCalculateRequest).block();
+
+        // Assert
+        Assertions.assertNotNull(res);
+        Assertions.assertEquals(BigDecimal.valueOf(93).intValue(), res.getCost());
     }
 
     private CostDTO getNationalCost() {

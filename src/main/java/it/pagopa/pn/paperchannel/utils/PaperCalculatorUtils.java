@@ -84,8 +84,8 @@ public class PaperCalculatorUtils {
     private BigDecimal getCostSimulated(PnPaperChannelCostDTO contract, Integer numSides, Integer pageWeight, String productType, boolean isReversePrinter) {
         Integer numbersPage = isReversePrinter ? (int) Math.ceil(((double) numSides)/2) : numSides;
         Integer finalPageWeight = pageWeight == null ? pnPaperChannelConfig.getPaperWeight() : pageWeight;
-        Integer totalPagesWeight = (numbersPage * finalPageWeight) + pnPaperChannelConfig.getLetterWeight();
-        return getSimplifiedAmount(totalPagesWeight, numbersPage, numbersPage, contract, productType);
+        int totPagesWeight = getLetterWeight(numbersPage, finalPageWeight, pnPaperChannelConfig.getLetterWeight());
+        return getSimplifiedAmount(totPagesWeight, numbersPage, contract, productType);
     }
 
     /**
@@ -161,7 +161,7 @@ public class PaperCalculatorUtils {
     private BigDecimal getPriceForCOMPLETEMode(List<AttachmentInfo> attachments, CostDTO costDTO, boolean isReversePrinter){
         Integer totPagesIgnoringAAR = getNumberOfPages(attachments, isReversePrinter, false);
         Integer totPages = getNumberOfPages(attachments, isReversePrinter, true);
-        int totPagesWight = getLetterWeight(totPages);
+        int totPagesWight = getLetterWeight(totPages, pnPaperChannelConfig.getPaperWeight(), pnPaperChannelConfig.getLetterWeight());
         BigDecimal basePriceForWeight = CostRanges.getBasePriceForWeight(costDTO, totPagesWight);
         BigDecimal priceTotPages = costDTO.getPriceAdditional().multiply(BigDecimal.valueOf(totPagesIgnoringAAR));
         BigDecimal completedPrice = basePriceForWeight.add(priceTotPages);
@@ -171,28 +171,27 @@ public class PaperCalculatorUtils {
     }
 
     private BigDecimal getSimplifiedPriceForCOMPLETEMode(List<AttachmentInfo> attachments, PnPaperChannelCostDTO costDTO, String productType,  boolean isReversePrinter) {
-        Integer totPagesIgnoringAAR = getNumberOfPages(attachments, isReversePrinter, false);
         Integer totPages = getNumberOfPages(attachments, isReversePrinter, true);
-        int totPagesWeight = getLetterWeight(totPages);
-        return getSimplifiedAmount(totPagesWeight, totPagesIgnoringAAR, totPages, costDTO, productType);
+        int totPagesWeight = getLetterWeight(totPages, pnPaperChannelConfig.getPaperWeight(), pnPaperChannelConfig.getLetterWeight());
+        int totPlicoWeight = totPagesWeight + pnPaperChannelConfig.getLetterWeight();
+        return getSimplifiedAmount(totPlicoWeight, totPages, costDTO, productType);
     }
 
     /**
      * Applies formula to calculate complete cost of notification
      *
      * @param totPlicoWeight       amount of total weight of plico
-     * @param totPagesIgnoringAAR  amount of total pages without AAR
      * @param totPages             amount of total pages
      * @param contract             contract from which costs are calculated
      * @param productType          type of product based on address (AR, 890, etc)
      *
      * @return                     the amount final cost of notification
      **/
-    private BigDecimal getSimplifiedAmount(Integer totPlicoWeight, Integer totPagesIgnoringAAR, Integer totPages, PnPaperChannelCostDTO contract, String productType) {
+    private BigDecimal getSimplifiedAmount(Integer totPlicoWeight, Integer totPages, PnPaperChannelCostDTO contract, String productType) {
         log.info("Calculating cost Simplified COMPLETE mode, costDTO={}", contract);
 
         BigDecimal rangePriceFromWeight = contract.getBasePriceForWeight(totPlicoWeight);
-        BigDecimal priceTotPages = contract.getPagePrice().multiply(BigDecimal.valueOf(totPagesIgnoringAAR).subtract(BigDecimal.ONE));
+        BigDecimal priceTotPages = contract.getPagePrice().multiply(BigDecimal.valueOf(totPages).subtract(BigDecimal.ONE));
         BigDecimal totPricePages = rangePriceFromWeight.add(priceTotPages);
 
         log.info("Calculating cost Simplified COMPLETE mode, totPages={}, totPlicoWeight={} rangePriceFromWeight={}, totPricePages={}, priceTotPages={}",
@@ -208,9 +207,7 @@ public class PaperCalculatorUtils {
         return completedPrice.setScale(2, RoundingMode.HALF_UP);
     }
 
-    public int getLetterWeight(int numberOfPages){
-        int weightPaper = this.pnPaperChannelConfig.getPaperWeight();
-        int weightLetter = this.pnPaperChannelConfig.getLetterWeight();
+    public int getLetterWeight(int numberOfPages, int weightPaper, int weightLetter){
         return (weightPaper * numberOfPages) + weightLetter;
     }
 
