@@ -172,8 +172,7 @@ public class PaperCalculatorUtils {
 
     private BigDecimal getSimplifiedPriceForCOMPLETEMode(List<AttachmentInfo> attachments, PnPaperChannelCostDTO costDTO, String productType,  boolean isReversePrinter) {
         Integer totPages = getNumberOfPages(attachments, isReversePrinter, true);
-        int totPagesWeight = getLetterWeight(totPages, pnPaperChannelConfig.getPaperWeight(), pnPaperChannelConfig.getLetterWeight());
-        int totPlicoWeight = totPagesWeight + pnPaperChannelConfig.getLetterWeight();
+        int totPlicoWeight = getLetterWeight(totPages, pnPaperChannelConfig.getPaperWeight(), pnPaperChannelConfig.getLetterWeight());
         return getSimplifiedAmount(totPlicoWeight, totPages, costDTO, productType);
     }
 
