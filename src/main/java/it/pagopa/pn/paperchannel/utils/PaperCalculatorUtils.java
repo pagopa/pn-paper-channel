@@ -18,8 +18,8 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Collections;
 import java.util.List;
-import java.util.regex.Pattern;
 import static it.pagopa.pn.paperchannel.utils.Const.*;
 
 
@@ -37,8 +37,8 @@ public class PaperCalculatorUtils {
 
         if(pnPaperChannelConfig.isEnableSimplifiedTenderFlow()) {
             log.info("SimplifiedTenderFlow");
-            return paperTenderService.getSimplifiedCost(address.getCap(), address.getCountry(), getProductType(address, productType))
-                    .map(contract -> getSimplifiedCostWithDriver(contract, attachments, getProductType(address, productType), isReversePrinter));
+            return paperTenderService.getSimplifiedCost(address.getCap(), address.getCountry(), productType.getValue())
+                    .map(contract -> getSimplifiedCostWithDriver(contract, attachments, productType.getValue(), isReversePrinter));
         }
         log.info("OldTenderFlow");
 
@@ -60,9 +60,8 @@ public class PaperCalculatorUtils {
      **/
     public Mono<ShipmentCalculateResponse> costSimulator(String tenderId, ShipmentCalculateRequest request) {
         String geokey = request.getGeokey();
-        String product = getProposalProductType(geokey, request.getProduct().getValue());
-        return paperTenderService.getCostFromTenderId(tenderId, geokey, product)
-                .map(costDTO -> getCostSimulated(costDTO, request.getNumSides(), request.getPageWeight(), product, request.getIsReversePrinter()))
+        return paperTenderService.getCostFromTenderId(tenderId, geokey, request.getProduct().getValue())
+                .map(costDTO -> getCostSimulated(costDTO, request.getNumSides(), request.getPageWeight(), request.getProduct().getValue(), request.getIsReversePrinter()))
                 .map(cost -> {
                     ShipmentCalculateResponse response = new ShipmentCalculateResponse();
                     response.setCost(cost.multiply(BigDecimal.valueOf(100)).intValue());
@@ -82,7 +81,8 @@ public class PaperCalculatorUtils {
      * @return                  the amount final cost of notification
      **/
     private BigDecimal getCostSimulated(PnPaperChannelCostDTO contract, Integer numSides, Integer pageWeight, String productType, boolean isReversePrinter) {
-        Integer numbersPage = isReversePrinter ? (int) Math.ceil(((double) numSides)/2) : numSides;
+        var attachments = getAttachments(numSides);
+        Integer numbersPage = getNumberOfPages(attachments, isReversePrinter, true);
         Integer finalPageWeight = pageWeight == null ? pnPaperChannelConfig.getPaperWeight() : pageWeight;
         int totPagesWeight = getLetterWeight(numbersPage, finalPageWeight, pnPaperChannelConfig.getLetterWeight());
         return getSimplifiedAmount(totPagesWeight, numbersPage, contract, productType);
@@ -242,36 +242,6 @@ public class PaperCalculatorUtils {
         return productType;
     }
 
-    public String getProposalProductType(String geokey, String productType) {
-        String proposalProductType = "";
-
-        String regex = "^\\d+$";
-        boolean isNational =  Pattern.matches(regex, geokey);
-
-        //nazionale
-        if (isNational) {
-            if(productType.equals(RACCOMANDATA_SEMPLICE)){
-                proposalProductType = ProductTypeEnum.RS.getValue();
-            }
-            if(productType.equals(RACCOMANDATA_890)){
-                proposalProductType = ProductTypeEnum._890.getValue();
-            }
-            if(productType.equals(RACCOMANDATA_AR)){
-                proposalProductType = ProductTypeEnum.AR.getValue();
-            }
-        }
-        //internazionale
-        else {
-            if(productType.equals(RACCOMANDATA_SEMPLICE)){
-                proposalProductType = ProductTypeEnum.RIS.getValue();
-            }
-            if(productType.equals(RACCOMANDATA_AR) || productType.equals(RACCOMANDATA_890)){
-                proposalProductType = ProductTypeEnum.RIR.getValue();
-            }
-        }
-        return proposalProductType;
-    }
-
     public String getProposalProductType(Address address, String productType){
         String proposalProductType = "";
         boolean isNational = Utility.isNational(address.getCountry());
@@ -297,5 +267,14 @@ public class PaperCalculatorUtils {
             }
         }
         return proposalProductType;
+    }
+
+
+    private List<AttachmentInfo> getAttachments(Integer numSides) {
+        var attachment = new AttachmentInfo();
+        attachment.setDocumentType("");
+        attachment.setNumberOfPage(numSides);
+
+        return Collections.singletonList(attachment);
     }
 }

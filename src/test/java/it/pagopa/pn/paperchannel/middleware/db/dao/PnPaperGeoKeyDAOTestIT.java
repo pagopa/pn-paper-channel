@@ -1,6 +1,8 @@
 package it.pagopa.pn.paperchannel.middleware.db.dao;
 
 import it.pagopa.pn.paperchannel.config.BaseTest;
+import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
+import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnPaperChannelGeoKey;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,7 +30,7 @@ class PnPaperGeoKeyDAOTestIT extends BaseTest {
     }
 
     @Test
-    void testGetGeoKey() {
+    void testRetrieveActiveGeokeyWithDismissedFalse() {
 
         // Act: Recupero del GeoKey dal database
         Mono<PnPaperChannelGeoKey> result = pnPaperGeoKeyDAO.getGeoKey(TENDER_ID, PRODUCT, GEO_KEY);
@@ -44,6 +46,29 @@ class PnPaperGeoKeyDAOTestIT extends BaseTest {
                     assertEquals(false, geoKey.getDismissed());
                 })
                 .verifyComplete();
+    }
+
+    @Test
+    void testRetrieveActiveGeokeyWithDismissedTrue() {
+        // Arrange
+        var geoKeyDismissed = new PnPaperChannelGeoKey(TENDER_ID, PRODUCT, GEO_KEY);
+        geoKeyDismissed.setActivationDate(Instant.now().minusSeconds(300));
+        geoKeyDismissed.setDismissed(true);
+        geoKeyDismissed.setLot("LOT 1");
+        geoKeyDismissed.setZone("ZONE 1");
+
+        // add Recently Dismissed GeoKey
+        pnPaperGeoKeyDAO.createOrUpdate(geoKeyDismissed).block();
+
+        // Act: Recupero del GeoKey dal database AND Assert: Verifica che il GeoKey sia stato recuperato correttamente
+        StepVerifier.create(pnPaperGeoKeyDAO.getGeoKey(TENDER_ID, PRODUCT, GEO_KEY))
+                .expectErrorMatches(error -> {
+                    assertNotNull(error);
+                    assertInstanceOf(PnGenericException.class, error);
+                    var exception = (PnGenericException) error;
+                    assertEquals(exception.getExceptionType(), ExceptionTypeEnum.GEOKEY_NOT_FOUND);
+                    return true;
+                }).verify();
     }
 
 

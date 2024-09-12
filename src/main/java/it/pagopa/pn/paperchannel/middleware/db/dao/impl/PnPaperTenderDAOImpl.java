@@ -43,7 +43,7 @@ public class PnPaperTenderDAOImpl extends BaseDAO<PnPaperChannelTender> implemen
     @Override
     public Mono<PnPaperChannelTender> getActiveTender() {
         Expression filterExpression = Expression.builder()
-                .expression("activationDate < :now")
+                .expression("activationDate <= :now")
                 .putExpressionValue(":now", AttributeValue.builder().s(Instant.now().toString()).build())
                 .build();
 

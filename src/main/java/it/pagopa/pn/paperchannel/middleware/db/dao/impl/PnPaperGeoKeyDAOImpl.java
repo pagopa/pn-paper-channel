@@ -1,6 +1,7 @@
 package it.pagopa.pn.paperchannel.middleware.db.dao.impl;
 
 import it.pagopa.pn.paperchannel.config.AwsPropertiesConfig;
+import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PnPaperGeoKeyDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.BaseDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnPaperChannelGeoKey;
@@ -10,12 +11,11 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 import java.time.Instant;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
+
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.GEOKEY_NOT_FOUND;
 
 
 @Repository
@@ -34,6 +34,12 @@ public class PnPaperGeoKeyDAOImpl extends BaseDAO<PnPaperChannelGeoKey> implemen
         return Mono.fromFuture(put(paperChannelGeoKey).thenApply(item -> item));
     }
 
+
+    /**
+     * Retrieve the active GeoKey
+     *
+     * @return  the entity of GeoKey
+     **/
     @Override
     public Mono<PnPaperChannelGeoKey> getGeoKey(String tenderId, String product, String geoKey) {
 
@@ -52,15 +58,14 @@ public class PnPaperGeoKeyDAOImpl extends BaseDAO<PnPaperChannelGeoKey> implemen
                 )
         );
 
-        String filterExpression = "dismissed = :isDismissed";
-
-        Map<String, AttributeValue> values = new HashMap<>();
-
-        values.put(":isDismissed", AttributeValue.builder().bool(Boolean.FALSE).build());
-
-        return super.getByFilter(keyConditional, null, values, filterExpression, null, false)
+        return super.getByFilter(keyConditional, null, null, null, null, false)
                 .sort(Comparator.comparing(PnPaperChannelGeoKey::getActivationDate).reversed())
-                .next();
+                .next()
+                .flatMap(item -> {
+                    if (item.getDismissed().equals(Boolean.TRUE))
+                        return Mono.error(new PnGenericException(GEOKEY_NOT_FOUND, GEOKEY_NOT_FOUND.getMessage()));
+                    return Mono.just(item);
+                });
     }
 
 
