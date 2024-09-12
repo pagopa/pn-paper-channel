@@ -1,7 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.db.dao.impl;
 
 import it.pagopa.pn.paperchannel.config.AwsPropertiesConfig;
-import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PnPaperGeoKeyDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.BaseDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnPaperChannelGeoKey;
@@ -15,7 +14,6 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import java.time.Instant;
 import java.util.Comparator;
 
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.GEOKEY_NOT_FOUND;
 
 
 @Repository

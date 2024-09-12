@@ -1,8 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.db.dao;
 
 import it.pagopa.pn.paperchannel.config.BaseTest;
-import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
-import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnPaperChannelGeoKey;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
