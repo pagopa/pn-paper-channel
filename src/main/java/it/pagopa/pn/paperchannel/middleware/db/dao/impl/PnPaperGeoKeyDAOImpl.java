@@ -63,7 +63,7 @@ public class PnPaperGeoKeyDAOImpl extends BaseDAO<PnPaperChannelGeoKey> implemen
                 .next()
                 .flatMap(item -> {
                     if (item.getDismissed().equals(Boolean.TRUE))
-                        return Mono.error(new PnGenericException(GEOKEY_NOT_FOUND, GEOKEY_NOT_FOUND.getMessage()));
+                        return Mono.empty();
                     return Mono.just(item);
                 });
     }

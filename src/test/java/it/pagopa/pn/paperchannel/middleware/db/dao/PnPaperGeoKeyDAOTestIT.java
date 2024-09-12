@@ -62,13 +62,8 @@ class PnPaperGeoKeyDAOTestIT extends BaseTest {
 
         // Act: Recupero del GeoKey dal database AND Assert: Verifica che il GeoKey sia stato recuperato correttamente
         StepVerifier.create(pnPaperGeoKeyDAO.getGeoKey(TENDER_ID, PRODUCT, GEO_KEY))
-                .expectErrorMatches(error -> {
-                    assertNotNull(error);
-                    assertInstanceOf(PnGenericException.class, error);
-                    var exception = (PnGenericException) error;
-                    assertEquals(exception.getExceptionType(), ExceptionTypeEnum.GEOKEY_NOT_FOUND);
-                    return true;
-                }).verify();
+                .expectComplete()
+                .verify();
     }
 
 
