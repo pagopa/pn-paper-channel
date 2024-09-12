@@ -59,7 +59,7 @@ public class PnPaperGeoKeyDAOImpl extends BaseDAO<PnPaperChannelGeoKey> implemen
         return super.getByFilter(keyConditional, null, null, null, null, false)
                 .sort(Comparator.comparing(PnPaperChannelGeoKey::getActivationDate).reversed())
                 .next()
-                .filter(item -> !item.getDismissed().equals(Boolean.TRUE));
+                .filter(item ->  Boolean.FALSE.equals(item.getDismissed()));
     }
 
 
