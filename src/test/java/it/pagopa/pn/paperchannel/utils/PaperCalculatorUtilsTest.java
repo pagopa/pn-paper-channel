@@ -3,6 +3,8 @@ package it.pagopa.pn.paperchannel.utils;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.CostDTO;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ProductTypeEnum;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ShipmentCalculateRequest;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ShipmentCalculateResponse;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.AttachmentInfo;
 import it.pagopa.pn.paperchannel.model.PnPaperChannelCostDTO;
@@ -18,11 +20,12 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
-import static it.pagopa.pn.paperchannel.utils.Const.*;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
@@ -43,7 +46,7 @@ class PaperCalculatorUtilsTest {
 
 
     @Test
-    void testSimplifiedCalculatorReversePrinterWithAAR() {
+    void testNationalWithReversePrinterAndProductTypeRS() {
         //Arrange
         List<AttachmentInfo> attachmentUrls = new ArrayList<>();
         AttachmentInfo pnAttachmentInfo = new AttachmentInfo();
@@ -66,14 +69,16 @@ class PaperCalculatorUtilsTest {
 
         Address address = new Address();
         address.setCap("00100");
-        address.setCountry("it");
+        address.setCountry("ITALIA");
 
         var costDTO = getPaperChannelCostDTO();
 
         costDTO.setProduct("RS");
+        var isReversePrinter = true;
 
         Mockito.when(pnPaperChannelConfig.isEnableSimplifiedTenderFlow()).thenReturn(true);
         Mockito.when(pnPaperChannelConfig.getPaperWeight()).thenReturn(5);
+        Mockito.when(pnPaperChannelConfig.getLetterWeight()).thenReturn(5);
         Mockito.when(dateChargeCalculationModesUtils.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.COMPLETE);
 
 
@@ -82,18 +87,18 @@ class PaperCalculatorUtilsTest {
 
 
         // Act
-        CostWithDriver res = paperCalculatorUtils.calculator(attachmentUrls, address, ProductTypeEnum.RS, true).block();
+        CostWithDriver res = paperCalculatorUtils.calculator(attachmentUrls, address, ProductTypeEnum.RS, isReversePrinter).block();
 
 
         //Assert
         Assertions.assertNotNull(res);
-        Assertions.assertEquals(BigDecimal.valueOf(1.20).setScale(2, RoundingMode.UNNECESSARY), res.getCost());
+        Assertions.assertEquals(BigDecimal.valueOf(1.33).setScale(2, RoundingMode.UNNECESSARY), res.getCost());
         Assertions.assertEquals(costDTO.getDeliveryDriverId(), res.getDriverCode());
         Assertions.assertEquals(costDTO.getTenderId(), res.getTenderCode());
     }
 
     @Test
-    void testSimplifiedCalculatorReversePrinter() {
+    void testNationalWithReversePrinterAndProductTypeRSWithoutAAR() {
         // Arrange
         List<AttachmentInfo> attachmentUrls = new ArrayList<>();
         AttachmentInfo pnAttachmentInfo = new AttachmentInfo();
@@ -107,7 +112,7 @@ class PaperCalculatorUtilsTest {
 
         Address address = new Address();
         address.setCap("00100");
-        address.setCountry("it");
+        address.setCountry("ITALIA");
 
         var costDTO = getPaperChannelCostDTO();
 
@@ -134,7 +139,7 @@ class PaperCalculatorUtilsTest {
     }
 
     @Test
-    void testSimplifiedCalculatorOnlyFront() {
+    void testNationalOnlyFrontPrinterAndProductTypeRSWithoutAAR() {
         // Arrange
         List<AttachmentInfo> attachmentUrls = new ArrayList<>();
         AttachmentInfo pnAttachmentInfo = new AttachmentInfo();
@@ -148,7 +153,7 @@ class PaperCalculatorUtilsTest {
 
         Address address = new Address();
         address.setCap("00100");
-        address.setCountry("it");
+        address.setCountry("ITALIA");
 
         var costDTO = getPaperChannelCostDTO();
 
@@ -169,6 +174,178 @@ class PaperCalculatorUtilsTest {
         Assertions.assertEquals(costDTO.getDeliveryDriverId(), res.getDriverCode());
         Assertions.assertEquals(costDTO.getTenderId(), res.getTenderCode());
     }
+
+
+    @Test
+    void testInternationalOnlyFrontPrinterAndProductTypeRIRWithoutAAR() {
+        // Arrange
+        List<AttachmentInfo> attachmentUrls = new ArrayList<>();
+        AttachmentInfo pnAttachmentInfo = new AttachmentInfo();
+        pnAttachmentInfo.setDate("");
+        pnAttachmentInfo.setFileKey("http://localhost:8080");
+        pnAttachmentInfo.setId("");
+        pnAttachmentInfo.setNumberOfPage(5);
+        pnAttachmentInfo.setDocumentType("");
+        pnAttachmentInfo.setUrl("");
+        attachmentUrls.add(pnAttachmentInfo);
+
+        Address address = new Address();
+        address.setCountry("BRASILE");
+
+        var costDTO = getPaperChannelCostDTO();
+        costDTO.setProduct("RIR");
+
+        Mockito.when(pnPaperChannelConfig.isEnableSimplifiedTenderFlow()).thenReturn(true);
+        Mockito.when(pnPaperChannelConfig.getPaperWeight()).thenReturn(5);
+        Mockito.when(dateChargeCalculationModesUtils.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.COMPLETE);
+        Mockito.when(paperTenderService.getSimplifiedCost(address.getCap(), address.getCountry(), costDTO.getProduct()))
+                .thenReturn(Mono.just(costDTO));
+
+        // Act
+        CostWithDriver res = paperCalculatorUtils.calculator(attachmentUrls, address, ProductTypeEnum.RIR, false).block();
+
+        // Assert
+        Assertions.assertNotNull(res);
+        Assertions.assertEquals(BigDecimal.valueOf(1.25).setScale(2, RoundingMode.UNNECESSARY), res.getCost());
+        Assertions.assertEquals(costDTO.getDeliveryDriverId(), res.getDriverCode());
+        Assertions.assertEquals(costDTO.getTenderId(), res.getTenderCode());
+    }
+
+    @Test
+    void testInternationalWithReversePrinterAndProductTypeRIS() {
+        //Arrange
+        List<AttachmentInfo> attachmentUrls = new ArrayList<>();
+        AttachmentInfo pnAttachmentInfo = new AttachmentInfo();
+        pnAttachmentInfo.setDate("");
+        pnAttachmentInfo.setFileKey("http://localhost:8080");
+        pnAttachmentInfo.setId("");
+        pnAttachmentInfo.setNumberOfPage(5);
+        pnAttachmentInfo.setDocumentType("");
+        pnAttachmentInfo.setUrl("");
+        attachmentUrls.add(pnAttachmentInfo);
+        AttachmentInfo attachmentAAR = new AttachmentInfo();
+        attachmentAAR.setDate("");
+        attachmentAAR.setFileKey("http://localhost:8080");
+        attachmentAAR.setId("");
+        attachmentAAR.setNumberOfPage(5);
+        attachmentAAR.setDocumentType(Const.PN_AAR);
+        attachmentAAR.setUrl("");
+        attachmentUrls.add(attachmentAAR);
+
+
+        Address address = new Address();
+        address.setCountry("FRANCIA");
+
+        var costDTO = getPaperChannelCostDTO();
+
+        costDTO.setProduct("RIS");
+        var isReversePrinter = true;
+
+        Mockito.when(pnPaperChannelConfig.isEnableSimplifiedTenderFlow()).thenReturn(true);
+        Mockito.when(pnPaperChannelConfig.getPaperWeight()).thenReturn(5);
+        Mockito.when(pnPaperChannelConfig.getLetterWeight()).thenReturn(5);
+        Mockito.when(dateChargeCalculationModesUtils.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.COMPLETE);
+
+
+        Mockito.when(paperTenderService.getSimplifiedCost(address.getCap(), address.getCountry(), costDTO.getProduct()))
+                .thenReturn(Mono.just(costDTO));
+
+
+        // Act
+        CostWithDriver res = paperCalculatorUtils.calculator(attachmentUrls, address, ProductTypeEnum.RIS, isReversePrinter).block();
+
+
+        //Assert
+        Assertions.assertNotNull(res);
+        Assertions.assertEquals(BigDecimal.valueOf(1.33).setScale(2, RoundingMode.UNNECESSARY), res.getCost());
+        Assertions.assertEquals(costDTO.getDeliveryDriverId(), res.getDriverCode());
+        Assertions.assertEquals(costDTO.getTenderId(), res.getTenderCode());
+    }
+
+
+    @Test
+    void testCalculatorSimulatorWithProductTypeRSAndReversePrinter() {
+        // Arrange
+        String geokey = "00100";
+
+        var paperChannelCostDTO = getPaperChannelCostDTO();
+        paperChannelCostDTO.setProduct("RS");
+
+        var shipmentCalculateRequest = new ShipmentCalculateRequest();
+        shipmentCalculateRequest.setGeokey(geokey);
+        shipmentCalculateRequest.setIsReversePrinter(true);
+        shipmentCalculateRequest.setPageWeight(5);
+        shipmentCalculateRequest.setNumSides(12);
+        shipmentCalculateRequest.setProduct(ShipmentCalculateRequest.ProductEnum.fromValue(paperChannelCostDTO.getProduct()));
+
+
+        Mockito.when(pnPaperChannelConfig.getLetterWeight()).thenReturn(5);
+        Mockito.when(paperTenderService.getCostFromTenderId(paperChannelCostDTO.getTenderId(), shipmentCalculateRequest.getGeokey(), paperChannelCostDTO.getProduct()))
+                .thenReturn(Mono.just(paperChannelCostDTO));
+
+        // Act
+        ShipmentCalculateResponse res = paperCalculatorUtils.costSimulator(paperChannelCostDTO.getTenderId(), shipmentCalculateRequest).block();
+
+        // Assert
+        Assertions.assertNotNull(res);
+        Assertions.assertEquals(BigDecimal.valueOf(133).intValue(), res.getCost());
+    }
+
+    @Test
+    void testCalculatorSimulatorWithProductTypeRIRAndOnlyFront() {
+        // Arrange
+        String geokey = "BRASILE";
+
+        var paperChannelCostDTO = getPaperChannelCostDTO();
+        paperChannelCostDTO.setProduct("RIR");
+        var shipmentCalculateRequest = new ShipmentCalculateRequest();
+        shipmentCalculateRequest.setGeokey(geokey);
+        shipmentCalculateRequest.setIsReversePrinter(false);
+        shipmentCalculateRequest.setPageWeight(5);
+        shipmentCalculateRequest.setNumSides(5);
+        shipmentCalculateRequest.setProduct(ShipmentCalculateRequest.ProductEnum.fromValue(paperChannelCostDTO.getProduct()));
+
+        Mockito.when(pnPaperChannelConfig.getLetterWeight()).thenReturn(5);
+
+        Mockito.when(paperTenderService.getCostFromTenderId(paperChannelCostDTO.getTenderId(), shipmentCalculateRequest.getGeokey(), paperChannelCostDTO.getProduct()))
+                .thenReturn(Mono.just(paperChannelCostDTO));
+
+        // Act
+        ShipmentCalculateResponse res = paperCalculatorUtils.costSimulator(paperChannelCostDTO.getTenderId(), shipmentCalculateRequest).block();
+
+        // Assert
+        Assertions.assertNotNull(res);
+        Assertions.assertEquals(BigDecimal.valueOf(125).intValue(), res.getCost());
+    }
+
+    @Test
+    void testCalculatorSimulatorWithProductTypeRISAndReversePrinter() {
+        // Arrange
+        String geokey = "FRANCIA";
+
+        var paperChannelCostDTO = getPaperChannelCostDTO();
+        paperChannelCostDTO.setProduct("RIS");
+        var shipmentCalculateRequest = new ShipmentCalculateRequest();
+        shipmentCalculateRequest.setGeokey(geokey);
+        shipmentCalculateRequest.setIsReversePrinter(true);
+        shipmentCalculateRequest.setPageWeight(5);
+        shipmentCalculateRequest.setNumSides(12);
+        shipmentCalculateRequest.setProduct(ShipmentCalculateRequest.ProductEnum.fromValue(paperChannelCostDTO.getProduct()));
+
+        Mockito.when(pnPaperChannelConfig.getLetterWeight()).thenReturn(5);
+
+        Mockito.when(paperTenderService.getCostFromTenderId(paperChannelCostDTO.getTenderId(), shipmentCalculateRequest.getGeokey(), paperChannelCostDTO.getProduct()))
+                .thenReturn(Mono.just(paperChannelCostDTO));
+
+        // Act
+        ShipmentCalculateResponse res = paperCalculatorUtils.costSimulator(paperChannelCostDTO.getTenderId(), shipmentCalculateRequest).block();
+
+        // Assert
+        Assertions.assertNotNull(res);
+        Assertions.assertEquals(BigDecimal.valueOf(133).intValue(), res.getCost());
+    }
+
+
 
     @Test
     void calculator() {
@@ -409,7 +586,7 @@ class PaperCalculatorUtilsTest {
     void getLetterWeight() {
         Mockito.when(pnPaperChannelConfig.getLetterWeight()).thenReturn(100);
         Mockito.when(pnPaperChannelConfig.getPaperWeight()).thenReturn(200);
-        int res = paperCalculatorUtils.getLetterWeight(3);
+        int res = paperCalculatorUtils.getLetterWeight(3, pnPaperChannelConfig.getPaperWeight(), pnPaperChannelConfig.getLetterWeight());
         assertEquals(700, res);
     }
 
@@ -489,26 +666,6 @@ class PaperCalculatorUtilsTest {
         assertEquals("890", res3);
     }
 
-    @Test
-    void getProposalProductTypeWithGeokey() {
-        String geokey = "00100";
-
-        String resRS = paperCalculatorUtils.getProposalProductType(geokey, RACCOMANDATA_SEMPLICE);
-        assertEquals(ProductTypeEnum.RS.getValue(), resRS);
-        String res890 = paperCalculatorUtils.getProposalProductType(geokey, RACCOMANDATA_890);
-        assertEquals(ProductTypeEnum._890.getValue(), res890);
-        String resAR = paperCalculatorUtils.getProposalProductType(geokey, RACCOMANDATA_AR);
-        assertEquals(ProductTypeEnum.AR.getValue(), resAR);
-
-        geokey = "ZONE_1";
-
-        String res1 = paperCalculatorUtils.getProposalProductType(geokey, RACCOMANDATA_SEMPLICE);
-        assertEquals(ProductTypeEnum.RIS.getValue(), res1);
-        String res2 = paperCalculatorUtils.getProposalProductType(geokey, RACCOMANDATA_890);
-        assertEquals(ProductTypeEnum.RIR.getValue(), res2);
-        String res3 = paperCalculatorUtils.getProposalProductType(geokey, RACCOMANDATA_AR);
-        assertEquals(ProductTypeEnum.RIR.getValue(), res3);
-    }
 
     //(numero di pagine degli atti 4, ma reversPrinter=true per cui 2 effettive + 1 AAR)
     @Test
@@ -561,6 +718,8 @@ class PaperCalculatorUtilsTest {
         System.out.println(numberOfPages);
         assertEquals(2, numberOfPages);
     }
+
+
 
     private CostDTO getNationalCost() {
         CostDTO dto = new CostDTO();

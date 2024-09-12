@@ -10,6 +10,8 @@ public class Const {
     public static final String RACCOMANDATA_SEMPLICE = "RS";
     public static final String RACCOMANDATA_890 = "890";
     public static final String RACCOMANDATA_AR = "AR";
+    public static final String RACCOMANDATA_RIR = "RIR";
+    public static final String RACCOMANDATA_RIS = "RIS";
     public static final String ZONE_1 = "ZONE_1";
     public static final String ZONE_2 = "ZONE_2";
     public static final String ZONE_3 = "ZONE_3";

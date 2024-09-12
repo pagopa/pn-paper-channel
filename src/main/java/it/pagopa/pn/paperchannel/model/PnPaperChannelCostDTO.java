@@ -32,8 +32,8 @@ public class PnPaperChannelCostDTO {
 
     public BigDecimal getBasePriceFromProductType(String productType) {
         return switch (productType) {
-            case RACCOMANDATA_AR -> basePriceAR;
-            case RACCOMANDATA_SEMPLICE -> basePriceRS;
+            case RACCOMANDATA_AR, RACCOMANDATA_RIR -> basePriceAR;
+            case RACCOMANDATA_SEMPLICE, RACCOMANDATA_RIS -> basePriceRS;
             case RACCOMANDATA_890 -> basePrice890;
             default -> throw new PnGenericException(INVALID_PRODUCT_TYPE, INVALID_PRODUCT_TYPE.getMessage());
         };

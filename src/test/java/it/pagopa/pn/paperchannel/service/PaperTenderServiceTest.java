@@ -45,7 +45,7 @@ class PaperTenderServiceTest {
     void whenCallGetCostWithoutActiveTenderThenReturnErrorTest(){
         when(tenderDAO.findActiveTender()).thenReturn(Mono.empty());
         StepVerifier.create(this.paperTenderService.getCostFrom(null, "ZONE_1", "AR"))
-                .expectErrorMatches((ex) -> {
+                .expectErrorMatches(ex -> {
                     assertInstanceOf(PnGenericException.class, ex);
                     assertEquals(ACTIVE_TENDER_NOT_FOUND, ((PnGenericException) ex).getExceptionType());
                     return true;
