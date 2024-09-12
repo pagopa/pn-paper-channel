@@ -10,12 +10,10 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 import java.time.Instant;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
+
 
 
 @Repository
@@ -34,6 +32,12 @@ public class PnPaperGeoKeyDAOImpl extends BaseDAO<PnPaperChannelGeoKey> implemen
         return Mono.fromFuture(put(paperChannelGeoKey).thenApply(item -> item));
     }
 
+
+    /**
+     * Retrieve the active GeoKey
+     *
+     * @return  the entity of GeoKey
+     **/
     @Override
     public Mono<PnPaperChannelGeoKey> getGeoKey(String tenderId, String product, String geoKey) {
 
@@ -52,15 +56,10 @@ public class PnPaperGeoKeyDAOImpl extends BaseDAO<PnPaperChannelGeoKey> implemen
                 )
         );
 
-        String filterExpression = "dismissed = :isDismissed";
-
-        Map<String, AttributeValue> values = new HashMap<>();
-
-        values.put(":isDismissed", AttributeValue.builder().bool(Boolean.FALSE).build());
-
-        return super.getByFilter(keyConditional, null, values, filterExpression, null, false)
+        return super.getByFilter(keyConditional, null, null, null, null, false)
                 .sort(Comparator.comparing(PnPaperChannelGeoKey::getActivationDate).reversed())
-                .next();
+                .next()
+                .filter(item ->  Boolean.FALSE.equals(item.getDismissed()));
     }
 
 
