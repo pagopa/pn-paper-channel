@@ -37,7 +37,8 @@ public class PaperCalculatorUtils {
 
         if(pnPaperChannelConfig.isEnableSimplifiedTenderFlow()) {
             log.info("SimplifiedTenderFlow");
-            return paperTenderService.getSimplifiedCost(address.getCap(), address.getCountry(), productType.getValue())
+            String geokey = (isNational) ? address.getCap() : address.getCountry();
+            return paperTenderService.getSimplifiedCost(geokey, productType.getValue())
                     .map(contract -> getSimplifiedCostWithDriver(contract, attachments, productType.getValue(), isReversePrinter));
         }
         log.info("OldTenderFlow");
