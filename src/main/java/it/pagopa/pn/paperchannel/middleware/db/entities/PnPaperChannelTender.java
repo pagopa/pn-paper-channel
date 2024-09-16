@@ -6,7 +6,6 @@ import java.math.BigDecimal;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey;
 
 
 @Setter
@@ -17,7 +16,7 @@ public class PnPaperChannelTender {
     @Getter(onMethod = @__({@DynamoDbPartitionKey, @DynamoDbAttribute("tenderId")}))
     private String tenderId;
 
-    @Getter(onMethod = @__({@DynamoDbSortKey, @DynamoDbAttribute("activationDate")}))
+    @Getter(onMethod = @__({@DynamoDbAttribute("activationDate")}))
     private Instant activationDate;
 
     @Getter(onMethod = @__({@DynamoDbAttribute("tenderName")}))

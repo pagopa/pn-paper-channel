@@ -46,18 +46,16 @@ public class PaperTenderServiceImpl implements PaperTenderService {
     /**
      * Retrieve the cost based on a specific tenderId, geokey and productType
      *
-     * @param cap          identifier of national city
-     * @param zone         identifier of a geographic set of contries
+     * @param geokey          identifier of national city or geographic set of contries
      * @param productType  type of product (AR, 890, etc)
      *
      * @return             DTO containing cost
      * */
     @Override
-    public Mono<PnPaperChannelCostDTO> getSimplifiedCost(String cap, String zone, String productType) {
+    public Mono<PnPaperChannelCostDTO> getSimplifiedCost(String geokey, String productType) {
         String processName = "Get New Cost From";
         log.logStartingProcess(processName);
-        String geoKeyValue = StringUtils.isNotEmpty(cap) ? cap : zone;
-        return getCostFromTenderId(null, geoKeyValue, productType);
+        return getCostFromTenderId(null, geokey, productType);
     }
 
     /**
@@ -73,6 +71,7 @@ public class PaperTenderServiceImpl implements PaperTenderService {
     public Mono<PnPaperChannelCostDTO> getCostFromTenderId(String tenderId, String geokey, String productType) {
         String processName = "Get Cost From TenderId";
         log.logStartingProcess(processName);
+        log.debug("Retrieve cost from tender {}, geokey {} and product {}", tenderId, geokey, productType);
         Mono<PnPaperChannelTender> getTender = StringUtils.isEmpty(tenderId)
                 ?
                     this.pnPaperTenderDAO.getActiveTender().switchIfEmpty(Mono.error(new PnGenericException(ACTIVE_TENDER_NOT_FOUND, ACTIVE_TENDER_NOT_FOUND.getMessage(), HttpStatus.NOT_FOUND)))

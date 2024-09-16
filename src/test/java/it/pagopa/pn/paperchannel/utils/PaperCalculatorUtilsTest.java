@@ -82,7 +82,7 @@ class PaperCalculatorUtilsTest {
         Mockito.when(dateChargeCalculationModesUtils.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.COMPLETE);
 
 
-        Mockito.when(paperTenderService.getSimplifiedCost(address.getCap(), address.getCountry(), costDTO.getProduct()))
+        Mockito.when(paperTenderService.getSimplifiedCost(address.getCap(), costDTO.getProduct()))
                 .thenReturn(Mono.just(costDTO));
 
 
@@ -123,7 +123,7 @@ class PaperCalculatorUtilsTest {
         Mockito.when(dateChargeCalculationModesUtils.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.COMPLETE);
 
 
-        Mockito.when(paperTenderService.getSimplifiedCost(address.getCap(), address.getCountry(), costDTO.getProduct()))
+        Mockito.when(paperTenderService.getSimplifiedCost(address.getCap(), costDTO.getProduct()))
                 .thenReturn(Mono.just(costDTO));
 
 
@@ -162,7 +162,7 @@ class PaperCalculatorUtilsTest {
         Mockito.when(pnPaperChannelConfig.isEnableSimplifiedTenderFlow()).thenReturn(true);
         Mockito.when(pnPaperChannelConfig.getPaperWeight()).thenReturn(5);
         Mockito.when(dateChargeCalculationModesUtils.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.COMPLETE);
-        Mockito.when(paperTenderService.getSimplifiedCost(address.getCap(), address.getCountry(), costDTO.getProduct()))
+        Mockito.when(paperTenderService.getSimplifiedCost(address.getCap(), costDTO.getProduct()))
                 .thenReturn(Mono.just(costDTO));
 
         // Act
@@ -190,6 +190,7 @@ class PaperCalculatorUtilsTest {
         attachmentUrls.add(pnAttachmentInfo);
 
         Address address = new Address();
+        address.setCap("ZONE_1");
         address.setCountry("BRASILE");
 
         var costDTO = getPaperChannelCostDTO();
@@ -198,7 +199,7 @@ class PaperCalculatorUtilsTest {
         Mockito.when(pnPaperChannelConfig.isEnableSimplifiedTenderFlow()).thenReturn(true);
         Mockito.when(pnPaperChannelConfig.getPaperWeight()).thenReturn(5);
         Mockito.when(dateChargeCalculationModesUtils.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.COMPLETE);
-        Mockito.when(paperTenderService.getSimplifiedCost(address.getCap(), address.getCountry(), costDTO.getProduct()))
+        Mockito.when(paperTenderService.getSimplifiedCost(address.getCountry(), costDTO.getProduct()))
                 .thenReturn(Mono.just(costDTO));
 
         // Act
@@ -234,6 +235,7 @@ class PaperCalculatorUtilsTest {
 
 
         Address address = new Address();
+        address.setCap("ZONE_1");
         address.setCountry("FRANCIA");
 
         var costDTO = getPaperChannelCostDTO();
@@ -247,7 +249,7 @@ class PaperCalculatorUtilsTest {
         Mockito.when(dateChargeCalculationModesUtils.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.COMPLETE);
 
 
-        Mockito.when(paperTenderService.getSimplifiedCost(address.getCap(), address.getCountry(), costDTO.getProduct()))
+        Mockito.when(paperTenderService.getSimplifiedCost(address.getCountry(), costDTO.getProduct()))
                 .thenReturn(Mono.just(costDTO));
 
 
