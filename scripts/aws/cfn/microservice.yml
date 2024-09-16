@@ -302,13 +302,13 @@ Parameters:
     Type: String
     Description: 'ARN of dynamodb table containing out of order event errors'
 
-  PaperChannelTenderDynamoTableName:
-    Type: String
-    Description: 'Name of dynamodb table containing tenders'
-
-  PaperChannelTenderDynamoTableArn:
-    Type: String
-    Description: 'ARN of dynamodb table containing tenders'
+#  PaperChannelTenderDynamoTableName:
+#    Type: String
+#    Description: 'Name of dynamodb table containing tenders'
+#
+#  PaperChannelTenderDynamoTableArn:
+#    Type: String
+#    Description: 'ARN of dynamodb table containing tenders'
 
   PaperChannelGeokeyDynamoTableName:
     Type: String
@@ -693,7 +693,7 @@ Resources:
         ContainerEnvEntry63: !Sub 'PN_PAPERCHANNEL_ENABLEDOCFILTERRULEENGINE=${EnableDocFilterRuleEngine}'
         ContainerEnvEntry64: !Sub 'PN_PAPERCHANNEL_DEFAULTATTACHMENTCONFIGCAP=${DefaultAttachmentConfigCap}'
         ContainerEnvEntry65: !Sub 'AWS_DYNAMODBPAPEREVENTERRORTABLE=${PaperEventErrorDynamoTableName}'
-        ContainerEnvEntry66: !Sub 'AWS_DYNAMODBPAPERCHANNELTENDERTABLE=${PaperChannelTenderDynamoTableName}'
+#        ContainerEnvEntry66: !Sub 'AWS_DYNAMODBPAPERCHANNELTENDERTABLE=${PaperChannelTenderDynamoTableName}'
         ContainerEnvEntry67: !Sub 'AWS_DYNAMODBPAPERCHANNELGEOKEYTABLE=${PaperChannelGeokeyDynamoTableName}'
         ContainerEnvEntry68: !Sub 'AWS_DYNAMODBPAPERCHANNELDELIVERYDRIVERTABLE=${PaperChannelDeliveryDriverDynamoTableName}'
         ContainerEnvEntry69: !Sub 'AWS_DYNAMODBPAPERCHANNELCOSTTABLE=${PaperChannelCostDynamoTableName}'
@@ -801,8 +801,8 @@ Resources:
               - !Sub "${AttachmentsConfigDynamoTableArn}/*"
               - !Sub "${PaperEventErrorDynamoTableArn}"
               - !Sub "${PaperEventErrorDynamoTableArn}/*"
-              - !Sub "${PaperChannelTenderDynamoTableArn}"
-              - !Sub "${PaperChannelTenderDynamoTableArn}/*"
+#              - !Sub "${PaperChannelTenderDynamoTableArn}"
+#              - !Sub "${PaperChannelTenderDynamoTableArn}/*"
               - !Sub "${PaperChannelGeokeyDynamoTableArn}"
               - !Sub "${PaperChannelGeokeyDynamoTableArn}/*"
               - !Sub "${PaperChannelDeliveryDriverDynamoTableArn}"
@@ -838,7 +838,7 @@ Resources:
             - !Ref RequestDeliveryDynamoTableName
             - !Ref AttachmentsConfigDynamoTableArn
             - !Ref PaperEventErrorDynamoTableArn
-            - !Ref PaperChannelTenderDynamoTableArn
+#            - !Ref PaperChannelTenderDynamoTableArn
             - !Ref PaperChannelGeokeyDynamoTableArn
             - !Ref PaperChannelDeliveryDriverDynamoTableArn
             - !Ref PaperChannelCostDynamoTableArn
