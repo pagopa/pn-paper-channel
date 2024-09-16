@@ -107,7 +107,7 @@ class PaperTenderServiceTest {
                 .thenReturn(Mono.just(mockPaperCost));
 
         // Act
-        Mono<PnPaperChannelCostDTO> result = paperTenderService.getSimplifiedCost(cap, mockGeoKey.getZone(), mockGeoKey.getProduct());
+        Mono<PnPaperChannelCostDTO> result = paperTenderService.getSimplifiedCost(cap, mockGeoKey.getProduct());
 
         // Assert
         assertNotNull(result);
@@ -127,14 +127,13 @@ class PaperTenderServiceTest {
     @Test
     void getSimplifiedCost_shouldThrowException_whenNoActiveTenderFound() {
         // Arrange
-        String cap = "12345";
         String zone = "Francia";
         String productType = "AR";
 
         when(pnPaperTenderDAO.getActiveTender()).thenReturn(Mono.empty());
 
         // Act
-        Mono<PnPaperChannelCostDTO> result = paperTenderService.getSimplifiedCost(cap, zone, productType);
+        Mono<PnPaperChannelCostDTO> result = paperTenderService.getSimplifiedCost(zone, productType);
 
         //Assert
         assertThrows(PnGenericException.class, result::block);
