@@ -81,7 +81,12 @@ public class PaperTenderServiceImpl implements PaperTenderService {
                 .flatMap(tender -> pnPaperGeoKeyDAO.getGeoKey(tender.getTenderId(), productType, geokey)
                         .switchIfEmpty(Mono.error(new PnGenericException(GEOKEY_NOT_FOUND, GEOKEY_NOT_FOUND.getMessage(), HttpStatus.NOT_FOUND)))
                         .doOnNext(geoKey -> log.info("Geokey finded {}", geoKey))
-                        .flatMap(geoKey -> pnPaperCostDAO.getCostByTenderIdProductLotZone(geoKey.getTenderId(), productType, geoKey.getLot(), geoKey.getZone()))
+                        .flatMap(geoKey -> {
+                            if(Boolean.FALSE.equals(geoKey.getCoverFlag())) {
+                                geoKey.setLot("UNCOVERED");
+                            }
+                            return pnPaperCostDAO.getCostByTenderIdProductLotZone(geoKey.getTenderId(), productType, geoKey.getLot(), geoKey.getZone());
+                        })
                         .switchIfEmpty(Mono.error(new PnGenericException(COST_DRIVER_OR_FSU_NOT_FOUND, COST_DRIVER_OR_FSU_NOT_FOUND.getMessage(), HttpStatus.NOT_FOUND)))
                         .doOnNext(paperCost -> log.info("Cost finded {}", paperCost))
                         .map(paperCost -> {
