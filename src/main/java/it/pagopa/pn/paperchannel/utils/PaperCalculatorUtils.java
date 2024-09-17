@@ -5,6 +5,7 @@ import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.CostDTO;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ShipmentCalculateRequest;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ShipmentCalculateResponse;
 import it.pagopa.pn.paperchannel.model.PnPaperChannelCostDTO;
+import it.pagopa.pn.paperchannel.utils.config.CostRoundingModeConfig;
 import it.pagopa.pn.paperchannel.utils.costutils.CostRanges;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ProductTypeEnum;
 import it.pagopa.pn.paperchannel.model.Address;
@@ -30,7 +31,7 @@ public class PaperCalculatorUtils {
     private final PaperTenderService paperTenderService;
     private final PnPaperChannelConfig pnPaperChannelConfig;
     private final DateChargeCalculationModesUtils chargeCalculationModeUtils;
-
+    private final CostRoundingModeConfig costRoundingModeConfig;
 
     public Mono<CostWithDriver> calculator(List<AttachmentInfo> attachments, Address address, ProductTypeEnum productType, boolean isReversePrinter){
         boolean isNational = Utility.isNational(address.getCountry());
@@ -214,7 +215,9 @@ public class PaperCalculatorUtils {
         BigDecimal completedPrice = finalPriceProduct.add(priceTotPages).add(contract.getFee());
 
         log.info("Calculating complete value: finalPriceProduct={}, completedPrice={}", finalPriceProduct,  completedPrice);
-        return completedPrice.setScale(2, RoundingMode.HALF_UP);
+
+        RoundingMode roundingMode = costRoundingModeConfig.getRoundingMode();
+        return completedPrice.setScale(2, roundingMode);
     }
 
     public int getLetterWeight(int numberOfPages, int weightPaper, int weightLetter){
