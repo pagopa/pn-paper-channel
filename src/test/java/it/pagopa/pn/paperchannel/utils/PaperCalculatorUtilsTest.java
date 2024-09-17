@@ -92,9 +92,11 @@ class PaperCalculatorUtilsTest {
 
         //Assert
         Assertions.assertNotNull(res);
-        Assertions.assertEquals(BigDecimal.valueOf(1.33).setScale(2, RoundingMode.UNNECESSARY), res.getCost());
+        Assertions.assertEquals(BigDecimal.valueOf(1.25).setScale(2, RoundingMode.UNNECESSARY), res.getCost());
         Assertions.assertEquals(costDTO.getDeliveryDriverId(), res.getDriverCode());
         Assertions.assertEquals(costDTO.getTenderId(), res.getTenderCode());
+
+
     }
 
     @Test
@@ -133,7 +135,7 @@ class PaperCalculatorUtilsTest {
 
         // Assert
         Assertions.assertNotNull(res);
-        Assertions.assertEquals(BigDecimal.valueOf(0.93), res.getCost());
+        Assertions.assertEquals(BigDecimal.valueOf(0.87), res.getCost());
         Assertions.assertEquals(costDTO.getDeliveryDriverId(), res.getDriverCode());
         Assertions.assertEquals(costDTO.getTenderId(), res.getTenderCode());
     }
@@ -170,7 +172,7 @@ class PaperCalculatorUtilsTest {
 
         // Assert
         Assertions.assertNotNull(res);
-        Assertions.assertEquals(BigDecimal.valueOf(1.20).setScale(2, RoundingMode.UNNECESSARY), res.getCost());
+        Assertions.assertEquals(BigDecimal.valueOf(1.12).setScale(2, RoundingMode.UNNECESSARY), res.getCost());
         Assertions.assertEquals(costDTO.getDeliveryDriverId(), res.getDriverCode());
         Assertions.assertEquals(costDTO.getTenderId(), res.getTenderCode());
     }
@@ -207,7 +209,7 @@ class PaperCalculatorUtilsTest {
 
         // Assert
         Assertions.assertNotNull(res);
-        Assertions.assertEquals(BigDecimal.valueOf(1.25).setScale(2, RoundingMode.UNNECESSARY), res.getCost());
+        Assertions.assertEquals(BigDecimal.valueOf(1.18).setScale(2, RoundingMode.UNNECESSARY), res.getCost());
         Assertions.assertEquals(costDTO.getDeliveryDriverId(), res.getDriverCode());
         Assertions.assertEquals(costDTO.getTenderId(), res.getTenderCode());
     }
@@ -259,7 +261,7 @@ class PaperCalculatorUtilsTest {
 
         //Assert
         Assertions.assertNotNull(res);
-        Assertions.assertEquals(BigDecimal.valueOf(1.33).setScale(2, RoundingMode.UNNECESSARY), res.getCost());
+        Assertions.assertEquals(BigDecimal.valueOf(1.25).setScale(2, RoundingMode.UNNECESSARY), res.getCost());
         Assertions.assertEquals(costDTO.getDeliveryDriverId(), res.getDriverCode());
         Assertions.assertEquals(costDTO.getTenderId(), res.getTenderCode());
     }
@@ -290,7 +292,7 @@ class PaperCalculatorUtilsTest {
 
         // Assert
         Assertions.assertNotNull(res);
-        Assertions.assertEquals(BigDecimal.valueOf(133).intValue(), res.getCost());
+        Assertions.assertEquals(BigDecimal.valueOf(125).intValue(), res.getCost());
     }
 
     @Test
@@ -317,7 +319,7 @@ class PaperCalculatorUtilsTest {
 
         // Assert
         Assertions.assertNotNull(res);
-        Assertions.assertEquals(BigDecimal.valueOf(125).intValue(), res.getCost());
+        Assertions.assertEquals(BigDecimal.valueOf(118).intValue(), res.getCost());
     }
 
     @Test
@@ -344,7 +346,7 @@ class PaperCalculatorUtilsTest {
 
         // Assert
         Assertions.assertNotNull(res);
-        Assertions.assertEquals(BigDecimal.valueOf(133).intValue(), res.getCost());
+        Assertions.assertEquals(BigDecimal.valueOf(125).intValue(), res.getCost());
     }
 
 

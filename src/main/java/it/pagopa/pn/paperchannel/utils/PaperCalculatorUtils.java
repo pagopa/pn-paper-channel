@@ -163,6 +163,7 @@ public class PaperCalculatorUtils {
         Integer totPagesIgnoringAAR = getNumberOfPages(attachments, isReversePrinter, false);
         Integer totPages = getNumberOfPages(attachments, isReversePrinter, true);
         int totPagesWight = getLetterWeight(totPages, pnPaperChannelConfig.getPaperWeight(), pnPaperChannelConfig.getLetterWeight());
+
         BigDecimal basePriceForWeight = CostRanges.getBasePriceForWeight(costDTO, totPagesWight);
         BigDecimal priceTotPages = costDTO.getPriceAdditional().multiply(BigDecimal.valueOf(totPagesIgnoringAAR));
         BigDecimal completedPrice = basePriceForWeight.add(priceTotPages);
@@ -187,23 +188,33 @@ public class PaperCalculatorUtils {
      *
      * @return                     the amount final cost of notification
      **/
+
     private BigDecimal getSimplifiedAmount(Integer totPlicoWeight, Integer totPages, PnPaperChannelCostDTO contract, String productType) {
         log.info("Calculating cost Simplified COMPLETE mode, costDTO={}", contract);
 
-        BigDecimal rangePriceFromWeight = contract.getBasePriceForWeight(totPlicoWeight);
-        BigDecimal priceTotPages = contract.getPagePrice().multiply(BigDecimal.valueOf(totPages).subtract(BigDecimal.ONE));
-        BigDecimal totPricePages = rangePriceFromWeight.add(priceTotPages);
-
-        log.info("Calculating cost Simplified COMPLETE mode, totPages={}, totPlicoWeight={} rangePriceFromWeight={}, totPricePages={}, priceTotPages={}",
-                totPages, totPlicoWeight, rangePriceFromWeight, priceTotPages, totPricePages);
-
         BigDecimal priceOfProduct = contract.getBasePriceFromProductType(productType);
-        BigDecimal pricePlico = priceOfProduct.add(contract.getDematerializationCost()).add(totPricePages).add(contract.getFee());
-        BigDecimal vatPlico = pricePlico.multiply(BigDecimal.valueOf(contract.getVat()/100.0)).multiply(BigDecimal.valueOf(contract.getNonDeductibleVat()/100.0));
-        BigDecimal completedPrice = pricePlico.add(vatPlico);
+        BigDecimal rangePriceFromWeight = contract.getBasePriceForWeight(totPlicoWeight);
 
-        log.info("Calculating cost Simplified COMPLETE mode, priceOfProduct={}, pricePlico={}, vatPlico={}, completedPrice={}",
-                priceOfProduct, pricePlico, vatPlico, completedPrice);
+        log.info("Calculating variables: totPages={}, totPlicoWeight={}, priceOfProduct={}, rangePriceFromWeight={}", totPages, totPlicoWeight, priceOfProduct, rangePriceFromWeight);
+
+        // (PrezzoScaglione + PrezzoProdotto + CostoDematerializzazione)
+        BigDecimal basePriceProduct = rangePriceFromWeight.add(priceOfProduct).add(contract.getDematerializationCost());
+
+        // (1 + (vat/100 * nonDeductibleVat/100)
+        BigDecimal totalVat = BigDecimal.ONE.add(BigDecimal.valueOf(contract.getVat()/100.0).multiply(BigDecimal.valueOf(contract.getNonDeductibleVat()/100.0)));
+
+        // (basePriceProduct * totalVat)
+        BigDecimal finalPriceProduct = basePriceProduct.multiply(totalVat);
+
+        // (PrezzoPagina * (NumFogli - 1))
+        BigDecimal priceTotPages = contract.getPagePrice().multiply(BigDecimal.valueOf(totPages).subtract(BigDecimal.ONE));
+
+        log.info("Calculating values: basePriceProduct={}, totalVat={}, priceToPages={}", basePriceProduct, totalVat, priceTotPages);
+
+        //(finalPriceProduct) + priceTotPages + Fee
+        BigDecimal completedPrice = finalPriceProduct.add(priceTotPages).add(contract.getFee());
+
+        log.info("Calculating complete value: finalPriceProduct={}, completedPrice={}", finalPriceProduct,  completedPrice);
         return completedPrice.setScale(2, RoundingMode.HALF_UP);
     }
 
