@@ -192,21 +192,21 @@ public class PaperCalculatorUtils {
     private BigDecimal getSimplifiedAmount(Integer totPlicoWeight, Integer totPages, PnPaperChannelCostDTO contract, String productType) {
         log.info("Calculating cost Simplified COMPLETE mode, costDTO={}", contract);
 
-        BigDecimal priceOfProduct = contract.getBasePriceFromProductType(productType); //0.01234
-        BigDecimal rangePriceFromWeight = contract.getBasePriceForWeight(totPlicoWeight); //30
+        BigDecimal priceOfProduct = contract.getBasePriceFromProductType(productType);
+        BigDecimal rangePriceFromWeight = contract.getBasePriceForWeight(totPlicoWeight);
 
-        log.info("Calculating variables: totPages={3}, totPlicoWeight={20}, priceProduct={0.05945}, rangePriceFromWeight={0.00123}", totPages, totPlicoWeight, priceOfProduct, rangePriceFromWeight);
+        log.info("Calculating variables: totPages={}, totPlicoWeight={}, priceOfProduct={}, rangePriceFromWeight={}", totPages, totPlicoWeight, priceOfProduct, rangePriceFromWeight);
 
-        // (PrezzoScaglione + PrezzoProdotto + CostoDematerializzazione) = 0,15944
+        // (PrezzoScaglione + PrezzoProdotto + CostoDematerializzazione)
         BigDecimal basePriceProduct = rangePriceFromWeight.add(priceOfProduct).add(contract.getDematerializationCost());
 
-        // (1 + (vat/100 * nonDeductibleVat/100) = 1,0770
+        // (1 + (vat/100 * nonDeductibleVat/100)
         BigDecimal totalVat = BigDecimal.ONE.add(BigDecimal.valueOf(contract.getVat()/100.0).multiply(BigDecimal.valueOf(contract.getNonDeductibleVat()/100.0)));
 
-        // (basePriceProduct * totalVat) = 0,17171688
+        // (basePriceProduct * totalVat)
         BigDecimal finalPriceProduct = basePriceProduct.multiply(totalVat);
 
-        // (PrezzoPagina * (NumFogli - 1)) = 0,4938
+        // (PrezzoPagina * (NumFogli - 1))
         BigDecimal priceTotPages = contract.getPagePrice().multiply(BigDecimal.valueOf(totPages).subtract(BigDecimal.ONE));
 
         log.info("Calculating values: basePriceProduct={}, totalVat={}, priceToPages={}", basePriceProduct, totalVat, priceTotPages);
