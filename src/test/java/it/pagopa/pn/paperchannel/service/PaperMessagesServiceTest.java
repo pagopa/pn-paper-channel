@@ -19,6 +19,7 @@ import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.service.impl.PaperMessagesServiceImpl;
 import it.pagopa.pn.paperchannel.utils.*;
+import it.pagopa.pn.paperchannel.utils.config.CostRoundingModeConfig;
 import it.pagopa.pn.paperchannel.validator.PrepareRequestValidator;
 import it.pagopa.pn.paperchannel.validator.SendRequestValidator;
 import org.junit.jupiter.api.*;
@@ -36,6 +37,7 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -86,6 +88,8 @@ class PaperMessagesServiceTest {
     @Autowired
     private PaperCalculatorUtils paperCalculatorUtils;
 
+    @MockBean
+    private CostRoundingModeConfig costRoundingModeConfig;
 
     private PnDeliveryRequest deliveryRequestTakingCharge;
 
@@ -98,6 +102,7 @@ class PaperMessagesServiceTest {
         this.sendRequestValidatorMockedStatic = Mockito.mockStatic(SendRequestValidator.class);
         this.prepareRequestValidatorMockedStatic = Mockito.mockStatic(PrepareRequestValidator.class);
         this.deliveryRequestTakingCharge = getDeliveryRequest(getRequestOK().getRequestId(), StatusDeliveryEnum.TAKING_CHARGE);
+        Mockito.when(costRoundingModeConfig.getRoundingMode()).thenReturn(RoundingMode.HALF_UP);
     }
 
     @AfterEach

@@ -21,9 +21,11 @@ import it.pagopa.pn.paperchannel.service.PaperTenderService;
 import it.pagopa.pn.paperchannel.service.SafeStorageService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.*;
+import it.pagopa.pn.paperchannel.utils.config.CostRoundingModeConfig;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -39,6 +41,7 @@ import reactor.test.StepVerifier;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -77,6 +80,14 @@ class F24ServiceImplTest {
     private F24Client f24Client;
     @MockBean
     private SafeStorageService safeStorageService;
+    @MockBean
+    private CostRoundingModeConfig costRoundingModeConfig;
+
+
+    @BeforeEach
+    void setUp() {
+        Mockito.when(costRoundingModeConfig.getRoundingMode()).thenReturn(RoundingMode.HALF_UP);
+    }
 
     @Test
     @DisplayName("checkDeliveryRequestAttachmentForF24")

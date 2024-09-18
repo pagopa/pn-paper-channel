@@ -8,6 +8,7 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.*;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnPaperChannelTender;
 import it.pagopa.pn.paperchannel.model.PnPaperChannelCostDTO;
 import it.pagopa.pn.paperchannel.service.PaperTenderService;
+import it.pagopa.pn.paperchannel.utils.Const;
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
@@ -83,7 +84,7 @@ public class PaperTenderServiceImpl implements PaperTenderService {
                         .doOnNext(geoKey -> log.info("Geokey finded {}", geoKey))
                         .flatMap(geoKey -> {
                             if(Boolean.FALSE.equals(geoKey.getCoverFlag())) {
-                                geoKey.setLot("UNCOVERED");
+                                geoKey.setLot(Const.UNCOVERED);
                             }
                             return pnPaperCostDAO.getCostByTenderIdProductLotZone(geoKey.getTenderId(), productType, geoKey.getLot(), geoKey.getZone());
                         })
