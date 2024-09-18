@@ -67,7 +67,8 @@ public enum ExceptionTypeEnum{
     RESPONSE_ERROR_NOT_HANDLED_FROM_DEDUPLICATION("RESPONSE_ERROR_NOT_HANDLED_FROM_DEDUPLICATION", "La deduplication ha risposto con con un codice errore non gestito"),
     F24_ERROR("F24_ERROR", "Problemi con la generazione dei PDF F24"),
     COST_OUF_OF_RANGE("COST_OUF_OF_RANGE", "Il costo calcolato della notifica sfora il limite dell'ultimo range"),
-    ERROR_CODE_PAPERCHANNEL_ZIP_HANDLE("PN_PAPERCHANNEL_ZIP_HANDLE", "Errore nel flusso di gestione dell'allegato ZIP");
+    ERROR_CODE_PAPERCHANNEL_ZIP_HANDLE("PN_PAPERCHANNEL_ZIP_HANDLE", "Errore nel flusso di gestione dell'allegato ZIP"),
+    INCORRECT_ROUNDING_MODE("INCORRECT_ROUNDING_MODE", "Modalità di rounding non è tra quelle possibili");
 
     private final String title;
     private final String message;

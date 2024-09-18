@@ -184,6 +184,46 @@ class PaperTenderServiceTest {
     }
 
     @Test
+    void getCostFromTenderIdAndUncoveredFlagReturnPnPaperChannelCostDTOTest() {
+        // ARRANGE
+        PnPaperChannelTender pnPaperChannelTender = mockPnPaperTender();
+        PnPaperChannelGeoKey pnPaperChannelGeoKey = mockPnPaperGeokey();
+        pnPaperChannelGeoKey.setCoverFlag(false);
+
+        String product = pnPaperChannelGeoKey.getProduct();
+        String geokey = pnPaperChannelGeoKey.getGeokey();
+        String zone = pnPaperChannelGeoKey.getZone();
+
+        PnPaperChannelCost pnPaperChannelCost = mockPnPaperCost();
+        when(pnPaperTenderDAO.getTenderById(pnPaperChannelTender.getTenderId()))
+                .thenReturn(Mono.just(pnPaperChannelTender));
+        when(pnPaperGeoKeyDAO.getGeoKey(pnPaperChannelTender.getTenderId(), product, geokey))
+                .thenReturn(Mono.just(pnPaperChannelGeoKey));
+        when(pnPaperCostDAO.getCostByTenderIdProductLotZone(pnPaperChannelTender.getTenderId(), product, "UNCOVERED", zone))
+                .thenReturn(Mono.just(pnPaperChannelCost));
+
+        PnPaperChannelCostDTO expectedDTO = new PnPaperChannelCostDTO();
+        expectedDTO.setTenderId(pnPaperChannelTender.getTenderId());
+        expectedDTO.setProduct(pnPaperChannelCost.getProduct());
+        expectedDTO.setLot(pnPaperChannelGeoKey.getLot());
+        expectedDTO.setZone(pnPaperChannelGeoKey.getZone());
+
+        // ACT
+        PnPaperChannelCostDTO pnPaperChannelCostDTO = paperTenderService.getCostFromTenderId(pnPaperChannelTender.getTenderId(), geokey, product).block();
+
+        //ASSERT
+        assertNotNull(pnPaperChannelCostDTO);
+        assertEquals(expectedDTO.getTenderId(), pnPaperChannelCostDTO.getTenderId());
+        assertEquals(expectedDTO.getProduct(), pnPaperChannelCostDTO.getProduct());
+        assertEquals(expectedDTO.getLot(), pnPaperChannelCostDTO.getLot());
+        assertEquals(expectedDTO.getZone(), pnPaperChannelCostDTO.getZone());
+
+        verify(pnPaperTenderDAO, times(1)).getTenderById(pnPaperChannelTender.getTenderId());
+        verify(pnPaperGeoKeyDAO, times(1)).getGeoKey(pnPaperChannelTender.getTenderId(), product, geokey);
+        verify(pnPaperCostDAO, times(1)).getCostByTenderIdProductLotZone(pnPaperChannelTender.getTenderId(), product, "UNCOVERED", zone);
+    }
+
+    @Test
     void getCostFromTenderIdThrowExceptionWhenTenderIsNotFound() {
         //ARRANGE
         String tenderId = "GARA_2024";
