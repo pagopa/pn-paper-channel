@@ -8,6 +8,7 @@ import java.math.RoundingMode;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.INCORRECT_ROUNDING_MODE;
 
 
 /**
@@ -29,11 +30,9 @@ public class CostRoundingModeConfig {
 
     @PostConstruct
     public void setUp() {
-        RoundingMode cRMode = RoundingMode.valueOf(config.getCostRoundingMode());
-        roundingMode = allowedValues.contains(cRMode)
-                ?
-                    cRMode
-                :
-                    RoundingMode.HALF_UP;
+        roundingMode = RoundingMode.valueOf(config.getCostRoundingMode());
+        if(!allowedValues.contains(roundingMode)) {
+            throw new IllegalArgumentException(INCORRECT_ROUNDING_MODE.getMessage());
+        }
     }
 }

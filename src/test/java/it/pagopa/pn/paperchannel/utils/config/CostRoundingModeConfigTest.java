@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import java.math.RoundingMode;
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.INCORRECT_ROUNDING_MODE;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
@@ -24,7 +25,7 @@ public class CostRoundingModeConfigTest {
     void testRoundingModeHalfUp() {
         // Given
         // When
-        when(config.getCostRoundingMode()).thenReturn("HALF_UP");
+        when(config.getCostRoundingMode()).thenReturn(RoundingMode.HALF_UP.name());
 
         // Then
         assertDoesNotThrow(() -> {
@@ -39,7 +40,7 @@ public class CostRoundingModeConfigTest {
     void testRoundingModeHalfDown() {
         // Given
         // When
-        when(config.getCostRoundingMode()).thenReturn("HALF_DOWN");
+        when(config.getCostRoundingMode()).thenReturn(RoundingMode.HALF_DOWN.name());
 
         // Then
         assertDoesNotThrow(() -> {
@@ -54,10 +55,11 @@ public class CostRoundingModeConfigTest {
     void testRoundingModeWrongValueThenThrow() {
         // Given
         // When
-        when(config.getCostRoundingMode()).thenReturn("ILLEGAL_ARGUMENT_TEST");
+        when(config.getCostRoundingMode()).thenReturn(RoundingMode.UP.name());
 
         // Then
-        assertThrows(IllegalArgumentException.class,() -> costRoundingModeConfig.setUp());
+        var exception = assertThrows(IllegalArgumentException.class, () -> costRoundingModeConfig.setUp());
+        assertEquals(INCORRECT_ROUNDING_MODE.getMessage(), exception.getMessage());
     }
 
     @Test
