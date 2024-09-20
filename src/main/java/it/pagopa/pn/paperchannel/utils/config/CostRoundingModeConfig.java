@@ -25,7 +25,7 @@ public class CostRoundingModeConfig {
 
     public CostRoundingModeConfig(PnPaperChannelConfig config) {
         this.config = config;
-        this.allowedValues = new HashSet<>(Arrays.asList(RoundingMode.HALF_UP, RoundingMode.HALF_DOWN));
+        this.allowedValues = new HashSet<>(Arrays.asList(RoundingMode.HALF_UP, RoundingMode.UP));
     }
 
     @PostConstruct

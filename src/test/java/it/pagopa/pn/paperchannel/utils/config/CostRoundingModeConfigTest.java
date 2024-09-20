@@ -37,17 +37,17 @@ public class CostRoundingModeConfigTest {
     }
 
     @Test
-    void testRoundingModeHalfDown() {
+    void testRoundingModeRoundUp() {
         // Given
         // When
-        when(config.getCostRoundingMode()).thenReturn(RoundingMode.HALF_DOWN.name());
+        when(config.getCostRoundingMode()).thenReturn(RoundingMode.UP.name());
 
         // Then
         assertDoesNotThrow(() -> {
             costRoundingModeConfig.setUp();
             RoundingMode roundingMode = costRoundingModeConfig.getRoundingMode();
             assertNotNull(roundingMode);
-            assertEquals(RoundingMode.HALF_DOWN, roundingMode);
+            assertEquals(RoundingMode.UP, roundingMode);
         });
     }
 
@@ -55,7 +55,7 @@ public class CostRoundingModeConfigTest {
     void testRoundingModeWrongValueThenThrow() {
         // Given
         // When
-        when(config.getCostRoundingMode()).thenReturn(RoundingMode.UP.name());
+        when(config.getCostRoundingMode()).thenReturn(RoundingMode.DOWN.name());
 
         // Then
         var exception = assertThrows(IllegalArgumentException.class, () -> costRoundingModeConfig.setUp());
