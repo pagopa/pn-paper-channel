@@ -178,7 +178,7 @@ class PaperCalculatorUtilsTest {
 
 
         //Arrange 2° Caso
-        Mockito.when(costRoundingModeConfig.getRoundingMode()).thenReturn(RoundingMode.HALF_DOWN);
+        Mockito.when(costRoundingModeConfig.getRoundingMode()).thenReturn(RoundingMode.UP);
 
 
         //Act 2° Caso
@@ -187,7 +187,7 @@ class PaperCalculatorUtilsTest {
 
         //Assert 2° Caso
         Assertions.assertNotNull(res);
-        Assertions.assertEquals(BigDecimal.valueOf(1.12).setScale(2, RoundingMode.UNNECESSARY), res.getCost());
+        Assertions.assertEquals(BigDecimal.valueOf(1.13).setScale(2, RoundingMode.UNNECESSARY), res.getCost());
         Assertions.assertEquals(costDTO.getDeliveryDriverId(), res.getDriverCode());
         Assertions.assertEquals(costDTO.getTenderId(), res.getTenderCode());
     }
@@ -561,7 +561,6 @@ class PaperCalculatorUtilsTest {
         Mockito.when(dateChargeCalculationModesUtils.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.COMPLETE);
         Mockito.when(pnPaperChannelConfig.getPaperWeight()).thenReturn(5);
         Mockito.when(pnPaperChannelConfig.getLetterWeight()).thenReturn(5);
-//        Mockito.when(costRoundingModeConfig.getRoundingMode()).thenReturn(RoundingMode.HALF_UP);
 
         CostWithDriver res = paperCalculatorUtils.calculator(attachmentUrls, address, ProductTypeEnum.AR, true).block();
 

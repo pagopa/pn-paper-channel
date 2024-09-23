@@ -430,7 +430,7 @@ Parameters:
     Default: 'HALF_UP'
     AllowedValues:
       - 'HALF_UP'
-      - 'HALF_DOWN'
+      - 'UP'
     Description: 'Rounding mode for simplified cost calculation'
 
   # Logging parameters
