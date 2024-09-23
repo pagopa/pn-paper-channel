@@ -561,7 +561,6 @@ class PaperCalculatorUtilsTest {
         Mockito.when(dateChargeCalculationModesUtils.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.COMPLETE);
         Mockito.when(pnPaperChannelConfig.getPaperWeight()).thenReturn(5);
         Mockito.when(pnPaperChannelConfig.getLetterWeight()).thenReturn(5);
-//        Mockito.when(costRoundingModeConfig.getRoundingMode()).thenReturn(RoundingMode.HALF_UP);
 
         CostWithDriver res = paperCalculatorUtils.calculator(attachmentUrls, address, ProductTypeEnum.AR, true).block();
 
