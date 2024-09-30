@@ -26,6 +26,7 @@ import it.pagopa.pn.paperchannel.model.*;
 import it.pagopa.pn.paperchannel.service.impl.PrepareAsyncServiceImpl;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import it.pagopa.pn.paperchannel.utils.PaperCalculatorUtils;
+import lombok.val;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,6 +43,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.F24_WAITING;
 import static it.pagopa.pn.paperchannel.utils.Const.RACCOMANDATA_SEMPLICE;
@@ -95,6 +97,14 @@ class PrepareAsyncServiceTest {
     @Test
     @DisplayName("prepareAsyncTestCorrelationIdNullNotCorrectAddress")
     void prepareAsyncTestCorrelationIdNull(){
+
+        Optional<BigDecimal> x = Optional.empty();
+
+        BigDecimal decimal = x.get();
+
+        decimal.add(B);
+
+
         Mockito.when(this.requestDeliveryDAO.getByRequestId(Mockito.any(), Mockito.anyBoolean())).thenReturn(Mono.just(getDeliveryRequest()));
         Mockito.when(this.paperAddressService.getCorrectAddress(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenThrow(new PnAddressFlowException(ExceptionTypeEnum.ADDRESS_NOT_EXIST));
