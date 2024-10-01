@@ -1,11 +1,12 @@
 import { AttributeValue } from '@aws-sdk/client-dynamodb';
+import { expect } from 'chai';
 import { buildPnTendersFromDynamoItems } from '../../../src/utils/builders';
 
 
 describe("Builders test", () => {
 
 
-  test("buildPnTendersFromDynamoItems_shouldReturnCorrectTenders", () => {
+  it("buildPnTendersFromDynamoItems_shouldReturnCorrectTenders", () => {
 
     // Arrange
     const tenderRecord: Record<string, AttributeValue> = {
@@ -21,7 +22,8 @@ describe("Builders test", () => {
     const result = buildPnTendersFromDynamoItems([tenderRecord]);
 
     // Assert
-    expect(result).toEqual([{
+
+    expect(result).to.deep.equal([{
       tenderId: "12344",
       activationDate: "2023-01-01"
     }]);
