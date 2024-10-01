@@ -594,6 +594,15 @@ Parameters:
     Type: String
     Default: 'FATAL'
 
+  TenderAPILambdaName:
+    Type: String
+    Description: "TenderAPILambdaName"
+
+  TenderAPILambdaProvisionedConcurrency:
+    Type: Number
+    Description: "TenderAPILambdaProvisionedConcurrency"
+    Default: 1
+
 Conditions:
   UseExternalChannelMock: !Equals [ !Ref ExternalChannelBaseUrl, "Mock" ]
 
@@ -864,7 +873,95 @@ Resources:
             - !Ref RaddAltToPaperChannelQueueARN
         LogGroupsNames: !Join
           - ','
-          - - !Sub '/aws/ecs/${ProjectName}-paper-channel'   
+          - - !Sub '/aws/ecs/${ProjectName}-paper-channel'
+
+
+  TenderAPILambdaSecGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Sub "${TenderAPILambdaName}-sec-group"
+      VpcId: !Ref VpcId
+
+  # Lambda function
+  TenderAPILambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Ref TenderAPILambdaName
+      Runtime: nodejs18.x
+      Handler: "index.handler"
+      Code:
+        S3Bucket: !Ref MicroserviceBucketName
+        S3Key: !Sub "${MicroserviceBucketBaseKey}/functions_zip/TenderAPI.zip"
+      Role: !GetAtt TenderAPILambdaRole.Arn
+      VpcConfig:
+        SecurityGroupIds:
+          - !GetAtt TenderAPILambdaSecGroup.GroupId
+        SubnetIds: !Ref SubnetsIds
+      Environment:
+        Variables:
+          REGION: !Sub ${AWS::Region}
+          PN_DELIVERY_URL: !Sub "http://${ApplicationLoadBalancerDomain}:8080/delivery/v2.3"
+          NUM_RETRY: !Ref NumRetry
+          ATTEMPT_TIMEOUT_SEC: !Ref AttemptTimeoutSec
+      TracingConfig:
+        Mode: Active
+      Layers:
+        - !Sub "arn:aws:lambda:${AWS::Region}:339249233099:layer:LambdaInsightsExtension:13"
+      Timeout: 30
+      MemorySize: 512
+
+  # a new version at each deploy, with provisioned concurrency set
+  TenderAPILambdaVersionPnPlaceholderEpochSeconds:
+    Type: AWS::Lambda::Version
+    Properties:
+      FunctionName: !Ref TenderAPILambda
+
+    TenderAPILambdaVersionAlias:
+      Type: AWS::Lambda::Alias
+      Properties:
+        FunctionName: !Ref TenderAPILambda
+        FunctionVersion: !GetAtt TenderAPILambdaVersionPnPlaceholderEpochSeconds.Version
+        Name: live
+        ProvisionedConcurrencyConfig:
+          ProvisionedConcurrentExecutions: !Ref TenderAPILambdaProvisionedConcurrency
+
+  # Lambda function role
+  TenderAPILambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${ProjectName}-TenderAPILambdaRole
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+        # - arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
+        # - arn:aws:iam::aws:policy/CloudWatchLambdaInsightsExecutionRolePolicy
+
+  TenderAPILambdaAlarms:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/lambda-alarms.yaml"
+      Parameters:
+        FunctionName: !Ref TenderAPILambda
+        AlarmSNSTopicArn: !Ref AlarmSNSTopicArn
+        FilterPattern: "FATAL"
+
+  # Lambda access right
+  TenderAPILambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref TenderAPILambdaVersionAlias
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:*/*"
 
   PaperChannelGatewayDeliveryDriver:
     Type: AWS::CloudFormation::Stack
@@ -882,6 +979,23 @@ Resources:
         CloudwatchLogKinesisStreamArn: !Ref LogsKinesisSourceStreamArn
         OpenApiBucketName: !Ref MicroserviceBucketName
         OpenApiBucketKey: !Sub ${MicroserviceBucketBaseKey}/docs/openapi/pn-paper-channel-v1.yaml
+
+  TenderAPIGatewayDeliveryDriver:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/api-gw-expose-service.yaml"
+      Parameters:
+        MicroServiceUniqueName: !Sub '${ProjectName}-paper-channel-bo'
+        IntendedUsage: BACKOFFICE
+        DnsName: !Ref WebApiDnsName
+        ProjectName: !Ref ProjectName
+        ServiceApiPath: 'paper-channel-bo'
+        NetworkLoadBalancerLink: !Ref NetworkLoadBalancerLink
+        ApplicationLoadBalancerDomain: !Ref ApplicationLoadBalancerDomain
+        AlarmSNSTopicArn: !Ref AlarmSNSTopicArn
+        CloudwatchLogKinesisStreamArn: !Ref LogsKinesisSourceStreamArn
+        OpenApiBucketName: !Ref MicroserviceBucketName
+        OpenApiBucketKey: !Sub ${MicroserviceBucketBaseKey}/docs/openapi/pn-tender-api-lambda-v2.yaml
 
   PaperChannelGatewayDeliveryDriverWaf:
     Type: AWS::CloudFormation::Stack

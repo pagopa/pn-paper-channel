@@ -1,0 +1,489 @@
+openapi: 3.0.3
+info:
+  title: API Paper Channel
+  description: |
+    # Interface definition for Paper Channel
+  version: 1.0.0
+  contact:
+    name: API Support
+    url: http://www.pagopa.com/support
+    email: support@pagopa.com
+  termsOfService: termsOfService
+  x-api-id: ppr-chnnl
+  x-summary: summary
+
+servers:
+  - url: 'https://.*'
+    description: Server url
+
+security:
+  - ApiKeyAuth: []
+
+tags:
+  - name: HealthCheck
+    description: metodo di health
+  - name: TenderCost
+    description: operazioni legate al recupero dei costi della gara
+  - name: DeliveryDriver
+    description: operazioni legate ai recapitisti
+
+paths:
+  /status:
+    get:
+      tags:
+        - HealthCheck
+      operationId: takeHealth
+      summary: Info health.
+      description: Ritorna lo status di salute dell'API.
+      responses:
+        '200':
+          description: JSON contenente lo stato.
+
+  /paper-channel-private/v2/tenders:
+    get:
+      tags:
+        - TenderCost
+      operationId: getTenders
+      summary: Recupero di tutte le gare
+      description: API che consente il recupero dei dettagli delle gare
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/size'
+        - $ref: '#/components/parameters/from'
+        - $ref: '#/components/parameters/to'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageableTenderResponseDto'
+        '400':
+          $ref: '#/components/responses/Invalid'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/NotAllowed'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+
+
+  /paper-channel-private/v2/tenders/active:
+    get:
+      tags:
+        - TenderCost
+      operationId: getActiveTender
+      summary: Recupero della gara attiva
+      description: API che consente il recupero dei dettagli della gara attiva
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenderDTO'
+        '400':
+          $ref: '#/components/responses/Invalid'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/NotAllowed'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /paper-channel-private/v2/tenders/{tenderId}/costs:
+    get:
+      tags:
+        - TenderCost
+      operationId: getCostByTenderId
+      summary: Recupero dei costi legati alla gara
+      description: API che consente il recupero dei dettagli dei costi associati a una gara
+      parameters:
+        - $ref: '#/components/parameters/pathTenderId'
+        - $ref: '#/components/parameters/product'
+        - $ref: '#/components/parameters/lot'
+        - $ref: '#/components/parameters/zone'
+        - $ref: '#/components/parameters/deliveryDriverId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CostDTO'
+        '400':
+          $ref: '#/components/responses/Invalid'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/NotAllowed'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /paper-channel/v2/tenders/{tenderId}/geokeys/{geokey}/{product}/costs:
+    get:
+      tags:
+        - TenderCost
+      operationId: getCost
+      summary: Recupero dei costi legati a una specifica gara, geokey e prodotto
+      description: API che consente il recupero dei dettagli dei costi associati a una gara
+      parameters:
+        - $ref: '#/components/parameters/pathTenderId'
+        - $ref: '#/components/parameters/pathGeoKey'
+        - $ref: '#/components/parameters/pathProduct'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CostDTO'
+        '400':
+          $ref: '#/components/responses/Invalid'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/NotAllowed'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /paper-channel-private/v2/delivery-drivers:
+    get:
+      tags:
+        - DeliveryDriver
+      operationId: getDeliveryDrivers
+      summary: Recupero dei recapitisti
+      description: API che consente il recupero dei dettagli dei costi associati a una gara
+      parameters:
+        - $ref: '#/components/parameters/from'
+        - $ref: '#/components/parameters/to'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageableDeliveryDriverResponseDto'
+        '400':
+          $ref: '#/components/responses/Invalid'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '405':
+          $ref: '#/components/responses/NotAllowed'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  schemas:
+    Page:
+      type: object
+      properties:
+        empty:
+          type: boolean
+        first:
+          type: boolean
+        last:
+          type: boolean
+        number:
+          type: integer
+          format: int32
+          maximum: 999999999
+          minimum: 1
+        numberOfElements:
+          type: integer
+          format: int32
+          maximum: 999999999
+          minimum: 1
+        size:
+          type: integer
+          format: int32
+          maximum: 1024
+          minimum: 1
+        totalElements:
+          type: integer
+          format: int64
+          maximum: 1
+          minimum: 1
+        totalPages:
+          type: integer
+          format: int64
+          maximum: 999999999
+          minimum: 1
+      additionalProperties: false
+      required:
+        - number
+        - numberOfElements
+        - size
+        - totalElements
+        - totalPages
+
+    PageableTenderResponseDto:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Page'
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/TenderDTO'
+          maxItems: 999999999
+          minItems: 1
+      additionalProperties: false
+      required:
+        - content
+
+    TenderDTO:
+      type: object
+      properties:
+        tenderId:
+          type: string
+          example: "20240808"
+          maxLength: 128
+        name:
+          type: string
+          example: "20240809"
+          maxLength: 128
+        activationDate:
+          type: string
+          format: date
+        vat:
+          type: integer
+          format: int32
+          example: 22
+        nonDeductibleVat:
+          type: integer
+          format: int32
+          example: 35
+        pagePrice:
+          type: number
+          format: float
+        basePriceAR:
+          type: number
+          format: float
+        basePriceRS:
+          type: number
+          format: float
+        basePrice890:
+          type: number
+          format: float
+        fee:
+          type: number
+          format: float
+        active:
+          type: boolean
+          format: float
+      required:
+        - tenderId
+        - name
+        - activationDate
+        - vat
+        - nonDeductibleVat
+        - pagePrice
+        - basePriceAR
+        - basePriceRS
+        - basePrice890
+        - fee
+    CostDTO:
+      type: object
+      properties:
+        tenderId:
+          type: string
+        product:
+          type: string
+        lot:
+          type: string
+        zone:
+          type: string
+        deliveryDriverId:
+          type: string
+        dematerializationCost:
+          type: number
+        rangedCosts:
+          type: array
+          items:
+            $ref: '#/components/schemas/RangeCostDto'
+      required:
+        - product
+        - dematerializationCost
+        - rangedCosts
+      additionalProperties: false
+    RangeCostDto:
+      type: object
+      properties:
+        cost:
+          type: string
+        minWeight:
+          type: number
+        maxWeight:
+          type: number
+      required:
+        - minWeight
+        - price
+        - maxWeight
+    PageableDeliveryDriverResponseDto:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Page'
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeliveryDriverDTO'
+          maxItems: 999999999
+          minItems: 1
+      additionalProperties: false
+    DeliveryDriverDTO:
+      type: object
+      properties:
+        deliveryDriverId:
+          type: string
+        taxId:
+          type: string
+          example: '12345678900'
+          maxLength: 32
+        businessName:
+          type: string
+          example: 'Ragione sociale'
+          maxLength: 128
+        fiscalCode:
+          type: string
+          example: 'ABCDEF22G12H345K'
+          maxLength: 16
+        pec:
+          type: string
+          example: 'email.example@pec.com'
+          maxLength: 64
+        phoneNumber:
+          type: string
+          example: '+39012345678'
+          maxLength: 32
+        registeredOffice:
+          type: string
+          example: 'Sede legale'
+          maxLength: 128
+      additionalProperties: false
+
+  responses:
+    Forbidden:
+      description: Forbidden
+    NotFound:
+      description: Not found
+    Invalid:
+      description: Bad Request
+    NotAllowed:
+      description: Method not allowed
+    InternalError:
+      description: Internal Server Error
+    Unauthorized:
+      description: Unauthorized
+
+  parameters:
+    pathTenderId:
+      name: tenderId
+      in: path
+      required: true
+      schema:
+        type: string
+    pathGeoKey:
+      name: geokey
+      in: path
+      required: true
+      schema:
+        type: string
+    pathProduct:
+      name: product
+      in: path
+      required: true
+      schema:
+        type: string
+    from:
+      name: from
+      in: query
+      required: false
+      description: Data inizio
+      schema:
+        type: string
+        format: date-time
+        example: '2024-07-15T11:07:38Z'
+    to:
+      name: to
+      in: query
+      required: false
+      description: Data fine
+      schema:
+        type: string
+        format: date-time
+        example: '2024-07-20T11:07:38Z'
+    page:
+      name: page
+      in: query
+      required: true
+      description: Numero pagina
+      schema:
+        type: number
+    size:
+      name: size
+      in: query
+      required: true
+      description: Dimensione pagina
+      schema:
+        type: number
+
+    product:
+      name: product
+      in: query
+      required: false
+      description: Identificativo del prodotto
+      schema:
+        type: string
+        example: 'RS'
+    lot:
+      name: lot
+      in: query
+      required: false
+      description: Indica il lotto
+      schema:
+        type: string
+        example: '1'
+    zone:
+      name: zone
+      in: query
+      required: false
+      description: Indica la zona
+      schema:
+        type: string
+        example: 'AM'
+    deliveryDriverId:
+      name: deliveryDriverId
+      in: query
+      required: false
+      description: Identificativo del recapitista
+      schema:
+        type: string
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
