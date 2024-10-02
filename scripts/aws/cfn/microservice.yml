@@ -876,12 +876,6 @@ Resources:
           - - !Sub '/aws/ecs/${ProjectName}-paper-channel'
 
 
-  TenderAPILambdaSecGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: !Sub "${TenderAPILambdaName}-sec-group"
-      VpcId: !Ref VpcId
-
   # Lambda function
   TenderAPILambda:
     Type: AWS::Lambda::Function
@@ -942,17 +936,25 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
         - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
-        # - arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
-        # - arn:aws:iam::aws:policy/CloudWatchLambdaInsightsExecutionRolePolicy
-
-  TenderAPILambdaAlarms:
-    Type: AWS::CloudFormation::Stack
-    Properties:
-      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/lambda-alarms.yaml"
-      Parameters:
-        FunctionName: !Ref TenderAPILambda
-        AlarmSNSTopicArn: !Ref AlarmSNSTopicArn
-        FilterPattern: "FATAL"
+      Policies:
+        - PolicyName: !Sub ${ProjectName}-TenderAPILambdaRolePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: ReceiveDynamoStream
+                Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:Scan
+                Resource:
+                  - !Sub "${PaperChannelTenderDynamoTableArn}"
+                  - !Sub "${PaperChannelTenderDynamoTableArn}/*"
+                  - !Sub "${PaperChannelGeokeyDynamoTableArn}"
+                  - !Sub "${PaperChannelGeokeyDynamoTableArn}/*"
+                  - !Sub "${PaperChannelDeliveryDriverDynamoTableArn}"
+                  - !Sub "${PaperChannelDeliveryDriverDynamoTableArn}/*"
+                  - !Sub "${PaperChannelCostDynamoTableArn}"
+                  - !Sub "${PaperChannelCostDynamoTableArn}/*"
 
   # Lambda access right
   TenderAPILambdaPermission:
@@ -979,23 +981,6 @@ Resources:
         CloudwatchLogKinesisStreamArn: !Ref LogsKinesisSourceStreamArn
         OpenApiBucketName: !Ref MicroserviceBucketName
         OpenApiBucketKey: !Sub ${MicroserviceBucketBaseKey}/docs/openapi/pn-paper-channel-v1.yaml
-
-  TenderAPIGatewayDeliveryDriver:
-    Type: AWS::CloudFormation::Stack
-    Properties:
-      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/api-gw-expose-service.yaml"
-      Parameters:
-        MicroServiceUniqueName: !Sub '${ProjectName}-paper-channel-bo'
-        IntendedUsage: BACKOFFICE
-        DnsName: !Ref WebApiDnsName
-        ProjectName: !Ref ProjectName
-        ServiceApiPath: 'paper-channel-bo'
-        NetworkLoadBalancerLink: !Ref NetworkLoadBalancerLink
-        ApplicationLoadBalancerDomain: !Ref ApplicationLoadBalancerDomain
-        AlarmSNSTopicArn: !Ref AlarmSNSTopicArn
-        CloudwatchLogKinesisStreamArn: !Ref LogsKinesisSourceStreamArn
-        OpenApiBucketName: !Ref MicroserviceBucketName
-        OpenApiBucketKey: !Sub ${MicroserviceBucketBaseKey}/docs/openapi/pn-tender-api-lambda-v2.yaml
 
   PaperChannelGatewayDeliveryDriverWaf:
     Type: AWS::CloudFormation::Stack
