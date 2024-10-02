@@ -6,15 +6,13 @@
         "target": "es2022",
         "verbatimModuleSyntax": false,
         "allowJs": true,
-        /*"resolveJsonModule": true,*/
         "moduleDetection": "force",
         /* Strictness */
         "strict": true,
         "noUncheckedIndexedAccess": true,
         "module": "CommonJS",
-        "noEmit": false,
+        "noEmit": true,
         "outDir": "./dist",
-        /* If your code doesn't run in the DOM: */
         "lib": ["es2022"]
     },
     "include": ["src/**/*", "test/**/*"],
