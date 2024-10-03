@@ -30,7 +30,7 @@ export const findTenders = async (page: number, size: number, from?: string, to?
       }
     } as ScanInput
   }
-  console.log("Use scan with this command ", scanInput);
+  console.log("Use scan with command ", scanInput);
   const command = new ScanCommand(scanInput);
   const response = await dynamoDBClient.send(command);
 

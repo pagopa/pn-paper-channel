@@ -13,7 +13,7 @@ function toPageMapper<T>(
     totalElements: totalElements,
     totalPages: totalPages,
     number: pageNumber,
-    size: totalPages,
+    size: pageSize,
     isFirstPage: pageNumber === 1,
     isLastPage: pageNumber === totalPages,
   }

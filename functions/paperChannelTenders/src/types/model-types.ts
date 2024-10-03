@@ -9,3 +9,7 @@ export type Page<T> = {
   isFirstPage: boolean;
   isLastPage: boolean;
 }
+
+export type Event = {
+  operation: string;
+}

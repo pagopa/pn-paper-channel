@@ -1,4 +1,4 @@
-// import { apiHandler } from './handlers/api-handler';
+import { Event } from './types/model-types';
 
 /*
 {
@@ -36,4 +36,6 @@
 }
 */
 
-export const handler = (event: unknown) => {}
+
+
+export const handler = (event: Event) => {}
