@@ -56,7 +56,7 @@ export const findActiveTender = async () => {
 
   const tenders = buildPnTendersFromDynamoItems(response.Items || [])
 
-  if (tenders.length > 0) {
+  if (tenders.length == 0) {
     throw new Error("Not found Tenders");
   }
 
