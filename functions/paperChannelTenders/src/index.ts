@@ -1,4 +1,5 @@
-import { Event } from './types/model-types';
+import handlerRoute from './routes/tender-routes';
+import { validatorEvent } from './middlewares/validators';
 
 /*
 {
@@ -36,6 +37,7 @@ import { Event } from './types/model-types';
 }
 */
 
-
-
-export const handler = (event: Event) => {}
+export const handler = (event: unknown) => {
+  const eventValidated = validatorEvent(event)
+  return handlerRoute(eventValidated)
+}
