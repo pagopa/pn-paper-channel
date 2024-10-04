@@ -5,7 +5,7 @@ import { toPageMapper } from '../utils/mappers';
 import { PaperChannelTender } from '../types/dynamo-types';
 
 
-export const findTenders = async (page: number, size: number, from?: string, to?: string) => {
+export const findTenders = async (page: number, size: number, from?: Date, to?: Date) => {
   let scanInput = {
     TableName: PN_TENDER_TABLE_NAME,
     FilterExpression: "activationDate <= :now",

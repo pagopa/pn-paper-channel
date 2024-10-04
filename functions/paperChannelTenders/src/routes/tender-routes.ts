@@ -1,10 +1,14 @@
-import { Event } from '../types/schema-request-types';
+import { Event, TenderActiveEvent, TendersEvent } from '../types/schema-request-types';
+import { tenderActive, tendersHandler } from '../handlers/api-handler';
 
 
-const handlerRoute = (event: Event) => {
-  return {
-    statusCode: 200,
-    body: JSON.stringify(event)
+const handlerRoute = async (event: Event) => {
+  console.log("Received event validated", event)
+  switch (event.operation) {
+    case "GET_TENDERS":
+      return tendersHandler(event as TendersEvent)
+    case 'GET_TENDER_ACTIVE':
+      return tenderActive(event as TenderActiveEvent)
   }
 }
 

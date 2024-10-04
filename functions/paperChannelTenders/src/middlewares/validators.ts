@@ -21,11 +21,11 @@ const validatorEvent = (event: unknown): Event => {
   if (TenderActiveEventSchema.safeParse(parsedEvent.data).success){
     return TenderActiveEventSchema.parse(parsedEvent.data)
   }
-   if (CostsEventSchema.safeParse(parsedEvent.data).success) {
+  if (CostsEventSchema.safeParse(parsedEvent.data).success) {
     return CostsEventSchema.parse(parsedEvent.data);
-    }
-   if (CostEventSchema.safeParse(parsedEvent.data).success) {
-    return CostEventSchema.parse(parsedEvent.data);
+  }
+  if (CostEventSchema.safeParse(parsedEvent.data).success) {
+   return CostEventSchema.parse(parsedEvent.data);
   }
   if (DeliveryDriversEventSchema.safeParse(parsedEvent.data).success) {
     return DeliveryDriversEventSchema.parse(parsedEvent.data);
