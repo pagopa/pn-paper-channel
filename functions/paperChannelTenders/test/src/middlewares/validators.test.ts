@@ -60,6 +60,8 @@ describe("Validator tests", () => {
       const event = {
         operation: "GET_COST",
         tenderId: "1234",
+        geokey: "85994",
+        product: "AR"
       };
 
 
@@ -67,6 +69,8 @@ describe("Validator tests", () => {
       expect(result).toEqual({
         operation: "GET_COST",
         tenderId: "1234",
+        geokey: "85994",
+        product: "AR"
       });
     });
 
