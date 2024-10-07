@@ -14,3 +14,23 @@ export type Page<T> = {
   isFirstPage: boolean;
   isLastPage: boolean;
 }
+
+
+export type PaperChannelTenderCosts = {
+  tenderId: string;
+  productLotZone: string;
+  product: string;
+  lot: string;
+  zone: string;
+  deliveryDriverName: string;
+  deliveryDriverId: string;
+  dematerializationCost: number;
+  rangedCosts: PaperChannelTenderCostsRange[];
+  createdAt: string;
+};
+
+export type PaperChannelTenderCostsRange = {
+  cost: number;
+  minWeight: number;
+  maxWeight: number;
+};
