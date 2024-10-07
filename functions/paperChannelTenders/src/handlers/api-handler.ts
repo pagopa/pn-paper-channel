@@ -15,12 +15,12 @@ export const tendersHandler = async (event: TendersEvent): Promise<Response<Page
   }
 }
 
-export const tenderActive = async (event: TenderActiveEvent): Promise<Response<PaperChannelTender>> => {
-  console.log("Find active tender")
+export const tenderActiveHandler = async (event: TenderActiveEvent): Promise<Response<PaperChannelTender>> => {
+  console.log("Find active tender event=", event)
   const response = await getActiveTender();
   console.log("Active is ", response);
   return {
-    statusCode: response ? 200 : 400,
+    statusCode: response ? 200 : 404,
     description: "Get tender active",
     body: response,
   }

@@ -11,7 +11,7 @@ export const findTenders = async (page: number, size: number, from?: Date, to?: 
     FilterExpression: "activationDate <= :now",
     ExpressionAttributeValues: {
       ":now": {
-        "S": new Date().toDateString()
+        "S": new Date().toISOString()
       }
     }
   } as ScanInput;
@@ -22,10 +22,10 @@ export const findTenders = async (page: number, size: number, from?: Date, to?: 
       FilterExpression: "activationDate <= :to AND activationDate >= from",
       ExpressionAttributeValues: {
         ":from": {
-          "S": (from) ? from : new Date("1970").toDateString()
+          "S": (from) ? from.toISOString() : new Date("1970").toISOString()
         },
         ":to": {
-          "S": (to) ? to : new Date().toDateString()
+          "S": (to) ? to.toISOString() : new Date().toISOString()
         },
       }
     } as ScanInput
@@ -47,7 +47,7 @@ export const findActiveTender = async () => {
     FilterExpression: "activationDate <= :now",
     ExpressionAttributeValues: {
       ":now": {
-        "S": new Date().toDateString()
+        "S": new Date().toISOString()
       }
     }
   } as ScanInput;

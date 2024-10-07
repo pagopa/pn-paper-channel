@@ -11,6 +11,17 @@ describe('findTenders', () => {
 
   const dynamoMockClient = mockClient(dynamoDBClient);
 
+  beforeEach(() => {
+    const mockedDate = new Date();
+
+    jest.useFakeTimers();
+    jest.setSystemTime(mockedDate);
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
   test('should return paged results when no date filters are provided', async () => {
     // Arrange
     const mockResponse = {
@@ -30,7 +41,7 @@ describe('findTenders', () => {
       FilterExpression: "activationDate <= :now",
       ExpressionAttributeValues: {
         ":now": {
-          "S": new Date().toDateString()
+          "S": new Date().toISOString()
         }
       }
     } as ScanInput
@@ -57,8 +68,8 @@ describe('findTenders', () => {
 
   test('return page results when date range is provided', async () => {
     // Arrange
-    const from = "2012-01-01";
-    const to = "2024-10-03";
+    const from = new Date("2012-01-01");
+    const to = new Date("2024-10-03");
 
     const mockResponse = {
       Items: [{
@@ -112,10 +123,10 @@ describe('findTenders', () => {
       FilterExpression: "activationDate <= :to AND activationDate >= from",
       ExpressionAttributeValues: {
         ":from": {
-          "S": (from) ? from : new Date("1970").toDateString()
+          "S": from.toISOString()
         },
         ":to": {
-          "S": (to) ? to : new Date().toDateString()
+          "S": to.toISOString()
         },
       }
     } as ScanInput
@@ -157,7 +168,7 @@ describe('findTenders', () => {
 
   test('return page results when only from is provided', async () => {
     // Arrange
-    const from = "2012-01-01";
+    const from = new Date("2012-01-01");
 
     const mockResponse = {
       Items: [{
@@ -211,10 +222,10 @@ describe('findTenders', () => {
       FilterExpression: "activationDate <= :to AND activationDate >= from",
       ExpressionAttributeValues: {
         ":from": {
-          "S": from
+          "S": from.toISOString()
         },
         ":to": {
-          "S": new Date().toDateString()
+          "S": new Date().toISOString()
         },
       }
     } as ScanInput
@@ -256,7 +267,7 @@ describe('findTenders', () => {
 
   test('return page results when only to is provided', async () => {
     // Arrange
-    const to = "2024-10-01";
+    const to = new Date("2024-10-01");
 
     const mockResponse = {
       Items: [{
@@ -310,10 +321,10 @@ describe('findTenders', () => {
       FilterExpression: "activationDate <= :to AND activationDate >= from",
       ExpressionAttributeValues: {
         ":from": {
-          "S": new Date("1970").toDateString()
+          "S": new Date("1970").toISOString()
         },
         ":to": {
-          "S": to
+          "S": to.toISOString()
         },
       }
     } as ScanInput
@@ -386,7 +397,7 @@ describe('findTenders', () => {
       FilterExpression: "activationDate <= :now",
       ExpressionAttributeValues: {
         ":now": {
-          "S": new Date().toDateString()
+          "S": new Date().toISOString()
         }
       }
     } as ScanInput;
@@ -415,7 +426,7 @@ describe('findTenders', () => {
       FilterExpression: "activationDate <= :now",
       ExpressionAttributeValues: {
         ":now": {
-          "S": new Date().toDateString()
+          "S": new Date().toISOString()
         }
       }
     } as ScanInput;

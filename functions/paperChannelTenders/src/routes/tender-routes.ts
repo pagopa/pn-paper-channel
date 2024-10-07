@@ -1,5 +1,5 @@
 import { Event, TenderActiveEvent, TendersEvent } from '../types/schema-request-types';
-import { tenderActive, tendersHandler } from '../handlers/api-handler';
+import { tenderActiveHandler, tendersHandler } from '../handlers/api-handler';
 
 
 const handlerRoute = async (event: Event) => {
@@ -8,7 +8,7 @@ const handlerRoute = async (event: Event) => {
     case "GET_TENDERS":
       return tendersHandler(event as TendersEvent)
     case 'GET_TENDER_ACTIVE':
-      return tenderActive(event as TenderActiveEvent)
+      return tenderActiveHandler(event as TenderActiveEvent)
   }
 }
 
