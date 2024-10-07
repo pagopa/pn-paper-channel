@@ -1,5 +1,5 @@
 import { AttributeValue, DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { PaperChannelCost, PaperChannelGeokey, PaperChannelTender } from '../types/dynamo-types';
+import { PaperChannelTenderCosts, PaperChannelGeokey, PaperChannelTender } from '../types/dynamo-types';
 import { unmarshall } from '@aws-sdk/util-dynamodb';
 
 
@@ -19,14 +19,17 @@ export const buildPnTendersFromDynamoItems = (
   items.map(item => unmarshall(item))
   .map(item => item as PaperChannelTender);
 
+export const buildPnCostsTendersFromDynamoItems = (
+  items: Record<string, AttributeValue>[]
+): PaperChannelTenderCosts[] =>
+  items.map(item => buildPnCostFromDynamoItems(item));
 
 export const buildPnGeokeyFromDynamoItems = (
   item: Record<string, AttributeValue>
 ): PaperChannelGeokey =>
   unmarshall(item) as PaperChannelGeokey;
 
-
 export const buildPnCostFromDynamoItems = (
   item: Record<string, AttributeValue>
-): PaperChannelCost =>
-  unmarshall(item) as PaperChannelCost;
+): PaperChannelTenderCosts =>
+  unmarshall(item) as PaperChannelTenderCosts;

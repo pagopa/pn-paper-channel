@@ -1,14 +1,14 @@
 import { PN_COST_TABLE_NAME } from '../config';
 import {
   buildCostSortKey,
-  buildPnCostFromDynamoItems,
+  buildPnCostFromDynamoItems, buildPnCostsTendersFromDynamoItems,
   dynamoDBClient,
 } from '../utils/builders';
-import { GetItemCommand, GetItemCommandInput } from '@aws-sdk/client-dynamodb';
-import { PaperChannelCost } from '../types/dynamo-types';
+import { AttributeValue, GetItemCommand, GetItemCommandInput, ScanCommand, ScanInput } from '@aws-sdk/client-dynamodb';
+import { PaperChannelTenderCosts } from '../types/dynamo-types';
 
 
-export const findCost = async (tenderId: string, product: string, lot: string, zone: string): Promise<PaperChannelCost | undefined> => {
+export const findCost = async (tenderId: string, product: string, lot: string, zone: string): Promise<PaperChannelTenderCosts | undefined> => {
   const getCommand: GetItemCommandInput = {
     TableName: PN_COST_TABLE_NAME,
     Key: {
@@ -26,4 +26,59 @@ export const findCost = async (tenderId: string, product: string, lot: string, z
   if (!getItemOutput.Item) return undefined;
 
   return buildPnCostFromDynamoItems(getItemOutput.Item);
+}
+
+export const findCosts = async (tenderId: string, product?: string, lot?: string, zone?: string, deliveryDriverId?: string): Promise<PaperChannelTenderCosts[] | undefined> => {
+
+  let expressionValues: Record<string, AttributeValue> = {
+    ":tenderId": {
+      "S": tenderId
+    }
+  }
+
+  const filterExpression: string[] = ["tenderId = :tenderId"]
+
+  if(product) {
+    filterExpression.push("product = :product")
+    expressionValues = {
+      ...expressionValues,
+      ":product": { "S": product}
+    }
+  }
+
+  if(lot) {
+    filterExpression.push("lot = :lot")
+    expressionValues = {
+      ...expressionValues,
+      ":lot": { "S": lot}
+    }
+  }
+
+  if(zone) {
+    filterExpression.push("zone = :zone")
+    expressionValues = {
+      ...expressionValues,
+      ":zone": { "S": zone}
+    }
+  }
+
+  if(deliveryDriverId) {
+    filterExpression.push("deliveryDriverId = :deliveryDriverId")
+    expressionValues = {
+      ...expressionValues,
+      ":deliveryDriverId": { "S": deliveryDriverId}
+    }
+  }
+
+  const scanInput = {
+    TableName: PN_COST_TABLE_NAME,
+    FilterExpression: filterExpression.join(" AND "),
+    ExpressionAttributeValues: expressionValues
+  } as ScanInput;
+
+  console.log("Use scan with command ", scanInput);
+  const command = new ScanCommand(scanInput);
+  const response = await dynamoDBClient.send(command);
+
+  return buildPnCostsTendersFromDynamoItems(response.Items || []);
 }

@@ -1,7 +1,8 @@
-import { TenderActiveEvent, TendersEvent } from '../types/schema-request-types';
+import { CostsEvent, TenderActiveEvent, TendersEvent } from '../types/schema-request-types';
 import { Page, Response } from '../types/model-types';
-import { PaperChannelTender } from '../types/dynamo-types';
+import { PaperChannelTenderCosts, PaperChannelTender } from '../types/dynamo-types';
 import { getActiveTender, getAllTenders } from '../services/tender-service';
+import { getCosts } from '../services/cost-service';
 
 
 export const tendersHandler = async (event: TendersEvent): Promise<Response<Page<PaperChannelTender>>> => {
@@ -22,6 +23,17 @@ export const tenderActiveHandler = async (event: TenderActiveEvent): Promise<Res
   return {
     statusCode: response ? 200 : 404,
     description: "Get tender active",
+    body: response,
+  }
+}
+
+export const costHandler = async (event: CostsEvent): Promise<Response<PaperChannelTenderCosts[]>> => {
+  console.log("Get cost of tender from event ", event);
+  const response = await getCosts(event.tenderId, event.product, event.lot, event.zone, event.deliveryDriverId);
+  console.log("Response is ", response);
+  return {
+    statusCode: 200,
+    description: "OK",
     body: response,
   }
 }

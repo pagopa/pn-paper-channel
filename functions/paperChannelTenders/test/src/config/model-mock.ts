@@ -1,5 +1,5 @@
 import {
-  PaperChannelCost,
+  PaperChannelTenderCosts,
   PaperChannelGeokey,
   PaperChannelTender,
 } from '../../../src/types/dynamo-types';
@@ -48,7 +48,7 @@ export const geokeyItem = {
   createdAt: "2024-10-07T14:30:15.000Z"
 } as PaperChannelGeokey;
 
-export const costItem: PaperChannelCost = {
+export const costItem: PaperChannelTenderCosts = {
   tenderId: "12345",
   productLotZone: "AR#LOT_1#EU",
   product: "AR",
@@ -56,7 +56,7 @@ export const costItem: PaperChannelCost = {
   zone: "EU",
   deliveryDriverName: "GLS",
   deliveryDriverId: "121212",
-  dematerializationCost: "12.89",
+  dematerializationCost: 12.89,
   rangedCosts: [
     {
       minWeight: 1,
@@ -128,7 +128,7 @@ export const getItemCostOutput: GetItemCommandOutput = {
       "S": "121212",
     },
     dematerializationCost: {
-      "S": "12.89",
+      "N": "12.89",
     },
     rangedCosts: {
       "L": [
