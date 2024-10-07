@@ -4,7 +4,11 @@ import {
   buildPnCostFromDynamoItems, buildPnCostsTendersFromDynamoItems,
   dynamoDBClient,
 } from '../utils/builders';
-import { AttributeValue, GetItemCommand, GetItemCommandInput, ScanCommand, ScanInput } from '@aws-sdk/client-dynamodb';
+import {
+  AttributeValue,
+  GetItemCommand,
+  GetItemCommandInput, QueryCommand, QueryInput,
+} from '@aws-sdk/client-dynamodb';
 import { PaperChannelTenderCosts } from '../types/dynamo-types';
 
 
@@ -70,14 +74,14 @@ export const findCosts = async (tenderId: string, product?: string, lot?: string
     }
   }
 
-  const scanInput = {
+  const queryInput = {
     TableName: PN_COST_TABLE_NAME,
     FilterExpression: filterExpression.join(" AND "),
     ExpressionAttributeValues: expressionValues
-  } as ScanInput;
+  } as QueryInput;
 
-  console.log("Use scan with command ", scanInput);
-  const command = new ScanCommand(scanInput);
+  console.log("Used queryInput ", queryInput);
+  const command = new QueryCommand(queryInput);
   const response = await dynamoDBClient.send(command);
 
   return buildPnCostsTendersFromDynamoItems(response.Items || []);
