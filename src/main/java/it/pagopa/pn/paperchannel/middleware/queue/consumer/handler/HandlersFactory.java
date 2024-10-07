@@ -432,9 +432,6 @@ public class HandlersFactory {
         map.put(ExternalChannelCodeEnum.RECRS005C.name(), handler);
         map.put(ExternalChannelCodeEnum.RECRN001C.name(), handler);
         map.put(ExternalChannelCodeEnum.RECRN002F.name(), handler);
-        map.put(ExternalChannelCodeEnum.RECRN003C.name(), handler);
-        map.put(ExternalChannelCodeEnum.RECRN004C.name(), handler);
-        map.put(ExternalChannelCodeEnum.RECRN005C.name(), handler);
         map.put(ExternalChannelCodeEnum.RECAG001C.name(), handler);
         map.put(ExternalChannelCodeEnum.RECAG002C.name(), handler);
         map.put(ExternalChannelCodeEnum.RECAG003F.name(), handler);

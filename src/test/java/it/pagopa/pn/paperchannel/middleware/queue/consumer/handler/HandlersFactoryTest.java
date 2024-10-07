@@ -77,7 +77,8 @@ class HandlersFactoryTest {
                         new TestCase("NotRetryable", List.of("CON998"), NotRetryableErrorMessageHandler.class),
                         new TestCase("Log", List.of("UNKNOWN"), LogMessageHandler.class),
                         new TestCase("Complex890", List.of("RECAG005C", "RECAG006C", "RECAG007C", "RECAG008C"),
-                                Proxy890MessageHandler.class)
+                                Proxy890MessageHandler.class),
+                        new TestCase("RECRN00xC", List.of("RECRN003C", "RECRN004C", "RECRN005C"), RECRN00XCMessageHandler.class)
                     )),
             // SIMPLE_890_FLOW ENABLE cases
             new FFTestCases(
