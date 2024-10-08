@@ -4,7 +4,8 @@ import {
   PaperChannelTender,
 } from '../../../src/types/dynamo-types';
 import { Page } from '../../../src/types/model-types';
-import { GetItemCommandOutput } from '@aws-sdk/client-dynamodb';
+import { AttributeValue, GetItemCommandOutput } from '@aws-sdk/client-dynamodb';
+import { QueryOutput } from '@aws-sdk/client-dynamodb/dist-types/models/models_0';
 
 export const tender = {
   tenderId: "1234",
@@ -103,47 +104,52 @@ export const getItemGeokeyOutput: GetItemCommandOutput = {
   $metadata: {}
 };
 
+const getItem: Record<string, AttributeValue> = {
+  tenderId: {
+    "S": "12345",
+  },
+  productLotZone: {
+    "S": "AR#LOT_1#EU",
+  },
+  product: {
+    "S": "AR",
+  },
+  lot: {
+    "S": "LOT_1",
+  },
+  zone: {
+    "S": "EU",
+  },
+  deliveryDriverName: {
+    "S": "GLS",
+  },
+  deliveryDriverId: {
+    "S": "121212",
+  },
+  dematerializationCost: {
+    "N": "12.89",
+  },
+  rangedCosts: {
+    "L": [
+      {
+        M: {
+          minWeight: { N: "1" },
+          maxWeight: { N: "10" },
+          cost: { N: "12.34" },
+        }
+      }
+    ],
+  },
+  createdAt: {
+    "S": "2024-10-07T14:30:15.000Z",
+  },
+}
 
 export const getItemCostOutput: GetItemCommandOutput = {
-  Item: {
-    tenderId: {
-      "S": "12345",
-    },
-    productLotZone: {
-      "S": "AR#LOT_1#EU",
-    },
-    product: {
-      "S": "AR",
-    },
-    lot: {
-      "S": "LOT_1",
-    },
-    zone: {
-      "S": "EU",
-    },
-    deliveryDriverName: {
-      "S": "GLS",
-    },
-    deliveryDriverId: {
-      "S": "121212",
-    },
-    dematerializationCost: {
-      "N": "12.89",
-    },
-    rangedCosts: {
-      "L": [
-        {
-          M: {
-            minWeight: { N: "1" },
-            maxWeight: { N: "10" },
-            cost: { N: "12.34" },
-          }
-        }
-      ],
-    },
-    createdAt: {
-      "S": "2024-10-07T14:30:15.000Z",
-    },
-  },
+  Item: getItem,
   $metadata: {}
 };
+
+export const getItemCostListOutput: QueryOutput = {
+  Items: [getItem]
+}

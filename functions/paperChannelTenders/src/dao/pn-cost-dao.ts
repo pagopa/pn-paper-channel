@@ -32,7 +32,7 @@ export const findCost = async (tenderId: string, product: string, lot: string, z
   return buildPnCostFromDynamoItems(getItemOutput.Item);
 }
 
-export const findCosts = async (tenderId: string, product?: string, lot?: string, zone?: string, deliveryDriverId?: string): Promise<PaperChannelTenderCosts[] | undefined> => {
+export const findCosts = async (tenderId: string, product?: string, lot?: string, zone?: string, deliveryDriverId?: string): Promise<PaperChannelTenderCosts[]> => {
 
   let expressionValues: Record<string, AttributeValue> = {
     ":tenderId": {
