@@ -1,10 +1,12 @@
-import { tenderActiveHandler, tendersHandler } from '../../../src/handlers/api-handler';
-import { TenderActiveEvent, TendersEvent } from '../../../src/types/schema-request-types';
+import { singleCostHandler, tenderActiveHandler, tendersHandler } from '../../../src/handlers/api-handler';
+import { CostEvent, TenderActiveEvent, TendersEvent } from '../../../src/types/schema-request-types';
 import { getActiveTender, getAllTenders } from '../../../src/services/tender-service';
-import { pageTender, tender } from '../config/model-mock';
+import { costItem, pageTender, tender } from '../config/model-mock';
+import { getCost } from '../../../src/services/cost-service';
 
 
 jest.mock('../../../src/services/tender-service');
+jest.mock('../../../src/services/cost-service');
 
 describe("API Handlers", () => {
 
@@ -76,6 +78,59 @@ describe("API Handlers", () => {
         description: "Get tender active",
         body: tenderActive,
       });
+    });
+
+  });
+
+  describe("Get single cost", () => {
+
+    test("when not exist cost should return 404", async () => {
+      // Arrange
+      (getCost as jest.Mock).mockReturnValue(Promise.resolve(undefined));
+
+      const event: CostEvent = {
+        operation: "GET_COST",
+        tenderId: "1234",
+        product: "AR",
+        geokey: "95869"
+      }
+
+      // Act
+      const result = await singleCostHandler(event);
+
+      // Assert
+      expect(result).toEqual({
+        statusCode: 404,
+        description: "NOT_FOUND",
+        body: undefined
+      });
+
+    });
+
+    test("when cost exist should return 200 with data", async () => {
+      // Arrange
+
+      const costEntity = costItem;
+
+      (getCost as jest.Mock).mockReturnValue(Promise.resolve(costEntity));
+
+      const event: CostEvent = {
+        operation: "GET_COST",
+        tenderId: "1234",
+        product: "AR",
+        geokey: "95869"
+      }
+
+      // Act
+      const result = await singleCostHandler(event);
+
+      // Assert
+      expect(result).toEqual({
+        statusCode: 200,
+        description: "OK",
+        body: costEntity
+      });
+
     });
 
   });
