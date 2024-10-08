@@ -9,7 +9,7 @@ describe("Validator tests", () => {
         from: "12:234"
       };
 
-      expect(() => validatorEvent(badlyEvent)).toThrow(Error("Invalid event data"));
+      expect(() => validatorEvent(badlyEvent)).toThrow(Error("Unknown event type"));
     });
 
     test('should return valid Tender Event', () => {
