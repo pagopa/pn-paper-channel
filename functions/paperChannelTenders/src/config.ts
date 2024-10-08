@@ -19,6 +19,5 @@ const getEnvironmentVariable = (env: string, defaultValue: string | undefined = 
 
 
 export const PN_TENDER_TABLE_NAME = getEnvironmentVariable("PN_TENDER_TABLE_NAME", "pn-PaperChannelTender");
-export const PN_TENDER_TABLE_NAME = "pn-PaperChannelTender"
-export const PN_COST_TABLE_NAME = "pn-PaperChannelCost"
-export const PN_GEOKEY_TABLE_NAME = "pn-PaperChannelGeokey"
+export const PN_COST_TABLE_NAME = getEnvironmentVariable("PN_COST_TABLE_NAME", "pn-PaperChannelCost");
+export const PN_GEOKEY_TABLE_NAME = getEnvironmentVariable("PN_GEOKEY_TABLE_NAME", "pn-PaperChannelGeokey");

@@ -12,6 +12,19 @@ import {
 import { PaperChannelTenderCosts } from '../types/dynamo-types';
 
 
+
+/**
+ * Fetches the cost information for a specific tender, product, lot, and zone from the DynamoDB table.
+ *
+ * @param {string} tenderId - The unique identifier for the tender.
+ * @param {string} product - The name of the product.
+ * @param {string} lot - The lot number associated with the product.
+ * @param {string} zone - The geographical zone for which the cost is being queried.
+ *
+ * @returns {Promise<PaperChannelTenderCosts | undefined>}
+ * - A promise that resolves to the cost information of type `PaperChannelTenderCosts` if found,
+ * - or `undefined` if no cost information is found for the given parameters.
+ */
 export const findCost = async (tenderId: string, product: string, lot: string, zone: string): Promise<PaperChannelTenderCosts | undefined> => {
   const getCommand: GetItemCommandInput = {
     TableName: PN_COST_TABLE_NAME,
@@ -32,7 +45,21 @@ export const findCost = async (tenderId: string, product: string, lot: string, z
   return buildPnCostFromDynamoItems(getItemOutput.Item);
 }
 
-export const findCosts = async (tenderId: string, product?: string, lot?: string, zone?: string, deliveryDriverId?: string): Promise<PaperChannelTenderCosts[]> => {
+
+/**
+ * Fetches cost information for a specific tender, optionally filtered by product, lot, zone, and delivery driver ID.
+ *
+ * @param {string} tenderId - The unique identifier for the tender.
+ * @param {string} [product] - The optional name of the product to filter by.
+ * @param {string} [lot] - The optional lot number to filter by.
+ * @param {string} [zone] - The optional geographical zone to filter by.
+ * @param {string} [deliveryDriverId] - The optional delivery driver ID to filter by.
+ *
+ * @returns {Promise<PaperChannelTenderCosts[] | undefined>}
+ * - A promise that resolves to an array of cost information of type `PaperChannelTenderCosts` if found,
+ * - or `undefined` if no cost information is found for the given parameters.
+ */
+export const findCosts = async (tenderId: string, product?: string, lot?: string, zone?: string, deliveryDriverId?: string): Promise<PaperChannelTenderCosts[] | undefined> => {
 
   let expressionValues: Record<string, AttributeValue> = {
     ":tenderId": {

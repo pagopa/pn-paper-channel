@@ -1,10 +1,21 @@
-
 import { GetItemCommand, GetItemCommandInput } from '@aws-sdk/client-dynamodb';
 import { PN_GEOKEY_TABLE_NAME } from '../config';
 import { buildGeokeyPartitionKey, buildPnGeokeyFromDynamoItems, dynamoDBClient } from '../utils/builders';
 import { PaperChannelGeokey } from '../types/dynamo-types';
 
 
+
+/**
+ * Retrieves the geokey information for a specific tender and product from the DynamoDB table.
+ *
+ * @param {string} tenderId - The unique identifier for the tender.
+ * @param {string} product - The name of the product associated with the geokey.
+ * @param {string} geokey - The specific geokey to be retrieved.
+ *
+ * @returns {Promise<PaperChannelGeokey | undefined>}
+ * - A promise that resolves to the geokey information of type `PaperChannelGeokey` if found,
+ * - or `undefined` if no geokey information is found for the given parameters.
+ */
 export const findGeokey = async (tenderId: string, product: string, geokey: string): Promise<PaperChannelGeokey | undefined> => {
   const getCommand = {
     TableName: PN_GEOKEY_TABLE_NAME,
