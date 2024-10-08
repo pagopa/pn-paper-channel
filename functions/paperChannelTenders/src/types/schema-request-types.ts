@@ -51,6 +51,7 @@ type DeliveryDriversEvent = z.infer<typeof DeliveryDriversEventSchema>;
 type Event = z.infer<typeof EventSchema>;
 
 export {
+  BaseEventSchema,
   EventSchema,
   TendersEventSchema,
   TenderActiveEventSchema,
