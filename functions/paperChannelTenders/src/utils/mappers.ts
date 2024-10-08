@@ -36,6 +36,14 @@ function toPageMapper<T>(
   }
 }
 
+
+/**
+ * Converts a Zod validation error into an array of validation field objects.
+ *
+ * @param error - The ZodError instance containing validation error details.
+ *
+ * @returns An array of ValidationField objects, each containing the field ID and error message.
+  */
 function zodErrorToValidationField (error: ZodError): ValidationField[] {
   return error.errors.map(err => ({
     fieldId: err.path.join('.'),

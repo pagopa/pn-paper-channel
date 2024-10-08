@@ -5,7 +5,16 @@ import { toPageMapper } from '../utils/mappers';
 import { PaperChannelTender } from '../types/dynamo-types';
 import { Page } from '../types/model-types';
 
-
+/**
+ * Retrieves a paginated list of tenders filtered by activation date.
+ *
+ * @param page - The page number to retrieve (0-based index).
+ * @param size - The number of tenders per page.
+ * @param from - Optional date to filter tenders activated from this date onwards.
+ * @param to - Optional date to filter tenders activated up to this date.
+ *
+ * @returns A promise that resolves to a paginated response containing the tenders.
+ */
 export const findTenders = async (page: number, size: number, from?: Date, to?: Date): Promise<Page<PaperChannelTender>> => {
   const defaultFrom = new Date("1970").toISOString();
   const now = new Date().toISOString();
@@ -30,6 +39,13 @@ export const findTenders = async (page: number, size: number, from?: Date, to?: 
 }
 
 
+/**
+ * Retrieves the currently active tender based on the activation date.
+ *
+ * @returns A promise that resolves to the latest active tender, or throws an error if no tenders are found.
+ *
+ * @throws {Error} If no active tenders are found.
+ */
 export const findActiveTender = async () : Promise<PaperChannelTender | undefined> => {
   const scanInput = {
     TableName: PN_TENDER_TABLE_NAME,
