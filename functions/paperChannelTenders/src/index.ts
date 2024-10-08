@@ -1,5 +1,6 @@
 import handlerRoute from './routes/tender-routes';
 import { validatorEvent } from './middlewares/validators';
+import { handleError } from './middlewares/errors';
 
 /*
 {
@@ -37,7 +38,25 @@ import { validatorEvent } from './middlewares/validators';
 }
 */
 
+/**
+ * A handler function that processes an event.
+ *
+ * This function validates the incoming event using the `validatorEvent` function,
+ * and then passes the validated event to the `handlerRoute` function.
+ * If any errors occur during validation or processing, they are caught and handled
+ * using the `handleError` function.
+ *
+ * @param event - The event to be processed. The type is unknown until validated.
+ * @returns The result of the `handlerRoute` function, or an error response from `handleError`.
+ *
+ * @throws Will throw an error if the event validation fails or if an error occurs
+ * during processing.
+ */
 export const handler = (event: unknown) => {
-  const eventValidated = validatorEvent(event)
-  return handlerRoute(eventValidated)
+  try {
+    const eventValidated = validatorEvent(event)
+    return handlerRoute(eventValidated)
+  } catch (error: unknown) {
+    return handleError(error);
+  }
 }

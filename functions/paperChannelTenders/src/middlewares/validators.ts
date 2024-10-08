@@ -2,36 +2,43 @@ import {
   CostEventSchema,
   CostsEventSchema, DeliveryDriversEventSchema,
   Event,
-  EventSchema,
   TenderActiveEventSchema,
   TendersEventSchema,
 } from '../types/schema-request-types';
 
+
+
+/**
+ * Validates an incoming event against a set of predefined schemas.
+ *
+ * This function attempts to parse the provided event using a series of schemas.
+ * It iterates through each schema, and if the event successfully matches one,
+ * it returns the validated event data. If none of the schemas match, it throws
+ * an error indicating that the event type is unknown.
+ *
+ * @param event - The event to validate, which can be of any type until validated.
+ * @returns The validated event data of type Event if successful.
+ *
+ * @throws Will throw an error if the event does not match any of the predefined schemas.
+ */
 const validatorEvent = (event: unknown): Event => {
-  const parsedEvent = EventSchema.safeParse(event);
 
-  if (!parsedEvent.success) {
-    //console.error("Invalid event data:", parsedEvent.error);
-    throw new Error("Invalid event data");
-  }
+  const eventSchemas = [
+    TendersEventSchema,
+    TenderActiveEventSchema,
+    CostsEventSchema,
+    CostEventSchema,
+    DeliveryDriversEventSchema,
+  ];
 
-  if (TendersEventSchema.safeParse(parsedEvent.data).success) {
-    return TendersEventSchema.parse(parsedEvent.data)
-  }
-  if (TenderActiveEventSchema.safeParse(parsedEvent.data).success){
-    return TenderActiveEventSchema.parse(parsedEvent.data)
-  }
-  if (CostsEventSchema.safeParse(parsedEvent.data).success) {
-    return CostsEventSchema.parse(parsedEvent.data);
-  }
-  if (CostEventSchema.safeParse(parsedEvent.data).success) {
-   return CostEventSchema.parse(parsedEvent.data);
-  }
-  if (DeliveryDriversEventSchema.safeParse(parsedEvent.data).success) {
-    return DeliveryDriversEventSchema.parse(parsedEvent.data);
+  for (const schema of eventSchemas) {
+    const result = schema.safeParse(event);
+    if (result.success) {
+      return result.data;
+    }
   }
 
-  throw new Error("Unknown event Type")
+  throw new Error("Unknown event type");
 }
 
 export {
