@@ -321,6 +321,11 @@ public class HandlersFactory {
         if(sendProgressMetaConfig.isCON018Enabled()){
             map.put(CON018.name(), sendToDeliveryPushHandler);
         }
+
+        if(pnPaperChannelConfig.isSendCon020()){
+            map.put(CON020.name(), sendToDeliveryPushHandler);
+        }
+
     }
 
     private void addRetryableErrorStatusCodes(ConcurrentHashMap<String, MessageHandler> map, RetryableErrorMessageHandler handler) {
