@@ -1,9 +1,6 @@
 import { CostEvent, CostsEvent, TenderActiveEvent, TendersEvent } from '../types/schema-request-types';
-import { Page, Response } from '../types/model-types';
-import { PaperChannelTenderCosts, PaperChannelTender } from '../types/dynamo-types';
-import { TenderActiveEvent, TendersEvent } from '../types/schema-request-types';
 import { Page, Response, ResponseLambda } from '../types/model-types';
-import { PaperChannelTender } from '../types/dynamo-types';
+import { PaperChannelTenderCosts, PaperChannelTender } from '../types/dynamo-types';
 import { getActiveTender, getAllTenders } from '../services/tender-service';
 import { getCost, getCosts } from '../services/cost-service';
 
@@ -54,12 +51,23 @@ export const costHandler = async (event: CostsEvent): Promise<Response<PaperChan
   }
 }
 
+
+/**
+ * Retrieves the cost information for a specific tender and product.
+ *
+ * This asynchronous function logs the incoming event, fetches the cost details
+ * using the provided tenderId, product, and geokey, and returns the response
+ * formatted as a ResponseLambda object containing the cost information.
+ *
+ * @param event - An object of type CostEvent containing the tender ID, product,
+ *                and geokey for which the cost is being requested.
+ * @returns A Promise that resolves to a Response containing the cost information
+ *          as a PaperChannelTenderCosts object.
+ *
+ * @throws Will throw an NotFoundError if the cost or geokey not found.
+ */
 export const singleCostHandler = async (event: CostEvent): Promise<Response<PaperChannelTenderCosts>> => {
   console.log("Get cost from event ", event);
   const response = await getCost(event.tenderId, event.product, event.geokey)
-  return {
-    statusCode: (response) ? 200 : 404,
-    description: (response) ? "OK" : "NOT_FOUND",
-    body: response,
-  }
+  return new ResponseLambda<PaperChannelTenderCosts>().toResponseOK(response);
 }

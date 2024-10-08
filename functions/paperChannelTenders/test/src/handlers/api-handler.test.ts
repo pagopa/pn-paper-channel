@@ -80,9 +80,9 @@ describe("API Handlers", () => {
 
   describe("Get single cost", () => {
 
-    test("when not exist cost should return 404", async () => {
+    test("when not exist cost should throw NotFoundError", async () => {
       // Arrange
-      (getCost as jest.Mock).mockReturnValue(Promise.resolve(undefined));
+      (getCost as jest.Mock).mockReturnValue(Promise.reject(new NotFoundError("CostNotFound")));
 
       const event: CostEvent = {
         operation: "GET_COST",
@@ -92,15 +92,24 @@ describe("API Handlers", () => {
       }
 
       // Act
-      const result = await singleCostHandler(event);
+      await expect(() => singleCostHandler(event)).rejects
+        .toThrow(new NotFoundError("CostNotFound"));
+    });
 
-      // Assert
-      expect(result).toEqual({
-        statusCode: 404,
-        description: "NOT_FOUND",
-        body: undefined
-      });
+    test("when not exist geokey should throw NotFoundError", async () => {
+      // Arrange
+      (getCost as jest.Mock).mockReturnValue(Promise.reject(new NotFoundError("GeokeyNotFound")));
 
+      const event: CostEvent = {
+        operation: "GET_COST",
+        tenderId: "1234",
+        product: "AR",
+        geokey: "95869"
+      }
+
+      // Act
+      await expect(() => singleCostHandler(event)).rejects
+        .toThrow(new NotFoundError("GeokeyNotFound"));
     });
 
     test("when cost exist should return 200 with data", async () => {
