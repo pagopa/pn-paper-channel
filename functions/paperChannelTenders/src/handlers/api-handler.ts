@@ -40,17 +40,24 @@ export const tenderActiveHandler = async (event: TenderActiveEvent): Promise<Res
   return new ResponseLambda<PaperChannelTender>().toResponseOK(response);
 }
 
+/**
+ * Handles the retrieval of cost information based on the incoming event.
+ *
+ * @param {CostsEvent} event - The event containing information needed to retrieve costs, including
+ *                              tender ID, optional filters for product, lot, zone, and delivery driver ID.
+ *
+ * @returns {Promise<Response<PaperChannelTenderCosts[]>>}
+ * - A promise that resolves to a response object containing the status code, description,
+ *   and the retrieved cost information.
+ *
+ * @throws {Error} Throws an error if the underlying `getCosts` function fails to retrieve the data.
+ */
 export const costHandler = async (event: CostsEvent): Promise<Response<PaperChannelTenderCosts[]>> => {
   console.log("Get cost of tender from event ", event);
   const response = await getCosts(event.tenderId, event.product, event.lot, event.zone, event.deliveryDriverId);
   console.log("Response is ", response);
-  return {
-    statusCode: 200,
-    description: "OK",
-    body: response,
-  }
+  return new ResponseLambda<PaperChannelTenderCosts[]>().toResponseOK(response);
 }
-
 
 /**
  * Retrieves the cost information for a specific tender and product.

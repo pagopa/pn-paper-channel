@@ -19,7 +19,7 @@ import { NotFoundError } from '../types/error-types';
  *
  * @throws {Error} Throws an error if the underlying `findCosts` function fails.
  */
-export const getCosts = async (tenderId: string, product?: string, lot?: string, zone?: string, deliveryDriverId?: string): Promise<PaperChannelTenderCosts[] | undefined> => {
+export const getCosts = async (tenderId: string, product?: string, lot?: string, zone?: string, deliveryDriverId?: string): Promise<PaperChannelTenderCosts[]> => {
   return await findCosts(tenderId, product, lot, zone, deliveryDriverId);
 }
 
