@@ -2,6 +2,7 @@ import { tenderActiveHandler, tendersHandler } from '../../../src/handlers/api-h
 import { TenderActiveEvent, TendersEvent } from '../../../src/types/schema-request-types';
 import { getActiveTender, getAllTenders } from '../../../src/services/tender-service';
 import { pageTender, tender } from '../config/model-mock';
+import { NotFoundError } from '../../../src/types/error-types';
 
 
 jest.mock('../../../src/services/tender-service');
@@ -28,7 +29,7 @@ describe("API Handlers", () => {
       // Assert
       expect(result).toEqual({
         statusCode: 200,
-        description: "Get all tenders",
+        description: "OK",
         body: pageTenders,
       });
 
@@ -38,23 +39,18 @@ describe("API Handlers", () => {
 
   describe("Find active Tender", () => {
 
-    test("when not exist active tender should return 404", async () => {
+    test("when not exist active tender should throw NotFoundError", async () => {
       // Arrange
       const event = {
         operation: "GET_TENDER_ACTIVE"
       } as TenderActiveEvent;
 
-      (getActiveTender as jest.Mock).mockReturnValue(Promise.resolve(undefined));
+      (getActiveTender as jest.Mock).mockReturnValue(Promise.reject(new NotFoundError("TenderNotFound")));
 
-      // Act
-      const result = await tenderActiveHandler(event);
+      // Act & Assert
+      await expect(() => tenderActiveHandler(event)).rejects
+        .toThrow(new NotFoundError("TenderNotFound"));
 
-      // Assert
-      expect(result).toEqual({
-        statusCode: 404,
-        description: "Get tender active",
-        body: undefined,
-      });
     });
 
     test("when exist active tender should return 200 with tender", async () => {
@@ -73,7 +69,7 @@ describe("API Handlers", () => {
       // Assert
       expect(result).toEqual({
         statusCode: 200,
-        description: "Get tender active",
+        description: "OK",
         body: tenderActive,
       });
     });

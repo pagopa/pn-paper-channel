@@ -1,5 +1,6 @@
 import { findActiveTender, findTenders } from '../dao/pn-tender-dao';
 import { PaperChannelTender } from '../types/dynamo-types';
+import { NotFoundError } from '../types/error-types';
 
 
 export const getAllTenders = async (page: number, size: number, from ?: Date, to ?: Date) => {
@@ -9,6 +10,10 @@ export const getAllTenders = async (page: number, size: number, from ?: Date, to
 }
 
 
-export const getActiveTender = async (): Promise<PaperChannelTender | undefined> => {
-  return await findActiveTender();
+export const getActiveTender = async (): Promise<PaperChannelTender> => {
+  const activeTender = await findActiveTender();
+  if (!activeTender) {
+    throw new NotFoundError("Active tender not found");
+  }
+  return activeTender;
 }

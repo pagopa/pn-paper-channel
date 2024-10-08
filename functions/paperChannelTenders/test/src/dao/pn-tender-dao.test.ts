@@ -38,9 +38,12 @@ describe('findTenders', () => {
 
     const scanInput = {
       TableName: PN_TENDER_TABLE_NAME,
-      FilterExpression: "activationDate <= :now",
+      FilterExpression: "activationDate <= :to AND activationDate >= :from",
       ExpressionAttributeValues: {
-        ":now": {
+        ":from": {
+          "S": new Date("1970").toISOString()
+        },
+        ":to": {
           "S": new Date().toISOString()
         }
       }
@@ -120,7 +123,7 @@ describe('findTenders', () => {
 
     const scanInput = {
       TableName: PN_TENDER_TABLE_NAME,
-      FilterExpression: "activationDate <= :to AND activationDate >= from",
+      FilterExpression: "activationDate <= :to AND activationDate >= :from",
       ExpressionAttributeValues: {
         ":from": {
           "S": from.toISOString()
@@ -130,6 +133,7 @@ describe('findTenders', () => {
         },
       }
     } as ScanInput
+
 
     dynamoMockClient.on(ScanCommand, scanInput).resolves(Promise.resolve(mockResponse))
 
@@ -219,7 +223,7 @@ describe('findTenders', () => {
 
     const scanInput = {
       TableName: PN_TENDER_TABLE_NAME,
-      FilterExpression: "activationDate <= :to AND activationDate >= from",
+      FilterExpression: "activationDate <= :to AND activationDate >= :from",
       ExpressionAttributeValues: {
         ":from": {
           "S": from.toISOString()
@@ -318,7 +322,7 @@ describe('findTenders', () => {
 
     const scanInput = {
       TableName: PN_TENDER_TABLE_NAME,
-      FilterExpression: "activationDate <= :to AND activationDate >= from",
+      FilterExpression: "activationDate <= :to AND activationDate >= :from",
       ExpressionAttributeValues: {
         ":from": {
           "S": new Date("1970").toISOString()
