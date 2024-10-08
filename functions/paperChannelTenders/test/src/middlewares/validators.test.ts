@@ -1,15 +1,55 @@
 import { validatorEvent } from '../../../src/middlewares/validators';
+import { ValidatorError } from '../../../src/types/error-types';
+import { ValidationField } from '../../../src/types/model-types';
 
 describe("Validator tests", () => {
   describe("Validator event tests", () => {
 
-    test('should throw error for invalid event', () => {
+    test('should throw error for invalid operation event', () => {
       const badlyEvent = {
-        type: "TENDERS",
+        operation: "XXX",
         from: "12:234"
       };
 
-      expect(() => validatorEvent(badlyEvent)).toThrow(Error("Unknown event type"));
+      const validationField: ValidationField[] = [
+        {
+          fieldId: 'operation',
+          message: "Invalid enum value. Expected 'GET_TENDERS' | 'GET_TENDER_ACTIVE' | 'GET_COSTS' | 'GET_COST' | 'GET_DELIVERY_DRIVERS', received 'XXX'"
+        }
+      ]
+
+      const validatorError = new ValidatorError("Event badly format", validationField)
+
+      try {
+        validatorEvent(badlyEvent);
+      } catch (e) {
+        expect(e).toBeInstanceOf(ValidatorError);
+        expect((e as ValidatorError).message).toEqual(validatorError.message);
+        expect((e as ValidatorError).fields).toEqual(validationField);
+      }
+    });
+
+    test('should throw error for invalid field of event', () => {
+      const badlyEvent = {
+        operation: "GET_TENDERS",
+        from: "12:234"
+      };
+
+      const validationField: ValidationField[] = [
+        { fieldId: 'page', message: 'Required' },
+        { fieldId: 'size', message: 'Required' },
+        { fieldId: 'from', message: 'Expected date, received string' }
+      ]
+
+      const validatorError = new ValidatorError("Event badly format", validationField)
+
+      try {
+        validatorEvent(badlyEvent);
+      } catch (e) {
+        expect(e).toBeInstanceOf(ValidatorError);
+        expect((e as ValidatorError).message).toEqual(validatorError.message);
+        expect((e as ValidatorError).fields).toEqual(validationField);
+      }
     });
 
     test('should return valid Tender Event', () => {

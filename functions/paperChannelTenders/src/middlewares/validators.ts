@@ -1,10 +1,15 @@
 import {
+  BaseEventSchema,
   CostEventSchema,
   CostsEventSchema, DeliveryDriversEventSchema,
   Event,
   TenderActiveEventSchema,
   TendersEventSchema,
 } from '../types/schema-request-types';
+import { ValidationField } from '../types/model-types';
+import { ZodIssueCode } from 'zod';
+import { zodErrorToValidationField } from '../utils/mappers';
+import { ValidatorError } from '../types/error-types';
 
 
 
@@ -22,6 +27,14 @@ import {
  * @throws Will throw an error if the event does not match any of the predefined schemas.
  */
 const validatorEvent = (event: unknown): Event => {
+  const validationErrors: ValidationField[] = [];
+  const parsedEvent = BaseEventSchema.safeParse(event);
+
+  if (!parsedEvent.success) {
+    validationErrors.push(...zodErrorToValidationField(parsedEvent.error));
+    throw new ValidatorError("Event badly format", validationErrors);
+  }
+
 
   const eventSchemas = [
     TendersEventSchema,
@@ -35,11 +48,17 @@ const validatorEvent = (event: unknown): Event => {
     const result = schema.safeParse(event);
     if (result.success) {
       return result.data;
+    } else {
+      const onlyErrorWithOperationKey = result.error.errors.filter(err => err.code === ZodIssueCode.invalid_literal );
+      if (onlyErrorWithOperationKey.length === 0) {
+        validationErrors.push(...zodErrorToValidationField(result.error));
+      }
     }
   }
-
-  throw new Error("Unknown event type");
+  throw new ValidatorError("Event badly format", validationErrors);
 }
+
+
 
 export {
   validatorEvent
