@@ -1,4 +1,5 @@
-import { Page } from '../types/model-types';
+import { Page, ValidationField } from '../types/model-types';
+import { ZodError } from 'zod';
 
 
 
@@ -35,6 +36,14 @@ function toPageMapper<T>(
   }
 }
 
+function zodErrorToValidationField (error: ZodError): ValidationField[] {
+  return error.errors.map(err => ({
+    fieldId: err.path.join('.'),
+    message: err.message,
+  }));
+}
+
 export {
-  toPageMapper
+  toPageMapper,
+  zodErrorToValidationField
 }
