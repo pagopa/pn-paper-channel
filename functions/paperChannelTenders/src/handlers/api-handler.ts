@@ -1,6 +1,6 @@
+import { PaperChannelTenderCosts, PaperChannelTender } from '../types/dynamo-types';
 import { CostEvent, CostsEvent, TenderActiveEvent, TendersEvent } from '../types/schema-request-types';
 import { Page, Response, ResponseLambda } from '../types/model-types';
-import { PaperChannelTenderCosts, PaperChannelTender } from '../types/dynamo-types';
 import { getActiveTender, getAllTenders } from '../services/tender-service';
 import { getCost, getCosts } from '../services/cost-service';
 
