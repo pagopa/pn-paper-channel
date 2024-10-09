@@ -35,7 +35,6 @@ const validatorEvent = (event: unknown): Event => {
     throw new ValidatorError("Event badly format", validationErrors);
   }
 
-
   const eventSchemas = [
     TendersEventSchema,
     TenderActiveEventSchema,

@@ -1,6 +1,6 @@
 import handlerRoute from './routes/tender-routes';
 import { validatorEvent } from './middlewares/validators';
-import { handleError } from './middlewares/errors';
+import { handleError } from './utils/errors';
 
 /*
 {
@@ -56,7 +56,7 @@ export const handler = (event: unknown) => {
   try {
     const eventValidated = validatorEvent(event)
     return handlerRoute(eventValidated)
-  } catch (error: unknown) {
+  } catch (error: Error | unknown) {
     return handleError(error);
   }
 }

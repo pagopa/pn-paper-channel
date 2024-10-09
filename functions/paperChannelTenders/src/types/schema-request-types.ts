@@ -22,7 +22,6 @@ const CostsEventSchema = BaseEventSchema.extend({
   operation: z.literal("GET_COSTS"),
   tenderId: z.string(),
   product: z.string().optional(),
-  lot: z.string().optional(),
   zone: z.string().optional(),
   deliveryDriverId: z.string().optional(),
 });
