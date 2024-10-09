@@ -46,7 +46,7 @@ export const findTenders = async (page: number, size: number, from?: Date, to?: 
  *
  * @throws {Error} If no active tenders are found.
  */
-export const findActiveTender = async () : Promise<PaperChannelTender | undefined> => {
+export const findActiveTender = async () : Promise<PaperChannelTender> => {
   const scanInput = {
     TableName: PN_TENDER_TABLE_NAME,
     FilterExpression: "activationDate <= :now",
@@ -67,7 +67,7 @@ export const findActiveTender = async () : Promise<PaperChannelTender | undefine
 
   const latestTender = tenders.reduce((latest, current) => {
     return new Date(current.activationDate) > new Date(latest!.activationDate) ? current : latest;
-  }, tenders[0]);
+  }, tenders[0] as PaperChannelTender);
 
   return latestTender;
 }

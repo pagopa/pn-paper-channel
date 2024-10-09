@@ -56,7 +56,7 @@ export const handler = (event: unknown) => {
   try {
     const eventValidated = validatorEvent(event)
     return handlerRoute(eventValidated)
-  } catch (error: unknown) {
+  } catch (error: Error | unknown) {
     return handleError(error);
   }
 }

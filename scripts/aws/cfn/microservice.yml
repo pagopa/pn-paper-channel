@@ -598,10 +598,20 @@ Parameters:
     Type: String
     Description: "TenderAPILambdaName"
 
-  TenderAPILambdaProvisionedConcurrency:
+  TenderAPILambdaRuntime:
+    Type: String
+    Default: nodejs20.x
+    Description: Runtime of the DataIndexer Lambda.
+
+  TenderAPILambdaTimeout:
     Type: Number
-    Description: "TenderAPILambdaProvisionedConcurrency"
-    Default: 1
+    Default: 30
+    Description: Timeout TenderAPI Lambda.
+
+  TenderAPILambdaMemorySize:
+    Type: Number
+    Default: 512
+    Description: Memory size TenderAPI Lambda.
 
 Conditions:
   UseExternalChannelMock: !Equals [ !Ref ExternalChannelBaseUrl, "Mock" ]
@@ -881,49 +891,28 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       FunctionName: !Ref TenderAPILambdaName
-      Runtime: nodejs18.x
+      Runtime: !Ref TenderAPILambdaRuntime
       Handler: "index.handler"
       Code:
         S3Bucket: !Ref MicroserviceBucketName
-        S3Key: !Sub "${MicroserviceBucketBaseKey}/functions_zip/TenderAPI.zip"
+        S3Key: !Sub "${MicroserviceBucketBaseKey}/functions_zip/paperChannelTenders.zip"
       Role: !GetAtt TenderAPILambdaRole.Arn
-      VpcConfig:
-        SecurityGroupIds:
-          - !GetAtt TenderAPILambdaSecGroup.GroupId
-        SubnetIds: !Ref SubnetsIds
       Environment:
         Variables:
           REGION: !Sub ${AWS::Region}
           AWS_DYNAMODBPAPERCHANNELTENDERTABLE: !Ref PaperChannelTenderDynamoTableName
           AWS_DYNAMODBPAPERCHANNELGEOKEYTABLE: !Ref PaperChannelGeokeyDynamoTableName
           AWS_DYNAMODBPAPERCHANNELCOSTTABLE: !Ref PaperChannelCostDynamoTableName
-      TracingConfig:
-        Mode: Active
       Layers:
         - !Sub "arn:aws:lambda:${AWS::Region}:339249233099:layer:LambdaInsightsExtension:13"
-      Timeout: 30
-      MemorySize: 512
-
-  # a new version at each deploy, with provisioned concurrency set
-  TenderAPILambdaVersionPnPlaceholderEpochSeconds:
-    Type: AWS::Lambda::Version
-    Properties:
-      FunctionName: !Ref TenderAPILambda
-
-    TenderAPILambdaVersionAlias:
-      Type: AWS::Lambda::Alias
-      Properties:
-        FunctionName: !Ref TenderAPILambda
-        FunctionVersion: !GetAtt TenderAPILambdaVersionPnPlaceholderEpochSeconds.Version
-        Name: live
-        ProvisionedConcurrencyConfig:
-          ProvisionedConcurrentExecutions: !Ref TenderAPILambdaProvisionedConcurrency
+      Timeout: !Ref TenderAPILambdaTimeout
+      MemorySize: !Ref TenderAPILambdaMemorySize
 
   # Lambda function role
   TenderAPILambdaRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub ${ProjectName}-TenderAPILambdaRole
+      RoleName: !Sub ${TenderAPILambdaName}Role
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -935,35 +924,27 @@ Resources:
               - sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
       Policies:
-        - PolicyName: !Sub ${ProjectName}-TenderAPILambdaRolePolicy
+        - PolicyName: DynamoDbAccess
           PolicyDocument:
             Version: 2012-10-17
             Statement:
-              - Sid: ReceiveDynamoStream
+              - Sid: DynamoDbScan
                 Effect: Allow
                 Action:
-                  - dynamodb:GetItem
                   - dynamodb:Scan
                 Resource:
                   - !Sub "${PaperChannelTenderDynamoTableArn}"
-                  - !Sub "${PaperChannelTenderDynamoTableArn}/*"
-                  - !Sub "${PaperChannelGeokeyDynamoTableArn}"
-                  - !Sub "${PaperChannelGeokeyDynamoTableArn}/*"
                   - !Sub "${PaperChannelDeliveryDriverDynamoTableArn}"
+              - Sid: DynamoDbGet
+                Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                Resource:
+                  - !Sub "${PaperChannelTenderDynamoTableArn}/*"
+                  - !Sub "${PaperChannelGeokeyDynamoTableArn}/*"
                   - !Sub "${PaperChannelDeliveryDriverDynamoTableArn}/*"
-                  - !Sub "${PaperChannelCostDynamoTableArn}"
                   - !Sub "${PaperChannelCostDynamoTableArn}/*"
-
-  # Lambda access right
-  TenderAPILambdaPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      FunctionName: !Ref TenderAPILambdaVersionAlias
-      Action: lambda:InvokeFunction
-      Principal: apigateway.amazonaws.com
-      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:*/*"
 
   PaperChannelGatewayDeliveryDriver:
     Type: AWS::CloudFormation::Stack

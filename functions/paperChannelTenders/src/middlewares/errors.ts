@@ -18,7 +18,7 @@ import { GenericError, NotFoundError, ValidatorError } from '../types/error-type
  *
  * @throws Will return a ResponseError regardless of the error type.
  */
-export function handleError(error: unknown): ResponseError {
+export function handleError(error: Error | unknown): ResponseError {
   if (error instanceof NotFoundError) {
     return error.toResponse();
   } else if (error instanceof ValidatorError) {

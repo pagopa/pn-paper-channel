@@ -23,13 +23,13 @@
     "ts-jest": "^29.2.5",
     "typescript": "^5.6.2",
     "typescript-eslint": "^8.2.0",
-    "aws-sdk-client-mock": "^4.0.2",
-    "zod": "^3.23.8"
+    "aws-sdk-client-mock": "^4.0.2"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.650.0",
-    "@aws-sdk/util-dynamodb": "^3.637.0"
+    "@aws-sdk/util-dynamodb": "^3.637.0",
+    "zod": "^3.23.8"
   }
 }
