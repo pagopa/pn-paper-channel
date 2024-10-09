@@ -1,5 +1,5 @@
 import { GenericError, NotFoundError, ValidatorError } from '../../../src/types/error-types';
-import { handleError } from '../../../src/middlewares/errors';
+import { handleError } from '../../../src/utils/errors';
 import { ValidationField } from '../../../src/types/model-types';
 
 
