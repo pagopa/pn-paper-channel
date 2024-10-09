@@ -1,9 +1,10 @@
 import { ScanCommand, ScanInput } from '@aws-sdk/client-dynamodb';
-import { buildPnTendersFromDynamoItems, dynamoDBClient } from '../utils/builders';
+import { buildPnTendersFromDynamoItems } from '../utils/builders';
 import { PN_TENDER_TABLE_NAME } from '../config';
 import { toPageMapper } from '../utils/mappers';
 import { PaperChannelTender } from '../types/dynamo-types';
 import { Page } from '../types/model-types';
+import { dynamoDBClient } from '../utils/awsClients';
 
 /**
  * Retrieves a paginated list of tenders filtered by activation date.

@@ -1,5 +1,5 @@
 import { PN_COST_TABLE_NAME } from '../../../src/config';
-import { buildCostSortKey, dynamoDBClient } from '../../../src/utils/builders';
+import { buildCostSortKey } from '../../../src/utils/builders';
 import {
   AttributeValue,
   GetItemCommand,
@@ -10,6 +10,7 @@ import {
 import { mockClient } from 'aws-sdk-client-mock';
 import { costItem, getItemCostOutput, getItemCostListOutput } from '../config/model-mock';
 import { findCost, findCosts } from '../../../src/dao/pn-cost-dao';
+import { dynamoDBClient } from '../../../src/utils/awsClients';
 
 
 

@@ -1,7 +1,8 @@
 import { GetItemCommand, GetItemCommandInput } from '@aws-sdk/client-dynamodb';
 import { PN_GEOKEY_TABLE_NAME } from '../config';
-import { buildGeokeyPartitionKey, buildPnGeokeyFromDynamoItems, dynamoDBClient } from '../utils/builders';
+import { buildGeokeyPartitionKey, buildPnGeokeyFromDynamoItems } from '../utils/builders';
 import { PaperChannelGeokey } from '../types/dynamo-types';
+import { dynamoDBClient } from '../utils/awsClients';
 
 
 

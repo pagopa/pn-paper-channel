@@ -2,7 +2,6 @@ import { PN_COST_TABLE_NAME } from '../config';
 import {
   buildCostSortKey,
   buildPnCostFromDynamoItems, buildPnCostsTendersFromDynamoItems,
-  dynamoDBClient,
 } from '../utils/builders';
 import {
   AttributeValue,
@@ -10,6 +9,7 @@ import {
   GetItemCommandInput, QueryCommand, QueryInput,
 } from '@aws-sdk/client-dynamodb';
 import { PaperChannelTenderCosts } from '../types/dynamo-types';
+import { dynamoDBClient } from '../utils/awsClients';
 
 
 

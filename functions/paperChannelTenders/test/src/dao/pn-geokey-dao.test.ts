@@ -1,9 +1,10 @@
 import { PN_GEOKEY_TABLE_NAME } from '../../../src/config';
-import { buildGeokeyPartitionKey, dynamoDBClient } from '../../../src/utils/builders';
+import { buildGeokeyPartitionKey } from '../../../src/utils/builders';
 import { GetItemCommand, GetItemCommandInput } from '@aws-sdk/client-dynamodb';
 import { mockClient } from 'aws-sdk-client-mock';
 import { geokeyItem, getItemGeokeyOutput } from '../config/model-mock';
 import { findGeokey } from '../../../src/dao/pn-geokey-dao';
+import { dynamoDBClient } from '../../../src/utils/awsClients';
 
 
 describe("Geokey DAO tests", () => {

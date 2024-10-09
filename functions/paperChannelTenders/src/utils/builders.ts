@@ -1,9 +1,6 @@
-import { AttributeValue, DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { AttributeValue } from '@aws-sdk/client-dynamodb';
 import { PaperChannelTenderCosts, PaperChannelGeokey, PaperChannelTender } from '../types/dynamo-types';
 import { unmarshall } from '@aws-sdk/util-dynamodb';
-
-
-export const dynamoDBClient = new DynamoDBClient();
 
 
 /**
