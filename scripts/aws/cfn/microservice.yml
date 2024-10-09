@@ -894,9 +894,9 @@ Resources:
       Environment:
         Variables:
           REGION: !Sub ${AWS::Region}
-          PN_DELIVERY_URL: !Sub "http://${ApplicationLoadBalancerDomain}:8080/delivery/v2.3"
-          NUM_RETRY: !Ref NumRetry
-          ATTEMPT_TIMEOUT_SEC: !Ref AttemptTimeoutSec
+          AWS_DYNAMODBPAPERCHANNELTENDERTABLE: !Ref PaperChannelTenderDynamoTableName
+          AWS_DYNAMODBPAPERCHANNELGEOKEYTABLE: !Ref PaperChannelGeokeyDynamoTableName
+          AWS_DYNAMODBPAPERCHANNELCOSTTABLE: !Ref PaperChannelCostDynamoTableName
       TracingConfig:
         Mode: Active
       Layers:

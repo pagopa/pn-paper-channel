@@ -16,8 +16,6 @@ const getEnvironmentVariable = (env: string, defaultValue: string | undefined = 
   return value;
 };
 
-
-
-export const PN_TENDER_TABLE_NAME = getEnvironmentVariable("PN_TENDER_TABLE_NAME", "pn-PaperChannelTender");
-export const PN_COST_TABLE_NAME = getEnvironmentVariable("PN_COST_TABLE_NAME", "pn-PaperChannelCost");
-export const PN_GEOKEY_TABLE_NAME = getEnvironmentVariable("PN_GEOKEY_TABLE_NAME", "pn-PaperChannelGeokey");
+export const PN_TENDER_TABLE_NAME = getEnvironmentVariable("AWS_DYNAMODBPAPERCHANNELTENDERTABLE", "pn-PaperChannelTender");
+export const PN_COST_TABLE_NAME = getEnvironmentVariable("AWS_DYNAMODBPAPERCHANNELCOSTTABLE", "pn-PaperChannelCost");
+export const PN_GEOKEY_TABLE_NAME = getEnvironmentVariable("AWS_DYNAMODBPAPERCHANNELGEOKEYTABLE", "pn-PaperChannelGeokey");
