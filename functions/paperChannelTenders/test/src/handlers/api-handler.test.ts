@@ -1,5 +1,3 @@
-import { tenderActiveHandler, tendersHandler } from '../../../src/handlers/api-handler';
-import { TenderActiveEvent, TendersEvent } from '../../../src/types/schema-request-types';
 import { singleCostHandler, tenderActiveHandler, tendersHandler } from '../../../src/handlers/api-handler';
 import { CostEvent, TenderActiveEvent, TendersEvent } from '../../../src/types/schema-request-types';
 import { getActiveTender, getAllTenders } from '../../../src/services/tender-service';
