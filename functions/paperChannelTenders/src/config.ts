@@ -18,4 +18,4 @@ const getEnvironmentVariable = (env: string, defaultValue: string | undefined = 
 
 
 
-export const PN_TENDER_TABLE_NAME = getEnvironmentVariable("PN_TENDER_TABLE_NAME", "pn-PaperChannelTender");
+export const PN_TENDER_TABLE_NAME = getEnvironmentVariable("AWS_DYNAMODBPAPERCHANNELTENDERTABLE", "pn-PaperChannelTender");
