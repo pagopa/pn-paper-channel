@@ -1,6 +1,6 @@
 import handlerRoute from './routes/tender-routes';
 import { validatorEvent } from './middlewares/validators';
-import { handleError } from './middlewares/errors';
+import { handleError } from './utils/errors';
 
 /*
 {
