@@ -43,3 +43,14 @@ type PaperChannelTenderCostsRange = {
   minWeight: number;
   maxWeight: number;
 }
+
+export type PaperChannelDeliveryDriver =  {
+  deliveryDriverId: string;
+  taxId: string;
+  businessName: string;
+  fiscalCode: string;
+  pec: string;
+  phoneNumber: string;
+  registeredOffice: string;
+  createdAt: string;
+}

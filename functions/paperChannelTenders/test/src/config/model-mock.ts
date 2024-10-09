@@ -1,11 +1,11 @@
 import {
   PaperChannelTenderCosts,
   PaperChannelGeokey,
-  PaperChannelTender,
+  PaperChannelTender, PaperChannelDeliveryDriver,
 } from '../../../src/types/dynamo-types';
 import { Page } from '../../../src/types/model-types';
 import { AttributeValue, GetItemCommandOutput } from '@aws-sdk/client-dynamodb';
-import { QueryOutput } from '@aws-sdk/client-dynamodb/dist-types/models/models_0';
+import { QueryOutput, ScanOutput } from '@aws-sdk/client-dynamodb/dist-types/models/models_0';
 
 export const tender = {
   tenderId: "1234",
@@ -68,6 +68,44 @@ export const costItem: PaperChannelTenderCosts = {
   createdAt: "2024-10-07T14:30:15.000Z",
 }
 
+const getDeliveryDriverItem: Record<string, AttributeValue> = {
+  deliveryDriverId: {
+    "S": "12345",
+  },
+  taxId: {
+    "S": "012345678",
+  },
+  businessName: {
+    "S": "pagopa",
+  },
+  fiscalCode: {
+    "S": "ABCDEF01G23H456I",
+  },
+  pec: {
+    "S": "test@pec.it",
+  },
+  phoneNumber: {
+    "S": "06123456",
+  },
+  registeredOffice: {
+    "S": "Rome",
+  },
+  createdAt: {
+    "S": "2024-10-09T14:30:15.000Z",
+  }
+}
+
+export const deliveryDriverItem: PaperChannelDeliveryDriver = {
+  deliveryDriverId: "12345",
+  taxId: "012345678",
+  businessName: "pagopa",
+  fiscalCode: "ABCDEF01G23H456I",
+  pec: "test@pec.it",
+  phoneNumber: "06123456",
+  registeredOffice: "Rome",
+  createdAt: "2024-10-09T14:30:15.000Z",
+}
+
 export const getItemGeokeyOutput: GetItemCommandOutput = {
   Item: {
     tenderProductGeokey: {
@@ -104,7 +142,7 @@ export const getItemGeokeyOutput: GetItemCommandOutput = {
   $metadata: {}
 };
 
-const getItem: Record<string, AttributeValue> = {
+const getCostItem: Record<string, AttributeValue> = {
   tenderId: {
     "S": "12345",
   },
@@ -146,10 +184,14 @@ const getItem: Record<string, AttributeValue> = {
 }
 
 export const getItemCostOutput: GetItemCommandOutput = {
-  Item: getItem,
+  Item: getCostItem,
   $metadata: {}
 };
 
 export const getItemCostListOutput: QueryOutput = {
-  Items: [getItem]
+  Items: [getCostItem]
+}
+
+export const getDeliveryDriverListOutput: ScanOutput = {
+  Items: [getDeliveryDriverItem]
 }

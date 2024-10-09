@@ -1,5 +1,16 @@
-import { CostsEvent, Event, TenderActiveEvent, TendersEvent } from '../types/schema-request-types';
-import { costHandler, singleCostHandler, tenderActiveHandler, tendersHandler } from '../handlers/api-handler';
+import {
+  CostEvent,
+  CostsEvent, DeliveryDriversEvent,
+  Event,
+  TenderActiveEvent,
+  TendersEvent,
+} from '../types/schema-request-types';
+import {
+  costHandler, deliveryDriversHandler,
+  singleCostHandler,
+  tenderActiveHandler,
+  tendersHandler,
+} from '../handlers/api-handler';
 
 
 
@@ -26,9 +37,9 @@ const handlerRoute = async (event: Event) => {
     case 'GET_COSTS':
       return costHandler(event as CostsEvent)
     case 'GET_COST':
-      return singleCostHandler(event)
-    default:
-      throw new Error(`Unknown operation: ${event.operation}`);
+      return singleCostHandler(event as CostEvent)
+    case 'GET_DELIVERY_DRIVERS':
+      return deliveryDriversHandler(event as DeliveryDriversEvent)
   }
 }
 

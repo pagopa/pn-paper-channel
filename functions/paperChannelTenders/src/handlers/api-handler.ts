@@ -1,8 +1,15 @@
-import { PaperChannelTenderCosts, PaperChannelTender } from '../types/dynamo-types';
-import { CostEvent, CostsEvent, TenderActiveEvent, TendersEvent } from '../types/schema-request-types';
+import { PaperChannelTenderCosts, PaperChannelTender, PaperChannelDeliveryDriver } from '../types/dynamo-types';
+import {
+  CostEvent,
+  CostsEvent,
+  DeliveryDriversEvent,
+  TenderActiveEvent,
+  TendersEvent,
+} from '../types/schema-request-types';
 import { Page, Response, ResponseLambda } from '../types/model-types';
 import { getActiveTender, getAllTenders } from '../services/tender-service';
 import { getCost, getCosts } from '../services/cost-service';
+import { getAllDeliveryDrivers } from '../services/deliveryDrivers-service';
 
 /**
  * Handles the retrieval of all tenders based on the provided event parameters.
@@ -77,4 +84,23 @@ export const singleCostHandler = async (event: CostEvent): Promise<Response<Pape
   console.log("Get cost from event ", event);
   const response = await getCost(event.tenderId, event.product, event.geokey)
   return new ResponseLambda<PaperChannelTenderCosts>().toResponseOK(response);
+}
+
+/**
+ * Retrieves all delivery driver information.
+ *
+ * This asynchronous function logs the incoming event, fetches the delivery driver details
+ * and returns the response formatted as a ResponseLambda object containing the information.
+ *
+ * @param event - An object of type DeliveryDriversEvent.
+ * @returns A Promise that resolves to a Response containing the delivery driver information
+ *          as a PaperChannelDeliveryDriver object.
+ *
+ * @throws Will throw an NotFoundError if the delivery driver not found.
+ */
+export const deliveryDriversHandler = async (event: DeliveryDriversEvent): Promise<Response<PaperChannelDeliveryDriver[]>> => {
+  console.log("Get all delivery drivers from event ", event);
+  const response = await getAllDeliveryDrivers();
+  console.log("Response is ", response);
+  return new ResponseLambda<PaperChannelDeliveryDriver[]>().toResponseOK(response);
 }

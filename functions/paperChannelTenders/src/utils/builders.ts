@@ -1,5 +1,10 @@
 import { AttributeValue } from '@aws-sdk/client-dynamodb';
-import { PaperChannelTenderCosts, PaperChannelGeokey, PaperChannelTender } from '../types/dynamo-types';
+import {
+  PaperChannelTenderCosts,
+  PaperChannelGeokey,
+  PaperChannelTender,
+  PaperChannelDeliveryDriver,
+} from '../types/dynamo-types';
 import { unmarshall } from '@aws-sdk/util-dynamodb';
 
 
@@ -93,3 +98,21 @@ export const buildPnCostFromDynamoItems = (
   item: Record<string, AttributeValue>
 ): PaperChannelTenderCosts =>
   unmarshall(item) as PaperChannelTenderCosts;
+
+
+/**
+ * Transforms an array of DynamoDB items into an array of PaperChannelDeliveryDriver objects.
+ *
+ * This function takes in raw DynamoDB items, unmarshall them into JavaScript objects,
+ * and casts them to the PaperChannelDeliveryDriver type. It returns an array of the transformed
+ * objects.
+ *
+ * @param items - An array of DynamoDB items represented as records with string keys
+ *                and AttributeValue values.
+ * @returns An array of PaperChannelDeliveryDriver objects derived from the provided DynamoDB items.
+ */
+export const buildPnDeliveryDriverFromDynamoItems = (
+  items: Record<string, AttributeValue>[]
+): PaperChannelDeliveryDriver[] =>
+  items.map(item => unmarshall(item))
+    .map(item => item as PaperChannelDeliveryDriver);
