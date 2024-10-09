@@ -594,6 +594,25 @@ Parameters:
     Type: String
     Default: 'FATAL'
 
+  TenderAPILambdaName:
+    Type: String
+    Description: "TenderAPILambdaName"
+
+  TenderAPILambdaRuntime:
+    Type: String
+    Default: nodejs20.x
+    Description: Runtime of the DataIndexer Lambda.
+
+  TenderAPILambdaTimeout:
+    Type: Number
+    Default: 30
+    Description: Timeout TenderAPI Lambda.
+
+  TenderAPILambdaMemorySize:
+    Type: Number
+    Default: 512
+    Description: Memory size TenderAPI Lambda.
+
 Conditions:
   UseExternalChannelMock: !Equals [ !Ref ExternalChannelBaseUrl, "Mock" ]
 
@@ -864,7 +883,68 @@ Resources:
             - !Ref RaddAltToPaperChannelQueueARN
         LogGroupsNames: !Join
           - ','
-          - - !Sub '/aws/ecs/${ProjectName}-paper-channel'   
+          - - !Sub '/aws/ecs/${ProjectName}-paper-channel'
+
+
+  # Lambda function
+  TenderAPILambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Ref TenderAPILambdaName
+      Runtime: !Ref TenderAPILambdaRuntime
+      Handler: "index.handler"
+      Code:
+        S3Bucket: !Ref MicroserviceBucketName
+        S3Key: !Sub "${MicroserviceBucketBaseKey}/functions_zip/paperChannelTenders.zip"
+      Role: !GetAtt TenderAPILambdaRole.Arn
+      Environment:
+        Variables:
+          REGION: !Sub ${AWS::Region}
+          AWS_DYNAMODBPAPERCHANNELTENDERTABLE: !Ref PaperChannelTenderDynamoTableName
+          AWS_DYNAMODBPAPERCHANNELGEOKEYTABLE: !Ref PaperChannelGeokeyDynamoTableName
+          AWS_DYNAMODBPAPERCHANNELCOSTTABLE: !Ref PaperChannelCostDynamoTableName
+      Layers:
+        - !Sub "arn:aws:lambda:${AWS::Region}:339249233099:layer:LambdaInsightsExtension:13"
+      Timeout: !Ref TenderAPILambdaTimeout
+      MemorySize: !Ref TenderAPILambdaMemorySize
+
+  # Lambda function role
+  TenderAPILambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${TenderAPILambdaName}Role
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: DynamoDbAccess
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: DynamoDbScan
+                Effect: Allow
+                Action:
+                  - dynamodb:Scan
+                Resource:
+                  - !Sub "${PaperChannelTenderDynamoTableArn}"
+                  - !Sub "${PaperChannelDeliveryDriverDynamoTableArn}"
+              - Sid: DynamoDbGet
+                Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                Resource:
+                  - !Sub "${PaperChannelTenderDynamoTableArn}/*"
+                  - !Sub "${PaperChannelGeokeyDynamoTableArn}/*"
+                  - !Sub "${PaperChannelDeliveryDriverDynamoTableArn}/*"
+                  - !Sub "${PaperChannelCostDynamoTableArn}/*"
 
   PaperChannelGatewayDeliveryDriver:
     Type: AWS::CloudFormation::Stack

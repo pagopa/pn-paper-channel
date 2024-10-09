@@ -97,21 +97,12 @@ class PrepareAsyncServiceTest {
     @Test
     @DisplayName("prepareAsyncTestCorrelationIdNullNotCorrectAddress")
     void prepareAsyncTestCorrelationIdNull(){
-
-        Optional<BigDecimal> x = Optional.empty();
-
-        BigDecimal decimal = x.get();
-
-        decimal.add(B);
-
-
         Mockito.when(this.requestDeliveryDAO.getByRequestId(Mockito.any(), Mockito.anyBoolean())).thenReturn(Mono.just(getDeliveryRequest()));
         Mockito.when(this.paperAddressService.getCorrectAddress(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenThrow(new PnAddressFlowException(ExceptionTypeEnum.ADDRESS_NOT_EXIST));
 
         Mono<PnDeliveryRequest> mono = this.prepareAsyncService.prepareAsync(request);
         assertThrows(PnAddressFlowException.class, () -> mono.block());
-
     }
 
     @Test

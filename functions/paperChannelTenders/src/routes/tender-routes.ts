@@ -1,56 +1,32 @@
-import  { Route } from "@middy/http-router";
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import middy from '@middy/core';
-import { validatorMiddlewareGetTenders } from '../middlewares/validators';
-import { getActiveTender, getAllTenders } from '../services/tender-service';
+import { Event, TenderActiveEvent, TendersEvent } from '../types/schema-request-types';
+import { tenderActiveHandler, tendersHandler } from '../handlers/api-handler';
 
 
 
-
-const getTendersHandler = middy()
-  .use(validatorMiddlewareGetTenders)
-  .handler(async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    console.log("GET TENDERS")
-    const { queryStringParameters } = event
-    console.log("Query Parameters ", queryStringParameters)
-
-    const pageInt = parseInt(queryStringParameters!.page!)
-    const sizeInt = parseInt(queryStringParameters!.size!)
-    const from = queryStringParameters?.from
-    const to = queryStringParameters?.to
-
-    const response = await getAllTenders(pageInt, sizeInt, from, to);
-    console.log("Response ", response)
-    return {
-      statusCode: 200,
-      body: JSON.stringify(response),
-    }
-  })
-
-const getActiveTenderHandler = middy()
-  .handler(async (): Promise<APIGatewayProxyResult> => {
-    console.log("GET ACTIVE TENDER")
-
-    const active = await getActiveTender()
-
-    console.log("Response ", active)
-
-    return {
-      statusCode: 200,
-      body: JSON.stringify(active)
-    }
-  })
-
-
-export const tenderRoutes:Route<APIGatewayProxyEvent, APIGatewayProxyResult>[] = [
-  {
-    method: 'GET',
-    path: '/paper-channel-private/v2/tenders',
-    handler: getTendersHandler
-  },
-  {
-    method: 'GET',
-    path: '/paper-channel-private/v2/tenders/active',
-    handler: getActiveTenderHandler
+/**
+ * Routes the incoming event to the appropriate handler based on the operation type.
+ *
+ * This asynchronous function logs the validated event and determines which handler to
+ * invoke based on the operation specified in the event. It supports two operations:
+ * "GET_TENDERS" and "GET_TENDER_ACTIVE", routing to their respective handlers.
+ *
+ * @param event - The validated Event object containing the operation type and associated data.
+ * @returns A Promise that resolves to the response from the corresponding handler function.
+ *
+ * @throws Will throw an error if the operation type is not recognized or if the handler
+ * function fails.
+ */
+const handlerRoute = async (event: Event) => {
+  console.log("Received event validated", event)
+  switch (event.operation) {
+    case "GET_TENDERS":
+      return tendersHandler(event as TendersEvent)
+    case 'GET_TENDER_ACTIVE':
+      return tenderActiveHandler(event as TenderActiveEvent)
+    default:
+      throw new Error(`Unknown operation: ${event.operation}`);
   }
-]
+}
+
+
+export default handlerRoute;

@@ -6,18 +6,15 @@
         "target": "es2022",
         "verbatimModuleSyntax": false,
         "allowJs": true,
-        "resolveJsonModule": true,
         "moduleDetection": "force",
         /* Strictness */
         "strict": true,
         "noUncheckedIndexedAccess": true,
-        /* If NOT transpiling with TypeScript: */
-        "moduleResolution": "Bundler",
-        "module": "ESNext",
+        "module": "CommonJS",
         "noEmit": true,
-        /* If your code doesn't run in the DOM: */
+        "outDir": "./dist",
         "lib": ["es2022"]
     },
-    "include": ["src", "tests"],
+    "include": ["src/**/*", "test/**/*"],
     "exclude": ["dist", "node_modules"]
 }

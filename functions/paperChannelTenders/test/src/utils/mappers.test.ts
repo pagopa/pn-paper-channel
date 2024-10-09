@@ -1,21 +1,10 @@
 import { PaperChannelTender } from '../../../src/types/dynamo-types';
 import { toPageMapper } from '../../../src/utils/mappers';
-import { Page } from 'aws-sdk/clients/macie2';
+import { Page } from '../../../src/types/model-types';
+import { tender } from '../config/model-mock';
 
 describe("Mappers test", () => {
-  const mockContent = [{
-    tenderId: '12344',
-    activationDate: '2023-01-01',
-    tenderName: 'Test tenders',
-    vat: 0,
-    nonDeductibleVat: 0,
-    pagePrice: 0,
-    basePriceAR: 0,
-    basePriceRS: 0,
-    basePrice890: 0,
-    fee: 0,
-    createdAt: '',
-  }]
+  const mockContent = [tender]
 
   test("toPageMapper_whenFirstPage_shouldReturnCorrectPages", () => {
     // Arrange
@@ -38,7 +27,7 @@ describe("Mappers test", () => {
       size: pageSize,
       isFirstPage: true,
       isLastPage: false,
-    } as Page)
+    } as Page<PaperChannelTender>)
 
   })
 
@@ -62,7 +51,7 @@ describe("Mappers test", () => {
       size: pageSize,
       isFirstPage: false,
       isLastPage: false,
-    } as Page)
+    } as Page<PaperChannelTender>)
 
   })
 
@@ -86,7 +75,7 @@ describe("Mappers test", () => {
       size: pageSize,
       isFirstPage: false,
       isLastPage: true,
-    } as Page)
+    } as Page<PaperChannelTender>)
 
   })
 

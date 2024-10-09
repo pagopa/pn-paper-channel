@@ -3,38 +3,33 @@
   "version": "1.0.0",
   "description": "",
   "type": "commonjs",
-  "outDir": "dist",
   "scripts": {
-    "tsc": "tsc",
-    "build": "esbuild src/index.ts --bundle --minify --sourcemap --platform=node --outfile=dist/index.js",
-    "test": "jest -c jest.config.mjs"
+    "test-build": "npm run-script test && npm run-script sonar && npm run-script build",
+    "build-ts": "esbuild src/index.ts --bundle --minify --sourcemap --platform=node --outfile=dist/index.js",
+    "build": "npm run build-ts && rm -f ./function.zip && cd dist && zip ../function.zip index.js index.js.map",
+    "test": "tsc && jest",
+    "sonar": "node sonarqube-scanner.js"
   },
   "devDependencies": {
-    "@babel/preset-typescript": "^7.24.7",
     "@eslint/js": "^9.9.0",
     "@types/aws-lambda": "^8.10.145",
     "@types/eslint__js": "^8.42.3",
-    "@types/jest": "^29.5.12",
+    "@types/jest": "^29.5.13",
     "@types/node": "^22.5.0",
     "esbuild": "0.23.1",
     "eslint": "^9.9.0",
     "jest": "^29.7.0",
+    "sonarqube-scanner": "^3.5.0",
     "ts-jest": "^29.2.5",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.5.4",
-    "typescript-eslint": "^8.2.0"
+    "typescript": "^5.6.2",
+    "typescript-eslint": "^8.2.0",
+    "aws-sdk-client-mock": "^4.0.2"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.650.0",
     "@aws-sdk/util-dynamodb": "^3.637.0",
-    "@middy/core": "^5.5.0",
-    "@middy/http-error-handler": "^5.5.0",
-    "@middy/http-json-body-parser": "^5.5.0",
-    "@middy/http-router": "^5.5.0",
-    "@middy/validator": "^5.5.0",
-    "aws-sdk": "^2.1691.0",
-    "middy": "^0.36.0"
+    "zod": "^3.23.8"
   }
 }
