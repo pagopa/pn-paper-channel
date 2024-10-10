@@ -1,7 +1,8 @@
 import { PaperChannelDeliveryDriver } from '../types/dynamo-types';
 import { ScanCommand, ScanInput } from '@aws-sdk/client-dynamodb';
 import { PN_DELIVERY_DRIVER_TABLE_NAME } from '../config';
-import { buildPnDeliveryDriverFromDynamoItems, dynamoDBClient } from '../utils/builders';
+import { buildPnDeliveryDriverFromDynamoItems } from '../utils/builders';
+import { dynamoDBClient } from '../utils/awsClients';
 
 
 /**

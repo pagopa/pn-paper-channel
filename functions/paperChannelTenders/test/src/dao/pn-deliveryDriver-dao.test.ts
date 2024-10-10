@@ -1,9 +1,9 @@
 import { mockClient } from 'aws-sdk-client-mock';
-import { dynamoDBClient } from '../../../src/utils/builders';
 import { PN_DELIVERY_DRIVER_TABLE_NAME } from '../../../src/config';
 import { ScanCommand, ScanInput } from '@aws-sdk/client-dynamodb';
 import { deliveryDriverItem, getDeliveryDriverListOutput } from '../config/model-mock';
 import { findDeliveryDrivers } from '../../../src/dao/pn-deliveryDriver-dao';
+import { dynamoDBClient } from '../../../src/utils/awsClients';
 
 
 describe("Delivery Driver DAO tests", () => {
