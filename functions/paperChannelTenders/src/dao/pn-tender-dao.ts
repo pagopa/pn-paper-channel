@@ -1,9 +1,10 @@
 import { ScanCommand, ScanInput } from '@aws-sdk/client-dynamodb';
-import { buildPnTendersFromDynamoItems, dynamoDBClient } from '../utils/builders';
 import { PN_TENDER_TABLE_NAME } from '../config';
 import { toPageMapper } from '../utils/mappers';
 import { PaperChannelTender } from '../types/dynamo-types';
 import { Page } from '../types/model-types';
+import { dynamoDBClient } from '../utils/awsClients';
+import { unmarshall } from '@aws-sdk/util-dynamodb';
 
 /**
  * Retrieves a paginated list of tenders filtered by activation date.
@@ -32,7 +33,7 @@ export const findTenders = async (page: number, size: number, from?: Date, to?: 
   const command = new ScanCommand(scanInput);
   const response = await dynamoDBClient.send(command);
 
-  const content = buildPnTendersFromDynamoItems(response.Items || []);
+  const content = (response.Items || []).map(item => unmarshall(item) as PaperChannelTender);
   const totalElements = response.Count || 0
 
   return toPageMapper<PaperChannelTender>(content, totalElements, page, size);
@@ -59,15 +60,14 @@ export const findActiveTender = async () : Promise<PaperChannelTender> => {
   const command = new ScanCommand(scanInput);
   const response = await dynamoDBClient.send(command);
 
-  const tenders = buildPnTendersFromDynamoItems(response.Items || [])
+  const tenders = (response.Items || []).map(item => unmarshall(item) as PaperChannelTender)
 
   if (tenders.length == 0) {
     throw new Error("Not found Tenders");
   }
 
-  const latestTender = tenders.reduce((latest, current) => {
+  return tenders.reduce((latest, current) => {
     return new Date(current.activationDate) > new Date(latest!.activationDate) ? current : latest;
   }, tenders[0] as PaperChannelTender);
 
-  return latestTender;
 }

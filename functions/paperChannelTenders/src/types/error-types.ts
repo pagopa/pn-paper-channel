@@ -1,6 +1,5 @@
 import { ResponseError, Status, statusDescription, ValidationField } from './model-types';
 
-
 export class GenericError extends Error {
   status: Status;
 
@@ -19,37 +18,23 @@ export class GenericError extends Error {
   }
 }
 
-export class NotFoundError extends Error {
+export class NotFoundError extends GenericError {
   constructor(message: string) {
-    super(message);
-  }
-
-  toResponse(): ResponseError {
-    return {
-      body: undefined,
-      description: statusDescription[Status.NOT_FOUND],
-      statusCode: Status.NOT_FOUND,
-      errorMessage: this.message
-    };
+    super(message, Status.NOT_FOUND);
   }
 }
 
-
-
-export class ValidatorError extends Error {
+export class ValidatorError extends GenericError {
   fields: ValidationField[];
 
   constructor(message: string, fields: ValidationField[]) {
-    super(message);
+    super(message, Status.BAD_REQUEST);
     this.fields = fields;
   }
 
   toResponse(): ResponseError {
     return {
-      body: undefined,
-      statusCode: Status.BAD_REQUEST,
-      description: statusDescription[Status.BAD_REQUEST],
-      errorMessage: this.message,
+      ...super.toResponse(),
       fields: this.fields
     };
   }

@@ -12,7 +12,20 @@ export type PaperChannelTender = {
   createdAt: string;
 }
 
-type PaperChannelTenderCosts = {
+export type PaperChannelGeokey = {
+  tenderProductGeokey: string;
+  activationDate: string;
+  tenderId: string;
+  product: string;
+  geokey: string;
+  lot: string;
+  zone: string;
+  coverFlag: boolean;
+  dismissed: boolean;
+  createdAt: string;
+}
+
+export type PaperChannelTenderCosts = {
   tenderId: string;
   productLotZone: string;
   product: string;
@@ -23,10 +36,10 @@ type PaperChannelTenderCosts = {
   dematerializationCost: number;
   rangedCosts: PaperChannelTenderCostsRange[];
   createdAt: string;
-};
+}
 
 type PaperChannelTenderCostsRange = {
   cost: number;
   minWeight: number;
   maxWeight: number;
-};
+}

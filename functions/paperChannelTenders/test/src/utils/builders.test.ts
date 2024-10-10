@@ -1,29 +1,32 @@
-import { AttributeValue } from '@aws-sdk/client-dynamodb';
-import { buildPnTendersFromDynamoItems } from '../../../src/utils/builders';
+import {
+  buildCostSortKey,
+  buildGeokeyPartitionKey
+} from '../../../src/utils/builders';
 
 describe("Builders test", () => {
 
-  test("buildPnTendersFromDynamoItems_shouldReturnCorrectTenders", () => {
+  test("buildGeokeyPartitionKey_shouldReturnCorrectPartitionKey", () => {
+    // Arrange
+    const tenderId = "1234";
+    const product = "AR";
+    const geokey = "86950";
 
-   // Arrange
-   const tenderRecord: Record<string, AttributeValue> = {
-     tenderId: {
-       "S": "12344"
-     }as AttributeValue,
-     activationDate: {
-       "S": "2023-01-01"
-     } as AttributeValue
-   }
+    // Act
+    const result = buildGeokeyPartitionKey(tenderId, product, geokey);
 
-   // Act
-   const result = buildPnTendersFromDynamoItems([tenderRecord]);
+    expect(result).toEqual(tenderId+"#"+product+"#"+geokey);
+  });
 
-   // Assert
-   expect(result).toEqual([{
-     tenderId: "12344",
-     activationDate: "2023-01-01"
-   }]);
-  })
+  test("buildCostSortKey_shouldReturnCorrectSortKey", () => {
+    // Arrange
+    const product = "AR";
+    const lot = "LOT1";
+    const zone = "EU"
 
+    // Act
+    const result = buildCostSortKey(product, lot, zone);
 
-})
+    expect(result).toEqual(product+"#"+lot+"#"+zone);
+  });
+
+});
