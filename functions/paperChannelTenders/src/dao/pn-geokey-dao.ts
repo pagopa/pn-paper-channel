@@ -1,8 +1,9 @@
-import { GetItemCommand, GetItemCommandInput } from '@aws-sdk/client-dynamodb';
+import { QueryCommand } from '@aws-sdk/client-dynamodb';
 import { PN_GEOKEY_TABLE_NAME } from '../config';
-import { buildGeokeyPartitionKey, buildPnGeokeyFromDynamoItems } from '../utils/builders';
+import { buildGeokeyPartitionKey } from '../utils/builders';
 import { PaperChannelGeokey } from '../types/dynamo-types';
-import { dynamoDBClient } from '../utils/awsClients';
+import { dynamoDBClient, QueryCommandBuilder } from '../utils/awsClients';
+import { unmarshall } from '@aws-sdk/util-dynamodb';
 
 
 
@@ -18,18 +19,15 @@ import { dynamoDBClient } from '../utils/awsClients';
  * - or `undefined` if no geokey information is found for the given parameters.
  */
 export const findGeokey = async (tenderId: string, product: string, geokey: string): Promise<PaperChannelGeokey | undefined> => {
-  const getCommand = {
-    TableName: PN_GEOKEY_TABLE_NAME,
-    Key: {
-      "tenderProductGeokey" : {
-        "S": buildGeokeyPartitionKey(tenderId, product, geokey)
-      }
-    }
-  } as GetItemCommandInput;
+  const queryCommandBuilder = new QueryCommandBuilder(PN_GEOKEY_TABLE_NAME);
+  queryCommandBuilder.addFilter("tenderProductGeokey", buildGeokeyPartitionKey(tenderId, product, geokey))
 
-  const getItemOutput = await dynamoDBClient.send(new GetItemCommand(getCommand));
+  console.log(queryCommandBuilder.build())
+  const commandOutput = await dynamoDBClient.send(new QueryCommand(queryCommandBuilder.build()));
 
-  if (!getItemOutput.Item) return undefined;
+  const geokeys = (commandOutput.Items || []).map(item => unmarshall(item) as PaperChannelGeokey);
 
-  return buildPnGeokeyFromDynamoItems(getItemOutput.Item)
+  return geokeys.reduce((latest, current) => {
+    return new Date(current.activationDate) > new Date(latest!.activationDate) ? current : latest;
+  }, geokeys[0] as PaperChannelGeokey);
 }

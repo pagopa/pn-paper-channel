@@ -1,16 +1,25 @@
 import { z } from 'zod';
 
 
+enum OperationEnum {
+  GET_TENDERS = 'GET_TENDERS',
+  GET_TENDER_ACTIVE = 'GET_TENDER_ACTIVE',
+  GET_COSTS = 'GET_COSTS',
+  GET_COST = 'GET_COST',
+  GET_DELIVERY_DRIVERS = 'GET_DELIVERY_DRIVERS'
+}
+
+
 const BaseEventSchema = z.object({
-  operation: z.enum(['GET_TENDERS', 'GET_TENDER_ACTIVE', 'GET_COSTS', 'GET_COST', 'GET_DELIVERY_DRIVERS']),
+  operation: z.enum([OperationEnum.GET_TENDERS, OperationEnum.GET_TENDER_ACTIVE, OperationEnum.GET_COSTS, OperationEnum.GET_COST, OperationEnum.GET_DELIVERY_DRIVERS]),
 });
 
 const TenderActiveEventSchema = BaseEventSchema.extend({
-  operation: z.literal("GET_TENDER_ACTIVE"),
+  operation: z.literal(OperationEnum.GET_TENDER_ACTIVE),
 });
 
 const TendersEventSchema = BaseEventSchema.extend({
-  operation: z.literal("GET_TENDERS"),
+  operation: z.literal(OperationEnum.GET_TENDERS),
   page: z.number().min(1),
   size: z.number().min(1),
   from: z.date().optional(),
@@ -19,7 +28,7 @@ const TendersEventSchema = BaseEventSchema.extend({
 
 
 const CostsEventSchema = BaseEventSchema.extend({
-  operation: z.literal("GET_COSTS"),
+  operation: z.literal(OperationEnum.GET_COSTS),
   tenderId: z.string(),
   product: z.string().optional(),
   lot: z.string().optional(),
@@ -28,14 +37,14 @@ const CostsEventSchema = BaseEventSchema.extend({
 });
 
 const CostEventSchema = BaseEventSchema.extend({
-  operation: z.literal("GET_COST"),
+  operation: z.literal(OperationEnum.GET_COST),
   tenderId: z.string(),
   product: z.string(),
   geokey: z.string(),
 });
 
 const DeliveryDriversEventSchema = BaseEventSchema.extend({
-  operation: z.literal("GET_DELIVERY_DRIVERS"),
+  operation: z.literal(OperationEnum.GET_DELIVERY_DRIVERS),
   from: z.date(),
   to: z.date().optional(),
 });
@@ -63,5 +72,6 @@ export {
   CostsEvent,
   CostEvent,
   DeliveryDriversEvent,
-  Event
+  Event,
+  OperationEnum
 }
