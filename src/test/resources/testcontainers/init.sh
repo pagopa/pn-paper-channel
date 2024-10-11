@@ -348,10 +348,8 @@ aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     --table-name pn-PaperChannelTender \
     --attribute-definitions \
         AttributeName=tenderId,AttributeType=S \
-        AttributeName=activationDate,AttributeType=S \
     --key-schema \
         AttributeName=tenderId,KeyType=HASH \
-        AttributeName=activationDate,KeyType=RANGE \
     --provisioned-throughput \
         ReadCapacityUnits=5,WriteCapacityUnits=5 \
 

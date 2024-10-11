@@ -335,7 +335,7 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
         SendResponse response = new SendResponse();
         response.setAmount(amountPriceFormat);
         response.setNumberOfPages(totalPages);
-        response.setEnvelopeWeight(this.paperCalculatorUtils.getLetterWeight(totalPages));
+        response.setEnvelopeWeight(this.paperCalculatorUtils.getLetterWeight(totalPages, pnPaperChannelConfig.getPaperWeight(), pnPaperChannelConfig.getLetterWeight()));
 
         return response;
     }

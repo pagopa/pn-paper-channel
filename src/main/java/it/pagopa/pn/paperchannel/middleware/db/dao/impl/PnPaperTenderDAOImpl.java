@@ -9,9 +9,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 import software.amazon.awssdk.enhanced.dynamodb.Expression;
-import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.model.Page;
-import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
@@ -43,7 +41,7 @@ public class PnPaperTenderDAOImpl extends BaseDAO<PnPaperChannelTender> implemen
     @Override
     public Mono<PnPaperChannelTender> getActiveTender() {
         Expression filterExpression = Expression.builder()
-                .expression("activationDate < :now")
+                .expression("activationDate <= :now")
                 .putExpressionValue(":now", AttributeValue.builder().s(Instant.now().toString()).build())
                 .build();
 
@@ -66,22 +64,6 @@ public class PnPaperTenderDAOImpl extends BaseDAO<PnPaperChannelTender> implemen
      **/
     @Override
     public Mono<PnPaperChannelTender> getTenderById(String tenderId) {
-        QueryConditional keyConditional = CONDITION_BETWEEN.apply(
-                new Keys(
-                        Key.builder()
-                                .partitionValue(tenderId)
-                                .sortValue(Instant.EPOCH.toString())  // La data minima possibile
-                                .build(),
-                        Key.builder()
-                                .partitionValue(tenderId)
-                                .sortValue(Instant.now().toString())  // La data corrente
-                                .build()
-                )
-        );
-
-
-        return super.getByFilter(keyConditional, null, null, null, null, false)
-                .sort(Comparator.comparing(PnPaperChannelTender::getActivationDate).reversed())
-                .next();
+        return Mono.fromFuture(super.get(tenderId, null));
     }
 }

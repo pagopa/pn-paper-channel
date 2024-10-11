@@ -1,7 +1,7 @@
 package it.pagopa.pn.paperchannel.utils;
 
-public class Const {
 
+public class Const {
     public static final String PN_PAPER_CHANNEL = "PN-PAPER-CHANNEL";
     public static final String PN_AAR = "PN_AAR";
     public static final String AAR = "AAR";
@@ -10,11 +10,14 @@ public class Const {
     public static final String RACCOMANDATA_SEMPLICE = "RS";
     public static final String RACCOMANDATA_890 = "890";
     public static final String RACCOMANDATA_AR = "AR";
+    public static final String RACCOMANDATA_RIR = "RIR";
+    public static final String RACCOMANDATA_RIS = "RIS";
     public static final String ZONE_1 = "ZONE_1";
     public static final String ZONE_2 = "ZONE_2";
     public static final String ZONE_3 = "ZONE_3";
     public static final String CAP_DEFAULT = "99999";
     public static final String ZONE_DEFAULT = "zone_default";
+    public static final String UNCOVERED = "UNCOVERED";
     public static final String capRegex = "(\\d{5})?+";
     public static final String zoneRegex = "^ZONE_[1-9]$";
     public static final String taxIdRegex = "^[0-9]{11}$";
@@ -44,5 +47,4 @@ public class Const {
     public static final String DEMAT_23L = "23L";
     public static final String DEMAT_PLICO = "Plico";
     public static final String DEMAT_INDAGINE = "Indagine";
-
 }
