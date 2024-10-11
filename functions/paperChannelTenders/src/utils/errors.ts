@@ -1,8 +1,6 @@
 import { ResponseError } from '../types/model-types';
 import { GenericError } from '../types/error-types';
 
-
-
 /**
  * Handles various types of errors and converts them into a standardized ResponseError format.
  *
@@ -18,7 +16,7 @@ import { GenericError } from '../types/error-types';
  *
  * @throws Will return a ResponseError regardless of the error type.
  */
-export function handleError(error: Error | unknown): ResponseError {
+export const handleError = (error: Error | unknown): ResponseError => {
   if (error instanceof GenericError) {
     return error.toResponse();
   } else if (error instanceof Error) {

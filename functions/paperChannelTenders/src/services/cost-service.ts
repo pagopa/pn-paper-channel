@@ -4,7 +4,6 @@ import { findGeokey } from '../dao/pn-geokey-dao';
 import { NotFoundError } from '../types/error-types';
 import { formatNotFoundError } from '../utils/errors';
 
-
 /**
  * Retrieves cost information for a specific tender, optionally filtered by product, lot, zone, and delivery driver ID.
  *

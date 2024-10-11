@@ -5,8 +5,6 @@ import { PaperChannelGeokey } from '../types/dynamo-types';
 import { dynamoDBClient, QueryCommandBuilder } from '../utils/awsClients';
 import { unmarshall } from '@aws-sdk/util-dynamodb';
 
-
-
 /**
  * Retrieves the geokey information for a specific tender and product from the DynamoDB table.
  *
