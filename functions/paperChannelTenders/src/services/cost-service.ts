@@ -2,6 +2,7 @@ import { PaperChannelTenderCosts } from '../types/dynamo-types';
 import { findCost, findCosts } from '../dao/pn-cost-dao';
 import { findGeokey } from '../dao/pn-geokey-dao';
 import { NotFoundError } from '../types/error-types';
+import { formatNotFoundError } from '../utils/errors';
 
 
 /**
@@ -40,13 +41,13 @@ export const getCost = async (tenderId: string, product: string, geokey: string)
   console.log("Get cost from ", tenderId, " - ", product, " - ", geokey);
   const geokeyEntity = await findGeokey(tenderId, product, geokey);
   if (!geokeyEntity) {
-    throw new NotFoundError("Geokey entity not found")
+    throw new NotFoundError(formatNotFoundError('Geokey', geokey));
   }
-  console.log("Geokey retrieved : ", geokeyEntity.lot, " - ", geokeyEntity.zone);
+  console.log(geokeyEntity);
   const costEntity = await findCost(tenderId, product, geokeyEntity.lot, geokeyEntity.zone);
   if (!costEntity) {
-    throw new NotFoundError("Cost entity not found")
+    throw new NotFoundError(formatNotFoundError('Cost', `${product} - ${geokeyEntity.lot} - ${geokeyEntity.zone}`));
   }
-  console.log("Cost retrieved : ", costEntity)
+  console.log(costEntity)
   return costEntity;
 }

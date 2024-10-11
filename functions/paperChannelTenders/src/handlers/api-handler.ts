@@ -59,7 +59,7 @@ export const tenderActiveHandler = async (event: TenderActiveEvent): Promise<Res
  *
  * @throws {Error} Throws an error if the underlying `getCosts` function fails to retrieve the data.
  */
-export const costHandler = async (event: CostsEvent): Promise<Response<PaperChannelTenderCosts[]>> => {
+export const costsHandler = async (event: CostsEvent): Promise<Response<PaperChannelTenderCosts[]>> => {
   console.log("Get cost of tender from event ", event);
   const response = await getCosts(event.tenderId, event.product, event.lot, event.zone, event.deliveryDriverId);
   console.log("Response is ", response);
@@ -80,7 +80,7 @@ export const costHandler = async (event: CostsEvent): Promise<Response<PaperChan
  *
  * @throws Will throw an NotFoundError if the cost or geokey not found.
  */
-export const singleCostHandler = async (event: CostEvent): Promise<Response<PaperChannelTenderCosts>> => {
+export const costHandler = async (event: CostEvent): Promise<Response<PaperChannelTenderCosts>> => {
   console.log("Get cost from event ", event);
   const response = await getCost(event.tenderId, event.product, event.geokey)
   return new ResponseLambda<PaperChannelTenderCosts>().toResponseOK(response);

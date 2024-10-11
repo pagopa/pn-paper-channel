@@ -1,5 +1,5 @@
 import { ResponseError } from '../types/model-types';
-import { GenericError, NotFoundError, ValidatorError } from '../types/error-types';
+import { GenericError } from '../types/error-types';
 
 
 
@@ -19,14 +19,14 @@ import { GenericError, NotFoundError, ValidatorError } from '../types/error-type
  * @throws Will return a ResponseError regardless of the error type.
  */
 export function handleError(error: Error | unknown): ResponseError {
-  if (error instanceof NotFoundError) {
-    return error.toResponse();
-  } else if (error instanceof ValidatorError) {
-    return error.toResponse();
-  } else if (error instanceof GenericError) {
+  if (error instanceof GenericError) {
     return error.toResponse();
   } else if (error instanceof Error) {
     return new GenericError(error.message).toResponse()
   }
   return new GenericError("An unexpected error occurred").toResponse();
 }
+
+export const formatNotFoundError = (entity: string, identifier: string): string => {
+  return `Entity ${entity} [${identifier}] not found`;
+};

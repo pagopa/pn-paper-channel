@@ -1,6 +1,6 @@
 import { PN_GEOKEY_TABLE_NAME } from '../../../src/config';
 import { buildGeokeyPartitionKey } from '../../../src/utils/builders';
-import { GetItemCommand, GetItemCommandInput } from '@aws-sdk/client-dynamodb';
+import { QueryCommand, QueryCommandInput } from '@aws-sdk/client-dynamodb';
 import { mockClient } from 'aws-sdk-client-mock';
 import { geokeyItem, getItemGeokeyOutput } from '../config/model-mock';
 import { findGeokey } from '../../../src/dao/pn-geokey-dao';
@@ -20,14 +20,15 @@ describe("Geokey DAO tests", () => {
       const geokeyValue = "85039";
       const inputCommand = {
         TableName: PN_GEOKEY_TABLE_NAME,
-        Key: {
-          "tenderProductGeokey" : {
+        FilterExpression: 'tenderProductGeokey = :tenderProductGeokey',
+        ExpressionAttributeValues: {
+          ":tenderProductGeokey" : {
             "S": buildGeokeyPartitionKey(tenderId, product, geokeyValue)
           }
         }
-      } as GetItemCommandInput;
+      } as QueryCommandInput;
 
-      dynamoMockClient.on(GetItemCommand, inputCommand).resolves(Promise.resolve(getItemGeokeyOutput));
+      dynamoMockClient.on(QueryCommand, inputCommand).resolves(Promise.resolve(getItemGeokeyOutput));
 
       // Act
       const result = await findGeokey(tenderId, product, geokeyValue);
@@ -43,19 +44,18 @@ describe("Geokey DAO tests", () => {
       const geokeyValue = "85039";
       const inputCommand = {
         TableName: PN_GEOKEY_TABLE_NAME,
-        Key: {
-          "tenderProductGeokey" : {
-            "S": buildGeokeyPartitionKey(tenderId, product, geokeyValue)
-          }
-        }
-      } as GetItemCommandInput;
+        FilterExpression: 'tenderProductGeokey = :tenderProductGeokey',
+        ExpressionAttributeValues: { ":tenderProductGeokey" : { "S": buildGeokeyPartitionKey(tenderId, product, geokeyValue) } }
+      } as QueryCommandInput;
 
       const outputCommand = {
         ...getItemGeokeyOutput,
-        Item: undefined
+        Items: undefined
       }
 
-      dynamoMockClient.on(GetItemCommand, inputCommand).resolves(Promise.resolve(outputCommand));
+      console.log(inputCommand);
+
+      dynamoMockClient.on(QueryCommand, inputCommand).resolves(Promise.resolve(outputCommand));
 
       // Act
       const result = await findGeokey(tenderId, product, geokeyValue);

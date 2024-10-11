@@ -4,8 +4,8 @@ import {
   PaperChannelTender, PaperChannelDeliveryDriver,
 } from '../../../src/types/dynamo-types';
 import { Page } from '../../../src/types/model-types';
-import { AttributeValue, GetItemCommandOutput } from '@aws-sdk/client-dynamodb';
-import { QueryOutput, ScanOutput } from '@aws-sdk/client-dynamodb/dist-types/models/models_0';
+import { AttributeValue, GetItemCommandOutput, QueryCommandOutput } from '@aws-sdk/client-dynamodb';
+import { QueryOutput } from '@aws-sdk/client-dynamodb/dist-types/models/models_0';
 
 export const tender = {
   tenderId: "1234",
@@ -106,8 +106,8 @@ export const deliveryDriverItem: PaperChannelDeliveryDriver = {
   createdAt: "2024-10-09T14:30:15.000Z",
 }
 
-export const getItemGeokeyOutput: GetItemCommandOutput = {
-  Item: {
+export const getItemGeokeyOutput: QueryCommandOutput = {
+  Items: [{
     tenderProductGeokey: {
       "S": "12345#AR#85965"
     },
@@ -138,7 +138,8 @@ export const getItemGeokeyOutput: GetItemCommandOutput = {
     createdAt: {
       "S": "2024-10-07T14:30:15.000Z"
     }
-  },
+  }],
+  Count: 1,
   $metadata: {}
 };
 
