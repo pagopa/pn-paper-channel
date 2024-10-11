@@ -17,6 +17,8 @@ const getEnvironmentVariable = (
   return value;
 };
 
+export const UNCOVERED_FLAG = "UNCOVERED";
+
 export const PN_TENDER_TABLE_NAME = getEnvironmentVariable(
   'AWS_DYNAMODBPAPERCHANNELTENDERTABLE',
   'pn-PaperChannelTender'

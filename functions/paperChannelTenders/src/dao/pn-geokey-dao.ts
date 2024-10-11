@@ -25,7 +25,7 @@ export const findGeokey = async (tenderId: string, product: string, geokey: stri
 
   const geokeys = (commandOutput.Items || []).map(item => unmarshall(item) as PaperChannelGeokey);
 
-  return geokeys.reduce((latest, current) => {
+  return geokeys.filter(item => !item.dismissed).reduce((latest, current) => {
     return new Date(current.activationDate) > new Date(latest!.activationDate) ? current : latest;
   }, geokeys[0] as PaperChannelGeokey);
 }

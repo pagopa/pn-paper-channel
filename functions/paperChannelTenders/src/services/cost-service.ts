@@ -3,6 +3,8 @@ import { findCost, findCosts } from '../dao/pn-cost-dao';
 import { findGeokey } from '../dao/pn-geokey-dao';
 import { NotFoundError } from '../types/error-types';
 import { formatNotFoundError } from '../utils/errors';
+import { UNCOVERED_FLAG } from '../config';
+
 
 /**
  * Retrieves cost information for a specific tender, optionally filtered by product, lot, zone, and delivery driver ID.
@@ -41,6 +43,9 @@ export const getCost = async (tenderId: string, product: string, geokey: string)
   const geokeyEntity = await findGeokey(tenderId, product, geokey);
   if (!geokeyEntity) {
     throw new NotFoundError(formatNotFoundError('Geokey', geokey));
+  }
+  if(geokeyEntity.coverFlag) {
+    geokeyEntity.lot = UNCOVERED_FLAG
   }
   console.log(geokeyEntity);
   const costEntity = await findCost(tenderId, product, geokeyEntity.lot, geokeyEntity.zone);
