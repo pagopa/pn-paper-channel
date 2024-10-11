@@ -1,6 +1,4 @@
-import { AttributeValue } from '@aws-sdk/client-dynamodb';
-import { PaperChannelTender } from '../types/dynamo-types';
-import { unmarshall } from '@aws-sdk/util-dynamodb';
+
 
 /**
  * Build partition key of PaperChannelGeokey Dynamo object.
