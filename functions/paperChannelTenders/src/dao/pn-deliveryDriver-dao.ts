@@ -1,8 +1,8 @@
 import { PaperChannelDeliveryDriver } from '../types/dynamo-types';
 import { ScanCommand, ScanInput } from '@aws-sdk/client-dynamodb';
 import { PN_DELIVERY_DRIVER_TABLE_NAME } from '../config';
-import { buildPnDeliveryDriverFromDynamoItems } from '../utils/builders';
 import { dynamoDBClient } from '../utils/awsClients';
+import { unmarshall } from '@aws-sdk/util-dynamodb';
 
 
 /**
@@ -22,7 +22,8 @@ export const findDeliveryDrivers = async (): Promise<PaperChannelDeliveryDriver[
   const command = new ScanCommand(scanInput);
   const response = await dynamoDBClient.send(command);
 
-  const drivers = buildPnDeliveryDriverFromDynamoItems(response.Items || []);
+  const drivers = (response.Items || [])
+    .map(item => unmarshall(item) as PaperChannelDeliveryDriver );
 
   if (drivers.length == 0) {
     throw new Error("Not found delivery driver");

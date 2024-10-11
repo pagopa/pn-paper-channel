@@ -4,8 +4,8 @@ import {
   PaperChannelTender, PaperChannelDeliveryDriver,
 } from '../../../src/types/dynamo-types';
 import { Page } from '../../../src/types/model-types';
-import { AttributeValue, GetItemCommandOutput, QueryCommandOutput } from '@aws-sdk/client-dynamodb';
-import { QueryOutput } from '@aws-sdk/client-dynamodb/dist-types/models/models_0';
+import { AttributeValue, GetItemCommandOutput, QueryCommandOutput, QueryOutput, ScanOutput } from '@aws-sdk/client-dynamodb';
+
 
 export const tender = {
   tenderId: "1234",

@@ -1,7 +1,13 @@
 import { validatorEvent } from './middlewares/validators';
 import { handleError } from './utils/errors';
 import { CostsEvent, Event, OperationEnum, TenderActiveEvent, TendersEvent } from './types/schema-request-types';
-import { costHandler, costsHandler, tenderActiveHandler, tendersHandler } from './handlers/api-handler';
+import {
+  costHandler,
+  costsHandler,
+  deliveryDriversHandler,
+  tenderActiveHandler,
+  tendersHandler,
+} from './handlers/api-handler';
 
 
 /**
@@ -21,15 +27,15 @@ const handleRoute = async (event: Event) => {
   console.log("Received event validated", event)
   switch (event.operation) {
     case OperationEnum.GET_TENDERS:
-      return tendersHandler(event as TendersEvent)
+      return tendersHandler(event)
     case OperationEnum.GET_TENDER_ACTIVE:
-      return tenderActiveHandler(event as TenderActiveEvent)
+      return tenderActiveHandler(event)
     case OperationEnum.GET_COSTS:
-      return costsHandler(event as CostsEvent)
+      return costsHandler(event)
     case OperationEnum.GET_COST:
       return costHandler(event)
-    default:
-      throw new Error(`Unknown operation: ${event.operation}`);
+    case OperationEnum.GET_DELIVERY_DRIVERS:
+      return deliveryDriversHandler(event)
   }
 }
 
