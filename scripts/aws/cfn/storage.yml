@@ -516,13 +516,9 @@ Resources:
       AttributeDefinitions:
         - AttributeName: "tenderId"
           AttributeType: "S"
-        - AttributeName: "activationDate"
-          AttributeType: "S"
       KeySchema:
         - AttributeName: "tenderId"
           KeyType: "HASH"
-        - AttributeName: "activationDate"
-          KeyType: "RANGE"
       KinesisStreamSpecification:
         StreamArn: !Ref CdcKinesisSourceStreamArn
       StreamSpecification:

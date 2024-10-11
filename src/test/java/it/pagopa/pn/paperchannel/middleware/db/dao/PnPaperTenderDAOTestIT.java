@@ -49,9 +49,19 @@ class PnPaperTenderDAOTestIT extends BaseTest {
         StepVerifier.create(result)
                 .assertNext(tender -> {
                     assertNotNull(tender);
-                    assertTrue(tender.getActivationDate().isBefore(Instant.now()));
                     assertEquals(ACTIVATION_DATA, tender.getActivationDate());
                 })
+                .verifyComplete();
+    }
+
+    @Test
+    void getTenderByIdWhenTenderIsNotPresent() {
+        // Act: Azione - Recupero del tender
+        Mono<PnPaperChannelTender> result = pnPaperTenderDAO.getTenderById("GARA_2020");
+
+        // Assert: Verifica - Controllare che il tender sia stato recuperato correttamente
+        StepVerifier.create(result)
+                .expectNextCount(0)
                 .verifyComplete();
     }
 
@@ -63,17 +73,17 @@ class PnPaperTenderDAOTestIT extends BaseTest {
 
 
         testArrange = new PnPaperChannelTender();
-        testArrange.setTenderId(TENDER_ID);
+        testArrange.setTenderId("GARA_2023");
         testArrange.setActivationDate(Instant.now().minusSeconds(3600*24)); // Un giorno fa
         pnPaperTenderDAO.createOrUpdate(testArrange).block();
 
         testArrange = new PnPaperChannelTender();
-        testArrange.setTenderId(TENDER_ID);
+        testArrange.setTenderId("GARA_2022");
         testArrange.setActivationDate(Instant.now().minusSeconds(3600*21)); // 21 ora fa
         pnPaperTenderDAO.createOrUpdate(testArrange).block();
 
         testArrange = new PnPaperChannelTender();
-        testArrange.setTenderId(TENDER_ID);
+        testArrange.setTenderId("GARA_2021");
         testArrange.setActivationDate(Instant.now().minusSeconds(3600*14)); // 14 ora fa
         pnPaperTenderDAO.createOrUpdate(testArrange).block();
     }

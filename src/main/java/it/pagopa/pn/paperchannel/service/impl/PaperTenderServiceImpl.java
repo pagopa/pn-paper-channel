@@ -8,6 +8,7 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.*;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnPaperChannelTender;
 import it.pagopa.pn.paperchannel.model.PnPaperChannelCostDTO;
 import it.pagopa.pn.paperchannel.service.PaperTenderService;
+import it.pagopa.pn.paperchannel.utils.Const;
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
@@ -46,18 +47,16 @@ public class PaperTenderServiceImpl implements PaperTenderService {
     /**
      * Retrieve the cost based on a specific tenderId, geokey and productType
      *
-     * @param cap          identifier of national city
-     * @param zone         identifier of a geographic set of contries
+     * @param geokey          identifier of national city or geographic set of contries
      * @param productType  type of product (AR, 890, etc)
      *
      * @return             DTO containing cost
      * */
     @Override
-    public Mono<PnPaperChannelCostDTO> getSimplifiedCost(String cap, String zone, String productType) {
+    public Mono<PnPaperChannelCostDTO> getSimplifiedCost(String geokey, String productType) {
         String processName = "Get New Cost From";
         log.logStartingProcess(processName);
-        String geoKeyValue = StringUtils.isNotEmpty(cap) ? cap : zone;
-        return getCostFromTenderId(null, geoKeyValue, productType);
+        return getCostFromTenderId(null, geokey, productType);
     }
 
     /**
@@ -73,6 +72,7 @@ public class PaperTenderServiceImpl implements PaperTenderService {
     public Mono<PnPaperChannelCostDTO> getCostFromTenderId(String tenderId, String geokey, String productType) {
         String processName = "Get Cost From TenderId";
         log.logStartingProcess(processName);
+        log.debug("Retrieve cost from tender {}, geokey {} and product {}", tenderId, geokey, productType);
         Mono<PnPaperChannelTender> getTender = StringUtils.isEmpty(tenderId)
                 ?
                     this.pnPaperTenderDAO.getActiveTender().switchIfEmpty(Mono.error(new PnGenericException(ACTIVE_TENDER_NOT_FOUND, ACTIVE_TENDER_NOT_FOUND.getMessage(), HttpStatus.NOT_FOUND)))
@@ -82,7 +82,12 @@ public class PaperTenderServiceImpl implements PaperTenderService {
                 .flatMap(tender -> pnPaperGeoKeyDAO.getGeoKey(tender.getTenderId(), productType, geokey)
                         .switchIfEmpty(Mono.error(new PnGenericException(GEOKEY_NOT_FOUND, GEOKEY_NOT_FOUND.getMessage(), HttpStatus.NOT_FOUND)))
                         .doOnNext(geoKey -> log.info("Geokey finded {}", geoKey))
-                        .flatMap(geoKey -> pnPaperCostDAO.getCostByTenderIdProductLotZone(geoKey.getTenderId(), productType, geoKey.getLot(), geoKey.getZone()))
+                        .flatMap(geoKey -> {
+                            if(Boolean.FALSE.equals(geoKey.getCoverFlag())) {
+                                geoKey.setLot(Const.UNCOVERED);
+                            }
+                            return pnPaperCostDAO.getCostByTenderIdProductLotZone(geoKey.getTenderId(), productType, geoKey.getLot(), geoKey.getZone());
+                        })
                         .switchIfEmpty(Mono.error(new PnGenericException(COST_DRIVER_OR_FSU_NOT_FOUND, COST_DRIVER_OR_FSU_NOT_FOUND.getMessage(), HttpStatus.NOT_FOUND)))
                         .doOnNext(paperCost -> log.info("Cost finded {}", paperCost))
                         .map(paperCost -> {
