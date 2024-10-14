@@ -1,7 +1,7 @@
 {
   "name": "pn-paper-channel-tenders",
   "version": "1.0.0",
-  "description": "",
+  "description": "pn-paper-channel tenders API",
   "type": "commonjs",
   "scripts": {
     "test-build": "npm run-script test && npm run-script sonar && npm run-script build",
