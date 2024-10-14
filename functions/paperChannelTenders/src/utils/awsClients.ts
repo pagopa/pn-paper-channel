@@ -1,7 +1,10 @@
-import { AttributeValue, DynamoDBClient, QueryInput } from '@aws-sdk/client-dynamodb';
+import {
+  AttributeValue,
+  DynamoDBClient,
+  QueryInput,
+} from '@aws-sdk/client-dynamodb';
 
 const dynamoDBClient = new DynamoDBClient({ region: 'eu-south-1' });
-
 
 class QueryCommandBuilder {
   private readonly tableName: string | undefined;
@@ -20,11 +23,10 @@ class QueryCommandBuilder {
     return this;
   }
 
-
   public build(): QueryInput {
     return {
       TableName: this.tableName,
-      FilterExpression: this.filterExpression.join(" AND "),
+      FilterExpression: this.filterExpression.join(' AND '),
       ExpressionAttributeValues: this.expressionValues,
     };
   }

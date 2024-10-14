@@ -2,10 +2,16 @@ import {
   PaperChannelTenderCosts,
   PaperChannelGeokey,
   PaperChannelTender,
+  PaperChannelDeliveryDriver,
 } from '../../../src/types/dynamo-types';
 import { Page } from '../../../src/types/model-types';
-import { AttributeValue, GetItemCommandOutput, QueryCommandOutput } from '@aws-sdk/client-dynamodb';
-import { QueryOutput } from '@aws-sdk/client-dynamodb/dist-types/models/models_0';
+import {
+  AttributeValue,
+  GetItemCommandOutput,
+  QueryCommandOutput,
+  QueryOutput,
+  ScanOutput,
+} from '@aws-sdk/client-dynamodb';
 
 const currentDate = new Date();
 
@@ -13,12 +19,12 @@ const addDays = (date: Date, days: number) => {
   const current = new Date(date);
   current.setDate(date.getDate() + days);
   return current;
-}
+};
 
 export const tender = {
-  tenderId: "1234",
+  tenderId: '1234',
   activationDate: new Date().toISOString(),
-  tenderName: "Gara 2024",
+  tenderName: 'Gara 2024',
   vat: 1,
   nonDeductibleVat: 1,
   pagePrice: 1,
@@ -30,143 +36,184 @@ export const tender = {
 } as PaperChannelTender;
 
 export const pageTender = {
-  content: [
-    tender,
-    tender,
-    tender,
-    tender
-  ],
+  content: [tender, tender, tender, tender],
   number: 1,
   size: 10,
   isLastPage: true,
   isFirstPage: true,
   totalPages: 1,
   totalElements: 4,
-} as Page<PaperChannelTender>
+} as Page<PaperChannelTender>;
 
 export const geokeyItem = {
-  tenderProductGeokey: "12345#AR#85965",
-  activationDate: "2024-10-07T14:30:15.000Z",
-  tenderId: "12345",
-  product: "AR",
-  geokey: "85965",
-  lot: "ZON1",
-  zone: "EU",
+  tenderProductGeokey: '12345#AR#85965',
+  activationDate: '2024-10-07T14:30:15.000Z',
+  tenderId: '12345',
+  product: 'AR',
+  geokey: '85965',
+  lot: 'ZON1',
+  zone: 'EU',
   coverFlag: true,
   dismissed: false,
-  createdAt: "2024-10-07T14:30:15.000Z"
+  createdAt: '2024-10-07T14:30:15.000Z',
 } as PaperChannelGeokey;
 
 export const costItem: PaperChannelTenderCosts = {
-  tenderId: "12345",
-  productLotZone: "AR#LOT_1#EU",
-  product: "AR",
-  lot: "LOT_1",
-  zone: "EU",
-  deliveryDriverName: "GLS",
-  deliveryDriverId: "121212",
+  tenderId: '12345',
+  productLotZone: 'AR#LOT_1#EU',
+  product: 'AR',
+  lot: 'LOT_1',
+  zone: 'EU',
+  deliveryDriverName: 'GLS',
+  deliveryDriverId: '121212',
   dematerializationCost: 12.89,
   rangedCosts: [
     {
       minWeight: 1,
       maxWeight: 10,
-      cost: 12.34
-    }
+      cost: 12.34,
+    },
   ],
-  createdAt: "2024-10-07T14:30:15.000Z",
-}
+  createdAt: '2024-10-07T14:30:15.000Z',
+};
 
-
-
-export const getGeokey = (dismissed: boolean = false, activationDate ?: string):Record<string, AttributeValue> => ({
-  tenderProductGeokey: {
-    "S": "12345#AR#85965"
+const getDeliveryDriverItem: Record<string, AttributeValue> = {
+  deliveryDriverId: {
+    S: '12345',
   },
-  activationDate: {
-    "S": activationDate || "2024-10-07T14:30:15.000Z",
+  taxId: {
+    S: '012345678',
   },
-  tenderId: {
-    "S": "12345"
+  businessName: {
+    S: 'pagopa',
   },
-  product: {
-    "S": "AR"
+  fiscalCode: {
+    S: 'ABCDEF01G23H456I',
   },
-  geokey: {
-    "S": "85965"
+  pec: {
+    S: 'test@pec.it',
   },
-  lot: {
-    "S": "ZON1"
+  phoneNumber: {
+    S: '06123456',
   },
-  zone: {
-    "S": "EU"
-  },
-  coverFlag: {
-    "BOOL": true
-  },
-  dismissed: {
-    "BOOL": dismissed
+  registeredOffice: {
+    S: 'Rome',
   },
   createdAt: {
-    "S": "2024-10-07T14:30:15.000Z"
-  }
-})
-
-const getItem: Record<string, AttributeValue> = {
-  tenderId: {
-    "S": "12345",
+    S: '2024-10-09T14:30:15.000Z',
   },
-  productLotZone: {
-    "S": "AR#LOT_1#EU",
+};
+
+export const deliveryDriverItem: PaperChannelDeliveryDriver = {
+  deliveryDriverId: '12345',
+  taxId: '012345678',
+  businessName: 'pagopa',
+  fiscalCode: 'ABCDEF01G23H456I',
+  pec: 'test@pec.it',
+  phoneNumber: '06123456',
+  registeredOffice: 'Rome',
+  createdAt: '2024-10-09T14:30:15.000Z',
+};
+
+export const getGeokey = (
+  dismissed: boolean = false,
+  activationDate?: string
+): Record<string, AttributeValue> => ({
+  tenderProductGeokey: {
+    S: '12345#AR#85965',
+  },
+  activationDate: {
+    S: activationDate || '2024-10-07T14:30:15.000Z',
+  },
+  tenderId: {
+    S: '12345',
   },
   product: {
-    "S": "AR",
+    S: 'AR',
+  },
+  geokey: {
+    S: '85965',
   },
   lot: {
-    "S": "LOT_1",
+    S: 'ZON1',
   },
   zone: {
-    "S": "EU",
+    S: 'EU',
+  },
+  coverFlag: {
+    BOOL: true,
+  },
+  dismissed: {
+    BOOL: dismissed,
+  },
+  createdAt: {
+    S: '2024-10-07T14:30:15.000Z',
+  },
+});
+
+const getCostItem: Record<string, AttributeValue> = {
+  tenderId: {
+    S: '12345',
+  },
+  productLotZone: {
+    S: 'AR#LOT_1#EU',
+  },
+  product: {
+    S: 'AR',
+  },
+  lot: {
+    S: 'LOT_1',
+  },
+  zone: {
+    S: 'EU',
   },
   deliveryDriverName: {
-    "S": "GLS",
+    S: 'GLS',
   },
   deliveryDriverId: {
-    "S": "121212",
+    S: '121212',
   },
   dematerializationCost: {
-    "N": "12.89",
+    N: '12.89',
   },
   rangedCosts: {
-    "L": [
+    L: [
       {
         M: {
-          minWeight: { N: "1" },
-          maxWeight: { N: "10" },
-          cost: { N: "12.34" },
-        }
-      }
+          minWeight: { N: '1' },
+          maxWeight: { N: '10' },
+          cost: { N: '12.34' },
+        },
+      },
     ],
   },
   createdAt: {
-    "S": "2024-10-07T14:30:15.000Z",
+    S: '2024-10-07T14:30:15.000Z',
   },
-}
+};
 
 export const getItemCostOutput: GetItemCommandOutput = {
-  Item: getItem,
-  $metadata: {}
+  Item: getCostItem,
+  $metadata: {},
 };
 
 export const getItemCostListOutput: QueryOutput = {
-  Items: [getItem]
-}
+  Items: [getCostItem],
+};
+
+export const getDeliveryDriverListOutput: ScanOutput = {
+  Items: [getDeliveryDriverItem],
+};
 
 export const getItemGeokeyOutput: QueryCommandOutput = {
   Items: [
     getGeokey(false, addDays(currentDate, 10).toISOString()),
-    getGeokey(false, "2024-10-07T14:30:15.000Z"),
-    getGeokey(false, addDays(new Date("2024-10-07T14:30:15.000Z"), -11).toISOString()),
+    getGeokey(false, '2024-10-07T14:30:15.000Z'),
+    getGeokey(
+      false,
+      addDays(new Date('2024-10-07T14:30:15.000Z'), -11).toISOString()
+    ),
   ],
   Count: 3,
-  $metadata: {}
+  $metadata: {},
 };

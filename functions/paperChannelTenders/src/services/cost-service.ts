@@ -5,7 +5,6 @@ import { NotFoundError } from '../types/error-types';
 import { formatNotFoundError } from '../utils/errors';
 import { UNCOVERED_FLAG } from '../config';
 
-
 /**
  * Retrieves cost information for a specific tender, optionally filtered by product, lot, zone, and delivery driver ID.
  *
@@ -21,9 +20,15 @@ import { UNCOVERED_FLAG } from '../config';
  *
  * @throws {Error} Throws an error if the underlying `findCosts` function fails.
  */
-export const getCosts = async (tenderId: string, product?: string, lot?: string, zone?: string, deliveryDriverId?: string): Promise<PaperChannelTenderCosts[]> => {
+export const getCosts = async (
+  tenderId: string,
+  product?: string,
+  lot?: string,
+  zone?: string,
+  deliveryDriverId?: string
+): Promise<PaperChannelTenderCosts[]> => {
   return await findCosts(tenderId, product, lot, zone, deliveryDriverId);
-}
+};
 
 /**
  * Retrieves the cost information for a specific tender, product, and geokey.
@@ -38,20 +43,34 @@ export const getCosts = async (tenderId: string, product?: string, lot?: string,
  * @throws {NotFoundError}
  * - Throws a `NotFoundError` if the geokey entity or cost entity cannot be found.
  */
-export const getCost = async (tenderId: string, product: string, geokey: string): Promise<PaperChannelTenderCosts> => {
-  console.log("Get cost from ", tenderId, " - ", product, " - ", geokey);
+export const getCost = async (
+  tenderId: string,
+  product: string,
+  geokey: string
+): Promise<PaperChannelTenderCosts> => {
+  console.log('Get cost from ', tenderId, ' - ', product, ' - ', geokey);
   const geokeyEntity = await findGeokey(tenderId, product, geokey);
   if (!geokeyEntity) {
     throw new NotFoundError(formatNotFoundError('Geokey', geokey));
   }
-  if(geokeyEntity.coverFlag) {
-    geokeyEntity.lot = UNCOVERED_FLAG
+  if (geokeyEntity.coverFlag) {
+    geokeyEntity.lot = UNCOVERED_FLAG;
   }
   console.log(geokeyEntity);
-  const costEntity = await findCost(tenderId, product, geokeyEntity.lot, geokeyEntity.zone);
+  const costEntity = await findCost(
+    tenderId,
+    product,
+    geokeyEntity.lot,
+    geokeyEntity.zone
+  );
   if (!costEntity) {
-    throw new NotFoundError(formatNotFoundError('Cost', `${product} - ${geokeyEntity.lot} - ${geokeyEntity.zone}`));
+    throw new NotFoundError(
+      formatNotFoundError(
+        'Cost',
+        `${product} - ${geokeyEntity.lot} - ${geokeyEntity.zone}`
+      )
+    );
   }
-  console.log(costEntity)
+  console.log(costEntity);
   return costEntity;
-}
+};

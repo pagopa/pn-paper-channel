@@ -1,8 +1,14 @@
 import { validatorEvent } from './middlewares/validators';
 import { handleError } from './utils/errors';
-import { CostsEvent, Event, OperationEnum, TenderActiveEvent, TendersEvent } from './types/schema-request-types';
-import { costHandler, costsHandler, geokeyHandler, tenderActiveHandler, tendersHandler } from './handlers/api-handler';
-
+import { Event, OperationEnum } from './types/schema-request-types';
+import {
+  costHandler,
+  costsHandler,
+  deliveryDriversHandler,
+  tenderActiveHandler,
+  tendersHandler,
+  geokeyHandler,
+} from './handlers/api-handler';
 
 /**
  * Routes the incoming event to the appropriate handler based on the operation type.
@@ -18,22 +24,22 @@ import { costHandler, costsHandler, geokeyHandler, tenderActiveHandler, tendersH
  * function fails.
  */
 const handleRoute = async (event: Event) => {
-  console.log("Received event validated", event)
+  console.log('Received event validated', event);
   switch (event.operation) {
     case OperationEnum.GET_TENDERS:
-      return tendersHandler(event as TendersEvent)
+      return tendersHandler(event);
     case OperationEnum.GET_TENDER_ACTIVE:
-      return tenderActiveHandler(event as TenderActiveEvent)
+      return tenderActiveHandler(event);
     case OperationEnum.GET_COSTS:
-      return costsHandler(event as CostsEvent)
+      return costsHandler(event);
     case OperationEnum.GET_COST:
-      return costHandler(event)
+      return costHandler(event);
+    case OperationEnum.GET_DELIVERY_DRIVERS:
+      return deliveryDriversHandler(event);
     case OperationEnum.GET_GEOKEY:
-      return geokeyHandler(event)
-    default:
-      throw new Error(`Unknown operation: ${event.operation}`);
+      return geokeyHandler(event);
   }
-}
+};
 
 /**
  * A handler function that processes an event.
@@ -51,9 +57,9 @@ const handleRoute = async (event: Event) => {
  */
 export const handler = (event: unknown) => {
   try {
-    const eventValidated = validatorEvent(event)
-    return handleRoute(eventValidated)
+    const eventValidated = validatorEvent(event);
+    return handleRoute(eventValidated);
   } catch (error: Error | unknown) {
     return handleError(error);
   }
-}
+};

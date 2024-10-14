@@ -912,6 +912,9 @@ Resources:
           AWS_DYNAMODBPAPERCHANNELTENDERTABLE: !Ref PaperChannelTenderDynamoTableName
           AWS_DYNAMODBPAPERCHANNELGEOKEYTABLE: !Ref PaperChannelGeokeyDynamoTableName
           AWS_DYNAMODBPAPERCHANNELCOSTTABLE: !Ref PaperChannelCostDynamoTableName
+          AWS_DYNAMODBPAPERCHANNELDELIVERYDRIVERTABLE: !Ref PaperChannelDeliveryDriverDynamoTableName
+      TracingConfig:
+        Mode: Active
       Layers:
         - !Sub "arn:aws:lambda:${AWS::Region}:339249233099:layer:LambdaInsightsExtension:13"
       Timeout: !Ref TenderAPILambdaTimeout

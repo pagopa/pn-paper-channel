@@ -1,5 +1,3 @@
-
-
 /**
  * Build partition key of PaperChannelGeokey Dynamo object.
  *
@@ -8,9 +6,13 @@
  * @param {string} [geokey] - The geographical identification.
  * @returns String concat with #.
  */
-export const buildGeokeyPartitionKey = (tenderId: string, product: string, geokey: string): string => {
-  return [tenderId, product, geokey].join("#");
-}
+export const buildGeokeyPartitionKey = (
+  tenderId: string,
+  product: string,
+  geokey: string
+): string => {
+  return [tenderId, product, geokey].join('#');
+};
 
 /**
  * Build sort key of PaperChannelTenderCosts Dynamo object.
@@ -20,6 +22,10 @@ export const buildGeokeyPartitionKey = (tenderId: string, product: string, geoke
  * @param {string} [zone] - The geographical zone.
  * @returns String concat with #.
  */
-export const buildCostSortKey = (product: string, lot: string, zone: string): string => {
-  return [product, lot, zone].join("#");
-}
+export const buildCostSortKey = (
+  product: string,
+  lot: string,
+  zone: string
+): string => {
+  return [product, lot, zone].join('#');
+};

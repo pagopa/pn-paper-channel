@@ -1,4 +1,9 @@
-import { ResponseError, Status, statusDescription, ValidationField } from './model-types';
+import {
+  ResponseError,
+  Status,
+  statusDescription,
+  ValidationField,
+} from './model-types';
 
 export class GenericError extends Error {
   status: Status;
@@ -13,7 +18,7 @@ export class GenericError extends Error {
       body: undefined,
       description: statusDescription[this.status],
       statusCode: this.status,
-      errorMessage: this.message
+      errorMessage: this.message,
     };
   }
 }
@@ -35,7 +40,7 @@ export class ValidatorError extends GenericError {
   toResponse(): ResponseError {
     return {
       ...super.toResponse(),
-      fields: this.fields
+      fields: this.fields,
     };
   }
 }

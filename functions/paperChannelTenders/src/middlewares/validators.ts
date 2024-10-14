@@ -1,7 +1,8 @@
 import {
   BaseEventSchema,
   CostEventSchema,
-  CostsEventSchema, DeliveryDriversEventSchema,
+  CostsEventSchema,
+  DeliveryDriversEventSchema,
   Event,
   TenderActiveEventSchema,
   TendersEventSchema,
@@ -30,7 +31,7 @@ export const validatorEvent = (event: unknown): Event => {
 
   if (!parsedEvent.success) {
     validationErrors.push(...zodErrorToValidationField(parsedEvent.error));
-    throw new ValidatorError("Event badly format", validationErrors);
+    throw new ValidatorError('Event badly format', validationErrors);
   }
 
   const eventSchemas = [
@@ -46,11 +47,13 @@ export const validatorEvent = (event: unknown): Event => {
     if (result.success) {
       return result.data;
     } else {
-      const onlyErrorWithOperationKey = result.error.errors.filter(err => err.code === ZodIssueCode.invalid_literal );
+      const onlyErrorWithOperationKey = result.error.errors.filter(
+        (err) => err.code === ZodIssueCode.invalid_literal
+      );
       if (onlyErrorWithOperationKey.length === 0) {
         validationErrors.push(...zodErrorToValidationField(result.error));
       }
     }
   }
-  throw new ValidatorError("Event badly format", validationErrors);
-}
+  throw new ValidatorError('Event badly format', validationErrors);
+};

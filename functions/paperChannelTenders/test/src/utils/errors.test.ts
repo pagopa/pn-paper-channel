@@ -1,13 +1,15 @@
-import { GenericError, NotFoundError, ValidatorError } from '../../../src/types/error-types';
+import {
+  GenericError,
+  NotFoundError,
+  ValidatorError,
+} from '../../../src/types/error-types';
 import { handleError } from '../../../src/utils/errors';
 import { ValidationField } from '../../../src/types/model-types';
 
-
-describe("Errors middleware tests", () => {
-
-  test("when throw NotFoundError should return ResponseError", () => {
+describe('Errors middleware tests', () => {
+  test('when throw NotFoundError should return ResponseError', () => {
     // Arrange
-    const message = "Tenders not found.";
+    const message = 'Tenders not found.';
     const error = new NotFoundError(message);
 
     // Act
@@ -16,21 +18,21 @@ describe("Errors middleware tests", () => {
     // Assert
     expect(response).toEqual({
       body: undefined,
-      description: "NOT_FOUND",
+      description: 'NOT_FOUND',
       statusCode: 404,
-      errorMessage: message
-    })
+      errorMessage: message,
+    });
   });
 
-  test("when throw ValidationError should return ResponseError", () => {
+  test('when throw ValidationError should return ResponseError', () => {
     // Arrange
-    const message = "Validation error.";
+    const message = 'Validation error.';
     const fields: ValidationField[] = [
       {
-        fieldId: "tenderId",
-        message: "Field is required"
-      }
-    ]
+        fieldId: 'tenderId',
+        message: 'Field is required',
+      },
+    ];
     const error = new ValidatorError(message, fields);
 
     // Act
@@ -39,16 +41,16 @@ describe("Errors middleware tests", () => {
     // Assert
     expect(response).toEqual({
       body: undefined,
-      description: "BAD_REQUEST",
+      description: 'BAD_REQUEST',
       statusCode: 400,
       errorMessage: message,
-      fields: fields
-    })
+      fields: fields,
+    });
   });
 
-  test("when throw GenericError should return ResponseError", () => {
+  test('when throw GenericError should return ResponseError', () => {
     // Arrange
-    const message = "Generic error.";
+    const message = 'Generic error.';
     const error = new GenericError(message);
 
     // Act
@@ -57,15 +59,15 @@ describe("Errors middleware tests", () => {
     // Assert
     expect(response).toEqual({
       body: undefined,
-      description: "BAD_REQUEST",
+      description: 'BAD_REQUEST',
       statusCode: 400,
       errorMessage: message,
-    })
+    });
   });
 
-  test("when throw Error should return ResponseError", () => {
+  test('when throw Error should return ResponseError', () => {
     // Arrange
-    const message = "Generic error.";
+    const message = 'Generic error.';
     const error = Error(message);
 
     // Act
@@ -74,15 +76,15 @@ describe("Errors middleware tests", () => {
     // Assert
     expect(response).toEqual({
       body: undefined,
-      description: "BAD_REQUEST",
+      description: 'BAD_REQUEST',
       statusCode: 400,
       errorMessage: message,
-    })
+    });
   });
 
-  test("when throw unknown should return ResponseError", () => {
+  test('when throw unknown should return ResponseError', () => {
     // Arrange
-    const message = "Generic error.";
+    const message = 'Generic error.';
 
     // Act
     const response = handleError(message);
@@ -90,10 +92,9 @@ describe("Errors middleware tests", () => {
     // Assert
     expect(response).toEqual({
       body: undefined,
-      description: "BAD_REQUEST",
+      description: 'BAD_REQUEST',
       statusCode: 400,
-      errorMessage: "An unexpected error occurred",
-    })
+      errorMessage: 'An unexpected error occurred',
+    });
   });
-
 });

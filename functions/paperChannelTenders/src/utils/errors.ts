@@ -20,11 +20,14 @@ export const handleError = (error: Error | unknown): ResponseError => {
   if (error instanceof GenericError) {
     return error.toResponse();
   } else if (error instanceof Error) {
-    return new GenericError(error.message).toResponse()
+    return new GenericError(error.message).toResponse();
   }
-  return new GenericError("An unexpected error occurred").toResponse();
-}
+  return new GenericError('An unexpected error occurred').toResponse();
+};
 
-export const formatNotFoundError = (entity: string, identifier: string): string => {
+export const formatNotFoundError = (
+  entity: string,
+  identifier: string
+): string => {
   return `Entity ${entity} [${identifier}] not found`;
 };
