@@ -1,24 +1,25 @@
-import { AttributeValue, DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { PaperChannelTender } from '../types/dynamo-types';
-import { unmarshall } from '@aws-sdk/util-dynamodb';
-
-
-export const dynamoDBClient = new DynamoDBClient();
 
 
 /**
- * Transforms an array of DynamoDB items into an array of PaperChannelTender objects.
+ * Build partition key of PaperChannelGeokey Dynamo object.
  *
- * This function takes in raw DynamoDB items, unmarshall them into JavaScript objects,
- * and casts them to the PaperChannelTender type. It returns an array of the transformed
- * objects.
- *
- * @param items - An array of DynamoDB items represented as records with string keys
- *                and AttributeValue values.
- * @returns An array of PaperChannelTender objects derived from the provided DynamoDB items.
+ * @param {string} [tenderId] - Identifier of tender.
+ * @param {string} [product] - The name of the product.
+ * @param {string} [geokey] - The geographical identification.
+ * @returns String concat with #.
  */
-export const buildPnTendersFromDynamoItems = (
-  items: Record<string, AttributeValue>[]
-): PaperChannelTender[] =>
-  items.map(item => unmarshall(item))
-  .map(item => item as PaperChannelTender);
+export const buildGeokeyPartitionKey = (tenderId: string, product: string, geokey: string): string => {
+  return [tenderId, product, geokey].join("#");
+}
+
+/**
+ * Build sort key of PaperChannelTenderCosts Dynamo object.
+ *
+ * @param {string} [product] - The name of the product.
+ * @param {string} [lot] - The lot of geokey.
+ * @param {string} [zone] - The geographical zone.
+ * @returns String concat with #.
+ */
+export const buildCostSortKey = (product: string, lot: string, zone: string): string => {
+  return [product, lot, zone].join("#");
+}

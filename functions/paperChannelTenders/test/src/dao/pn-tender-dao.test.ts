@@ -1,10 +1,10 @@
-import { dynamoDBClient } from '../../../src/utils/builders';
 import { AttributeValue, ScanCommand, ScanInput } from '@aws-sdk/client-dynamodb';
 import { findActiveTender, findTenders } from '../../../src/dao/pn-tender-dao';
 import { PaperChannelTender } from '../../../src/types/dynamo-types';
 import { Page } from '../../../src/types/model-types';
 import { mockClient } from 'aws-sdk-client-mock';
 import { PN_TENDER_TABLE_NAME } from '../../../src/config';
+import { dynamoDBClient } from '../../../src/utils/awsClients';
 
 
 describe('findTenders', () => {

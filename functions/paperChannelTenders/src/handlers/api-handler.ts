@@ -1,7 +1,9 @@
-import { TenderActiveEvent, TendersEvent } from '../types/schema-request-types';
+import { PaperChannelTenderCosts, PaperChannelTender, PaperChannelGeokey } from '../types/dynamo-types';
+import { CostEvent, CostsEvent, GeokeyEvent, TenderActiveEvent, TendersEvent } from '../types/schema-request-types';
 import { Page, Response, ResponseLambda } from '../types/model-types';
-import { PaperChannelTender } from '../types/dynamo-types';
 import { getActiveTender, getAllTenders } from '../services/tender-service';
+import { getCost, getCosts } from '../services/cost-service';
+import { getGeokeys } from '../services/geokey-service';
 
 /**
  * Handles the retrieval of all tenders based on the provided event parameters.
@@ -37,4 +39,62 @@ export const tenderActiveHandler = async (event: TenderActiveEvent): Promise<Res
   const response = await getActiveTender();
   console.log("Active is ", response);
   return new ResponseLambda<PaperChannelTender>().toResponseOK(response);
+}
+
+/**
+ * Handles the retrieval of cost information based on the incoming event.
+ *
+ * @param {CostsEvent} event - The event containing information needed to retrieve costs, including
+ *                              tender ID, optional filters for product, lot, zone, and delivery driver ID.
+ *
+ * @returns {Promise<Response<PaperChannelTenderCosts[]>>}
+ * - A promise that resolves to a response object containing the status code, description,
+ *   and the retrieved cost information.
+ *
+ * @throws {Error} Throws an error if the underlying `getCosts` function fails to retrieve the data.
+ */
+export const costsHandler = async (event: CostsEvent): Promise<Response<PaperChannelTenderCosts[]>> => {
+  console.log("Get cost of tender from event ", event);
+  const response = await getCosts(event.tenderId, event.product, event.lot, event.zone, event.deliveryDriverId);
+  console.log("Response is ", response);
+  return new ResponseLambda<PaperChannelTenderCosts[]>().toResponseOK(response);
+}
+
+/**
+ * Retrieves the cost information for a specific tender and product.
+ *
+ * This asynchronous function logs the incoming event, fetches the cost details
+ * using the provided tenderId, product, and geokey, and returns the response
+ * formatted as a ResponseLambda object containing the cost information.
+ *
+ * @param event - An object of type CostEvent containing the tender ID, product,
+ *                and geokey for which the cost is being requested.
+ * @returns A Promise that resolves to a Response containing the cost information
+ *          as a PaperChannelTenderCosts object.
+ *
+ * @throws Will throw an NotFoundError if the cost or geokey not found.
+ */
+export const costHandler = async (event: CostEvent): Promise<Response<PaperChannelTenderCosts>> => {
+  console.log("Get cost from event ", event);
+  const response = await getCost(event.tenderId, event.product, event.geokey)
+  return new ResponseLambda<PaperChannelTenderCosts>().toResponseOK(response);
+}
+
+/**
+ * Retrieves the geokey information for a specific tender, product and geokey.
+ *
+ * This asynchronous function logs the incoming event, fetches the geokey details
+ * using the provided tenderId, product, and geokey, and returns the response
+ * formatted as a ResponseLambda object containing the cost information.
+ *
+ * @param event - An object of type GeokeyEvent containing the tenderId, product,
+ *                and geokey for which the cost is being requested.
+ * @returns A Promise that resolves to a Response containing the cost information
+ *          as a PaperChannelGeokey object.
+ *
+ */
+export const geokeyHandler = async (event: GeokeyEvent): Promise<Response<PaperChannelGeokey[]>> => {
+  console.log("Get geokey from event ", event);
+  const response = await getGeokeys(event.tenderId, event.product, event.geokey)
+  return new ResponseLambda<PaperChannelGeokey[]>().toResponseOK(response);
 }

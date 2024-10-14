@@ -1,8 +1,6 @@
 import { Page, ValidationField } from '../types/model-types';
 import { ZodError } from 'zod';
 
-
-
 /**
  * Maps an array of content into a paginated structure.
  *
@@ -18,12 +16,12 @@ import { ZodError } from 'zod';
  *
  * @template T - The type of items contained in the page.
  */
-function toPageMapper<T>(
+export const toPageMapper = <T>(
   content: T[],
   totalElements: number,
   pageNumber: number,
   pageSize: number
-): Page<T> {
+): Page<T> => {
   const totalPages = Math.ceil(totalElements / pageSize);
   return {
     content: content,
@@ -36,7 +34,6 @@ function toPageMapper<T>(
   }
 }
 
-
 /**
  * Converts a Zod validation error into an array of validation field objects.
  *
@@ -44,14 +41,9 @@ function toPageMapper<T>(
  *
  * @returns An array of ValidationField objects, each containing the field ID and error message.
   */
-function zodErrorToValidationField (error: ZodError): ValidationField[] {
+export const zodErrorToValidationField = (error: ZodError): ValidationField[] => {
   return error.errors.map(err => ({
     fieldId: err.path.join('.'),
     message: err.message,
   }));
-}
-
-export {
-  toPageMapper,
-  zodErrorToValidationField
 }

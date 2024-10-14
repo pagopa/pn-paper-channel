@@ -1,42 +1,39 @@
-import handlerRoute from './routes/tender-routes';
 import { validatorEvent } from './middlewares/validators';
 import { handleError } from './utils/errors';
+import { CostsEvent, Event, OperationEnum, TenderActiveEvent, TendersEvent } from './types/schema-request-types';
+import { costHandler, costsHandler, geokeyHandler, tenderActiveHandler, tendersHandler } from './handlers/api-handler';
 
-/*
-{
-    "operation": "GET_TENDERS", // SCAN
-    "page": "3",
-    "size": "2",
-    "from": "2024-06-15T11:07:38Z",
-    "to": "2024-06-15T11:07:38Z"
-}
 
-{
-    "operation": "GET_TENDER_ACTIVE"
+/**
+ * Routes the incoming event to the appropriate handler based on the operation type.
+ *
+ * This asynchronous function logs the validated event and determines which handler to
+ * invoke based on the operation specified in the event. It supports two operations:
+ * "GET_TENDERS" and "GET_TENDER_ACTIVE", routing to their respective handlers.
+ *
+ * @param event - The validated Event object containing the operation type and associated data.
+ * @returns A Promise that resolves to the response from the corresponding handler function.
+ *
+ * @throws Will throw an error if the operation type is not recognized or if the handler
+ * function fails.
+ */
+const handleRoute = async (event: Event) => {
+  console.log("Received event validated", event)
+  switch (event.operation) {
+    case OperationEnum.GET_TENDERS:
+      return tendersHandler(event as TendersEvent)
+    case OperationEnum.GET_TENDER_ACTIVE:
+      return tenderActiveHandler(event as TenderActiveEvent)
+    case OperationEnum.GET_COSTS:
+      return costsHandler(event as CostsEvent)
+    case OperationEnum.GET_COST:
+      return costHandler(event)
+    case OperationEnum.GET_GEOKEY:
+      return geokeyHandler(event)
+    default:
+      throw new Error(`Unknown operation: ${event.operation}`);
+  }
 }
-
-{
-    "operation": "GET_COSTS",
-    "tenderId": "xxxxxxx", // NECESSARIO
-    "product": "xxx",
-    "lot": "xxx",
-    "zone": "xxx",
-    "deliveryDriverId": "xxx"
-}
-
-{
-    "operation": "GET_COST",
-    "tenderId": "xxxxxxx", // NECESSARIO
-    "product": "xxx",
-    "geokey": "xxx",
-}
-
-{
-    "operation": "GET_DELIVERY_DRIVERS",
-    "from": "xxxxxxx", // NECESSARIO
-    "to": "xxx"
-}
-*/
 
 /**
  * A handler function that processes an event.
@@ -55,7 +52,7 @@ import { handleError } from './utils/errors';
 export const handler = (event: unknown) => {
   try {
     const eventValidated = validatorEvent(event)
-    return handlerRoute(eventValidated)
+    return handleRoute(eventValidated)
   } catch (error: Error | unknown) {
     return handleError(error);
   }
