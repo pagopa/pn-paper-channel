@@ -7,6 +7,7 @@ import {
   deliveryDriversHandler,
   tenderActiveHandler,
   tendersHandler,
+  geokeyHandler
 } from './handlers/api-handler';
 
 
@@ -36,6 +37,8 @@ const handleRoute = async (event: Event) => {
       return costHandler(event)
     case OperationEnum.GET_DELIVERY_DRIVERS:
       return deliveryDriversHandler(event)
+    case OperationEnum.GET_GEOKEY:
+      return geokeyHandler(event)
   }
 }
 

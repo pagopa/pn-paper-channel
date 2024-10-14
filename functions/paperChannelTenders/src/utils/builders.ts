@@ -1,6 +1,3 @@
-import { AttributeValue } from '@aws-sdk/client-dynamodb';
-import { PaperChannelTender } from '../types/dynamo-types';
-import { unmarshall } from '@aws-sdk/util-dynamodb';
 
 
 /**
@@ -14,7 +11,6 @@ import { unmarshall } from '@aws-sdk/util-dynamodb';
 export const buildGeokeyPartitionKey = (tenderId: string, product: string, geokey: string): string => {
   return [tenderId, product, geokey].join("#");
 }
-
 
 /**
  * Build sort key of PaperChannelTenderCosts Dynamo object.

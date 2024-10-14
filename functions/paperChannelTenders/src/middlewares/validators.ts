@@ -11,8 +11,6 @@ import { ZodIssueCode } from 'zod';
 import { zodErrorToValidationField } from '../utils/mappers';
 import { ValidatorError } from '../types/error-types';
 
-
-
 /**
  * Validates an incoming event against a set of predefined schemas.
  *
@@ -26,7 +24,7 @@ import { ValidatorError } from '../types/error-types';
  *
  * @throws Will throw an error if the event does not match any of the predefined schemas.
  */
-const validatorEvent = (event: unknown): Event => {
+export const validatorEvent = (event: unknown): Event => {
   const validationErrors: ValidationField[] = [];
   const parsedEvent = BaseEventSchema.safeParse(event);
 
@@ -56,9 +54,3 @@ const validatorEvent = (event: unknown): Event => {
   }
   throw new ValidatorError("Event badly format", validationErrors);
 }
-
-
-
-export {
-  validatorEvent
-};

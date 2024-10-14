@@ -5,8 +5,6 @@ import { PaperChannelTenderCosts } from '../types/dynamo-types';
 import { dynamoDBClient, QueryCommandBuilder } from '../utils/awsClients';
 import { unmarshall } from '@aws-sdk/util-dynamodb';
 
-
-
 /**
  * Fetches the cost information for a specific tender, product, lot, and zone from the DynamoDB table.
  *
@@ -39,7 +37,6 @@ export const findCost = async (tenderId: string, product: string, lot: string, z
   return unmarshall(getItemOutput.Item) as PaperChannelTenderCosts;
 }
 
-
 /**
  * Fetches cost information for a specific tender, optionally filtered by product, lot, zone, and delivery driver ID.
  *
@@ -62,7 +59,6 @@ export const findCosts = async (tenderId: string, product?: string, lot?: string
   queryCommandBuilder.addFilter("lot", lot);
   queryCommandBuilder.addFilter("zone", zone);
   queryCommandBuilder.addFilter("deliveryDriverId", deliveryDriverId);
-
 
   const queryInput = queryCommandBuilder.build();
 
