@@ -1,7 +1,7 @@
 import { validatorEvent } from './middlewares/validators';
 import { handleError } from './utils/errors';
 import { CostsEvent, Event, OperationEnum, TenderActiveEvent, TendersEvent } from './types/schema-request-types';
-import { costHandler, costsHandler, tenderActiveHandler, tendersHandler } from './handlers/api-handler';
+import { costHandler, costsHandler, geokeyHandler, tenderActiveHandler, tendersHandler } from './handlers/api-handler';
 
 
 /**
@@ -28,6 +28,8 @@ const handleRoute = async (event: Event) => {
       return costsHandler(event as CostsEvent)
     case OperationEnum.GET_COST:
       return costHandler(event)
+    case OperationEnum.GET_GEOKEY:
+      return geokeyHandler(event)
     default:
       throw new Error(`Unknown operation: ${event.operation}`);
   }

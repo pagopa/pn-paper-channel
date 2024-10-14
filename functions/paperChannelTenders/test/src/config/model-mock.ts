@@ -7,6 +7,14 @@ import { Page } from '../../../src/types/model-types';
 import { AttributeValue, GetItemCommandOutput, QueryCommandOutput } from '@aws-sdk/client-dynamodb';
 import { QueryOutput } from '@aws-sdk/client-dynamodb/dist-types/models/models_0';
 
+const currentDate = new Date();
+
+const addDays = (date: Date, days: number) => {
+  const current = new Date(date);
+  current.setDate(date.getDate() + days);
+  return current;
+}
+
 export const tender = {
   tenderId: "1234",
   activationDate: new Date().toISOString(),
@@ -45,7 +53,7 @@ export const geokeyItem = {
   lot: "ZON1",
   zone: "EU",
   coverFlag: true,
-  dismissed: true,
+  dismissed: false,
   createdAt: "2024-10-07T14:30:15.000Z"
 } as PaperChannelGeokey;
 
@@ -68,42 +76,40 @@ export const costItem: PaperChannelTenderCosts = {
   createdAt: "2024-10-07T14:30:15.000Z",
 }
 
-export const getItemGeokeyOutput: QueryCommandOutput = {
-  Items: [{
-    tenderProductGeokey: {
-      "S": "12345#AR#85965"
-    },
-    activationDate: {
-      "S": "2024-10-07T14:30:15.000Z",
-    },
-    tenderId: {
-      "S": "12345"
-    },
-    product: {
-      "S": "AR"
-    },
-    geokey: {
-      "S": "85965"
-    },
-    lot: {
-      "S": "ZON1"
-    },
-    zone: {
-      "S": "EU"
-    },
-    coverFlag: {
-      "BOOL": true
-    },
-    dismissed: {
-      "BOOL": true
-    },
-    createdAt: {
-      "S": "2024-10-07T14:30:15.000Z"
-    }
-  }],
-  Count: 1,
-  $metadata: {}
-};
+
+
+export const getGeokey = (dismissed: boolean = false, activationDate ?: string):Record<string, AttributeValue> => ({
+  tenderProductGeokey: {
+    "S": "12345#AR#85965"
+  },
+  activationDate: {
+    "S": activationDate || "2024-10-07T14:30:15.000Z",
+  },
+  tenderId: {
+    "S": "12345"
+  },
+  product: {
+    "S": "AR"
+  },
+  geokey: {
+    "S": "85965"
+  },
+  lot: {
+    "S": "ZON1"
+  },
+  zone: {
+    "S": "EU"
+  },
+  coverFlag: {
+    "BOOL": true
+  },
+  dismissed: {
+    "BOOL": dismissed
+  },
+  createdAt: {
+    "S": "2024-10-07T14:30:15.000Z"
+  }
+})
 
 const getItem: Record<string, AttributeValue> = {
   tenderId: {
@@ -154,3 +160,13 @@ export const getItemCostOutput: GetItemCommandOutput = {
 export const getItemCostListOutput: QueryOutput = {
   Items: [getItem]
 }
+
+export const getItemGeokeyOutput: QueryCommandOutput = {
+  Items: [
+    getGeokey(false, addDays(currentDate, 10).toISOString()),
+    getGeokey(false, "2024-10-07T14:30:15.000Z"),
+    getGeokey(false, addDays(new Date("2024-10-07T14:30:15.000Z"), -11).toISOString()),
+  ],
+  Count: 3,
+  $metadata: {}
+};

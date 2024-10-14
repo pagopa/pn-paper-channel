@@ -3,6 +3,7 @@ import { ValidatorError } from '../../../src/types/error-types';
 import { ValidationField } from '../../../src/types/model-types';
 
 describe("Validator tests", () => {
+
   describe("Validator event tests", () => {
 
     test('should throw error for invalid operation event', () => {
@@ -14,7 +15,7 @@ describe("Validator tests", () => {
       const validationField: ValidationField[] = [
         {
           fieldId: 'operation',
-          message: "Invalid enum value. Expected 'GET_TENDERS' | 'GET_TENDER_ACTIVE' | 'GET_COSTS' | 'GET_COST' | 'GET_DELIVERY_DRIVERS', received 'XXX'"
+          message: "Invalid enum value. Expected 'GET_TENDERS' | 'GET_TENDER_ACTIVE' | 'GET_COSTS' | 'GET_COST' | 'GET_DELIVERY_DRIVERS' | 'GET_GEOKEY', received 'XXX'"
         }
       ]
 

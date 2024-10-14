@@ -27,7 +27,8 @@ export const findAllGeokeys = async (tenderId: string, product: string, geokey: 
 }
 
 /**
- * Retrieves the geokey information for a specific tender, product and geokey from the DynamoDB table.
+ * Retrieves geokey information for a specific tender, product, and geokey from the DynamoDB table,
+ * obtaining the first geokey with an activation date less than or equal to the current date.
  *
  * @param {string} tenderId - The unique identifier for the tender.
  * @param {string} product - The name of the product associated with the geokey.
@@ -40,7 +41,15 @@ export const findAllGeokeys = async (tenderId: string, product: string, geokey: 
 export const findGeokey = async (tenderId: string, product: string, geokey: string): Promise<PaperChannelGeokey | undefined> => {
   const geokeys = await findAllGeokeys(tenderId, product, geokey);
 
-  return geokeys.filter(item => !item.dismissed).reduce((latest, current) => {
-    return new Date(current.activationDate) > new Date(latest!.activationDate) ? current : latest;
-  }, geokeys[0] as PaperChannelGeokey);
+  const now = new Date();
+
+
+  const validGeokeys = geokeys
+    .filter(item => !item.dismissed)
+    .sort((a, b) => new Date(b.activationDate).getTime() - new Date(a.activationDate).getTime());
+
+
+  return validGeokeys.find(item =>
+    new Date(item.activationDate) <= now
+  );
 }
