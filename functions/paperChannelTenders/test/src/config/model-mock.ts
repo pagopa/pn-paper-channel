@@ -114,44 +114,6 @@ export const deliveryDriverItem: PaperChannelDeliveryDriver = {
   createdAt: "2024-10-09T14:30:15.000Z",
 }
 
-export const getItemGeokeyOutput: QueryCommandOutput = {
-  Items: [{
-    tenderProductGeokey: {
-      "S": "12345#AR#85965"
-    },
-    activationDate: {
-      "S": "2024-10-07T14:30:15.000Z",
-    },
-    tenderId: {
-      "S": "12345"
-    },
-    product: {
-      "S": "AR"
-    },
-    geokey: {
-      "S": "85965"
-    },
-    lot: {
-      "S": "ZON1"
-    },
-    zone: {
-      "S": "EU"
-    },
-    coverFlag: {
-      "BOOL": true
-    },
-    dismissed: {
-      "BOOL": true
-    },
-    createdAt: {
-      "S": "2024-10-07T14:30:15.000Z"
-    }
-  }],
-  Count: 1,
-  $metadata: {}
-};
-
-
 export const getGeokey = (dismissed: boolean = false, activationDate ?: string):Record<string, AttributeValue> => ({
   tenderProductGeokey: {
     "S": "12345#AR#85965"

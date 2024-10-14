@@ -1,8 +1,13 @@
-import { PaperChannelTenderCosts, PaperChannelTender, PaperChannelDeliveryDriver } from '../types/dynamo-types';
+import {
+  PaperChannelTenderCosts,
+  PaperChannelTender,
+  PaperChannelDeliveryDriver,
+  PaperChannelGeokey,
+} from '../types/dynamo-types';
 import {
   CostEvent,
   CostsEvent,
-  DeliveryDriversEvent,
+  DeliveryDriversEvent, GeokeyEvent,
   TenderActiveEvent,
   TendersEvent,
 } from '../types/schema-request-types';
