@@ -10,7 +10,7 @@ export type PaperChannelTender = {
   basePrice890: number;
   fee: number;
   createdAt: string;
-}
+};
 
 export type PaperChannelGeokey = {
   tenderProductGeokey: string;
@@ -23,7 +23,7 @@ export type PaperChannelGeokey = {
   coverFlag: boolean;
   dismissed: boolean;
   createdAt: string;
-}
+};
 
 export type PaperChannelTenderCosts = {
   tenderId: string;
@@ -36,15 +36,15 @@ export type PaperChannelTenderCosts = {
   dematerializationCost: number;
   rangedCosts: PaperChannelTenderCostsRange[];
   createdAt: string;
-}
+};
 
 type PaperChannelTenderCostsRange = {
   cost: number;
   minWeight: number;
   maxWeight: number;
-}
+};
 
-export type PaperChannelDeliveryDriver =  {
+export type PaperChannelDeliveryDriver = {
   deliveryDriverId: string;
   taxId: string;
   businessName: string;
@@ -53,4 +53,4 @@ export type PaperChannelDeliveryDriver =  {
   phoneNumber: string;
   registeredOffice: string;
   createdAt: string;
-}
+};

@@ -13,6 +13,10 @@ import { PaperChannelGeokey } from '../types/dynamo-types';
  *
  * @throws {Error} Throws an error if the underlying `findAllGeokeys` function fails.
  */
-export const getGeokeys = async (tenderId: string, product: string, geokey: string): Promise<PaperChannelGeokey[]> => {
+export const getGeokeys = async (
+  tenderId: string,
+  product: string,
+  geokey: string
+): Promise<PaperChannelGeokey[]> => {
   return await findAllGeokeys(tenderId, product, geokey);
-}
+};

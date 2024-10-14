@@ -31,8 +31,8 @@ export const toPageMapper = <T>(
     size: pageSize,
     isFirstPage: pageNumber === 1,
     isLastPage: pageNumber === totalPages,
-  }
-}
+  };
+};
 
 /**
  * Converts a Zod validation error into an array of validation field objects.
@@ -40,10 +40,12 @@ export const toPageMapper = <T>(
  * @param error - The ZodError instance containing validation error details.
  *
  * @returns An array of ValidationField objects, each containing the field ID and error message.
-  */
-export const zodErrorToValidationField = (error: ZodError): ValidationField[] => {
-  return error.errors.map(err => ({
+ */
+export const zodErrorToValidationField = (
+  error: ZodError
+): ValidationField[] => {
+  return error.errors.map((err) => ({
     fieldId: err.path.join('.'),
     message: err.message,
   }));
-}
+};

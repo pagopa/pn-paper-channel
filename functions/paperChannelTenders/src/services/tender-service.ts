@@ -2,7 +2,6 @@ import { findActiveTender, findTenders } from '../dao/pn-tender-dao';
 import { PaperChannelTender } from '../types/dynamo-types';
 import { NotFoundError } from '../types/error-types';
 
-
 /**
  * Retrieves all tenders with optional date filtering, paginated by page and size.
  *
@@ -13,12 +12,16 @@ import { NotFoundError } from '../types/error-types';
  *
  * @returns A promise that resolves to the response containing the tenders for the specified page.
  */
-export const getAllTenders = async (page: number, size: number, from ?: Date, to ?: Date) => {
+export const getAllTenders = async (
+  page: number,
+  size: number,
+  from?: Date,
+  to?: Date
+) => {
   const pageResponse = await findTenders(page, size, from, to);
-  console.log("Get all tenders page response ", pageResponse);
+  console.log('Get all tenders page response ', pageResponse);
   return pageResponse;
-}
-
+};
 
 /**
  * Retrieves the currently active tender.
@@ -30,7 +33,7 @@ export const getAllTenders = async (page: number, size: number, from ?: Date, to
 export const getActiveTender = async (): Promise<PaperChannelTender> => {
   const activeTender = await findActiveTender();
   if (!activeTender) {
-    throw new NotFoundError("Active tender not found");
+    throw new NotFoundError('Active tender not found');
   }
   return activeTender;
-}
+};

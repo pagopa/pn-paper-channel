@@ -3,10 +3,10 @@ import { toPageMapper } from '../../../src/utils/mappers';
 import { Page } from '../../../src/types/model-types';
 import { tender } from '../config/model-mock';
 
-describe("Mappers test", () => {
-  const mockContent = [tender]
+describe('Mappers test', () => {
+  const mockContent = [tender];
 
-  test("toPageMapper_whenFirstPage_shouldReturnCorrectPages", () => {
+  test('toPageMapper_whenFirstPage_shouldReturnCorrectPages', () => {
     // Arrange
     const content: PaperChannelTender[] = mockContent;
 
@@ -15,7 +15,12 @@ describe("Mappers test", () => {
     const pageSize = 10;
 
     // Act
-    const pageResult = toPageMapper(content, totalElements, pageNumber, pageSize);
+    const pageResult = toPageMapper(
+      content,
+      totalElements,
+      pageNumber,
+      pageSize
+    );
 
     // Assert
 
@@ -27,11 +32,10 @@ describe("Mappers test", () => {
       size: pageSize,
       isFirstPage: true,
       isLastPage: false,
-    } as Page<PaperChannelTender>)
+    } as Page<PaperChannelTender>);
+  });
 
-  })
-
-  test("toPageMapper_whenMiddlePage_shouldReturnCorrectPages", () => {
+  test('toPageMapper_whenMiddlePage_shouldReturnCorrectPages', () => {
     // Arrange
     const content: PaperChannelTender[] = mockContent;
 
@@ -40,7 +44,12 @@ describe("Mappers test", () => {
     const pageSize = 10;
 
     // Act
-    const pageResult = toPageMapper(content, totalElements, pageNumber, pageSize);
+    const pageResult = toPageMapper(
+      content,
+      totalElements,
+      pageNumber,
+      pageSize
+    );
 
     // Assert
     expect(pageResult).toEqual({
@@ -51,11 +60,10 @@ describe("Mappers test", () => {
       size: pageSize,
       isFirstPage: false,
       isLastPage: false,
-    } as Page<PaperChannelTender>)
+    } as Page<PaperChannelTender>);
+  });
 
-  })
-
-  test("toPageMapper_whenEndPage_shouldReturnCorrectPages", () => {
+  test('toPageMapper_whenEndPage_shouldReturnCorrectPages', () => {
     // Arrange
     const content: PaperChannelTender[] = mockContent;
 
@@ -64,7 +72,12 @@ describe("Mappers test", () => {
     const pageSize = 10;
 
     // Act
-    const pageResult = toPageMapper(content, totalElements, pageNumber, pageSize);
+    const pageResult = toPageMapper(
+      content,
+      totalElements,
+      pageNumber,
+      pageSize
+    );
 
     // Assert
     expect(pageResult).toEqual({
@@ -75,8 +88,6 @@ describe("Mappers test", () => {
       size: pageSize,
       isFirstPage: false,
       isLastPage: true,
-    } as Page<PaperChannelTender>)
-
-  })
-
-})
+    } as Page<PaperChannelTender>);
+  });
+});

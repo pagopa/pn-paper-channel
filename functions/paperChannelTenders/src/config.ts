@@ -17,7 +17,7 @@ const getEnvironmentVariable = (
   return value;
 };
 
-export const UNCOVERED_FLAG = "UNCOVERED";
+export const UNCOVERED_FLAG = 'UNCOVERED';
 
 export const PN_TENDER_TABLE_NAME = getEnvironmentVariable(
   'AWS_DYNAMODBPAPERCHANNELTENDERTABLE',
@@ -33,6 +33,6 @@ export const PN_GEOKEY_TABLE_NAME = getEnvironmentVariable(
 );
 
 export const PN_DELIVERY_DRIVER_TABLE_NAME = getEnvironmentVariable(
-  "AWS_DYNAMODBPAPERCHANNELDELIVERYDRIVERTABLE",
-  "pn-PaperChannelDeliveryDriver"
+  'AWS_DYNAMODBPAPERCHANNELDELIVERYDRIVERTABLE',
+  'pn-PaperChannelDeliveryDriver'
 );

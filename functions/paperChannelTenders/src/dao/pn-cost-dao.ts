@@ -1,6 +1,10 @@
 import { PN_COST_TABLE_NAME } from '../config';
 import { buildCostSortKey } from '../utils/builders';
-import { GetItemCommand, GetItemCommandInput, QueryCommand } from '@aws-sdk/client-dynamodb';
+import {
+  GetItemCommand,
+  GetItemCommandInput,
+  QueryCommand,
+} from '@aws-sdk/client-dynamodb';
 import { PaperChannelTenderCosts } from '../types/dynamo-types';
 import { dynamoDBClient, QueryCommandBuilder } from '../utils/awsClients';
 import { unmarshall } from '@aws-sdk/util-dynamodb';
@@ -17,25 +21,32 @@ import { unmarshall } from '@aws-sdk/util-dynamodb';
  * - A promise that resolves to the cost information of type `PaperChannelTenderCosts` if found,
  * - or `undefined` if no cost information is found for the given parameters.
  */
-export const findCost = async (tenderId: string, product: string, lot: string, zone: string): Promise<PaperChannelTenderCosts | undefined> => {
+export const findCost = async (
+  tenderId: string,
+  product: string,
+  lot: string,
+  zone: string
+): Promise<PaperChannelTenderCosts | undefined> => {
   const getCommand: GetItemCommandInput = {
     TableName: PN_COST_TABLE_NAME,
     Key: {
-      "tenderId": {
-        "S": tenderId
+      tenderId: {
+        S: tenderId,
       },
-      "productLotZone": {
-        "S": buildCostSortKey(product, lot, zone)
-      }
-    }
+      productLotZone: {
+        S: buildCostSortKey(product, lot, zone),
+      },
+    },
   };
 
-  const getItemOutput = await dynamoDBClient.send(new GetItemCommand(getCommand));
+  const getItemOutput = await dynamoDBClient.send(
+    new GetItemCommand(getCommand)
+  );
 
   if (!getItemOutput.Item) return undefined;
 
   return unmarshall(getItemOutput.Item) as PaperChannelTenderCosts;
-}
+};
 
 /**
  * Fetches cost information for a specific tender, optionally filtered by product, lot, zone, and delivery driver ID.
@@ -50,21 +61,28 @@ export const findCost = async (tenderId: string, product: string, lot: string, z
  * - A promise that resolves to an array of cost information of type `PaperChannelTenderCosts` if found,
  * - or `undefined` if no cost information is found for the given parameters.
  */
-export const findCosts = async (tenderId: string, product?: string, lot?: string, zone?: string, deliveryDriverId?: string): Promise<PaperChannelTenderCosts[]> => {
-
+export const findCosts = async (
+  tenderId: string,
+  product?: string,
+  lot?: string,
+  zone?: string,
+  deliveryDriverId?: string
+): Promise<PaperChannelTenderCosts[]> => {
   const queryCommandBuilder = new QueryCommandBuilder(PN_COST_TABLE_NAME);
 
-  queryCommandBuilder.addFilter("tenderId", tenderId);
-  queryCommandBuilder.addFilter("product", product);
-  queryCommandBuilder.addFilter("lot", lot);
-  queryCommandBuilder.addFilter("zone", zone);
-  queryCommandBuilder.addFilter("deliveryDriverId", deliveryDriverId);
+  queryCommandBuilder.addFilter('tenderId', tenderId);
+  queryCommandBuilder.addFilter('product', product);
+  queryCommandBuilder.addFilter('lot', lot);
+  queryCommandBuilder.addFilter('zone', zone);
+  queryCommandBuilder.addFilter('deliveryDriverId', deliveryDriverId);
 
   const queryInput = queryCommandBuilder.build();
 
-  console.log("Used queryInput ", queryInput);
+  console.log('Used queryInput ', queryInput);
   const command = new QueryCommand(queryInput);
   const response = await dynamoDBClient.send(command);
 
-  return (response.Items || []).map(item => unmarshall(item) as PaperChannelTenderCosts);
-}
+  return (response.Items || []).map(
+    (item) => unmarshall(item) as PaperChannelTenderCosts
+  );
+};

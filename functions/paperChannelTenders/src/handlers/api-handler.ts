@@ -7,7 +7,8 @@ import {
 import {
   CostEvent,
   CostsEvent,
-  DeliveryDriversEvent, GeokeyEvent,
+  DeliveryDriversEvent,
+  GeokeyEvent,
   TenderActiveEvent,
   TendersEvent,
 } from '../types/schema-request-types';
@@ -28,12 +29,19 @@ import { getGeokeys } from '../services/geokey-service';
  * @returns A Promise that resolves to a Response containing a paginated list of PaperChannelTender objects.
  *
  */
-export const tendersHandler = async (event: TendersEvent): Promise<Response<Page<PaperChannelTender>>> => {
-  console.log("Get all tenders from event ", event);
-  const response = await getAllTenders(event.page, event.size, event.from, event.to);
-  console.log("Response is ", response);
+export const tendersHandler = async (
+  event: TendersEvent
+): Promise<Response<Page<PaperChannelTender>>> => {
+  console.log('Get all tenders from event ', event);
+  const response = await getAllTenders(
+    event.page,
+    event.size,
+    event.from,
+    event.to
+  );
+  console.log('Response is ', response);
   return new ResponseLambda<Page<PaperChannelTender>>().toResponseOK(response);
-}
+};
 
 /**
  * Handles the retrieval of the currently active tender.
@@ -46,12 +54,14 @@ export const tendersHandler = async (event: TendersEvent): Promise<Response<Page
  *
  * @throws Will throw an NotFoundError if the retrieval of the active tender not found.
  */
-export const tenderActiveHandler = async (event: TenderActiveEvent): Promise<Response<PaperChannelTender>> => {
-  console.log("Find active tender event=", event)
+export const tenderActiveHandler = async (
+  event: TenderActiveEvent
+): Promise<Response<PaperChannelTender>> => {
+  console.log('Find active tender event=', event);
   const response = await getActiveTender();
-  console.log("Active is ", response);
+  console.log('Active is ', response);
   return new ResponseLambda<PaperChannelTender>().toResponseOK(response);
-}
+};
 
 /**
  * Handles the retrieval of cost information based on the incoming event.
@@ -65,12 +75,20 @@ export const tenderActiveHandler = async (event: TenderActiveEvent): Promise<Res
  *
  * @throws {Error} Throws an error if the underlying `getCosts` function fails to retrieve the data.
  */
-export const costsHandler = async (event: CostsEvent): Promise<Response<PaperChannelTenderCosts[]>> => {
-  console.log("Get cost of tender from event ", event);
-  const response = await getCosts(event.tenderId, event.product, event.lot, event.zone, event.deliveryDriverId);
-  console.log("Response is ", response);
+export const costsHandler = async (
+  event: CostsEvent
+): Promise<Response<PaperChannelTenderCosts[]>> => {
+  console.log('Get cost of tender from event ', event);
+  const response = await getCosts(
+    event.tenderId,
+    event.product,
+    event.lot,
+    event.zone,
+    event.deliveryDriverId
+  );
+  console.log('Response is ', response);
   return new ResponseLambda<PaperChannelTenderCosts[]>().toResponseOK(response);
-}
+};
 
 /**
  * Retrieves the cost information for a specific tender and product.
@@ -86,11 +104,13 @@ export const costsHandler = async (event: CostsEvent): Promise<Response<PaperCha
  *
  * @throws Will throw an NotFoundError if the cost or geokey not found.
  */
-export const costHandler = async (event: CostEvent): Promise<Response<PaperChannelTenderCosts>> => {
-  console.log("Get cost from event ", event);
-  const response = await getCost(event.tenderId, event.product, event.geokey)
+export const costHandler = async (
+  event: CostEvent
+): Promise<Response<PaperChannelTenderCosts>> => {
+  console.log('Get cost from event ', event);
+  const response = await getCost(event.tenderId, event.product, event.geokey);
   return new ResponseLambda<PaperChannelTenderCosts>().toResponseOK(response);
-}
+};
 
 /**
  * Retrieves the geokey information for a specific tender, product and geokey.
@@ -105,11 +125,17 @@ export const costHandler = async (event: CostEvent): Promise<Response<PaperChann
  *          as a PaperChannelGeokey object.
  *
  */
-export const geokeyHandler = async (event: GeokeyEvent): Promise<Response<PaperChannelGeokey[]>> => {
-  console.log("Get geokey from event ", event);
-  const response = await getGeokeys(event.tenderId, event.product, event.geokey)
+export const geokeyHandler = async (
+  event: GeokeyEvent
+): Promise<Response<PaperChannelGeokey[]>> => {
+  console.log('Get geokey from event ', event);
+  const response = await getGeokeys(
+    event.tenderId,
+    event.product,
+    event.geokey
+  );
   return new ResponseLambda<PaperChannelGeokey[]>().toResponseOK(response);
-}
+};
 
 /**
  * Retrieves all delivery driver information.
@@ -123,9 +149,13 @@ export const geokeyHandler = async (event: GeokeyEvent): Promise<Response<PaperC
  *
  * @throws Will throw an NotFoundError if the delivery driver not found.
  */
-export const deliveryDriversHandler = async (event: DeliveryDriversEvent): Promise<Response<PaperChannelDeliveryDriver[]>> => {
-  console.log("Get all delivery drivers from event ", event);
+export const deliveryDriversHandler = async (
+  event: DeliveryDriversEvent
+): Promise<Response<PaperChannelDeliveryDriver[]>> => {
+  console.log('Get all delivery drivers from event ', event);
   const response = await getAllDeliveryDrivers();
-  console.log("Response is ", response);
-  return new ResponseLambda<PaperChannelDeliveryDriver[]>().toResponseOK(response);
-}
+  console.log('Response is ', response);
+  return new ResponseLambda<PaperChannelDeliveryDriver[]>().toResponseOK(
+    response
+  );
+};
