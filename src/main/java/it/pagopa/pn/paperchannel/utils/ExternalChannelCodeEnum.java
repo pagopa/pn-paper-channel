@@ -78,6 +78,7 @@ public enum ExternalChannelCodeEnum {
     RECRI003A(Constants.PROGRESS),
     RECRI004A(Constants.PROGRESS),
     CON018(Constants.PROGRESS),
+    CON020(Constants.PROGRESS),
     RECAG012A(Constants.PROGRESS),
 
     //DEMAT STATUS CODE
