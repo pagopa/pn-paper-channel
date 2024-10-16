@@ -9,10 +9,19 @@ const dynamoDBClient = new DynamoDBClient({ region: 'eu-south-1' });
 class QueryCommandBuilder {
   private readonly tableName: string | undefined;
   private filterExpression: string[] = [];
+  private keyConditionExpression: string[] = [];
   private expressionValues: Record<string, AttributeValue> = {};
 
   constructor(tableName: string | undefined) {
     this.tableName = tableName;
+  }
+
+  public addKeyCondition(key: string, value: string | undefined) {
+    if(value) {
+      this.keyConditionExpression.push(`${key} = :${key}`);
+      this.expressionValues[`:${key}`] = { S: value };
+    }
+    return this;
   }
 
   public addFilter(key: string, value: string | undefined): this {
@@ -27,6 +36,7 @@ class QueryCommandBuilder {
     return {
       TableName: this.tableName,
       FilterExpression: this.filterExpression.join(' AND '),
+      KeyConditionExpression: this.keyConditionExpression.join(' AND '),
       ExpressionAttributeValues: this.expressionValues,
     };
   }

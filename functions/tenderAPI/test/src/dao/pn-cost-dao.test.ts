@@ -90,14 +90,14 @@ describe('Cost DAO tests', () => {
     test('when tenderId is found then a list of costs is returned', async () => {
       // Arrange
       const tenderId = '12345';
-      const filterExpression: string = 'tenderId = :tenderId';
+      const keyCondition: string = 'tenderId = :tenderId';
       const expressionValues: Record<string, AttributeValue> = {
         ':tenderId': {
           S: tenderId,
         },
       };
 
-      const queryInput = getQueryInput(filterExpression, expressionValues);
+      const queryInput = getQueryInput('', expressionValues, keyCondition);
       const queryOutput = getQueryOutput();
 
       dynamoMockClient
@@ -123,8 +123,9 @@ describe('Cost DAO tests', () => {
       // Arrange
       const tenderId = '12345';
       const product = 'AR';
+      const keyCondition: string = "tenderId = :tenderId"
       const filterExpression: string =
-        'tenderId = :tenderId AND product = :product';
+        'product = :product';
       const expressionValues: Record<string, AttributeValue> = {
         ':tenderId': {
           S: tenderId,
@@ -134,7 +135,7 @@ describe('Cost DAO tests', () => {
         },
       };
 
-      const queryInput = getQueryInput(filterExpression, expressionValues);
+      const queryInput = getQueryInput(filterExpression, expressionValues, keyCondition);
       const queryOutput = getQueryOutput();
 
       dynamoMockClient
@@ -162,8 +163,9 @@ describe('Cost DAO tests', () => {
       const tenderId = '12345';
       const product = 'AR';
       const lot = 'LOT_1';
+      const keyCondition: string = "tenderId = :tenderId"
       const filterExpression: string =
-        'tenderId = :tenderId AND product = :product AND lot = :lot';
+        'product = :product AND lot = :lot';
       const expressionValues: Record<string, AttributeValue> = {
         ':tenderId': {
           S: tenderId,
@@ -176,7 +178,7 @@ describe('Cost DAO tests', () => {
         },
       };
 
-      const queryInput = getQueryInput(filterExpression, expressionValues);
+      const queryInput = getQueryInput(filterExpression, expressionValues, keyCondition);
       const queryOutput = getQueryOutput();
 
       dynamoMockClient
@@ -206,8 +208,9 @@ describe('Cost DAO tests', () => {
       const product = 'AR';
       const lot = 'LOT_1';
       const zone = 'EU';
+      const keyCondition: string = "tenderId = :tenderId";
       const filterExpression: string =
-        'tenderId = :tenderId AND product = :product AND lot = :lot AND zone = :zone';
+        'product = :product AND lot = :lot AND zone = :zone';
       const expressionValues: Record<string, AttributeValue> = {
         ':tenderId': {
           S: tenderId,
@@ -223,7 +226,7 @@ describe('Cost DAO tests', () => {
         },
       };
 
-      const queryInput = getQueryInput(filterExpression, expressionValues);
+      const queryInput = getQueryInput(filterExpression, expressionValues, keyCondition);
       const queryOutput = getQueryOutput();
 
       dynamoMockClient
@@ -249,8 +252,9 @@ describe('Cost DAO tests', () => {
       const lot = 'LOT_1';
       const zone = 'EU';
       const deliveryDriverId = '121212';
+      const keyCondition: string = "tenderId = :tenderId";
       const filterExpression: string =
-        'tenderId = :tenderId AND product = :product AND lot = :lot AND zone = :zone AND deliveryDriverId = :deliveryDriverId';
+        'product = :product AND lot = :lot AND zone = :zone AND deliveryDriverId = :deliveryDriverId';
       const expressionValues: Record<string, AttributeValue> = {
         ':tenderId': {
           S: tenderId,
@@ -269,7 +273,7 @@ describe('Cost DAO tests', () => {
         },
       };
 
-      const queryInput = getQueryInput(filterExpression, expressionValues);
+      const queryInput = getQueryInput(filterExpression, expressionValues, keyCondition);
       const queryOutput = getQueryOutput();
 
       dynamoMockClient
@@ -295,14 +299,18 @@ describe('Cost DAO tests', () => {
       expect(dynamoMockClient.calls()).toHaveLength(1);
     });
   });
+
+
 });
 
 const getQueryInput = (
   filterExpression: string,
-  expressionValues: Record<string, AttributeValue>
+  expressionValues: Record<string, AttributeValue>,
+  keyExpression: string | undefined = undefined
 ): QueryInput => {
   return {
     TableName: PN_COST_TABLE_NAME,
+    KeyConditionExpression: keyExpression,
     FilterExpression: filterExpression,
     ExpressionAttributeValues: expressionValues,
   } as QueryInput;

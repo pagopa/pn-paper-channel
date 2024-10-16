@@ -56,6 +56,7 @@ const handleRoute = async (event: Event) => {
  * during processing.
  */
 export const handler = (event: unknown) => {
+  console.log("Event from AWS Lambda received", event);
   try {
     const eventValidated = validatorEvent(event);
     return handleRoute(eventValidated);

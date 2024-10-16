@@ -21,7 +21,7 @@ describe('Geokey DAO tests', () => {
       const geokeyValue = '85039';
       const inputCommand = {
         TableName: PN_GEOKEY_TABLE_NAME,
-        FilterExpression: 'tenderProductGeokey = :tenderProductGeokey',
+        KeyConditionExpression: 'tenderProductGeokey = :tenderProductGeokey',
         ExpressionAttributeValues: {
           ':tenderProductGeokey': {
             S: buildGeokeyPartitionKey(tenderId, product, geokeyValue),
@@ -47,7 +47,7 @@ describe('Geokey DAO tests', () => {
       const geokeyValue = '85039';
       const inputCommand = {
         TableName: PN_GEOKEY_TABLE_NAME,
-        FilterExpression: 'tenderProductGeokey = :tenderProductGeokey',
+        KeyConditionExpression: 'tenderProductGeokey = :tenderProductGeokey',
         ExpressionAttributeValues: {
           ':tenderProductGeokey': {
             S: buildGeokeyPartitionKey(tenderId, product, geokeyValue),
@@ -80,7 +80,7 @@ describe('Geokey DAO tests', () => {
       const geokeyValue = '85039';
       const inputCommand = {
         TableName: PN_GEOKEY_TABLE_NAME,
-        FilterExpression: 'tenderProductGeokey = :tenderProductGeokey',
+        KeyConditionExpression: 'tenderProductGeokey = :tenderProductGeokey',
         ExpressionAttributeValues: {
           ':tenderProductGeokey': {
             S: buildGeokeyPartitionKey(tenderId, product, geokeyValue),

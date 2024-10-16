@@ -69,8 +69,7 @@ export const findCosts = async (
   deliveryDriverId?: string
 ): Promise<PaperChannelTenderCosts[]> => {
   const queryCommandBuilder = new QueryCommandBuilder(PN_COST_TABLE_NAME);
-
-  queryCommandBuilder.addFilter('tenderId', tenderId);
+  queryCommandBuilder.addKeyCondition('tenderId', tenderId)
   queryCommandBuilder.addFilter('product', product);
   queryCommandBuilder.addFilter('lot', lot);
   queryCommandBuilder.addFilter('zone', zone);

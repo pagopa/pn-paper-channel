@@ -23,8 +23,13 @@ export const toPageMapper = <T>(
   pageSize: number
 ): Page<T> => {
   const totalPages = Math.ceil(totalElements / pageSize);
+
+  const startIndex = (pageNumber - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const pagedContent = content.slice(startIndex, endIndex);
+
   return {
-    content: content,
+    content: pagedContent,
     totalElements: totalElements,
     totalPages: totalPages,
     number: pageNumber,

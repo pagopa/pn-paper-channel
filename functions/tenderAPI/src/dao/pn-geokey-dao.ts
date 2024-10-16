@@ -22,7 +22,7 @@ export const findAllGeokeys = async (
   geokey: string
 ): Promise<PaperChannelGeokey[]> => {
   const queryCommandBuilder = new QueryCommandBuilder(PN_GEOKEY_TABLE_NAME);
-  queryCommandBuilder.addFilter(
+  queryCommandBuilder.addKeyCondition(
     'tenderProductGeokey',
     buildGeokeyPartitionKey(tenderId, product, geokey)
   );
