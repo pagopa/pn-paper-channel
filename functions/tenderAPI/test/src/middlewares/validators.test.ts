@@ -120,15 +120,13 @@ describe('Validator tests', () => {
 
     test('should return valid Delivery Driver Event', () => {
       const event = {
-        operation: 'GET_DELIVERY_DRIVERS',
-        from: new Date(),
+        operation: 'GET_DELIVERY_DRIVERS'
       };
 
       const result = validatorEvent(event);
 
       expect(result).toEqual({
-        operation: 'GET_DELIVERY_DRIVERS',
-        from: event.from,
+        operation: 'GET_DELIVERY_DRIVERS'
       });
     });
   });

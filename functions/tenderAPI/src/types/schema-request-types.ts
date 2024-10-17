@@ -56,9 +56,7 @@ export const GeokeyEventSchema = BaseEventSchema.extend({
 });
 
 export const DeliveryDriversEventSchema = BaseEventSchema.extend({
-  operation: z.literal(OperationEnum.GET_DELIVERY_DRIVERS),
-  from: z.date(),
-  to: z.date().optional(),
+  operation: z.literal(OperationEnum.GET_DELIVERY_DRIVERS)
 });
 
 // types union

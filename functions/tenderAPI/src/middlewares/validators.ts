@@ -3,7 +3,7 @@ import {
   CostEventSchema,
   CostsEventSchema,
   DeliveryDriversEventSchema,
-  Event,
+  Event, GeokeyEventSchema,
   TenderActiveEventSchema,
   TendersEventSchema,
 } from '../types/schema-request-types';
@@ -40,6 +40,7 @@ export const validatorEvent = (event: unknown): Event => {
     CostsEventSchema,
     CostEventSchema,
     DeliveryDriversEventSchema,
+    GeokeyEventSchema
   ];
 
   for (const schema of eventSchemas) {
