@@ -19,8 +19,8 @@ import { unmarshall } from '@aws-sdk/util-dynamodb';
 export const findTenders = async (
   page: number,
   size: number,
-  from?: Date,
-  to?: Date
+  from?: string,
+  to?: string
 ): Promise<Page<PaperChannelTender>> => {
   const defaultFrom = new Date('1970').toISOString();
   const now = new Date().toISOString();
@@ -29,8 +29,8 @@ export const findTenders = async (
     TableName: PN_TENDER_TABLE_NAME,
     FilterExpression: 'activationDate <= :to AND activationDate >= :from',
     ExpressionAttributeValues: {
-      ':from': { S: from ? from.toISOString() : defaultFrom },
-      ':to': { S: to ? to.toISOString() : now },
+      ':from': { S: from ? from : defaultFrom },
+      ':to': { S: to ? to : now },
     },
   };
 

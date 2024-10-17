@@ -70,18 +70,22 @@ export const findCosts = async (
 ): Promise<PaperChannelTenderCosts[]> => {
   const queryCommandBuilder = new QueryCommandBuilder(PN_COST_TABLE_NAME);
   queryCommandBuilder.addKeyCondition('tenderId', tenderId)
-  queryCommandBuilder.addFilter('product', product);
-  queryCommandBuilder.addFilter('lot', lot);
-  queryCommandBuilder.addFilter('zone', zone);
-  queryCommandBuilder.addFilter('deliveryDriverId', deliveryDriverId);
-
   const queryInput = queryCommandBuilder.build();
 
   console.log('Used queryInput ', queryInput);
   const command = new QueryCommand(queryInput);
   const response = await dynamoDBClient.send(command);
 
-  return (response.Items || []).map(
-    (item) => unmarshall(item) as PaperChannelTenderCosts
+  const filter: {[key:string]: string | undefined} = {
+    product,
+    lot,
+    zone,
+    deliveryDriverId
+  }
+
+  return (response.Items || []).filter(item => {
+    return Object.keys(filter).every(key => !filter[key] || (item[key] && item[key].S === filter[key]))
+  }).map(item =>
+    unmarshall(item) as PaperChannelTenderCosts
   );
 };

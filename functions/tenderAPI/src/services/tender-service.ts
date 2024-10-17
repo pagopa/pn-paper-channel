@@ -15,8 +15,8 @@ import { NotFoundError } from '../types/error-types';
 export const getAllTenders = async (
   page: number,
   size: number,
-  from?: Date,
-  to?: Date
+  from?: string,
+  to?: string
 ) => {
   const pageResponse = await findTenders(page, size, from, to);
   console.log('Get all tenders page response ', pageResponse);

@@ -1,6 +1,7 @@
 import { validatorEvent } from './middlewares/validators';
 import { handleError } from './utils/errors';
 import { Event, OperationEnum } from './types/schema-request-types';
+import { Response } from './types/model-types'
 import {
   costHandler,
   costsHandler,
@@ -55,11 +56,11 @@ const handleRoute = async (event: Event) => {
  * @throws Will throw an error if the event validation fails or if an error occurs
  * during processing.
  */
-export const handler = (event: unknown) => {
+export const handler = async (event: unknown): Promise<Response<unknown>> => {
   console.log("Event from AWS Lambda received", event);
   try {
     const eventValidated = validatorEvent(event);
-    return handleRoute(eventValidated);
+    return await handleRoute(eventValidated);
   } catch (error: Error | unknown) {
     return handleError(error);
   }

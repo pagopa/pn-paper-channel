@@ -65,7 +65,7 @@ describe('Cost Service Test', () => {
       await expect(() =>
         getCost(tenderId, product, geokey)
       ).rejects.toThrowError(
-        new NotFoundError('Entity Cost [AR - UNCOVERED - EU] not found')
+        new NotFoundError('Entity Cost [AR - ZON1 - EU] not found')
       );
     });
 

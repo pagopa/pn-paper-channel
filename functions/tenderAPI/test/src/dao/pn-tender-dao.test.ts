@@ -79,8 +79,8 @@ describe('findTenders', () => {
 
   test('return page results when date range is provided', async () => {
     // Arrange
-    const from = new Date('2012-01-01');
-    const to = new Date('2024-10-03');
+    const from = new Date('2012-01-01').toISOString();
+    const to = new Date('2024-10-03').toISOString();
 
     const mockResponse = {
       Items: [
@@ -141,10 +141,10 @@ describe('findTenders', () => {
       FilterExpression: 'activationDate <= :to AND activationDate >= :from',
       ExpressionAttributeValues: {
         ':from': {
-          S: from.toISOString(),
+          S: from,
         },
         ':to': {
-          S: to.toISOString(),
+          S: to,
         },
       },
     } as ScanInput;
@@ -195,7 +195,7 @@ describe('findTenders', () => {
 
   test('return page results when only from is provided', async () => {
     // Arrange
-    const from = new Date('2012-01-01');
+    const from = new Date('2012-01-01').toISOString();
 
     const mockResponse = {
       Items: [
@@ -256,7 +256,7 @@ describe('findTenders', () => {
       FilterExpression: 'activationDate <= :to AND activationDate >= :from',
       ExpressionAttributeValues: {
         ':from': {
-          S: from.toISOString(),
+          S: from,
         },
         ':to': {
           S: new Date().toISOString(),
@@ -310,7 +310,7 @@ describe('findTenders', () => {
 
   test('return page results when only to is provided', async () => {
     // Arrange
-    const to = new Date('2024-10-01');
+    const to = new Date('2024-10-01').toISOString();
 
     const mockResponse = {
       Items: [
@@ -374,7 +374,7 @@ describe('findTenders', () => {
           S: new Date('1970').toISOString(),
         },
         ':to': {
-          S: to.toISOString(),
+          S: to,
         },
       },
     } as ScanInput;

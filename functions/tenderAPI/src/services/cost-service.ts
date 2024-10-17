@@ -53,7 +53,7 @@ export const getCost = async (
   if (!geokeyEntity) {
     throw new NotFoundError(formatNotFoundError('Geokey', geokey));
   }
-  if (geokeyEntity.coverFlag) {
+  if (!geokeyEntity.coverFlag) {
     geokeyEntity.lot = UNCOVERED_FLAG;
   }
   console.log(geokeyEntity);

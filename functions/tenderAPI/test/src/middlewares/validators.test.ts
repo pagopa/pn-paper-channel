@@ -41,7 +41,7 @@ describe('Validator tests', () => {
       const validationField: ValidationField[] = [
         { fieldId: 'page', message: 'Required' },
         { fieldId: 'size', message: 'Required' },
-        { fieldId: 'from', message: 'Expected date, received string' },
+        { fieldId: 'from', message: 'Invalid datetime' },
       ];
 
       const validatorError = new ValidatorError(

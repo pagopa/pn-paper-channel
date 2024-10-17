@@ -28,8 +28,8 @@ export const TendersEventSchema = BaseEventSchema.extend({
   operation: z.literal(OperationEnum.GET_TENDERS),
   page: z.number().min(1),
   size: z.number().min(1),
-  from: z.date().optional(),
-  to: z.date().optional(),
+  from: z.string().datetime().optional(),
+  to: z.string().datetime().optional(),
 });
 
 export const CostsEventSchema = BaseEventSchema.extend({

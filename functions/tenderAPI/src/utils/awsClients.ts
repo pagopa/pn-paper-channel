@@ -35,8 +35,8 @@ class QueryCommandBuilder {
   public build(): QueryInput {
     return {
       TableName: this.tableName,
-      FilterExpression: this.filterExpression.join(' AND '),
-      KeyConditionExpression: this.keyConditionExpression.join(' AND '),
+      FilterExpression: (this.filterExpression.length == 0) ? undefined : this.filterExpression.join(' AND '),
+      KeyConditionExpression: (this.keyConditionExpression.length == 0) ? undefined : this.keyConditionExpression.join(' AND '),
       ExpressionAttributeValues: this.expressionValues,
     };
   }

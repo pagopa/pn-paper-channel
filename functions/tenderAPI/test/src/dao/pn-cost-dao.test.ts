@@ -97,7 +97,7 @@ describe('Cost DAO tests', () => {
         },
       };
 
-      const queryInput = getQueryInput('', expressionValues, keyCondition);
+      const queryInput = getQueryInput(undefined, expressionValues, keyCondition);
       const queryOutput = getQueryOutput();
 
       dynamoMockClient
@@ -124,18 +124,13 @@ describe('Cost DAO tests', () => {
       const tenderId = '12345';
       const product = 'AR';
       const keyCondition: string = "tenderId = :tenderId"
-      const filterExpression: string =
-        'product = :product';
       const expressionValues: Record<string, AttributeValue> = {
         ':tenderId': {
           S: tenderId,
-        },
-        ':product': {
-          S: product,
-        },
+        }
       };
 
-      const queryInput = getQueryInput(filterExpression, expressionValues, keyCondition);
+      const queryInput = getQueryInput(undefined, expressionValues, keyCondition);
       const queryOutput = getQueryOutput();
 
       dynamoMockClient
@@ -164,21 +159,13 @@ describe('Cost DAO tests', () => {
       const product = 'AR';
       const lot = 'LOT_1';
       const keyCondition: string = "tenderId = :tenderId"
-      const filterExpression: string =
-        'product = :product AND lot = :lot';
       const expressionValues: Record<string, AttributeValue> = {
         ':tenderId': {
           S: tenderId,
         },
-        ':product': {
-          S: product,
-        },
-        ':lot': {
-          S: lot,
-        },
       };
 
-      const queryInput = getQueryInput(filterExpression, expressionValues, keyCondition);
+      const queryInput = getQueryInput(undefined, expressionValues, keyCondition);
       const queryOutput = getQueryOutput();
 
       dynamoMockClient
@@ -209,24 +196,13 @@ describe('Cost DAO tests', () => {
       const lot = 'LOT_1';
       const zone = 'EU';
       const keyCondition: string = "tenderId = :tenderId";
-      const filterExpression: string =
-        'product = :product AND lot = :lot AND zone = :zone';
       const expressionValues: Record<string, AttributeValue> = {
         ':tenderId': {
           S: tenderId,
         },
-        ':product': {
-          S: product,
-        },
-        ':lot': {
-          S: lot,
-        },
-        ':zone': {
-          S: zone,
-        },
       };
 
-      const queryInput = getQueryInput(filterExpression, expressionValues, keyCondition);
+      const queryInput = getQueryInput(undefined, expressionValues, keyCondition);
       const queryOutput = getQueryOutput();
 
       dynamoMockClient
@@ -253,27 +229,13 @@ describe('Cost DAO tests', () => {
       const zone = 'EU';
       const deliveryDriverId = '121212';
       const keyCondition: string = "tenderId = :tenderId";
-      const filterExpression: string =
-        'product = :product AND lot = :lot AND zone = :zone AND deliveryDriverId = :deliveryDriverId';
       const expressionValues: Record<string, AttributeValue> = {
         ':tenderId': {
           S: tenderId,
-        },
-        ':product': {
-          S: product,
-        },
-        ':lot': {
-          S: lot,
-        },
-        ':zone': {
-          S: zone,
-        },
-        ':deliveryDriverId': {
-          S: deliveryDriverId,
-        },
+        }
       };
 
-      const queryInput = getQueryInput(filterExpression, expressionValues, keyCondition);
+      const queryInput = getQueryInput(undefined, expressionValues, keyCondition);
       const queryOutput = getQueryOutput();
 
       dynamoMockClient
@@ -304,7 +266,7 @@ describe('Cost DAO tests', () => {
 });
 
 const getQueryInput = (
-  filterExpression: string,
+  filterExpression: string | undefined,
   expressionValues: Record<string, AttributeValue>,
   keyExpression: string | undefined = undefined
 ): QueryInput => {
