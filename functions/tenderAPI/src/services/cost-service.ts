@@ -27,7 +27,11 @@ export const getCosts = async (
   zone?: string,
   deliveryDriverId?: string
 ): Promise<PaperChannelTenderCosts[]> => {
-  return await findCosts(tenderId, product, lot, zone, deliveryDriverId);
+  const costs = await findCosts(tenderId, product, lot, zone, deliveryDriverId);
+  if (!costs) {
+      throw new NotFoundError(formatNotFoundError('Cost', tenderId));
+  }
+  return costs;
 };
 
 /**
