@@ -963,10 +963,10 @@ Resources:
                   - dynamodb:GetItem
                   - dynamodb:Query
                 Resource:
-                  - !Sub "${PaperChannelTenderDynamoTableArn}/*"
-                  - !Sub "${PaperChannelGeokeyDynamoTableArn}/*"
-                  - !Sub "${PaperChannelDeliveryDriverDynamoTableArn}/*"
-                  - !Sub "${PaperChannelCostDynamoTableArn}/*"
+                  - !Sub "${PaperChannelTenderDynamoTableArn}"
+                  - !Sub "${PaperChannelGeokeyDynamoTableArn}"
+                  - !Sub "${PaperChannelDeliveryDriverDynamoTableArn}"
+                  - !Sub "${PaperChannelCostDynamoTableArn}"
 
   PaperChannelGatewayDeliveryDriver:
     Type: AWS::CloudFormation::Stack
