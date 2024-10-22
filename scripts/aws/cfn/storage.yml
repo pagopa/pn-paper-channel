@@ -606,6 +606,18 @@ Resources:
         LogGroupRetention: !Ref LogRetention
         LogsKinesisSourceStreamArn: !Ref LogsKinesisSourceStreamArn
 
+  # Lambda TenderAPI
+  TenderAPILambdaLogGroup:
+    Type: AWS::CloudFormation::Stack
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Properties:
+      TemplateURL: !Sub ${TemplateBucketBaseUrl}/fragments/log-group.yaml
+      Parameters:
+        LogGroupName: !Sub ${ProjectName}-paper-channel-TenderAPI
+        LogGroupRetention: !Ref LogRetention
+        LogGroupPrefix: /aws/lambda
+
 Outputs:
 
   PaperDeliveryDriversBucketName:
@@ -766,3 +778,6 @@ Outputs:
   # Log group exports
   EcsLogGroup:
     Value: !GetAtt PnPaperChannelLogGroup.Outputs.LogGroupName
+
+  TenderAPILambdaName:
+    Value: !Sub ${ProjectName}-paper-channel-TenderAPI
