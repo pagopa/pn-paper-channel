@@ -502,7 +502,7 @@ describe('findTenders', () => {
 
     //Act & Assert
     await expect(findActiveTender()).rejects.toThrow(
-      Error('Not found Tenders')
+      Error("Active tender not found")
     );
   });
 });
