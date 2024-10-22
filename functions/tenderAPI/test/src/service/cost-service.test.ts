@@ -8,36 +8,26 @@ jest.mock('../../../src/dao/pn-geokey-dao');
 jest.mock('../../../src/dao/pn-cost-dao');
 
 describe('Cost Service Test', () => {
+
   describe('get costs Service Test', () => {
-    test('when cost list is empty return empty list', async () => {
-      // Arrage
+    test('when tenderId is invalid should throw NotFoundError', async () => {
+      // Arrange
       const tenderId = '1234';
-      (findCosts as jest.Mock).mockReturnValue(Promise.resolve([]));
 
-      // Act
-      const result = await getCosts(tenderId);
+      (findCosts as jest.Mock).mockReturnValue(Promise.resolve(undefined));
 
-      // Assert
-      expect(result).toEqual([]);
-    });
-
-    test('when cost list is empty return empty list', async () => {
-      // Arrage
-      const tenderId = '1234';
-      const costs = [costItem];
-      (findCosts as jest.Mock).mockReturnValue(Promise.resolve(costs));
-
-      // Act
-      const result = await getCosts(tenderId);
-
-      // Assert
-      expect(result).toEqual(costs);
+      // Act && Assert
+      await expect(() =>
+        getCosts(tenderId)
+      ).rejects.toThrowError(
+        new NotFoundError('Entity Cost [1234] not found')
+      );
     });
   });
 
   describe('get Cost Service Test', () => {
     test('when geokey not exists should throw NotFoundError', async () => {
-      // Arrage
+      // Arrange
       const tenderId = '1234';
       const product = 'AR';
       const geokey = '84758';
@@ -52,7 +42,7 @@ describe('Cost Service Test', () => {
     });
 
     test('when cost exist should throw NotFoundError', async () => {
-      // Arrage
+      // Arrange
       const tenderId = '1234';
       const product = 'AR';
       const geokey = '84758';
@@ -70,7 +60,7 @@ describe('Cost Service Test', () => {
     });
 
     test('when cost exist should return cost', async () => {
-      // Arrage
+      // Arrange
       const tenderId = '1234';
       const product = 'AR';
       const geokey = '84758';
