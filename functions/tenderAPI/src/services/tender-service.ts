@@ -31,9 +31,5 @@ export const getAllTenders = async (
  * @returns A promise that resolves to the active tender.
  */
 export const getActiveTender = async (): Promise<PaperChannelTender> => {
-  const activeTender = await findActiveTender();
-  if (!activeTender) {
-    throw new NotFoundError('Active tender not found');
-  }
-  return activeTender;
+  return await findActiveTender();
 };

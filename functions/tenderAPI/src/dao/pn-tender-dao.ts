@@ -5,6 +5,7 @@ import { PaperChannelTender } from '../types/dynamo-types';
 import { Page } from '../types/model-types';
 import { dynamoDBClient } from '../utils/awsClients';
 import { unmarshall } from '@aws-sdk/util-dynamodb';
+import { NotFoundError } from '../types/error-types';
 
 /**
  * Retrieves a paginated list of tenders filtered by activation date.
@@ -70,8 +71,8 @@ export const findActiveTender = async (): Promise<PaperChannelTender> => {
     (item) => unmarshall(item) as PaperChannelTender
   );
 
-  if (tenders.length == 0) {
-    throw new Error('Not found Tenders');
+  if (tenders.length === 0) {
+    throw new NotFoundError('Active tender not found')
   }
 
   return tenders.reduce((latest, current) => {

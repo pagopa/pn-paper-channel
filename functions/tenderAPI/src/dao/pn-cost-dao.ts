@@ -83,11 +83,7 @@ export const findCosts = async (
     deliveryDriverId
   }
 
-  if (!response.Items || response.Items.length === 0) {
-    throw new Error('Invalid tenderId');
-  }
-
-  return (response.Items).filter(item => {
+  return (response.Items || []).filter(item => {
     return Object.keys(filter).every(key => !filter[key] || (item[key] && item[key].S === filter[key]))
   }).map(item =>
     unmarshall(item) as PaperChannelTenderCosts

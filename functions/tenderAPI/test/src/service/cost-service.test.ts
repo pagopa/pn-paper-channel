@@ -14,7 +14,7 @@ describe('Cost Service Test', () => {
       // Arrange
       const tenderId = '1234';
 
-      (findCosts as jest.Mock).mockReturnValue(Promise.resolve(undefined));
+      (findCosts as jest.Mock).mockReturnValue(Promise.resolve([]));
 
       // Act && Assert
       await expect(() =>
