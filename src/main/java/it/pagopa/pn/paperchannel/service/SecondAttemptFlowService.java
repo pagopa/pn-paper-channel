@@ -4,6 +4,7 @@ import it.pagopa.pn.commons.log.PnLogger;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnAddressFlowException;
+import it.pagopa.pn.paperchannel.exception.PnDeduplicationException;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.dto.AnalogAddressDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.dto.DeduplicatesResponseDto;
@@ -127,9 +128,9 @@ public abstract class SecondAttemptFlowService {
             log.debug("[{}] ContinueFlow for {} is enabled, continue flow", requestId, errorCode);
             return throwExceptionToContinueFlowAfterError(addressFailed);
         }
-        else {
+        else { // PNADDR002
             log.debug("[{}] ContinueFlow for {} is disabled, stop flow", requestId, errorCode);
-            return new PnGenericException(exceptionType, errorCode);
+            return new PnDeduplicationException(exceptionType, errorCode, addressFailed.getCap());
         }
     }
 }
