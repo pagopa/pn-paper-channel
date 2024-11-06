@@ -273,7 +273,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
     }
 
     private Mono<Void> traceError(String requestId, PnGenericException ex, String flowType){
-        String geokey = (ex instanceof PnDeduplicationException) ? ((PnDeduplicationException) ex).getGeokey() : null;
+        String geokey = (ex instanceof StopFlowSecondAttemptException) ? ((StopFlowSecondAttemptException) ex).getGeokey() : null;
 
         PnRequestError pnRequestError = PnRequestError.builder()
                 .requestId(requestId)
