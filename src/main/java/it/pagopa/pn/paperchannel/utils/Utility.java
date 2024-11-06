@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
+import it.pagopa.pn.paperchannel.model.Address;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -247,6 +248,20 @@ public class Utility {
                 StringUtils.equalsIgnoreCase(country, COUNTRY_IT) ||
                 StringUtils.equalsIgnoreCase(country, COUNTRY_ITALIA) ||
                 StringUtils.equalsIgnoreCase(country, COUNTRY_ITALY);
+    }
+
+    /**
+     * Retrieves a geokey based on the address provided.
+     * <p>
+     * If the address is located in the national territory, CAP is returned.
+     * Otherwise, the country code of the address is returned.
+     * </p>
+     *
+     * @param address The address object from which to extract the geographic key.
+     * @return The postal code if the address is national, or the country code otherwise.
+     */
+    public static String getGeokey(Address address) {
+        return isNational(address.getCountry()) ? address.getCap() : address.getCountry();
     }
 
 }
