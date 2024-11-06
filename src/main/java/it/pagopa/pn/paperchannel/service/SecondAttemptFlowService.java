@@ -4,7 +4,7 @@ import it.pagopa.pn.commons.log.PnLogger;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnAddressFlowException;
-import it.pagopa.pn.paperchannel.exception.PnDeduplicationException;
+import it.pagopa.pn.paperchannel.exception.StopFlowSecondAttemptException;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.dto.AnalogAddressDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.dto.DeduplicatesResponseDto;
@@ -13,6 +13,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.AddressManagerClient;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.utils.PnLogAudit;
+import it.pagopa.pn.paperchannel.utils.Utility;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -130,7 +131,7 @@ public abstract class SecondAttemptFlowService {
         }
         else { // PNADDR002
             log.debug("[{}] ContinueFlow for {} is disabled, stop flow", requestId, errorCode);
-            return new PnDeduplicationException(exceptionType, errorCode, addressFailed.getCap());
+            return new StopFlowSecondAttemptException(exceptionType, errorCode, Utility.getGeokey(addressFailed));
         }
     }
 }
