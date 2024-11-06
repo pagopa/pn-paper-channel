@@ -37,7 +37,7 @@
     "F24ClientRetryMaxAttempts": "0",
     "RequiredDemats": "23L",
     "ZipHandleActive": "false",
-    "Pnaddr002ContinueFlow": "true",
+    "Pnaddr002ContinueFlow": "false",
     "ComplexRefinementCodes": "RECAG007C",
     "EnableSimple890Flow": "true",
     "EnableDocFilterRuleEngine": "true",
