@@ -1,6 +1,7 @@
 package it.pagopa.pn.paperchannel.utils;
 
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnCap;
+import it.pagopa.pn.paperchannel.model.Address;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.jupiter.api.Assertions;
@@ -107,4 +108,31 @@ class UtilityTest {
         assertEquals("001", result);
     }
 
+    @Test
+    void getGeokeyCapTest(){
+        // Arrange
+        Address address = new Address();
+        address.setCap("63087");
+        address.setCountry("it");
+
+        // Act
+        String geokey = Utility.getGeokey(address);
+
+        // Assert
+        assertEquals("63087", geokey);
+    }
+
+    @Test
+    void getGeokeyCountryTest(){
+        // Arrange
+        Address address = new Address();
+        address.setCap("1234");
+        address.setCountry("fr");
+
+        // Act
+        String geokey = Utility.getGeokey(address);
+
+        // Assert
+        assertEquals("fr", geokey);
+    }
 }

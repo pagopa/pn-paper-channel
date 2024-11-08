@@ -17,6 +17,7 @@ class PnRequestErrorTest {
     public String flowThrow;
     public String author;
     public String paId;
+    public String geokey;
 
     @BeforeEach
     void setUp(){
@@ -46,6 +47,9 @@ class PnRequestErrorTest {
         stringBuilder.append(", ");
         stringBuilder.append("flowThrow=");
         stringBuilder.append(flowThrow);
+        stringBuilder.append(", ");
+        stringBuilder.append("geokey=");
+        stringBuilder.append(geokey);
         stringBuilder.append(")");
 
         String toTest = stringBuilder.toString();
@@ -60,6 +64,7 @@ class PnRequestErrorTest {
         pnRequestError.setError(error);
         pnRequestError.setFlowThrow(flowThrow);
         pnRequestError.setPaId(paId);
+        pnRequestError.setGeokey(geokey);
         return pnRequestError;
     }
 
@@ -70,5 +75,6 @@ class PnRequestErrorTest {
         error = EXTERNAL_CHANNEL_LISTENER_EXCEPTION.getMessage();
         flowThrow = EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name();
         paId = "0123456789";
+        geokey = "63087";
     }
 }

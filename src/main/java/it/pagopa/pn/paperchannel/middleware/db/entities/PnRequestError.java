@@ -24,6 +24,7 @@ public class PnRequestError {
     public static final String COL_ERROR_TYPE = "error";
     public static final String COL_FLOW_THROW = "flowThrow";
     public static final String COL_AUTHOR = "author";
+    public static final String COL_GEOKEY = "geokey";
 
     /* Indexes */
     public static final String AUTHOR_INDEX = "author-index";
@@ -47,6 +48,9 @@ public class PnRequestError {
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_FLOW_THROW)}))
     public String flowThrow;
 
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_GEOKEY)}))
+    public String geokey;
+
     public static PnRequestErrorBuilder builder() {
         return new PnRequestErrorBuilder();
     }
@@ -58,6 +62,7 @@ public class PnRequestError {
         private String paId;
         private String error;
         private String flowThrow;
+        private String geokey;
 
         // Private constructor
         private PnRequestErrorBuilder() {}
@@ -82,6 +87,11 @@ public class PnRequestError {
             return this;
         }
 
+        public PnRequestErrorBuilder geokey(String geokey) {
+            this.geokey = geokey;
+            return this;
+        }
+
         public PnRequestError build() {
             PnRequestError pnRequestError = new PnRequestError();
 
@@ -89,6 +99,7 @@ public class PnRequestError {
             pnRequestError.setPaId(this.paId);
             pnRequestError.setError(this.error);
             pnRequestError.setFlowThrow(this.flowThrow);
+            pnRequestError.setGeokey(geokey);
 
             /* Auto-generated constant field values */
             pnRequestError.setCreated(Instant.now());

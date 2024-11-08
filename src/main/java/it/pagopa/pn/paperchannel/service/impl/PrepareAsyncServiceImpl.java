@@ -207,11 +207,9 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
         if(ex instanceof PnUntracebleException) {
             // se l'eccezione PnGenericException è di tipo UNTRACEABLE, ALLORA NON SCRIVO L'ERRORE SU DB
             return Mono.error(ex);
-
-        }
-        else {
+        } else {
             // ALTRIMENTI SCRIVO L'ERRORE SU DB
-            return traceError(requestId, ex.getMessage(), "CHECK_ADDRESS_FLOW").then(Mono.error(ex));
+            return traceError(requestId, ex, "CHECK_ADDRESS_FLOW").then(Mono.error(ex));
         }
     }
 
@@ -274,12 +272,14 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
         this.pushPrepareEvent(request, null, clientId, StatusCodeEnum.KO, koReason);
     }
 
-    private Mono<Void> traceError(String requestId, String error, String flowType){
+    private Mono<Void> traceError(String requestId, PnGenericException ex, String flowType){
+        String geokey = (ex instanceof StopFlowSecondAttemptException) ? ((StopFlowSecondAttemptException) ex).getGeokey() : null;
 
         PnRequestError pnRequestError = PnRequestError.builder()
                 .requestId(requestId)
-                .error(error)
+                .error(ex.getMessage())
                 .flowThrow(flowType)
+                .geokey(geokey)
                 .build();
 
         return this.paperRequestErrorDAO.created(pnRequestError).then();
