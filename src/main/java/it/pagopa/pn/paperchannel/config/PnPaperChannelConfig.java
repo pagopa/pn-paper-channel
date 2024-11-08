@@ -67,6 +67,7 @@ public class PnPaperChannelConfig {
     private boolean zipHandleActive;
     private Set<String> complexRefinementCodes;
     private boolean enableSimple890Flow;
+    private boolean sendCon020;
     private boolean enabledocfilterruleengine;
     private boolean enableSimplifiedTenderFlow;
     private String defaultattachmentconfigcap;
