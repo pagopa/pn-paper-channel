@@ -51,7 +51,12 @@ public enum ExternalChannelCodeEnum {
     CON996(Constants.PROGRESS),
     CON995(Constants.PROGRESS),
     CON993(Constants.PROGRESS),
+    P008(Constants.PROGRESS),
     P010(Constants.PROGRESS),
+    P011(Constants.PROGRESS),
+    P012(Constants.PROGRESS),
+    P013(Constants.PROGRESS),
+    P014(Constants.PROGRESS),
 
     RECRN011(Constants.PROGRESS),
 

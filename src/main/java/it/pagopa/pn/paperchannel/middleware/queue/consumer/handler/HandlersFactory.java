@@ -348,7 +348,12 @@ public class HandlersFactory {
     }
 
     private void addNotRetryableErrorStatusCodeWithoutSend(ConcurrentHashMap<String, MessageHandler> map, NotRetriableWithoutSendErrorMessageHandler handler){
+        map.put(ExternalChannelCodeEnum.P008.name(), handler);
         map.put(ExternalChannelCodeEnum.P010.name(), handler);
+        map.put(ExternalChannelCodeEnum.P011.name(), handler);
+        map.put(ExternalChannelCodeEnum.P012.name(), handler);
+        map.put(ExternalChannelCodeEnum.P013.name(), handler);
+        map.put(ExternalChannelCodeEnum.P014.name(), handler);
     }
 
     private void addSaveMetadataStatusCodes(ConcurrentHashMap<String, MessageHandler> map, ChainedMessageHandler handler) {
