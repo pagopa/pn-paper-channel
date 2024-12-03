@@ -18,6 +18,7 @@ import it.pagopa.pn.paperchannel.service.SecondAttemptFlowHandlerFactory;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
 import it.pagopa.pn.paperchannel.utils.PnLogAudit;
+import it.pagopa.pn.paperchannel.utils.Utility;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -48,17 +49,17 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
     public Mono<Address> getCorrectAddress(PnDeliveryRequest deliveryRequest, Address fromNationalRegistry, PrepareAsyncRequest queueModel) {
 
         PnLogAudit pnLogAudit = new PnLogAudit();
-        logAuditBeforeLogic("prepare requestId = %s, relatedRequestId = %s Is Receiver Address present ?", deliveryRequest, pnLogAudit);
-
-        return this.addressDAO.findByRequestId(deliveryRequest.getRequestId(), AddressTypeEnum.RECEIVER_ADDRESS)
+        logAuditBeforeLogic("prepare requestId = %s, relatedRequestId = %s Is Receiver Address First Attempt present ?", deliveryRequest, pnLogAudit);
+        var requestIdFirstAttempt = Utility.getRequestIdFirstAttempt(deliveryRequest);
+        return this.addressDAO.findByRequestId(requestIdFirstAttempt, AddressTypeEnum.RECEIVER_ADDRESS)
                 .switchIfEmpty(Mono.defer(() -> {
-                    logAuditSuccessLogic("prepare requestId = %s, relatedRequestId = %s Receiver address is not present on DB", deliveryRequest, pnLogAudit);
+                    logAuditSuccessLogic("prepare requestId = %s, relatedRequestId = %s Receiver address First Attempt is not present on DB", deliveryRequest, pnLogAudit);
                     log.error("Receiver Address for {} request id not found on DB", deliveryRequest.getRequestId());
                     throw new PnGenericException(ADDRESS_NOT_EXIST, ADDRESS_NOT_EXIST.getMessage());
                 }))
-                .doOnNext(pnAddress -> logAuditSuccessLogic("prepare requestId = %s, relatedRequestId = %s Receiver address is present on DB", deliveryRequest, pnLogAudit))
+                .doOnNext(receiverAddressFirstAttempt -> logAuditSuccessLogic("prepare requestId = %s, relatedRequestId = %s Receiver address First Attempt is present on DB", deliveryRequest, pnLogAudit))
                 .map(AddressMapper::toDTO)
-                .flatMap(receiverAddress -> chooseAddress(deliveryRequest, fromNationalRegistry, receiverAddress))
+                .flatMap(receiverAddressFirstAttempt -> chooseAddress(deliveryRequest, fromNationalRegistry, receiverAddressFirstAttempt))
                 .onErrorResume(PnAddressFlowException.class, ex -> handlePnAddressFlowException(ex, deliveryRequest, queueModel));
     }
 
