@@ -54,6 +54,27 @@ class PaperAddressServiceImplTest {
     }
 
     @Test
+    void getCorrectAddressForFirstAttemptFlow() {
+        PrepareAsyncRequest prepareAsyncRequest = new PrepareAsyncRequest();
+        String requestId = "";
+        PnDeliveryRequest deliveryRequest = new PnDeliveryRequest();
+        deliveryRequest.setIun("a-iun");
+        deliveryRequest.setRequestId(requestId);
+        PnAddress addressFromDb = new PnAddress();
+        addressFromDb.setRequestId(requestId);
+        addressFromDb.setAddress("via Roma");
+        Address addressFirstAttempt = AddressMapper.toDTO(addressFromDb);
+        when(addressDAO.findByRequestId(requestId, AddressTypeEnum.RECEIVER_ADDRESS))
+                .thenReturn(Mono.just(addressFromDb));
+
+
+        StepVerifier.create(paperAddressService.getCorrectAddress(deliveryRequest, null, prepareAsyncRequest))
+                .expectNext(addressFirstAttempt).verifyComplete();
+
+        verify(addressManagerClient, never()).deduplicates(anyString(), any(Address.class), any(Address.class));
+    }
+
+    @Test
     void getCorrectAddressNationalRegistryFlowOk() {
         PrepareAsyncRequest prepareAsyncRequest = new PrepareAsyncRequest();
         DeduplicatesResponseDto mockDeduplicationResponse = new DeduplicatesResponseDto();
@@ -62,16 +83,18 @@ class PaperAddressServiceImplTest {
         Address fromNationalRegistry = new Address();
         fromNationalRegistry.setAddress("via Da NR");
         String requestId = "";
+        String relatedRequestId = "related-request";
         PnDeliveryRequest deliveryRequest = new PnDeliveryRequest();
         deliveryRequest.setIun("a-iun");
         deliveryRequest.setRequestId(requestId);
+        deliveryRequest.setRelatedRequestId(relatedRequestId);
         String correlationId = "a-correlation-id";
         deliveryRequest.setCorrelationId(correlationId); //questo campo non-null determina il fatto di scegliere il flusso NR
         PnAddress addressFromDb = new PnAddress();
         addressFromDb.setRequestId(requestId);
         addressFromDb.setAddress("via Roma");
         Address addressFirstAttempt = AddressMapper.toDTO(addressFromDb);
-        when(addressDAO.findByRequestId(requestId, AddressTypeEnum.RECEIVER_ADDRESS))
+        when(addressDAO.findByRequestId(relatedRequestId, AddressTypeEnum.RECEIVER_ADDRESS))
                 .thenReturn(Mono.just(addressFromDb));
 
         when(addressManagerClient.deduplicates(correlationId, addressFirstAttempt, fromNationalRegistry))
@@ -126,11 +149,12 @@ class PaperAddressServiceImplTest {
         DeduplicatesResponseDto mockDeduplicationResponse = new DeduplicatesResponseDto();
         mockDeduplicationResponse.setEqualityResult(true);
         String requestId = "";
+        String relatedRequestId = "related-request";
         PnDeliveryRequest deliveryRequest = new PnDeliveryRequest();
         deliveryRequest.setIun("a-iun");
         deliveryRequest.setRequestId(requestId);
         deliveryRequest.setCorrelationId(null); //questo campo non-null determina il fatto di scegliere il flusso NR
-        deliveryRequest.setRelatedRequestId("related-request");
+        deliveryRequest.setRelatedRequestId(relatedRequestId);
         PnAddress addressFromDb = new PnAddress();
         addressFromDb.setRequestId(requestId);
         addressFromDb.setAddress("via Roma");
@@ -141,7 +165,7 @@ class PaperAddressServiceImplTest {
         Address addressFirstAttempt = AddressMapper.toDTO(addressFromDb);
         Address addressDiscovered = AddressMapper.toDTO(discoveredAddressFromDb);
 
-        when(addressDAO.findByRequestId(requestId, AddressTypeEnum.RECEIVER_ADDRESS))
+        when(addressDAO.findByRequestId(relatedRequestId, AddressTypeEnum.RECEIVER_ADDRESS))
                 .thenReturn(Mono.just(addressFromDb));
 
         when(addressDAO.findByRequestId(requestId, AddressTypeEnum.DISCOVERED_ADDRESS))
@@ -167,16 +191,18 @@ class PaperAddressServiceImplTest {
         Address fromNationalRegistry = new Address();
         fromNationalRegistry.setAddress("via Da NR");
         String requestId = "";
+        String relatedRequestId = "related-request";
         PnDeliveryRequest deliveryRequest = new PnDeliveryRequest();
         deliveryRequest.setIun("a-iun");
         deliveryRequest.setRequestId(requestId);
+        deliveryRequest.setRelatedRequestId(relatedRequestId);
         String correlationId = "a-correlation-id";
         deliveryRequest.setCorrelationId(correlationId); //questo campo non-null determina il fatto di scegliere il flusso NR
         PnAddress addressFromDb = new PnAddress();
         addressFromDb.setRequestId(requestId);
         addressFromDb.setAddress("via Roma");
         Address addressFirstAttempt = AddressMapper.toDTO(addressFromDb);
-        when(addressDAO.findByRequestId(requestId, AddressTypeEnum.RECEIVER_ADDRESS))
+        when(addressDAO.findByRequestId(relatedRequestId, AddressTypeEnum.RECEIVER_ADDRESS))
                 .thenReturn(Mono.just(addressFromDb));
 
         when(addressManagerClient.deduplicates(correlationId, addressFirstAttempt, fromNationalRegistry))
@@ -205,16 +231,18 @@ class PaperAddressServiceImplTest {
         Address fromNationalRegistry = new Address();
         fromNationalRegistry.setAddress("via Da NR");
         String requestId = "";
+        String relatedRequestId = "related-request";
         PnDeliveryRequest deliveryRequest = new PnDeliveryRequest();
         deliveryRequest.setIun("a-iun");
         deliveryRequest.setRequestId(requestId);
+        deliveryRequest.setRelatedRequestId(relatedRequestId);
         String correlationId = "a-correlation-id";
         deliveryRequest.setCorrelationId(correlationId); //questo campo non-null determina il fatto di scegliere il flusso NR
         PnAddress addressFromDb = new PnAddress();
         addressFromDb.setRequestId(requestId);
         addressFromDb.setAddress("via Roma");
         Address addressFirstAttempt = AddressMapper.toDTO(addressFromDb);
-        when(addressDAO.findByRequestId(requestId, AddressTypeEnum.RECEIVER_ADDRESS))
+        when(addressDAO.findByRequestId(relatedRequestId, AddressTypeEnum.RECEIVER_ADDRESS))
                 .thenReturn(Mono.just(addressFromDb));
 
         when(addressManagerClient.deduplicates(correlationId, addressFirstAttempt, fromNationalRegistry))
@@ -239,23 +267,25 @@ class PaperAddressServiceImplTest {
         Address fromNationalRegistry = new Address();
         fromNationalRegistry.setAddress("via Da NR");
         String requestId = "";
+        String relatedRequestId = "related-request";
         PnDeliveryRequest deliveryRequest = new PnDeliveryRequest();
         deliveryRequest.setIun("a-iun");
         deliveryRequest.setRequestId(requestId);
+        deliveryRequest.setRelatedRequestId(relatedRequestId);
         String correlationId = "a-correlation-id";
         deliveryRequest.setCorrelationId(correlationId); //questo campo non-null determina il fatto di scegliere il flusso NR
         PnAddress addressFromDb = new PnAddress();
         addressFromDb.setRequestId(requestId);
         addressFromDb.setAddress("via Roma");
         Address addressFirstAttempt = AddressMapper.toDTO(addressFromDb);
-        when(addressDAO.findByRequestId(requestId, AddressTypeEnum.RECEIVER_ADDRESS))
+        when(addressDAO.findByRequestId(relatedRequestId, AddressTypeEnum.RECEIVER_ADDRESS))
                 .thenReturn(Mono.just(addressFromDb));
 
         when(addressManagerClient.deduplicates(correlationId, addressFirstAttempt, fromNationalRegistry))
                 .thenReturn(Mono.just(mockDeduplicationResponse));
 
         StepVerifier.create(paperAddressService.getCorrectAddress(deliveryRequest, fromNationalRegistry, prepareAsyncRequest))
-                .expectErrorMatches(throwable -> throwable instanceof PnGenericException)
+                .expectErrorMatches(PnGenericException.class::isInstance)
                 .verify();
 
     }
@@ -268,11 +298,12 @@ class PaperAddressServiceImplTest {
         DeduplicatesResponseDto mockDeduplicationResponse = new DeduplicatesResponseDto();
         mockDeduplicationResponse.setError(PNADDR001);
         String requestId = "";
+        String relatedRequestId = "related-request";
         PnDeliveryRequest deliveryRequest = new PnDeliveryRequest();
         deliveryRequest.setIun("a-iun");
         deliveryRequest.setRequestId(requestId);
         deliveryRequest.setCorrelationId(null); //questo campo non-null determina il fatto di scegliere il flusso NR
-        deliveryRequest.setRelatedRequestId("related-request");
+        deliveryRequest.setRelatedRequestId(relatedRequestId);
         PnAddress addressFromDb = new PnAddress();
         addressFromDb.setRequestId(requestId);
         addressFromDb.setAddress("via Roma");
@@ -283,7 +314,7 @@ class PaperAddressServiceImplTest {
         Address addressFirstAttempt = AddressMapper.toDTO(addressFromDb);
         Address addressDiscovered = AddressMapper.toDTO(discoveredAddressFromDb);
 
-        when(addressDAO.findByRequestId(requestId, AddressTypeEnum.RECEIVER_ADDRESS))
+        when(addressDAO.findByRequestId(relatedRequestId, AddressTypeEnum.RECEIVER_ADDRESS))
                 .thenReturn(Mono.just(addressFromDb));
 
         when(addressDAO.findByRequestId(requestId, AddressTypeEnum.DISCOVERED_ADDRESS))
@@ -296,7 +327,7 @@ class PaperAddressServiceImplTest {
 
         StepVerifier.create(paperAddressService.getCorrectAddress(deliveryRequest, null, prepareAsyncRequest))
                 .expectErrorMatches(throwable -> {
-                    boolean isPnAddressFlowException = throwable instanceof PnAddressFlowException pnAddressFlowException;
+                    boolean isPnAddressFlowException = throwable instanceof PnAddressFlowException;
                     PnAddressFlowException pnAddressFlowException = (PnAddressFlowException) throwable;
                     boolean errorToRunNRFlow = pnAddressFlowException.getExceptionType() == ExceptionTypeEnum.ATTEMPT_ADDRESS_NATIONAL_REGISTRY;
                     return isPnAddressFlowException && errorToRunNRFlow;
@@ -312,11 +343,12 @@ class PaperAddressServiceImplTest {
         DeduplicatesResponseDto mockDeduplicationResponse = new DeduplicatesResponseDto();
         mockDeduplicationResponse.setError(PNADDR002);
         String requestId = "";
+        String relatedRequestId = "related-request";
         PnDeliveryRequest deliveryRequest = new PnDeliveryRequest();
         deliveryRequest.setIun("a-iun");
         deliveryRequest.setRequestId(requestId);
         deliveryRequest.setCorrelationId(null); //questo campo non-null determina il fatto di scegliere il flusso NR
-        deliveryRequest.setRelatedRequestId("related-request");
+        deliveryRequest.setRelatedRequestId(relatedRequestId);
         PnAddress addressFromDb = new PnAddress();
         addressFromDb.setRequestId(requestId);
         addressFromDb.setAddress("via Roma");
@@ -327,7 +359,7 @@ class PaperAddressServiceImplTest {
         Address addressFirstAttempt = AddressMapper.toDTO(addressFromDb);
         Address addressDiscovered = AddressMapper.toDTO(discoveredAddressFromDb);
 
-        when(addressDAO.findByRequestId(requestId, AddressTypeEnum.RECEIVER_ADDRESS))
+        when(addressDAO.findByRequestId(relatedRequestId, AddressTypeEnum.RECEIVER_ADDRESS))
                 .thenReturn(Mono.just(addressFromDb));
 
         when(addressDAO.findByRequestId(requestId, AddressTypeEnum.DISCOVERED_ADDRESS))
@@ -357,9 +389,11 @@ class PaperAddressServiceImplTest {
         DeduplicatesResponseDto mockDeduplicationResponse = new DeduplicatesResponseDto();
         mockDeduplicationResponse.setError(PNADDR999);
         String requestId = "";
+        String relatedRequestId = "related-request";
         PnDeliveryRequest deliveryRequest = new PnDeliveryRequest();
         deliveryRequest.setIun("a-iun");
         deliveryRequest.setRequestId(requestId);
+        deliveryRequest.setRelatedRequestId(relatedRequestId);
         deliveryRequest.setCorrelationId(null); //questo campo non-null determina il fatto di scegliere il flusso NR
         deliveryRequest.setRelatedRequestId("related-request");
         PnAddress addressFromDb = new PnAddress();
@@ -379,7 +413,7 @@ class PaperAddressServiceImplTest {
         Address addressFirstAttempt = AddressMapper.toDTO(addressFromDb);
         Address addressDiscovered = AddressMapper.toDTO(discoveredAddressFromDb);
 
-        when(addressDAO.findByRequestId(requestId, AddressTypeEnum.RECEIVER_ADDRESS))
+        when(addressDAO.findByRequestId(relatedRequestId, AddressTypeEnum.RECEIVER_ADDRESS))
                 .thenReturn(Mono.just(addressFromDb));
 
         when(addressDAO.findByRequestId(requestId, AddressTypeEnum.DISCOVERED_ADDRESS))
