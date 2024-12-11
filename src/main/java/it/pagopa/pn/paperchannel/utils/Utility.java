@@ -264,4 +264,26 @@ public class Utility {
         return isNational(address.getCountry()) ? address.getCap() : address.getCountry();
     }
 
+    /**
+     * Retrieves the request ID for the first attempt of a delivery request.
+     * <p>
+     * If the delivery request object has the {@code relatedRequestId} field populated,
+     * it indicates that this is a second attempt. In this case, the value of
+     * {@code relatedRequestId} contains the request ID of the first attempt.
+     * </p>
+     * <p>
+     * If the {@code relatedRequestId} field is not populated, it indicates that
+     * this is the first attempt, and the method returns the {@code requestId}
+     * of the delivery request object.
+     * </p>
+     *
+     * @param pnDeliveryRequest the delivery request object containing request information
+     * @return the {@code relatedRequestId} if populated, indicating a second attempt;
+     *         otherwise, the {@code requestId} of the first attempt
+     */
+    public static String getRequestIdFirstAttempt(@NotNull PnDeliveryRequest pnDeliveryRequest) {
+        var relatedRequestId = pnDeliveryRequest.getRelatedRequestId();
+        return StringUtils.isNotBlank(relatedRequestId) ? relatedRequestId : pnDeliveryRequest.getRequestId();
+    }
+
 }
