@@ -601,6 +601,25 @@ Parameters:
       - 'true'
       - 'false'
 
+  # pn-paper-channel TO pn-delayer events
+  PaperChannelToDelayerQueueARN:
+    Type: String
+    Description: Events from pn-paper-channel TO pn-delayer queue ARN
+
+  # pn-delayer TO pn-paper-channel events
+  DelayerToPaperChannelQueueARN:
+    Type: String
+    Description: Events from pn-delayer TO pn-paper-channel queue ARN
+
+  PaperChannelPrepareToDelayerQueuePipeDesiredState:
+    Type: String
+    Default: 'RUNNING'
+    Description: 'Desired state of the pipe'
+    AllowedValues:
+      - 'RUNNING'
+      - 'STOPPED'
+
+
   # Log group parameters
   EcsLogGroup:
     Type: String
@@ -834,6 +853,71 @@ Resources:
               - cloudwatch:GetMetricData
             Resource:
               - "*"
+
+
+  ###            Paper Channel Queue to Delayer Queue Pipe                                  ###
+  ############################################################################
+
+  # pn-paper-channel
+  PaperChannelPrepareToDelayerQueuePipeRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - pipes.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: !Sub ${ProjectName}--paper-channel-to-delayer-source-policy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'sqs:ReceiveMessage'
+                  - 'sqs:DeleteMessage'
+                  - 'sqs:GetQueueAttributes'
+                Resource: !Ref PaperChannelToDelayerQueueARN
+        - PolicyName: !Sub ${ProjectName}-paper-channel-to-delayer-target-policy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'sqs:ChangeMessageVisibility'
+                  - 'sqs:ChangeMessageVisibilityBatch'
+                  - 'sqs:GetQueueAttributes'
+                  - 'sqs:GetQueueUrl'
+                  - 'sqs:SendMessage'
+                  - 'sqs:SendMessageBatch'
+                Resource: !Ref DelayerToPaperChannelQueueARN
+
+  # pn-paper-channel
+  PaperChannelPrepareToDelayerQueuePipe:
+    Type: AWS::Pipes::Pipe
+    Properties:
+      Name: !Sub ${ProjectName}-paper-channel-to-delayer-pipe
+      Description: 'Pipe from Paper Channel Queue to Delayer queue'
+      RoleArn: !GetAtt PaperChannelPrepareToDelayerQueuePipeRole.Arn
+      DesiredState: !Ref PaperChannelPrepareToDelayerQueuePipeDesiredState
+      Source: !Ref PaperChannelToDelayerQueueARN
+      SourceParameters:
+        SqsQueueParameters:
+          BatchSize: 10
+      TargetParameters:
+        InputTemplate: |
+          {
+            "requestId": <$.body.requestId>,
+            "iun": <$.body.iun>,
+            "recipientNormalizedAddress": <$.body.recipientNormalizedAddress>
+          }
+      Target: !Ref DelayerToPaperChannelQueueARN
+      Tags:
+        Microservice: pn-paper-channel
 
   # Dashboard
   PaperChannelMicroserviceCloudWatchDashboard:

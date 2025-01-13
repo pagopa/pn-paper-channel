@@ -48,6 +48,7 @@
     "SendProgressMeta": "META,RECAG012A,CON018",
     "SendCon020": "true",
     "EnableSimplifiedTenderFlow": "true",
-    "CostRoundingMode": "HALF_UP"
+    "CostRoundingMode": "HALF_UP",
+    "PaperChannelPrepareToDelayerQueuePipeDesiredState": "RUNNING"
   }
 }
