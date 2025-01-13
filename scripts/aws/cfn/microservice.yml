@@ -872,7 +872,7 @@ Resources:
             Action:
               - sts:AssumeRole
       Policies:
-        - PolicyName: !Sub ${ProjectName}--paper-channel-to-delayer-source-policy
+        - PolicyName: !Sub ${ProjectName}-paper-channel-to-delayer-source-policy
           PolicyDocument:
             Version: 2012-10-17
             Statement:
@@ -916,8 +916,6 @@ Resources:
             "recipientNormalizedAddress": <$.body.recipientNormalizedAddress>
           }
       Target: !Ref DelayerToPaperChannelQueueARN
-      Tags:
-        Microservice: pn-paper-channel
 
   # Dashboard
   PaperChannelMicroserviceCloudWatchDashboard:
