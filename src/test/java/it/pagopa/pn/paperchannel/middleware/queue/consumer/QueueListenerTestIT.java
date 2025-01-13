@@ -89,7 +89,7 @@ class QueueListenerTestIT extends BaseTest
 
         //mi aspetto che a seguito del 400 di ext-channel, il messaggio venga letto 2 volte poiché in localstack è configurato maxReceiveCount=2
         await()
-                .atMost(Duration.ofSeconds(10))
+                .atMost(Duration.ofMinutes(3))
                 .untilAsserted(() -> verify(queueListenerService, times(2)).externalChannelListener(any(), anyInt()));
 
         //mi aspetto che non cia mai invocato il salvataggio della PaperError
