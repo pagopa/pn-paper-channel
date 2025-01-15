@@ -11,6 +11,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnRequestError;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.DeliveryPushMomProducer;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.InternalQueueMomProducer;
+import it.pagopa.pn.paperchannel.middleware.queue.producer.NormalizeAddressQueueMomProducer;
 import it.pagopa.pn.paperchannel.service.PaperResultAsyncService;
 import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
@@ -54,6 +55,9 @@ class PaperNotRetryableIT {
 
     @MockBean
     private InternalQueueMomProducer internalQueueMomProducer;
+
+    @MockBean
+    private NormalizeAddressQueueMomProducer normalizeAddressQueueMomProducer;
 
     @ParameterizedTest
     @ValueSource(strings = {"P008", "P010", "P011", "P012", "P013", "P014"})
