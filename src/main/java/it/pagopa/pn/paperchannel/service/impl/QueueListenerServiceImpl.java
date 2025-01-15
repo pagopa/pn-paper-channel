@@ -21,6 +21,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnRequestError;
 import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
+import it.pagopa.pn.paperchannel.middleware.queue.model.delayer.DelayerToPaperChannelEventPayload;
 import it.pagopa.pn.paperchannel.model.*;
 import it.pagopa.pn.paperchannel.service.*;
 import it.pagopa.pn.paperchannel.utils.Const;
@@ -380,6 +381,31 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                                         .flatMap(errorEntity -> Mono.error(ex));
                             });
                 })
+                .block();
+    }
+
+    @Override
+    public void delayerListener(DelayerToPaperChannelEventPayload data) {
+        String processName = "DelayerListener";
+        //MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, body.getRequestId());
+        log.logStartingProcess(processName);
+        MDCUtils.addMDCToContextAndExecute(Mono.just(body)
+                        .flatMap(prepareRequest -> {
+                            prepareRequest.setAttemptRetry(attempt);
+                            return this.paperAsyncService.prepareAsync(prepareRequest);
+                        })
+                        .doOnSuccess(resultFromAsync ->{
+                                    log.info("End of prepare async internal");
+                                    log.logEndingProcess(processName);
+                                }
+                        )
+                        .doOnError(throwable -> {
+                            log.error(throwable.getMessage());
+                            if (throwable instanceof PnAddressFlowException) return;
+                            if (throwable instanceof PnF24FlowException pnF24FlowException) manageF24Exception(pnF24FlowException.getF24Error(), pnF24FlowException.getF24Error().getAttempt(), pnF24FlowException);
+
+                            throw new PnGenericException(PREPARE_ASYNC_LISTENER_EXCEPTION, PREPARE_ASYNC_LISTENER_EXCEPTION.getMessage());
+                        }))
                 .block();
     }
 

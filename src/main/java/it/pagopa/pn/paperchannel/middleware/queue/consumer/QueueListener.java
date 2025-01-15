@@ -15,6 +15,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnRequestError;
 import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
 import it.pagopa.pn.paperchannel.middleware.queue.model.InternalEventHeader;
 import it.pagopa.pn.paperchannel.middleware.queue.model.ManualRetryEvent;
+import it.pagopa.pn.paperchannel.middleware.queue.model.delayer.DelayerToPaperChannelEventPayload;
 import it.pagopa.pn.paperchannel.model.*;
 import it.pagopa.pn.paperchannel.service.QueueListenerService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
@@ -129,6 +130,14 @@ public class QueueListener {
         setMDCContext(headers);
         log.debug("Handle message from raddAltListener with header {}, body:{}", headers, body);
         this.queueListenerService.raddAltListener(body);
+    }
+
+    @SqsListener(value = "${pn.paper-channel.delayer-to-paperchannel}", deletionPolicy = SqsMessageDeletionPolicy.ALWAYS)
+    public void pullDelayerMessages(@Payload String node, @Headers Map<String,Object> headers){
+        var body = convertToObject(node, DelayerToPaperChannelEventPayload.class);
+        setMDCContext(headers);
+        log.debug("Handle message from delayerListener with header {}, body:{}", headers, body);
+        this.queueListenerService.delayerListener(body);
     }
 
     private void handleNationalRegistriesErrorEvent(InternalEventHeader internalEventHeader, String node) {
