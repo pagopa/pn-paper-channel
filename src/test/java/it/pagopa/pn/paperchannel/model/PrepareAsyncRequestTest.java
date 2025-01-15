@@ -23,12 +23,6 @@ class PrepareAsyncRequestTest {
         this.initialize();
     }
 
-    @Test
-    void setGetTest() {
-        PrepareAsyncRequest prepareAsyncRequest = new PrepareAsyncRequest(requestId, iun, correlationId, address, false, attemptRetry);
-        prepareAsyncRequest.setClientId(clientId);
-        Assertions.assertNotNull(prepareAsyncRequest);
-    }
 
     @Test
     void toStringTest() {

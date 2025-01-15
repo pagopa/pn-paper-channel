@@ -80,6 +80,9 @@ class PaperMessagesServiceTest {
     private SqsSender sqsSender;
 
     @MockBean
+    private PrepareUtil prepareUtil;
+
+    @MockBean
     private PnPaperChannelConfig pnPaperChannelConfig;
 
     @MockBean
@@ -158,7 +161,7 @@ class PaperMessagesServiceTest {
         Mockito.when(requestDeliveryDAO.createWithAddress(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(getPnDeliveryRequest()));
 
-        Mockito.doNothing().when(this.sqsSender).pushToInternalQueue(Mockito.any());
+        Mockito.doNothing().when(this.prepareUtil).startPreparePhaseOne(Mockito.any());
 
         PaperChannelUpdate update = this.paperMessagesService.preparePaperSync("TST-IOR.2332", getRequestOK()).block();
         assertNull(update);
@@ -203,7 +206,7 @@ class PaperMessagesServiceTest {
         Mockito.when(requestDeliveryDAO.createWithAddress(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(getPnDeliveryRequest()));
 
-        Mockito.doNothing().when(this.sqsSender).pushToInternalQueue(Mockito.any());
+        Mockito.doNothing().when(this.prepareUtil).startPreparePhaseOne(Mockito.any());
 
         PaperChannelUpdate update = this.paperMessagesService
                 .preparePaperSync("TST-IOR.2332", getRequestOK()).block();
@@ -305,7 +308,7 @@ class PaperMessagesServiceTest {
                 .thenReturn(Mono.just(deliveryRequest));
 
         //MOCK PUSH QUEUE
-        Mockito.doNothing().when(this.sqsSender).pushToInternalQueue(Mockito.any());
+        Mockito.doNothing().when(this.prepareUtil).startPreparePhaseOne(Mockito.any());
 
         StepVerifier.create(this.paperMessagesService.preparePaperSync("TST-IOR.2332", request))
                 .expectErrorMatches((ex) -> {
@@ -381,7 +384,7 @@ class PaperMessagesServiceTest {
         Mockito.when(requestDeliveryDAO.createWithAddress(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(getPnDeliveryRequest()));
 
-        Mockito.doNothing().when(this.sqsSender).pushToInternalQueue(Mockito.any());
+        Mockito.doNothing().when(this.prepareUtil).startPreparePhaseOne(Mockito.any());
 
         PaperChannelUpdate update = this.paperMessagesService
                 .preparePaperSync("TST-IOR.2332", getRequestOK()).block();
@@ -832,7 +835,7 @@ class PaperMessagesServiceTest {
         Mockito.when(requestDeliveryDAO.getByRequestId(deliveryRequestTakingCharge.getRequestId())).thenReturn(Mono.empty());
         Mockito.when(requestDeliveryDAO.createWithAddress(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(deliveryRequestTakingCharge));
-        Mockito.doNothing().when(sqsSender).pushToInternalQueue(Mockito.any());
+        Mockito.doNothing().when(prepareUtil).startPreparePhaseOne(Mockito.any());
         PaperChannelUpdate update = paperMessagesService.preparePaperSync(deliveryRequestTakingCharge.getRequestId(), getRequestOK()).block();
         assertNull(update);
     }

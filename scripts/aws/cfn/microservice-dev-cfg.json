@@ -49,6 +49,7 @@
     "SendCon020": "true",
     "EnableSimplifiedTenderFlow": "true",
     "CostRoundingMode": "HALF_UP",
-    "PaperChannelPrepareToDelayerQueuePipeDesiredState": "RUNNING"
+    "PaperChannelPrepareToDelayerQueuePipeDesiredState": "RUNNING",
+    "PrepareTwoPhases": "true"
   }
 }

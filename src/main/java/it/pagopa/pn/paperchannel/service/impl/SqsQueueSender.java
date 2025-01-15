@@ -13,6 +13,7 @@ import it.pagopa.pn.paperchannel.middleware.queue.model.InternalPushEvent;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.DeliveryPushMomProducer;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.EventBridgeProducer;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.InternalQueueMomProducer;
+import it.pagopa.pn.paperchannel.middleware.queue.producer.NormalizeAddressQueueMomProducer;
 import it.pagopa.pn.paperchannel.model.*;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
@@ -36,6 +37,7 @@ public class SqsQueueSender implements SqsSender {
 
     private final DeliveryPushMomProducer deliveryPushMomProducer;
     private final InternalQueueMomProducer internalQueueMomProducer;
+    private final NormalizeAddressQueueMomProducer normalizeAddressQueueMomProducer;
     private final EventBridgeProducer eventBridgeProducer;
 
     @Override
@@ -56,18 +58,31 @@ public class SqsQueueSender implements SqsSender {
 
     @Override
     public void pushToInternalQueue(PrepareAsyncRequest prepareAsyncRequest){
-        InternalEventHeader prepareHeader= InternalEventHeader.builder()
+        InternalEventHeader prepareHeader= buildHeaderForPrepareNormalizeAddress(prepareAsyncRequest.getClientId());
+
+        InternalPushEvent<PrepareAsyncRequest> internalPushEvent = new InternalPushEvent<>(prepareHeader, prepareAsyncRequest);
+        this.internalQueueMomProducer.push(internalPushEvent);
+    }
+
+    @Override
+    public void pushToNormalizeAddressQueue(PrepareNormalizeAddressEvent prepareNormalizeAddressEvent) {
+        InternalEventHeader prepareHeader= buildHeaderForPrepareNormalizeAddress(prepareNormalizeAddressEvent.getClientId());
+
+        var internalPushEvent = new InternalPushEvent<>(prepareHeader, prepareNormalizeAddressEvent);
+        this.normalizeAddressQueueMomProducer.push(internalPushEvent);
+    }
+
+
+    private InternalEventHeader buildHeaderForPrepareNormalizeAddress(String clientId) {
+        return InternalEventHeader.builder()
                 .publisher(PUBLISHER_PREPARE)
                 .eventId(UUID.randomUUID().toString())
                 .createdAt(Instant.now())
                 .eventType(EventTypeEnum.PREPARE_ASYNC_FLOW.name())
-                .clientId(prepareAsyncRequest.getClientId())
+                .clientId(clientId)
                 .attempt(0)
                 .expired(Instant.now())
                 .build();
-
-        InternalPushEvent<PrepareAsyncRequest> internalPushEvent = new InternalPushEvent<>(prepareHeader, prepareAsyncRequest);
-        this.internalQueueMomProducer.push(internalPushEvent);
     }
 
     @Override

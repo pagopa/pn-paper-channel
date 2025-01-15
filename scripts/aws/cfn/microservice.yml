@@ -372,6 +372,14 @@ Parameters:
     Type: String
     Description: 'Send and pull requests in this queue'
 
+  PaperNormalizeAddressQueueName:
+    Type: String
+    Description: 'Name of the queue executing the flow of PREPARE phase 1'
+
+  PaperNormalizeAddressQueueARN:
+    Type: String
+    Description: 'ARN of the queue executing the flow of PREPARE phase 1'
+
   RaddAltToPaperChannelQueueName:
     Type: String
     Description: 'Pull radd-alt messages from this Queue'
@@ -619,6 +627,13 @@ Parameters:
       - 'RUNNING'
       - 'STOPPED'
 
+  PrepareTwoPhases:
+    Type: String
+    Description: 'Activation of the PREPARE flow in two phases'
+    AllowedValues:
+      - 'true'
+      - 'false'
+
 
   # Log group parameters
   EcsLogGroup:
@@ -740,6 +755,8 @@ Resources:
         ContainerEnvEntry75: !Sub 'PN_PAPERCHANNEL_SENDPROGRESSMETA=${SendProgressMeta}'
         ContainerEnvEntry76: !Sub 'PN_PAPERCHANNEL_COSTROUNDINGMODE=${CostRoundingMode}'
         ContainerEnvEntry77: !Sub 'PN_PAPERCHANNEL_SENDCON020=${SendCon020}'
+        ContainerEnvEntry78: !Sub 'PN_PAPERCHANNEL_PREPARETWOPHASES=${PrepareTwoPhases}'
+        ContainerEnvEntry79: !Sub 'PN_PAPERCHANNEL_QUEUENORMALIZEADDRESS=${PaperNormalizeAddressQueueName}'
         ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-PaperChannel-Secrets
         MappedPaths: '/paper-channel-bo/*,/paper-channel-private/*'
@@ -783,6 +800,7 @@ Resources:
               - !Ref ExternalChannelsOutputsQueueARN
               - !Ref ExternalChannels2PaperChannelQueueARN
               - !Ref ScheduledRequestsQueueARN
+              - !Ref PaperNormalizeAddressQueueARN
               - !Ref NationalRegistries2PaperChannelQueueARN
               - !Ref F24ToPaperChannelQueueARN
               - !Ref RaddAltToPaperChannelQueueARN
@@ -959,6 +977,7 @@ Resources:
           - - !Ref ExternalChannelsOutputsQueueARN
             - !Ref ExternalChannels2PaperChannelQueueARN
             - !Ref ScheduledRequestsQueueARN
+            - !Ref PaperNormalizeAddressQueueARN
             - !Ref NationalRegistries2PaperChannelQueueARN
             - !Ref F24ToPaperChannelQueueARN
             - !Ref RaddAltToPaperChannelQueueARN
@@ -1053,6 +1072,17 @@ Resources:
             Period: !Ref AutoscalingCheckPeriod
             Stat: Average
           ReturnData: False
+        - Id: m7
+          MetricStat:
+            Metric:
+              Dimensions:
+                - Name: QueueName
+                  Value: !Ref "PaperNormalizeAddressQueueName"
+              Namespace: "AWS/SQS"
+              MetricName: "ApproximateNumberOfMessagesVisible"
+            Period: !Ref AutoscalingCheckPeriod
+            Stat: Average
+          ReturnData: False
         - Id: m4
           MetricStat:
             Metric:
@@ -1089,7 +1119,7 @@ Resources:
             Stat: Average
           ReturnData: False
         - Id: code
-          Expression: !Sub "IF(m5==0, 101, (100*(m1+m2+m3)) / (${ConsumedQueueMessagePerMinute} * m5) )"
+          Expression: !Sub "IF(m5==0, 101, (100*(m1+m2+m3+m7)) / (${ConsumedQueueMessagePerMinute} * m5) )"
           Label: !Sub "${ProjectName}-paper-channel-queue-custom-metric"
           ReturnData: False
         - Id: http

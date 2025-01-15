@@ -27,6 +27,7 @@ import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.FeedbackStatus;
 import it.pagopa.pn.paperchannel.utils.PnLogAudit;
 
+import it.pagopa.pn.paperchannel.utils.PrepareUtil;
 import lombok.CustomLog;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.MDC;
@@ -56,6 +57,7 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
     private final F24Service f24Service;
     private final DematZipService dematZipService;
     private final AttachmentsConfigService attachmentsConfigService;
+    private final PrepareUtil prepareUtil;
 
     public QueueListenerServiceImpl(RequestDeliveryDAO requestDeliveryDAO,
                                     CostDAO costDAO,
@@ -68,7 +70,8 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                                     ExternalChannelClient externalChannelClient,
                                     F24Service f24Service,
                                     DematZipService dematZipService,
-                                    AttachmentsConfigService attachmentsConfigService) {
+                                    AttachmentsConfigService attachmentsConfigService,
+                                    PrepareUtil prepareUtil) {
 
         super(requestDeliveryDAO, costDAO, nationalRegistryClient, sqsSender);
 
@@ -80,6 +83,7 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
         this.f24Service = f24Service;
         this.dematZipService = dematZipService;
         this.attachmentsConfigService = attachmentsConfigService;
+        this.prepareUtil = prepareUtil;
     }
 
 
@@ -246,17 +250,22 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                             if (validatePhysicalAddressPayload(addressFromNational, entity.getRequestId())) {
                                 Address address = AddressMapper.fromNationalRegistry(addressFromNational.getPhysicalAddress());
                                 return this.retrieveRelatedAddress(entity.getRelatedRequestId(), address)
-                                        .map(updateAddress -> new PrepareAsyncRequest(entity.getRequestId(), entity.getCorrelationId(), updateAddress));
+                                        .doOnNext(updateAddress -> startPreparePhaseOne(entity, updateAddress))
+                                        .doOnNext(updateAddress -> log.logEndingProcess(PROCESS_NAME))
+                                        .then();
                             }
-
-                            return Mono.just(new PrepareAsyncRequest(entity.getRequestId(), entity.getCorrelationId(), null));
-                        })
-                        .flatMap(prepareRequest -> {
-                            this.sqsSender.pushToInternalQueue(prepareRequest);
-                            log.logEndingProcess(PROCESS_NAME);
-                            return Mono.empty();
+                            else {
+                                startPreparePhaseOne(entity, null);
+                                log.logEndingProcess(PROCESS_NAME);
+                                return Mono.empty();
+                            }
                         }))
                 .block();
+    }
+
+    private void startPreparePhaseOne(PnDeliveryRequest deliveryRequest, Address nationalRegistriesAddress) {
+        var prepareNormalizeAddressEvent = PrepareUtil.buildEventFromNationalRegistriesFlow(deliveryRequest, nationalRegistriesAddress);
+        prepareUtil.startPreparePhaseOne(prepareNormalizeAddressEvent);
     }
 
     private boolean validatePhysicalAddressPayload(AddressSQSMessageDto payload, String requestId) {
