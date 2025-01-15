@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import it.pagopa.pn.paperchannel.middleware.queue.model.InternalPushEvent;
 import software.amazon.awssdk.services.sqs.SqsClient;
 
-public class NormalizeAddressQueueMomProducer extends InternalQueueMomProducer {
+public class NormalizeAddressQueueMomProducer extends AttemptedQueueMomProducer<InternalPushEvent> {
 
     public NormalizeAddressQueueMomProducer(SqsClient sqsClient, String topic, ObjectMapper objectMapper, Class<InternalPushEvent> msgClass) {
         super(sqsClient, topic, objectMapper, msgClass);

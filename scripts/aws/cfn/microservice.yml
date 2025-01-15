@@ -1072,6 +1072,17 @@ Resources:
             Period: !Ref AutoscalingCheckPeriod
             Stat: Average
           ReturnData: False
+        - Id: m7
+          MetricStat:
+            Metric:
+              Dimensions:
+                - Name: QueueName
+                  Value: !Ref "PaperNormalizeAddressQueueName"
+              Namespace: "AWS/SQS"
+              MetricName: "ApproximateNumberOfMessagesVisible"
+            Period: !Ref AutoscalingCheckPeriod
+            Stat: Average
+          ReturnData: False
         - Id: m4
           MetricStat:
             Metric:
@@ -1108,7 +1119,7 @@ Resources:
             Stat: Average
           ReturnData: False
         - Id: code
-          Expression: !Sub "IF(m5==0, 101, (100*(m1+m2+m3)) / (${ConsumedQueueMessagePerMinute} * m5) )"
+          Expression: !Sub "IF(m5==0, 101, (100*(m1+m2+m3+m7)) / (${ConsumedQueueMessagePerMinute} * m5) )"
           Label: !Sub "${ProjectName}-paper-channel-queue-custom-metric"
           ReturnData: False
         - Id: http
