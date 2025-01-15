@@ -28,6 +28,7 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
 
 import java.io.IOException;
@@ -73,6 +74,17 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
 
         String correlationId = request.getCorrelationId();
         final String requestId = request.getRequestId();
+
+        return prepareAsyncPhaseOne(request)
+                .flatMap(pnDeliveryRequestWithAddress ->
+                        prepareAsyncPhaseTwo(pnDeliveryRequestWithAddress, request))
+                .onErrorResume(ex -> handlePrepareAsyncError(request, processName, correlationId, requestId, ex));
+
+    }
+
+    private Mono<Tuple2<PnAddress, PnDeliveryRequest>> prepareAsyncPhaseOne(PrepareAsyncRequest request){
+        String correlationId = request.getCorrelationId();
+        final String requestId = request.getRequestId();
         Address addressFromNationalRegistry = request.getAddress();
 
         Mono<PnDeliveryRequest> requestDeliveryEntityMono;
@@ -93,18 +105,18 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                         return checkAndUpdateAddress(deliveryRequest, addressFromNationalRegistry, request)
                                 .zipWhen(pnAddress -> attachmentsConfigService.filterAttachmentsToSend(deliveryRequest, deliveryRequest.getAttachments(), pnAddress));
                     }
-                }) // nel caso sia settato il flag di f24FlowResponse, vuol dire che ho già eseguito questo step.
-                .flatMap(pnDeliveryRequestWithAddress -> {
-                    var pnDeliveryRequest = pnDeliveryRequestWithAddress.getT2();
-                    var correctAddress = pnDeliveryRequestWithAddress.getT1();
-                    if (f24Service.checkDeliveryRequestAttachmentForF24(pnDeliveryRequest)) {
-                        return f24Service.preparePDF(pnDeliveryRequest);
-                    }
-                    else {
-                        return continueWithPrepareRequest(pnDeliveryRequest, request, correctAddress);
-                    }
-                })
-                .onErrorResume(ex -> handlePrepareAsyncError(request, processName, correlationId, requestId, ex));
+                });
+    }
+
+    private Mono<PnDeliveryRequest> prepareAsyncPhaseTwo(Tuple2<PnAddress, PnDeliveryRequest> pnDeliveryRequestWithAddress, PrepareAsyncRequest request) {
+        var pnDeliveryRequest = pnDeliveryRequestWithAddress.getT2();
+        var correctAddress = pnDeliveryRequestWithAddress.getT1();
+        if (f24Service.checkDeliveryRequestAttachmentForF24(pnDeliveryRequest)) {
+            return f24Service.preparePDF(pnDeliveryRequest);
+        }
+        else {
+            return continueWithPrepareRequest(pnDeliveryRequest, request, correctAddress);
+        }
     }
 
     @NotNull
