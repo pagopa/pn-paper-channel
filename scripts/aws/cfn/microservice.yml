@@ -755,7 +755,7 @@ Resources:
         ContainerEnvEntry75: !Sub 'PN_PAPERCHANNEL_SENDPROGRESSMETA=${SendProgressMeta}'
         ContainerEnvEntry76: !Sub 'PN_PAPERCHANNEL_COSTROUNDINGMODE=${CostRoundingMode}'
         ContainerEnvEntry77: !Sub 'PN_PAPERCHANNEL_SENDCON020=${SendCon020}'
-        ContainerEnvEntry78: !Sub 'PN_PAPERCHANNEL_PREPARETWOPHASES=${SendCon020}'
+        ContainerEnvEntry78: !Sub 'PN_PAPERCHANNEL_PREPARETWOPHASES=${PrepareTwoPhases}'
         ContainerEnvEntry79: !Sub 'PN_PAPERCHANNEL_QUEUENORMALIZEADDRESS=${PaperNormalizeAddressQueueName}'
         ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-PaperChannel-Secrets
