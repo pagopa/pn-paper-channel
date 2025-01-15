@@ -51,13 +51,4 @@ public class PrepareAsyncRequest {
         this.attemptRetry = attemptRetry;
     }
 
-    public PrepareAsyncRequest(String requestId, String iun, String correlationId, Address address, boolean isAddressRetry, Integer attemptRetry){
-        this.requestId = requestId;
-        this.iun = iun;
-        this.correlationId = correlationId;
-        this.address = address;
-        this.isAddressRetry = isAddressRetry;
-        this.attemptRetry = attemptRetry;
-    }
-
 }

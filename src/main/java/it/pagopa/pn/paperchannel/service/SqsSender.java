@@ -5,6 +5,7 @@ import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PrepareEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.model.DematInternalEvent;
 import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
+import it.pagopa.pn.paperchannel.model.PrepareNormalizeAddressEvent;
 
 
 import java.time.Instant;
@@ -15,6 +16,7 @@ public interface SqsSender {
     void pushSendEvent(SendEvent event);
     void pushPrepareEvent(PrepareEvent event);
     void pushToInternalQueue(PrepareAsyncRequest prepareAsyncRequest);
+    void pushToNormalizeAddressQueue(PrepareNormalizeAddressEvent prepareNormalizeAddressEvent);
     void pushDematZipInternalEvent(DematInternalEvent dematZipInternalEvent);
     void pushSingleStatusUpdateEvent(SingleStatusUpdateDto singleStatusUpdateDto);
 
