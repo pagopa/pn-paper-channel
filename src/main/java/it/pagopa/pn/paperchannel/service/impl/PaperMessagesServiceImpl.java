@@ -15,10 +15,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
-import it.pagopa.pn.paperchannel.model.Address;
-import it.pagopa.pn.paperchannel.model.AttachmentInfo;
-import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
-import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
+import it.pagopa.pn.paperchannel.model.*;
 import it.pagopa.pn.paperchannel.service.PaperMessagesService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.*;
@@ -54,17 +51,19 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
     private final ExternalChannelClient externalChannelClient;
     private final PnPaperChannelConfig pnPaperChannelConfig;
     private final PaperCalculatorUtils paperCalculatorUtils;
+    private final PrepareUtil prepareUtil;
 
 
     public PaperMessagesServiceImpl(RequestDeliveryDAO requestDeliveryDAO, CostDAO costDAO,
                                     NationalRegistryClient nationalRegistryClient, SqsSender sqsSender, AddressDAO addressDAO,
                                     ExternalChannelClient externalChannelClient, PnPaperChannelConfig pnPaperChannelConfig,
-                                    PaperCalculatorUtils paperCalculatorUtils) {
+                                    PaperCalculatorUtils paperCalculatorUtils, PrepareUtil prepareUtil) {
         super(requestDeliveryDAO, costDAO, nationalRegistryClient, sqsSender);
         this.addressDAO = addressDAO;
         this.externalChannelClient = externalChannelClient;
         this.pnPaperChannelConfig = pnPaperChannelConfig;
         this.paperCalculatorUtils = paperCalculatorUtils;
+        this.prepareUtil = prepareUtil;
     }
 
     @Override
@@ -141,9 +140,9 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
                                                             String.format("prepare requestId = %s, relatedRequestId = %s Discovered Address is present", requestId, prepareRequest.getRelatedRequestId())
                                                     );
 
-                                                    PrepareAsyncRequest request = new PrepareAsyncRequest(response.getRequestId(), response.getIun(), false, 0);
-                                                    request.setClientId(cxt.getOrDefault(CONTEXT_KEY_CLIENT_ID, ""));
-                                                    this.sqsSender.pushToInternalQueue(request);
+                                                    final String clientId = cxt.getOrDefault(CONTEXT_KEY_CLIENT_ID, "");
+                                                    var prepareNormalizeAddressEvent = PrepareUtil.buildEventFromPrepareSync(response, clientId);
+                                                    prepareUtil.startPreparePhaseOne(prepareNormalizeAddressEvent);
                                                 } else {
                                                     pnLogAudit.addsSuccessResolveLogic(
                                                             prepareRequest.getIun(),
@@ -444,12 +443,10 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
     private Mono<Void> createAndPushPrepareEvent(PnDeliveryRequest deliveryRequest){
         return Utility.getFromContext(CONTEXT_KEY_CLIENT_ID, "")
                 .switchIfEmpty(Mono.just(""))
-                .map(clientId -> {
-                    PrepareAsyncRequest request = new PrepareAsyncRequest(deliveryRequest.getRequestId(), deliveryRequest.getIun(), false, 0);
-                    request.setClientId(clientId);
-                    return request;
+                .doOnNext(clientId -> {
+                    var prepareNormalizeAddressEvent = PrepareUtil.buildEventFromPrepareSync(deliveryRequest, clientId);
+                    prepareUtil.startPreparePhaseOne(prepareNormalizeAddressEvent);
                 })
-                .doOnNext(this.sqsSender::pushToInternalQueue)
                 .then();
 
     }
