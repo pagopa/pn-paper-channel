@@ -12,9 +12,11 @@ import it.pagopa.pn.paperchannel.middleware.queue.model.DeliveryPushEvent;
 import it.pagopa.pn.paperchannel.middleware.queue.model.InternalPushEvent;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.DeliveryPushMomProducer;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.InternalQueueMomProducer;
+import it.pagopa.pn.paperchannel.middleware.queue.producer.NormalizeAddressQueueMomProducer;
 import it.pagopa.pn.paperchannel.model.ExternalChannelError;
 import it.pagopa.pn.paperchannel.model.NationalRegistryError;
 import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
+import it.pagopa.pn.paperchannel.model.PrepareNormalizeAddressEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -33,6 +35,9 @@ class SqsQueueSenderTestIT extends BaseTest {
     @SpyBean
     private InternalQueueMomProducer internalQueueMomProducer;
 
+    @SpyBean
+    private NormalizeAddressQueueMomProducer normalizeAddressQueueMomProducer;
+
     @Autowired
     private SqsSender sqsSender;
 
@@ -43,6 +48,9 @@ class SqsQueueSenderTestIT extends BaseTest {
                 .push((DeliveryPushEvent) Mockito.any());
 
         Mockito.doNothing().when(internalQueueMomProducer)
+                .push((InternalPushEvent) Mockito.any());
+
+        Mockito.doNothing().when(normalizeAddressQueueMomProducer)
                 .push((InternalPushEvent) Mockito.any());
     }
 
@@ -126,6 +134,19 @@ class SqsQueueSenderTestIT extends BaseTest {
         this.sqsSender.pushSingleStatusUpdateEvent(singleStatusUpdateDto);
 
         Mockito.verify(internalQueueMomProducer, Mockito.times(1))
+                .push((InternalPushEvent) Mockito.any());
+    }
+
+    @Test
+    void pushToNormalizeAddressQueueTest(){
+        final PrepareNormalizeAddressEvent event = PrepareNormalizeAddressEvent.builder()
+                .requestId("")
+                .iun("")
+                .isAddressRetry(false)
+                .attemptRetry(0)
+                .build();
+        this.sqsSender.pushToNormalizeAddressQueue(event);
+        Mockito.verify(normalizeAddressQueueMomProducer, Mockito.times(1))
                 .push((InternalPushEvent) Mockito.any());
     }
 
