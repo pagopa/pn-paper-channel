@@ -27,7 +27,6 @@ import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.FeedbackStatus;
 import it.pagopa.pn.paperchannel.utils.PnLogAudit;
 
-import it.pagopa.pn.paperchannel.utils.PrepareUtil;
 import lombok.CustomLog;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.MDC;
@@ -35,8 +34,10 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 
+import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import static it.pagopa.pn.commons.log.PnLogger.EXTERNAL_SERVICES.PN_NATIONAL_REGISTRIES;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
@@ -48,6 +49,7 @@ import static it.pagopa.pn.paperchannel.utils.Utility.resolveAuditLogFromRespons
 @CustomLog
 public class QueueListenerServiceImpl extends BaseService implements QueueListenerService {
     private static final String NATIONAL_REGISTRY_DESCRIPTION = "Retrieve the address.";
+    private static final String PROCESS_NAME = "National Registries Response Listener";
 
     private final PaperResultAsyncService paperResultAsyncService;
     private final PaperAsyncService paperAsyncService;
@@ -57,7 +59,7 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
     private final F24Service f24Service;
     private final DematZipService dematZipService;
     private final AttachmentsConfigService attachmentsConfigService;
-    private final PrepareUtil prepareUtil;
+    private final PrepareFlowStarter prepareFlowStarter;
 
     public QueueListenerServiceImpl(RequestDeliveryDAO requestDeliveryDAO,
                                     CostDAO costDAO,
@@ -71,7 +73,7 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                                     F24Service f24Service,
                                     DematZipService dematZipService,
                                     AttachmentsConfigService attachmentsConfigService,
-                                    PrepareUtil prepareUtil) {
+                                    PrepareFlowStarter prepareFlowStarter) {
 
         super(requestDeliveryDAO, costDAO, nationalRegistryClient, sqsSender);
 
@@ -83,7 +85,7 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
         this.f24Service = f24Service;
         this.dematZipService = dematZipService;
         this.attachmentsConfigService = attachmentsConfigService;
-        this.prepareUtil = prepareUtil;
+        this.prepareFlowStarter = prepareFlowStarter;
     }
 
 
@@ -205,8 +207,6 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
     public void nationalRegistriesResponseListener(AddressSQSMessageDto body) {
 
         PnLogAudit pnLogAudit = new PnLogAudit();
-
-        final String PROCESS_NAME = "National Registries Response Listener";
         MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, body.getCorrelationId());
 
         log.logStartingProcess(PROCESS_NAME);
@@ -247,25 +247,27 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                                 throw new PnGenericException(NATIONAL_REGISTRY_LISTENER_EXCEPTION, NATIONAL_REGISTRY_LISTENER_EXCEPTION.getMessage());
                             }
 
-                            if (validatePhysicalAddressPayload(addressFromNational, entity.getRequestId())) {
-                                Address address = AddressMapper.fromNationalRegistry(addressFromNational.getPhysicalAddress());
-                                return this.retrieveRelatedAddress(entity.getRelatedRequestId(), address)
-                                        .doOnNext(updateAddress -> startPreparePhaseOne(entity, updateAddress))
-                                        .doOnNext(updateAddress -> log.logEndingProcess(PROCESS_NAME))
-                                        .then();
-                            }
-                            else {
-                                startPreparePhaseOne(entity, null);
-                                log.logEndingProcess(PROCESS_NAME);
-                                return Mono.empty();
-                            }
+                            return startPrepareAsync(addressFromNational, entity);
                         }))
                 .block();
     }
 
-    private void startPreparePhaseOne(PnDeliveryRequest deliveryRequest, Address nationalRegistriesAddress) {
-        var prepareNormalizeAddressEvent = PrepareUtil.buildEventFromNationalRegistriesFlow(deliveryRequest, nationalRegistriesAddress);
-        prepareUtil.startPreparePhaseOne(prepareNormalizeAddressEvent);
+    private Mono<Void> startPrepareAsync(@NotNull AddressSQSMessageDto addressFromNational, PnDeliveryRequest deliveryRequest) {
+        Mono<Optional<Address>> addressMono;
+
+        if (validatePhysicalAddressPayload(addressFromNational, deliveryRequest.getRequestId())) {
+            Address address = AddressMapper.fromNationalRegistry(addressFromNational.getPhysicalAddress());
+            addressMono = this.retrieveRelatedAddress(deliveryRequest.getRelatedRequestId(), address);
+        }
+        else {
+            addressMono = Mono.just(Optional.empty());
+        }
+
+        return addressMono
+                .doOnNext(updateAddress -> prepareFlowStarter
+                        .startPreparePhaseOneFromNationalRegistriesFlow(deliveryRequest, updateAddress.orElse(null)))
+                .doOnNext(updateAddress -> log.logEndingProcess(PROCESS_NAME))
+                .then();
     }
 
     private boolean validatePhysicalAddressPayload(AddressSQSMessageDto payload, String requestId) {
@@ -393,12 +395,12 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
     }
 
 
-    private Mono<Address> retrieveRelatedAddress(String relatedRequestId, Address fromNationalRegistry){
+    private Mono<Optional<Address>> retrieveRelatedAddress(String relatedRequestId, Address fromNationalRegistry){
         return addressDAO.findByRequestId(relatedRequestId)
                 .map(address -> {
                     fromNationalRegistry.setFullName(address.getFullName());
-                    return fromNationalRegistry;
-                }).switchIfEmpty(Mono.just(fromNationalRegistry));
+                    return Optional.of(fromNationalRegistry);
+                }).switchIfEmpty(Mono.just(Optional.of(fromNationalRegistry)));
 
     }
 
