@@ -172,11 +172,11 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
 
     @Override
     public void f24ResponseListener(PnF24PdfSetReadyEvent.Detail body) {
-        final String PROCESS_NAME = "F24 Response Listener";
+        final String processName = "F24 Response Listener";
         String requestId = body.getPdfSetReady().getRequestId();
         MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, requestId);
 
-        log.logStartingProcess(PROCESS_NAME);
+        log.logStartingProcess(processName);
         log.info("Received message from F24 queue");
         MDCUtils.addMDCToContextAndExecute(Mono.just(body)
                         .map(msg -> {
@@ -192,12 +192,12 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
 
     @Override
     public void raddAltListener(PnAttachmentsConfigEventPayload data) {
-        final String PROCESS_NAME = "raddAltListener";
+        final String processName = "raddAltListener";
         MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, data.getConfigKey());
         log.logStartingProcess(PROCESS_NAME);
         var monoResult = Mono.just(data)
                 .flatMap(request -> attachmentsConfigService.refreshConfig(data))
-                .doOnSuccess(resultFromAsync -> log.logEndingProcess(PROCESS_NAME))
+                .doOnSuccess(resultFromAsync -> log.logEndingProcess(processName))
                 .doOnError(ex -> log.error("Error in raddAltListener with configKey: {}", data.getConfigKey(), ex));
 
         MDCUtils.addMDCToContextAndExecute(monoResult).block();
@@ -284,8 +284,8 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
     @Override
     public void nationalRegistriesErrorListener(NationalRegistryError data, int attempt) {
         MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, data.getRequestId());
-        final String PROCESS_NAME = "National Registries Error Listener";
-        log.logStartingProcess(PROCESS_NAME);
+        final String processName = "National Registries Error Listener";
+        log.logStartingProcess(processName);
         MDCUtils.addMDCToContextAndExecute(Mono.just(data)
                         .doOnSuccess(nationalRegistryError -> {
                             log.info("Called national Registries");
@@ -298,7 +298,7 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                                     nationalRegistryError.getIun(),
                                     attempt
                             );
-                            log.logEndingProcess(PROCESS_NAME);
+                            log.logEndingProcess(processName);
                         })
                         .doOnError(throwable -> {
                             log.error(throwable.getMessage());
@@ -309,19 +309,19 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
 
     @Override
     public void externalChannelListener(SingleStatusUpdateDto data, int attempt) {
-        final String PROCESS_NAME = "External Channel Listener";
+        final String processName = "External Channel Listener";
         if (data.getAnalogMail() != null) {
             MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, data.getAnalogMail().getRequestId());
         }
 
-        log.logStartingProcess(PROCESS_NAME);
+        log.logStartingProcess(processName);
 
 
         MDCUtils.addMDCToContextAndExecute(Mono.just(data)
                         .flatMap(request -> this.paperResultAsyncService.resultAsyncBackground(request, attempt))
                         .doOnSuccess(resultFromAsync -> {
                             log.info("End of external Channel result");
-                            log.logEndingProcess(PROCESS_NAME);
+                            log.logEndingProcess(processName);
                         })
                         .onErrorResume(ex -> {
                             if (ex instanceof InvalidEventOrderException invalidEventEx
