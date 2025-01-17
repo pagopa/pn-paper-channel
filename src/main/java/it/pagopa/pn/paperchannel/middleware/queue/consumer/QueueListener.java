@@ -131,6 +131,23 @@ public class QueueListener {
         this.queueListenerService.raddAltListener(body);
     }
 
+    @SqsListener(value = "${pn.paper-channel.queue-internal}", deletionPolicy = SqsMessageDeletionPolicy.ALWAYS)
+    public void pullFromNormalizeAddressQueue(@Payload String node, @Headers Map<String, Object> headers){
+        log.debug("Headers : {}", headers);
+        setMDCContext(headers);
+        InternalEventHeader internalEventHeader = toInternalEventHeader(headers);
+
+        if (internalEventHeader == null) return;
+
+        switch (EventTypeEnum.valueOf(internalEventHeader.getEventType())) {
+            case PREPARE_ASYNC_FLOW: this.handlePreparePhaseOneAsyncFlowEvent(internalEventHeader, node); break;
+            case NATIONAL_REGISTRIES_ERROR:  this.handleNationalRegistriesErrorEvent(internalEventHeader, node); break;
+            case ADDRESS_MANAGER_ERROR: this.handleAddressManagerErrorEventFromPreparePhaseOne(internalEventHeader, node); break;
+            default: log.error("Event type not allowed in Prepare Async Phase One Flow: {}", internalEventHeader.getEventType());
+        }
+
+    }
+
     private void handleNationalRegistriesErrorEvent(InternalEventHeader internalEventHeader, String node) {
 
         boolean noAttempt = (paperChannelConfig.getAttemptQueueNationalRegistries()-1) < internalEventHeader.getAttempt();
@@ -216,6 +233,7 @@ public class QueueListener {
                 });
     }
 
+    @Deprecated
     private void handleAddressManagerErrorEvent(InternalEventHeader internalEventHeader, String node) {
 
         boolean noAttempt = (paperChannelConfig.getAttemptQueueAddressManager()-1) < internalEventHeader.getAttempt();
@@ -238,6 +256,32 @@ public class QueueListener {
                 },
                 entityAndAttempt -> {
                     this.queueListenerService.internalListener(entityAndAttempt.getFirst(), entityAndAttempt.getSecond());
+                    return null;
+                });
+    }
+
+    private void handleAddressManagerErrorEventFromPreparePhaseOne(InternalEventHeader internalEventHeader, String node) {
+
+        boolean noAttempt = (paperChannelConfig.getAttemptQueueAddressManager()-1) < internalEventHeader.getAttempt();
+        PrepareNormalizeAddressEvent error = convertToObject(node, PrepareNormalizeAddressEvent.class);
+        execution(error, noAttempt, internalEventHeader.getAttempt(), internalEventHeader.getExpired(), PrepareNormalizeAddressEvent.class,
+                entity -> {
+                    PnLogAudit pnLogAudit = new PnLogAudit();
+                    pnLogAudit.addsBeforeDiscard(entity.getIun(), String.format("requestId = %s finish retry address manager error ?", entity.getRequestId()));
+
+                    PnRequestError pnRequestError = PnRequestError.builder()
+                            .requestId(entity.getRequestId())
+                            .error(ADDRESS_MANAGER_ERROR.getMessage())
+                            .flowThrow(EventTypeEnum.ADDRESS_MANAGER_ERROR.name())
+                            .build();
+
+                    paperRequestErrorDAO.created(pnRequestError).subscribe();
+
+                    pnLogAudit.addsSuccessDiscard(entity.getIun(), String.format("requestId = %s finish retry address manager error", entity.getRequestId()));
+                    return null;
+                },
+                entityAndAttempt -> {
+                    this.queueListenerService.normalizeAddressListener(entityAndAttempt.getFirst(), entityAndAttempt.getSecond());
                     return null;
                 });
     }
@@ -294,10 +338,17 @@ public class QueueListener {
                 });
     }
 
+    @Deprecated
     private void handlePrepareAsyncFlowEvent(InternalEventHeader internalEventHeader, String node) {
         log.info("Push internal queue - first time");
         PrepareAsyncRequest request = convertToObject(node, PrepareAsyncRequest.class);
         this.queueListenerService.internalListener(request, internalEventHeader.getAttempt());
+    }
+
+    private void handlePreparePhaseOneAsyncFlowEvent(InternalEventHeader internalEventHeader, String node) {
+        log.info("Push prepare phase one queue - first time");
+        PrepareNormalizeAddressEvent request = convertToObject(node, PrepareNormalizeAddressEvent.class);
+        this.queueListenerService.normalizeAddressListener(request, internalEventHeader.getAttempt());
     }
 
     private void handleSendZipEvent(InternalEventHeader internalEventHeader, String node) {

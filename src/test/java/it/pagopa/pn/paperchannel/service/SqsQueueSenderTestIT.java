@@ -143,7 +143,7 @@ class SqsQueueSenderTestIT extends BaseTest {
                 .requestId("")
                 .iun("")
                 .isAddressRetry(false)
-                .attemptRetry(0)
+                .attempt(0)
                 .build();
         this.sqsSender.pushToNormalizeAddressQueue(event);
         Mockito.verify(normalizeAddressQueueMomProducer, Mockito.times(1))

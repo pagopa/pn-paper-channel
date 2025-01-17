@@ -3,6 +3,7 @@ package it.pagopa.pn.paperchannel.service.impl;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.model.Address;
+import it.pagopa.pn.paperchannel.model.NationalRegistryError;
 import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
 import it.pagopa.pn.paperchannel.model.PrepareNormalizeAddressEvent;
 import it.pagopa.pn.paperchannel.service.PrepareFlowStarter;
@@ -64,6 +65,39 @@ public class PrepareFlowStarterImpl implements PrepareFlowStarter {
         }
     }
 
+    @Override
+    public void redrivePreparePhaseOneAfterNationalRegistryError(NationalRegistryError entity, int attemptRetry) {
+        if(isPrepareTwoPhases()) {
+            this.sqsSender.redrivePreparePhaseOneAfterError(entity, attemptRetry, NationalRegistryError.class);
+        }
+        else {
+            this.sqsSender.pushInternalError(entity, attemptRetry, NationalRegistryError.class);
+        }
+    }
+
+    @Override
+    public void redrivePreparePhaseOneAfterAddressManagerError(PnDeliveryRequest deliveryRequest, int attemptRetry) {
+        if(isPrepareTwoPhases()) {
+            PrepareNormalizeAddressEvent event = PrepareNormalizeAddressEvent.builder()
+                    .requestId(deliveryRequest.getRequestId())
+                    .correlationId(deliveryRequest.getCorrelationId())
+                    .iun(deliveryRequest.getIun())
+                    .isAddressRetry(true)
+                    .attempt(attemptRetry)
+                    .build();
+            this.sqsSender.redrivePreparePhaseOneAfterError(event, event.getAttempt(), PrepareNormalizeAddressEvent.class);
+        }
+        else {
+            PrepareAsyncRequest queueModel = new PrepareAsyncRequest();
+            queueModel.setIun(deliveryRequest.getIun());
+            queueModel.setRequestId(deliveryRequest.getRequestId());
+            queueModel.setCorrelationId(deliveryRequest.getCorrelationId());
+            queueModel.setAddressRetry(true);
+            queueModel.setAttemptRetry(attemptRetry);
+            this.sqsSender.pushInternalError(queueModel, queueModel.getAttemptRetry(), PrepareAsyncRequest.class);
+        }
+    }
+
     private boolean isPrepareTwoPhases() {
         return Boolean.TRUE.equals(config.isPrepareTwoPhases());
     }
@@ -79,7 +113,7 @@ public class PrepareFlowStarterImpl implements PrepareFlowStarter {
                 .requestId(deliveryRequest.getRequestId())
                 .iun(deliveryRequest.getIun())
                 .isAddressRetry(false)
-                .attemptRetry(0)
+                .attempt(0)
                 .clientId(clientId)
                 .build();
 

@@ -1,7 +1,5 @@
 package it.pagopa.pn.paperchannel.model;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 /**
@@ -9,27 +7,23 @@ import lombok.*;
  */
 @Data
 @Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor
 public class PrepareNormalizeAddressEvent {
 
-    @JsonProperty("requestId")
     private String requestId;
 
-    @JsonProperty("iun")
+
     private String iun;
 
-    @JsonProperty("correlationId")
+
     private String correlationId;
 
-    @JsonProperty("address")
-    @JsonInclude(JsonInclude.Include.NON_NULL)
     private Address address;
 
-    @JsonProperty("isAddressRetry")
-    private boolean isAddressRetry = false;
+    private boolean isAddressRetry;
 
-    @JsonProperty("attempt")
-    private Integer attemptRetry;
+    private Integer attempt;
 
-    @JsonProperty("clientId")
     private String clientId;
 }

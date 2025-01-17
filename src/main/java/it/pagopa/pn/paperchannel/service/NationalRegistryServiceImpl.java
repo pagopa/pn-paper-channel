@@ -1,18 +1,15 @@
-package it.pagopa.pn.paperchannel.service.impl;
+package it.pagopa.pn.paperchannel.service;
 
 import it.pagopa.pn.commons.utils.MDCUtils;
-import it.pagopa.pn.paperchannel.encryption.DataEncryption;
-import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.model.NationalRegistryError;
-import it.pagopa.pn.paperchannel.service.SqsSender;
+import it.pagopa.pn.paperchannel.service.impl.GenericService;
 import it.pagopa.pn.paperchannel.utils.PnLogAudit;
 import it.pagopa.pn.paperchannel.utils.Utility;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
@@ -21,25 +18,22 @@ import java.time.Duration;
 import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.NATIONAL_REGISTRY_ERROR;
 import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.NATIONAL_REGISTRY_WAITING;
 
+@Service
 @Slf4j
-public class BaseService extends GenericService {
+public class NationalRegistryServiceImpl extends GenericService implements NationalRegistryService {
 
-    protected final NationalRegistryClient nationalRegistryClient;
-    protected CostDAO costDAO;
-    @Autowired
-    @Qualifier("dataVaultEncryption")
-    protected DataEncryption dataEncryption;
+    private final NationalRegistryClient nationalRegistryClient;
+    private final PrepareFlowStarter prepareFlowStarter;
 
-    public BaseService(RequestDeliveryDAO requestDeliveryDAO, CostDAO costDAO,
-                NationalRegistryClient nationalRegistryClient, SqsSender sqsSender) {
+    public NationalRegistryServiceImpl(NationalRegistryClient nationalRegistryClient, SqsSender sqsSender,
+                                       RequestDeliveryDAO requestDeliveryDAO, PrepareFlowStarter prepareFlowStarter) {
         super(sqsSender, requestDeliveryDAO);
-
         this.nationalRegistryClient = nationalRegistryClient;
-        this.costDAO = costDAO;
+        this.prepareFlowStarter = prepareFlowStarter;
     }
 
-
-    protected void finderAddressFromNationalRegistries(String requestId, String relatedRequestId, String fiscalCode, String personType, String iun, Integer attempt){
+    public void finderAddressFromNationalRegistries(String requestId, String relatedRequestId, String fiscalCode,
+                                                    String personType, String iun, Integer attempt) {
 
         PnLogAudit pnLogAudit = new PnLogAudit();
 
@@ -59,7 +53,7 @@ public class BaseService extends GenericService {
                                 error.setRequestId(requestId);
                                 error.setRelatedRequestId(relatedRequestId);
                                 saveErrorAndPushError(requestId, NATIONAL_REGISTRY_ERROR, error, payload -> {
-                                    sqsSender.pushInternalError(payload, attempt, NationalRegistryError.class);
+                                    prepareFlowStarter.redrivePreparePhaseOneAfterNationalRegistryError(payload, attempt);
                                     return null;
                                 });
                                 return Mono.error(e);
@@ -83,6 +77,4 @@ public class BaseService extends GenericService {
 
                 }).subscribeOn(Schedulers.boundedElastic())).subscribe();
     }
-
-
 }

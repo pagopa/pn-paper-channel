@@ -152,6 +152,22 @@ public class SqsQueueSender implements SqsSender {
     }
 
     @Override
+    public <T> void redrivePreparePhaseOneAfterError(T entity, int attempt, Class<T> tClass) {
+        EventTypeEnum eventTypeEnum = getTypeEnumForPreparePhaseOne(entity, tClass);
+        if (eventTypeEnum == null) return;
+        InternalEventHeader prepareHeader= InternalEventHeader.builder()
+                .publisher(PUBLISHER_PREPARE)
+                .eventId(UUID.randomUUID().toString())
+                .createdAt(Instant.now())
+                .attempt(attempt+1)
+                .eventType(eventTypeEnum.name())
+                .expired(DateUtils.addedTime(attempt+1, 1))
+                .build();
+        this.normalizeAddressQueueMomProducer.push(new InternalPushEvent<>(prepareHeader, entity));
+        log.info("pushed to prepare phase one queue entity={}", entity);
+    }
+
+    @Override
     public <T> void rePushInternalError(T entity, int attempt, Instant expired, Class<T> tClass) {
         EventTypeEnum eventTypeEnum = getTypeEnum(entity, tClass);
         if (eventTypeEnum == null) return;
@@ -166,6 +182,8 @@ public class SqsQueueSender implements SqsSender {
         this.internalQueueMomProducer.push(new InternalPushEvent<>(prepareHeader, entity));
     }
 
+
+    //TODO rimuovere errori non pertinenti dopo il rilascio dello split della PREPARE
     private <T> EventTypeEnum getTypeEnum(T entity, Class<T> tClass){
         EventTypeEnum typeEnum = null;
         if (tClass == NationalRegistryError.class) typeEnum = NATIONAL_REGISTRIES_ERROR;
@@ -175,6 +193,13 @@ public class SqsQueueSender implements SqsSender {
         if (tClass == PrepareAsyncRequest.class && ((PrepareAsyncRequest) entity).isAddressRetry()) typeEnum = ADDRESS_MANAGER_ERROR;
         if (tClass == DematInternalEvent.class) typeEnum = ZIP_HANDLE_ERROR;
 
+        return typeEnum;
+    }
+
+    private <T> EventTypeEnum getTypeEnumForPreparePhaseOne(T entity, Class<T> tClass){
+        EventTypeEnum typeEnum = null;
+        if (tClass == NationalRegistryError.class) typeEnum = NATIONAL_REGISTRIES_ERROR;
+        if (tClass == PrepareNormalizeAddressEvent.class && ((PrepareNormalizeAddressEvent) entity).isAddressRetry()) typeEnum = ADDRESS_MANAGER_ERROR;
         return typeEnum;
     }
 

@@ -25,4 +25,6 @@ public interface SqsSender {
 
     <T> void pushInternalError(T entity, int attempt, Class<T> tClass);
     <T> void rePushInternalError(T entity, int attempt, Instant expired, Class<T> tClass);
+
+    <T> void redrivePreparePhaseOneAfterError(T entity, int attempt, Class<T> tClass);
 }
