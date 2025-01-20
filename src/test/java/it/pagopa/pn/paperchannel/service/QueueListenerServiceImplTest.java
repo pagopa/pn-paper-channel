@@ -13,6 +13,7 @@ import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnnationalregistries.v1.dto.AddressSQSMessageDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnnationalregistries.v1.dto.AddressSQSMessagePhysicalAddressDto;
+import it.pagopa.pn.paperchannel.mapper.AddressMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
@@ -20,14 +21,10 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnRequestError;
 import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
-import it.pagopa.pn.paperchannel.model.F24Error;
-import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
-import it.pagopa.pn.paperchannel.model.PrepareNormalizeAddressEvent;
-import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
+import it.pagopa.pn.paperchannel.model.*;
 import it.pagopa.pn.paperchannel.service.impl.QueueListenerServiceImpl;
 import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
 import it.pagopa.pn.paperchannel.utils.FeedbackStatus;
-import it.pagopa.pn.paperchannel.utils.PrepareUtil;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -66,7 +63,7 @@ class QueueListenerServiceImplTest {
     private RequestDeliveryDAO requestDeliveryDAO;
 
     @Mock
-    private PrepareUtil prepareUtil;
+    private PrepareFlowStarter prepareFlowStarter;
 
     @Mock
     private F24Service f24Service;
@@ -195,16 +192,18 @@ class QueueListenerServiceImplTest {
         addressDto.setAddress("address");
         addressSQSMessageDto.setPhysicalAddress(addressDto);
 
+        Address expectedAddress = AddressMapper.fromNationalRegistry(addressDto);
+
         // When
         Mockito.when(this.requestDeliveryDAO.getByCorrelationId(Mockito.anyString())).thenReturn(Mono.just(deliveryRequest));
         Mockito.when(this.addressDAO.findByRequestId(deliveryRequest.getRelatedRequestId())).thenReturn(Mono.just(new PnAddress()));
-        Mockito.doNothing().when(this.prepareUtil).startPreparePhaseOne(Mockito.any(PrepareNormalizeAddressEvent.class));
+        Mockito.doNothing().when(this.prepareFlowStarter).startPreparePhaseOneFromNationalRegistriesFlow(deliveryRequest, expectedAddress);
 
         this.queueListenerService.nationalRegistriesResponseListener(addressSQSMessageDto);
 
         // Then
         Mockito.verify(this.paperRequestErrorDAO, Mockito.never()).created(Mockito.any(PnRequestError.class));
-        Mockito.verify(this.prepareUtil, Mockito.times(1)).startPreparePhaseOne(Mockito.any(PrepareNormalizeAddressEvent.class));
+        Mockito.verify(this.prepareFlowStarter, Mockito.times(1)).startPreparePhaseOneFromNationalRegistriesFlow(deliveryRequest, expectedAddress);
     }
 
     @Test
@@ -233,7 +232,7 @@ class QueueListenerServiceImplTest {
 
         // Then
         Mockito.verify(this.paperRequestErrorDAO, Mockito.never()).created(Mockito.any(PnRequestError.class));
-        Mockito.verify(this.prepareUtil, Mockito.times(1)).startPreparePhaseOne(Mockito.any(PrepareNormalizeAddressEvent.class));
+        Mockito.verify(this.prepareFlowStarter, Mockito.times(1)).startPreparePhaseOneFromNationalRegistriesFlow(deliveryRequest, null);
     }
 
     @Test
@@ -253,7 +252,6 @@ class QueueListenerServiceImplTest {
         deliveryRequest.setStatusDetail(StatusDeliveryEnum.READY_TO_SEND.getDetail());
 
         addressSQSMessageDto.setCorrelationId("1234");
-        addressSQSMessageDto.setError("");
 
         // When
         Mockito.when(this.requestDeliveryDAO.getByCorrelationId(Mockito.anyString())).thenReturn(Mono.just(deliveryRequest));
@@ -262,7 +260,7 @@ class QueueListenerServiceImplTest {
 
         // Then
         Mockito.verify(this.paperRequestErrorDAO, Mockito.never()).created(Mockito.any(PnRequestError.class));
-        Mockito.verify(this.prepareUtil, Mockito.never()).startPreparePhaseOne(Mockito.any(PrepareNormalizeAddressEvent.class));
+        Mockito.verify(this.prepareFlowStarter, Mockito.never()).startPreparePhaseOneFromNationalRegistriesFlow(Mockito.any(PnDeliveryRequest.class), Mockito.any(Address.class));
     }
 
     @Test
@@ -289,10 +287,9 @@ class QueueListenerServiceImplTest {
         Mockito.when(this.requestDeliveryDAO.getByCorrelationId(Mockito.anyString())).thenReturn(Mono.just(deliveryRequest));
 
         this.queueListenerService.nationalRegistriesResponseListener(addressSQSMessageDto);
-        PrepareNormalizeAddressEvent event = PrepareUtil.buildEventFromNationalRegistriesFlow(deliveryRequest, null);
 
         // Mi aspetto che venga inviato l'evento con address vuoto nella coda interna
-        Mockito.verify(this.prepareUtil,Mockito.times(1)).startPreparePhaseOne(event);
+        Mockito.verify(this.prepareFlowStarter,Mockito.times(1)).startPreparePhaseOneFromNationalRegistriesFlow(deliveryRequest, null);
     }
 
     @Test

@@ -16,8 +16,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.model.*;
-import it.pagopa.pn.paperchannel.service.PaperMessagesService;
-import it.pagopa.pn.paperchannel.service.SqsSender;
+import it.pagopa.pn.paperchannel.service.*;
 import it.pagopa.pn.paperchannel.utils.*;
 import it.pagopa.pn.paperchannel.utils.costutils.CostWithDriver;
 import it.pagopa.pn.paperchannel.validator.PrepareRequestValidator;
@@ -51,19 +50,19 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
     private final ExternalChannelClient externalChannelClient;
     private final PnPaperChannelConfig pnPaperChannelConfig;
     private final PaperCalculatorUtils paperCalculatorUtils;
-    private final PrepareUtil prepareUtil;
+    private final PrepareFlowStarter prepareFlowStarter;
 
 
     public PaperMessagesServiceImpl(RequestDeliveryDAO requestDeliveryDAO, CostDAO costDAO,
                                     NationalRegistryClient nationalRegistryClient, SqsSender sqsSender, AddressDAO addressDAO,
                                     ExternalChannelClient externalChannelClient, PnPaperChannelConfig pnPaperChannelConfig,
-                                    PaperCalculatorUtils paperCalculatorUtils, PrepareUtil prepareUtil) {
+                                    PaperCalculatorUtils paperCalculatorUtils, PrepareFlowStarter prepareFlowStarter) {
         super(requestDeliveryDAO, costDAO, nationalRegistryClient, sqsSender);
         this.addressDAO = addressDAO;
         this.externalChannelClient = externalChannelClient;
         this.pnPaperChannelConfig = pnPaperChannelConfig;
         this.paperCalculatorUtils = paperCalculatorUtils;
-        this.prepareUtil = prepareUtil;
+        this.prepareFlowStarter = prepareFlowStarter;
     }
 
     @Override
@@ -141,8 +140,7 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
                                                     );
 
                                                     final String clientId = cxt.getOrDefault(CONTEXT_KEY_CLIENT_ID, "");
-                                                    var prepareNormalizeAddressEvent = PrepareUtil.buildEventFromPrepareSync(response, clientId);
-                                                    prepareUtil.startPreparePhaseOne(prepareNormalizeAddressEvent);
+                                                    prepareFlowStarter.startPreparePhaseOneFromPrepareSync(response, clientId);
                                                 } else {
                                                     pnLogAudit.addsSuccessResolveLogic(
                                                             prepareRequest.getIun(),
@@ -443,10 +441,7 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
     private Mono<Void> createAndPushPrepareEvent(PnDeliveryRequest deliveryRequest){
         return Utility.getFromContext(CONTEXT_KEY_CLIENT_ID, "")
                 .switchIfEmpty(Mono.just(""))
-                .doOnNext(clientId -> {
-                    var prepareNormalizeAddressEvent = PrepareUtil.buildEventFromPrepareSync(deliveryRequest, clientId);
-                    prepareUtil.startPreparePhaseOne(prepareNormalizeAddressEvent);
-                })
+                .doOnNext(clientId -> prepareFlowStarter.startPreparePhaseOneFromPrepareSync(deliveryRequest, clientId))
                 .then();
 
     }
