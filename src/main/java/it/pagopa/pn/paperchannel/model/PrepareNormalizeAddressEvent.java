@@ -13,9 +13,7 @@ public class PrepareNormalizeAddressEvent {
 
     private String requestId;
 
-
     private String iun;
-
 
     private String correlationId;
 
@@ -23,7 +21,7 @@ public class PrepareNormalizeAddressEvent {
 
     private boolean isAddressRetry;
 
-    private Integer attempt;
+    private int attempt;
 
     private String clientId;
 }
