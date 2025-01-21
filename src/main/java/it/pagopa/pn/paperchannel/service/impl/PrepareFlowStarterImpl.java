@@ -70,6 +70,11 @@ public class PrepareFlowStarterImpl implements PrepareFlowStarter {
         }
     }
 
+    /**
+     * Starts the asynchronous PREPARE flow from the national registries flow
+     * @param deliveryRequest Paper Channel entity representing a shipping request
+     * @param recipientNormalizedAddress Possible normalized address for the shipping
+     */
     @Override
     public void pushPreparePhaseOneOutput(PnDeliveryRequest deliveryRequest, PnAddress recipientNormalizedAddress) {
         PnAddressItem addressItem = PnAddressItem.builder()

@@ -112,6 +112,7 @@ public class RequestDeliveryDAOImpl extends BaseDAO<PnDeliveryRequest> implement
     }
 
     public Mono<Void> updateStatus(String requestId,String statusCode, String statusDescription, String statusDetail, String statusDateString) {
+        log.debug("[{}] Updating status in {}", requestId, statusCode);
         // Definizione della chiave primaria
         Map<String, AttributeValue> key = new HashMap<>();
         key.put("requestId", AttributeValue.builder().s(requestId).build());
@@ -150,7 +151,7 @@ public class RequestDeliveryDAOImpl extends BaseDAO<PnDeliveryRequest> implement
 
         // Esecuzione dell'aggiornamento
         return Mono.fromFuture(dynamoDbAsyncClient.updateItem(updateRequest)
-                .thenAccept(response -> log.debug("Update status in {} completed successfully.", statusCode)));
+                .thenAccept(response -> log.debug("Updated status in {} completed successfully.", statusCode)));
     }
 
     @Override
