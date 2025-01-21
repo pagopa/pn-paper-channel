@@ -131,7 +131,7 @@ public class QueueListener {
         this.queueListenerService.raddAltListener(body);
     }
 
-    @SqsListener(value = "${pn.paper-channel.queue-internal}", deletionPolicy = SqsMessageDeletionPolicy.ALWAYS)
+    @SqsListener(value = "${pn.paper-channel.queue-normalize-address}", deletionPolicy = SqsMessageDeletionPolicy.ALWAYS)
     public void pullFromNormalizeAddressQueue(@Payload String node, @Headers Map<String, Object> headers){
         log.debug("Headers : {}", headers);
         setMDCContext(headers);

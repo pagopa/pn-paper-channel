@@ -14,6 +14,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnRequestError;
 import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
+import it.pagopa.pn.paperchannel.service.PreparePhaseOneAsyncService;
 import it.pagopa.pn.paperchannel.service.QueueListenerService;
 import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
 import it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum;
@@ -31,8 +32,10 @@ import software.amazon.awssdk.services.sqs.model.*;
 
 import java.nio.charset.Charset;
 import java.time.Duration;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -65,6 +68,9 @@ class QueueListenerTestIT extends BaseTest
 
     @MockBean
     private PaperRequestErrorDAO paperRequestErrorDAO;
+
+    @MockBean
+    private PreparePhaseOneAsyncService preparePhaseOneAsyncService;
 
 
     @Test
@@ -108,6 +114,45 @@ class QueueListenerTestIT extends BaseTest
                     assertThat(message.body()).isEqualTo(messageJson);
                 });
     }
+
+    @Test
+    void pullFromNormalizeAddressQueuePrepareEventTest() {
+        var message = """
+                {
+                   "requestId":"41873b5b-b6a7-47b4-b170-2c38c0eb47ec",
+                   "iun":"iun",
+                   "correlationId":null,
+                   "address":null,
+                   "attempt":0,
+                   "clientId":null,
+                   "addressRetry":false
+                 }
+                """;
+
+        var headers = Map.of(
+                "attempt", MessageAttributeValue.builder().dataType("String").stringValue("0").build(),
+                "eventType", MessageAttributeValue.builder().dataType("String").stringValue("PREPARE_ASYNC_FLOW").build(),
+                "expired", MessageAttributeValue.builder().dataType("String").stringValue(Instant.now().toString()).build()
+        );
+
+        when(preparePhaseOneAsyncService.preparePhaseOneAsync(any())).thenReturn(Mono.just(new PnDeliveryRequest()));
+
+
+        SendMessageRequest sendMessageRequest = SendMessageRequest.builder()
+                .queueUrl(config.getQueueNormalizeAddress())
+                .messageAttributes(headers)
+                .messageBody(message)
+                .build();
+
+        sqsClient.sendMessage(sendMessageRequest);
+
+        await()
+                .atMost(Duration.ofSeconds(10))
+                .untilAsserted(() -> verify(queueListenerService, times(1)).normalizeAddressListener(any(), anyInt()));
+
+        verify(preparePhaseOneAsyncService, times(1)).preparePhaseOneAsync(any());
+    }
+
 
     private String toJson(Object obj) {
         try {
