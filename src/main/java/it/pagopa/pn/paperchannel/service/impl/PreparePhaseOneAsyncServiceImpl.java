@@ -2,22 +2,28 @@ package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.*;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
+import it.pagopa.pn.paperchannel.mapper.RequestDeliveryMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.*;
 import it.pagopa.pn.paperchannel.middleware.db.entities.*;
-import it.pagopa.pn.paperchannel.model.Address;
-import it.pagopa.pn.paperchannel.model.PrepareNormalizeAddressEvent;
+import it.pagopa.pn.paperchannel.model.*;
 import it.pagopa.pn.paperchannel.service.*;
 import it.pagopa.pn.paperchannel.utils.*;
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
+
+import java.time.Instant;
+
+import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.SEND_TO_DELAYER;
 
 @Service
 @RequiredArgsConstructor
 @CustomLog
-public class PreparePhaseOneAsyncServiceImpl implements PreparePhaseOneAsyncService{
+public class PreparePhaseOneAsyncServiceImpl implements PreparePhaseOneAsyncService {
 
     private static final String PROCESS_NAME = "Prepare Async Phase One";
     private static final String VALIDATION_NAME = "Check and update address";
@@ -29,21 +35,41 @@ public class PreparePhaseOneAsyncServiceImpl implements PreparePhaseOneAsyncServ
     private final PaperAddressService paperAddressService;
     private final PaperCalculatorUtils paperCalculatorUtils;
     private final AttachmentsConfigService attachmentsConfigService;
+    private final PrepareFlowStarter prepareFlowStarter;
 
 
     @Override
-    public Mono<PnDeliveryRequest> preparePhaseOneAsync(PrepareNormalizeAddressEvent prepareNormalizeAddressEvent) {
+    public Mono<PnDeliveryRequest> preparePhaseOneAsync(PrepareNormalizeAddressEvent event) {
         log.logStartingProcess(PROCESS_NAME);
 
-        final String requestId = prepareNormalizeAddressEvent.getRequestId();
-        Address addressFromNationalRegistry = prepareNormalizeAddressEvent.getAddress();
+        final String requestId = event.getRequestId();
+        Address addressFromNationalRegistry = event.getAddress();
+
 
         return requestDeliveryDAO.getByRequestId(requestId, true)
-                .flatMap(deliveryRequest ->
-                        checkAndUpdateAddress(deliveryRequest, addressFromNationalRegistry, prepareNormalizeAddressEvent)
-                                .flatMap(pnAddress -> attachmentsConfigService.filterAttachmentsToSend(deliveryRequest, deliveryRequest.getAttachments(), pnAddress))
-                );
+                .zipWhen(deliveryRequest -> checkAndUpdateAddress(deliveryRequest, addressFromNationalRegistry, event)
+                        .onErrorResume(PnUntracebleException.class, ex -> this.handleUntraceableError(deliveryRequest, event, ex)))
+                .flatMap(deliveryRequestWithAddress -> attachmentsConfigService
+                        .filterAttachmentsToSend(deliveryRequestWithAddress.getT1(), deliveryRequestWithAddress.getT1().getAttachments(), deliveryRequestWithAddress.getT2())
+                        .thenReturn(deliveryRequestWithAddress))
+                .doOnNext(deliveryRequestWithAddress -> prepareFlowStarter.pushPreparePhaseOneOutput(deliveryRequestWithAddress.getT1(), deliveryRequestWithAddress.getT2()))
+                .flatMap(deliveryRequestWithAddress -> this.updateRequestInSendToDelayer(deliveryRequestWithAddress.getT1()))
+                .doOnNext(deliveryRequest -> log.logEndingProcess(PROCESS_NAME))
+                .onErrorResume(ex -> handlePrepareAsyncError(requestId, ex));
 
+    }
+
+    private Mono<PnDeliveryRequest> updateRequestInSendToDelayer(PnDeliveryRequest pnDeliveryRequest){
+        RequestDeliveryMapper.changeState(
+                pnDeliveryRequest,
+                SEND_TO_DELAYER.getCode(),
+                SEND_TO_DELAYER.getDescription(),
+                SEND_TO_DELAYER.getDetail(),
+                pnDeliveryRequest.getProductType(),
+                null
+        );
+
+         return this.requestDeliveryDAO.updateData(pnDeliveryRequest);
     }
 
     private Mono<PnAddress> checkAndUpdateAddress(PnDeliveryRequest pnDeliveryRequest, Address fromNationalRegistries, PrepareNormalizeAddressEvent queueModel){
@@ -82,4 +108,67 @@ public class PreparePhaseOneAsyncServiceImpl implements PreparePhaseOneAsyncServ
 
         return this.paperRequestErrorDAO.created(pnRequestError).then();
     }
+
+    private Mono<PnAddress> handleUntraceableError(PnDeliveryRequest deliveryRequest, PrepareNormalizeAddressEvent request, PnUntracebleException ex) {
+        log.error("UNTRACEABLE Error prepare async requestId {}, {}", deliveryRequest.getRequestId(), ex.getMessage(), ex);
+
+        StatusDeliveryEnum statusDeliveryEnum = StatusDeliveryEnum.UNTRACEABLE;
+
+        RequestDeliveryMapper.changeState(
+                deliveryRequest,
+                statusDeliveryEnum.getCode(),
+                statusDeliveryEnum.getDescription(),
+                statusDeliveryEnum.getDetail(),
+                null,
+                null
+        );
+
+        return updateStatus(deliveryRequest.getRequestId(), statusDeliveryEnum)
+                .doOnNext(requestIdString -> {
+                    sendUnreachableEvent(deliveryRequest, request.getClientId(), ex.getKoReason());
+                    log.logEndingProcess(PROCESS_NAME);
+                })
+                .flatMap(entity -> Mono.error(ex));
+    }
+
+    private Mono<PnDeliveryRequest> handlePrepareAsyncError(String requestId, Throwable ex) {
+        log.error("Error prepare async requestId {}, {}", requestId, ex.getMessage(), ex);
+        if (ex instanceof PnAddressFlowException || ex instanceof PnUntracebleException) return Mono.error(ex);
+
+        StatusDeliveryEnum statusDeliveryEnum = StatusDeliveryEnum.PAPER_CHANNEL_ASYNC_ERROR;
+
+
+        if(ex instanceof PnGenericException) {
+            statusDeliveryEnum = StatusDeliveryEnum.PAPER_CHANNEL_DEFAULT_ERROR;
+        }
+
+        return updateStatus(requestId, statusDeliveryEnum)
+                .doOnNext(o -> log.logEndingProcess(PROCESS_NAME))
+                .flatMap(entity -> Mono.error(ex));
+    }
+
+
+    private Mono<String> updateStatus(String requestId, StatusDeliveryEnum status ){
+        String processName = "Update Status";
+        log.logStartingProcess(processName);
+
+        var statusCode = status.getCode();
+        var completeDescription = new StringBuilder(status.getCode());
+        var statusDate = DateUtils.formatDate(Instant.now());
+        var statusDetail = status.getDetail();
+
+        if (StringUtils.isNotBlank(status.getDescription())) {
+            completeDescription.append(" - ").append(status.getDescription());
+        }
+
+        return this.requestDeliveryDAO.updateStatus(requestId, statusCode, completeDescription.toString(), statusDetail, statusDate).thenReturn(requestId)
+                .doOnSuccess(requestIdString -> log.logEndingProcess(processName));
+
+    }
+
+    private void sendUnreachableEvent(PnDeliveryRequest request, String clientId, KOReason koReason){
+        log.debug("Send Unreachable Event request id - {}, iun - {}", request.getRequestId(), request.getIun());
+        prepareFlowStarter.pushResultPrepareEvent(request, null, clientId, StatusCodeEnum.KO, koReason);
+    }
+
 }

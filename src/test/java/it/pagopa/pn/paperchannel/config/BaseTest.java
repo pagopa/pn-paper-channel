@@ -5,6 +5,7 @@ import it.pagopa.pn.paperchannel.LocalStackTestConfig;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.DeliveryPushMomProducer;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.InternalQueueMomProducer;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.NormalizeAddressQueueMomProducer;
+import it.pagopa.pn.paperchannel.middleware.queue.producer.PaperchannelToDelayerMomProducer;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,6 +43,9 @@ public abstract class BaseTest {
 
         @MockBean
         private NormalizeAddressQueueMomProducer normalizeAddressQueueMomProducer;
+
+        @MockBean
+        private PaperchannelToDelayerMomProducer paperchannelToDelayerMomProducer;
 
 
         @BeforeEach

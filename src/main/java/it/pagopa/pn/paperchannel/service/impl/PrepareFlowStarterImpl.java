@@ -1,11 +1,14 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
+import it.pagopa.pn.api.dto.events.PnAddressItem;
+import it.pagopa.pn.api.dto.events.PnPreparePaperchannelToDelayerPayload;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PrepareEvent;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
+import it.pagopa.pn.paperchannel.mapper.PrepareEventMapper;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
-import it.pagopa.pn.paperchannel.model.Address;
-import it.pagopa.pn.paperchannel.model.NationalRegistryError;
-import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
-import it.pagopa.pn.paperchannel.model.PrepareNormalizeAddressEvent;
+import it.pagopa.pn.paperchannel.model.*;
 import it.pagopa.pn.paperchannel.service.PrepareFlowStarter;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +16,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Nullable;
+
+import static it.pagopa.pn.paperchannel.utils.Const.PREFIX_REQUEST_ID_SERVICE_DESK;
 
 /**
  * Utility class that manages the PREPARE phase.
@@ -66,6 +71,30 @@ public class PrepareFlowStarterImpl implements PrepareFlowStarter {
     }
 
     @Override
+    public void pushPreparePhaseOneOutput(PnDeliveryRequest deliveryRequest, PnAddress recipientNormalizedAddress) {
+        PnAddressItem addressItem = PnAddressItem.builder()
+                .address(recipientNormalizedAddress.getAddress())
+                .addressRow2(recipientNormalizedAddress.getAddressRow2())
+                .cap(recipientNormalizedAddress.getCap())
+                .city(recipientNormalizedAddress.getCity())
+                .city2(recipientNormalizedAddress.getCity2())
+                .pr(recipientNormalizedAddress.getPr())
+                .country(recipientNormalizedAddress.getCountry())
+                .fullName(recipientNormalizedAddress.getFullName())
+                .nameRow2(recipientNormalizedAddress.getNameRow2())
+                .build();
+
+        PnPreparePaperchannelToDelayerPayload payload = PnPreparePaperchannelToDelayerPayload.builder()
+                .requestId(deliveryRequest.getRequestId())
+                .iun(deliveryRequest.getIun())
+                .productType(deliveryRequest.getProductType())
+                .recipientNormalizedAddress(addressItem)
+                .build();
+
+        this.sqsSender.pushToPaperchannelToDelayerQueue(payload);
+    }
+
+    @Override
     public void redrivePreparePhaseOneAfterNationalRegistryError(NationalRegistryError entity, int attemptRetry) {
         if(isPrepareTwoPhases()) {
             this.sqsSender.redrivePreparePhaseOneAfterError(entity, attemptRetry, NationalRegistryError.class);
@@ -96,6 +125,17 @@ public class PrepareFlowStarterImpl implements PrepareFlowStarter {
             queueModel.setAttemptRetry(attemptRetry);
             this.sqsSender.pushInternalError(queueModel, queueModel.getAttemptRetry(), PrepareAsyncRequest.class);
         }
+    }
+
+    public void pushResultPrepareEvent(PnDeliveryRequest request, Address address, String clientId, StatusCodeEnum statusCode, KOReason koReason){
+        PrepareEvent prepareEvent = PrepareEventMapper.toPrepareEvent(request, address, statusCode, koReason);
+        if (request.getRequestId().contains(PREFIX_REQUEST_ID_SERVICE_DESK)){
+            log.info("Sending event to EventBridge: {}", prepareEvent);
+            this.sqsSender.pushPrepareEventOnEventBridge(clientId, prepareEvent);
+            return;
+        }
+        log.info("Sending event to delivery-push: {}", prepareEvent);
+        this.sqsSender.pushPrepareEvent(prepareEvent);
     }
 
     private boolean isPrepareTwoPhases() {

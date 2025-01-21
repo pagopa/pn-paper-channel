@@ -1,6 +1,9 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.api.dto.events.GenericEventHeader;
+import it.pagopa.pn.api.dto.events.PnPreparePaperchannelToDelayerEvent;
+import it.pagopa.pn.api.dto.events.PnPreparePaperchannelToDelayerPayload;
+import it.pagopa.pn.api.dto.events.StandardEventHeader;
 import it.pagopa.pn.commons.utils.LogUtils;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PaperChannelUpdate;
@@ -10,10 +13,7 @@ import it.pagopa.pn.paperchannel.middleware.queue.model.DeliveryPushEvent;
 import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
 import it.pagopa.pn.paperchannel.middleware.queue.model.InternalEventHeader;
 import it.pagopa.pn.paperchannel.middleware.queue.model.InternalPushEvent;
-import it.pagopa.pn.paperchannel.middleware.queue.producer.DeliveryPushMomProducer;
-import it.pagopa.pn.paperchannel.middleware.queue.producer.EventBridgeProducer;
-import it.pagopa.pn.paperchannel.middleware.queue.producer.InternalQueueMomProducer;
-import it.pagopa.pn.paperchannel.middleware.queue.producer.NormalizeAddressQueueMomProducer;
+import it.pagopa.pn.paperchannel.middleware.queue.producer.*;
 import it.pagopa.pn.paperchannel.model.*;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
@@ -34,10 +34,12 @@ public class SqsQueueSender implements SqsSender {
 
     private static final String PUBLISHER_UPDATE = "paper-channel-update";
     private static final String PUBLISHER_PREPARE = "paper-channel-prepare";
+    private static final String PUBLISHER_PREPARE_PHASE_ONE = "paper-channel-prepare-phase-one";
 
     private final DeliveryPushMomProducer deliveryPushMomProducer;
     private final InternalQueueMomProducer internalQueueMomProducer;
     private final NormalizeAddressQueueMomProducer normalizeAddressQueueMomProducer;
+    private final PaperchannelToDelayerMomProducer paperchannelToDelayerMomProducer;
     private final EventBridgeProducer eventBridgeProducer;
 
     @Override
@@ -70,6 +72,26 @@ public class SqsQueueSender implements SqsSender {
 
         var internalPushEvent = new InternalPushEvent<>(prepareHeader, prepareNormalizeAddressEvent);
         this.normalizeAddressQueueMomProducer.push(internalPushEvent);
+    }
+
+    @Override
+    public void pushToPaperchannelToDelayerQueue(PnPreparePaperchannelToDelayerPayload payload) {
+        log.info("Push event to paperchannel_to_delayer queue {}", payload.getRequestId());
+
+        StandardEventHeader header = StandardEventHeader.builder()
+                .publisher(PUBLISHER_PREPARE_PHASE_ONE)
+                .eventId(UUID.randomUUID().toString())
+                .createdAt(Instant.now())
+                .eventType(EventTypeEnum.PREPARE_PHASE_ONE_RESPONSE.name())
+                .iun(payload.getIun())
+                .build();
+
+        var event = PnPreparePaperchannelToDelayerEvent.builder()
+                .header(header)
+                .payload(payload)
+                .build();
+
+        this.paperchannelToDelayerMomProducer.push(event);
     }
 
 
@@ -180,6 +202,22 @@ public class SqsQueueSender implements SqsSender {
                 .expired(expired)
                 .build();
         this.internalQueueMomProducer.push(new InternalPushEvent<>(prepareHeader, entity));
+    }
+
+    @Override
+    public <T> void redrivePreparePhaseOneAfterError(T entity, int attempt, Instant expired, Class<T> tClass) {
+        EventTypeEnum eventTypeEnum = getTypeEnum(entity, tClass);
+        if (eventTypeEnum == null) return;
+        InternalEventHeader prepareHeader= InternalEventHeader.builder()
+                .publisher(PUBLISHER_PREPARE)
+                .eventId(UUID.randomUUID().toString())
+                .createdAt(Instant.now())
+                .attempt(attempt)
+                .eventType(eventTypeEnum.name())
+                .expired(expired)
+                .build();
+        this.normalizeAddressQueueMomProducer.push(new InternalPushEvent<>(prepareHeader, entity));
+        log.info("pushed to prepare phase one queue with expired entity={}", entity);
     }
 
 

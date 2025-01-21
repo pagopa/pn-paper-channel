@@ -89,7 +89,10 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
     }
 
 
-    @Deprecated
+    /**
+     * @deprecated This method has been replaced by  {@link #normalizeAddressListener(PrepareNormalizeAddressEvent, int)}.
+     */
+    @Deprecated(since = "2.15.0", forRemoval = true)
     @Override
     public void internalListener(PrepareAsyncRequest body, int attempt) {
         String processName = "InternalListener";

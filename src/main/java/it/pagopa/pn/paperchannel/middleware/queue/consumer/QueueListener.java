@@ -141,18 +141,48 @@ public class QueueListener {
 
         switch (EventTypeEnum.valueOf(internalEventHeader.getEventType())) {
             case PREPARE_ASYNC_FLOW: this.handlePreparePhaseOneAsyncFlowEvent(internalEventHeader, node); break;
-            case NATIONAL_REGISTRIES_ERROR:  this.handleNationalRegistriesErrorEvent(internalEventHeader, node); break;
+            case NATIONAL_REGISTRIES_ERROR:  this.handleNationalRegistriesErrorEventFromPreparePhaseOne(internalEventHeader, node); break;
             case ADDRESS_MANAGER_ERROR: this.handleAddressManagerErrorEventFromPreparePhaseOne(internalEventHeader, node); break;
             default: log.error("Event type not allowed in Prepare Async Phase One Flow: {}", internalEventHeader.getEventType());
         }
 
     }
 
+    /**
+     * @deprecated This method has been replaced by  {@link #handleNationalRegistriesErrorEventFromPreparePhaseOne(InternalEventHeader, String)}.
+     */
+    @Deprecated(since = "2.15.0", forRemoval = true)
     private void handleNationalRegistriesErrorEvent(InternalEventHeader internalEventHeader, String node) {
 
         boolean noAttempt = (paperChannelConfig.getAttemptQueueNationalRegistries()-1) < internalEventHeader.getAttempt();
         NationalRegistryError error = convertToObject(node, NationalRegistryError.class);
         execution(error, noAttempt, internalEventHeader.getAttempt(), internalEventHeader.getExpired(), NationalRegistryError.class,
+                entity -> {
+                    PnLogAudit pnLogAudit = new PnLogAudit();
+                    pnLogAudit.addsBeforeDiscard(entity.getIun(), String.format("requestId = %s finish retry to National Registry", entity.getRequestId()));
+
+                    PnRequestError pnRequestError = PnRequestError.builder()
+                            .requestId(entity.getRequestId())
+                            .error("ERROR WITH RETRIEVE ADDRESS")
+                            .flowThrow(EventTypeEnum.NATIONAL_REGISTRIES_ERROR.name())
+                            .build();
+
+                    paperRequestErrorDAO.created(pnRequestError).subscribe();
+
+                    pnLogAudit.addsSuccessDiscard(entity.getIun(), String.format("requestId = %s finish retry to National Registry", entity.getRequestId()));
+                    return null;
+                },
+                entityAndAttempt -> {
+                    this.queueListenerService.nationalRegistriesErrorListener(entityAndAttempt.getFirst(), entityAndAttempt.getSecond());
+                    return null;
+                });
+    }
+
+    private void handleNationalRegistriesErrorEventFromPreparePhaseOne(InternalEventHeader internalEventHeader, String node) {
+
+        boolean noAttempt = (paperChannelConfig.getAttemptQueueNationalRegistries()-1) < internalEventHeader.getAttempt();
+        NationalRegistryError error = convertToObject(node, NationalRegistryError.class);
+        executionPreparePhaseOne(error, noAttempt, internalEventHeader.getAttempt(), internalEventHeader.getExpired(), NationalRegistryError.class,
                 entity -> {
                     PnLogAudit pnLogAudit = new PnLogAudit();
                     pnLogAudit.addsBeforeDiscard(entity.getIun(), String.format("requestId = %s finish retry to National Registry", entity.getRequestId()));
@@ -233,7 +263,11 @@ public class QueueListener {
                 });
     }
 
-    @Deprecated
+
+    /**
+     * @deprecated This method has been replaced by  {@link #handleAddressManagerErrorEventFromPreparePhaseOne(InternalEventHeader, String)}.
+     */
+    @Deprecated(since = "2.15.0", forRemoval = true)
     private void handleAddressManagerErrorEvent(InternalEventHeader internalEventHeader, String node) {
 
         boolean noAttempt = (paperChannelConfig.getAttemptQueueAddressManager()-1) < internalEventHeader.getAttempt();
@@ -264,7 +298,7 @@ public class QueueListener {
 
         boolean noAttempt = (paperChannelConfig.getAttemptQueueAddressManager()-1) < internalEventHeader.getAttempt();
         PrepareNormalizeAddressEvent error = convertToObject(node, PrepareNormalizeAddressEvent.class);
-        execution(error, noAttempt, internalEventHeader.getAttempt(), internalEventHeader.getExpired(), PrepareNormalizeAddressEvent.class,
+        executionPreparePhaseOne(error, noAttempt, internalEventHeader.getAttempt(), internalEventHeader.getExpired(), PrepareNormalizeAddressEvent.class,
                 entity -> {
                     PnLogAudit pnLogAudit = new PnLogAudit();
                     pnLogAudit.addsBeforeDiscard(entity.getIun(), String.format("requestId = %s finish retry address manager error ?", entity.getRequestId()));
@@ -338,7 +372,10 @@ public class QueueListener {
                 });
     }
 
-    @Deprecated
+    /**
+     * @deprecated This method has been replaced by  {@link #handleNationalRegistriesErrorEventFromPreparePhaseOne(InternalEventHeader, String)}.
+     */
+    @Deprecated(since = "2.15.0", forRemoval = true)
     private void handlePrepareAsyncFlowEvent(InternalEventHeader internalEventHeader, String node) {
         log.info("Push internal queue - first time");
         PrepareAsyncRequest request = convertToObject(node, PrepareAsyncRequest.class);
@@ -399,6 +436,25 @@ public class QueueListener {
             Mono.delay(Duration.ofMillis(1)).publishOn(Schedulers.boundedElastic())
                     .map(i -> {
                         this.sqsSender.rePushInternalError(entity, attempt, expired, tClass);
+                        return "";
+                    }).subscribe();
+            return;
+        }
+        pushQueue.apply(Pair.of(entity, attempt));
+    }
+
+    private <T> void executionPreparePhaseOne(T entity, boolean noAttempt, int attempt, Instant expired, Class<T> tClass,
+                               Function<T, Void> traceErrorDB,
+                               Function<Pair<T, Integer>, Void> pushQueue){
+        if (noAttempt) {
+            traceErrorDB.apply(entity);
+            return;
+        }
+
+        if (expired.isAfter(Instant.now())){
+            Mono.delay(Duration.ofMillis(1)).publishOn(Schedulers.boundedElastic())
+                    .map(i -> {
+                        this.sqsSender.redrivePreparePhaseOneAfterError(entity, attempt, expired, tClass);
                         return "";
                     }).subscribe();
             return;

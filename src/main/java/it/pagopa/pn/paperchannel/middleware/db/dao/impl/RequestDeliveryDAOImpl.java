@@ -22,9 +22,7 @@ import software.amazon.awssdk.enhanced.dynamodb.model.TransactPutItemEnhancedReq
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.UpdateItemEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
-import software.amazon.awssdk.services.dynamodb.model.TransactionCanceledException;
+import software.amazon.awssdk.services.dynamodb.model.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -94,7 +92,7 @@ public class RequestDeliveryDAOImpl extends BaseDAO<PnDeliveryRequest> implement
                         })
                 )
                 .onErrorResume(throwable -> {
-                    throwable.printStackTrace();
+                    log.error("Error in createWithAddress", throwable);
                     return Mono.error(throwable);
                 });
     }
@@ -111,6 +109,48 @@ public class RequestDeliveryDAOImpl extends BaseDAO<PnDeliveryRequest> implement
                 pnDeliveryRequest.setFiscalCode(entityDB.getFiscalCode());
                 return Mono.fromFuture(this.update(pnDeliveryRequest, ignorableNulls).thenApply(saved -> pnDeliveryRequest));
             });
+    }
+
+    public Mono<Void> updateStatus(String requestId,String statusCode, String statusDescription, String statusDetail, String statusDateString) {
+        // Definizione della chiave primaria
+        Map<String, AttributeValue> key = new HashMap<>();
+        key.put("requestId", AttributeValue.builder().s(requestId).build());
+
+        // Creazione dell'espressione di aggiornamento
+        String updateExpr = """
+                SET #statusCode = :statusCodeValue, 
+                    #statusDescription = :statusDescriptionValue, 
+                    #statusDetail = :statusDetailValue, 
+                    #statusDate = :statusDateValue
+                """;
+
+        // Mappatura degli alias per i nomi degli attributi
+        Map<String, String> expressionAttributeNames = new HashMap<>();
+        expressionAttributeNames.put("#statusCode", "statusCode");
+        expressionAttributeNames.put("#statusDescription", "statusDescription");
+        expressionAttributeNames.put("#statusDetail", "statusDetail");
+        expressionAttributeNames.put("#statusDate", "statusDate");
+
+        // Valori da aggiornare
+        Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
+        expressionAttributeValues.put(":statusCodeValue", AttributeValue.builder().s(statusCode).build());
+        expressionAttributeValues.put(":statusDescriptionValue", AttributeValue.builder().s(statusDescription).build());
+        expressionAttributeValues.put(":statusDetailValue", AttributeValue.builder().s(statusDetail).build());
+        expressionAttributeValues.put(":statusDateValue", AttributeValue.builder().s(statusDateString).build());
+
+        // Creazione della richiesta di aggiornamento
+        UpdateItemRequest updateRequest = UpdateItemRequest.builder()
+                .tableName(table)
+                .key(key)
+                .updateExpression(updateExpr)
+                .expressionAttributeNames(expressionAttributeNames)
+                .expressionAttributeValues(expressionAttributeValues)
+                .returnValues(ReturnValue.NONE) // Specifica che non ti interessa il valore precedente
+                .build();
+
+        // Esecuzione dell'aggiornamento
+        return Mono.fromFuture(dynamoDbAsyncClient.updateItem(updateRequest)
+                .thenAccept(response -> log.debug("Update status in {} completed successfully.", statusCode)));
     }
 
     @Override
