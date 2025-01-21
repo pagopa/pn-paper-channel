@@ -1,10 +1,13 @@
-package it.pagopa.pn.paperchannel.middleware.queue.model.delayer;
+package it.pagopa.pn.paperchannel.model;
 
 import lombok.AllArgsConstructor;
+import lombok.Data;
 
 @AllArgsConstructor
+@Data
 public class DelayerToPaperChannelEventPayload {
     private String requestId;
     private String iun;
-    private String attemptRetry;
+    private int attemptRetry;
+    private String clientId;
 }

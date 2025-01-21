@@ -2,7 +2,9 @@ package it.pagopa.pn.paperchannel.middleware;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
+import it.pagopa.pn.paperchannel.middleware.queue.model.DelayerToPaperChannelEvent;
 import it.pagopa.pn.paperchannel.middleware.queue.model.InternalPushEvent;
+import it.pagopa.pn.paperchannel.middleware.queue.producer.DelayerToPaperChannelQueueMomProducer;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.DeliveryPushMomProducer;
 import it.pagopa.pn.paperchannel.middleware.queue.model.DeliveryPushEvent;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.InternalQueueMomProducer;
@@ -38,6 +40,12 @@ public class PnPaperChannelMiddlewareConfigs {
     @Bean
     public NormalizeAddressQueueMomProducer normalizeAddressQueueMomProducer(SqsClient sqsClient, ObjectMapper objMapper) {
         return new NormalizeAddressQueueMomProducer(sqsClient, this.pnPaperChannelConfig.getQueueNormalizeAddress(), objMapper, InternalPushEvent.class);
+    }
+
+    @Bean
+    public DelayerToPaperChannelQueueMomProducer delayerToPaperQueueMomProducer(SqsClient sqsClient, ObjectMapper objMapper) {
+        //TODO: NON PUSHARE aggiungere nuova coda nelle configurazioni
+        return new DelayerToPaperChannelQueueMomProducer(sqsClient, this.pnPaperChannelConfig.getQueueNormalizeAddress(), objMapper, DelayerToPaperChannelEvent.class);
     }
 }
 
