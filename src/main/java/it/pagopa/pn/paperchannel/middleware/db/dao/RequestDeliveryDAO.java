@@ -2,10 +2,7 @@ package it.pagopa.pn.paperchannel.middleware.db.dao;
 
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
-import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import reactor.core.publisher.Mono;
-
-import java.time.Instant;
 
 public interface RequestDeliveryDAO {
 
