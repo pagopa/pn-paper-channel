@@ -110,12 +110,13 @@ public class PrepareFlowStarterImpl implements PrepareFlowStarter {
     }
 
     @Override
-    public void redrivePreparePhaseOneAfterAddressManagerError(PnDeliveryRequest deliveryRequest, int attemptRetry) {
+    public void redrivePreparePhaseOneAfterAddressManagerError(PnDeliveryRequest deliveryRequest, int attemptRetry, Address fromNationalRegistry) {
         if(isPrepareTwoPhases()) {
             PrepareNormalizeAddressEvent event = PrepareNormalizeAddressEvent.builder()
                     .requestId(deliveryRequest.getRequestId())
                     .correlationId(deliveryRequest.getCorrelationId())
                     .iun(deliveryRequest.getIun())
+                    .address(fromNationalRegistry)
                     .isAddressRetry(true)
                     .attempt(attemptRetry)
                     .build();
@@ -126,6 +127,7 @@ public class PrepareFlowStarterImpl implements PrepareFlowStarter {
             queueModel.setIun(deliveryRequest.getIun());
             queueModel.setRequestId(deliveryRequest.getRequestId());
             queueModel.setCorrelationId(deliveryRequest.getCorrelationId());
+            queueModel.setAddress(fromNationalRegistry);
             queueModel.setAddressRetry(true);
             queueModel.setAttemptRetry(attemptRetry);
             this.sqsSender.pushInternalError(queueModel, queueModel.getAttemptRetry(), PrepareAsyncRequest.class);

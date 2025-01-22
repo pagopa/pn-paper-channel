@@ -59,7 +59,7 @@ public class PaperAddressServiceImpl extends GenericService implements PaperAddr
                 .doOnNext(receiverAddressFirstAttempt -> logAuditSuccessLogic("prepare requestId = %s, relatedRequestId = %s Receiver address First Attempt is present on DB", deliveryRequest, pnLogAudit))
                 .map(AddressMapper::toDTO)
                 .flatMap(receiverAddressFirstAttempt -> chooseAddress(deliveryRequest, fromNationalRegistry, receiverAddressFirstAttempt))
-                .onErrorResume(PnAddressFlowException.class, ex -> handlePnAddressFlowException(ex, deliveryRequest, attemptRetry));
+                .onErrorResume(PnAddressFlowException.class, ex -> handlePnAddressFlowException(ex, deliveryRequest, fromNationalRegistry, attemptRetry));
     }
 
     private Mono<Address> chooseAddress(PnDeliveryRequest deliveryRequest, Address fromNationalRegistry, Address addressFromFirstAttempt) {
@@ -122,7 +122,7 @@ public class PaperAddressServiceImpl extends GenericService implements PaperAddr
 
     }
 
-    private <T> Mono<T> handlePnAddressFlowException(PnAddressFlowException ex, PnDeliveryRequest deliveryRequest, int attemptRetry) {
+    private <T> Mono<T> handlePnAddressFlowException(PnAddressFlowException ex, PnDeliveryRequest deliveryRequest, Address fromNationalRegistry, int attemptRetry) {
         if (ex.getExceptionType() == ATTEMPT_ADDRESS_NATIONAL_REGISTRY){
             nationalRegistryService.finderAddressFromNationalRegistries(
                     deliveryRequest.getRequestId(),
@@ -133,7 +133,7 @@ public class PaperAddressServiceImpl extends GenericService implements PaperAddr
             return Mono.error(ex);
         }
         if (ex.getExceptionType() == ADDRESS_MANAGER_ERROR){
-            prepareFlowStarter.redrivePreparePhaseOneAfterAddressManagerError(deliveryRequest, attemptRetry);
+            prepareFlowStarter.redrivePreparePhaseOneAfterAddressManagerError(deliveryRequest, attemptRetry, fromNationalRegistry);
         }
         return Mono.error(ex);
     }
