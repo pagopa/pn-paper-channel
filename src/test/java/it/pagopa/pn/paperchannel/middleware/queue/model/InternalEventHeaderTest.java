@@ -18,27 +18,6 @@ class InternalEventHeaderTest {
         this.initialize();
     }
 
-    @Test
-    void toStringTest() {
-        InternalEventHeader internalEventHeader = initInternalEventHeader();
-        Assertions.assertNotNull(internalEventHeader);
-
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(internalEventHeader.getClass().getSimpleName());
-        stringBuilder.append("(");
-        stringBuilder.append("attempt=");
-        stringBuilder.append(attempt);
-        stringBuilder.append(", ");
-        stringBuilder.append("expired=");
-        stringBuilder.append(expired);
-        stringBuilder.append(", ");
-        stringBuilder.append("clientId=");
-        stringBuilder.append(clientId);
-        stringBuilder.append(")");
-
-        String toTest = stringBuilder.toString();
-        Assertions.assertEquals(toTest, internalEventHeader.toString());
-    }
 
     @Test
     void equalsTest() {

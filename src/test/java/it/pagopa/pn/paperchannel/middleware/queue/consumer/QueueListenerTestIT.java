@@ -14,12 +14,16 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnRequestError;
 import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
+import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
+import it.pagopa.pn.paperchannel.model.PrepareNormalizeAddressEvent;
+import it.pagopa.pn.paperchannel.service.NationalRegistryService;
 import it.pagopa.pn.paperchannel.service.PreparePhaseOneAsyncService;
 import it.pagopa.pn.paperchannel.service.QueueListenerService;
 import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
 import it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -32,11 +36,11 @@ import software.amazon.awssdk.services.sqs.model.*;
 
 import java.nio.charset.Charset;
 import java.time.Duration;
-import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.ADDRESS_MANAGER_ERROR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
@@ -71,6 +75,9 @@ class QueueListenerTestIT extends BaseTest
 
     @MockBean
     private PreparePhaseOneAsyncService preparePhaseOneAsyncService;
+
+    @MockBean
+    private NationalRegistryService nationalRegistryService;
 
 
     @Test
@@ -131,8 +138,7 @@ class QueueListenerTestIT extends BaseTest
 
         var headers = Map.of(
                 "attempt", MessageAttributeValue.builder().dataType("String").stringValue("0").build(),
-                "eventType", MessageAttributeValue.builder().dataType("String").stringValue("PREPARE_ASYNC_FLOW").build(),
-                "expired", MessageAttributeValue.builder().dataType("String").stringValue(Instant.now().toString()).build()
+                "eventType", MessageAttributeValue.builder().dataType("String").stringValue("PREPARE_ASYNC_FLOW").build()
         );
 
         when(preparePhaseOneAsyncService.preparePhaseOneAsync(any())).thenReturn(Mono.just(new PnDeliveryRequest()));
@@ -150,7 +156,175 @@ class QueueListenerTestIT extends BaseTest
                 .atMost(Duration.ofSeconds(10))
                 .untilAsserted(() -> verify(queueListenerService, times(1)).normalizeAddressListener(any(), anyInt()));
 
-        verify(preparePhaseOneAsyncService, times(1)).preparePhaseOneAsync(any());
+        PrepareNormalizeAddressEvent expectedEvent = PrepareNormalizeAddressEvent.builder()
+                .requestId("41873b5b-b6a7-47b4-b170-2c38c0eb47ec")
+                .iun("iun")
+                .build();
+        verify(preparePhaseOneAsyncService, times(1)).preparePhaseOneAsync(expectedEvent);
+    }
+
+    @Test
+    void pullFromNormalizeAddressQueueNationalRegistriesErrorEventWithAttemptNotFinishedTest() {
+        var message = """
+                {
+                   "requestId":"PREPARE_ANALOG_DOMICILE.IUN_GJWA-HMEK-RGUJ-202307-H-1.RECINDEX_0.ATTEMPT_1",
+                   "iun":"iun",
+                   "message":"Exception",
+                   "fiscalCode":"FFFFFFFFFFFFFF",
+                   "receiverType":"PF",
+                   "setRelatedRequestId":"PREPARE_ANALOG_DOMICILE.IUN_GJWA-HMEK-RGUJ-202307-H-1.RECINDEX_0.ATTEMPT_0"
+                 }
+                """;
+
+        var headers = Map.of(
+                "attempt", MessageAttributeValue.builder().dataType("String").stringValue("1").build(),
+                "eventType", MessageAttributeValue.builder().dataType("String").stringValue("NATIONAL_REGISTRIES_ERROR").build()
+        );
+
+        doNothing().when(nationalRegistryService).finderAddressFromNationalRegistries(any(), any(), any(), any(), any(), any());
+
+        SendMessageRequest sendMessageRequest = SendMessageRequest.builder()
+                .queueUrl(config.getQueueNormalizeAddress())
+                .messageAttributes(headers)
+                .messageBody(message)
+                .build();
+
+        sqsClient.sendMessage(sendMessageRequest);
+
+        await()
+                .atMost(Duration.ofSeconds(10))
+                .untilAsserted(() -> verify(queueListenerService, times(1)).nationalRegistriesErrorListener(any(), eq(1)));
+
+        verify(nationalRegistryService, times(1)).finderAddressFromNationalRegistries(any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void pullFromNormalizeAddressQueueNationalRegistriesErrorEventWithAttemptFinishedTest() {
+        ArgumentCaptor<PnRequestError> requestErrorArgumentCaptor = ArgumentCaptor.forClass(PnRequestError.class);
+
+        var message = """
+                {
+                   "requestId":"PREPARE_ANALOG_DOMICILE.IUN_GJWA-HMEK-RGUJ-202307-H-1.RECINDEX_0.ATTEMPT_1",
+                   "iun":"iun",
+                   "message":"Exception",
+                   "fiscalCode":"FFFFFFFFFFFFFF",
+                   "receiverType":"PF",
+                   "setRelatedRequestId":"PREPARE_ANALOG_DOMICILE.IUN_GJWA-HMEK-RGUJ-202307-H-1.RECINDEX_0.ATTEMPT_0"
+                 }
+                """;
+
+        var headers = Map.of(
+                "attempt", MessageAttributeValue.builder().dataType("String").stringValue(config.getAttemptQueueNationalRegistries().toString()).build(),
+                "eventType", MessageAttributeValue.builder().dataType("String").stringValue("NATIONAL_REGISTRIES_ERROR").build()
+        );
+
+
+        when(paperRequestErrorDAO.created(any())).thenReturn(Mono.just(new PnRequestError()));
+
+        SendMessageRequest sendMessageRequest = SendMessageRequest.builder()
+                .queueUrl(config.getQueueNormalizeAddress())
+                .messageAttributes(headers)
+                .messageBody(message)
+                .build();
+
+        sqsClient.sendMessage(sendMessageRequest);
+
+
+        await()
+                .atMost(Duration.ofSeconds(10))
+                .untilAsserted(() -> verify(paperRequestErrorDAO, times(1)).created(requestErrorArgumentCaptor.capture()));
+
+        PnRequestError actualError = requestErrorArgumentCaptor.getValue();
+        assertThat(actualError).isNotNull();
+        assertThat(actualError.getRequestId()).isEqualTo("PREPARE_ANALOG_DOMICILE.IUN_GJWA-HMEK-RGUJ-202307-H-1.RECINDEX_0.ATTEMPT_1");
+        assertThat(actualError.getError()).isEqualTo("ERROR WITH RETRIEVE ADDRESS");
+        assertThat(actualError.getFlowThrow()).isEqualTo(EventTypeEnum.NATIONAL_REGISTRIES_ERROR.name());
+
+        verify(queueListenerService, never()).nationalRegistriesErrorListener(any(), anyInt());
+        verify(nationalRegistryService, never()).finderAddressFromNationalRegistries(any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void pullFromNormalizeAddressQueueAddressManagerErrorEventWithAttemptNotFinishedTest() {
+        PrepareNormalizeAddressEvent expectedEvent = PrepareNormalizeAddressEvent.builder()
+                .requestId("PREPARE_ANALOG_DOMICILE.IUN_GJWA-HMEK-RGUJ-202307-H-1.RECINDEX_0.ATTEMPT_1")
+                .correlationId("corrId")
+                .iun("iun")
+                .isAddressRetry(false)
+                .attempt(1)
+                .build();
+        var message = """
+                {
+                   "requestId":"PREPARE_ANALOG_DOMICILE.IUN_GJWA-HMEK-RGUJ-202307-H-1.RECINDEX_0.ATTEMPT_1",
+                   "correlationId":"corrId",
+                   "iun":"iun",
+                   "isAddressRetry":"true",
+                   "attempt":"1"
+                 }
+                """;
+
+        var headers = Map.of(
+                "attempt", MessageAttributeValue.builder().dataType("String").stringValue("1").build(),
+                "eventType", MessageAttributeValue.builder().dataType("String").stringValue("ADDRESS_MANAGER_ERROR").build()
+        );
+
+        when(paperRequestErrorDAO.created(any())).thenReturn(Mono.just(new PnRequestError()));
+
+        SendMessageRequest sendMessageRequest = SendMessageRequest.builder()
+                .queueUrl(config.getQueueNormalizeAddress())
+                .messageAttributes(headers)
+                .messageBody(message)
+                .build();
+
+        sqsClient.sendMessage(sendMessageRequest);
+
+        await()
+                .atMost(Duration.ofSeconds(10))
+                .untilAsserted(() -> verify(queueListenerService, times(1)).normalizeAddressListener(expectedEvent, 1));
+
+        verify(preparePhaseOneAsyncService, times(1)).preparePhaseOneAsync(expectedEvent);
+    }
+
+    @Test
+    void pullFromNormalizeAddressQueueAddressManagerErrorEventWithAttemptFinishedTest() {
+        ArgumentCaptor<PnRequestError> requestErrorArgumentCaptor = ArgumentCaptor.forClass(PnRequestError.class);
+        var message = """
+                {
+                   "requestId":"PREPARE_ANALOG_DOMICILE.IUN_GJWA-HMEK-RGUJ-202307-H-1.RECINDEX_0.ATTEMPT_1",
+                   "correlationId":"corrId",
+                   "iun":"iun",
+                   "isAddressRetry":"true",
+                   "attempt":"3"
+                 }
+                """;
+
+        var headers = Map.of(
+                "attempt", MessageAttributeValue.builder().dataType("String").stringValue("3").build(),
+                "eventType", MessageAttributeValue.builder().dataType("String").stringValue("ADDRESS_MANAGER_ERROR").build()
+        );
+
+        when(paperRequestErrorDAO.created(any())).thenReturn(Mono.just(new PnRequestError()));
+
+        SendMessageRequest sendMessageRequest = SendMessageRequest.builder()
+                .queueUrl(config.getQueueNormalizeAddress())
+                .messageAttributes(headers)
+                .messageBody(message)
+                .build();
+
+        sqsClient.sendMessage(sendMessageRequest);
+
+        await()
+                .atMost(Duration.ofSeconds(10))
+                .untilAsserted(() -> verify(paperRequestErrorDAO, times(1)).created(requestErrorArgumentCaptor.capture()));
+
+        PnRequestError actualError = requestErrorArgumentCaptor.getValue();
+        assertThat(actualError).isNotNull();
+        assertThat(actualError.getRequestId()).isEqualTo("PREPARE_ANALOG_DOMICILE.IUN_GJWA-HMEK-RGUJ-202307-H-1.RECINDEX_0.ATTEMPT_1");
+        assertThat(actualError.getError()).isEqualTo(ADDRESS_MANAGER_ERROR.getMessage());
+        assertThat(actualError.getFlowThrow()).isEqualTo(EventTypeEnum.ADDRESS_MANAGER_ERROR.name());
+
+        verify(queueListenerService, never()).normalizeAddressListener(any(), anyInt());
+        verify(preparePhaseOneAsyncService, never()).preparePhaseOneAsync(any());
     }
 
 

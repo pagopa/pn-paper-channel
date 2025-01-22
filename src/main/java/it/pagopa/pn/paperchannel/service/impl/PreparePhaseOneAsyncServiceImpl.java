@@ -54,7 +54,10 @@ public class PreparePhaseOneAsyncServiceImpl implements PreparePhaseOneAsyncServ
                         .thenReturn(deliveryRequestWithAddress))
                 .doOnNext(deliveryRequestWithAddress -> prepareFlowStarter.pushPreparePhaseOneOutput(deliveryRequestWithAddress.getT1(), deliveryRequestWithAddress.getT2()))
                 .flatMap(deliveryRequestWithAddress -> this.updateRequestInSendToDelayer(deliveryRequestWithAddress.getT1()))
-                .doOnNext(deliveryRequest -> log.logEndingProcess(PROCESS_NAME))
+                .doOnNext(deliveryRequest -> {
+                    log.info("End of prepare async phase one");
+                    log.logEndingProcess(PROCESS_NAME);
+                })
                 .onErrorResume(ex -> handlePrepareAsyncError(requestId, ex));
 
     }

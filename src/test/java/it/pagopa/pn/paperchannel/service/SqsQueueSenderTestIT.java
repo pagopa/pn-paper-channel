@@ -8,6 +8,7 @@ import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.AnalogAddress;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PrepareEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
+import it.pagopa.pn.paperchannel.middleware.queue.model.AttemptPushEvent;
 import it.pagopa.pn.paperchannel.middleware.queue.model.DeliveryPushEvent;
 import it.pagopa.pn.paperchannel.middleware.queue.model.InternalPushEvent;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.DeliveryPushMomProducer;
@@ -51,7 +52,7 @@ class SqsQueueSenderTestIT extends BaseTest {
                 .push((InternalPushEvent) Mockito.any());
 
         Mockito.doNothing().when(normalizeAddressQueueMomProducer)
-                .push((InternalPushEvent) Mockito.any());
+                .push((AttemptPushEvent) Mockito.any());
     }
 
     @Test
@@ -147,7 +148,7 @@ class SqsQueueSenderTestIT extends BaseTest {
                 .build();
         this.sqsSender.pushToNormalizeAddressQueue(event);
         Mockito.verify(normalizeAddressQueueMomProducer, Mockito.times(1))
-                .push((InternalPushEvent) Mockito.any());
+                .push((AttemptPushEvent) Mockito.any());
     }
 
 

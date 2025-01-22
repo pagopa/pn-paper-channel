@@ -129,15 +129,10 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
                             return this.preparePhaseOneAsyncService.preparePhaseOneAsync(prepareNormalizeAddressEvent);
                         })
                         .doOnSuccess(resultFromAsync ->{
-                                    log.info("End of prepare async phase one");
                                     log.logEndingProcess(processName);
                                 }
                         )
-                        .doOnError(throwable -> {
-                            log.error(throwable.getMessage());
-                            if (throwable instanceof PnAddressFlowException) return;
-                            throw new PnGenericException(PREPARE_ASYNC_LISTENER_EXCEPTION, PREPARE_ASYNC_LISTENER_EXCEPTION.getMessage());
-                        }))
+                )
                 .block();
     }
 

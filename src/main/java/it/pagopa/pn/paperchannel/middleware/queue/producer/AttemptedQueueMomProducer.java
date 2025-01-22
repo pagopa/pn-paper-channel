@@ -26,7 +26,7 @@ public abstract class AttemptedQueueMomProducer<T extends GenericEvent> extends 
         InternalEventHeader headerCustom = (InternalEventHeader) header;
         map.put("attempt", MessageAttributeValue.builder()
                 .dataType("String")
-                .stringValue(headerCustom.getAttempt().toString())
+                .stringValue(String.valueOf(headerCustom.getAttempt()))
                 .build());
         map.put("expired", MessageAttributeValue.builder()
                 .dataType("String")
