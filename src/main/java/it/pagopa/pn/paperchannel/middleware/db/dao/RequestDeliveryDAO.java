@@ -10,6 +10,7 @@ public interface RequestDeliveryDAO {
 
     Mono<PnDeliveryRequest> updateData(PnDeliveryRequest pnDeliveryRequest);
     Mono<PnDeliveryRequest> updateData(PnDeliveryRequest pnDeliveryRequest, boolean ignorableNulls);
+    Mono<Void> updateStatus(String requestId,String statusCode, String statusDescription, String statusDetail, String statusDateString);
 
     Mono<PnDeliveryRequest> updateConditionalOnFeedbackStatus(PnDeliveryRequest pnDeliveryRequest, boolean ignorableNulls);
 

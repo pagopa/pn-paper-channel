@@ -41,7 +41,7 @@ class PrepareFlowStarterImplTest {
                 .iun("iun")
                 .clientId("clientId")
                 .isAddressRetry(false)
-                .attemptRetry(0)
+                .attempt(0)
                 .correlationId(null)
                 .build();
 

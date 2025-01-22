@@ -9,12 +9,10 @@ import it.pagopa.pn.paperchannel.exception.PnPaperEventException;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.paperchannel.mapper.*;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
-import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
-import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.model.*;
 import it.pagopa.pn.paperchannel.service.*;
 import it.pagopa.pn.paperchannel.utils.*;
@@ -39,7 +37,7 @@ import static it.pagopa.pn.paperchannel.utils.Const.CONTEXT_KEY_PREFIX_CLIENT_ID
 
 @CustomLog
 @Service
-public class  PaperMessagesServiceImpl extends BaseService implements PaperMessagesService {
+public class  PaperMessagesServiceImpl extends GenericService implements PaperMessagesService {
     
     private static final String PN_DELIVERY_REQUEST_LOG = "PnDeliveryRequest";
     private static final String ADDRESS_ENTITY_LOG = "addressEntity";
@@ -51,18 +49,19 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
     private final PnPaperChannelConfig pnPaperChannelConfig;
     private final PaperCalculatorUtils paperCalculatorUtils;
     private final PrepareFlowStarter prepareFlowStarter;
+    private final NationalRegistryService nationalRegistryService;
 
 
-    public PaperMessagesServiceImpl(RequestDeliveryDAO requestDeliveryDAO, CostDAO costDAO,
-                                    NationalRegistryClient nationalRegistryClient, SqsSender sqsSender, AddressDAO addressDAO,
+    public PaperMessagesServiceImpl(RequestDeliveryDAO requestDeliveryDAO, SqsSender sqsSender, AddressDAO addressDAO,
                                     ExternalChannelClient externalChannelClient, PnPaperChannelConfig pnPaperChannelConfig,
-                                    PaperCalculatorUtils paperCalculatorUtils, PrepareFlowStarter prepareFlowStarter) {
-        super(requestDeliveryDAO, costDAO, nationalRegistryClient, sqsSender);
+                                    PaperCalculatorUtils paperCalculatorUtils, PrepareFlowStarter prepareFlowStarter, NationalRegistryService nationalRegistryService) {
+        super(sqsSender, requestDeliveryDAO);
         this.addressDAO = addressDAO;
         this.externalChannelClient = externalChannelClient;
         this.pnPaperChannelConfig = pnPaperChannelConfig;
         this.paperCalculatorUtils = paperCalculatorUtils;
         this.prepareFlowStarter = prepareFlowStarter;
+        this.nationalRegistryService = nationalRegistryService;
     }
 
     @Override
@@ -146,7 +145,7 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
                                                             prepareRequest.getIun(),
                                                             String.format("prepare requestId = %s, relatedRequestId = %s Discovered Address is not present", requestId, prepareRequest.getRelatedRequestId())
                                                     );
-                                                    this.finderAddressFromNationalRegistries(
+                                                    nationalRegistryService.finderAddressFromNationalRegistries(
                                                             response.getRequestId(),
                                                             response.getRelatedRequestId(),
                                                             response.getFiscalCode(),

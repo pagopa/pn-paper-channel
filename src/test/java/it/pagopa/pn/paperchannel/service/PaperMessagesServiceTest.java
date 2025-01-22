@@ -8,13 +8,11 @@ import it.pagopa.pn.paperchannel.exception.PnInputValidatorException;
 import it.pagopa.pn.paperchannel.exception.PnPaperEventException;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
-import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
-import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.service.impl.PaperMessagesServiceImpl;
@@ -58,8 +56,6 @@ class PaperMessagesServiceTest {
     @MockBean
     private RequestDeliveryDAO requestDeliveryDAO;
 
-    @MockBean
-    private CostDAO costDAO;
 
     @MockBean
     private DataEncryption dataEncryption;
@@ -71,7 +67,7 @@ class PaperMessagesServiceTest {
     private PaperTenderService paperTenderService;
 
     @MockBean
-    private NationalRegistryClient nationalRegistryClient;
+    private NationalRegistryService nationalRegistryService;
 
     @MockBean
     private ExternalChannelClient externalChannelClient;

@@ -1,14 +1,16 @@
 package it.pagopa.pn.paperchannel.middleware;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import it.pagopa.pn.api.dto.events.PnPreparePaperchannelToDelayerEvent;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
-import it.pagopa.pn.paperchannel.middleware.queue.model.DelayerToPaperChannelEvent;
+import it.pagopa.pn.paperchannel.middleware.queue.model.AttemptPushEvent;
 import it.pagopa.pn.paperchannel.middleware.queue.model.InternalPushEvent;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.DelayerToPaperChannelQueueMomProducer;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.DeliveryPushMomProducer;
 import it.pagopa.pn.paperchannel.middleware.queue.model.DeliveryPushEvent;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.InternalQueueMomProducer;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.NormalizeAddressQueueMomProducer;
+import it.pagopa.pn.paperchannel.middleware.queue.producer.PaperchannelToDelayerMomProducer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -39,7 +41,12 @@ public class PnPaperChannelMiddlewareConfigs {
 
     @Bean
     public NormalizeAddressQueueMomProducer normalizeAddressQueueMomProducer(SqsClient sqsClient, ObjectMapper objMapper) {
-        return new NormalizeAddressQueueMomProducer(sqsClient, this.pnPaperChannelConfig.getQueueNormalizeAddress(), objMapper, InternalPushEvent.class);
+        return new NormalizeAddressQueueMomProducer(sqsClient, this.pnPaperChannelConfig.getQueueNormalizeAddress(), objMapper, AttemptPushEvent.class);
+    }
+
+    @Bean
+    public PaperchannelToDelayerMomProducer paperchannelToDelayerMomProducer(SqsClient sqsClient, ObjectMapper objMapper) {
+        return new PaperchannelToDelayerMomProducer(sqsClient, this.pnPaperChannelConfig.getQueuePaperchannelToDelayer(), objMapper, PnPreparePaperchannelToDelayerEvent.class);
     }
 
     @Bean

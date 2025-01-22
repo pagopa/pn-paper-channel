@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.service;
 
+import it.pagopa.pn.api.dto.events.PnPreparePaperchannelToDelayerPayload;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PrepareEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
@@ -17,6 +18,7 @@ public interface SqsSender {
     void pushPrepareEvent(PrepareEvent event);
     void pushToInternalQueue(PrepareAsyncRequest prepareAsyncRequest);
     void pushToNormalizeAddressQueue(PrepareNormalizeAddressEvent prepareNormalizeAddressEvent);
+    void pushToPaperchannelToDelayerQueue(PnPreparePaperchannelToDelayerPayload payload);
     void pushDematZipInternalEvent(DematInternalEvent dematZipInternalEvent);
     void pushSingleStatusUpdateEvent(SingleStatusUpdateDto singleStatusUpdateDto);
 
@@ -25,4 +27,6 @@ public interface SqsSender {
 
     <T> void pushInternalError(T entity, int attempt, Class<T> tClass);
     <T> void rePushInternalError(T entity, int attempt, Instant expired, Class<T> tClass);
+
+    <T> void redrivePreparePhaseOneAfterError(T entity, int attempt, Class<T> tClass);
 }

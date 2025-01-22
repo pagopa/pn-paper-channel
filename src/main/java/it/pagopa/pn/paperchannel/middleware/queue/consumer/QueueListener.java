@@ -12,6 +12,7 @@ import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnnationalregistries.v1.dto.AddressSQSMessageDto;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnRequestError;
+import it.pagopa.pn.paperchannel.middleware.queue.model.AttemptEventHeader;
 import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
 import it.pagopa.pn.paperchannel.middleware.queue.model.InternalEventHeader;
 import it.pagopa.pn.paperchannel.middleware.queue.model.ManualRetryEvent;
@@ -140,30 +141,46 @@ public class QueueListener {
         this.queueListenerService.delayerListener(body);
     }
 
-    private void handleNationalRegistriesErrorEvent(InternalEventHeader internalEventHeader, String node) {
+    @SqsListener(value = "${pn.paper-channel.queue-normalize-address}", deletionPolicy = SqsMessageDeletionPolicy.ALWAYS)
+    public void pullFromNormalizeAddressQueue(@Payload String node, @Headers Map<String, Object> headers){
+        log.debug("Headers : {}", headers);
+        setMDCContext(headers);
+        AttemptEventHeader attemptEventHeader = toAttemptEventHeader(headers);
 
-        boolean noAttempt = (paperChannelConfig.getAttemptQueueNationalRegistries()-1) < internalEventHeader.getAttempt();
-        NationalRegistryError error = convertToObject(node, NationalRegistryError.class);
-        execution(error, noAttempt, internalEventHeader.getAttempt(), internalEventHeader.getExpired(), NationalRegistryError.class,
-                entity -> {
-                    PnLogAudit pnLogAudit = new PnLogAudit();
-                    pnLogAudit.addsBeforeDiscard(entity.getIun(), String.format("requestId = %s finish retry to National Registry", entity.getRequestId()));
+        if (attemptEventHeader == null) return;
 
-                    PnRequestError pnRequestError = PnRequestError.builder()
-                            .requestId(entity.getRequestId())
-                            .error("ERROR WITH RETRIEVE ADDRESS")
-                            .flowThrow(EventTypeEnum.NATIONAL_REGISTRIES_ERROR.name())
-                            .build();
+        switch (EventTypeEnum.valueOf(attemptEventHeader.getEventType())) {
+            case PREPARE_ASYNC_FLOW: this.handlePreparePhaseOneAsyncFlowEvent(attemptEventHeader, node); break;
+            case NATIONAL_REGISTRIES_ERROR:  this.handleNationalRegistriesErrorEvent(attemptEventHeader, node); break;
+            case ADDRESS_MANAGER_ERROR: this.handleAddressManagerErrorEventFromPreparePhaseOne(attemptEventHeader, node); break;
+            default: log.error("Event type not allowed in Prepare Async Phase One Flow: {}", attemptEventHeader.getEventType());
+        }
 
-                    paperRequestErrorDAO.created(pnRequestError).subscribe();
+    }
 
-                    pnLogAudit.addsSuccessDiscard(entity.getIun(), String.format("requestId = %s finish retry to National Registry", entity.getRequestId()));
-                    return null;
-                },
-                entityAndAttempt -> {
-                    this.queueListenerService.nationalRegistriesErrorListener(entityAndAttempt.getFirst(), entityAndAttempt.getSecond());
-                    return null;
-                });
+
+    private void handleNationalRegistriesErrorEvent(AttemptEventHeader attemptEventHeader, String node) {
+
+        boolean noAttempt = (paperChannelConfig.getAttemptQueueNationalRegistries()-1) < attemptEventHeader.getAttempt();
+        NationalRegistryError entity = convertToObject(node, NationalRegistryError.class);
+        if(noAttempt) {
+            PnLogAudit pnLogAudit = new PnLogAudit();
+            pnLogAudit.addsBeforeDiscard(entity.getIun(), String.format("requestId = %s finish retry to National Registry", entity.getRequestId()));
+
+            PnRequestError pnRequestError = PnRequestError.builder()
+                    .requestId(entity.getRequestId())
+                    .error("ERROR WITH RETRIEVE ADDRESS")
+                    .flowThrow(EventTypeEnum.NATIONAL_REGISTRIES_ERROR.name())
+                    .build();
+
+            paperRequestErrorDAO.created(pnRequestError).subscribe();
+
+            pnLogAudit.addsSuccessDiscard(entity.getIun(), String.format("requestId = %s finish retry to National Registry", entity.getRequestId()));
+        }
+        else {
+            this.queueListenerService.nationalRegistriesErrorListener(entity, attemptEventHeader.getAttempt());
+        }
+
     }
 
     private void handleManualRetryExternalChannelEvent(String node) {
@@ -225,6 +242,11 @@ public class QueueListener {
                 });
     }
 
+
+    /**
+     * @deprecated This method has been replaced by  {@link #handleAddressManagerErrorEventFromPreparePhaseOne(AttemptEventHeader, String)}.
+     */
+    @Deprecated(since = "2.15.0", forRemoval = true)
     private void handleAddressManagerErrorEvent(InternalEventHeader internalEventHeader, String node) {
 
         boolean noAttempt = (paperChannelConfig.getAttemptQueueAddressManager()-1) < internalEventHeader.getAttempt();
@@ -249,6 +271,29 @@ public class QueueListener {
                     this.queueListenerService.internalListener(entityAndAttempt.getFirst(), entityAndAttempt.getSecond());
                     return null;
                 });
+    }
+
+    private void handleAddressManagerErrorEventFromPreparePhaseOne(AttemptEventHeader attemptEventHeader, String node) {
+
+        boolean noAttempt = (paperChannelConfig.getAttemptQueueAddressManager()-1) < attemptEventHeader.getAttempt();
+        PrepareNormalizeAddressEvent entity = convertToObject(node, PrepareNormalizeAddressEvent.class);
+        if(noAttempt) {
+            PnLogAudit pnLogAudit = new PnLogAudit();
+            pnLogAudit.addsBeforeDiscard(entity.getIun(), String.format("requestId = %s finish retry address manager error ?", entity.getRequestId()));
+
+            PnRequestError pnRequestError = PnRequestError.builder()
+                    .requestId(entity.getRequestId())
+                    .error(ADDRESS_MANAGER_ERROR.getMessage())
+                    .flowThrow(EventTypeEnum.ADDRESS_MANAGER_ERROR.name())
+                    .build();
+
+            paperRequestErrorDAO.created(pnRequestError).subscribe();
+
+            pnLogAudit.addsSuccessDiscard(entity.getIun(), String.format("requestId = %s finish retry address manager error", entity.getRequestId()));
+        }
+        else {
+            this.queueListenerService.normalizeAddressListener(entity, attemptEventHeader.getAttempt());
+        }
     }
 
     private void handleF24ErrorEvent(InternalEventHeader internalEventHeader, String node) {
@@ -303,10 +348,20 @@ public class QueueListener {
                 });
     }
 
+    /**
+     * @deprecated This method has been replaced by  {@link #handleNationalRegistriesErrorEvent(AttemptEventHeader, String)} (AttemptEventHeader, String)}.
+     */
+    @Deprecated(since = "2.15.0", forRemoval = true)
     private void handlePrepareAsyncFlowEvent(InternalEventHeader internalEventHeader, String node) {
         log.info("Push internal queue - first time");
         PrepareAsyncRequest request = convertToObject(node, PrepareAsyncRequest.class);
         this.queueListenerService.internalListener(request, internalEventHeader.getAttempt());
+    }
+
+    private void handlePreparePhaseOneAsyncFlowEvent(AttemptEventHeader internalEventHeader, String node) {
+        log.info("Push prepare phase one queue - first time");
+        PrepareNormalizeAddressEvent request = convertToObject(node, PrepareNormalizeAddressEvent.class);
+        this.queueListenerService.normalizeAddressListener(request, internalEventHeader.getAttempt());
     }
 
     private void handleSendZipEvent(InternalEventHeader internalEventHeader, String node) {
@@ -345,6 +400,27 @@ public class QueueListener {
         return null;
     }
 
+    private AttemptEventHeader toAttemptEventHeader(Map<String, Object> headers){
+        if (headers.containsKey(PN_EVENT_HEADER_EVENT_TYPE) &&
+                headers.containsKey(PN_EVENT_HEADER_ATTEMPT)){
+
+            String headerEventType = headers.get(PN_EVENT_HEADER_EVENT_TYPE) instanceof String headerEventTypeString ? headerEventTypeString : "";
+
+            int headerAttempt = 0;
+            try {
+                headerAttempt = Integer.parseInt((String) headers.get(PN_EVENT_HEADER_ATTEMPT));
+            } catch (NumberFormatException | DateTimeParseException ex ){
+                log.warn("QueueListener#toInternalEventHeader - Ignoring exception: {}", ex.getClass().getCanonicalName());
+            }
+            return AttemptEventHeader.builder()
+                    .attempt(headerAttempt)
+                    .eventType(headerEventType)
+                    .build();
+
+        }
+        return null;
+    }
+
     private <T> void execution(T entity, boolean noAttempt, int attempt, Instant expired, Class<T> tClass,
                                Function<T, Void> traceErrorDB,
                                Function<Pair<T, Integer>, Void> pushQueue){
@@ -363,6 +439,7 @@ public class QueueListener {
         }
         pushQueue.apply(Pair.of(entity, attempt));
     }
+
 
     private <T> T convertToObject(String body, Class<T> tClass){
         T entity = Utility.jsonToObject(this.objectMapper, body, tClass);
