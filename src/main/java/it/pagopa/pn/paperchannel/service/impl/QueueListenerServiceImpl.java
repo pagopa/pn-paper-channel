@@ -13,13 +13,11 @@ import it.pagopa.pn.paperchannel.mapper.AttachmentMapper;
 import it.pagopa.pn.paperchannel.mapper.RequestDeliveryMapper;
 import it.pagopa.pn.paperchannel.mapper.SendRequestMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
-import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnRequestError;
 import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
-import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
 import it.pagopa.pn.paperchannel.model.*;
 import it.pagopa.pn.paperchannel.service.*;
@@ -47,12 +45,13 @@ import static it.pagopa.pn.paperchannel.utils.Utility.resolveAuditLogFromRespons
 
 @Service
 @CustomLog
-public class QueueListenerServiceImpl extends BaseService implements QueueListenerService {
+public class QueueListenerServiceImpl extends GenericService implements QueueListenerService {
     private static final String NATIONAL_REGISTRY_DESCRIPTION = "Retrieve the address.";
     private static final String PROCESS_NAME = "National Registries Response Listener";
 
     private final PaperResultAsyncService paperResultAsyncService;
     private final PaperAsyncService paperAsyncService;
+    private final PreparePhaseOneAsyncService preparePhaseOneAsyncService;
     private final AddressDAO addressDAO;
     private final PaperRequestErrorDAO paperRequestErrorDAO;
     private final ExternalChannelClient externalChannelClient;
@@ -60,25 +59,25 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
     private final DematZipService dematZipService;
     private final AttachmentsConfigService attachmentsConfigService;
     private final PrepareFlowStarter prepareFlowStarter;
+    private final NationalRegistryService nationalRegistryService;
 
     public QueueListenerServiceImpl(RequestDeliveryDAO requestDeliveryDAO,
-                                    CostDAO costDAO,
-                                    NationalRegistryClient nationalRegistryClient,
                                     SqsSender sqsSender,
                                     PaperResultAsyncService paperResultAsyncService,
-                                    PaperAsyncService paperAsyncService,
+                                    PaperAsyncService paperAsyncService, PreparePhaseOneAsyncService preparePhaseOneAsyncService,
                                     AddressDAO addressDAO,
                                     PaperRequestErrorDAO paperRequestErrorDAO,
                                     ExternalChannelClient externalChannelClient,
                                     F24Service f24Service,
                                     DematZipService dematZipService,
                                     AttachmentsConfigService attachmentsConfigService,
-                                    PrepareFlowStarter prepareFlowStarter) {
+                                    PrepareFlowStarter prepareFlowStarter, NationalRegistryService nationalRegistryService) {
 
-        super(requestDeliveryDAO, costDAO, nationalRegistryClient, sqsSender);
+        super(sqsSender, requestDeliveryDAO);
 
         this.paperResultAsyncService = paperResultAsyncService;
         this.paperAsyncService = paperAsyncService;
+        this.preparePhaseOneAsyncService = preparePhaseOneAsyncService;
         this.addressDAO = addressDAO;
         this.paperRequestErrorDAO = paperRequestErrorDAO;
         this.externalChannelClient = externalChannelClient;
@@ -86,10 +85,14 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
         this.dematZipService = dematZipService;
         this.attachmentsConfigService = attachmentsConfigService;
         this.prepareFlowStarter = prepareFlowStarter;
+        this.nationalRegistryService = nationalRegistryService;
     }
 
 
-
+    /**
+     * @deprecated This method has been replaced by  {@link #normalizeAddressListener(PrepareNormalizeAddressEvent, int)}.
+     */
+    @Deprecated(since = "2.15.0", forRemoval = true)
     @Override
     public void internalListener(PrepareAsyncRequest body, int attempt) {
         String processName = "InternalListener";
@@ -112,6 +115,24 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
 
                             throw new PnGenericException(PREPARE_ASYNC_LISTENER_EXCEPTION, PREPARE_ASYNC_LISTENER_EXCEPTION.getMessage());
                         }))
+                .block();
+    }
+
+    @Override
+    public void normalizeAddressListener(PrepareNormalizeAddressEvent data, int attempt) {
+        String processName = "NormalizeAddressListener";
+        MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, data.getRequestId());
+        log.logStartingProcess(processName);
+        MDCUtils.addMDCToContextAndExecute(Mono.just(data)
+                        .flatMap(prepareNormalizeAddressEvent -> {
+                            prepareNormalizeAddressEvent.setAttempt(attempt);
+                            return this.preparePhaseOneAsyncService.preparePhaseOneAsync(prepareNormalizeAddressEvent);
+                        })
+                        .doOnSuccess(resultFromAsync ->{
+                                    log.logEndingProcess(processName);
+                                }
+                        )
+                )
                 .block();
     }
 
@@ -290,7 +311,7 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                         .doOnSuccess(nationalRegistryError -> {
                             log.info("Called national Registries");
                             log.logInvokingAsyncExternalService(PN_NATIONAL_REGISTRIES,NATIONAL_REGISTRY_DESCRIPTION, nationalRegistryError.getRequestId());
-                            this.finderAddressFromNationalRegistries(
+                            nationalRegistryService.finderAddressFromNationalRegistries(
                                     nationalRegistryError.getRequestId(),
                                     nationalRegistryError.getRelatedRequestId(),
                                     nationalRegistryError.getFiscalCode(),

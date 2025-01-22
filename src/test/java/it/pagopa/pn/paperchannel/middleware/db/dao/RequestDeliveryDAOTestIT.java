@@ -4,12 +4,18 @@ import it.pagopa.pn.paperchannel.config.BaseTest;
 import it.pagopa.pn.paperchannel.encryption.impl.DataVaultEncryptionImpl;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
+import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
+import it.pagopa.pn.paperchannel.utils.DateUtils;
 import org.junit.jupiter.api.*;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
+import java.time.Instant;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -216,13 +222,44 @@ class RequestDeliveryDAOTestIT extends BaseTest {
         assertNull(deliveryRequest);
     }
 
+    @Test
+    void updateStatusTest(){
+        // Given
+        var requestId = UUID.randomUUID().toString();
+        PnDeliveryRequest deliveryRequest = this.buildDeliveryRequest(requestId);
+
+        this.requestDeliveryDAO.createWithAddress(deliveryRequest, null, null).block();
+
+        deliveryRequest = this.requestDeliveryDAO.getByRequestId(requestId).block();
+
+        assertThat(deliveryRequest).isNotNull();
+        assertThat(deliveryRequest.getStatusCode()).isEqualTo(StatusDeliveryEnum.IN_PROCESSING.getCode());
+        assertThat(deliveryRequest.getStatusDescription()).isEqualTo(StatusDeliveryEnum.IN_PROCESSING.getDescription());
+        assertThat(deliveryRequest.getStatusDetail()).isEqualTo(StatusDeliveryEnum.IN_PROCESSING.getDetail());
+
+        var untraceable = StatusDeliveryEnum.UNTRACEABLE;
+        var statusDate = DateUtils.formatDate(Instant.now());
+        this.requestDeliveryDAO.updateStatus(requestId, untraceable.getCode(), untraceable.getDescription(), untraceable.getDetail(), statusDate).block();
+
+        deliveryRequest = this.requestDeliveryDAO.getByRequestId(requestId).block();
+
+        assertThat(deliveryRequest).isNotNull();
+        assertThat(deliveryRequest.getStatusCode()).isEqualTo(StatusDeliveryEnum.UNTRACEABLE.getCode());
+        assertThat(deliveryRequest.getStatusDescription()).isEqualTo(StatusDeliveryEnum.UNTRACEABLE.getDescription());
+        assertThat(deliveryRequest.getStatusDetail()).isEqualTo(StatusDeliveryEnum.UNTRACEABLE.getDetail());
+
+    }
+
     private PnDeliveryRequest buildDeliveryRequest(String requestId) {
         PnDeliveryRequest request = new PnDeliveryRequest();
 
         request.setRequestId(requestId);
         request.setProductType("req");
         request.setCorrelationId("idcor-aaddg89");
-        request.setStatusCode("VALIDATE");
+        request.setStatusCode(StatusDeliveryEnum.IN_PROCESSING.getCode());
+        request.setStatusDescription(StatusDeliveryEnum.IN_PROCESSING.getDescription());
+        request.setStatusDetail(StatusDeliveryEnum.IN_PROCESSING.getDetail());
+        request.setStartDate(Instant.now().toString());
         request.setProductType("type");
         request.setFiscalCode("FRMTTR76M06B715E");
         request.setReceiverType("PF");

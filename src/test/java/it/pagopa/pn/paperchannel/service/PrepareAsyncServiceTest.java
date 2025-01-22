@@ -96,7 +96,7 @@ class PrepareAsyncServiceTest {
     @DisplayName("prepareAsyncTestCorrelationIdNullNotCorrectAddress")
     void prepareAsyncTestCorrelationIdNull(){
         Mockito.when(this.requestDeliveryDAO.getByRequestId(Mockito.any(), Mockito.anyBoolean())).thenReturn(Mono.just(getDeliveryRequest()));
-        Mockito.when(this.paperAddressService.getCorrectAddress(Mockito.any(), Mockito.any(), Mockito.any()))
+        Mockito.when(this.paperAddressService.getCorrectAddress(Mockito.any(), Mockito.any(), Mockito.anyInt()))
                 .thenThrow(new PnAddressFlowException(ExceptionTypeEnum.ADDRESS_NOT_EXIST));
 
         Mono<PnDeliveryRequest> mono = this.prepareAsyncService.prepareAsync(request);
@@ -111,7 +111,7 @@ class PrepareAsyncServiceTest {
         Mockito.when(this.requestDeliveryDAO.getByCorrelationId(Mockito.any(), Mockito.anyBoolean()))
                 .thenReturn(Mono.just(getDeliveryRequest()));
 
-        Mockito.when(this.paperAddressService.getCorrectAddress(Mockito.any(), Mockito.any(), Mockito.any()))
+        Mockito.when(this.paperAddressService.getCorrectAddress(Mockito.any(), Mockito.any(), Mockito.anyInt()))
                 .thenReturn(Mono.just(new Address()));
 
         Mockito.when(this.addressDAO.create(Mockito.any()))
@@ -139,7 +139,7 @@ class PrepareAsyncServiceTest {
         Mockito.when(this.requestDeliveryDAO.getByCorrelationId(Mockito.any(), Mockito.anyBoolean()))
                 .thenReturn(Mono.just(deliveryRequest));
 
-        Mockito.when(this.paperAddressService.getCorrectAddress(Mockito.any(), Mockito.any(), Mockito.any()))
+        Mockito.when(this.paperAddressService.getCorrectAddress(Mockito.any(), Mockito.any(), Mockito.anyInt()))
                 .thenReturn(Mono.error(new PnUntracebleException(new KOReason(FailureDetailCodeEnum.D00, null))));
 
 
@@ -185,7 +185,7 @@ class PrepareAsyncServiceTest {
         Mockito.when(this.requestDeliveryDAO.getByCorrelationId(Mockito.any(), Mockito.anyBoolean()))
                 .thenReturn(Mono.just(requestDelivery));
 
-        Mockito.when(this.paperAddressService.getCorrectAddress(Mockito.any(), Mockito.any(), Mockito.any()))
+        Mockito.when(this.paperAddressService.getCorrectAddress(Mockito.any(), Mockito.any(), Mockito.anyInt()))
                         .thenReturn(Mono.just(new Address()));
 
         Mockito.when(this.addressDAO.create(Mockito.any()))
@@ -256,7 +256,7 @@ class PrepareAsyncServiceTest {
 
         // When
         Mockito.when(this.requestDeliveryDAO.getByRequestId(Mockito.anyString(), Mockito.anyBoolean())).thenReturn(Mono.just(deliveryRequest));
-        Mockito.when(this.paperAddressService.getCorrectAddress(Mockito.any(PnDeliveryRequest.class), Mockito.any(Address.class), Mockito.any(PrepareAsyncRequest.class))).thenReturn(Mono.just(new Address()));
+        Mockito.when(this.paperAddressService.getCorrectAddress(Mockito.any(PnDeliveryRequest.class), Mockito.any(Address.class), Mockito.anyInt())).thenReturn(Mono.just(new Address()));
         Mockito.when(this.addressDAO.create(Mockito.any(PnAddress.class))).thenReturn(Mono.just(new PnAddress()));
 
         Mockito.when(this.f24Service.checkDeliveryRequestAttachmentForF24(Mockito.any(PnDeliveryRequest.class))).thenReturn(true);
@@ -342,7 +342,7 @@ class PrepareAsyncServiceTest {
 
         Mockito.when(this.requestDeliveryDAO.getByCorrelationId(Mockito.any(), Mockito.anyBoolean()))
                 .thenReturn(Mono.just(deliveryRequest));
-        Mockito.when(this.paperAddressService.getCorrectAddress(Mockito.any(), Mockito.any(), Mockito.any()))
+        Mockito.when(this.paperAddressService.getCorrectAddress(Mockito.any(), Mockito.any(), Mockito.anyInt()))
                 .thenReturn(Mono.just(new Address()));
         Mockito.when(this.addressDAO.create(Mockito.any()))
                 .thenReturn(Mono.just(getAddress()));

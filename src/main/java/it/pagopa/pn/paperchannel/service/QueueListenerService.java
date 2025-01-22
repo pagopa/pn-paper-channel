@@ -4,14 +4,12 @@ import it.pagopa.pn.api.dto.events.PnAttachmentsConfigEventPayload;
 import it.pagopa.pn.api.dto.events.PnF24PdfSetReadyEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnnationalregistries.v1.dto.AddressSQSMessageDto;
-import it.pagopa.pn.paperchannel.model.DematInternalEvent;
-import it.pagopa.pn.paperchannel.model.F24Error;
-import it.pagopa.pn.paperchannel.model.NationalRegistryError;
-import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
+import it.pagopa.pn.paperchannel.model.*;
 
 public interface QueueListenerService {
 
     void internalListener(PrepareAsyncRequest data, int attempt);
+    void normalizeAddressListener(PrepareNormalizeAddressEvent data, int attempt);
     void dematZipInternalListener(DematInternalEvent body, int attempt);
     void nationalRegistriesResponseListener(AddressSQSMessageDto body);
     void nationalRegistriesErrorListener(NationalRegistryError data, int attempt);
