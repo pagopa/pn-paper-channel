@@ -429,7 +429,7 @@ class PaperAddressServiceImplTest {
                 .verify();
 
         // verifico che scrivo in coda nuovamente l'evento di prepare async
-        verify(prepareFlowStarter, times(1)).redrivePreparePhaseOneAfterAddressManagerError(deliveryRequest, retryPrepareAsyncRequest.getAttemptRetry());
+        verify(prepareFlowStarter, times(1)).redrivePreparePhaseOneAfterAddressManagerError(deliveryRequest, retryPrepareAsyncRequest.getAttemptRetry(), null);
 
     }
 }
