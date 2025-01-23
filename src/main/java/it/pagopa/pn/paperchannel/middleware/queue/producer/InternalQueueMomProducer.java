@@ -22,10 +22,6 @@ public class InternalQueueMomProducer extends AttemptedQueueMomProducer<Internal
             return map;
         }
         InternalEventHeader headerCustom = (InternalEventHeader) header;
-        map.put("attempt", MessageAttributeValue.builder()
-                .dataType("String")
-                .stringValue(String.valueOf(headerCustom.getAttempt()))
-                .build());
         map.put("expired", MessageAttributeValue.builder()
                 .dataType("String")
                 .stringValue(headerCustom.getExpired().toString())
