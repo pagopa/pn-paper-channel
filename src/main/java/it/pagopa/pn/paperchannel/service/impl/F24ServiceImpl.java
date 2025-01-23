@@ -121,6 +121,7 @@ public class F24ServiceImpl extends GenericService implements F24Service {
                         .map(pnDeliveryRequest -> arrangeAttachments(pnDeliveryRequest, normalizedFilekeys))
                         .flatMap(requestDeliveryDAO::updateData)
                         .flatMap(deliveryRequest -> {
+                            // TODO prepareFlowStarter true -> push delayer else
                             PrepareAsyncRequest request = new PrepareAsyncRequest(deliveryRequest.getRequestId(), deliveryRequest.getIun(), false, 0);
                             request.setF24ResponseFlow(true);
                             this.sqsSender.pushToInternalQueue(request);
