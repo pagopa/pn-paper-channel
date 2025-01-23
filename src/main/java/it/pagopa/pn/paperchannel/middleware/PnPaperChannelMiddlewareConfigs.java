@@ -6,12 +6,8 @@ import it.pagopa.pn.api.dto.events.PnPreparePaperchannelToDelayerEvent;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.middleware.queue.model.AttemptPushEvent;
 import it.pagopa.pn.paperchannel.middleware.queue.model.InternalPushEvent;
-import it.pagopa.pn.paperchannel.middleware.queue.producer.DelayerToPaperChannelQueueMomProducer;
-import it.pagopa.pn.paperchannel.middleware.queue.producer.DeliveryPushMomProducer;
+import it.pagopa.pn.paperchannel.middleware.queue.producer.*;
 import it.pagopa.pn.paperchannel.middleware.queue.model.DeliveryPushEvent;
-import it.pagopa.pn.paperchannel.middleware.queue.producer.InternalQueueMomProducer;
-import it.pagopa.pn.paperchannel.middleware.queue.producer.NormalizeAddressQueueMomProducer;
-import it.pagopa.pn.paperchannel.middleware.queue.producer.PaperchannelToDelayerMomProducer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -55,6 +51,11 @@ public class PnPaperChannelMiddlewareConfigs {
     public DelayerToPaperChannelQueueMomProducer delayerToPaperQueueMomProducer(SqsClient sqsClient, ObjectMapper objMapper) {
         return new DelayerToPaperChannelQueueMomProducer(sqsClient,
                 this.pnPaperChannelConfig.getQueueDelayerToPaperchannel(), objMapper, PnPrepareDelayerToPaperchannelEvent.class);
+    }
+
+    @Bean
+    public DelayerToPaperchannelInternalProducer delayerToPaperchannelInternalProducer(SqsClient sqsClient, ObjectMapper objMapper) {
+        return new DelayerToPaperchannelInternalProducer(sqsClient, this.pnPaperChannelConfig.getQueueDelayerToPaperchannel(), objMapper, AttemptPushEvent.class);
     }
 }
 
