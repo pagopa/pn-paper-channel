@@ -45,7 +45,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
 
-@SpringBootTest(properties = { "pn.paper-channel.queue-external-channel=local-ext-channels-outputs-test" })
+@SpringBootTest(properties = {
+        "pn.paper-channel.queue-external-channel=local-ext-channels-outputs-test",
+        "pn.paper-channel.queue-normalize-address=local-paper-normalize-address-test"
+})
 class QueueListenerTestIT extends BaseTest
 {
 
@@ -390,5 +393,6 @@ class QueueListenerTestIT extends BaseTest
     public void clean() {
         sqsClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(config.getQueueExternalChannel() + "-DLQ").build());
         sqsClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(config.getQueueExternalChannel()).build());
+        sqsClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(config.getQueueNormalizeAddress()).build());
     }
 }
