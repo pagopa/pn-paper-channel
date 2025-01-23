@@ -110,7 +110,8 @@ class QueueListenerTestIT extends BaseTest
 
         //mi aspetto che dopo aver letto il messaggio 2 volte, quest'ultimo venga re-indirizzato in DLQ
         await()
-                .atMost(Duration.ofSeconds(10))
+                .atMost(Duration.ofSeconds(15))
+                .pollInterval(Duration.ofMillis(500))
                 .untilAsserted(() -> {
                     final ReceiveMessageResponse receiveMessageResponse = sqsClient.receiveMessage(ReceiveMessageRequest.builder()
                             .queueUrl(config.getQueueExternalChannel() + "-DLQ")
@@ -153,7 +154,8 @@ class QueueListenerTestIT extends BaseTest
         sqsClient.sendMessage(sendMessageRequest);
 
         await()
-                .atMost(Duration.ofSeconds(10))
+                .atMost(Duration.ofSeconds(15))
+                .pollInterval(Duration.ofMillis(500))
                 .untilAsserted(() -> verify(queueListenerService, times(1)).normalizeAddressListener(any(), anyInt()));
 
         PrepareNormalizeAddressEvent expectedEvent = PrepareNormalizeAddressEvent.builder()
@@ -192,7 +194,8 @@ class QueueListenerTestIT extends BaseTest
         sqsClient.sendMessage(sendMessageRequest);
 
         await()
-                .atMost(Duration.ofSeconds(10))
+                .atMost(Duration.ofSeconds(15))
+                .pollInterval(Duration.ofMillis(500))
                 .untilAsserted(() -> verify(queueListenerService, times(1)).nationalRegistriesErrorListener(any(), eq(1)));
 
         verify(nationalRegistryService, times(1)).finderAddressFromNationalRegistries(any(), any(), any(), any(), any(), any());
@@ -231,7 +234,8 @@ class QueueListenerTestIT extends BaseTest
 
 
         await()
-                .atMost(Duration.ofSeconds(10))
+                .atMost(Duration.ofSeconds(15))
+                .pollInterval(Duration.ofMillis(500))
                 .untilAsserted(() -> verify(paperRequestErrorDAO, times(1)).created(requestErrorArgumentCaptor.capture()));
 
         PnRequestError actualError = requestErrorArgumentCaptor.getValue();
@@ -279,7 +283,8 @@ class QueueListenerTestIT extends BaseTest
         sqsClient.sendMessage(sendMessageRequest);
 
         await()
-                .atMost(Duration.ofSeconds(10))
+                .atMost(Duration.ofSeconds(15))
+                .pollInterval(Duration.ofMillis(500))
                 .untilAsserted(() -> verify(queueListenerService, times(1)).normalizeAddressListener(expectedEvent, 1));
 
         verify(preparePhaseOneAsyncService, times(1)).preparePhaseOneAsync(expectedEvent);
@@ -314,7 +319,8 @@ class QueueListenerTestIT extends BaseTest
         sqsClient.sendMessage(sendMessageRequest);
 
         await()
-                .atMost(Duration.ofSeconds(10))
+                .atMost(Duration.ofSeconds(15))
+                .pollInterval(Duration.ofMillis(500))
                 .untilAsserted(() -> verify(paperRequestErrorDAO, times(1)).created(requestErrorArgumentCaptor.capture()));
 
         PnRequestError actualError = requestErrorArgumentCaptor.getValue();

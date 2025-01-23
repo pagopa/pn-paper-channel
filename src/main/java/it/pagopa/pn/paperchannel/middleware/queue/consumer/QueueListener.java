@@ -440,7 +440,6 @@ public class QueueListener {
         pushQueue.apply(Pair.of(entity, attempt));
     }
 
-
     private <T> T convertToObject(String body, Class<T> tClass){
         T entity = Utility.jsonToObject(this.objectMapper, body, tClass);
         if (entity == null) throw new PnGenericException(MAPPER_ERROR, MAPPER_ERROR.getMessage());

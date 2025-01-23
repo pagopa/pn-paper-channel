@@ -13,6 +13,6 @@ public interface PrepareFlowStarter {
     void startPreparePhaseOneFromNationalRegistriesFlow(PnDeliveryRequest deliveryRequest, Address nationalRegistriesAddress);
     void pushPreparePhaseOneOutput(PnDeliveryRequest deliveryRequest, PnAddress recipientNormalizedAddress);
     void redrivePreparePhaseOneAfterNationalRegistryError(NationalRegistryError entity, int attemptRetry);
-    void redrivePreparePhaseOneAfterAddressManagerError(PnDeliveryRequest deliveryRequest, int attemptRetry);
+    void redrivePreparePhaseOneAfterAddressManagerError(PnDeliveryRequest deliveryRequest, int attemptRetry, Address fromNationalRegistry);
     void pushResultPrepareEvent(PnDeliveryRequest request, Address address, String clientId, StatusCodeEnum statusCode, KOReason koReason);
 }

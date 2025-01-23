@@ -129,9 +129,7 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
                             prepareNormalizeAddressEvent.setAttempt(attempt);
                             return this.preparePhaseOneAsyncService.preparePhaseOneAsync(prepareNormalizeAddressEvent);
                         })
-                        .doOnSuccess(resultFromAsync ->{
-                                    log.logEndingProcess(processName);
-                                }
+                        .doOnSuccess(resultFromAsync -> log.logEndingProcess(processName)
                         )
                 )
                 .block();
