@@ -5,6 +5,7 @@ import io.awspring.cloud.messaging.listener.SqsMessageDeletionPolicy;
 import io.awspring.cloud.messaging.listener.annotation.SqsListener;
 import it.pagopa.pn.api.dto.events.PnAttachmentsConfigEventPayload;
 import it.pagopa.pn.api.dto.events.PnF24PdfSetReadyEvent;
+import it.pagopa.pn.api.dto.events.PnPrepareDelayerToPaperchannelPayload;
 import it.pagopa.pn.commons.utils.MDCUtils;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
@@ -16,7 +17,6 @@ import it.pagopa.pn.paperchannel.middleware.queue.model.AttemptEventHeader;
 import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
 import it.pagopa.pn.paperchannel.middleware.queue.model.InternalEventHeader;
 import it.pagopa.pn.paperchannel.middleware.queue.model.ManualRetryEvent;
-import it.pagopa.pn.paperchannel.model.DelayerToPaperChannelEventPayload;
 import it.pagopa.pn.paperchannel.model.*;
 import it.pagopa.pn.paperchannel.service.QueueListenerService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
@@ -135,10 +135,12 @@ public class QueueListener {
 
     @SqsListener(value = "${pn.paper-channel.delayer-to-paperchannel}", deletionPolicy = SqsMessageDeletionPolicy.ALWAYS)
     public void pullDelayerMessages(@Payload String node, @Headers Map<String,Object> headers){
-        var body = convertToObject(node, DelayerToPaperChannelEventPayload.class);
+        var body = convertToObject(node, PnPrepareDelayerToPaperchannelPayload.class);
+        InternalEventHeader internalEventHeader = toInternalEventHeader(headers);
         setMDCContext(headers);
         log.debug("Handle message from delayerListener with header {}, body:{}", headers, body);
-        this.queueListenerService.delayerListener(body);
+        this.queueListenerService.delayerListener(body, internalEventHeader.getAttempt());
+        this.queueListenerService.delayerListener(body, 0);
     }
 
     @SqsListener(value = "${pn.paper-channel.queue-normalize-address}", deletionPolicy = SqsMessageDeletionPolicy.ALWAYS)
@@ -400,7 +402,8 @@ public class QueueListener {
         return null;
     }
 
-    private AttemptEventHeader toAttemptEventHeader(Map<String, Object> headers){
+    // TODo controllare se è presente la chiave attempt
+    private GenericEventHeader toAttemptEventHeader(Map<String, Object> headers){
         if (headers.containsKey(PN_EVENT_HEADER_EVENT_TYPE) &&
                 headers.containsKey(PN_EVENT_HEADER_ATTEMPT)){
 
