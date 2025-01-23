@@ -3,6 +3,7 @@ package it.pagopa.pn.paperchannel.service.impl;
 import it.pagopa.pn.api.dto.events.PnAttachmentsConfigEventPayload;
 import it.pagopa.pn.api.dto.events.PnF24PdfSetReadyEvent;
 import it.pagopa.pn.api.dto.events.PnF24PdfSetReadyEventItem;
+import it.pagopa.pn.api.dto.events.PnPrepareDelayerToPaperchannelPayload;
 import it.pagopa.pn.commons.utils.MDCUtils;
 import it.pagopa.pn.paperchannel.exception.*;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.SingleStatusUpdateDto;
@@ -19,7 +20,6 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnRequestError;
 import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
 import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
-import it.pagopa.pn.paperchannel.middleware.queue.model.delayer.DelayerToPaperChannelEventPayload;
 import it.pagopa.pn.paperchannel.model.*;
 import it.pagopa.pn.paperchannel.service.*;
 import it.pagopa.pn.paperchannel.utils.Const;
@@ -53,6 +53,7 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
     private final PaperResultAsyncService paperResultAsyncService;
     private final PaperAsyncService paperAsyncService;
     private final PreparePhaseOneAsyncService preparePhaseOneAsyncService;
+    private final PreparePhaseTwoAsyncService preparePhaseTwoAsyncService;
     private final AddressDAO addressDAO;
     private final PaperRequestErrorDAO paperRequestErrorDAO;
     private final ExternalChannelClient externalChannelClient;
@@ -65,7 +66,9 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
     public QueueListenerServiceImpl(RequestDeliveryDAO requestDeliveryDAO,
                                     SqsSender sqsSender,
                                     PaperResultAsyncService paperResultAsyncService,
-                                    PaperAsyncService paperAsyncService, PreparePhaseOneAsyncService preparePhaseOneAsyncService,
+                                    PaperAsyncService paperAsyncService,
+                                    PreparePhaseOneAsyncService preparePhaseOneAsyncService,
+                                    PreparePhaseTwoAsyncService preparePhaseTwoAsyncService,
                                     AddressDAO addressDAO,
                                     PaperRequestErrorDAO paperRequestErrorDAO,
                                     ExternalChannelClient externalChannelClient,
@@ -79,6 +82,7 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
         this.paperResultAsyncService = paperResultAsyncService;
         this.paperAsyncService = paperAsyncService;
         this.preparePhaseOneAsyncService = preparePhaseOneAsyncService;
+        this.preparePhaseTwoAsyncService = preparePhaseTwoAsyncService;
         this.addressDAO = addressDAO;
         this.paperRequestErrorDAO = paperRequestErrorDAO;
         this.externalChannelClient = externalChannelClient;
@@ -415,14 +419,14 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
     }
 
     @Override
-    public void delayerListener(DelayerToPaperChannelEventPayload data) {
+    public void delayerListener(PnPrepareDelayerToPaperchannelPayload data, int attempt) {
         String processName = "DelayerListener";
-        //MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, body.getRequestId());
+        MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, data.getRequestId());
         log.logStartingProcess(processName);
-        MDCUtils.addMDCToContextAndExecute(Mono.just(body)
-                        .flatMap(prepareRequest -> {
-                            prepareRequest.setAttemptRetry(attempt);
-                            return this.paperAsyncService.prepareAsync(prepareRequest);
+        MDCUtils.addMDCToContextAndExecute(Mono.just(data)
+                        .flatMap(delayerRequest -> {
+                            delayerRequest.setAttemptRetry(attempt);
+                            return this.preparePhaseTwoAsyncService.prepareAsyncPhaseTwo(data);
                         })
                         .doOnSuccess(resultFromAsync ->{
                                     log.info("End of prepare async internal");
@@ -431,9 +435,6 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
                         )
                         .doOnError(throwable -> {
                             log.error(throwable.getMessage());
-                            if (throwable instanceof PnAddressFlowException) return;
-                            if (throwable instanceof PnF24FlowException pnF24FlowException) manageF24Exception(pnF24FlowException.getF24Error(), pnF24FlowException.getF24Error().getAttempt(), pnF24FlowException);
-
                             throw new PnGenericException(PREPARE_ASYNC_LISTENER_EXCEPTION, PREPARE_ASYNC_LISTENER_EXCEPTION.getMessage());
                         }))
                 .block();

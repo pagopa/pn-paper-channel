@@ -2,9 +2,9 @@ package it.pagopa.pn.paperchannel.service;
 
 import it.pagopa.pn.api.dto.events.PnAttachmentsConfigEventPayload;
 import it.pagopa.pn.api.dto.events.PnF24PdfSetReadyEvent;
+import it.pagopa.pn.api.dto.events.PnPrepareDelayerToPaperchannelPayload;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnnationalregistries.v1.dto.AddressSQSMessageDto;
-import it.pagopa.pn.paperchannel.middleware.queue.model.delayer.DelayerToPaperChannelEventPayload;
 import it.pagopa.pn.paperchannel.model.*;
 
 public interface QueueListenerService {
@@ -19,6 +19,6 @@ public interface QueueListenerService {
     void f24ErrorListener(F24Error entity, Integer attempt);
     void f24ResponseListener(PnF24PdfSetReadyEvent.Detail body);
     void raddAltListener(PnAttachmentsConfigEventPayload data);
-    void delayerListener(DelayerToPaperChannelEventPayload data);
+    void delayerListener(PnPrepareDelayerToPaperchannelPayload data, int attempt);
 
 }
