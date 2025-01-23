@@ -403,7 +403,7 @@ public class QueueListener {
     }
 
     // TODo controllare se è presente la chiave attempt
-    private GenericEventHeader toAttemptEventHeader(Map<String, Object> headers){
+    private AttemptEventHeader toAttemptEventHeader(Map<String, Object> headers){
         if (headers.containsKey(PN_EVENT_HEADER_EVENT_TYPE) &&
                 headers.containsKey(PN_EVENT_HEADER_ATTEMPT)){
 

@@ -23,6 +23,7 @@ public interface SqsSender {
     void pushToPaperchannelToDelayerQueue(PnPreparePaperchannelToDelayerPayload payload);
     void pushDematZipInternalEvent(DematInternalEvent dematZipInternalEvent);
     void pushSingleStatusUpdateEvent(SingleStatusUpdateDto singleStatusUpdateDto);
+    void pushToDelayerToPaperchennelQueue(PnPrepareDelayerToPaperchannelPayload payload);
 
     void pushSendEventOnEventBridge(String clientId, SendEvent event);
     void pushPrepareEventOnEventBridge(String clientId, PrepareEvent event);

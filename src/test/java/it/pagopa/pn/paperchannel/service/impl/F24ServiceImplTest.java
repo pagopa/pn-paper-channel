@@ -16,10 +16,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.F24Client;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
-import it.pagopa.pn.paperchannel.service.F24Service;
-import it.pagopa.pn.paperchannel.service.PaperTenderService;
-import it.pagopa.pn.paperchannel.service.SafeStorageService;
-import it.pagopa.pn.paperchannel.service.SqsSender;
+import it.pagopa.pn.paperchannel.service.*;
 import it.pagopa.pn.paperchannel.utils.*;
 import it.pagopa.pn.paperchannel.utils.config.CostRoundingModeConfig;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -54,11 +51,11 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest(classes = {PaperCalculatorUtils.class, F24ServiceImpl.class})
 class F24ServiceImplTest {
 
-    private final static String IUN = "ABCD-EFGH-00000000-000001";
-    private final static String RECIPIENT_INDEX = "0";
-    private final static String F24_FILE_KEY = "f24set://ABCD-EFGH-00000000-000001/0";
-    private final static String ATTACHMENT_DOC_TYPE = "PDF";
-    private final static String ATTACHMENT_URL = "http://localhost:8080";
+    private static final String IUN = "ABCD-EFGH-00000000-000001";
+    private static final String RECIPIENT_INDEX = "0";
+    private static final String F24_FILE_KEY = "f24set://ABCD-EFGH-00000000-000001/0";
+    private static final String ATTACHMENT_DOC_TYPE = "PDF";
+    private static final String ATTACHMENT_URL = "http://localhost:8080";
 
     @Autowired
     private F24Service f24Service;
@@ -76,6 +73,8 @@ class F24ServiceImplTest {
     private DateChargeCalculationModesUtils dateChargeCalculationModesUtils;
     @MockBean
     private SqsSender sqsSender;
+    @MockBean
+    private PrepareFlowStarter prepareFlowStarter;
     @MockBean
     private F24Client f24Client;
     @MockBean
@@ -238,7 +237,7 @@ class F24ServiceImplTest {
         PnDeliveryRequest res = f24Service.arrangeF24AttachmentsAndReschedulePrepare(requestid, f24SetResolvedUrls).block();
 
         // Then
-        Mockito.verify(this.sqsSender).pushToInternalQueue(Mockito.any());
+        Mockito.verify(this.prepareFlowStarter).redrivePreparePhaseTwoAfterF24Flow(Mockito.any());
 
         assertNotNull(res);
 

@@ -1,6 +1,7 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.api.dto.events.PnAddressItem;
+import it.pagopa.pn.api.dto.events.PnPrepareDelayerToPaperchannelPayload;
 import it.pagopa.pn.api.dto.events.PnPreparePaperchannelToDelayerPayload;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PrepareEvent;
@@ -131,6 +132,26 @@ public class PrepareFlowStarterImpl implements PrepareFlowStarter {
             queueModel.setAddressRetry(true);
             queueModel.setAttemptRetry(attemptRetry);
             this.sqsSender.pushInternalError(queueModel, queueModel.getAttemptRetry(), PrepareAsyncRequest.class);
+        }
+    }
+
+    public void redrivePreparePhaseTwoAfterF24Flow(PnDeliveryRequest deliveryRequest) {
+
+        if(isPrepareTwoPhases()) {
+            log.debug("Internal event from f24 flow to pn-delayer_to_paperchannel queue");
+            PnPrepareDelayerToPaperchannelPayload payload = PnPrepareDelayerToPaperchannelPayload.builder()
+                    .requestId(deliveryRequest.getRequestId())
+                    .iun(deliveryRequest.getIun())
+                    .attemptRetry(0)
+                    .build();
+            this.sqsSender.pushToDelayerToPaperchennelQueue(payload);
+        }
+
+        else {
+            log.debug("Internal event from f24 flow to pn-paper_channel_requests queue");
+            PrepareAsyncRequest request = new PrepareAsyncRequest(deliveryRequest.getRequestId(), deliveryRequest.getIun(), false, 0);
+            request.setF24ResponseFlow(true);
+            this.sqsSender.pushToInternalQueue(request);
         }
     }
 

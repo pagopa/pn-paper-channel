@@ -1,9 +1,6 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
-import it.pagopa.pn.api.dto.events.GenericEventHeader;
-import it.pagopa.pn.api.dto.events.PnPreparePaperchannelToDelayerEvent;
-import it.pagopa.pn.api.dto.events.PnPreparePaperchannelToDelayerPayload;
-import it.pagopa.pn.api.dto.events.StandardEventHeader;
+import it.pagopa.pn.api.dto.events.*;
 import it.pagopa.pn.commons.utils.LogUtils;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PaperChannelUpdate;
@@ -39,6 +36,7 @@ public class SqsQueueSender implements SqsSender {
     private final InternalQueueMomProducer internalQueueMomProducer;
     private final NormalizeAddressQueueMomProducer normalizeAddressQueueMomProducer;
     private final PaperchannelToDelayerMomProducer paperchannelToDelayerMomProducer;
+    private final DelayerToPaperchannelInternalProducer delayerToPaperchannelInternalProducer;
     private final EventBridgeProducer eventBridgeProducer;
 
     @Override
@@ -139,6 +137,22 @@ public class SqsQueueSender implements SqsSender {
 
         InternalPushEvent<SingleStatusUpdateDto> internalPushEvent = new InternalPushEvent<>(prepareHeader, singleStatusUpdateDto);
         this.internalQueueMomProducer.push(internalPushEvent);
+    }
+
+    @Override
+    public void pushToDelayerToPaperchennelQueue(PnPrepareDelayerToPaperchannelPayload payload) {
+        AttemptEventHeader prepareHeader= AttemptEventHeader.builder()
+                .publisher(PUBLISHER_PREPARE)
+                .eventId(UUID.randomUUID().toString())
+                .createdAt(Instant.now())
+                .eventType(EventTypeEnum.PREPARE_ASYNC_FLOW.name())
+                .clientId(payload.getClientId())
+                .attempt(0)
+                .build();
+
+        //TODO capire se cambiare eventType poichè utilizzato già dalla PREPARE fase 1
+        var internalPushEvent = new AttemptPushEvent<>(prepareHeader, payload);
+        this.delayerToPaperchannelInternalProducer.push(internalPushEvent);
     }
 
     @Override

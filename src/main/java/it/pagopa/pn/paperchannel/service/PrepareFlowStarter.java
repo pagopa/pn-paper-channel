@@ -14,5 +14,6 @@ public interface PrepareFlowStarter {
     void pushPreparePhaseOneOutput(PnDeliveryRequest deliveryRequest, PnAddress recipientNormalizedAddress);
     void redrivePreparePhaseOneAfterNationalRegistryError(NationalRegistryError entity, int attemptRetry);
     void redrivePreparePhaseOneAfterAddressManagerError(PnDeliveryRequest deliveryRequest, int attemptRetry, Address fromNationalRegistry);
+    void redrivePreparePhaseTwoAfterF24Flow(PnDeliveryRequest deliveryRequest);
     void pushResultPrepareEvent(PnDeliveryRequest request, Address address, String clientId, StatusCodeEnum statusCode, KOReason koReason);
 }
