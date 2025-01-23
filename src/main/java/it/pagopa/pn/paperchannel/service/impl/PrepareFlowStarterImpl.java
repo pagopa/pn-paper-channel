@@ -166,6 +166,19 @@ public class PrepareFlowStarterImpl implements PrepareFlowStarter {
         this.sqsSender.pushPrepareEvent(prepareEvent);
     }
 
+    public void redrivePreparePhaseTwoAfterF24Error(F24Error f24Error) {
+
+        if(isPrepareTwoPhases()) {
+            log.info("Attempting F24 to pushing to pn-delayer_to_paperchannel queue, payload={}", f24Error);
+            this.sqsSender.pushF24ErrorDelayerToPaperChannelQueue(f24Error);
+        }
+
+        else {
+            log.info("Attempting to pushing to internal payload={}", f24Error);
+            sqsSender.pushInternalError(f24Error, f24Error.getAttempt(), F24Error.class);
+        }
+    }
+
     private boolean isPrepareTwoPhases() {
         return Boolean.TRUE.equals(config.isPrepareTwoPhases());
     }

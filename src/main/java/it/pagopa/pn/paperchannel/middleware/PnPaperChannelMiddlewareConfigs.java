@@ -1,7 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import it.pagopa.pn.api.dto.events.PnPrepareDelayerToPaperchannelEvent;
 import it.pagopa.pn.api.dto.events.PnPreparePaperchannelToDelayerEvent;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.middleware.queue.model.AttemptPushEvent;
@@ -43,14 +42,7 @@ public class PnPaperChannelMiddlewareConfigs {
 
     @Bean
     public PaperchannelToDelayerMomProducer paperchannelToDelayerMomProducer(SqsClient sqsClient, ObjectMapper objMapper) {
-        return new PaperchannelToDelayerMomProducer(sqsClient,
-                this.pnPaperChannelConfig.getQueuePaperchannelToDelayer(), objMapper, PnPreparePaperchannelToDelayerEvent.class);
-    }
-
-    @Bean
-    public DelayerToPaperChannelQueueMomProducer delayerToPaperQueueMomProducer(SqsClient sqsClient, ObjectMapper objMapper) {
-        return new DelayerToPaperChannelQueueMomProducer(sqsClient,
-                this.pnPaperChannelConfig.getQueueDelayerToPaperchannel(), objMapper, PnPrepareDelayerToPaperchannelEvent.class);
+        return new PaperchannelToDelayerMomProducer(sqsClient, this.pnPaperChannelConfig.getQueuePaperchannelToDelayer(), objMapper, PnPreparePaperchannelToDelayerEvent.class);
     }
 
     @Bean

@@ -29,7 +29,6 @@ public interface SqsSender {
     void pushPrepareEventOnEventBridge(String clientId, PrepareEvent event);
 
     <T> void pushInternalError(T entity, int attempt, Class<T> tClass);
-    void pushErrorDelayerToPaperChannelQueue(PnPrepareDelayerToPaperchannelPayload entity);
     void pushF24ErrorDelayerToPaperChannelQueue(F24Error entity);
     <T> void rePushInternalError(T entity, int attempt, Instant expired, Class<T> tClass);
 

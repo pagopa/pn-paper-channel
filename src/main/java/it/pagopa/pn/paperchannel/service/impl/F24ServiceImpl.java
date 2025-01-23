@@ -124,7 +124,7 @@ public class F24ServiceImpl extends GenericService implements F24Service {
                         .map(pnDeliveryRequest -> arrangeAttachments(pnDeliveryRequest, normalizedFilekeys))
                         .flatMap(requestDeliveryDAO::updateData)
                         .flatMap(deliveryRequest -> {
-                            this.prepareFlowStarter.startPreparePhaseTwoFromF24Flow(deliveryRequest);
+                            this.prepareFlowStarter.redrivePreparePhaseTwoAfterF24Flow(deliveryRequest);
                             return Mono.just(deliveryRequest);
                         })
                 .doOnSuccess(deliveryRequest -> f24ResponseLogAuditSuccess(deliveryRequest, normalizedFilekeys, pnLogAudit))

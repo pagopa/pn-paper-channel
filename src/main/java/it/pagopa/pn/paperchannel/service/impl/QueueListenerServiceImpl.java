@@ -187,8 +187,7 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
 
         entity.setAttempt(attempt +1);
         saveErrorAndPushError(entity.getRequestId(), StatusDeliveryEnum.F24_ERROR, entity, payload -> {
-            log.info("attempting to pushing to internal payload={}", payload);
-            sqsSender.pushInternalError(payload, entity.getAttempt(), F24Error.class);
+            prepareFlowStarter.redrivePreparePhaseTwoAfterF24Error(entity);
             return null;
         });
     }

@@ -190,6 +190,20 @@ public class SqsQueueSender implements SqsSender {
     }
 
     @Override
+    public void pushF24ErrorDelayerToPaperChannelQueue(F24Error entity) {
+        AttemptEventHeader prepareHeader= InternalEventHeader.builder()
+                .publisher(PUBLISHER_PREPARE)
+                .eventId(UUID.randomUUID().toString())
+                .createdAt(Instant.now())
+                .attempt(entity.getAttempt() +1)
+                .eventType(F24_ERROR.name())
+                .build();
+
+        int delaySeconds = getDelaySeconds(entity.getAttempt());
+        this.delayerToPaperchannelInternalProducer.push(new AttemptPushEvent<>(prepareHeader, entity), delaySeconds);
+    }
+
+    @Override
     public <T> void redrivePreparePhaseOneAfterError(T entity, int attempt, Class<T> tClass) {
         EventTypeEnum eventTypeEnum = getTypeEnumForPreparePhaseOne(entity, tClass);
         if (eventTypeEnum == null) return;
