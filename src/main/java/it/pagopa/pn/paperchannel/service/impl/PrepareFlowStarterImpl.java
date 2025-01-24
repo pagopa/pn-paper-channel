@@ -1,6 +1,7 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.api.dto.events.PnAddressItem;
+import it.pagopa.pn.api.dto.events.PnPrepareDelayerToPaperchannelPayload;
 import it.pagopa.pn.api.dto.events.PnPreparePaperchannelToDelayerPayload;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PrepareEvent;
@@ -134,6 +135,26 @@ public class PrepareFlowStarterImpl implements PrepareFlowStarter {
         }
     }
 
+    public void redrivePreparePhaseTwoAfterF24Flow(PnDeliveryRequest deliveryRequest) {
+
+        if(isPrepareTwoPhases()) {
+            log.debug("Internal event from f24 flow to pn-delayer_to_paperchannel queue");
+            PnPrepareDelayerToPaperchannelPayload payload = PnPrepareDelayerToPaperchannelPayload.builder()
+                    .requestId(deliveryRequest.getRequestId())
+                    .iun(deliveryRequest.getIun())
+                    .attemptRetry(0)
+                    .build();
+            this.sqsSender.pushToDelayerToPaperchennelQueue(payload);
+        }
+
+        else {
+            log.debug("Internal event from f24 flow to pn-paper_channel_requests queue");
+            PrepareAsyncRequest request = new PrepareAsyncRequest(deliveryRequest.getRequestId(), deliveryRequest.getIun(), false, 0);
+            request.setF24ResponseFlow(true);
+            this.sqsSender.pushToInternalQueue(request);
+        }
+    }
+
     public void pushResultPrepareEvent(PnDeliveryRequest request, Address address, String clientId, StatusCodeEnum statusCode, KOReason koReason){
         PrepareEvent prepareEvent = PrepareEventMapper.toPrepareEvent(request, address, statusCode, koReason);
         if (request.getRequestId().contains(PREFIX_REQUEST_ID_SERVICE_DESK)){
@@ -143,6 +164,19 @@ public class PrepareFlowStarterImpl implements PrepareFlowStarter {
         }
         log.info("Sending event to delivery-push: {}", prepareEvent);
         this.sqsSender.pushPrepareEvent(prepareEvent);
+    }
+
+    public void redrivePreparePhaseTwoAfterF24Error(F24Error f24Error) {
+
+        if(isPrepareTwoPhases()) {
+            log.info("Attempting F24 to pushing to pn-delayer_to_paperchannel queue, payload={}", f24Error);
+            this.sqsSender.pushF24ErrorDelayerToPaperChannelQueue(f24Error);
+        }
+
+        else {
+            log.info("Attempting to pushing to internal payload={}", f24Error);
+            sqsSender.pushInternalError(f24Error, f24Error.getAttempt(), F24Error.class);
+        }
     }
 
     private boolean isPrepareTwoPhases() {

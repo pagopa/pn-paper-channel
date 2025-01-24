@@ -1,9 +1,6 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
-import it.pagopa.pn.api.dto.events.GenericEventHeader;
-import it.pagopa.pn.api.dto.events.PnPreparePaperchannelToDelayerEvent;
-import it.pagopa.pn.api.dto.events.PnPreparePaperchannelToDelayerPayload;
-import it.pagopa.pn.api.dto.events.StandardEventHeader;
+import it.pagopa.pn.api.dto.events.*;
 import it.pagopa.pn.commons.utils.LogUtils;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PaperChannelUpdate;
@@ -39,6 +36,7 @@ public class SqsQueueSender implements SqsSender {
     private final InternalQueueMomProducer internalQueueMomProducer;
     private final NormalizeAddressQueueMomProducer normalizeAddressQueueMomProducer;
     private final PaperchannelToDelayerMomProducer paperchannelToDelayerMomProducer;
+    private final DelayerToPaperchannelInternalProducer delayerToPaperchannelInternalProducer;
     private final EventBridgeProducer eventBridgeProducer;
 
     @Override
@@ -142,6 +140,22 @@ public class SqsQueueSender implements SqsSender {
     }
 
     @Override
+    public void pushToDelayerToPaperchennelQueue(PnPrepareDelayerToPaperchannelPayload payload) {
+        AttemptEventHeader prepareHeader= AttemptEventHeader.builder()
+                .publisher(PUBLISHER_PREPARE)
+                .eventId(UUID.randomUUID().toString())
+                .createdAt(Instant.now())
+                .eventType(EventTypeEnum.PREPARE_ASYNC_FLOW.name())
+                .clientId(payload.getClientId())
+                .attempt(0)
+                .build();
+
+        //TODO capire se cambiare eventType poichè utilizzato già dalla PREPARE fase 1
+        var internalPushEvent = new AttemptPushEvent<>(prepareHeader, payload);
+        this.delayerToPaperchannelInternalProducer.push(internalPushEvent);
+    }
+
+    @Override
     public void pushSendEventOnEventBridge(String clientId, SendEvent event) {
         PaperChannelUpdate update = new PaperChannelUpdate();
         update.setSendEvent(event);
@@ -173,6 +187,34 @@ public class SqsQueueSender implements SqsSender {
                 .build();
         this.internalQueueMomProducer.push(new InternalPushEvent<>(prepareHeader, entity));
         log.info("pushed to queue entity={}", entity);
+    }
+
+    public void pushErrorDelayerToPaperChannelAfterSafeStorageErrorQueue(PnPrepareDelayerToPaperchannelPayload entity) {
+        AttemptEventHeader prepareHeader= AttemptEventHeader.builder()
+                .publisher(PUBLISHER_PREPARE)
+                .eventId(UUID.randomUUID().toString())
+                .createdAt(Instant.now())
+                .attempt(entity.getAttemptRetry() + 1)
+                .eventType(SAFE_STORAGE_ERROR.name())
+                .build();
+        int delaySeconds = getDelaySeconds(entity.getAttemptRetry());
+        this.delayerToPaperchannelInternalProducer.push(new AttemptPushEvent<>(prepareHeader, entity), delaySeconds);
+        log.info("pushed to DelayerToPaperchannel queue entity={}", entity);
+    }
+
+    @Override
+    public void pushF24ErrorDelayerToPaperChannelQueue(F24Error entity) {
+        AttemptEventHeader prepareHeader= InternalEventHeader.builder()
+                .publisher(PUBLISHER_PREPARE)
+                .eventId(UUID.randomUUID().toString())
+                .createdAt(Instant.now())
+                .attempt(entity.getAttempt() +1)
+                .eventType(F24_ERROR.name())
+                .build();
+
+        int delaySeconds = getDelaySeconds(entity.getAttempt());
+        this.delayerToPaperchannelInternalProducer.push(new AttemptPushEvent<>(prepareHeader, entity), delaySeconds);
+        log.info("pushed to DelayerToPaperchannel queue entity={}", entity);
     }
 
     @Override

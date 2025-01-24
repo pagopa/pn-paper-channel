@@ -44,6 +44,7 @@ public class PnPaperChannelConfig {
     private String queueRaddAlt;
     private String queueNormalizeAddress;
     private String queuePaperchannelToDelayer;
+    private String queueDelayerToPaperchannel;
     private String queueInternal;
     private Integer attemptSafeStorage;
     private Integer attemptQueueSafeStorage;

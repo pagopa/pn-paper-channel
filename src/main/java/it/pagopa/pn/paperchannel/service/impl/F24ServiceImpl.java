@@ -18,9 +18,9 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.F24Client;
 import it.pagopa.pn.paperchannel.model.F24Error;
-import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.service.F24Service;
+import it.pagopa.pn.paperchannel.service.PrepareFlowStarter;
 import it.pagopa.pn.paperchannel.service.SafeStorageService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.*;
@@ -70,16 +70,19 @@ public class F24ServiceImpl extends GenericService implements F24Service {
 
     private final DateChargeCalculationModesUtils dateChargeCalculationModesUtils;
 
+    private final PrepareFlowStarter prepareFlowStarter;
+
 
     public F24ServiceImpl(F24Client f24Client,
                           SqsSender sqsQueueSender,
                           PaperCalculatorUtils paperCalculatorUtils, AddressDAO addressDAO, RequestDeliveryDAO requestDeliveryDAO,
                           PnPaperChannelConfig paperChannelConfig, SafeStorageService safeStorageService,
-                          DateChargeCalculationModesUtils dateChargeCalculationModesUtils) {
+                          DateChargeCalculationModesUtils dateChargeCalculationModesUtils, PrepareFlowStarter prepareFlowStarter) {
         super(sqsQueueSender, requestDeliveryDAO);
         this.f24Client = f24Client;
         this.paperCalculatorUtils = paperCalculatorUtils;
         this.addressDAO = addressDAO;
+        this.prepareFlowStarter = prepareFlowStarter;
         this.requestDeliveryDAO = requestDeliveryDAO;
         this.paperChannelConfig = paperChannelConfig;
         this.safeStorageService = safeStorageService;
@@ -121,9 +124,7 @@ public class F24ServiceImpl extends GenericService implements F24Service {
                         .map(pnDeliveryRequest -> arrangeAttachments(pnDeliveryRequest, normalizedFilekeys))
                         .flatMap(requestDeliveryDAO::updateData)
                         .flatMap(deliveryRequest -> {
-                            PrepareAsyncRequest request = new PrepareAsyncRequest(deliveryRequest.getRequestId(), deliveryRequest.getIun(), false, 0);
-                            request.setF24ResponseFlow(true);
-                            this.sqsSender.pushToInternalQueue(request);
+                            this.prepareFlowStarter.redrivePreparePhaseTwoAfterF24Flow(deliveryRequest);
                             return Mono.just(deliveryRequest);
                         })
                 .doOnSuccess(deliveryRequest -> f24ResponseLogAuditSuccess(deliveryRequest, normalizedFilekeys, pnLogAudit))

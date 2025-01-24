@@ -262,8 +262,6 @@ public class PrepareAsyncServiceImpl extends GenericService implements PaperAsyn
                 });
     }
 
-
-
     private void sendUnreachableEvent(PnDeliveryRequest request, String clientId, KOReason koReason){
         log.debug("Send Unreachable Event request id - {}, iun - {}", request.getRequestId(), request.getIun());
         this.pushPrepareEvent(request, null, clientId, StatusCodeEnum.KO, koReason);

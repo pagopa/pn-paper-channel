@@ -5,6 +5,7 @@ import io.awspring.cloud.messaging.listener.SqsMessageDeletionPolicy;
 import io.awspring.cloud.messaging.listener.annotation.SqsListener;
 import it.pagopa.pn.api.dto.events.PnAttachmentsConfigEventPayload;
 import it.pagopa.pn.api.dto.events.PnF24PdfSetReadyEvent;
+import it.pagopa.pn.api.dto.events.PnPrepareDelayerToPaperchannelPayload;
 import it.pagopa.pn.commons.utils.MDCUtils;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
@@ -132,10 +133,44 @@ public class QueueListener {
         this.queueListenerService.raddAltListener(body);
     }
 
+    @SqsListener(value = "${pn.paper-channel.queue-delayer-to-paperchannel}", deletionPolicy = SqsMessageDeletionPolicy.ALWAYS)
+    public void pullDelayerMessages(@Payload String node, @Headers Map<String,Object> headers){
+        setMDCContext(headers);
+
+        if(log.isDebugEnabled()){
+            log.debug("Message from pullDelayerMessages, headers={}, payload: {}", headers, node);
+        }
+        else {
+            log.info("Message from pullDelayerMessages, payload: {}", node);
+        }
+
+        AttemptEventHeader attemptEventHeader = toAttemptEventHeader(headers);
+        if(attemptEventHeader == null) {
+            //evento che viene dal delayer
+            this.handlePreparePhaseTwoAsyncFlowEvent(null, node);
+        }
+        else {
+            //evento che viene da paper-channel stesso
+            switch (EventTypeEnum.valueOf(attemptEventHeader.getEventType())) {
+                case F24_ERROR:  this.handleF24ErrorEvent(attemptEventHeader, node); break;
+                case SAFE_STORAGE_ERROR: this.handleSafeStorageErrorEventFromPreparePhaseTwo(attemptEventHeader, node); break;
+                default: log.error("Event type not allowed in Prepare Async Phase Two Flow: {}", attemptEventHeader.getEventType());
+            }
+        }
+
+    }
+
     @SqsListener(value = "${pn.paper-channel.queue-normalize-address}", deletionPolicy = SqsMessageDeletionPolicy.ALWAYS)
     public void pullFromNormalizeAddressQueue(@Payload String node, @Headers Map<String, Object> headers){
-        log.debug("Headers : {}", headers);
         setMDCContext(headers);
+
+        if(log.isDebugEnabled()){
+            log.debug("Message from pullFromNormalizeAddressQueue, headers={}, payload: {}", headers, node);
+        }
+        else {
+            log.info("Message from pullFromNormalizeAddressQueue, payload: {}", node);
+        }
+
         AttemptEventHeader attemptEventHeader = toAttemptEventHeader(headers);
 
         if (attemptEventHeader == null) return;
@@ -207,6 +242,10 @@ public class QueueListener {
                 });
     }
 
+    /**
+     * @deprecated This method has been replaced by  {@link #handleSafeStorageErrorEventFromPreparePhaseTwo(AttemptEventHeader, String)}.
+     */
+    @Deprecated(since = "2.15.0", forRemoval = true)
     private void handleSafeStorageErrorEvent(InternalEventHeader internalEventHeader, String node) {
 
         boolean noAttempt = (paperChannelConfig.getAttemptQueueSafeStorage()-1) < internalEventHeader.getAttempt();
@@ -231,6 +270,29 @@ public class QueueListener {
                     this.queueListenerService.internalListener(entityAndAttempt.getFirst(), entityAndAttempt.getSecond());
                     return null;
                 });
+    }
+
+    private void handleSafeStorageErrorEventFromPreparePhaseTwo(AttemptEventHeader attemptEventHeader, String node) {
+
+        boolean noAttempt = (paperChannelConfig.getAttemptQueueSafeStorage()-1) < attemptEventHeader.getAttempt();
+        PnPrepareDelayerToPaperchannelPayload error = convertToObject(node, PnPrepareDelayerToPaperchannelPayload.class);
+        if(noAttempt) {
+            PnLogAudit pnLogAudit = new PnLogAudit();
+            pnLogAudit.addsBeforeDiscard(error.getIun(), String.format("requestId = %s finish retry to Safe Storage from PREPARE phase 2", error.getRequestId()));
+
+            PnRequestError pnRequestError = PnRequestError.builder()
+                    .requestId(error.getRequestId())
+                    .error(DOCUMENT_NOT_DOWNLOADED.getMessage())
+                    .flowThrow(EventTypeEnum.SAFE_STORAGE_ERROR.name())
+                    .build();
+
+            paperRequestErrorDAO.created(pnRequestError).subscribe();
+
+            pnLogAudit.addsSuccessDiscard(error.getIun(), String.format("requestId = %s finish retry to Safe Storage from PREPARE phase 2", error.getRequestId()));
+        }
+        else {
+            this.queueListenerService.delayerListener(error, attemptEventHeader.getAttempt());
+        }
     }
 
 
@@ -287,30 +349,27 @@ public class QueueListener {
         }
     }
 
-    private void handleF24ErrorEvent(InternalEventHeader internalEventHeader, String node) {
+    private void handleF24ErrorEvent(AttemptEventHeader internalEventHeader, String node) {
 
         boolean noAttempt = (paperChannelConfig.getAttemptQueueF24()-1) < internalEventHeader.getAttempt();
         F24Error error = convertToObject(node, F24Error.class);
-        execution(error, noAttempt, internalEventHeader.getAttempt(), internalEventHeader.getExpired(), F24Error.class,
-                entity -> {
-                    PnLogAudit pnLogAudit = new PnLogAudit();
-                    pnLogAudit.addsBeforeDiscard(entity.getIun(), String.format("requestId = %s finish retry f24 error ?", entity.getRequestId()));
+        if(noAttempt) {
+            PnLogAudit pnLogAudit = new PnLogAudit();
+            pnLogAudit.addsBeforeDiscard(error.getIun(), String.format("requestId = %s finish retry f24 error ?", error.getRequestId()));
 
-                    PnRequestError pnRequestError = PnRequestError.builder()
-                            .requestId(entity.getRequestId())
-                            .error(entity.getMessage())
-                            .flowThrow(EventTypeEnum.F24_ERROR.name())
-                            .build();
+            PnRequestError pnRequestError = PnRequestError.builder()
+                    .requestId(error.getRequestId())
+                    .error(error.getMessage())
+                    .flowThrow(EventTypeEnum.F24_ERROR.name())
+                    .build();
 
-                    paperRequestErrorDAO.created(pnRequestError).subscribe();
+            paperRequestErrorDAO.created(pnRequestError).subscribe();
 
-                    pnLogAudit.addsSuccessDiscard(entity.getIun(), String.format("requestId = %s finish retry f24 error", entity.getRequestId()));
-                    return null;
-                },
-                entityAndAttempt -> {
-                    this.queueListenerService.f24ErrorListener(entityAndAttempt.getFirst(), entityAndAttempt.getSecond());
-                    return null;
-                });
+            pnLogAudit.addsSuccessDiscard(error.getIun(), String.format("requestId = %s finish retry f24 error", error.getRequestId()));
+        }
+        else {
+            this.queueListenerService.f24ErrorListener(error, internalEventHeader.getAttempt());
+        }
     }
 
     private void handleZipErrorEvent(InternalEventHeader internalEventHeader, String node) {
@@ -353,6 +412,22 @@ public class QueueListener {
         log.info("Push prepare phase one queue - first time");
         PrepareNormalizeAddressEvent request = convertToObject(node, PrepareNormalizeAddressEvent.class);
         this.queueListenerService.normalizeAddressListener(request, internalEventHeader.getAttempt());
+    }
+
+    private void handlePreparePhaseTwoAsyncFlowEvent(AttemptEventHeader attemptEventHeader, String node) {
+        var body = convertToObject(node, PnPrepareDelayerToPaperchannelPayload.class);
+        int attempt;
+        if(attemptEventHeader == null) {
+            log.info("Push prepare phase two queue from delayer");
+            attempt = 0;
+        }
+        else {
+            log.info("Push prepare phase two queue from internal");
+            attempt = attemptEventHeader.getAttempt();
+        }
+
+        this.queueListenerService.delayerListener(body, attempt);
+
     }
 
     private void handleSendZipEvent(InternalEventHeader internalEventHeader, String node) {
