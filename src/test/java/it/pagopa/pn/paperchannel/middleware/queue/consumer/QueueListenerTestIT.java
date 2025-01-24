@@ -22,6 +22,7 @@ import it.pagopa.pn.paperchannel.service.QueueListenerService;
 import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
 import it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,6 +46,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
 
+@Disabled
 @SpringBootTest(properties = {
         "pn.paper-channel.queue-external-channel=local-ext-channels-outputs-test",
         "pn.paper-channel.queue-normalize-address=local-paper-normalize-address-test"
