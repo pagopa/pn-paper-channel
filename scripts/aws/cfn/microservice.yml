@@ -811,6 +811,8 @@ Resources:
               - !Ref ExternalChannels2PaperChannelQueueARN
               - !Ref ScheduledRequestsQueueARN
               - !Ref PaperNormalizeAddressQueueARN
+              - !Ref PaperChannelToDelayerQueueARN
+              - !Ref DelayerToPaperChannelQueueARN
               - !Ref NationalRegistries2PaperChannelQueueARN
               - !Ref F24ToPaperChannelQueueARN
               - !Ref RaddAltToPaperChannelQueueARN
