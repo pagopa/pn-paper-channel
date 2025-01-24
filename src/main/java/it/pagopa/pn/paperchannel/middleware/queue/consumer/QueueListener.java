@@ -133,7 +133,7 @@ public class QueueListener {
         this.queueListenerService.raddAltListener(body);
     }
 
-    @SqsListener(value = "${pn.paper-channel.delayer-to-paperchannel}", deletionPolicy = SqsMessageDeletionPolicy.ALWAYS)
+    @SqsListener(value = "${pn.paper-channel.queue-delayer-to-paperchannel}", deletionPolicy = SqsMessageDeletionPolicy.ALWAYS)
     public void pullDelayerMessages(@Payload String node, @Headers Map<String,Object> headers){
         setMDCContext(headers);
 
