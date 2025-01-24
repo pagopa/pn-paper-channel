@@ -189,6 +189,19 @@ public class SqsQueueSender implements SqsSender {
         log.info("pushed to queue entity={}", entity);
     }
 
+    public void pushErrorDelayerToPaperChannelAfterSafeStorageErrorQueue(PnPrepareDelayerToPaperchannelPayload entity) {
+        AttemptEventHeader prepareHeader= AttemptEventHeader.builder()
+                .publisher(PUBLISHER_PREPARE)
+                .eventId(UUID.randomUUID().toString())
+                .createdAt(Instant.now())
+                .attempt(entity.getAttemptRetry() + 1)
+                .eventType(SAFE_STORAGE_ERROR.name())
+                .build();
+        int delaySeconds = getDelaySeconds(entity.getAttemptRetry());
+        this.delayerToPaperchannelInternalProducer.push(new AttemptPushEvent<>(prepareHeader, entity), delaySeconds);
+        log.info("pushed to DelayerToPaperchannel queue entity={}", entity);
+    }
+
     @Override
     public void pushF24ErrorDelayerToPaperChannelQueue(F24Error entity) {
         AttemptEventHeader prepareHeader= InternalEventHeader.builder()
@@ -201,6 +214,7 @@ public class SqsQueueSender implements SqsSender {
 
         int delaySeconds = getDelaySeconds(entity.getAttempt());
         this.delayerToPaperchannelInternalProducer.push(new AttemptPushEvent<>(prepareHeader, entity), delaySeconds);
+        log.info("pushed to DelayerToPaperchannel queue entity={}", entity);
     }
 
     @Override

@@ -19,10 +19,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.model.*;
-import it.pagopa.pn.paperchannel.service.F24Service;
-import it.pagopa.pn.paperchannel.service.PreparePhaseTwoAsyncService;
-import it.pagopa.pn.paperchannel.service.SafeStorageService;
-import it.pagopa.pn.paperchannel.service.SqsSender;
+import it.pagopa.pn.paperchannel.service.*;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
@@ -63,7 +60,7 @@ public class PreparePhaseTwoAsyncServiceImpl implements PreparePhaseTwoAsyncServ
     private final SafeStorageService safeStorageService;
     private final PnPaperChannelConfig paperChannelConfig;
     private final AddressDAO addressDAO;
-
+    private final PrepareFlowStarter prepareFlowStarter;
 
     @Override
     public Mono<PnDeliveryRequest> prepareAsyncPhaseTwo(PnPrepareDelayerToPaperchannelPayload eventPayload) {
@@ -79,7 +76,7 @@ public class PreparePhaseTwoAsyncServiceImpl implements PreparePhaseTwoAsyncServ
                     return handleRegularDeliveryRequest(deliveryRequest, eventPayload.getClientId())
                             .onErrorResume(ex -> {
                                 // Error -> Retry
-                                this.sqsSender.pushErrorDelayerToPaperChannelQueue(eventPayload);
+                                this.sqsSender.pushErrorDelayerToPaperChannelAfterSafeStorageErrorQueue(eventPayload);
                                 return Mono.error(ex);
                             });
                 })
@@ -331,8 +328,7 @@ public class PreparePhaseTwoAsyncServiceImpl implements PreparePhaseTwoAsyncServ
         f24Error.setAttempt(attempt +1);
 
         changeStatusDeliveryRequest(deliveryRequest, StatusDeliveryEnum.F24_ERROR);
-        log.info("attempting to pushing to internal payload={}", ex);
-        sqsSender.pushInternalError(f24Error, f24Error.getAttempt(), F24Error.class);
+        prepareFlowStarter.redrivePreparePhaseTwoAfterF24Error(f24Error);
     }
 
     private Mono<PnDeliveryRequest> changeStatusDeliveryRequest(PnDeliveryRequest deliveryRequest, StatusDeliveryEnum status){
