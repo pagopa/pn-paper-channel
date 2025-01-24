@@ -765,8 +765,8 @@ Resources:
         ContainerEnvEntry77: !Sub 'PN_PAPERCHANNEL_SENDCON020=${SendCon020}'
         ContainerEnvEntry78: !Sub 'PN_PAPERCHANNEL_PREPARETWOPHASES=${PrepareTwoPhases}'
         ContainerEnvEntry79: !Sub 'PN_PAPERCHANNEL_QUEUENORMALIZEADDRESS=${PaperNormalizeAddressQueueName}'
-        ContainerEnvEntry80: !Sub 'PN_PAPERCHANNEL_PAPERCHANNELTODELAYERQUEUE=${PaperChannelToDelayerQueueName}'
-        ContainerEnvEntry81: !Sub 'PN_PAPERCHANNEL_DELAYERTOPAPERCHANNELQUEUE=${DelayerToPaperChannelQueueName}'
+        ContainerEnvEntry80: !Sub 'PN_PAPERCHANNEL_QUEUEPAPERCHANNELTODELAYER=${PaperChannelToDelayerQueueName}'
+        ContainerEnvEntry81: !Sub 'PN_PAPERCHANNEL_QUEUEDELAYERTOPAPERCHANNEL=${DelayerToPaperChannelQueueName}'
         ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-PaperChannel-Secrets
         MappedPaths: '/paper-channel-bo/*,/paper-channel-private/*'
