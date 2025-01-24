@@ -114,16 +114,12 @@ public class PreparePhaseTwoAsyncServiceImpl implements PreparePhaseTwoAsyncServ
                 deliveryRequest.getProductType(),
                 null
         );
-        var correctAddressMono = addressDAO.findByRequestId(deliveryRequest.getRequestId());
 
         return processAllAttachments(deliveryRequest)
-                .flatMap(pnDeliveryRequestWithAttachmentOk -> {
-                        correctAddressMono.doOnNext( correctAddress -> {
-                            this.pushPrepareEvent(pnDeliveryRequestWithAttachmentOk,
-                                    AddressMapper.toDTO(correctAddress), clientId, StatusCodeEnum.OK, null);
-                        });
-                        return this.requestDeliveryDAO.updateData(pnDeliveryRequestWithAttachmentOk);
-                });
+                .flatMap(pnDeliveryRequestWithAttachmentOk -> addressDAO.findByRequestId(deliveryRequest.getRequestId()))
+                .doOnNext(correctAddress -> this.pushPrepareEvent(deliveryRequest, AddressMapper.toDTO(correctAddress), clientId, StatusCodeEnum.OK, null))
+                .flatMap(pnAddress -> this.requestDeliveryDAO.updateData(deliveryRequest));
+
     }
 
     /**
