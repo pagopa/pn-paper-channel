@@ -42,7 +42,7 @@
     "EnableSimple890Flow": "true",
     "EnableDocFilterRuleEngine": "true",
     "DefaultAttachmentConfigCap": "ZIP##DEFAULT",
-    "PnCronAnalyzer": "* */1 * * * *",
+    "PnCronAnalyzer": "-",
     "WireTapLogActivation": "false",
     "MountEfs": "false",
     "SendProgressMeta": "META,RECAG012A,CON018",
