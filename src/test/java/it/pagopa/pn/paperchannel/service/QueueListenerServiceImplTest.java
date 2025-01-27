@@ -13,6 +13,7 @@ import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnnationalregistries.v1.dto.AddressSQSMessageDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnnationalregistries.v1.dto.AddressSQSMessagePhysicalAddressDto;
+import it.pagopa.pn.paperchannel.mapper.AddressMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
@@ -20,9 +21,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnRequestError;
 import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
-import it.pagopa.pn.paperchannel.model.F24Error;
-import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
-import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
+import it.pagopa.pn.paperchannel.model.*;
 import it.pagopa.pn.paperchannel.service.impl.QueueListenerServiceImpl;
 import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
 import it.pagopa.pn.paperchannel.utils.FeedbackStatus;
@@ -64,7 +63,7 @@ class QueueListenerServiceImplTest {
     private RequestDeliveryDAO requestDeliveryDAO;
 
     @Mock
-    private SqsSender sqsSender;
+    private PrepareFlowStarter prepareFlowStarter;
 
     @Mock
     private F24Service f24Service;
@@ -193,16 +192,18 @@ class QueueListenerServiceImplTest {
         addressDto.setAddress("address");
         addressSQSMessageDto.setPhysicalAddress(addressDto);
 
+        Address expectedAddress = AddressMapper.fromNationalRegistry(addressDto);
+
         // When
         Mockito.when(this.requestDeliveryDAO.getByCorrelationId(Mockito.anyString())).thenReturn(Mono.just(deliveryRequest));
         Mockito.when(this.addressDAO.findByRequestId(deliveryRequest.getRelatedRequestId())).thenReturn(Mono.just(new PnAddress()));
-        Mockito.doNothing().when(this.sqsSender).pushToInternalQueue(Mockito.any(PrepareAsyncRequest.class));
+        Mockito.doNothing().when(this.prepareFlowStarter).startPreparePhaseOneFromNationalRegistriesFlow(deliveryRequest, expectedAddress);
 
         this.queueListenerService.nationalRegistriesResponseListener(addressSQSMessageDto);
 
         // Then
         Mockito.verify(this.paperRequestErrorDAO, Mockito.never()).created(Mockito.any(PnRequestError.class));
-        Mockito.verify(this.sqsSender, Mockito.times(1)).pushToInternalQueue(Mockito.any(PrepareAsyncRequest.class));
+        Mockito.verify(this.prepareFlowStarter, Mockito.times(1)).startPreparePhaseOneFromNationalRegistriesFlow(deliveryRequest, expectedAddress);
     }
 
     @Test
@@ -231,7 +232,7 @@ class QueueListenerServiceImplTest {
 
         // Then
         Mockito.verify(this.paperRequestErrorDAO, Mockito.never()).created(Mockito.any(PnRequestError.class));
-        Mockito.verify(this.sqsSender, Mockito.times(1)).pushToInternalQueue(Mockito.any(PrepareAsyncRequest.class));
+        Mockito.verify(this.prepareFlowStarter, Mockito.times(1)).startPreparePhaseOneFromNationalRegistriesFlow(deliveryRequest, null);
     }
 
     @Test
@@ -251,7 +252,6 @@ class QueueListenerServiceImplTest {
         deliveryRequest.setStatusDetail(StatusDeliveryEnum.READY_TO_SEND.getDetail());
 
         addressSQSMessageDto.setCorrelationId("1234");
-        addressSQSMessageDto.setError("");
 
         // When
         Mockito.when(this.requestDeliveryDAO.getByCorrelationId(Mockito.anyString())).thenReturn(Mono.just(deliveryRequest));
@@ -260,7 +260,7 @@ class QueueListenerServiceImplTest {
 
         // Then
         Mockito.verify(this.paperRequestErrorDAO, Mockito.never()).created(Mockito.any(PnRequestError.class));
-        Mockito.verify(this.sqsSender, Mockito.never()).pushToInternalQueue(Mockito.any(PrepareAsyncRequest.class));
+        Mockito.verify(this.prepareFlowStarter, Mockito.never()).startPreparePhaseOneFromNationalRegistriesFlow(Mockito.any(PnDeliveryRequest.class), Mockito.any(Address.class));
     }
 
     @Test
@@ -269,7 +269,7 @@ class QueueListenerServiceImplTest {
         // Given
         PnDeliveryRequest deliveryRequest = new PnDeliveryRequest();
         AddressSQSMessageDto addressSQSMessageDto = new AddressSQSMessageDto();
-        addressSQSMessageDto.setPhysicalAddress(new AddressSQSMessagePhysicalAddressDto());
+        addressSQSMessageDto.setPhysicalAddress(new AddressSQSMessagePhysicalAddressDto()); //physicalAddress.getAddress null
 
         deliveryRequest.setIun("1223");
         deliveryRequest.setRequestId("1234dc");
@@ -289,11 +289,7 @@ class QueueListenerServiceImplTest {
         this.queueListenerService.nationalRegistriesResponseListener(addressSQSMessageDto);
 
         // Mi aspetto che venga inviato l'evento con address vuoto nella coda interna
-        Mockito.verify(this.sqsSender,Mockito.times(1)).pushToInternalQueue(new PrepareAsyncRequest(
-                deliveryRequest.getRequestId(),
-                addressSQSMessageDto.getCorrelationId(),
-                null
-        ));
+        Mockito.verify(this.prepareFlowStarter,Mockito.times(1)).startPreparePhaseOneFromNationalRegistriesFlow(deliveryRequest, null);
     }
 
     @Test
@@ -382,7 +378,6 @@ class QueueListenerServiceImplTest {
         Mockito.when(requestDeliveryDAO.updateData(Mockito.any())).thenReturn(Mono.just(deliveryRequest));
 
         Mockito.when(this.f24Service.preparePDF(deliveryRequest)).thenReturn(Mono.error(new PnInternalException("missing URL f24set on f24serviceImpl", PnExceptionsCodes.ERROR_CODE_PN_GENERIC_ERROR)));
-        //Mockito.doNothing().when(sqsSender).pushInternalError(Mockito.any(F24Error.class), Mockito.anyInt(), Mockito.eq(F24Error.class));
 
         Assertions.assertThrows(PnF24FlowException.class, () -> this.queueListenerService.f24ErrorListener(error, 1));
         Mockito.verify(requestDeliveryDAO, Mockito.timeout(1000)).updateData(Mockito.any());
@@ -408,7 +403,6 @@ class QueueListenerServiceImplTest {
         Mockito.when(requestDeliveryDAO.updateData(Mockito.any())).thenReturn(Mono.just(deliveryRequest));
 
         Mockito.when(this.f24Service.preparePDF(deliveryRequest)).thenReturn(Mono.error(new PnF24FlowException(ExceptionTypeEnum.F24_ERROR, error, new NullPointerException())));
-        //Mockito.doNothing().when(sqsSender).pushInternalError(Mockito.any(F24Error.class), Mockito.any(Integer.class), Mockito.eq(F24Error.class));
 
         Assertions.assertThrows(PnF24FlowException.class, () -> this.queueListenerService.f24ErrorListener(error, 1));
         Mockito.verify(requestDeliveryDAO, Mockito.timeout(1000)).updateData(Mockito.any());
@@ -549,9 +543,4 @@ class QueueListenerServiceImplTest {
         Mockito.verify(paperRequestErrorDAO, Mockito.times(1)).created(Mockito.any(PnRequestError.class));
     }
 
-    private PnAddress getRelatedAddress(){
-        PnAddress address = new PnAddress();
-        address.setFullName("Mario Rossi");
-        return address;
-    }
 }

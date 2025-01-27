@@ -9,18 +9,12 @@ import it.pagopa.pn.paperchannel.exception.PnPaperEventException;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.paperchannel.mapper.*;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
-import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
-import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
-import it.pagopa.pn.paperchannel.model.Address;
-import it.pagopa.pn.paperchannel.model.AttachmentInfo;
-import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
-import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
-import it.pagopa.pn.paperchannel.service.PaperMessagesService;
-import it.pagopa.pn.paperchannel.service.SqsSender;
+import it.pagopa.pn.paperchannel.model.*;
+import it.pagopa.pn.paperchannel.service.*;
 import it.pagopa.pn.paperchannel.utils.*;
 import it.pagopa.pn.paperchannel.utils.costutils.CostWithDriver;
 import it.pagopa.pn.paperchannel.validator.PrepareRequestValidator;
@@ -43,7 +37,7 @@ import static it.pagopa.pn.paperchannel.utils.Const.CONTEXT_KEY_PREFIX_CLIENT_ID
 
 @CustomLog
 @Service
-public class  PaperMessagesServiceImpl extends BaseService implements PaperMessagesService {
+public class  PaperMessagesServiceImpl extends GenericService implements PaperMessagesService {
     
     private static final String PN_DELIVERY_REQUEST_LOG = "PnDeliveryRequest";
     private static final String ADDRESS_ENTITY_LOG = "addressEntity";
@@ -54,17 +48,20 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
     private final ExternalChannelClient externalChannelClient;
     private final PnPaperChannelConfig pnPaperChannelConfig;
     private final PaperCalculatorUtils paperCalculatorUtils;
+    private final PrepareFlowStarter prepareFlowStarter;
+    private final NationalRegistryService nationalRegistryService;
 
 
-    public PaperMessagesServiceImpl(RequestDeliveryDAO requestDeliveryDAO, CostDAO costDAO,
-                                    NationalRegistryClient nationalRegistryClient, SqsSender sqsSender, AddressDAO addressDAO,
+    public PaperMessagesServiceImpl(RequestDeliveryDAO requestDeliveryDAO, SqsSender sqsSender, AddressDAO addressDAO,
                                     ExternalChannelClient externalChannelClient, PnPaperChannelConfig pnPaperChannelConfig,
-                                    PaperCalculatorUtils paperCalculatorUtils) {
-        super(requestDeliveryDAO, costDAO, nationalRegistryClient, sqsSender);
+                                    PaperCalculatorUtils paperCalculatorUtils, PrepareFlowStarter prepareFlowStarter, NationalRegistryService nationalRegistryService) {
+        super(sqsSender, requestDeliveryDAO);
         this.addressDAO = addressDAO;
         this.externalChannelClient = externalChannelClient;
         this.pnPaperChannelConfig = pnPaperChannelConfig;
         this.paperCalculatorUtils = paperCalculatorUtils;
+        this.prepareFlowStarter = prepareFlowStarter;
+        this.nationalRegistryService = nationalRegistryService;
     }
 
     @Override
@@ -141,15 +138,14 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
                                                             String.format("prepare requestId = %s, relatedRequestId = %s Discovered Address is present", requestId, prepareRequest.getRelatedRequestId())
                                                     );
 
-                                                    PrepareAsyncRequest request = new PrepareAsyncRequest(response.getRequestId(), response.getIun(), false, 0);
-                                                    request.setClientId(cxt.getOrDefault(CONTEXT_KEY_CLIENT_ID, ""));
-                                                    this.sqsSender.pushToInternalQueue(request);
+                                                    final String clientId = cxt.getOrDefault(CONTEXT_KEY_CLIENT_ID, "");
+                                                    prepareFlowStarter.startPreparePhaseOneFromPrepareSync(response, clientId);
                                                 } else {
                                                     pnLogAudit.addsSuccessResolveLogic(
                                                             prepareRequest.getIun(),
                                                             String.format("prepare requestId = %s, relatedRequestId = %s Discovered Address is not present", requestId, prepareRequest.getRelatedRequestId())
                                                     );
-                                                    this.finderAddressFromNationalRegistries(
+                                                    nationalRegistryService.finderAddressFromNationalRegistries(
                                                             response.getRequestId(),
                                                             response.getRelatedRequestId(),
                                                             response.getFiscalCode(),
@@ -444,12 +440,7 @@ public class  PaperMessagesServiceImpl extends BaseService implements PaperMessa
     private Mono<Void> createAndPushPrepareEvent(PnDeliveryRequest deliveryRequest){
         return Utility.getFromContext(CONTEXT_KEY_CLIENT_ID, "")
                 .switchIfEmpty(Mono.just(""))
-                .map(clientId -> {
-                    PrepareAsyncRequest request = new PrepareAsyncRequest(deliveryRequest.getRequestId(), deliveryRequest.getIun(), false, 0);
-                    request.setClientId(clientId);
-                    return request;
-                })
-                .doOnNext(this.sqsSender::pushToInternalQueue)
+                .doOnNext(clientId -> prepareFlowStarter.startPreparePhaseOneFromPrepareSync(deliveryRequest, clientId))
                 .then();
 
     }

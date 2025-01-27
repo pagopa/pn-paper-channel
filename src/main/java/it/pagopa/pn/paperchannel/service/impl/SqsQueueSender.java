@@ -1,18 +1,13 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
-import it.pagopa.pn.api.dto.events.GenericEventHeader;
+import it.pagopa.pn.api.dto.events.*;
 import it.pagopa.pn.commons.utils.LogUtils;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PaperChannelUpdate;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PrepareEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
-import it.pagopa.pn.paperchannel.middleware.queue.model.DeliveryPushEvent;
-import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
-import it.pagopa.pn.paperchannel.middleware.queue.model.InternalEventHeader;
-import it.pagopa.pn.paperchannel.middleware.queue.model.InternalPushEvent;
-import it.pagopa.pn.paperchannel.middleware.queue.producer.DeliveryPushMomProducer;
-import it.pagopa.pn.paperchannel.middleware.queue.producer.EventBridgeProducer;
-import it.pagopa.pn.paperchannel.middleware.queue.producer.InternalQueueMomProducer;
+import it.pagopa.pn.paperchannel.middleware.queue.model.*;
+import it.pagopa.pn.paperchannel.middleware.queue.producer.*;
 import it.pagopa.pn.paperchannel.model.*;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
@@ -33,9 +28,15 @@ public class SqsQueueSender implements SqsSender {
 
     private static final String PUBLISHER_UPDATE = "paper-channel-update";
     private static final String PUBLISHER_PREPARE = "paper-channel-prepare";
+    private static final String PUBLISHER_PREPARE_PHASE_ONE = "paper-channel-prepare-phase-one";
+
+    private static final int ONE_MINUTE_IN_SECONDS = 60;
 
     private final DeliveryPushMomProducer deliveryPushMomProducer;
     private final InternalQueueMomProducer internalQueueMomProducer;
+    private final NormalizeAddressQueueMomProducer normalizeAddressQueueMomProducer;
+    private final PaperchannelToDelayerMomProducer paperchannelToDelayerMomProducer;
+    private final DelayerToPaperchannelInternalProducer delayerToPaperchannelInternalProducer;
     private final EventBridgeProducer eventBridgeProducer;
 
     @Override
@@ -71,6 +72,42 @@ public class SqsQueueSender implements SqsSender {
     }
 
     @Override
+    public void pushToNormalizeAddressQueue(PrepareNormalizeAddressEvent prepareNormalizeAddressEvent) {
+        AttemptEventHeader prepareHeader= AttemptEventHeader.builder()
+                .publisher(PUBLISHER_PREPARE)
+                .eventId(UUID.randomUUID().toString())
+                .createdAt(Instant.now())
+                .eventType(EventTypeEnum.PREPARE_ASYNC_FLOW.name())
+                .clientId(prepareNormalizeAddressEvent.getClientId())
+                .attempt(0)
+                .build();
+
+        var internalPushEvent = new AttemptPushEvent<>(prepareHeader, prepareNormalizeAddressEvent);
+        this.normalizeAddressQueueMomProducer.push(internalPushEvent);
+    }
+
+    @Override
+    public void pushToPaperchannelToDelayerQueue(PnPreparePaperchannelToDelayerPayload payload) {
+        log.info("Push event to paperchannel_to_delayer queue {}", payload.getRequestId());
+
+        StandardEventHeader header = StandardEventHeader.builder()
+                .publisher(PUBLISHER_PREPARE_PHASE_ONE)
+                .eventId(UUID.randomUUID().toString())
+                .createdAt(Instant.now())
+                .eventType(EventTypeEnum.PREPARE_PHASE_ONE_RESPONSE.name())
+                .iun(payload.getIun())
+                .build();
+
+        var event = PnPreparePaperchannelToDelayerEvent.builder()
+                .header(header)
+                .payload(payload)
+                .build();
+
+        this.paperchannelToDelayerMomProducer.push(event);
+    }
+
+
+    @Override
     public void pushDematZipInternalEvent(DematInternalEvent dematZipInternalEvent) {
         InternalEventHeader prepareHeader= InternalEventHeader.builder()
                 .publisher(PUBLISHER_PREPARE)
@@ -100,6 +137,22 @@ public class SqsQueueSender implements SqsSender {
 
         InternalPushEvent<SingleStatusUpdateDto> internalPushEvent = new InternalPushEvent<>(prepareHeader, singleStatusUpdateDto);
         this.internalQueueMomProducer.push(internalPushEvent);
+    }
+
+    @Override
+    public void pushToDelayerToPaperchennelQueue(PnPrepareDelayerToPaperchannelPayload payload) {
+        AttemptEventHeader prepareHeader= AttemptEventHeader.builder()
+                .publisher(PUBLISHER_PREPARE)
+                .eventId(UUID.randomUUID().toString())
+                .createdAt(Instant.now())
+                .eventType(EventTypeEnum.PREPARE_ASYNC_FLOW.name())
+                .clientId(payload.getClientId())
+                .attempt(0)
+                .build();
+
+        //TODO capire se cambiare eventType poichè utilizzato già dalla PREPARE fase 1
+        var internalPushEvent = new AttemptPushEvent<>(prepareHeader, payload);
+        this.delayerToPaperchannelInternalProducer.push(internalPushEvent);
     }
 
     @Override
@@ -136,6 +189,51 @@ public class SqsQueueSender implements SqsSender {
         log.info("pushed to queue entity={}", entity);
     }
 
+    public void pushErrorDelayerToPaperChannelAfterSafeStorageErrorQueue(PnPrepareDelayerToPaperchannelPayload entity) {
+        AttemptEventHeader prepareHeader= AttemptEventHeader.builder()
+                .publisher(PUBLISHER_PREPARE)
+                .eventId(UUID.randomUUID().toString())
+                .createdAt(Instant.now())
+                .attempt(entity.getAttemptRetry() + 1)
+                .eventType(SAFE_STORAGE_ERROR.name())
+                .build();
+        int delaySeconds = getDelaySeconds(entity.getAttemptRetry());
+        this.delayerToPaperchannelInternalProducer.push(new AttemptPushEvent<>(prepareHeader, entity), delaySeconds);
+        log.info("pushed to DelayerToPaperchannel queue entity={}", entity);
+    }
+
+    @Override
+    public void pushF24ErrorDelayerToPaperChannelQueue(F24Error entity) {
+        AttemptEventHeader prepareHeader= InternalEventHeader.builder()
+                .publisher(PUBLISHER_PREPARE)
+                .eventId(UUID.randomUUID().toString())
+                .createdAt(Instant.now())
+                .attempt(entity.getAttempt() +1)
+                .eventType(F24_ERROR.name())
+                .build();
+
+        int delaySeconds = getDelaySeconds(entity.getAttempt());
+        this.delayerToPaperchannelInternalProducer.push(new AttemptPushEvent<>(prepareHeader, entity), delaySeconds);
+        log.info("pushed to DelayerToPaperchannel queue entity={}", entity);
+    }
+
+    @Override
+    public <T> void redrivePreparePhaseOneAfterError(T entity, int attempt, Class<T> tClass) {
+        EventTypeEnum eventTypeEnum = getTypeEnumForPreparePhaseOne(entity, tClass);
+        if (eventTypeEnum == null) return;
+        AttemptEventHeader prepareHeader= AttemptEventHeader.builder()
+                .publisher(PUBLISHER_PREPARE)
+                .eventId(UUID.randomUUID().toString())
+                .createdAt(Instant.now())
+                .attempt(attempt+1)
+                .eventType(eventTypeEnum.name())
+                .build();
+
+        int delaySeconds = getDelaySeconds(attempt);
+        this.normalizeAddressQueueMomProducer.push(new AttemptPushEvent<>(prepareHeader, entity), delaySeconds);
+        log.info("pushed to prepare phase one queue entity={}", entity);
+    }
+
     @Override
     public <T> void rePushInternalError(T entity, int attempt, Instant expired, Class<T> tClass) {
         EventTypeEnum eventTypeEnum = getTypeEnum(entity, tClass);
@@ -151,6 +249,8 @@ public class SqsQueueSender implements SqsSender {
         this.internalQueueMomProducer.push(new InternalPushEvent<>(prepareHeader, entity));
     }
 
+
+    //TODO rimuovere errori non pertinenti dopo il rilascio dello split della PREPARE
     private <T> EventTypeEnum getTypeEnum(T entity, Class<T> tClass){
         EventTypeEnum typeEnum = null;
         if (tClass == NationalRegistryError.class) typeEnum = NATIONAL_REGISTRIES_ERROR;
@@ -160,6 +260,13 @@ public class SqsQueueSender implements SqsSender {
         if (tClass == PrepareAsyncRequest.class && ((PrepareAsyncRequest) entity).isAddressRetry()) typeEnum = ADDRESS_MANAGER_ERROR;
         if (tClass == DematInternalEvent.class) typeEnum = ZIP_HANDLE_ERROR;
 
+        return typeEnum;
+    }
+
+    private <T> EventTypeEnum getTypeEnumForPreparePhaseOne(T entity, Class<T> tClass){
+        EventTypeEnum typeEnum = null;
+        if (tClass == NationalRegistryError.class) typeEnum = NATIONAL_REGISTRIES_ERROR;
+        if (tClass == PrepareNormalizeAddressEvent.class && ((PrepareNormalizeAddressEvent) entity).isAddressRetry()) typeEnum = ADDRESS_MANAGER_ERROR;
         return typeEnum;
     }
 
@@ -188,6 +295,10 @@ public class SqsQueueSender implements SqsSender {
             );
         }
         return deliveryPushEvent;
+    }
+
+    private int getDelaySeconds(int attempt) {
+        return (attempt + 1) * ONE_MINUTE_IN_SECONDS;
     }
 
 

@@ -189,6 +189,7 @@ class QueueListenerTest {
         String json = """
                 {
                      "clientId": "123",
+                     "payloadType": "PnF24PdfSetReadyEvent",
                      "pdfSetReady":
                      {
                         "requestId": "AKUZ-AWPL-LTPX-20230415",

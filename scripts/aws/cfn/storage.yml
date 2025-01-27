@@ -104,6 +104,19 @@ Resources:
         DelaySeconds: 1
         VisibilityTimeout: 60
 
+  # internal queue executing the PREPARE phase 1 flow
+  PaperNormalizeAddressQueue:
+    Type: AWS::CloudFormation::Stack
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Properties:
+      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/sqs-queue.yaml"
+      Parameters:
+        QueueName: !Sub '${ProjectName}-paper-normalize-address'
+        AlarmSNSTopicName: !Ref AlarmSNSTopicName
+        DelaySeconds: 1
+        VisibilityTimeout: 60
+
   RequestDeliveryDynamoTable:
     Type: AWS::DynamoDB::Table
     UpdateReplacePolicy: Retain
@@ -623,6 +636,17 @@ Outputs:
   ScheduledRequestsQueueARN:
     Value: !GetAtt ScheduledRequestsQueue.Outputs.QueueARN
     Description: pn-paper-channel input queue ARN
+
+  # internal queue executing the PREPARE phase 1 flow
+  PaperNormalizeAddressQueueName:
+    Value: !GetAtt PaperNormalizeAddressQueue.Outputs.QueueName
+    Description: pn-paper-normalize-address queue name
+  PaperNormalizeAddressQueueURL:
+    Value: !GetAtt PaperNormalizeAddressQueue.Outputs.QueueURL
+    Description: pn-paper-normalize-address queue URL
+  PaperNormalizeAddressQueueARN:
+    Value: !GetAtt PaperNormalizeAddressQueue.Outputs.QueueARN
+    Description: pn-paper-normalize-address queue ARN
 
   PCKmsEncDecDynamoDataKeyARN:
     Description: Name of KMS Key for Dynamo encode/decode data

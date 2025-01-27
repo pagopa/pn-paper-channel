@@ -6,6 +6,7 @@ import lombok.Getter;
 public enum StatusDeliveryEnum {
     IN_PROCESSING("PC000", "In elaborazione", Constants.PROGRESS),
     TAKING_CHARGE("PC001","Presa in carico", Constants.PROGRESS),
+    SEND_TO_DELAYER("PC006","Richiesta inviata al delayer", Constants.PROGRESS),
     DISCARD_NOTIFICATION("PC999","Discard Notification", Constants.KO),
     F24_WAITING("PC015", "In attesa di generazione PDF da F24", Constants.PROGRESS),
     F24_ERROR("PC016", "Errore su generazione PDF da F24", Constants.PROGRESS),

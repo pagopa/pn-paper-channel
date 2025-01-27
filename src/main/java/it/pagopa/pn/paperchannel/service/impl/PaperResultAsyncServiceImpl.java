@@ -8,7 +8,6 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.PnClientDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnClientID;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
-import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.HandlersFactory;
 import it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.MessageHandler;
 import it.pagopa.pn.paperchannel.service.PaperResultAsyncService;
@@ -27,25 +26,24 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DATA_NULL_OR
 
 @CustomLog
 @Service
-public class PaperResultAsyncServiceImpl extends BaseService implements PaperResultAsyncService {
+public class PaperResultAsyncServiceImpl extends GenericService implements PaperResultAsyncService {
 
     private final PnClientDAO pnClientDAO;
 
     private final HandlersFactory handlersFactory;
 
-    private final String processName = "Result Async Background";
+    private static final String PROCESS_NAME = "Result Async Background";
 
-    public PaperResultAsyncServiceImpl(RequestDeliveryDAO requestDeliveryDAO,
-                                       NationalRegistryClient nationalRegistryClient, SqsSender sqsSender,
+    public PaperResultAsyncServiceImpl(RequestDeliveryDAO requestDeliveryDAO, SqsSender sqsSender,
                                        HandlersFactory handlersFactory,PnClientDAO pnClientDAO) {
-        super(requestDeliveryDAO, null, nationalRegistryClient, sqsSender);
+        super(sqsSender, requestDeliveryDAO);
         this.handlersFactory = handlersFactory;
         this.pnClientDAO = pnClientDAO;
     }
 
     @Override
     public Mono<Void> resultAsyncBackground(SingleStatusUpdateDto singleStatusUpdateDto, Integer attempt) {
-        log.logStartingProcess(processName);
+        log.logStartingProcess(PROCESS_NAME);
         if (singleStatusUpdateDto == null || singleStatusUpdateDto.getAnalogMail() == null || StringUtils.isBlank(singleStatusUpdateDto.getAnalogMail().getRequestId())) {
             log.error("the message sent from external channel, includes errors. It cannot be processing");
             return Mono.error(new PnGenericException(DATA_NULL_OR_INVALID, DATA_NULL_OR_INVALID.getMessage()));
@@ -112,7 +110,7 @@ public class PaperResultAsyncServiceImpl extends BaseService implements PaperRes
                 pnDeliveryRequestMono.getProductType(),
                 singleStatusUpdateDto.getAnalogMail().getStatusDateTime().toInstant()
         );
-        log.logEndingProcess(processName);
+        log.logEndingProcess(PROCESS_NAME);
         return requestDeliveryDAO.updateData(pnDeliveryRequestMono);
     }
 

@@ -6,6 +6,8 @@ import lombok.*;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+//toString with CAP, flowType, productType, fromNationalRegistry
+@ToString(exclude = {"fullName", "nameRow2", "address", "addressRow2", "addressRow2", "city", "city2", "pr", "country"})
 public class Address {
 
     private String fullName;

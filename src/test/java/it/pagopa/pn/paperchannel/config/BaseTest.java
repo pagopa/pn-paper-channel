@@ -2,8 +2,7 @@ package it.pagopa.pn.paperchannel.config;
 
 import io.awspring.cloud.autoconfigure.messaging.SqsAutoConfiguration;
 import it.pagopa.pn.paperchannel.LocalStackTestConfig;
-import it.pagopa.pn.paperchannel.middleware.queue.producer.DeliveryPushMomProducer;
-import it.pagopa.pn.paperchannel.middleware.queue.producer.InternalQueueMomProducer;
+import it.pagopa.pn.paperchannel.middleware.queue.producer.*;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,6 +37,15 @@ public abstract class BaseTest {
 
         @MockBean
         private InternalQueueMomProducer internalQueueMomProducer;
+
+        @MockBean
+        private NormalizeAddressQueueMomProducer normalizeAddressQueueMomProducer;
+
+        @MockBean
+        private PaperchannelToDelayerMomProducer paperchannelToDelayerMomProducer;
+
+        @MockBean
+        private DelayerToPaperchannelInternalProducer delayerToPaperchannelInternalProducer;
 
 
         @BeforeEach

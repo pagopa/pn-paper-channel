@@ -8,13 +8,11 @@ import it.pagopa.pn.paperchannel.exception.PnInputValidatorException;
 import it.pagopa.pn.paperchannel.exception.PnPaperEventException;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
-import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
-import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.service.impl.PaperMessagesServiceImpl;
@@ -58,8 +56,6 @@ class PaperMessagesServiceTest {
     @MockBean
     private RequestDeliveryDAO requestDeliveryDAO;
 
-    @MockBean
-    private CostDAO costDAO;
 
     @MockBean
     private DataEncryption dataEncryption;
@@ -71,13 +67,16 @@ class PaperMessagesServiceTest {
     private PaperTenderService paperTenderService;
 
     @MockBean
-    private NationalRegistryClient nationalRegistryClient;
+    private NationalRegistryService nationalRegistryService;
 
     @MockBean
     private ExternalChannelClient externalChannelClient;
 
     @MockBean
     private SqsSender sqsSender;
+
+    @MockBean
+    private PrepareFlowStarter prepareFlowStarter;
 
     @MockBean
     private PnPaperChannelConfig pnPaperChannelConfig;
@@ -158,7 +157,7 @@ class PaperMessagesServiceTest {
         Mockito.when(requestDeliveryDAO.createWithAddress(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(getPnDeliveryRequest()));
 
-        Mockito.doNothing().when(this.sqsSender).pushToInternalQueue(Mockito.any());
+        Mockito.doNothing().when(this.prepareFlowStarter).startPreparePhaseOneFromPrepareSync(Mockito.any(), Mockito.any());
 
         PaperChannelUpdate update = this.paperMessagesService.preparePaperSync("TST-IOR.2332", getRequestOK()).block();
         assertNull(update);
@@ -203,7 +202,7 @@ class PaperMessagesServiceTest {
         Mockito.when(requestDeliveryDAO.createWithAddress(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(getPnDeliveryRequest()));
 
-        Mockito.doNothing().when(this.sqsSender).pushToInternalQueue(Mockito.any());
+        Mockito.doNothing().when(this.prepareFlowStarter).startPreparePhaseOneFromPrepareSync(Mockito.any(), Mockito.any());
 
         PaperChannelUpdate update = this.paperMessagesService
                 .preparePaperSync("TST-IOR.2332", getRequestOK()).block();
@@ -305,7 +304,7 @@ class PaperMessagesServiceTest {
                 .thenReturn(Mono.just(deliveryRequest));
 
         //MOCK PUSH QUEUE
-        Mockito.doNothing().when(this.sqsSender).pushToInternalQueue(Mockito.any());
+        Mockito.doNothing().when(this.prepareFlowStarter).startPreparePhaseOneFromPrepareSync(Mockito.any(), Mockito.any());
 
         StepVerifier.create(this.paperMessagesService.preparePaperSync("TST-IOR.2332", request))
                 .expectErrorMatches((ex) -> {
@@ -381,7 +380,7 @@ class PaperMessagesServiceTest {
         Mockito.when(requestDeliveryDAO.createWithAddress(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(getPnDeliveryRequest()));
 
-        Mockito.doNothing().when(this.sqsSender).pushToInternalQueue(Mockito.any());
+        Mockito.doNothing().when(this.prepareFlowStarter).startPreparePhaseOneFromPrepareSync(Mockito.any(), Mockito.any());
 
         PaperChannelUpdate update = this.paperMessagesService
                 .preparePaperSync("TST-IOR.2332", getRequestOK()).block();
@@ -832,7 +831,7 @@ class PaperMessagesServiceTest {
         Mockito.when(requestDeliveryDAO.getByRequestId(deliveryRequestTakingCharge.getRequestId())).thenReturn(Mono.empty());
         Mockito.when(requestDeliveryDAO.createWithAddress(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(deliveryRequestTakingCharge));
-        Mockito.doNothing().when(sqsSender).pushToInternalQueue(Mockito.any());
+        Mockito.doNothing().when(prepareFlowStarter).startPreparePhaseOneFromPrepareSync(Mockito.any(), Mockito.any());
         PaperChannelUpdate update = paperMessagesService.preparePaperSync(deliveryRequestTakingCharge.getRequestId(), getRequestOK()).block();
         assertNull(update);
     }

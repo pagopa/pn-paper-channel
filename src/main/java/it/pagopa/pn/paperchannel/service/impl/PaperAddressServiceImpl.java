@@ -6,16 +6,11 @@ import it.pagopa.pn.paperchannel.exception.PnUntracebleException;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.FailureDetailCodeEnum;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
-import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
-import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.KOReason;
-import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
-import it.pagopa.pn.paperchannel.service.PaperAddressService;
-import it.pagopa.pn.paperchannel.service.SecondAttemptFlowHandlerFactory;
-import it.pagopa.pn.paperchannel.service.SqsSender;
+import it.pagopa.pn.paperchannel.service.*;
 import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
 import it.pagopa.pn.paperchannel.utils.PnLogAudit;
 import it.pagopa.pn.paperchannel.utils.Utility;
@@ -30,23 +25,27 @@ import static it.pagopa.pn.paperchannel.utils.Utility.logAuditSuccessLogic;
 
 @Slf4j
 @Service
-public class PaperAddressServiceImpl extends BaseService implements PaperAddressService {
+public class PaperAddressServiceImpl extends GenericService implements PaperAddressService {
 
     private final AddressDAO addressDAO;
     private final SecondAttemptFlowHandlerFactory secondAttemptFlowHandlerFactory;
+    private final NationalRegistryService nationalRegistryService;
+    private final PrepareFlowStarter prepareFlowStarter;
 
 
-    public PaperAddressServiceImpl(NationalRegistryClient nationalRegistryClient,
-                                   RequestDeliveryDAO requestDeliveryDAO, SqsSender sqsQueueSender, CostDAO costDAO,
-                                   AddressDAO addressDAO, SecondAttemptFlowHandlerFactory secondAttemptFlowHandlerFactory) {
-        super(requestDeliveryDAO, costDAO, nationalRegistryClient, sqsQueueSender);
+    public PaperAddressServiceImpl(RequestDeliveryDAO requestDeliveryDAO, SqsSender sqsQueueSender,
+                                   AddressDAO addressDAO, SecondAttemptFlowHandlerFactory secondAttemptFlowHandlerFactory,
+                                   NationalRegistryService nationalRegistryService, PrepareFlowStarter prepareFlowStarter) {
+        super(sqsQueueSender, requestDeliveryDAO);
         this.addressDAO = addressDAO;
         this.secondAttemptFlowHandlerFactory = secondAttemptFlowHandlerFactory;
+        this.nationalRegistryService = nationalRegistryService;
+        this.prepareFlowStarter = prepareFlowStarter;
     }
 
 
     @Override
-    public Mono<Address> getCorrectAddress(PnDeliveryRequest deliveryRequest, Address fromNationalRegistry, PrepareAsyncRequest queueModel) {
+    public Mono<Address> getCorrectAddress(PnDeliveryRequest deliveryRequest, Address fromNationalRegistry, int attemptRetry) {
 
         PnLogAudit pnLogAudit = new PnLogAudit();
         logAuditBeforeLogic("prepare requestId = %s, relatedRequestId = %s Is Receiver Address First Attempt present ?", deliveryRequest, pnLogAudit);
@@ -60,7 +59,7 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
                 .doOnNext(receiverAddressFirstAttempt -> logAuditSuccessLogic("prepare requestId = %s, relatedRequestId = %s Receiver address First Attempt is present on DB", deliveryRequest, pnLogAudit))
                 .map(AddressMapper::toDTO)
                 .flatMap(receiverAddressFirstAttempt -> chooseAddress(deliveryRequest, fromNationalRegistry, receiverAddressFirstAttempt))
-                .onErrorResume(PnAddressFlowException.class, ex -> handlePnAddressFlowException(ex, deliveryRequest, queueModel));
+                .onErrorResume(PnAddressFlowException.class, ex -> handlePnAddressFlowException(ex, deliveryRequest, fromNationalRegistry, attemptRetry));
     }
 
     private Mono<Address> chooseAddress(PnDeliveryRequest deliveryRequest, Address fromNationalRegistry, Address addressFromFirstAttempt) {
@@ -123,9 +122,9 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
 
     }
 
-    private <T> Mono<T> handlePnAddressFlowException(PnAddressFlowException ex, PnDeliveryRequest deliveryRequest, PrepareAsyncRequest queueModel) {
+    private <T> Mono<T> handlePnAddressFlowException(PnAddressFlowException ex, PnDeliveryRequest deliveryRequest, Address fromNationalRegistry, int attemptRetry) {
         if (ex.getExceptionType() == ATTEMPT_ADDRESS_NATIONAL_REGISTRY){
-            this.finderAddressFromNationalRegistries(
+            nationalRegistryService.finderAddressFromNationalRegistries(
                     deliveryRequest.getRequestId(),
                     deliveryRequest.getRelatedRequestId(),
                     deliveryRequest.getFiscalCode(),
@@ -134,11 +133,7 @@ public class PaperAddressServiceImpl extends BaseService implements PaperAddress
             return Mono.error(ex);
         }
         if (ex.getExceptionType() == ADDRESS_MANAGER_ERROR){
-            queueModel.setIun(deliveryRequest.getIun());
-            queueModel.setRequestId(deliveryRequest.getRequestId());
-            queueModel.setCorrelationId(deliveryRequest.getCorrelationId());
-            queueModel.setAddressRetry(true);
-            this.sqsSender.pushInternalError(queueModel, queueModel.getAttemptRetry(), PrepareAsyncRequest.class);
+            prepareFlowStarter.redrivePreparePhaseOneAfterAddressManagerError(deliveryRequest, attemptRetry, fromNationalRegistry);
         }
         return Mono.error(ex);
     }

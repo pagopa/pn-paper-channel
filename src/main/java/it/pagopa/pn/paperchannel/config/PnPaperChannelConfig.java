@@ -42,6 +42,9 @@ public class PnPaperChannelConfig {
     private String queueNationalRegistries;
     private String queueExternalChannel;
     private String queueRaddAlt;
+    private String queueNormalizeAddress;
+    private String queuePaperchannelToDelayer;
+    private String queueDelayerToPaperchannel;
     private String queueInternal;
     private Integer attemptSafeStorage;
     private Integer attemptQueueSafeStorage;
@@ -74,6 +77,7 @@ public class PnPaperChannelConfig {
     private List<String> allowedRedriveProgressStatusCodes;
     private List<String> SendProgressMeta;
     private String costRoundingMode;
+    private boolean prepareTwoPhases;
 
     /**
      * Per l'errore PNADDR001 flusso NR: True se il failureDetailCode D01 deve essere mandato a delivery push (specificando anche l'indirizzo),

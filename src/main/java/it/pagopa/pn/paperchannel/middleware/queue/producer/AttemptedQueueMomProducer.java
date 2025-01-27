@@ -1,31 +1,33 @@
 package it.pagopa.pn.paperchannel.middleware.queue.producer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import it.pagopa.pn.api.dto.events.AbstractSqsMomProducer;
+import it.pagopa.pn.api.dto.events.GenericEvent;
 import it.pagopa.pn.api.dto.events.GenericEventHeader;
-import it.pagopa.pn.paperchannel.middleware.queue.model.InternalEventHeader;
-import it.pagopa.pn.paperchannel.middleware.queue.model.InternalPushEvent;
+import it.pagopa.pn.paperchannel.middleware.queue.model.AttemptEventHeader;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 
 import java.util.Map;
 
-public class InternalQueueMomProducer extends AttemptedQueueMomProducer<InternalPushEvent> {
+public abstract class AttemptedQueueMomProducer<T extends GenericEvent> extends AbstractSqsMomProducer<T> {
 
-    public InternalQueueMomProducer(SqsClient sqsClient, String topic, ObjectMapper objectMapper, Class<InternalPushEvent> msgClass) {
+    protected AttemptedQueueMomProducer(SqsClient sqsClient, String topic, ObjectMapper objectMapper, Class<T> msgClass) {
         super(sqsClient, topic, objectMapper, msgClass);
     }
+
 
     @Override
     protected Map<String, MessageAttributeValue> getSqSHeader(GenericEventHeader header) {
         Map<String, MessageAttributeValue> map = super.getSqSHeader(header);
-        if (!(header instanceof InternalEventHeader)) {
+        if (!(header instanceof AttemptEventHeader headerCustom)) {
             return map;
         }
-        InternalEventHeader headerCustom = (InternalEventHeader) header;
-        map.put("expired", MessageAttributeValue.builder()
+        map.put("attempt", MessageAttributeValue.builder()
                 .dataType("String")
-                .stringValue(headerCustom.getExpired().toString())
+                .stringValue(String.valueOf(headerCustom.getAttempt()))
                 .build());
         return map;
     }
+
 }

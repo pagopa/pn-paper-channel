@@ -372,6 +372,14 @@ Parameters:
     Type: String
     Description: 'Send and pull requests in this queue'
 
+  PaperNormalizeAddressQueueName:
+    Type: String
+    Description: 'Name of the queue executing the flow of PREPARE phase 1'
+
+  PaperNormalizeAddressQueueARN:
+    Type: String
+    Description: 'ARN of the queue executing the flow of PREPARE phase 1'
+
   RaddAltToPaperChannelQueueName:
     Type: String
     Description: 'Pull radd-alt messages from this Queue'
@@ -601,6 +609,40 @@ Parameters:
       - 'true'
       - 'false'
 
+  # pn-paper-channel TO pn-delayer events
+  PaperChannelToDelayerQueueARN:
+    Type: String
+    Description: Events from pn-paper-channel TO pn-delayer queue ARN
+
+  # pn-delayer TO pn-paper-channel events
+  DelayerToPaperChannelQueueARN:
+    Type: String
+    Description: Events from pn-delayer TO pn-paper-channel queue ARN
+
+  PaperChannelPrepareToDelayerQueuePipeDesiredState:
+    Type: String
+    Default: 'RUNNING'
+    Description: 'Desired state of the pipe'
+    AllowedValues:
+      - 'RUNNING'
+      - 'STOPPED'
+
+  PrepareTwoPhases:
+    Type: String
+    Description: 'Activation of the PREPARE flow in two phases'
+    AllowedValues:
+      - 'true'
+      - 'false'
+
+  PaperChannelToDelayerQueueName:
+    Type: String
+    Description: 'Paper Channel to Delayer queue name'
+
+  DelayerToPaperChannelQueueName:
+    Type: String
+    Description: 'Delayer to Paper Channel queue name'
+
+
   # Log group parameters
   EcsLogGroup:
     Type: String
@@ -721,6 +763,10 @@ Resources:
         ContainerEnvEntry75: !Sub 'PN_PAPERCHANNEL_SENDPROGRESSMETA=${SendProgressMeta}'
         ContainerEnvEntry76: !Sub 'PN_PAPERCHANNEL_COSTROUNDINGMODE=${CostRoundingMode}'
         ContainerEnvEntry77: !Sub 'PN_PAPERCHANNEL_SENDCON020=${SendCon020}'
+        ContainerEnvEntry78: !Sub 'PN_PAPERCHANNEL_PREPARETWOPHASES=${PrepareTwoPhases}'
+        ContainerEnvEntry79: !Sub 'PN_PAPERCHANNEL_QUEUENORMALIZEADDRESS=${PaperNormalizeAddressQueueName}'
+        ContainerEnvEntry80: !Sub 'PN_PAPERCHANNEL_QUEUEPAPERCHANNELTODELAYER=${PaperChannelToDelayerQueueName}'
+        ContainerEnvEntry81: !Sub 'PN_PAPERCHANNEL_QUEUEDELAYERTOPAPERCHANNEL=${DelayerToPaperChannelQueueName}'
         ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-PaperChannel-Secrets
         MappedPaths: '/paper-channel-bo/*,/paper-channel-private/*'
@@ -764,6 +810,9 @@ Resources:
               - !Ref ExternalChannelsOutputsQueueARN
               - !Ref ExternalChannels2PaperChannelQueueARN
               - !Ref ScheduledRequestsQueueARN
+              - !Ref PaperNormalizeAddressQueueARN
+              - !Ref PaperChannelToDelayerQueueARN
+              - !Ref DelayerToPaperChannelQueueARN
               - !Ref NationalRegistries2PaperChannelQueueARN
               - !Ref F24ToPaperChannelQueueARN
               - !Ref RaddAltToPaperChannelQueueARN
@@ -835,6 +884,69 @@ Resources:
             Resource:
               - "*"
 
+
+  ###            Paper Channel Queue to Delayer Queue Pipe                                  ###
+  ############################################################################
+
+  # pn-paper-channel
+  PaperChannelPrepareToDelayerQueuePipeRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - pipes.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: !Sub ${ProjectName}-paper-channel-to-delayer-source-policy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'sqs:ReceiveMessage'
+                  - 'sqs:DeleteMessage'
+                  - 'sqs:GetQueueAttributes'
+                Resource: !Ref PaperChannelToDelayerQueueARN
+        - PolicyName: !Sub ${ProjectName}-paper-channel-to-delayer-target-policy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'sqs:ChangeMessageVisibility'
+                  - 'sqs:ChangeMessageVisibilityBatch'
+                  - 'sqs:GetQueueAttributes'
+                  - 'sqs:GetQueueUrl'
+                  - 'sqs:SendMessage'
+                  - 'sqs:SendMessageBatch'
+                Resource: !Ref DelayerToPaperChannelQueueARN
+
+  # pn-paper-channel
+  PaperChannelPrepareToDelayerQueuePipe:
+    Type: AWS::Pipes::Pipe
+    Properties:
+      Name: !Sub ${ProjectName}-paper-channel-to-delayer-pipe
+      Description: 'Pipe from Paper Channel Queue to Delayer queue'
+      RoleArn: !GetAtt PaperChannelPrepareToDelayerQueuePipeRole.Arn
+      DesiredState: !Ref PaperChannelPrepareToDelayerQueuePipeDesiredState
+      Source: !Ref PaperChannelToDelayerQueueARN
+      SourceParameters:
+        SqsQueueParameters:
+          BatchSize: 10
+      TargetParameters:
+        InputTemplate: |
+          {
+            "requestId": <$.body.requestId>,
+            "iun": <$.body.iun>,
+            "recipientNormalizedAddress": <$.body.recipientNormalizedAddress>
+          }
+      Target: !Ref DelayerToPaperChannelQueueARN
+
   # Dashboard
   PaperChannelMicroserviceCloudWatchDashboard:
     Type: AWS::CloudFormation::Stack
@@ -877,6 +989,7 @@ Resources:
           - - !Ref ExternalChannelsOutputsQueueARN
             - !Ref ExternalChannels2PaperChannelQueueARN
             - !Ref ScheduledRequestsQueueARN
+            - !Ref PaperNormalizeAddressQueueARN
             - !Ref NationalRegistries2PaperChannelQueueARN
             - !Ref F24ToPaperChannelQueueARN
             - !Ref RaddAltToPaperChannelQueueARN
@@ -971,6 +1084,17 @@ Resources:
             Period: !Ref AutoscalingCheckPeriod
             Stat: Average
           ReturnData: False
+        - Id: m7
+          MetricStat:
+            Metric:
+              Dimensions:
+                - Name: QueueName
+                  Value: !Ref "PaperNormalizeAddressQueueName"
+              Namespace: "AWS/SQS"
+              MetricName: "ApproximateNumberOfMessagesVisible"
+            Period: !Ref AutoscalingCheckPeriod
+            Stat: Average
+          ReturnData: False
         - Id: m4
           MetricStat:
             Metric:
@@ -1007,7 +1131,7 @@ Resources:
             Stat: Average
           ReturnData: False
         - Id: code
-          Expression: !Sub "IF(m5==0, 101, (100*(m1+m2+m3)) / (${ConsumedQueueMessagePerMinute} * m5) )"
+          Expression: !Sub "IF(m5==0, 101, (100*(m1+m2+m3+m7)) / (${ConsumedQueueMessagePerMinute} * m5) )"
           Label: !Sub "${ProjectName}-paper-channel-queue-custom-metric"
           ReturnData: False
         - Id: http
