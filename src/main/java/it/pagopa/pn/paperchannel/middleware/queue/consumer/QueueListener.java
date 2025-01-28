@@ -152,6 +152,7 @@ public class QueueListener {
         else {
             //evento che viene da paper-channel stesso
             switch (EventTypeEnum.valueOf(attemptEventHeader.getEventType())) {
+                case PREPARE_ASYNC_FLOW:  this.handlePreparePhaseTwoAsyncFlowEvent(attemptEventHeader, node); break; // evento inviato dal consumer di f24
                 case F24_ERROR:  this.handleF24ErrorEvent(attemptEventHeader, node); break;
                 case SAFE_STORAGE_ERROR: this.handleSafeStorageErrorEventFromPreparePhaseTwo(attemptEventHeader, node); break;
                 default: log.error("Event type not allowed in Prepare Async Phase Two Flow: {}", attemptEventHeader.getEventType());

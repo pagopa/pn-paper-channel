@@ -142,7 +142,7 @@ public class PrepareFlowStarterImpl implements PrepareFlowStarter {
             PnPrepareDelayerToPaperchannelPayload payload = PnPrepareDelayerToPaperchannelPayload.builder()
                     .requestId(deliveryRequest.getRequestId())
                     .iun(deliveryRequest.getIun())
-                    .attemptRetry(0)
+                    .attempt(0)
                     .build();
             this.sqsSender.pushToDelayerToPaperchennelQueue(payload);
         }

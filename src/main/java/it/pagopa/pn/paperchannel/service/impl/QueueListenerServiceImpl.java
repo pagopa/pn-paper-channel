@@ -424,7 +424,7 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
         log.logStartingProcess(processName);
         MDCUtils.addMDCToContextAndExecute(Mono.just(data)
                         .flatMap(delayerRequest -> {
-                            delayerRequest.setAttemptRetry(attempt);
+                            delayerRequest.setAttempt(attempt);
                             return this.preparePhaseTwoAsyncService.prepareAsyncPhaseTwo(data);
                         })
                         .doOnSuccess(resultFromAsync ->{

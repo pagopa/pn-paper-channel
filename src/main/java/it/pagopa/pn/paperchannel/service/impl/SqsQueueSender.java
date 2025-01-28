@@ -194,10 +194,10 @@ public class SqsQueueSender implements SqsSender {
                 .publisher(PUBLISHER_PREPARE)
                 .eventId(UUID.randomUUID().toString())
                 .createdAt(Instant.now())
-                .attempt(entity.getAttemptRetry() + 1)
+                .attempt(entity.getAttempt() + 1)
                 .eventType(SAFE_STORAGE_ERROR.name())
                 .build();
-        int delaySeconds = getDelaySeconds(entity.getAttemptRetry());
+        int delaySeconds = getDelaySeconds(entity.getAttempt());
         this.delayerToPaperchannelInternalProducer.push(new AttemptPushEvent<>(prepareHeader, entity), delaySeconds);
         log.info("pushed to DelayerToPaperchannel queue entity={}", entity);
     }
