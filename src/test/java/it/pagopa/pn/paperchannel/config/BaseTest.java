@@ -1,6 +1,7 @@
 package it.pagopa.pn.paperchannel.config;
 
 import io.awspring.cloud.autoconfigure.messaging.SqsAutoConfiguration;
+import it.pagopa.pn.commons.utils.metrics.SpringAnalyzer;
 import it.pagopa.pn.paperchannel.LocalStackTestConfig;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.*;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +23,9 @@ import org.springframework.test.context.ActiveProfiles;
 @AutoConfigureMockMvc
 @Import(LocalStackTestConfig.class)
 public abstract class BaseTest {
+
+    @MockBean
+    private SpringAnalyzer springAnalyzer;
 
     /**
      * Subclasses need to be annotated with:
@@ -45,6 +49,9 @@ public abstract class BaseTest {
 
         @MockBean
         private DelayerToPaperchannelInternalProducer delayerToPaperchannelInternalProducer;
+
+        @MockBean
+        private SpringAnalyzer springAnalyzer;
 
 
     }
