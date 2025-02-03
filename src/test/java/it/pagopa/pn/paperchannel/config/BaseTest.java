@@ -23,14 +23,13 @@ import org.springframework.test.context.ActiveProfiles;
 @Import(LocalStackTestConfig.class)
 public abstract class BaseTest {
 
-
-    @Slf4j
-    @SpringBootTest
-    @EnableAutoConfiguration(exclude= {SqsAutoConfiguration.class, ContextFunctionCatalogAutoConfiguration.class})
-    @ActiveProfiles("test")
-    public static class WithMockServer {
-        @Autowired
-        private MockServerBean mockServer;
+    /**
+     * Subclasses need to be annotated with:
+     * SpringBootTest
+     * EnableAutoConfiguration(exclude= {SqsAutoConfiguration.class, ContextFunctionCatalogAutoConfiguration.class})
+     * ActiveProfiles(“test”)
+     */
+    public static class WithOutLocalStackTest {
 
         @MockBean
         private DeliveryPushMomProducer deliveryMomProducer;
@@ -46,6 +45,18 @@ public abstract class BaseTest {
 
         @MockBean
         private DelayerToPaperchannelInternalProducer delayerToPaperchannelInternalProducer;
+
+
+    }
+
+
+    @Slf4j
+    @SpringBootTest
+    @EnableAutoConfiguration(exclude= {SqsAutoConfiguration.class, ContextFunctionCatalogAutoConfiguration.class})
+    @ActiveProfiles("test")
+    public static class WithMockServer extends WithOutLocalStackTest {
+        @Autowired
+        private MockServerBean mockServer;
 
 
         @BeforeEach

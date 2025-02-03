@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.integrationtests;
 
+import io.awspring.cloud.autoconfigure.messaging.SqsAutoConfiguration;
 import it.pagopa.pn.paperchannel.config.BaseTest;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.AttachmentDetailsDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
@@ -15,15 +16,19 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnDiscoveredAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventDemat;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
 import it.pagopa.pn.paperchannel.middleware.queue.consumer.MetaDematCleaner;
+import it.pagopa.pn.paperchannel.service.PaperResultAsyncService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
-import it.pagopa.pn.paperchannel.service.impl.PaperResultAsyncServiceImpl;
 import it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.cloud.function.context.config.ContextFunctionCatalogAutoConfiguration;
+import org.springframework.test.context.ActiveProfiles;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
@@ -39,8 +44,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.*;
 
-
-class PaperPNRN012IT extends BaseTest {
+@SpringBootTest
+@EnableAutoConfiguration(exclude= {SqsAutoConfiguration.class, ContextFunctionCatalogAutoConfiguration.class})
+@ActiveProfiles("test")
+class PaperPNRN012Test extends BaseTest.WithOutLocalStackTest {
     private static final String REQUEST_ID = "abc-234-SDSS";
     private static final String PRODUCT_TYPE = "AR";
     private static final String META_STRING = "META##";
@@ -48,7 +55,7 @@ class PaperPNRN012IT extends BaseTest {
 
 
     @Autowired
-    private PaperResultAsyncServiceImpl paperResultAsyncService;
+    private PaperResultAsyncService paperResultAsyncService;
 
     @MockBean
     private SqsSender sqsSender;
@@ -101,7 +108,7 @@ class PaperPNRN012IT extends BaseTest {
 
     @Test
     void Test_AR_Save_MetaData__RECRN003A() {
-        String RECRN003A_STATUS_CODE = "RECRN003A";
+        final String RECRN003A_STATUS_CODE = "RECRN003A";
         /* BODY OF EXTERNAL CHANNEL QUEUE */
         SingleStatusUpdateDto extChannelMessage = new SingleStatusUpdateDto();
         extChannelMessage.setAnalogMail(createSimpleAnalogMail(RECRN003A_STATUS_CODE, StatusCodeEnum.PROGRESS.getValue(), PRODUCT_TYPE));
@@ -132,8 +139,8 @@ class PaperPNRN012IT extends BaseTest {
 
     @Test
     void Test_AR_SaveDemat__RECRN004B(){
-        String RECRN004B = "RECRN004B";
-        String RECRN004A = "RECRN004A";
+        final String RECRN004B = "RECRN004B";
+        final String RECRN004A = "RECRN004A";
 
         /* BODY OF EXTERNAL CHANNEL QUEUE */
         SingleStatusUpdateDto extChannelMessage = new SingleStatusUpdateDto();
@@ -175,7 +182,7 @@ class PaperPNRN012IT extends BaseTest {
 
     @Test
     void Test_AR_SendPNRN012ToDeliveryPush__RECRN00XC_GreaterEquals10(){
-        String RECRN004C = "RECRN004C";
+        final String RECRN004C = "RECRN004C";
 
         /* BODY OF EXTERNAL CHANNEL QUEUE */
         SingleStatusUpdateDto extChannelMessage = new SingleStatusUpdateDto();
@@ -231,7 +238,7 @@ class PaperPNRN012IT extends BaseTest {
 
     @Test
     void Test_AR_SendPNRN012ToDeliveryPush__RECRN00XC_Minor10(){
-        String RECRN004C = "RECRN004C";
+        final String RECRN004C = "RECRN004C";
 
         /* BODY OF EXTERNAL CHANNEL QUEUE */
         SingleStatusUpdateDto extChannelMessage = new SingleStatusUpdateDto();
