@@ -50,6 +50,6 @@
     "EnableSimplifiedTenderFlow": "true",
     "CostRoundingMode": "HALF_UP",
     "PaperChannelPrepareToDelayerQueuePipeDesiredState": "RUNNING",
-    "PrepareTwoPhases": "true"
+    "PrepareTwoPhases": "false"
   }
 }
