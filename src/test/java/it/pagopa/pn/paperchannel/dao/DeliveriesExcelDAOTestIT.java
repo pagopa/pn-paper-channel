@@ -22,7 +22,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-class DeliveriesExcelDAOTest extends BaseTest {
+class DeliveriesExcelDAOTestIT extends BaseTest {
 
     @Autowired
     private DeliveriesExcelDAO deliveriesExcelDAO;

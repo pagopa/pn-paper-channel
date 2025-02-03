@@ -1,6 +1,7 @@
 package it.pagopa.pn.paperchannel.config;
 
 import io.awspring.cloud.autoconfigure.messaging.SqsAutoConfiguration;
+import it.pagopa.pn.commons.utils.metrics.SpringAnalyzer;
 import it.pagopa.pn.paperchannel.LocalStackTestConfig;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.*;
 import lombok.extern.slf4j.Slf4j;
@@ -23,14 +24,16 @@ import org.springframework.test.context.ActiveProfiles;
 @Import(LocalStackTestConfig.class)
 public abstract class BaseTest {
 
+    @MockBean
+    private SpringAnalyzer springAnalyzer;
 
-    @Slf4j
-    @SpringBootTest
-    @EnableAutoConfiguration(exclude= {SqsAutoConfiguration.class, ContextFunctionCatalogAutoConfiguration.class})
-    @ActiveProfiles("test")
-    public static class WithMockServer {
-        @Autowired
-        private MockServerBean mockServer;
+    /**
+     * Subclasses need to be annotated with:
+     * SpringBootTest
+     * EnableAutoConfiguration(exclude= {SqsAutoConfiguration.class, ContextFunctionCatalogAutoConfiguration.class})
+     * ActiveProfiles(“test”)
+     */
+    public static class WithOutLocalStackTest {
 
         @MockBean
         private DeliveryPushMomProducer deliveryMomProducer;
@@ -46,6 +49,21 @@ public abstract class BaseTest {
 
         @MockBean
         private DelayerToPaperchannelInternalProducer delayerToPaperchannelInternalProducer;
+
+        @MockBean
+        private SpringAnalyzer springAnalyzer;
+
+
+    }
+
+
+    @Slf4j
+    @SpringBootTest
+    @EnableAutoConfiguration(exclude= {SqsAutoConfiguration.class, ContextFunctionCatalogAutoConfiguration.class})
+    @ActiveProfiles("test")
+    public static class WithMockServer extends WithOutLocalStackTest {
+        @Autowired
+        private MockServerBean mockServer;
 
 
         @BeforeEach

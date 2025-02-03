@@ -1,6 +1,7 @@
 package it.pagopa.pn.paperchannel.integrationtests;
 
 import io.awspring.cloud.autoconfigure.messaging.SqsAutoConfiguration;
+import it.pagopa.pn.paperchannel.config.BaseTest;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
@@ -9,9 +10,6 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnRequestError;
-import it.pagopa.pn.paperchannel.middleware.queue.producer.DeliveryPushMomProducer;
-import it.pagopa.pn.paperchannel.middleware.queue.producer.InternalQueueMomProducer;
-import it.pagopa.pn.paperchannel.middleware.queue.producer.NormalizeAddressQueueMomProducer;
 import it.pagopa.pn.paperchannel.service.PaperResultAsyncService;
 import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
@@ -36,7 +34,7 @@ import static org.mockito.Mockito.*;
 @SpringBootTest
 @EnableAutoConfiguration(exclude= {SqsAutoConfiguration.class, ContextFunctionCatalogAutoConfiguration.class})
 @ActiveProfiles("test")
-class PaperNotRetryableIT {
+class PaperNotRetryableTest extends BaseTest.WithOutLocalStackTest {
 
     @Autowired
     private PaperResultAsyncService paperResultAsyncService;
@@ -50,14 +48,6 @@ class PaperNotRetryableIT {
     @MockBean
     private PaperRequestErrorDAO paperRequestErrorDAO;
 
-    @MockBean
-    private DeliveryPushMomProducer deliveryMomProducer;
-
-    @MockBean
-    private InternalQueueMomProducer internalQueueMomProducer;
-
-    @MockBean
-    private NormalizeAddressQueueMomProducer normalizeAddressQueueMomProducer;
 
     @ParameterizedTest
     @ValueSource(strings = {"P008", "P010", "P011", "P012", "P013", "P014"})
