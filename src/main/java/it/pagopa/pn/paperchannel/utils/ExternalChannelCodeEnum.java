@@ -27,7 +27,7 @@ public enum ExternalChannelCodeEnum {
     RECRN002F(Constants.KO),
     RECRN003C(Constants.OK),
     RECRN004C(Constants.OK),
-    RECRN005C(Constants.KO),
+    RECRN005C(Constants.OK),
     RECAG002C(Constants.OK),
     RECAG003C(Constants.OK),
     RECAG003F(Constants.KO),
