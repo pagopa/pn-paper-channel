@@ -4,6 +4,8 @@ import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.middleware.db.dao.*;
 import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
 import it.pagopa.pn.paperchannel.middleware.queue.consumer.MetaDematCleaner;
+import it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.RECRN00XC.RECRN005CMessageHandler;
+import it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.RECRN00XC.RECRN00XCMessageHandler;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum;
 import it.pagopa.pn.paperchannel.utils.SendProgressMetaConfig;
@@ -220,6 +222,15 @@ public class HandlersFactory {
                 .pnEventErrorDAO(pnEventErrorDAO)
                 .build();
 
+        RECRN005CMessageHandler recrn005cMessageHandler = RECRN005CMessageHandler.builder()
+                .sqsSender(sqsSender)
+                .eventMetaDAO(eventMetaDAO)
+                .requestDeliveryDAO(requestDeliveryDAO)
+                .metaDematCleaner(metaDematCleaner)
+                .pnPaperChannelConfig(pnPaperChannelConfig)
+                .pnEventErrorDAO(pnEventErrorDAO)
+                .build();
+
         RECRN011MessageHandler recrn011cMessageHandler = RECRN011MessageHandler.builder()
                 .sqsSender(sqsSender)
                 .eventMetaDAO(eventMetaDAO)
@@ -287,7 +298,7 @@ public class HandlersFactory {
 
         map.put(RECRN003C.name(), recrn00xcMessageHandler);
         map.put(RECRN004C.name(), recrn00xcMessageHandler);
-        map.put(RECRN005C.name(), recrn00xcMessageHandler);
+        map.put(RECRN005C.name(), recrn005cMessageHandler);
         map.put(PNAG012.name(), pnag012MessageHandler);
 
         /* Override mapping handlers before simple 890 (PN-10501) - Remove when feature flag will be not necessary */
