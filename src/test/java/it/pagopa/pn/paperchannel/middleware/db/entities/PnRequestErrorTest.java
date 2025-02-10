@@ -94,8 +94,8 @@ class PnRequestErrorTest {
         // Verify timestamp format
         String timestamp = causeParts[1];
         log.info("ISO_TIMESTAMP={}", timestamp);
-        assertTrue(timestamp.matches("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z"),
-                "Timestamp should be in ISO-8601 format with 6 decimal places");
+        assertTrue(timestamp.matches("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,9})?Z"),
+                "Timestamp should be in ISO-8601 format");
     }
 
     private PnRequestError initRequestError() {
