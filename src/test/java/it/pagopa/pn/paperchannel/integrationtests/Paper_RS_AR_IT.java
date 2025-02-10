@@ -528,8 +528,9 @@ class Paper_RS_AR_IT extends BaseTest {
         //
         // demat PROGRESS -> send to delivery push
         ArgumentCaptor<SendEvent> capturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
+        var now = Instant.now();
 
-        generateEvent(RECRN011_STATUS_CODE, null, null, null, Instant.now().minus(20, ChronoUnit.DAYS));
+        generateEvent(RECRN011_STATUS_CODE, null, null, null, now.minus(30, ChronoUnit.DAYS));
 
         verify(sqsSender, timeout(2000).times(1)).pushSendEvent(capturedSendEvent.capture());
         log.info("Event: \n"+capturedSendEvent.getAllValues());
@@ -537,9 +538,9 @@ class Paper_RS_AR_IT extends BaseTest {
         assertEquals(StatusCodeEnum.PROGRESS, capturedSendEvent.getValue().getStatusCode());
         assertEquals(RECRN011_STATUS_CODE, capturedSendEvent.getValue().getStatusDetail());
 
-        generateEvent("RECRN005A", "MA", null, null, Instant.now().minus(5, ChronoUnit.DAYS));
-        generateEvent("RECRN005B", "MA", null, List.of("safe-storage://123ABCDOC"), Instant.now().minus(5, ChronoUnit.DAYS));
-        generateEvent("RECRN005C", "MA", null, null, Instant.now().minus(5, ChronoUnit.DAYS));
+        generateEvent("RECRN005A", "MA", null, null, now);
+        generateEvent("RECRN005B", "MA", null, List.of("safe-storage://123ABCDOC"), now);
+        generateEvent("RECRN005C", "MA", null, null, now);
 
         ArgumentCaptor<SendEvent> captureSecond = ArgumentCaptor.forClass(SendEvent.class);
         verify(sqsSender, times(3)).pushSendEvent(captureSecond.capture());
