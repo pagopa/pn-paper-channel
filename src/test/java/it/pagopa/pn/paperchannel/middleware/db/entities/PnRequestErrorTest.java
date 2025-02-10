@@ -4,6 +4,7 @@ import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
 import it.pagopa.pn.paperchannel.model.RequestErrorCategoryEnum;
 import it.pagopa.pn.paperchannel.model.RequestErrorCauseEnum;
 import it.pagopa.pn.paperchannel.utils.Const;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,7 +16,7 @@ import java.time.temporal.ChronoUnit;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.EXTERNAL_CHANNEL_LISTENER_EXCEPTION;
 import static org.junit.jupiter.api.Assertions.*;
 
-
+@Slf4j
 class PnRequestErrorTest {
 
     public String requestId;
@@ -92,6 +93,7 @@ class PnRequestErrorTest {
 
         // Verify timestamp format
         String timestamp = causeParts[1];
+        log.info("ISO_TIMESTAMP={}", timestamp);
         assertTrue(timestamp.matches("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z"),
                 "Timestamp should be in ISO-8601 format with 6 decimal places");
     }
