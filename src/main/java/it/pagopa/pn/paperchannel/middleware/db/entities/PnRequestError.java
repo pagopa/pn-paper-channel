@@ -10,6 +10,7 @@ import lombok.ToString;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
 
 import java.time.Instant;
+import java.time.format.DateTimeFormatter;
 
 @DynamoDbBean
 @Getter
@@ -126,6 +127,9 @@ public class PnRequestError {
 
         public PnRequestError build() {
             var timestamp = Instant.now();
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'");
+            String formattedTimestamp = formatter.format(Instant.now());
+
             PnRequestError pnRequestError = new PnRequestError();
 
             pnRequestError.setRequestId(this.requestId);
@@ -134,7 +138,7 @@ public class PnRequestError {
             pnRequestError.setFlowThrow(this.flowThrow);
             pnRequestError.setGeokey(this.geokey);
             pnRequestError.setCategory(this.category.getValue());
-            pnRequestError.setCause(this.cause.getValue() + "##" + timestamp);
+            pnRequestError.setCause(this.cause.getValue() + "##" + formattedTimestamp);
 
             /* Auto-generated constant field values */
             pnRequestError.setCreated(timestamp);
