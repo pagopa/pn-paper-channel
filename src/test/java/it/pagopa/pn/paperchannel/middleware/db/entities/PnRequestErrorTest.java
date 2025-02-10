@@ -5,13 +5,10 @@ import it.pagopa.pn.paperchannel.model.RequestErrorCategoryEnum;
 import it.pagopa.pn.paperchannel.model.RequestErrorCauseEnum;
 import it.pagopa.pn.paperchannel.utils.Const;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import software.amazon.awssdk.enhanced.dynamodb.internal.converter.attribute.InstantAsStringAttributeConverter;
 
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.EXTERNAL_CHANNEL_LISTENER_EXCEPTION;
 import static org.junit.jupiter.api.Assertions.*;

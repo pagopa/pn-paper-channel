@@ -10,7 +10,6 @@ import lombok.ToString;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
 
 import java.time.Instant;
-import java.time.format.DateTimeFormatter;
 
 @DynamoDbBean
 @Getter
