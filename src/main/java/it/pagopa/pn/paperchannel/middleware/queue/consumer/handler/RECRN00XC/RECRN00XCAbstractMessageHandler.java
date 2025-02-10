@@ -18,10 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 
-import javax.annotation.PostConstruct;
-import java.time.Duration;
-import java.time.Instant;
-
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
 
 /**
@@ -62,7 +58,7 @@ public abstract class RECRN00XCAbstractMessageHandler extends SendToDeliveryPush
                                 .switchIfEmpty(Mono.defer(() -> {
                                     throw InvalidEventOrderException.from(entity, paperRequest,
                                             "[{" + paperRequest.getRequestId() +
-                                                    "}] Missing EventMeta RECRN011 for {" + paperRequest + "}");
+                                                    "}] Missing EventMeta RECRN00XA for {" + paperRequest + "}");
                                 }))
                 );
     }
