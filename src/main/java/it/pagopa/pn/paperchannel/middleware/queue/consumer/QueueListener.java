@@ -137,8 +137,8 @@ public class QueueListener {
     public void pullDelayerMessages(@Payload String node, @Headers Map<String,Object> headers){
         setMDCContext(headers);
 
-        if(log.isDebugEnabled()){
-            log.debug("Message from pullDelayerMessages, headers={}, payload: {}", headers, node);
+        if(log.isTraceEnabled()){ //TODO cambiare da TRACE a DEBUG una volta introdotto il delayer (perchè senza il delayer, stampa l'indirizzo normalizzato)
+            log.trace("Message from pullDelayerMessages, headers={}, payload: {}", headers, node);
         }
         else {
             log.info("Message from pullDelayerMessages, payload: {}", node);
@@ -423,8 +423,8 @@ public class QueueListener {
             attempt = 0;
         }
         else {
-            log.info("Push prepare phase two queue from internal");
             attempt = attemptEventHeader.getAttempt();
+            log.info("Push prepare phase two queue from internal, attempt = {}", attempt);
         }
 
         this.queueListenerService.delayerListener(body, attempt);
