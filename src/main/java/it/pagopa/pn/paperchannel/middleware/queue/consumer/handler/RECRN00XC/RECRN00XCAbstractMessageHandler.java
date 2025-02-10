@@ -24,25 +24,26 @@ import java.time.Instant;
 
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
 
+/**
+ * Abstract handler for processing RECRN00XC messages.
+ * This class provides common functionalities for checking duplicate events,
+ * enriching event data, and handling message processing logic.
+ */
 @Slf4j
 @SuperBuilder
 public abstract class RECRN00XCAbstractMessageHandler extends SendToDeliveryPushHandler {
     protected final EventMetaDAO eventMetaDAO;
     protected final MetaDematCleaner metaDematCleaner;
 
-    // TODO
-/*    @PostConstruct
-    private void postConstruct() {
-        log.info("Refinement duration is {}", this.pnPaperChannelConfig.getRefinementDuration());
-    }*/
-
     /**
+     * Checks if the event is a duplicate and retrieves the corresponding RECRN011 and RECRN00xA events.
      *
-     * @param entity PnDeliveryRequest
-     * @param paperRequest PaperProgressStatusEventDto
-     * @return (RECRN011, RECRN00xC)
+     * @param entity       The delivery request entity.
+     * @param paperRequest The paper progress status event.
+     * @return A tuple containing RECRN011 and RECRN00xA event metadata (RECRN011, RECRN00xC).
      */
     protected Mono<Tuple2<PnEventMeta, PnEventMeta>> checkIfDuplicateEvent(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
+        // Remove suffix 'C' and replace with 'A'
         final String status = paperRequest.getStatusCode()
                 .substring(0,paperRequest.getStatusCode().length()-1)
                 .concat("A");
@@ -66,6 +67,14 @@ public abstract class RECRN00XCAbstractMessageHandler extends SendToDeliveryPush
                 );
     }
 
+    /**
+     * Sends the PNRN012 event based on the RECRN011 event.
+     *
+     * @param eventrecrn011 The RECRN011 event metadata.
+     * @param entity        The delivery request entity.
+     * @param paperRequest  The paper progress status event.
+     * @return A Mono representing the asynchronous operation.
+     */
     protected Mono<Void> sendPNRN012Event(PnEventMeta eventrecrn011,
                                           PnDeliveryRequest entity,
                                           PaperProgressStatusEventDto paperRequest){
@@ -90,6 +99,13 @@ public abstract class RECRN00XCAbstractMessageHandler extends SendToDeliveryPush
                 .then(metaDematCleaner.clean(paperRequest.getRequestId()));
     }
 
+    /**
+     * Enriches the event with additional information from the event metadata.
+     *
+     * @param paperRequest The paper progress status event.
+     * @param pnEventMeta  The event metadata containing additional details.
+     * @return The enriched PaperProgressStatusEventDto.
+     */
     protected PaperProgressStatusEventDto enrichEvent(PaperProgressStatusEventDto paperRequest, PnEventMeta pnEventMeta) {
         if (pnEventMeta.getDiscoveredAddress() != null) {
             DiscoveredAddressDto discoveredAddressDto = new BaseMapperImpl<>(PnDiscoveredAddress.class, DiscoveredAddressDto.class)

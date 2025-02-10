@@ -229,6 +229,7 @@ public class HandlersFactory {
                 .metaDematCleaner(metaDematCleaner)
                 .pnPaperChannelConfig(pnPaperChannelConfig)
                 .pnEventErrorDAO(pnEventErrorDAO)
+                .paperRequestErrorDAO(paperRequestErrorDAO)
                 .build();
 
         RECRN011MessageHandler recrn011cMessageHandler = RECRN011MessageHandler.builder()
