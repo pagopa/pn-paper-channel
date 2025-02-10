@@ -37,7 +37,7 @@ public class RECRN005CMessageHandler extends RECRN00XCAbstractMessageHandler {
 
                     // Se il tempo che intercorre tra RECRN0011 e RECRN005A è >= 30gg
                     // Allora genera PNRN012 con data RECRN0011.date + 10gg
-                    if (verifyStorageDuration(eventRecrn011.getStatusDateTime(), eventRecrn005A.getStatusDateTime())) {
+                    if (isAValidStockInterval(eventRecrn011.getStatusDateTime(), eventRecrn005A.getStatusDateTime())) {
                         return super.sendPNRN012Event(eventRecrn011, entity, paperRequest);
                     }
 
@@ -46,7 +46,7 @@ public class RECRN005CMessageHandler extends RECRN00XCAbstractMessageHandler {
                 });
     }
 
-    private boolean verifyStorageDuration(Instant recrn011, Instant recrn005A){
+    private boolean isAValidStockInterval(Instant recrn011, Instant recrn005A){
         return Duration.between(recrn011, recrn005A).toDays() >= STORAGE_DURATION_AR_DAYS;
     }
 
