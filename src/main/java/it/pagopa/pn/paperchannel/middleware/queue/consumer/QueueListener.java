@@ -423,8 +423,8 @@ public class QueueListener {
             attempt = 0;
         }
         else {
-            log.info("Push prepare phase two queue from internal");
             attempt = attemptEventHeader.getAttempt();
+            log.info("Push prepare phase two queue from internal, attempt = {}", attempt);
         }
 
         this.queueListenerService.delayerListener(body, attempt);
