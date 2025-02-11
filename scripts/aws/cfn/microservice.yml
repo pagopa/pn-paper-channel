@@ -162,6 +162,10 @@ Parameters:
     Type: String
     Description: 'Duration for refinement'
 
+  CompiutaGiacenzaArDuration:
+    Type: String
+    Description: 'Duration for compiuta giacenza (e.g., 5d, 5h, 5m, 5s)'
+
   CloudwatchMetricCron:
     Type: String
     Description: 'Time before send metric'

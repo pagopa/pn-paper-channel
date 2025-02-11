@@ -53,6 +53,7 @@ class RECRN005CMessageHandlerTest {
     private EventMetaDAO eventMetaDAO;
     private RequestDeliveryDAO requestDeliveryDAO;
     private PaperRequestErrorDAO paperRequestErrorDAO;
+    private PnPaperChannelConfig paperChannelConfig;
 
     private final int DAYS_REFINEMENT = 10;
     private final int STORAGE_DURATION_AR_DAYS = 30;
@@ -70,6 +71,7 @@ class RECRN005CMessageHandlerTest {
 
         PnPaperChannelConfig mockConfig = new PnPaperChannelConfig();
         mockConfig.setRefinementDuration(Duration.of(DAYS_REFINEMENT, ChronoUnit.DAYS));
+        mockConfig.setCompiutaGiacenzaArDuration(Duration.of(STORAGE_DURATION_AR_DAYS, ChronoUnit.DAYS));
 
         handler = RECRN005CMessageHandler.builder()
                 .sqsSender(sqsSender)

@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.RECRN00XC;
 
+import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
@@ -24,9 +25,7 @@ import java.time.Instant;
 @Slf4j
 @SuperBuilder
 public class RECRN005CMessageHandler extends RECRN00XCAbstractMessageHandler {
-    private static final int STORAGE_DURATION_AR_DAYS = 30;
-
-    private final PaperRequestErrorDAO paperRequestErrorDAO;
+    protected final PaperRequestErrorDAO paperRequestErrorDAO;
 
     @Override
     public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
@@ -47,7 +46,8 @@ public class RECRN005CMessageHandler extends RECRN00XCAbstractMessageHandler {
     }
 
     private boolean isAValidStockInterval(Instant recrn011, Instant recrn005A){
-        return Duration.between(recrn011, recrn005A).toDays() >= STORAGE_DURATION_AR_DAYS;
+        return Duration.between(recrn011, recrn005A)
+                .compareTo(this.pnPaperChannelConfig.getCompiutaGiacenzaArDuration()) >= 0;
     }
 
     private Mono<PnRequestError> buildAndSavePnEventError(
