@@ -1,6 +1,5 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.RECRN00XC;
 
-import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
@@ -29,6 +28,8 @@ public class RECRN005CMessageHandler extends RECRN00XCAbstractMessageHandler {
 
     @Override
     public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
+        log.info("{} handling statusCode={}", RECRN005CMessageHandler.class.getSimpleName(), paperRequest.getStatusCode());
+
         return super.checkIfDuplicateEvent(entity, paperRequest)
                 .flatMap(recrn011AndRecrn005a -> {
                     PnEventMeta eventRecrn011 = recrn011AndRecrn005a.getT1(); // Inizio giacenza

@@ -16,6 +16,8 @@ public class RECRN00XCMessageHandler extends RECRN00XCAbstractMessageHandler {
 
     @Override
     public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
+        log.info("{} handling statusCode={}", RECRN00XCMessageHandler.class.getSimpleName(), paperRequest.getStatusCode());
+
         return super.checkIfDuplicateEvent(entity, paperRequest)
                 .flatMap(recrn011AndRecrn00Xa -> {
                     PnEventMeta eventrecrn011 = recrn011AndRecrn00Xa.getT1(); // Inizio giacenza
