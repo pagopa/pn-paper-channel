@@ -28,7 +28,10 @@ public class RECRN005CMessageHandler extends RECRN00XCAbstractMessageHandler {
 
     @Override
     public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
-        log.info("{} handling statusCode={}", RECRN005CMessageHandler.class.getSimpleName(), paperRequest.getStatusCode());
+        log.info("{} handling statusCode={}, compiutaGiacenzaArDuration={}",
+                RECRN005CMessageHandler.class.getSimpleName(),
+                paperRequest.getStatusCode(),
+                pnPaperChannelConfig.getCompiutaGiacenzaArDuration());
 
         return super.checkIfDuplicateEvent(entity, paperRequest)
                 .flatMap(recrn011AndRecrn005a -> {
@@ -47,6 +50,7 @@ public class RECRN005CMessageHandler extends RECRN00XCAbstractMessageHandler {
     }
 
     private boolean isAValidStockInterval(Instant recrn011, Instant recrn005A){
+
         return Duration.between(recrn011, recrn005A)
                 .compareTo(this.pnPaperChannelConfig.getCompiutaGiacenzaArDuration()) >= 0;
     }
