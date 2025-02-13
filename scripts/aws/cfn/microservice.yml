@@ -1000,7 +1000,7 @@ Resources:
   PaperChannelGatewayDeliveryDriver:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/api-gw-expose-service.yaml"
+      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/api-gw-expose-service-openapi.yaml"
       Parameters:
         MicroServiceUniqueName: !Sub '${ProjectName}-paper-channel-bo'
         IntendedUsage: BACKOFFICE
