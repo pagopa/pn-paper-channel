@@ -227,6 +227,8 @@ aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
         AttributeName=requestId,AttributeType=S \
         AttributeName=created,AttributeType=S \
         AttributeName=author,AttributeType=S \
+        AttributeName=category,AttributeType=S \
+        AttributeName=cause,AttributeType=S \
     --key-schema \
         AttributeName=requestId,KeyType=HASH \
         AttributeName=created,KeyType=RANGE \
@@ -244,8 +246,18 @@ aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
 				\"ReadCapacityUnits\": 5,
 				\"WriteCapacityUnits\": 5
 			}
+		},
+		{
+			\"IndexName\": \"category-index\",
+			\"KeySchema\": [{\"AttributeName\":\"category\",\"KeyType\":\"HASH\"}, {\"AttributeName\":\"cause\",\"KeyType\":\"RANGE\"}],
+			\"Projection\":{
+				\"ProjectionType\":\"ALL\"
+			},
+			\"ProvisionedThroughput\": {
+				\"ReadCapacityUnits\": 5,
+				\"WriteCapacityUnits\": 5
+			}
 		}
-
 	]"
 
 aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
@@ -418,11 +430,5 @@ aws  --profile default --region us-east-1 --endpoint-url=http://localstack:4566 
     dynamodb put-item \
     --table-name ZoneDynamoTable  \
     --item '{"countryIt": {"S": "countryIt" }, "countryEn": {"S": "countryEn"}, "zone": {"S": "zone_1"}}'
-
-
-aws  --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
-    dynamodb put-item \
-    --table-name DeliveryDriverDynamoTable  \
-    --item '{"uniqueCode": {"S": "KAS1901" }, "tenderCode": {"S": "GARA-2023"},  "denomination": {"S": "UPS"}, "taxId": {"S": "0123456789"}, "phoneNumber": {"S": "369451287238"}, "fsu": {"BOOL": true}, "author":{"S": "PN-PAPER-CHANNEL"}, "startDate": {"S": "2023-01-22T10:15:30Z"}}'
 
 echo "Initialization terminated"
