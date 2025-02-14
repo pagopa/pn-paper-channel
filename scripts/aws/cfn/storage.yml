@@ -380,6 +380,10 @@ Resources:
           AttributeType: "S"
         - AttributeName: "author"
           AttributeType: "S"
+        - AttributeName: "category"
+          AttributeType: "S"
+        - AttributeName: "cause"
+          AttributeType: "S"
       KeySchema:
         - AttributeName: "requestId"
           KeyType: "HASH"
@@ -391,6 +395,14 @@ Resources:
             - AttributeName: "author"
               KeyType: "HASH"
             - AttributeName: "created"
+              KeyType: "RANGE"
+          Projection:
+            ProjectionType: "ALL"
+        - IndexName: "category-index"
+          KeySchema:
+            - AttributeName: "category"
+              KeyType: "HASH"
+            - AttributeName: "cause"
               KeyType: "RANGE"
           Projection:
             ProjectionType: "ALL"

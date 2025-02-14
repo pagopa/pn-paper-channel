@@ -162,6 +162,10 @@ Parameters:
     Type: String
     Description: 'Duration for refinement'
 
+  CompiutaGiacenzaArDuration:
+    Type: String
+    Description: 'Duration for compiuta giacenza (e.g., 5d, 5h, 5m, 5s)'
+
   CloudwatchMetricCron:
     Type: String
     Description: 'Time before send metric'
@@ -767,6 +771,7 @@ Resources:
         ContainerEnvEntry79: !Sub 'PN_PAPERCHANNEL_QUEUENORMALIZEADDRESS=${PaperNormalizeAddressQueueName}'
         ContainerEnvEntry80: !Sub 'PN_PAPERCHANNEL_QUEUEPAPERCHANNELTODELAYER=${PaperChannelToDelayerQueueName}'
         ContainerEnvEntry81: !Sub 'PN_PAPERCHANNEL_QUEUEDELAYERTOPAPERCHANNEL=${DelayerToPaperChannelQueueName}'
+        ContainerEnvEntry82: !Sub 'PN_PAPERCHANNEL_COMPIUTAGIACENZAARDURATION=${CompiutaGiacenzaArDuration}'
         ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-PaperChannel-Secrets
         MappedPaths: '/paper-channel-bo/*,/paper-channel-private/*'

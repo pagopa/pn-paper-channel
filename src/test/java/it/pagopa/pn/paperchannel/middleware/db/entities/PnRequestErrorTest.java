@@ -1,14 +1,19 @@
 package it.pagopa.pn.paperchannel.middleware.db.entities;
 
 import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
+import it.pagopa.pn.paperchannel.model.RequestErrorCategoryEnum;
+import it.pagopa.pn.paperchannel.model.RequestErrorCauseEnum;
 import it.pagopa.pn.paperchannel.utils.Const;
-import org.junit.jupiter.api.Assertions;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 import java.time.Instant;
+
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.EXTERNAL_CHANNEL_LISTENER_EXCEPTION;
+import static org.junit.jupiter.api.Assertions.*;
 
-
+@Slf4j
 class PnRequestErrorTest {
 
     public String requestId;
@@ -18,6 +23,8 @@ class PnRequestErrorTest {
     public String author;
     public String paId;
     public String geokey;
+    public String category;
+    public String cause;
 
     @BeforeEach
     void setUp(){
@@ -27,33 +34,65 @@ class PnRequestErrorTest {
     @Test
     void toStringTest() {
         PnRequestError pnRequestError = initRequestError();
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(pnRequestError.getClass().getSimpleName());
-        stringBuilder.append("(");
-        stringBuilder.append("requestId=");
-        stringBuilder.append(requestId);
-        stringBuilder.append(", ");
-        stringBuilder.append("created=");
-        stringBuilder.append(created);
-        stringBuilder.append(", ");
-        stringBuilder.append("author=");
-        stringBuilder.append(author);
-        stringBuilder.append(", ");
-        stringBuilder.append("paId=");
-        stringBuilder.append(paId);
-        stringBuilder.append(", ");
-        stringBuilder.append("error=");
-        stringBuilder.append(error);
-        stringBuilder.append(", ");
-        stringBuilder.append("flowThrow=");
-        stringBuilder.append(flowThrow);
-        stringBuilder.append(", ");
-        stringBuilder.append("geokey=");
-        stringBuilder.append(geokey);
-        stringBuilder.append(")");
 
-        String toTest = stringBuilder.toString();
-        Assertions.assertEquals(toTest, pnRequestError.toString());
+        String toTest = pnRequestError.getClass().getSimpleName() +
+                "("+
+                "requestId=" + requestId + ", " +
+                "created=" + created + ", " +
+                "author=" + author + ", " +
+                "category=" + category + ", " +
+                "cause=" + cause + ", " +
+                "paId=" + paId + ", " +
+                "error=" + error + ", " +
+                "flowThrow=" + flowThrow + ", " +
+                "geokey=" + geokey +
+                ")";
+        assertEquals(toTest, pnRequestError.toString());
+    }
+
+    @Test
+    void testBuilderCreatesValidEntity() {
+        // Act
+        PnRequestError requestError = PnRequestError.builder()
+                .requestId(requestId)
+                .paId(paId)
+                .error(error)
+                .flowThrow(flowThrow)
+                .geokey(geokey)
+                .category(RequestErrorCategoryEnum.UNKNOWN)
+                .cause(RequestErrorCauseEnum.UNKNOWN)
+                .build();
+
+        // Assert
+        assertNotNull(error);
+        assertEquals(requestId, requestError.getRequestId());
+        assertEquals(paId, requestError.getPaId());
+        assertEquals(error, requestError.getError());
+        assertEquals(flowThrow, requestError.getFlowThrow());
+        assertEquals(geokey, requestError.getGeokey());
+        assertEquals(RequestErrorCategoryEnum.UNKNOWN.getValue(), requestError.getCategory());
+        assertTrue(requestError.getCause().startsWith(RequestErrorCauseEnum.UNKNOWN.getValue() + "##"));
+        assertEquals(Const.PN_PAPER_CHANNEL, requestError.getAuthor());
+        assertNotNull(requestError.getCreated());
+    }
+
+    @Test
+    void testTimestampFormatInCauseField() {
+        // Arrange
+        PnRequestError error = PnRequestError.builder()
+                .cause(RequestErrorCauseEnum.UNKNOWN)
+                .build();
+        String[] causeParts = error.getCause().split("##");
+
+        // Act
+        assertEquals(2, causeParts.length);
+        assertEquals(RequestErrorCauseEnum.UNKNOWN.getValue(), causeParts[0]);
+
+        // Verify timestamp format
+        String timestamp = causeParts[1];
+        log.info("ISO_TIMESTAMP={}", timestamp);
+        assertTrue(timestamp.matches("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,9})?Z"),
+                "Timestamp should be in ISO-8601 format");
     }
 
     private PnRequestError initRequestError() {
@@ -65,6 +104,8 @@ class PnRequestErrorTest {
         pnRequestError.setFlowThrow(flowThrow);
         pnRequestError.setPaId(paId);
         pnRequestError.setGeokey(geokey);
+        pnRequestError.setCategory(category);
+        pnRequestError.setCause(cause);
         return pnRequestError;
     }
 
@@ -76,5 +117,7 @@ class PnRequestErrorTest {
         flowThrow = EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name();
         paId = "0123456789";
         geokey = "63087";
+        category = RequestErrorCategoryEnum.UNKNOWN.getValue();
+        cause = RequestErrorCauseEnum.UNKNOWN.getValue() + "##" + Instant.now();
     }
 }
