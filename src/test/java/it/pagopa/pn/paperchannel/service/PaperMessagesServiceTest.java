@@ -602,6 +602,8 @@ class PaperMessagesServiceTest {
         PnDeliveryRequest request = getPnDeliveryRequest();
         request.setStatusCode(StatusDeliveryEnum.TAKING_CHARGE.getCode());
 
+
+
         //MOCK GET DELIVERY REQUEST
         Mockito.when(requestDeliveryDAO.getByRequestId("TST-IOR.2332"))
                 .thenReturn(Mono.just(request));
