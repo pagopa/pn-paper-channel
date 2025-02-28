@@ -138,7 +138,7 @@ class Paper_RS_AR_IT extends BaseTest {
         pnAddress.setCap("");
 
         when(mockAddressDAO.findAllByRequestId(anyString())).thenReturn(Mono.just(List.of(pnAddress)));
-        when(mockExtChannel.sendEngageRequest(any(SendRequest.class), anyList())).thenReturn(Mono.empty());
+        when(mockExtChannel.sendEngageRequest(any(SendRequest.class), anyList(), any())).thenReturn(Mono.empty());
 
         // verifico che il flusso è stato completato con successo
         assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());
@@ -146,7 +146,7 @@ class Paper_RS_AR_IT extends BaseTest {
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
         // verifico che viene invocato ext-channels
-        verify(mockExtChannel, timeout(2000).times(1)).sendEngageRequest(any(SendRequest.class), anyList());
+        verify(mockExtChannel, timeout(2000).times(1)).sendEngageRequest(any(SendRequest.class), anyList(), any());
 
         // verifico che è stato inviato un evento a delivery-push
         verify(sqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());

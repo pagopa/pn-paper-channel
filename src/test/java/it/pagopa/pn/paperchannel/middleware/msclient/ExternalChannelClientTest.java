@@ -35,15 +35,15 @@ class ExternalChannelClientTest  extends BaseTest.WithMockServer {
         attachmentInfo.setDocumentType(PN_AAR);
         attachmentInfo.setFileKey("safestorage://PN_AAR-0002-GR7Z-3UBM-81QT-1QWV?docTag=AAR");
         attachmentInfo.setSha256("234567890");
-        externalChannelClient.sendEngageRequest(sendRequest, List.of(attachmentInfo)).block();
-        StepVerifier.create(externalChannelClient.sendEngageRequest(sendRequest, List.of(attachmentInfo)))
+        externalChannelClient.sendEngageRequest(sendRequest, List.of(attachmentInfo), null).block();
+        StepVerifier.create(externalChannelClient.sendEngageRequest(sendRequest, List.of(attachmentInfo), null))
                         .verifyComplete();
     }
 
     @Test
     void testBadRequest() {
         sendRequest.setRequestId(null);
-        StepVerifier.create(externalChannelClient.sendEngageRequest(sendRequest, new ArrayList<>()))
+        StepVerifier.create(externalChannelClient.sendEngageRequest(sendRequest, new ArrayList<>(), null))
                 .expectErrorMatches(ex -> ex instanceof WebClientResponseException e && e.getStatusCode().value() == 400)
                 .verify();
     }

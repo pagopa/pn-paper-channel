@@ -384,7 +384,7 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
                     List<AttachmentInfo> attachments = request.getAttachments().stream().map(AttachmentMapper::fromEntity).toList();
                     sendRequest.setRequestId(sendRequest.getRequestId().concat(Const.RETRY).concat(newPcRetry));
                     pnLogAudit.addsBeforeSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request  to External Channel", sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY)));
-                    return this.externalChannelClient.sendEngageRequest(sendRequest, attachments)
+                    return this.externalChannelClient.sendEngageRequest(sendRequest, attachments, request.getApplyRasterization())
                             .then(Mono.defer(() -> {
                                 pnLogAudit.addsSuccessSend(
                                         request.getIun(),
