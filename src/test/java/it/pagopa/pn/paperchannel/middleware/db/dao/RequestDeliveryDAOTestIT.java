@@ -11,6 +11,8 @@ import org.junit.jupiter.api.*;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest;
+import software.amazon.awssdk.services.dynamodb.model.UpdateItemResponse;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -23,6 +25,8 @@ class RequestDeliveryDAOTestIT extends BaseTest {
 
     private static final String REQUEST_WITH_ADDRESS_ID = "requestWithAddressId";
     private static final String REQUEST_WITHOUT_ADDRESS_ID = "requestWithoutAddressId";
+    private static final String RASTERIZATION_REQUESTID_WITH_FALSE_APPLY = "requestForRasterizationWithApplyFalse";
+    private static final String RASTERIZATION_REQUESTID_WITH_NULL_APPLY = "requestForRasterizationWithApplyNull";
 
     @Autowired
     private RequestDeliveryDAO requestDeliveryDAO;
@@ -192,6 +196,49 @@ class RequestDeliveryDAOTestIT extends BaseTest {
 
         PnDeliveryRequest updateRequest = this.requestDeliveryDAO.updateConditionalOnFeedbackStatus(partialDeliveryRequest, true).block();
         assertNull(updateRequest);
+    }
+
+    @Test
+    void updateUpdateApplyRasterizationStartedValueNull(){
+        // Given
+        PnDeliveryRequest request = new PnDeliveryRequest();
+        request.setRequestId(RASTERIZATION_REQUESTID_WITH_NULL_APPLY);
+        request.setStatusCode("TEST");
+        request.setFeedbackStatusCode("TEST");
+
+        requestDeliveryDAO.createWithAddress(request, null, null).block();
+        PnDeliveryRequest createdRequest = this.requestDeliveryDAO.getByRequestId(RASTERIZATION_REQUESTID_WITH_NULL_APPLY).block();
+        assert createdRequest != null;
+        Assertions.assertNull(createdRequest.getApplyRasterization());
+
+        request.setApplyRasterization(true);
+        UpdateItemResponse updateItemResponse = this.requestDeliveryDAO.updateApplyRasterization(request.getRequestId(), request.getApplyRasterization()).block();
+        assertNotNull(updateItemResponse);
+        PnDeliveryRequest updatedRequest = this.requestDeliveryDAO.getByRequestId(RASTERIZATION_REQUESTID_WITH_NULL_APPLY).block();
+        assert updatedRequest != null;
+        Assertions.assertTrue(updatedRequest.getApplyRasterization());
+    }
+
+    @Test
+    void updateUpdateApplyRasterizationStartedValueFalse(){
+        // Given
+        PnDeliveryRequest request = new PnDeliveryRequest();
+        request.setRequestId(RASTERIZATION_REQUESTID_WITH_FALSE_APPLY);
+        request.setStatusCode("TEST");
+        request.setFeedbackStatusCode("TEST");
+        request.setApplyRasterization(false);
+
+        requestDeliveryDAO.createWithAddress(request, null, null).block();
+        PnDeliveryRequest createdRequest = this.requestDeliveryDAO.getByRequestId(RASTERIZATION_REQUESTID_WITH_FALSE_APPLY).block();
+        assert createdRequest != null;
+        Assertions.assertFalse(createdRequest.getApplyRasterization());
+
+        request.setApplyRasterization(true);
+        UpdateItemResponse updateItemResponse = this.requestDeliveryDAO.updateApplyRasterization(request.getRequestId(), request.getApplyRasterization()).block();
+        assertNotNull(updateItemResponse);
+        PnDeliveryRequest updatedRequest = this.requestDeliveryDAO.getByRequestId(RASTERIZATION_REQUESTID_WITH_FALSE_APPLY).block();
+        assert updatedRequest != null;
+        Assertions.assertTrue(updatedRequest.getApplyRasterization());
     }
 
     @Test

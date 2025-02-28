@@ -29,6 +29,8 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import static it.pagopa.pn.commons.abstractions.impl.AbstractDynamoKeyValueStore.ATTRIBUTE_NOT_EXISTS;
+import static it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest.COL_APPLY_RASTERIZATION;
+import static it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest.COL_REQUEST_ID;
 
 
 @Repository
@@ -111,7 +113,28 @@ public class RequestDeliveryDAOImpl extends BaseDAO<PnDeliveryRequest> implement
             });
     }
 
-    public Mono<Void> updateStatus(String requestId,String statusCode, String statusDescription, String statusDetail, String statusDateString) {
+    @Override
+    public Mono<UpdateItemResponse> updateApplyRasterization(String requestId, Boolean applyRasterization) {
+        Map<String, AttributeValue> key = new HashMap<>();
+        key.put(COL_REQUEST_ID, AttributeValue.builder().s(requestId).build());
+
+        UpdateItemRequest updateRequest = UpdateItemRequest.builder()
+                .tableName(table)
+                .key(key)
+                .updateExpression("SET #rast = :rastValue")
+                .expressionAttributeNames(Map.of("#rast", COL_APPLY_RASTERIZATION))
+                .expressionAttributeValues(Map.of(":rastValue", AttributeValue.builder().bool(applyRasterization).build()))
+                .returnValues(ReturnValue.NONE)
+                .build();
+
+        return Mono.fromFuture(dynamoDbAsyncClient.updateItem(updateRequest))
+                .doOnError(throwable -> log.error("Error in updateApplyRasterization for requestId [{}]",requestId, throwable))
+                .doOnNext(response -> log.debug("Updated applyRasterization value in [{}] for requestId [{}] completed successfully.",
+                        applyRasterization, requestId));
+    }
+
+
+    public Mono<Void> updateStatus(String requestId, String statusCode, String statusDescription, String statusDetail, String statusDateString) {
         log.debug("[{}] Updating status in {}", requestId, statusCode);
         // Definizione della chiave primaria
         Map<String, AttributeValue> key = new HashMap<>();

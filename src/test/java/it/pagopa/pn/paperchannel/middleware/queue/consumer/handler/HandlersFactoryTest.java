@@ -75,6 +75,7 @@ class HandlersFactoryTest {
                                 List.of("CON080", "RECRI001", "RECRI002", "RECRS001C", "RECRS003C",
                                         "RECRS015", "RECRN015", "RECAG015", "RECAG010", "RECRS010", "RECRN010"),
                                 SendToDeliveryPushHandler.class),
+                        new TestCase("CON996", List.of("CON996"), ProxyCON996MessageHandler.class),
                         new TestCase("SaveDemat", List.of("RECRS002B"), SaveDematMessageHandler.class),
                         new TestCase("Aggregator", List.of("RECRS002C"), AggregatorMessageHandler.class),
                         new TestCase("Retryable", List.of("RECRS006"), RetryableErrorMessageHandler.class),
