@@ -93,6 +93,8 @@ public class PnDeliveryRequest implements Serializable {
 
     public static final String COL_FEEDBACK_STATUS_DATE_TIME = "feedbackStatusDateTime";
 
+    public static final String COL_APPLY_RASTERIZATION = "applyRasterization";
+
     @Getter(onMethod = @__({@DynamoDbPartitionKey,@DynamoDbAttribute(COL_REQUEST_ID)}))
     private String requestId;
 
@@ -189,4 +191,7 @@ public class PnDeliveryRequest implements Serializable {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_FEEDBACK_STATUS_DATE_TIME)}))
     private Instant feedbackStatusDateTime;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_APPLY_RASTERIZATION)}))
+    private Boolean applyRasterization;
 }

@@ -257,7 +257,7 @@ public class  PaperMessagesServiceImpl extends GenericService implements PaperMe
                         pnDeliveryRequest.setRequestPaId(sendRequest.getRequestPaId());
                         pnDeliveryRequest.setPrintType(sendRequest.getPrintType());
 
-                        return sendEngageExternalChannel(sendRequest, attachments)
+                        return sendEngageExternalChannel(sendRequest, attachments, pnDeliveryRequest.getApplyRasterization())
                                 .then(Mono.defer(() -> {
                                     log.debug("Updating data {} with requestId {} in DynamoDb table {}", PN_DELIVERY_REQUEST_LOG, requestId, PnDeliveryRequest.REQUEST_DELIVERY_DYNAMO_TABLE_NAME);
                                     return this.requestDeliveryDAO.updateData(pnDeliveryRequest);
@@ -276,7 +276,7 @@ public class  PaperMessagesServiceImpl extends GenericService implements PaperMe
     }
 
 
-    private Mono<Void> sendEngageExternalChannel(SendRequest sendRequest, List<AttachmentInfo> attachments){
+    private Mono<Void> sendEngageExternalChannel(SendRequest sendRequest, List<AttachmentInfo> attachments, Boolean applyRasterization){
 
         PnLogAudit pnLogAudit = new PnLogAudit();
 
@@ -289,7 +289,7 @@ public class  PaperMessagesServiceImpl extends GenericService implements PaperMe
                     logString = String.format(logString, sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY));
                     pnLogAudit.addsBeforeSend(sendRequest.getIun(), logString);
                 })
-                .flatMap(newSendRequest -> this.externalChannelClient.sendEngageRequest(newSendRequest, attachments))
+                .flatMap(newSendRequest -> this.externalChannelClient.sendEngageRequest(newSendRequest, attachments, applyRasterization))
                 .doOnSuccess(response -> {
                     String logString = "prepare requestId = %s, trace_id = %s  request to External Channel";
                     logString = String.format(logString, sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY));

@@ -42,7 +42,7 @@ import java.util.List;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 
@@ -602,8 +602,6 @@ class PaperMessagesServiceTest {
         PnDeliveryRequest request = getPnDeliveryRequest();
         request.setStatusCode(StatusDeliveryEnum.TAKING_CHARGE.getCode());
 
-
-
         //MOCK GET DELIVERY REQUEST
         Mockito.when(requestDeliveryDAO.getByRequestId("TST-IOR.2332"))
                 .thenReturn(Mono.just(request));
@@ -617,7 +615,7 @@ class PaperMessagesServiceTest {
         Mockito.when(addressDAO.create(Mockito.any())).thenReturn(Mono.just(new PnAddress()));
 
         //MOCK SEND ENGAGE EXTERNAL CHANNEL
-        Mockito.when(externalChannelClient.sendEngageRequest(Mockito.any(), Mockito.any()))
+        Mockito.when(externalChannelClient.sendEngageRequest(any(), any(), eq(null)))
                 .thenReturn(Mono.just("").then());
 
         //MOCK UPDATE DELIVERY REQUEST
@@ -646,7 +644,7 @@ class PaperMessagesServiceTest {
         ArgumentCaptor<SendRequest> captureSendRequest = ArgumentCaptor.forClass(SendRequest.class);
 
         // verifico che è stato invocato externalChannel
-        Mockito.verify(externalChannelClient, timeout(2000).times(1)).sendEngageRequest(captureSendRequest.capture(), Mockito.any());
+        Mockito.verify(externalChannelClient, timeout(2000).times(1)).sendEngageRequest(captureSendRequest.capture(), any(), eq(null));
 
         // verifico il requestID da inviare ad ExtChannel
         assertNotNull(captureSendRequest.getValue());
@@ -672,7 +670,7 @@ class PaperMessagesServiceTest {
         ArgumentCaptor<SendRequest> captureSendRequest = ArgumentCaptor.forClass(SendRequest.class);
 
         // verifico che è stato invocato externalChannel
-        verify(externalChannelClient, timeout(2000).times(1)).sendEngageRequest(captureSendRequest.capture(), Mockito.any());
+        verify(externalChannelClient, timeout(2000).times(1)).sendEngageRequest(captureSendRequest.capture(), any(), any());
 
         // verifico il nuovo requestID da inviare ad ExtChannel - {CLIENTID}.{REQUESTID}.PCRETRY_{ATTEMPT}
         assertNotNull(captureSendRequest.getValue());
@@ -705,7 +703,7 @@ class PaperMessagesServiceTest {
         Mockito.when(addressDAO.create(Mockito.any())).thenReturn(Mono.just(new PnAddress()));
 
         //MOCK SEND ENGAGE EXTERNAL CHANNEL
-        Mockito.when(externalChannelClient.sendEngageRequest(Mockito.any(), Mockito.any()))
+        Mockito.when(externalChannelClient.sendEngageRequest(any(), any(), any()))
                 .thenReturn(Mono.error(new PnGenericException(EXTERNAL_CHANNEL_API_EXCEPTION, EXTERNAL_CHANNEL_API_EXCEPTION.getMessage())));
 
         //MOCK RETRIEVE NATIONAL COST
@@ -751,7 +749,7 @@ class PaperMessagesServiceTest {
         Mockito.when(addressDAO.create(Mockito.any())).thenReturn(Mono.just(new PnAddress()));
 
         //MOCK SEND ENGAGE EXTERNAL CHANNEL
-        Mockito.when(externalChannelClient.sendEngageRequest(Mockito.any(), Mockito.any()))
+        Mockito.when(externalChannelClient.sendEngageRequest(any(), any(), any()))
                 .thenReturn(Mono.just("").then());
 
         //MOCK UPDATE DELIVERY REQUEST
