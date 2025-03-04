@@ -44,6 +44,8 @@ class HandlersFactoryTest {
         // When
         when(mockConfig.isEnableSimple890Flow())
                 .thenReturn(featureFlags.contains(FeatureFlag.SIMPLE_890_FLOW));
+        when(mockConfig.isEnableRetryCon996())
+                .thenReturn(Boolean.TRUE);
         when(mockConfig.isSendCon020())
                 .thenReturn(true);
         when(mockSendProgressMetaConfig.isMetaEnabled())
