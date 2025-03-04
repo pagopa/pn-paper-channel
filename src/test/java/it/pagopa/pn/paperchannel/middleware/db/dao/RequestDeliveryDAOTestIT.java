@@ -64,16 +64,22 @@ class RequestDeliveryDAOTestIT extends BaseTest {
 
         // Given
         PnDeliveryRequest deliveryRequest = this.buildDeliveryRequest(REQUEST_WITHOUT_ADDRESS_ID);
+        deliveryRequest.setApplyRasterization(true);
 
         // When
         Mockito.when(dataVaultEncryption.encode(Mockito.any(), Mockito.any())).thenReturn("returnOk");
         Mockito.when(dataVaultEncryption.decode(Mockito.any())).thenReturn("returnOk");
 
-        PnDeliveryRequest createRequest = this.requestDeliveryDAO.createWithAddress(deliveryRequest, null, null).block();
+        PnDeliveryRequest createdRequest = this.requestDeliveryDAO.createWithAddress(deliveryRequest, null, null).block();
 
         // Then
-        assertNotNull(createRequest);
-        assertEquals(createRequest, deliveryRequest);
+        assertNotNull(createdRequest);
+        assertEquals(createdRequest, deliveryRequest);
+
+        PnDeliveryRequest readRequestAfterUpdate = this.requestDeliveryDAO.getByRequestId(createdRequest.getRequestId()).block();
+        assertNotNull(createdRequest);
+        assertTrue(readRequestAfterUpdate.getApplyRasterization());
+
     }
 
     @Test

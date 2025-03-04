@@ -81,7 +81,7 @@ public class  PaperMessagesServiceImpl extends GenericService implements PaperMe
                     .doOnNext(entity -> log.debug("Getting PnAddress with requestId {}, in  DynamoDB table AddressDynamoTable", requestId))
                     .flatMap(entity -> checkIfReworkNeededAndReturnPaperChannelUpdate(prepareRequest, entity))
                     .switchIfEmpty(
-                            Mono.defer(() -> saveRequestAndAddress(prepareRequest)
+                            Mono.defer(() -> saveRequestAndAddress(prepareRequest, null)
                                                         .flatMap(this::createAndPushPrepareEvent)
                                                         .then(Mono.empty()))
                     );
@@ -115,9 +115,9 @@ public class  PaperMessagesServiceImpl extends GenericService implements PaperMe
                             .doOnNext(secondDeliveryRequest -> log.info("Attempt already exist for request id : {}", secondDeliveryRequest.getRequestId()))
                             .doOnNext(secondDeliveryRequest -> log.info("Founded data in DynamoDB table RequestDeliveryDynamoTable"))
                             .doOnNext(secondDeliveryRequest -> PrepareRequestValidator.compareRequestEntity(prepareRequest, secondDeliveryRequest, false, false))
-                            .flatMap(newEntity -> checkIfReworkNeededAndReturnPaperChannelUpdate(prepareRequest, newEntity))
+                            .flatMap(secondDeliveryRequest -> checkIfReworkNeededAndReturnPaperChannelUpdate(prepareRequest, secondDeliveryRequest))
                             .switchIfEmpty(Mono.deferContextual(cxt ->
-                                    saveRequestAndAddress(prepareRequest)
+                                    saveRequestAndAddress(prepareRequest, oldEntity.getApplyRasterization())
                                             .flatMap(response -> {
                                                 pnLogAudit.addsBeforeResolveLogic(
                                                         prepareRequest.getIun(),
@@ -354,7 +354,7 @@ public class  PaperMessagesServiceImpl extends GenericService implements PaperMe
         if (Boolean.TRUE.equals(pnDeliveryRequest.getReworkNeeded()))
         {
             log.info("Call PREPARE Sync with rework-needed=true");
-            return saveRequestAndAddress(prepareRequest, true, pnDeliveryRequest.getReworkNeededCount())
+            return saveRequestAndAddress(prepareRequest, true, pnDeliveryRequest.getReworkNeededCount(), pnDeliveryRequest.getApplyRasterization())
                     .flatMap(this::createAndPushPrepareEvent)
                     .then(Mono.just(PreparePaperResponseMapper.fromResult(pnDeliveryRequest, null)));
         }
@@ -393,13 +393,14 @@ public class  PaperMessagesServiceImpl extends GenericService implements PaperMe
     }
 
 
-    private Mono<PnDeliveryRequest> saveRequestAndAddress(PrepareRequest prepareRequest, boolean reworkNeeded, Integer reworkNeededCount){
+    private Mono<PnDeliveryRequest> saveRequestAndAddress(PrepareRequest prepareRequest, boolean reworkNeeded, Integer reworkNeededCount, Boolean applyRasterization){
         String processName = "Save Request and Address";
         log.logStartingProcess(processName);
 
         PnDeliveryRequest pnDeliveryRequest = RequestDeliveryMapper.toEntity(prepareRequest);
         // Init refined field as false
         pnDeliveryRequest.setRefined(false);
+        pnDeliveryRequest.setApplyRasterization(applyRasterization);
 
         PnAddress receiverAddressEntity = null;
         PnAddress discoveredAddressEntity = null;
@@ -433,8 +434,8 @@ public class  PaperMessagesServiceImpl extends GenericService implements PaperMe
         return requestDeliveryDAO.createWithAddress(pnDeliveryRequest, receiverAddressEntity, discoveredAddressEntity);
     }
 
-    private Mono<PnDeliveryRequest> saveRequestAndAddress(PrepareRequest prepareRequest){
-        return saveRequestAndAddress(prepareRequest, false, 0);
+    private Mono<PnDeliveryRequest> saveRequestAndAddress(PrepareRequest prepareRequest, Boolean applyRasterization){
+        return saveRequestAndAddress(prepareRequest, false, 0, applyRasterization);
     }
 
     private Mono<Void> createAndPushPrepareEvent(PnDeliveryRequest deliveryRequest){
