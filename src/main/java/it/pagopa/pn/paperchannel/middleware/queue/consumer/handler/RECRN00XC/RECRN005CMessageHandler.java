@@ -12,8 +12,7 @@ import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
-import java.time.Duration;
-import java.time.Instant;
+import java.time.*;
 
 /**
  * RECRN005C message handler.
@@ -38,7 +37,7 @@ public class RECRN005CMessageHandler extends RECRN00XCAbstractMessageHandler {
                     PnEventMeta eventRecrn011 = recrn011AndRecrn005a.getT1(); // Inizio giacenza
                     PnEventMeta eventRecrn005A = recrn011AndRecrn005a.getT2(); // Pre-esito fine giacenza
 
-                    // Se il tempo che intercorre tra RECRN0011 e RECRN005A è >= 30gg
+                    // Se il tempo che intercorre tra RECRN0011 e RECRN005A è >= 30gg (troncando ore, minuti, secondo, etc)
                     // Allora genera PNRN012 con data RECRN0011.date + 10gg
                     if (isAValidStockInterval(eventRecrn011.getStatusDateTime(), eventRecrn005A.getStatusDateTime())) {
                         return super.sendPNRN012Event(eventRecrn011, entity, paperRequest);
@@ -50,8 +49,9 @@ public class RECRN005CMessageHandler extends RECRN00XCAbstractMessageHandler {
     }
 
     private boolean isAValidStockInterval(Instant recrn011, Instant recrn005A){
-
-        return Duration.between(recrn011, recrn005A)
+        var recrn011StartOfDay = LocalDate.ofInstant(recrn011, ZoneId.of("UTC")).atStartOfDay();
+        var recrn005AStartOfDay = LocalDate.ofInstant(recrn005A, ZoneId.of("UTC")).atStartOfDay();
+        return Duration.between(recrn011StartOfDay, recrn005AStartOfDay)
                 .compareTo(this.pnPaperChannelConfig.getCompiutaGiacenzaArDuration()) >= 0;
     }
 
