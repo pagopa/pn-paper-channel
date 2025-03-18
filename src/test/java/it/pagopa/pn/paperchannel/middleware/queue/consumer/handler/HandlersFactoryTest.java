@@ -44,6 +44,8 @@ class HandlersFactoryTest {
         // When
         when(mockConfig.isEnableSimple890Flow())
                 .thenReturn(featureFlags.contains(FeatureFlag.SIMPLE_890_FLOW));
+        when(mockConfig.isEnableRetryCon996())
+                .thenReturn(Boolean.TRUE);
         when(mockConfig.isSendCon020())
                 .thenReturn(true);
         when(mockSendProgressMetaConfig.isMetaEnabled())
@@ -75,6 +77,7 @@ class HandlersFactoryTest {
                                 List.of("CON080", "RECRI001", "RECRI002", "RECRS001C", "RECRS003C",
                                         "RECRS015", "RECRN015", "RECAG015", "RECAG010", "RECRS010", "RECRN010"),
                                 SendToDeliveryPushHandler.class),
+                        new TestCase("CON996", List.of("CON996"), ProxyCON996MessageHandler.class),
                         new TestCase("SaveDemat", List.of("RECRS002B"), SaveDematMessageHandler.class),
                         new TestCase("Aggregator", List.of("RECRS002C"), AggregatorMessageHandler.class),
                         new TestCase("Retryable", List.of("RECRS006"), RetryableErrorMessageHandler.class),

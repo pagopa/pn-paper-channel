@@ -255,6 +255,12 @@ public class HandlersFactory {
                 .pnEventErrorDAO(pnEventErrorDAO)
                 .build();
 
+        ProxyCON996MessageHandler proxyCON996MessageHandler = ProxyCON996MessageHandler.builder()
+                .retryableErrorMessageHandler(retryableErrorExtChannelsMessageHandler)
+                .notRetryableErrorMessageHandler(notRetryableErrorMessageHandler)
+                .requestDeliveryDAO(requestDeliveryDAO)
+                .build();
+
         // Metadata handlers
         SaveMetadataMessageHandler baseSaveMetadataMessageHandler = SaveMetadataMessageHandler.builder()
                 .eventMetaDAO(eventMetaDAO)
@@ -301,6 +307,10 @@ public class HandlersFactory {
         map.put(RECRN004C.name(), recrn00xcMessageHandler);
         map.put(RECRN005C.name(), recrn005cMessageHandler);
         map.put(PNAG012.name(), pnag012MessageHandler);
+
+        if (pnPaperChannelConfig.isEnableRetryCon996()) {
+            map.put(CON996.name(), proxyCON996MessageHandler);
+        }
 
         /* Override mapping handlers before simple 890 (PN-10501) - Remove when feature flag will be not necessary */
         if (!pnPaperChannelConfig.isEnableSimple890Flow()) {
@@ -354,7 +364,9 @@ public class HandlersFactory {
     private void addNotRetryableErrorStatusCodes(ConcurrentHashMap<String, MessageHandler> map, NotRetryableErrorMessageHandler handler) {
         map.put(ExternalChannelCodeEnum.CON998.name(), handler);
         map.put(ExternalChannelCodeEnum.CON997.name(), handler);
-        map.put(ExternalChannelCodeEnum.CON996.name(), handler);
+        if(!pnPaperChannelConfig.isEnableRetryCon996()) {
+            map.put(ExternalChannelCodeEnum.CON996.name(), handler);
+        }
         map.put(ExternalChannelCodeEnum.CON995.name(), handler);
         map.put(ExternalChannelCodeEnum.CON993.name(), handler);
     }

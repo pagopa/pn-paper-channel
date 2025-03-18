@@ -507,7 +507,7 @@ class QueueListenerServiceImplTest {
 
         Mockito.when(requestDeliveryDAO.getByRequestId(requestid)).thenReturn(Mono.just(deliveryRequest));
         Mockito.when(addressDAO.findAllByRequestId(requestid)).thenReturn(Mono.just(List.of(addOne, addTwo)));
-        Mockito.when(externalChannelClient.sendEngageRequest(Mockito.any(), Mockito.any()))
+        Mockito.when(externalChannelClient.sendEngageRequest(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.empty());
         Mockito.when(requestDeliveryDAO.updateData(Mockito.any()))
                 .thenReturn(Mono.just(deliveryRequest));
@@ -533,7 +533,7 @@ class QueueListenerServiceImplTest {
         Mockito.when(requestDeliveryDAO.getByRequestId(requestid)).thenReturn(Mono.just(deliveryRequest));
         Mockito.when(paperRequestErrorDAO.created(Mockito.any(PnRequestError.class))).thenReturn(Mono.just(new PnRequestError()));
 
-        Mockito.when(externalChannelClient.sendEngageRequest(Mockito.any(), Mockito.any()))
+        Mockito.when(externalChannelClient.sendEngageRequest(Mockito.any(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.error(new NullPointerException("Error message")));
 
         Mockito.when(addressDAO.findAllByRequestId(requestid)).thenReturn(Mono.just(List.of(add)));

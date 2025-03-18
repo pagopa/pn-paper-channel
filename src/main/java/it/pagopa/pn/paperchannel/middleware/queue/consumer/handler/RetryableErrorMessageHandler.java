@@ -95,7 +95,7 @@ public class RetryableErrorMessageHandler extends SendToDeliveryPushHandler {
 
         List<AttachmentInfo> attachmentInfos = pnDeliveryRequest.getAttachments().stream().map(AttachmentMapper::fromEntity).toList();
 
-        return externalChannelClient.sendEngageRequest(sendRequest, attachmentInfos)
+        return externalChannelClient.sendEngageRequest(sendRequest, attachmentInfos, pnDeliveryRequest.getApplyRasterization())
                 .doOnSuccess(unused -> pnLogAudit.addsSuccessSend(sendRequest.getIun(),
                         String.format(REQUEST_TO_EXTERNAL_CHANNEL, sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY)))
                 )

@@ -10,7 +10,7 @@ import java.util.List;
 public interface ExternalChannelClient {
 
 
-    Mono<Void> sendEngageRequest(SendRequest request, List<AttachmentInfo> attachments);
+    Mono<Void> sendEngageRequest(SendRequest request, List<AttachmentInfo> attachments, Boolean applyRasterization);
 
 
 }

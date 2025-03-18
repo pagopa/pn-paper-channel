@@ -71,6 +71,7 @@ class RetryableErrorMessageHandlerTest {
         pnDeliveryRequest.setStatusDetail(StatusCodeEnum.PROGRESS.getValue());
         pnDeliveryRequest.setAttachments(new ArrayList<>());
         pnDeliveryRequest.setProductType(ProductTypeEnum.AR.getValue());
+        pnDeliveryRequest.setApplyRasterization(Boolean.TRUE);
 
         PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto();
         paperRequest.setRequestId(currentRequestId);
@@ -84,12 +85,12 @@ class RetryableErrorMessageHandlerTest {
 
         when(mockConfig.getAttemptQueueExternalChannel()).thenReturn(1);
         when(mockAddressDAO.findAllByRequestId(currentRequestId)).thenReturn(Mono.just(List.of(pnAddress)));
-        when(mockExtChannel.sendEngageRequest(any(SendRequest.class), anyList())).thenReturn(Mono.empty());
+        when(mockExtChannel.sendEngageRequest(any(SendRequest.class), anyList(), eq(Boolean.TRUE))).thenReturn(Mono.empty());
         assertDoesNotThrow(() -> handler.handleMessage(pnDeliveryRequest, paperRequest).block());
 
         //verifico che viene invocato ext-channels
         verify(mockExtChannel, timeout(2000).times(1))
-                .sendEngageRequest(argThat( (SendRequest sr) -> sr.getRequestId().equals(nextRequestId)), anyList() );
+                .sendEngageRequest(argThat( (SendRequest sr) -> sr.getRequestId().equals(nextRequestId)), anyList(), anyBoolean() );
 
         //verifico che viene inviato l'evento a delivery-push
         verify(mockSqsSender, times(1)).pushSendEvent(argThat((SendEvent se) -> se.getRequestId().equals(currentRequestId) ));
@@ -123,7 +124,7 @@ class RetryableErrorMessageHandlerTest {
         assertDoesNotThrow(() -> handler.handleMessage(pnDeliveryRequest, paperRequest).block());
 
         //verifico che viene NON invocato ext-channels
-        verify(mockExtChannel, timeout(2000).times(0)).sendEngageRequest(any(SendRequest.class), anyList());
+        verify(mockExtChannel, timeout(2000).times(0)).sendEngageRequest(any(SendRequest.class), anyList(), eq(null));
 
         //verifico che viene salvata la richiesta andata in errore
         verify(mockRequestError, timeout(2000).times(1))
