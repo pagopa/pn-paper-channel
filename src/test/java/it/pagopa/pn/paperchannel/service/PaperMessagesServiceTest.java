@@ -43,8 +43,7 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.Mockito.timeout;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @SpringBootTest(classes = {PaperCalculatorUtils.class, PaperMessagesServiceImpl.class, DataVaultEncryptionImpl.class})
@@ -363,28 +362,37 @@ class PaperMessagesServiceTest {
         request1.setRequestId(request1.getRequestId()+"_1");
 
         PnDeliveryRequest request = getPnDeliveryRequest();
-        request.setRelatedRequestId(request1.getRequestId());
+        request.setRelatedRequestId(request.getRequestId());
         request.setReworkNeeded(true);
+        request.setApplyRasterization(Boolean.TRUE);
+
+        PrepareRequest prepareRequest = getRequestOK();
+        prepareRequest.setRelatedRequestId(request.getRelatedRequestId());
 
         //MOCK RELATED DELIVERY REQUEST
         Mockito.when(requestDeliveryDAO.getByRequestId(request.getRelatedRequestId()))
                 .thenReturn(Mono.just(request1));
 
-        Mockito.when(this.requestDeliveryDAO.getByRequestId(Mockito.any()))
+        Mockito.when(addressDAO.findByRequestId(anyString())).thenReturn(Mono.just(mock(PnAddress.class)));
+
+        Mockito.when(this.requestDeliveryDAO.getByRequestId("TST-IOR.2332"))
                 .thenReturn(Mono.just(request));
 
+
         prepareRequestValidatorMockedStatic.when(() -> {
-            PrepareRequestValidator.compareRequestEntity(getRequestOK(), getPnDeliveryRequest(), true, true);
+            PrepareRequestValidator.compareRequestEntity(prepareRequest, getPnDeliveryRequest(), true, true);
         }).thenAnswer((Answer<Void>) invocation -> null);
 
-        Mockito.when(requestDeliveryDAO.createWithAddress(Mockito.any(), Mockito.any(), Mockito.any()))
+        ArgumentCaptor<PnDeliveryRequest> captor = ArgumentCaptor.forClass(PnDeliveryRequest.class);
+        Mockito.when(requestDeliveryDAO.createWithAddress(captor.capture(), Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(getPnDeliveryRequest()));
 
         Mockito.doNothing().when(this.prepareFlowStarter).startPreparePhaseOneFromPrepareSync(Mockito.any(), Mockito.any());
 
         PaperChannelUpdate update = this.paperMessagesService
-                .preparePaperSync("TST-IOR.2332", getRequestOK()).block();
+                .preparePaperSync("TST-IOR.2332",prepareRequest).block();
 
+        Assertions.assertTrue(captor.getValue().getApplyRasterization());
         assertNotNull(update);
         assertNotNull(update.getPrepareEvent());
         assertNull(update.getSendEvent());
@@ -617,7 +625,7 @@ class PaperMessagesServiceTest {
         Mockito.when(addressDAO.create(Mockito.any())).thenReturn(Mono.just(new PnAddress()));
 
         //MOCK SEND ENGAGE EXTERNAL CHANNEL
-        Mockito.when(externalChannelClient.sendEngageRequest(Mockito.any(), Mockito.any()))
+        Mockito.when(externalChannelClient.sendEngageRequest(any(), any(), eq(null)))
                 .thenReturn(Mono.just("").then());
 
         //MOCK UPDATE DELIVERY REQUEST
@@ -646,7 +654,7 @@ class PaperMessagesServiceTest {
         ArgumentCaptor<SendRequest> captureSendRequest = ArgumentCaptor.forClass(SendRequest.class);
 
         // verifico che è stato invocato externalChannel
-        Mockito.verify(externalChannelClient, timeout(2000).times(1)).sendEngageRequest(captureSendRequest.capture(), Mockito.any());
+        Mockito.verify(externalChannelClient, timeout(2000).times(1)).sendEngageRequest(captureSendRequest.capture(), any(), eq(null));
 
         // verifico il requestID da inviare ad ExtChannel
         assertNotNull(captureSendRequest.getValue());
@@ -672,7 +680,7 @@ class PaperMessagesServiceTest {
         ArgumentCaptor<SendRequest> captureSendRequest = ArgumentCaptor.forClass(SendRequest.class);
 
         // verifico che è stato invocato externalChannel
-        verify(externalChannelClient, timeout(2000).times(1)).sendEngageRequest(captureSendRequest.capture(), Mockito.any());
+        verify(externalChannelClient, timeout(2000).times(1)).sendEngageRequest(captureSendRequest.capture(), any(), any());
 
         // verifico il nuovo requestID da inviare ad ExtChannel - {CLIENTID}.{REQUESTID}.PCRETRY_{ATTEMPT}
         assertNotNull(captureSendRequest.getValue());
@@ -705,7 +713,7 @@ class PaperMessagesServiceTest {
         Mockito.when(addressDAO.create(Mockito.any())).thenReturn(Mono.just(new PnAddress()));
 
         //MOCK SEND ENGAGE EXTERNAL CHANNEL
-        Mockito.when(externalChannelClient.sendEngageRequest(Mockito.any(), Mockito.any()))
+        Mockito.when(externalChannelClient.sendEngageRequest(any(), any(), any()))
                 .thenReturn(Mono.error(new PnGenericException(EXTERNAL_CHANNEL_API_EXCEPTION, EXTERNAL_CHANNEL_API_EXCEPTION.getMessage())));
 
         //MOCK RETRIEVE NATIONAL COST
@@ -751,7 +759,7 @@ class PaperMessagesServiceTest {
         Mockito.when(addressDAO.create(Mockito.any())).thenReturn(Mono.just(new PnAddress()));
 
         //MOCK SEND ENGAGE EXTERNAL CHANNEL
-        Mockito.when(externalChannelClient.sendEngageRequest(Mockito.any(), Mockito.any()))
+        Mockito.when(externalChannelClient.sendEngageRequest(any(), any(), any()))
                 .thenReturn(Mono.just("").then());
 
         //MOCK UPDATE DELIVERY REQUEST
@@ -822,6 +830,43 @@ class PaperMessagesServiceTest {
         Mockito.when(addressDAO.findByRequestId(deliveryRequestTakingCharge.getRequestId())).thenReturn(Mono.just(address));
         PaperChannelUpdate response =paperMessagesService.preparePaperSync(deliveryRequestTakingCharge.getRequestId(), getRelatedRequest()).block();
         assertNotNull(response);
+    }
+
+    @Test
+    void paperAsyncEntitySecondAttemptApplyRasterizationTest() {
+        PnAddress address = getPnAddress(deliveryRequestTakingCharge.getRequestId());
+        deliveryRequestTakingCharge.setApplyRasterization(Boolean.TRUE);
+        Mockito.when(requestDeliveryDAO.getByRequestId(getRelatedRequest().getRelatedRequestId())).thenReturn(Mono.just(deliveryRequestTakingCharge));
+
+        PnDeliveryRequest newPnDeliveryRequest = getDeliveryRequest(getRequestOK().getRequestId(), StatusDeliveryEnum.TAKING_CHARGE);
+        newPnDeliveryRequest.setApplyRasterization(null);
+        Mockito.when(requestDeliveryDAO.getByRequestId(deliveryRequestTakingCharge.getRequestId())).thenReturn(Mono.empty());
+
+
+        Mockito.when(addressDAO.findByRequestId(deliveryRequestTakingCharge.getRequestId())).thenReturn(Mono.just(address));
+
+        ArgumentCaptor<PnDeliveryRequest> captor = ArgumentCaptor.forClass(PnDeliveryRequest.class);
+        when(requestDeliveryDAO.createWithAddress(captor.capture(), Mockito.any(), Mockito.any())).thenReturn(Mono.just(deliveryRequestTakingCharge));
+        Assertions.assertThrows(PnPaperEventException.class, () -> paperMessagesService.preparePaperSync(deliveryRequestTakingCharge.getRequestId(), getRelatedRequest()).block());
+        Assertions.assertTrue(captor.getValue().getApplyRasterization());
+    }
+
+    @Test
+    void paperAsyncEntityFirstAttemptApplyRasterizationTest() {
+        PnAddress address = getPnAddress(deliveryRequestTakingCharge.getRequestId());
+        deliveryRequestTakingCharge.setApplyRasterization(Boolean.TRUE);
+        PrepareRequest prepareRequest = getRelatedRequest();
+        prepareRequest.setRelatedRequestId(null);
+
+        PnDeliveryRequest newPnDeliveryRequest = getDeliveryRequest(getRequestOK().getRequestId(), StatusDeliveryEnum.TAKING_CHARGE);
+        newPnDeliveryRequest.setApplyRasterization(null);
+        Mockito.when(requestDeliveryDAO.getByRequestId(deliveryRequestTakingCharge.getRequestId())).thenReturn(Mono.empty());
+        Mockito.when(addressDAO.findByRequestId(deliveryRequestTakingCharge.getRequestId())).thenReturn(Mono.just(address));
+
+        ArgumentCaptor<PnDeliveryRequest> captor = ArgumentCaptor.forClass(PnDeliveryRequest.class);
+        when(requestDeliveryDAO.createWithAddress(captor.capture(), Mockito.any(), Mockito.any())).thenReturn(Mono.just(deliveryRequestTakingCharge));
+        paperMessagesService.preparePaperSync(deliveryRequestTakingCharge.getRequestId(), prepareRequest).block();
+        Assertions.assertNull(captor.getValue().getApplyRasterization());
     }
 
 

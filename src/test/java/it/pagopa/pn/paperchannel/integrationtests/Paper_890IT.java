@@ -192,11 +192,11 @@ class Paper_890IT extends BaseTest {
 
 
         when(mockAddressDAO.findAllByRequestId(anyString())).thenReturn(Mono.just(List.of(pnAddress)));
-        when(mockExtChannel.sendEngageRequest(any(SendRequest.class), anyList())).thenReturn(Mono.empty());
+        when(mockExtChannel.sendEngageRequest(any(SendRequest.class), anyList(), any())).thenReturn(Mono.empty());
 
         generateEvent("RECAG004","F04","",null,"retry", null, iun);
 
-        verify(mockExtChannel, timeout(2000).times(1)).sendEngageRequest(any(SendRequest.class), anyList());
+        verify(mockExtChannel, timeout(2000).times(1)).sendEngageRequest(any(SendRequest.class), anyList(), any());
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
         verify(sqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
@@ -216,7 +216,7 @@ class Paper_890IT extends BaseTest {
         pnAddress.setCap("");
 
         when(mockAddressDAO.findAllByRequestId(anyString())).thenReturn(Mono.just(List.of(pnAddress)));
-        when(mockExtChannel.sendEngageRequest(any(SendRequest.class), anyList())).thenReturn(Mono.empty());
+        when(mockExtChannel.sendEngageRequest(any(SendRequest.class), anyList(), any())).thenReturn(Mono.empty());
 
         generateEvent("RECAG013","","",null,"retry", null, iun);
 

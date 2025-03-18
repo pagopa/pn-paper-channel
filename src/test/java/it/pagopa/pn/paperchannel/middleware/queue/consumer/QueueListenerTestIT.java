@@ -95,7 +95,7 @@ class QueueListenerTestIT extends BaseTest
         when(requestDeliveryDAO.getByRequestId(requestId)).thenReturn(Mono.just(pnDeliveryRequest));
         when(requestDeliveryDAO.updateData(pnDeliveryRequest)).thenReturn(Mono.just(pnDeliveryRequest));
         when(addressDAO.findAllByRequestId(requestId)).thenReturn(Mono.just(createAddresses()));
-        when(externalChannelClient.sendEngageRequest(any(), any())).thenReturn(Mono.error(WebClientResponseException.create(400, "", new HttpHeaders(), null, Charset.defaultCharset())));
+        when(externalChannelClient.sendEngageRequest(any(), any(), anyBoolean())).thenReturn(Mono.error(WebClientResponseException.create(400, "", new HttpHeaders(), null, Charset.defaultCharset())));
         when(paperRequestErrorDAO.created(any(PnRequestError.class))).thenReturn(Mono.just(new PnRequestError()));
 
         //invio il messaggio nella coda di ext-channel
