@@ -259,7 +259,7 @@ class PaperChannelRestV1ControllerTest {
         request.setPriceAdditional(BigDecimal.valueOf(11.2f));
         request.setProductType(ProductTypeEnumDto.AR);
         request.setCap(caps);
-        request.setZone(InternationalZoneEnum._1);
+        request.setZone(InternationalZoneEnum.ZONE_1);
         return request;
     }
 

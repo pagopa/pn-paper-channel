@@ -1,6 +1,6 @@
 package it.pagopa.pn.paperchannel.filter;
 
-import io.awspring.cloud.autoconfigure.messaging.SqsAutoConfiguration;
+import io.awspring.cloud.autoconfigure.sqs.SqsAutoConfiguration;
 import it.pagopa.pn.paperchannel.config.BaseTest;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PaperChannelUpdate;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PnClientDAO;
@@ -14,7 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.cloud.function.context.config.ContextFunctionCatalogAutoConfiguration;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
@@ -32,9 +32,9 @@ class ClientIdWebFilterTest extends BaseTest.WithOutLocalStackTest {
     private static final String PN_CLIENT_ID_NOT_IN_DB = "PAPER-001";
     @Autowired
     private WebTestClient webTestClient;
-    @MockBean
+    @MockitoBean
     private PaperMessagesService paperMessagesService;
-    @MockBean
+    @MockitoBean
     private PnClientDAO pnClientDAO;
 
     @BeforeEach

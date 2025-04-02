@@ -24,7 +24,7 @@ import java.util.List;
 @Slf4j
 public class AddressDAOImpl extends BaseDAO <PnAddress> implements AddressDAO {
 
-    public AddressDAOImpl(DataEncryption kmsEncryption,
+    public AddressDAOImpl(@Qualifier("kmsEncryption") DataEncryption kmsEncryption,
                           DynamoDbEnhancedAsyncClient dynamoDbEnhancedAsyncClient,
                           DynamoDbAsyncClient dynamoDbAsyncClient,
                           AwsPropertiesConfig awsPropertiesConfig) {

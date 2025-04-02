@@ -22,7 +22,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -30,13 +30,13 @@ import java.time.temporal.ChronoUnit;
 
 class SqsQueueSenderTestIT extends BaseTest {
 
-    @SpyBean
+    @MockitoSpyBean
     private DeliveryPushMomProducer deliveryPushMomProducer;
 
-    @SpyBean
+    @MockitoSpyBean
     private InternalQueueMomProducer internalQueueMomProducer;
 
-    @SpyBean
+    @MockitoSpyBean
     private NormalizeAddressQueueMomProducer normalizeAddressQueueMomProducer;
 
     @Autowired

@@ -1,6 +1,6 @@
 package it.pagopa.pn.paperchannel.config;
 
-import io.awspring.cloud.autoconfigure.messaging.SqsAutoConfiguration;
+import io.awspring.cloud.autoconfigure.sqs.SqsAutoConfiguration;
 import it.pagopa.pn.commons.utils.metrics.SpringAnalyzer;
 import it.pagopa.pn.paperchannel.LocalStackTestConfig;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.*;
@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.cloud.function.context.config.ContextFunctionCatalogAutoConfiguration;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
@@ -24,7 +24,7 @@ import org.springframework.test.context.ActiveProfiles;
 @Import(LocalStackTestConfig.class)
 public abstract class BaseTest {
 
-    @MockBean
+    @MockitoBean
     private SpringAnalyzer springAnalyzer;
 
     /**
@@ -35,22 +35,22 @@ public abstract class BaseTest {
      */
     public static class WithOutLocalStackTest {
 
-        @MockBean
+        @MockitoBean
         private DeliveryPushMomProducer deliveryMomProducer;
 
-        @MockBean
+        @MockitoBean
         private InternalQueueMomProducer internalQueueMomProducer;
 
-        @MockBean
+        @MockitoBean
         private NormalizeAddressQueueMomProducer normalizeAddressQueueMomProducer;
 
-        @MockBean
+        @MockitoBean
         private PaperchannelToDelayerMomProducer paperchannelToDelayerMomProducer;
 
-        @MockBean
+        @MockitoBean
         private DelayerToPaperchannelInternalProducer delayerToPaperchannelInternalProducer;
 
-        @MockBean
+        @MockitoBean
         private SpringAnalyzer springAnalyzer;
 
 
