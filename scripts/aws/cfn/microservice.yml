@@ -166,6 +166,10 @@ Parameters:
     Type: String
     Description: 'Duration for compiuta giacenza (e.g., 5d, 5h, 5m, 5s)'
 
+  EnableTruncatedDateForRefinementCheck:
+    Type: String
+    Description: 'If enabled truncate datetime to local date for refinement check'
+
   CloudwatchMetricCron:
     Type: String
     Description: 'Time before send metric'
