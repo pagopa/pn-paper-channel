@@ -11,7 +11,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDiscoveredAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
 import it.pagopa.pn.paperchannel.middleware.queue.consumer.MetaDematCleaner;
-import it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.RECRN00XC.RECRN00XCMessageHandler;
+import it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.RECRN00XC.RECRN003CMessageHandler;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum;
 import lombok.extern.slf4j.Slf4j;
@@ -40,7 +40,7 @@ class RECRN00XCMessageHandlerTest {
     private static final String requestId = "1234LL-GGGG-SSSS";
     private static final String META_STRING = "META##";
 
-    private RECRN00XCMessageHandler handler;
+    private RECRN003CMessageHandler handler;
 
     private SqsSender sqsSender;
     private EventMetaDAO eventMetaDAO;
@@ -61,7 +61,7 @@ class RECRN00XCMessageHandlerTest {
         PnPaperChannelConfig mockConfig = new PnPaperChannelConfig();
         mockConfig.setRefinementDuration(Duration.of(DAYS_REFINEMENT, ChronoUnit.DAYS));
 
-        handler = RECRN00XCMessageHandler.builder()
+        handler = RECRN003CMessageHandler.builder()
                 .sqsSender(sqsSender)
                 .eventMetaDAO(eventMetaDAO)
                 .requestDeliveryDAO(requestDeliveryDAO)

@@ -2,7 +2,7 @@ package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.RECRN00XC.RECRN005CMessageHandler;
-import it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.RECRN00XC.RECRN00XCMessageHandler;
+import it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.RECRN00XC.RECRN003CMessageHandler;
 import it.pagopa.pn.paperchannel.utils.SendProgressMetaConfig;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -85,7 +85,7 @@ class HandlersFactoryTest {
                         new TestCase("Log", List.of("UNKNOWN"), LogMessageHandler.class),
                         new TestCase("Complex890", List.of("RECAG005C", "RECAG006C", "RECAG007C", "RECAG008C"),
                                 Proxy890MessageHandler.class),
-                        new TestCase("RECRN00xC", List.of("RECRN003C", "RECRN004C"), RECRN00XCMessageHandler.class),
+                        new TestCase("RECRN00xC", List.of("RECRN003C", "RECRN004C"), RECRN003CMessageHandler.class),
                         new TestCase("RECRN00xC", List.of("RECRN005C"), RECRN005CMessageHandler.class)
                     )),
             // SIMPLE_890_FLOW ENABLE cases
