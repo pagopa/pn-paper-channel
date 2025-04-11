@@ -12,7 +12,6 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.cloud.function.context.config.ContextFunctionCatalogAutoConfiguration;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
@@ -59,7 +58,7 @@ public abstract class BaseTest {
 
     @Slf4j
     @SpringBootTest
-    @EnableAutoConfiguration(exclude= {SqsAutoConfiguration.class, ContextFunctionCatalogAutoConfiguration.class})
+    @EnableAutoConfiguration(exclude= {SqsAutoConfiguration.class })
     @ActiveProfiles("test")
     public static class WithMockServer extends WithOutLocalStackTest {
         @Autowired

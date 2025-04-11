@@ -15,7 +15,6 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.cloud.function.context.config.ContextFunctionCatalogAutoConfiguration;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
@@ -23,7 +22,7 @@ import reactor.core.publisher.Mono;
 import static it.pagopa.pn.paperchannel.config.InstanceCreator.getPrepareRequest;
 
 @SpringBootTest
-@EnableAutoConfiguration(exclude= {SqsAutoConfiguration.class, ContextFunctionCatalogAutoConfiguration.class})
+@EnableAutoConfiguration(exclude= {SqsAutoConfiguration.class })
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
 class ClientIdWebFilterTest extends BaseTest.WithOutLocalStackTest {
