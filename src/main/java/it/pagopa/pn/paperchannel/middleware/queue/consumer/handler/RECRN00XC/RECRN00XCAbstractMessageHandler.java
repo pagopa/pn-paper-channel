@@ -30,6 +30,7 @@ import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
 @Slf4j
 @SuperBuilder
 public abstract class RECRN00XCAbstractMessageHandler extends SendToDeliveryPushHandler {
+    private static final ZoneId zone = ZoneId.of("Europe/Rome");
     protected final EventMetaDAO eventMetaDAO;
     protected final MetaDematCleaner metaDematCleaner;
 
@@ -79,12 +80,10 @@ public abstract class RECRN00XCAbstractMessageHandler extends SendToDeliveryPush
                                           PnDeliveryRequest entity,
                                           PaperProgressStatusEventDto paperRequest) {
         // PNRN012.statusDateTime = RECRN010.statusDateTime + 10gg (RefinementDuration)
-        var pnrn012StatusDatetime = eventrecrn010.getStatusDateTime()
-                .atZone(ZoneId.of("UTC"))                       // converto da Instant a ZonedDateTime
-                .toLocalDate()                                         // prendo solo la data
-                .atStartOfDay(ZoneId.of("UTC"))                 // riporto a inizio giornata
-                .plus(pnPaperChannelConfig.getRefinementDuration())    // + Refinement
-                .toInstant() ;                                         // torno a Instant
+        var recrn010DateTime = truncateToStartOfDay(eventrecrn010.getStatusDateTime());
+        var pnrn012StatusDatetime = truncateToStartOfDay(
+                recrn010DateTime.plus(pnPaperChannelConfig.getRefinementDuration())   // + Refinement
+                .toInstant()).toInstant();
 
         PNRN012Wrapper pnrn012Wrapper = PNRN012Wrapper
                 .buildPNRN012Wrapper(entity, paperRequest, pnrn012StatusDatetime);
@@ -144,7 +143,9 @@ public abstract class RECRN00XCAbstractMessageHandler extends SendToDeliveryPush
                 .compareTo(pnPaperChannelConfig.getCompiutaGiacenzaArDuration()) >= 0;
     }
 
-    private LocalDateTime truncateToStartOfDay(Instant instant) {
-        return LocalDate.ofInstant(instant, ZoneId.of("UTC")).atStartOfDay();
+    private ZonedDateTime truncateToStartOfDay(Instant instant) {
+        return instant.atZone(zone)
+                .toLocalDate()
+                .atStartOfDay(zone);
     }
 }
