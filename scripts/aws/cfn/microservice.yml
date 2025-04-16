@@ -170,6 +170,10 @@ Parameters:
     Type: String
     Description: 'If enabled truncate datetime to local date for refinement check'
 
+  EnableOldFlowRECRN004C:
+    Type: String
+    Description: 'If enabled uses the old RECRN004C flow'
+
   CloudwatchMetricCron:
     Type: String
     Description: 'Time before send metric'
@@ -785,6 +789,8 @@ Resources:
         ContainerEnvEntry81: !Sub 'PN_PAPERCHANNEL_QUEUEDELAYERTOPAPERCHANNEL=${DelayerToPaperChannelQueueName}'
         ContainerEnvEntry82: !Sub 'PN_PAPERCHANNEL_COMPIUTAGIACENZAARDURATION=${CompiutaGiacenzaArDuration}'
         ContainerEnvEntry83: !Sub 'PN_PAPERCHANNEL_ENABLERETRYCON996=${EnableRetryCon996}'
+        ContainerEnvEntry84: !Sub 'PN_PAPERCHANNEL_ENABLETRUNCATEDDATEFORREFINEMENTCHECK=${EnableTruncatedDateForRefinementCheck}'
+        ContainerEnvEntry85: !Sub 'PN_PAPERCHANNEL_ENABLEOLDFLOWRECRN003C=${EnableOldFlowRECRN003C}'
         ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-PaperChannel-Secrets
         MappedPaths: '/paper-channel-bo/*,/paper-channel-private/*'
