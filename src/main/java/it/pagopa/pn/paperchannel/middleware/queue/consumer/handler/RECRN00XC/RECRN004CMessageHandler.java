@@ -40,8 +40,17 @@ public class RECRN004CMessageHandler extends RECRN00XCAbstractMessageHandler {
                     // Se il tempo che intercorre tra RECRN010 e RECRN004A è >= 10gg (troncando le ore)
                     // Allora genera PNRN012 con data RECRN0010.date + 10gg (troncando le ore)
                     if(super.isDifferenceGreaterOrEqualToRefinementDuration
-                            (eventrecrn004a.getStatusDateTime(), eventrecrn010.getStatusDateTime())) {
+                            (eventrecrn010.getStatusDateTime(), eventrecrn004a.getStatusDateTime())) {
                         return super.sendPNRN012Event(eventrecrn010, entity, paperRequest);
+                    }
+
+                    // Vecchio flusso
+                    if(pnPaperChannelConfig.isEnableOldFlowRECRN004C()) {
+                        // Invia RECRN004C a pn-delivery-push
+                        return Mono.just(enrichEvent(paperRequest, eventrecrn004a))
+                                .flatMap(enrichedRequest ->
+                                        super.handleMessage(entity, enrichedRequest))
+                                .then(super.metaDematCleaner.clean(paperRequest.getRequestId()));
                     }
 
                     // Altrimenti memorizza l'evento su pn-PaperEventError

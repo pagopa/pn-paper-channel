@@ -33,11 +33,11 @@ public class RECRN003CMessageHandler extends RECRN00XCAbstractMessageHandler {
                     // Se il tempo che intercorre tra RECRN0010 e RECRN003A è >= 10gg (troncando le ore)
                     // Allora genera PNRN012 con data RECRN0010.date + 10gg (troncando le ore)
                     if (super.isDifferenceGreaterOrEqualToRefinementDuration(
-                            eventrecrn003a.getStatusDateTime(), eventrecrn010.getStatusDateTime())) {
+                            eventrecrn010.getStatusDateTime(), eventrecrn003a.getStatusDateTime())) {
                         return super.sendPNRN012Event(eventrecrn010, entity, paperRequest);
                     }
 
-                    // Altrimenti invia eventrecrn003a a pn-delivery-push
+                    // Altrimenti invia RECRN003C a pn-delivery-push
                     return Mono.just(enrichEvent(paperRequest, eventrecrn003a))
                             .flatMap(enrichedRequest ->
                                     super.handleMessage(entity, enrichedRequest))

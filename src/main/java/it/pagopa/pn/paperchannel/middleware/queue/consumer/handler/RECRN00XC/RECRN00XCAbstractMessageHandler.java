@@ -30,7 +30,6 @@ import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
 @Slf4j
 @SuperBuilder
 public abstract class RECRN00XCAbstractMessageHandler extends SendToDeliveryPushHandler {
-    private static final ZoneId zone = ZoneId.of("Europe/Rome");
     protected final EventMetaDAO eventMetaDAO;
     protected final MetaDematCleaner metaDematCleaner;
 
@@ -82,8 +81,7 @@ public abstract class RECRN00XCAbstractMessageHandler extends SendToDeliveryPush
         // PNRN012.statusDateTime = RECRN010.statusDateTime + 10gg (RefinementDuration)
         var recrn010DateTime = truncateToStartOfDay(eventrecrn010.getStatusDateTime());
         var pnrn012StatusDatetime = truncateToStartOfDay(
-                recrn010DateTime.plus(pnPaperChannelConfig.getRefinementDuration())   // + Refinement
-                .toInstant()).toInstant();
+                recrn010DateTime.plus(pnPaperChannelConfig.getRefinementDuration()));   // + Refinement
 
         PNRN012Wrapper pnrn012Wrapper = PNRN012Wrapper
                 .buildPNRN012Wrapper(entity, paperRequest, pnrn012StatusDatetime);
@@ -123,29 +121,57 @@ public abstract class RECRN00XCAbstractMessageHandler extends SendToDeliveryPush
         return paperRequest;
     }
 
+    /**
+     * Returns the {@link Duration} between two instants, potentially truncated to the start of the day
+     * if {@code pnPaperChannelConfig.isEnableTruncatedDateForRefinementCheck()} is {@code true}.
+     *
+     * @param instant1 The first {@link Instant}.
+     * @param instant2 The second {@link Instant}.
+     * @return The time difference between the two instants, based on the configuration.
+     */
     protected Duration getDurationBetweenDates(Instant instant1, Instant instant2){
-        return pnPaperChannelConfig.isEnableTruncatedDateForRefinementCheck() ?
-                Duration.between(truncateToStartOfDay(instant1), truncateToStartOfDay(instant2)) :
-                Duration.between(instant1, instant2);
+        return pnPaperChannelConfig.isEnableTruncatedDateForRefinementCheck()
+                ? Duration.between(truncateToStartOfDay(instant1), truncateToStartOfDay(instant2))
+                : Duration.between(instant1, instant2);
     }
 
+    /**
+     * Checks whether the time difference between RECRN010 and RECRN00xA is
+     * greater than or equal to {@link it.pagopa.pn.paperchannel.config.PnPaperChannelConfig#getRefinementDuration()}.
+     *
+     * @param recrn010Timestamp  The {@link Instant} of RECRN010.
+     * @param recrn00xATimestamp The {@link Instant} of RECRN00xA (e.g., RECRN003A).
+     * @return {@code true} if the difference is &ge; the configured refinement duration; otherwise, {@code false}.
+     */
     protected boolean isDifferenceGreaterOrEqualToRefinementDuration (
-            Instant recrn00xATimestamp,
-            Instant recrn010Timestamp) {
+            Instant recrn010Timestamp,
+            Instant recrn00xATimestamp) {
         return getDurationBetweenDates(recrn010Timestamp, recrn00xATimestamp)
                 .compareTo(pnPaperChannelConfig.getRefinementDuration()) >= 0;
     }
 
+    /**
+     * Checks whether the time difference between RECRN010 and RECRN005A is
+     * greater than or equal to {@link it.pagopa.pn.paperchannel.config.PnPaperChannelConfig#getCompiutaGiacenzaArDuration()}.
+     *
+     * @param recrn010Timestamp  The {@link Instant} of RECRN010.
+     * @param recrn005ATimestamp The {@link Instant} of RECRN005A.
+     * @return {@code true} if the difference is &ge; the compiuta giacenza AR duration; otherwise, {@code false}.
+     */
     protected boolean isDifferenceGreaterOrEqualToStockDuration (
-            Instant recrn005ATimestamp,
-            Instant recrn010Timestamp) {
+            Instant recrn010Timestamp,
+            Instant recrn005ATimestamp) {
         return getDurationBetweenDates(recrn010Timestamp, recrn005ATimestamp)
                 .compareTo(pnPaperChannelConfig.getCompiutaGiacenzaArDuration()) >= 0;
     }
 
-    private ZonedDateTime truncateToStartOfDay(Instant instant) {
-        return instant.atZone(zone)
-                .toLocalDate()
-                .atStartOfDay(zone);
+    /**
+     * Truncates an {@link Instant} to the start of the day in UTC.
+     *
+     * @param instant The {@link Instant} to truncate.
+     * @return A new {@link Instant} set to the start of the day (00:00 UTC).
+     */
+    private Instant truncateToStartOfDay(Instant instant) {
+        return LocalDate.ofInstant(instant, ZoneId.of("UTC")).atStartOfDay().toInstant(ZoneOffset.UTC);
     }
 }
