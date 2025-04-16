@@ -11,10 +11,8 @@ import it.pagopa.pn.paperchannel.mapper.RequestDeliveryMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnDiscoveredAddress;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventDemat;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
+import it.pagopa.pn.paperchannel.middleware.db.dao.impl.PaperRequestErrorDAOImpl;
+import it.pagopa.pn.paperchannel.middleware.db.entities.*;
 import it.pagopa.pn.paperchannel.middleware.queue.consumer.MetaDematCleaner;
 import it.pagopa.pn.paperchannel.service.PaperResultAsyncService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
@@ -37,6 +35,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.TAKING_CHARGE;
+import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.RECRN010_STATUS_CODE;
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.RECRN011_STATUS_CODE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -67,7 +66,8 @@ class PaperPNRN012Test extends BaseTest.WithOutLocalStackTest {
     private EventMetaDAO eventMetaDAO;
     @MockBean
     private MetaDematCleaner metaDematCleaner;
-
+    @MockBean
+    private PaperRequestErrorDAOImpl requestErrorDAO;
 
     @Test
     void Test_AR_StartProcessing__RECRN011(){
@@ -114,10 +114,10 @@ class PaperPNRN012Test extends BaseTest.WithOutLocalStackTest {
         extChannelMessage.setAnalogMail(createSimpleAnalogMail(RECRN003A_STATUS_CODE, StatusCodeEnum.PROGRESS.getValue(), PRODUCT_TYPE));
 
         /* ENTITY ALREADY EXISTED INTO DB */
-        PnDeliveryRequest entityFromDB = getDeliveryRequest(RECRN011_STATUS_CODE, StatusCodeEnum.PROGRESS.getValue(), RECRN011_STATUS_CODE.concat(StatusCodeEnum.PROGRESS.getValue()));
+        PnDeliveryRequest entityFromDB = getDeliveryRequest(RECRN010_STATUS_CODE, StatusCodeEnum.PROGRESS.getValue(), RECRN010_STATUS_CODE.concat(StatusCodeEnum.PROGRESS.getValue()));
 
         /* ENTITY FOR UPDATE WITH NEW STATUS ON DB */
-        PnDeliveryRequest entityForUpdated = getDeliveryRequest(RECRN011_STATUS_CODE, StatusCodeEnum.PROGRESS.getValue(), RECRN011_STATUS_CODE.concat(StatusCodeEnum.PROGRESS.getValue()));
+        PnDeliveryRequest entityForUpdated = getDeliveryRequest(RECRN010_STATUS_CODE, StatusCodeEnum.PROGRESS.getValue(), RECRN010_STATUS_CODE.concat(StatusCodeEnum.PROGRESS.getValue()));
 
         /* MOCKS OF RESULT ASYNC SERVICE */
         mockResultAsync(entityFromDB, entityForUpdated, extChannelMessage.getAnalogMail());
@@ -181,7 +181,7 @@ class PaperPNRN012Test extends BaseTest.WithOutLocalStackTest {
 
 
     @Test
-    void Test_AR_SendPNRN012ToDeliveryPush__RECRN00XC_GreaterEquals10(){
+    void Test_AR_SendPNRN012ToDeliveryPush__RECRN004C_GreaterEquals10(){
         final String RECRN004C = "RECRN004C";
 
         /* BODY OF EXTERNAL CHANNEL QUEUE */
@@ -195,21 +195,21 @@ class PaperPNRN012Test extends BaseTest.WithOutLocalStackTest {
         extChannelMessage.setAnalogMail(analog);
 
         /* ENTITY ALREADY EXISTED INTO DB */
-        PnDeliveryRequest entityFromDB = getDeliveryRequest(RECRN011_STATUS_CODE, StatusCodeEnum.PROGRESS.getValue(), RECRN011_STATUS_CODE.concat(StatusCodeEnum.PROGRESS.getValue()));
+        PnDeliveryRequest entityFromDB = getDeliveryRequest(RECRN010_STATUS_CODE, StatusCodeEnum.PROGRESS.getValue(), RECRN010_STATUS_CODE.concat(StatusCodeEnum.PROGRESS.getValue()));
 
         /* ENTITY FOR UPDATE WITH NEW STATUS ON DB */
-        PnDeliveryRequest entityForUpdated = getDeliveryRequest(RECRN011_STATUS_CODE, StatusCodeEnum.PROGRESS.getValue(), RECRN011_STATUS_CODE.concat(StatusCodeEnum.PROGRESS.getValue()));
+        PnDeliveryRequest entityForUpdated = getDeliveryRequest(RECRN010_STATUS_CODE, StatusCodeEnum.PROGRESS.getValue(), RECRN010_STATUS_CODE.concat(StatusCodeEnum.PROGRESS.getValue()));
 
         /* MOCKS OF RESULT ASYNC SERVICE */
         mockResultAsync(entityFromDB, entityForUpdated, extChannelMessage.getAnalogMail());
 
         /* ENTITY FOR CALCULATED TIME DIFFERENCE */
-        PnEventMeta eventRECRN011 = getEventMeta(RECRN011_STATUS_CODE, Instant.now().minus(20, ChronoUnit.DAYS));
+        PnEventMeta eventRECRN010 = getEventMeta(RECRN010_STATUS_CODE, Instant.now().minus(20, ChronoUnit.DAYS));
         PnEventMeta eventRECRN004A = getEventMeta("RECRN004A", Instant.now().minus(5, ChronoUnit.DAYS));
 
         /* START MOCKS OF RECRN00XCMESSAGEHANDLER */
-        Mockito.when(eventMetaDAO.getDeliveryEventMeta(eventRECRN011.getMetaRequestId(), eventRECRN011.getMetaStatusCode()))
-                .thenReturn(Mono.just(eventRECRN011));
+        Mockito.when(eventMetaDAO.getDeliveryEventMeta(eventRECRN010.getMetaRequestId(), eventRECRN010.getMetaStatusCode()))
+                .thenReturn(Mono.just(eventRECRN010));
 
         Mockito.when(eventMetaDAO.getDeliveryEventMeta(eventRECRN004A.getMetaRequestId(), eventRECRN004A.getMetaStatusCode()))
                 .thenReturn(Mono.just(eventRECRN004A));
@@ -237,7 +237,7 @@ class PaperPNRN012Test extends BaseTest.WithOutLocalStackTest {
     }
 
     @Test
-    void Test_AR_SendPNRN012ToDeliveryPush__RECRN00XC_Minor10(){
+    void Test_AR_NoSendPNRN012ToDeliveryPush__RECRN004C_Minor10(){
         final String RECRN004C = "RECRN004C";
 
         /* BODY OF EXTERNAL CHANNEL QUEUE */
@@ -251,34 +251,36 @@ class PaperPNRN012Test extends BaseTest.WithOutLocalStackTest {
         extChannelMessage.setAnalogMail(analog);
 
         /* ENTITY ALREADY EXISTED INTO DB */
-        PnDeliveryRequest entityFromDB = getDeliveryRequest(RECRN011_STATUS_CODE, StatusCodeEnum.PROGRESS.getValue(), RECRN011_STATUS_CODE.concat(StatusCodeEnum.PROGRESS.getValue()));
+        PnDeliveryRequest entityFromDB = getDeliveryRequest(RECRN010_STATUS_CODE, StatusCodeEnum.PROGRESS.getValue(), RECRN010_STATUS_CODE.concat(StatusCodeEnum.PROGRESS.getValue()));
 
         /* ENTITY FOR UPDATE WITH NEW STATUS ON DB */
-        PnDeliveryRequest entityForUpdated = getDeliveryRequest(RECRN011_STATUS_CODE, StatusCodeEnum.PROGRESS.getValue(), RECRN011_STATUS_CODE.concat(StatusCodeEnum.PROGRESS.getValue()));
+        PnDeliveryRequest entityForUpdated = getDeliveryRequest(RECRN010_STATUS_CODE, StatusCodeEnum.PROGRESS.getValue(), RECRN010_STATUS_CODE.concat(StatusCodeEnum.PROGRESS.getValue()));
+        PnRequestError requestError = new PnRequestError();
 
         /* MOCKS OF RESULT ASYNC SERVICE */
         mockResultAsync(entityFromDB, entityForUpdated, extChannelMessage.getAnalogMail());
 
         /* ENTITY FOR CALCULATED TIME DIFFERENCE */
-        PnEventMeta eventRECRN011 = getEventMeta(RECRN011_STATUS_CODE, Instant.now().minus(20, ChronoUnit.DAYS));
+        PnEventMeta eventRECRN010 = getEventMeta(RECRN010_STATUS_CODE, Instant.now().minus(20, ChronoUnit.DAYS));
         PnEventMeta eventRECRN004A = getEventMeta("RECRN004A", Instant.now().minus(15, ChronoUnit.DAYS));
 
-        /* START MOCKS OF RECRN00XCMESSAGEHANDLER */
-        Mockito.when(eventMetaDAO.getDeliveryEventMeta(eventRECRN011.getMetaRequestId(), eventRECRN011.getMetaStatusCode()))
-                .thenReturn(Mono.just(eventRECRN011));
+        /* START MOCKS OF RECRN004CMESSAGEHANDLER */
+        Mockito.when(eventMetaDAO.getDeliveryEventMeta(eventRECRN010.getMetaRequestId(), eventRECRN010.getMetaStatusCode()))
+                .thenReturn(Mono.just(eventRECRN010));
 
         Mockito.when(eventMetaDAO.getDeliveryEventMeta(eventRECRN004A.getMetaRequestId(), eventRECRN004A.getMetaStatusCode()))
                 .thenReturn(Mono.just(eventRECRN004A));
 
         Mockito.when(metaDematCleaner.clean(REQUEST_ID))
                 .thenReturn(Mono.just("").then());
+        Mockito.when(requestErrorDAO.created(any())).thenReturn(Mono.just(requestError));
 
         /* END OF MOCKS OF RECRN00XCMESSAGEHANDLER*/
         Assertions.assertDoesNotThrow(() -> {
             this.paperResultAsyncService.resultAsyncBackground(extChannelMessage, 15).block();
         });
 
-        verify(metaDematCleaner, times(1)).clean(REQUEST_ID);
+        verify(metaDematCleaner, never()).clean(REQUEST_ID);
     }
 
 
