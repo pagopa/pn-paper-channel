@@ -81,6 +81,7 @@ public class PnPaperChannelConfig {
     private boolean prepareTwoPhases;
     private Duration compiutaGiacenzaArDuration;
     private boolean enableTruncatedDateForRefinementCheck;
+    private boolean enableOldFlowRECRN004C;
 
     /**
      * Per l'errore PNADDR001 flusso NR: True se il failureDetailCode D01 deve essere mandato a delivery push (specificando anche l'indirizzo),
