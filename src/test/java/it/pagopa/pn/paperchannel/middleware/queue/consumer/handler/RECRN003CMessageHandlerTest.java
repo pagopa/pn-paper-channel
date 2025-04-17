@@ -59,6 +59,7 @@ class RECRN003CMessageHandlerTest {
     @BeforeEach
     void setUp(){
         PnPaperChannelConfig pnPaperChannelConfig = new PnPaperChannelConfig();
+        pnPaperChannelConfig.setEnableTruncatedDateForRefinementCheck(true);
         pnPaperChannelConfig.setRefinementDuration(Duration.of(DAYS_REFINEMENT, ChronoUnit.DAYS));
 
         handler = RECRN003CMessageHandler.builder()

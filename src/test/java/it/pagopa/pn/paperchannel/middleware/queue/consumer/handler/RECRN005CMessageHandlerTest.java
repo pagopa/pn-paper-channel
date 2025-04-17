@@ -69,6 +69,8 @@ class RECRN005CMessageHandlerTest {
         PnPaperChannelConfig pnPaperChannelConfig = new PnPaperChannelConfig();
         pnPaperChannelConfig.setRefinementDuration(Duration.of(DAYS_REFINEMENT, ChronoUnit.DAYS));
         pnPaperChannelConfig.setCompiutaGiacenzaArDuration(Duration.of(STORAGE_DURATION_AR_DAYS, ChronoUnit.DAYS));
+        pnPaperChannelConfig.setEnableTruncatedDateForRefinementCheck(true);
+        pnPaperChannelConfig.setEnableOldFlowRECRN004C(false);
 
         handler = RECRN005CMessageHandler.builder()
                 .sqsSender(sqsSender)
@@ -81,7 +83,7 @@ class RECRN005CMessageHandlerTest {
     }
 
     @Test
-    void shouldPush_PNRN012_when_RECRN005A_greaterOrEquals_RECRN010_by30Days (){
+    void should_pushPNRN012_when_RECRN005AGreaterOrEqualsRECRN010By30Days (){
         // Arrange
         var now = Instant.now();
         PnEventMeta eventMetaRECRN010 = getEventMeta(STATUS_RECRN010,now.minus(STORAGE_DURATION_AR_DAYS, ChronoUnit.DAYS));
@@ -132,11 +134,111 @@ class RECRN005CMessageHandlerTest {
     }
 
     @Test
-    void shouldSavePnEventError_when_RECRN005A_less_RECRN010_by1Days() {
+    void should_savePnEventError_when_RECRN005ALessRECRN010By1Days() {
         // Arrange
         var now = Instant.now();
         PnEventMeta eventMetaRECRN010 = getEventMeta(STATUS_RECRN010, now);
         PnEventMeta eventMetaRECRN005A = getEventMeta(STATUS_RECRN005A, now.minus(1, ChronoUnit.DAYS));
+
+        when(eventMetaDAO.getDeliveryEventMeta(META_STRING.concat(requestId), META_STRING.concat(STATUS_RECRN010)))
+                .thenReturn(Mono.just(eventMetaRECRN010));
+        when(eventMetaDAO.getDeliveryEventMeta(META_STRING.concat(requestId), META_STRING.concat(STATUS_RECRN005A)))
+                .thenReturn(Mono.just(eventMetaRECRN005A));
+        when(paperRequestErrorDAO.created(any())).thenReturn(Mono.just(new PnRequestError()));
+
+        PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
+                .requestId(requestId)
+                .statusCode(STATUS_RECRN005C)
+                .statusDateTime(OffsetDateTime.now())
+                .clientRequestTimeStamp(OffsetDateTime.now())
+                .deliveryFailureCause("M02");
+
+        PnDeliveryRequest entity = new PnDeliveryRequest();
+        entity.setRequestId(requestId);
+        entity.setStatusDetail(STATUS_RECRN005C);
+        entity.setStatusCode(ExternalChannelCodeEnum.getStatusCode(paperRequest.getStatusCode()));
+
+        // Act
+        Mono<Void> mono = this.handler.handleMessage(entity, paperRequest);
+        Assertions.assertDoesNotThrow(() -> mono.block());
+
+        // Assert
+        verify(sqsSender, never()).pushSendEvent(any());
+        verify(requestDeliveryDAO, never()).updateConditionalOnFeedbackStatus(any(), anyBoolean());
+
+        // Verify requestError
+        verify(paperRequestErrorDAO, times(1)).created(argThat(error -> {
+            assertThat(error).isNotNull();
+            assertThat(error.getRequestId()).isEqualTo(requestId);
+            assertThat(error.getError()).contains("RECRN005A statusDateTime", "RECRN010 statusDateTime");
+            assertThat(error.getFlowThrow()).isEqualTo("RECRN005C");
+            assertThat(error.getCategory()).isEqualTo(RequestErrorCategoryEnum.RENDICONTAZIONE_SCARTATA.getValue());
+            assertThat(error.getCause()).startsWith(RequestErrorCauseEnum.GIACENZA_DATE_ERROR.getValue());
+            return true;
+        }));
+    }
+
+    // Test troncamento
+    @Test
+    void should_pushPNRN012_when_RECRN005GreaterOrEqualsRECRN010By30Days_withRemoveTime(){
+        // Arrange
+        var recrn010StatusDateTime = Instant.parse("2025-01-09T09:02:10Z");
+        var recrn005AStatusDateTime = Instant.parse("2025-02-08T06:55:24Z");
+        PnEventMeta eventMetaRECRN010 = getEventMeta(STATUS_RECRN010, recrn010StatusDateTime);
+        PnEventMeta eventMetaRECRN005A = getEventMeta(STATUS_RECRN005A, recrn005AStatusDateTime);
+
+        when(eventMetaDAO.getDeliveryEventMeta(META_STRING.concat(requestId), META_STRING.concat(STATUS_RECRN010)))
+                .thenReturn(Mono.just(eventMetaRECRN010));
+        when(eventMetaDAO.getDeliveryEventMeta(META_STRING.concat(requestId), META_STRING.concat(STATUS_RECRN005A)))
+                .thenReturn(Mono.just(eventMetaRECRN005A));
+        when(metaDematCleaner.clean(requestId)).thenReturn(Mono.empty());
+        doNothing().when(sqsSender).pushSendEvent(Mockito.any());
+
+        PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
+                .requestId(requestId)
+                .statusCode(STATUS_RECRN005C)
+                .statusDateTime(OffsetDateTime.now())
+                .clientRequestTimeStamp(OffsetDateTime.now());
+
+        PnDeliveryRequest entity = new PnDeliveryRequest();
+        entity.setRequestId(requestId);
+        entity.setStatusDetail(STATUS_RECRN005C);
+        entity.setStatusCode(ExternalChannelCodeEnum.getStatusCode(paperRequest.getStatusCode()));
+
+        when(requestDeliveryDAO.updateConditionalOnFeedbackStatus(any(PnDeliveryRequest.class), anyBoolean()))
+                .thenReturn(Mono.just(entity));
+        ArgumentCaptor<SendEvent> capturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
+
+        // Act
+        Mono<Void> mono = this.handler.handleMessage(entity, paperRequest);
+        Assertions.assertDoesNotThrow(() -> mono.block());
+
+        // Assert
+        verify(sqsSender, times(2)).pushSendEvent(capturedSendEvent.capture());
+        assertNotNull(capturedSendEvent.getAllValues());
+        assertEquals(2, capturedSendEvent.getAllValues().size());
+        assertEquals(STATUS_PNRN012, capturedSendEvent.getAllValues().get(0).getStatusDetail());
+        assertEquals(StatusCodeEnum.OK, capturedSendEvent.getAllValues().get(0).getStatusCode());
+        assertEquals(STATUS_RECRN005C, capturedSendEvent.getAllValues().get(1).getStatusDetail());
+        assertEquals(StatusCodeEnum.PROGRESS, capturedSendEvent.getAllValues().get(1).getStatusCode());
+
+        verify(requestDeliveryDAO, times(1))
+                .updateConditionalOnFeedbackStatus(argThat(pnDeliveryRequest -> {
+                    assertThat(pnDeliveryRequest).isNotNull();
+                    assertThat(pnDeliveryRequest.getRefined()).isTrue();
+                    assertThat(pnDeliveryRequest.getFeedbackStatusCode()).isEqualTo(STATUS_PNRN012);
+                    return true;
+                }), eq(true));
+    }
+
+    // test utile per capire se ci sono problemi con la timezone
+    @Test
+    void  should_savePnEventError_when_RECRN005LessRECRN010_testTimezone(){
+        // Arrange
+        var recrn010StatusDateTime = Instant.parse("2025-02-10T09:02:10Z");
+        var recrn005AStatusDateTime = Instant.parse("2025-03-07T23:55:24Z");
+        PnEventMeta eventMetaRECRN010 = getEventMeta(STATUS_RECRN010, recrn010StatusDateTime);
+        PnEventMeta eventMetaRECRN005A = getEventMeta(STATUS_RECRN005A, recrn005AStatusDateTime);
 
         when(eventMetaDAO.getDeliveryEventMeta(META_STRING.concat(requestId), META_STRING.concat(STATUS_RECRN010)))
                 .thenReturn(Mono.just(eventMetaRECRN010));
