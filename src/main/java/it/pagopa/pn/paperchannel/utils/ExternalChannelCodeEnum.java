@@ -41,7 +41,7 @@ public enum ExternalChannelCodeEnum {
     RECRI001(Constants.PROGRESS),
     RECRI002(Constants.PROGRESS),
     RECRI003C(Constants.OK),
-    RECRI004C(Constants.OK),
+    RECRI004C(Constants.KO),
     RECRSI003C(Constants.OK),
     RECRSI004C(Constants.KO),
     RECRSI005(Constants.PROGRESS), // furto o smarrimento
