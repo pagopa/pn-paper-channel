@@ -1,4 +1,4 @@
-package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
+package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.RECRN00XC;
 
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
@@ -12,7 +12,6 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnDiscoveredAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnRequestError;
 import it.pagopa.pn.paperchannel.middleware.queue.consumer.MetaDematCleaner;
-import it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.RECRN00XC.RECRN005CMessageHandler;
 import it.pagopa.pn.paperchannel.model.RequestErrorCategoryEnum;
 import it.pagopa.pn.paperchannel.model.RequestErrorCauseEnum;
 import it.pagopa.pn.paperchannel.service.SqsSender;
