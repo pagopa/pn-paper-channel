@@ -79,9 +79,8 @@ public abstract class RECRN00XCAbstractMessageHandler extends SendToDeliveryPush
                                           PnDeliveryRequest entity,
                                           PaperProgressStatusEventDto paperRequest) {
         // PNRN012.statusDateTime = RECRN010.statusDateTime + 10gg (RefinementDuration)
-        var recrn010DateTime = truncateToStartOfDay(eventrecrn010.getStatusDateTime());
-        var pnrn012StatusDatetime = truncateToStartOfDay(
-                recrn010DateTime.plus(pnPaperChannelConfig.getRefinementDuration()));   // + Refinement
+        var recrn010Datetime = eventrecrn010.getStatusDateTime();
+        var pnrn012StatusDatetime =  addDurationToInstant(recrn010Datetime, pnPaperChannelConfig.getRefinementDuration());
 
         PNRN012Wrapper pnrn012Wrapper = PNRN012Wrapper
                 .buildPNRN012Wrapper(entity, paperRequest, pnrn012StatusDatetime);
@@ -122,17 +121,67 @@ public abstract class RECRN00XCAbstractMessageHandler extends SendToDeliveryPush
     }
 
     /**
-     * Returns the {@link Duration} between two instants, potentially truncated to the start of the day
-     * if {@code pnPaperChannelConfig.isEnableTruncatedDateForRefinementCheck()} is {@code true}.
+     * Calculates the temporal distance between two {@link Instant}s according to the
+     * “truncate‑to‑date” settings.
      *
-     * @param instant1 The first {@link Instant}.
-     * @param instant2 The second {@link Instant}.
-     * @return The time difference between the two instants, based on the configuration.
+     * <p><strong>Behaviour</strong></p>
+     * <ul>
+     *   <li><b>Date‑based mode</b> –&nbsp;If
+     *       {@link it.pagopa.pn.paperchannel.config.PnPaperChannelConfig#isEnableTruncatedDateForRefinementCheck()}
+     *       returns {@code true}, each instant is first converted to the civil date in the {@code Europe/Rome}
+     *       time‑zone (see {@link #toRomeDate(Instant)}).
+     *       The method then returns a {@link Duration} equal to the number of <em>calendar
+     *       days</em> between those two dates:
+     *       {@code Duration.ofDays(…)}. Sub‑day information and daylight‑saving gaps/overlaps are
+     *       deliberately ignored.</li>
+     *   <li><b>Time‑based mode</b> –&nbsp;If the flag is {@code false}, the method falls back to
+     *       {@link Duration#between( java.time.temporal.Temporal, java.time.temporal.Temporal)}
+     *       and preserves the full time‑of‑day component (hours, minutes, seconds, nanoseconds).</li>
+     * </ul>
+     *
+     * @param instant1 the starting instant (inclusive), must not be {@code null}
+     * @param instant2 the ending instant   (exclusive), must not be {@code null}
+     * @return a {@link Duration} representing either
+     *         <ul>
+     *           <li>the exact time‑based interval between the two instants, or</li>
+     *           <li>a whole‑days interval measured on the local calendar in Europe/Rome,</li>
+     *         </ul>
+     *         depending on the configuration flag
+     *
+     * @see #toRomeDate(Instant)
+     * @see Duration#between(java.time.temporal.Temporal, java.time.temporal.Temporal)
+     * @see it.pagopa.pn.paperchannel.config.PnPaperChannelConfig#isEnableTruncatedDateForRefinementCheck()
      */
-    protected Duration getDurationBetweenDates(Instant instant1, Instant instant2){
+    protected Duration getDurationBetweenDates(Instant instant1, Instant instant2) {
         return pnPaperChannelConfig.isEnableTruncatedDateForRefinementCheck()
-                ? Duration.between(truncateToStartOfDay(instant1), truncateToStartOfDay(instant2))
+                ? Duration.ofDays(
+                        Period.between(toRomeDate(instant1), toRomeDate(instant2)
+                        ).getDays())
                 : Duration.between(instant1, instant2);
+    }
+
+    /**
+     * Adds a {@link Duration} to an {@link Instant}, respecting the
+     * “truncate‑to‑date” setting.
+     *
+     * <p>
+     * If {@link it.pagopa.pn.paperchannel.config.PnPaperChannelConfig#isEnableTruncatedDateForRefinementCheck()}
+     * is {@code true}, the instant is first converted to its calendar date in {@code Europe/Rome};
+     * only the whole‑days part of the duration ({@link Duration#toDays()}) is applied,
+     * and the result is returned as the start‑of‑day {@link Instant}.
+     * Otherwise, the full duration is added in the usual way ({@link Instant#plus(java.time.temporal.TemporalAmount)}).
+     * </p>
+     *
+     * @param instant  the base moment
+     * @param duration the amount to add
+     * @return the adjusted {@link Instant}
+     */
+    protected Instant addDurationToInstant(Instant instant, Duration duration) {
+        return pnPaperChannelConfig.isEnableTruncatedDateForRefinementCheck()
+                ? romeDateToInstant(
+                        toRomeDate(instant)
+                            .plusDays(duration.toDays()))
+                : instant.plus(duration);
     }
 
     /**
@@ -166,12 +215,27 @@ public abstract class RECRN00XCAbstractMessageHandler extends SendToDeliveryPush
     }
 
     /**
-     * Truncates an {@link Instant} to the start of the day in UTC.
+     * Converts the supplied {@link Instant} to a calendar date in the
+     * {@code Europe/Rome} time zone.
      *
-     * @param instant The {@link Instant} to truncate.
-     * @return A new {@link Instant} set to the start of the day (00:00 UTC).
+     * @param instant the moment in time to convert; must not be {@code null}
+     * @return the corresponding {@link LocalDate} in Europe/Rome
      */
-    private Instant truncateToStartOfDay(Instant instant) {
-        return LocalDate.ofInstant(instant, ZoneId.of("UTC")).atStartOfDay().toInstant(ZoneOffset.UTC);
+    private LocalDate toRomeDate(Instant instant) {
+        return instant.atZone(ZoneId.of("Europe/Rome"))
+                .toLocalDate();
+    }
+
+    /**
+     * Converts the supplied {@link LocalDate} to an {@link Instant} that marks
+     * the start of that day (00:00) in the {@code Europe/Rome} time zone.
+     *
+     * @param date the calendar day to convert; must not be {@code null}
+     * @return the {@link Instant} at the start of the given day in Europe/Rome
+     */
+    private Instant romeDateToInstant(LocalDate date) {
+        ZoneId rome = ZoneId.of("Europe/Rome");
+        return date.atStartOfDay(rome)
+                .toInstant();
     }
 }
