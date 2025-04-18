@@ -69,7 +69,6 @@ class RECRN005CMessageHandlerTest {
         pnPaperChannelConfig.setRefinementDuration(Duration.of(DAYS_REFINEMENT, ChronoUnit.DAYS));
         pnPaperChannelConfig.setCompiutaGiacenzaArDuration(Duration.of(STORAGE_DURATION_AR_DAYS, ChronoUnit.DAYS));
         pnPaperChannelConfig.setEnableTruncatedDateForRefinementCheck(true);
-        pnPaperChannelConfig.setEnableOldFlowRECRN004C(false);
 
         handler = RECRN005CMessageHandler.builder()
                 .sqsSender(sqsSender)

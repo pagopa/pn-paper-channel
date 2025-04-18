@@ -4,10 +4,6 @@ import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.
 import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnRequestError;
-import it.pagopa.pn.paperchannel.model.FlowTypeEnum;
-import it.pagopa.pn.paperchannel.model.RequestErrorCategoryEnum;
-import it.pagopa.pn.paperchannel.model.RequestErrorCauseEnum;
 import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
@@ -18,8 +14,7 @@ import reactor.core.publisher.Mono;
  * Gestisce l'evento di tipo "Mancata consegna presso punto di giacenza" (RECRN004C).
  * <p>
  * - Se il tempo che intercorre tra RECRN010 (inesito) e RECRN004A è inferiore alla durata configurata
- *   (`RefinementDuration`), non viene generato un perfezionamento nel futuro: l'evento viene scartato e salvato
- *   come errore nella tabella `pn-PaperEventError` (non è consentito generare elementi di feedback con data futura).
+ *   (`RefinementDuration`), genera un evento di feedback RECRN004C.
  * - Se la differenza di tempo (considerando solo la data, senza orario) è maggiore o uguale a `RefinementDuration`,
  *   genera un evento PNRN012 con data calcolata come: data di RECRN010 (troncata) + `RefinementDuration`.
  */
@@ -39,39 +34,16 @@ public class RECRN004CMessageHandler extends RECRN00XCAbstractMessageHandler {
 
                     // Se il tempo che intercorre tra RECRN010 e RECRN004A è >= 10gg (troncando le ore)
                     // Allora genera PNRN012 con data RECRN0010.date + 10gg (troncando le ore)
-                    if(super.isDifferenceGreaterOrEqualToRefinementDuration
+                    if (super.isDifferenceGreaterOrEqualToRefinementDuration
                             (eventrecrn010.getStatusDateTime(), eventrecrn004a.getStatusDateTime())) {
                         return super.sendPNRN012Event(eventrecrn010, entity, paperRequest);
                     }
 
-                    // Vecchio flusso
-                    if(pnPaperChannelConfig.isEnableOldFlowRECRN004C()) {
-                        // Invia RECRN004C a pn-delivery-push
-                        return Mono.just(enrichEvent(paperRequest, eventrecrn004a))
-                                .flatMap(enrichedRequest ->
-                                        super.handleMessage(entity, enrichedRequest))
-                                .then(super.metaDematCleaner.clean(paperRequest.getRequestId()));
-                    }
-
-                    // Altrimenti memorizza l'evento su pn-PaperEventError
-                    return buildAndSavePnEventError(entity, paperRequest, eventrecrn010, eventrecrn004a).then();
+                    // Invia RECRN004C a pn-delivery-push
+                    return Mono.just(enrichEvent(paperRequest, eventrecrn004a))
+                            .flatMap(enrichedRequest ->
+                                    super.handleMessage(entity, enrichedRequest))
+                            .then(super.metaDematCleaner.clean(paperRequest.getRequestId()));
                 });
-    }
-
-    private Mono<PnRequestError> buildAndSavePnEventError(
-            PnDeliveryRequest entity,
-            PaperProgressStatusEventDto paperRequest,
-            PnEventMeta recrn010,
-            PnEventMeta recrn004a){
-        PnRequestError requestError = PnRequestError.builder()
-                .requestId(paperRequest.getRequestId())
-                .paId(entity.getRequestPaId())
-                .error(String.format("RECRN004A statusDateTime: %s, RECRN010 statusDateTime: %s",
-                        recrn004a.getStatusDateTime(), recrn010.getStatusDateTime()))
-                .flowThrow(FlowTypeEnum.RECRN004C.name())
-                .category(RequestErrorCategoryEnum.RENDICONTAZIONE_SCARTATA)
-                .cause(RequestErrorCauseEnum.REFINEMENT_DATE_ERROR)
-                .build();
-        return paperRequestErrorDAO.created(requestError);
     }
 }

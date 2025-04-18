@@ -280,7 +280,7 @@ class PaperPNRN012Test extends BaseTest.WithOutLocalStackTest {
             this.paperResultAsyncService.resultAsyncBackground(extChannelMessage, 15).block();
         });
 
-        verify(metaDematCleaner, never()).clean(REQUEST_ID);
+        verify(metaDematCleaner, times(1)).clean(REQUEST_ID);
     }
 
 

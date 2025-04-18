@@ -155,8 +155,7 @@ public abstract class RECRN00XCAbstractMessageHandler extends SendToDeliveryPush
     protected Duration getDurationBetweenDates(Instant instant1, Instant instant2) {
         return pnPaperChannelConfig.isEnableTruncatedDateForRefinementCheck()
                 ? Duration.ofDays(
-                        Period.between(toRomeDate(instant1), toRomeDate(instant2)
-                        ).getDays())
+                        Period.between(toRomeDate(instant1), toRomeDate(instant2)).getDays())
                 : Duration.between(instant1, instant2);
     }
 
@@ -179,8 +178,7 @@ public abstract class RECRN00XCAbstractMessageHandler extends SendToDeliveryPush
     protected Instant addDurationToInstant(Instant instant, Duration duration) {
         return pnPaperChannelConfig.isEnableTruncatedDateForRefinementCheck()
                 ? romeDateToInstant(
-                        toRomeDate(instant)
-                            .plusDays(duration.toDays()))
+                        toRomeDate(instant).plusDays(duration.toDays()))
                 : instant.plus(duration);
     }
 

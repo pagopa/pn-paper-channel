@@ -10,10 +10,7 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDiscoveredAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnRequestError;
 import it.pagopa.pn.paperchannel.middleware.queue.consumer.MetaDematCleaner;
-import it.pagopa.pn.paperchannel.model.RequestErrorCategoryEnum;
-import it.pagopa.pn.paperchannel.model.RequestErrorCauseEnum;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum;
 import lombok.extern.slf4j.Slf4j;
@@ -60,14 +57,12 @@ class RECRN004CMessageHandlerTest {
     private MetaDematCleaner metaDematCleaner;
 
     private RECRN004CMessageHandler handler;
-    private PnPaperChannelConfig pnPaperChannelConfig;
 
     @BeforeEach
     void setUp(){
-        pnPaperChannelConfig = new PnPaperChannelConfig();
+        PnPaperChannelConfig pnPaperChannelConfig = new PnPaperChannelConfig();
         pnPaperChannelConfig.setRefinementDuration(Duration.of(DAYS_REFINEMENT, ChronoUnit.DAYS));
         pnPaperChannelConfig.setEnableTruncatedDateForRefinementCheck(true);
-        pnPaperChannelConfig.setEnableOldFlowRECRN004C(false);
 
         handler = RECRN004CMessageHandler.builder()
                 .sqsSender(sqsSender)
@@ -138,56 +133,8 @@ class RECRN004CMessageHandlerTest {
     }
 
     @Test
-    void when_RECRN004ALessThanRECRN010by1Days_then_savePnEventError() {
+    void when_RECRN004ALessThenRECRN010Of10Days_then_pushOnQueue(){
         // Arrange
-        var now = Instant.now();
-        PnEventMeta eventMetaRECRN010 = getEventMeta(STATUS_RECRN010, now);
-        PnEventMeta eventMetaRECRN005A = getEventMeta(STATUS_RECRN004A, now.minus(1, ChronoUnit.DAYS));
-
-        when(eventMetaDAO.getDeliveryEventMeta(META_STRING.concat(requestId), META_STRING.concat(STATUS_RECRN010)))
-                .thenReturn(Mono.just(eventMetaRECRN010));
-        when(eventMetaDAO.getDeliveryEventMeta(META_STRING.concat(requestId), META_STRING.concat(STATUS_RECRN004A)))
-                .thenReturn(Mono.just(eventMetaRECRN005A));
-
-        PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
-                .requestId(requestId)
-                .statusCode(STATUS_RECRN004C)
-                .statusDateTime(OffsetDateTime.now())
-                .clientRequestTimeStamp(OffsetDateTime.now())
-                .deliveryFailureCause("M02");
-
-        PnDeliveryRequest entity = new PnDeliveryRequest();
-        entity.setRequestId(requestId);
-        entity.setStatusDetail(STATUS_RECRN004C);
-        entity.setStatusCode(ExternalChannelCodeEnum.getStatusCode(paperRequest.getStatusCode()));
-
-        when(paperRequestErrorDAO.created(any())).thenReturn(Mono.just(new PnRequestError()));
-
-        // Act
-        Mono<Void> mono = this.handler.handleMessage(entity, paperRequest);
-        Assertions.assertDoesNotThrow(() -> mono.block());
-
-        // Assert
-        verify(sqsSender, never()).pushSendEvent(any());
-        verify(requestDeliveryDAO, never()).updateConditionalOnFeedbackStatus(any(), anyBoolean());
-
-        // Verify requestError
-        verify(paperRequestErrorDAO, times(1)).created(argThat(error -> {
-            assertThat(error).isNotNull();
-            assertThat(error.getRequestId()).isEqualTo(requestId);
-            assertThat(error.getError()).contains("RECRN004A statusDateTime", "RECRN010 statusDateTime");
-            assertThat(error.getFlowThrow()).isEqualTo("RECRN004C");
-            assertThat(error.getCategory()).isEqualTo(RequestErrorCategoryEnum.RENDICONTAZIONE_SCARTATA.getValue());
-            assertThat(error.getCause()).startsWith(RequestErrorCauseEnum.REFINEMENT_DATE_ERROR.getValue());
-            return true;
-        }));
-    }
-
-    @Test
-    void when_RECRN004ALessThenRECRN010Of10Days_oldFlow_then_pushOnQueue(){
-        // Arrange
-        pnPaperChannelConfig.setEnableOldFlowRECRN004C(true); // Enable old flow
-
         var now = Instant.now();
         PnEventMeta eventMetaRECRN010 = getEventMeta(STATUS_RECRN010, now.minus(DAYS_REFINEMENT-1, ChronoUnit.DAYS));
         PnEventMeta eventMetaRECRN003A = getEventMeta(STATUS_RECRN004A, now);
