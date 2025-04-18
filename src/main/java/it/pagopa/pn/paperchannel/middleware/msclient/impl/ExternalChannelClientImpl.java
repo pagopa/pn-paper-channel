@@ -3,7 +3,7 @@ package it.pagopa.pn.paperchannel.middleware.msclient.impl;
 import it.pagopa.pn.commons.log.PnLogger;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.api.PaperMessagesApi;
-import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperEngageRequestAttachmentsDto;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperEngageRequestAttachmentsInnerDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperEngageRequestDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
@@ -77,7 +77,7 @@ public class ExternalChannelClientImpl extends BaseClient implements ExternalCha
         List<AttachmentInfo> mutableList = new ArrayList<>(attachments);
         Collections.sort(mutableList);
         mutableList.forEach(a -> {
-            PaperEngageRequestAttachmentsDto attachmentsDto = new PaperEngageRequestAttachmentsDto();
+            var attachmentsDto = new PaperEngageRequestAttachmentsInnerDto();
             attachmentsDto.setDocumentType(StringUtils.equals(a.getDocumentType(), PN_AAR) ? Const.AAR : Const.ATTO);
             attachmentsDto.setSha256(a.getSha256());
             attachmentsDto.setOrder(new BigDecimal(i.getAndIncrement()));

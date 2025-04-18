@@ -31,7 +31,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -60,26 +60,26 @@ class F24ServiceImplTest {
     @Autowired
     private F24Service f24Service;
 
-    @MockBean
+    @MockitoBean
     AddressDAO addressDAO;
 
-    @MockBean
+    @MockitoBean
     RequestDeliveryDAO requestDeliveryDAO;
-    @MockBean
+    @MockitoBean
     private PaperTenderService paperTenderService;
-    @MockBean
+    @MockitoBean
     private PnPaperChannelConfig pnPaperChannelConfig;
-    @MockBean
+    @MockitoBean
     private DateChargeCalculationModesUtils dateChargeCalculationModesUtils;
-    @MockBean
+    @MockitoBean
     private SqsSender sqsSender;
-    @MockBean
+    @MockitoBean
     private PrepareFlowStarter prepareFlowStarter;
-    @MockBean
+    @MockitoBean
     private F24Client f24Client;
-    @MockBean
+    @MockitoBean
     private SafeStorageService safeStorageService;
-    @MockBean
+    @MockitoBean
     private CostRoundingModeConfig costRoundingModeConfig;
 
 

@@ -7,7 +7,7 @@ import it.pagopa.pn.paperchannel.utils.AttachmentsConfigUtils;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 import java.time.Instant;
 
 import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.IN_PROCESSING;
