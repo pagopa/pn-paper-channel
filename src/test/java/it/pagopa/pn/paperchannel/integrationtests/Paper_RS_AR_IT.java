@@ -36,6 +36,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.LinkedList;
 import java.util.List;
 
+import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.RECRN010_STATUS_CODE;
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.RECRN011_STATUS_CODE;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -462,7 +463,7 @@ class Paper_RS_AR_IT extends BaseTest {
         //
         // demat PROGRESS -> send to delivery push
         ArgumentCaptor<SendEvent> capturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
-
+        generateEvent(RECRN010_STATUS_CODE, null, null, null, Instant.now().minus(20, ChronoUnit.DAYS));
         generateEvent(RECRN011_STATUS_CODE, null, null, null, Instant.now().minus(20, ChronoUnit.DAYS));
 
         verify(sqsSender, timeout(2000).times(1)).pushSendEvent(capturedSendEvent.capture());
@@ -496,6 +497,7 @@ class Paper_RS_AR_IT extends BaseTest {
         // demat PROGRESS -> send to delivery push
         ArgumentCaptor<SendEvent> capturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
+        generateEvent(RECRN010_STATUS_CODE, null, null, null, Instant.now().minus(20, ChronoUnit.DAYS));
         generateEvent(RECRN011_STATUS_CODE, null, null, null, Instant.now().minus(20, ChronoUnit.DAYS));
 
         verify(sqsSender, timeout(2000).times(1)).pushSendEvent(capturedSendEvent.capture());
@@ -530,6 +532,7 @@ class Paper_RS_AR_IT extends BaseTest {
         ArgumentCaptor<SendEvent> capturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
         var now = Instant.now();
 
+        generateEvent(RECRN010_STATUS_CODE, null, null, null, now.minus(30, ChronoUnit.DAYS));
         generateEvent(RECRN011_STATUS_CODE, null, null, null, now.minus(30, ChronoUnit.DAYS));
 
         verify(sqsSender, timeout(2000).times(1)).pushSendEvent(capturedSendEvent.capture());

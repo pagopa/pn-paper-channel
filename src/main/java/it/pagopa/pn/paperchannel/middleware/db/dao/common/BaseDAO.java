@@ -64,22 +64,14 @@ public abstract class BaseDAO<T> {
     }
 
     protected CompletableFuture<T> put(T entity){
-        log.logPuttingDynamoDBEntity(dynamoTable.tableName(), entity);
         PutItemEnhancedRequest<T> putRequest = PutItemEnhancedRequest.builder(tClass)
                 .item(encode(entity))
                 .build();
-        return dynamoTable.putItem(putRequest).thenApply(x -> {
-            log.logPutDoneDynamoDBEntity(dynamoTable.tableName());
-            return entity;
-        });
+        return dynamoTable.putItem(putRequest).thenApply(x -> entity);
     }
 
     protected CompletableFuture<T> put(PutItemEnhancedRequest<T> putItemEnhancedRequest){
-        log.logPuttingDynamoDBEntity(dynamoTable.tableName(), putItemEnhancedRequest.item());
-        return dynamoTable.putItem(putItemEnhancedRequest).thenApply(x -> {
-            log.logPutDoneDynamoDBEntity(dynamoTable.tableName());
-            return putItemEnhancedRequest.item();
-        });
+        return dynamoTable.putItem(putItemEnhancedRequest).thenApply(x -> putItemEnhancedRequest.item());
     }
 
     protected CompletableFuture<T> delete(String partitionKey, String sortKey){
@@ -87,14 +79,10 @@ public abstract class BaseDAO<T> {
         if (!StringUtils.isBlank(sortKey)){
             keyBuilder.sortValue(sortKey);
         }
-        return dynamoTable.deleteItem(keyBuilder.build()).thenApply(t -> {
-            log.logDeleteDynamoDBEntity(dynamoTable.tableName(), keyBuild(partitionKey, sortKey), t);
-            return t;
-        });
+        return dynamoTable.deleteItem(keyBuilder.build());
     }
 
     protected CompletableFuture<Void> putWithTransact(TransactWriteItemsEnhancedRequest transactRequest){
-        transactRequest.transactWriteItems().forEach(log::logTransactionDynamoDBEntity);
         Map<String, String> copyOfContextMap = MDCUtils.retrieveMDCContextMap();
         return this.dynamoDbEnhancedAsyncClient.transactWriteItems(transactRequest)
                 .thenApply(queryResponse -> MDCUtils.enrichWithMDC(queryResponse, copyOfContextMap));
@@ -112,10 +100,7 @@ public abstract class BaseDAO<T> {
     }
 
     protected CompletableFuture<T> update(UpdateItemEnhancedRequest<T> updateItemEnhancedRequest){
-        return dynamoTable.updateItem(updateItemEnhancedRequest).thenApply(t -> {
-            log.logUpdateDynamoDBEntity(dynamoTable.tableName(), t);
-            return t;
-        });
+        return dynamoTable.updateItem(updateItemEnhancedRequest);
     }
 
     protected CompletableFuture<T> get(String partitionKey, String sortKey){
@@ -133,10 +118,7 @@ public abstract class BaseDAO<T> {
                 .consistentRead(consistentRead)
                 .build();
 
-        return dynamoTable.getItem(getItemEnhancedRequest).thenApply(data -> {
-            log.logGetDynamoDBEntity(dynamoTable.tableName(), keyBuild(partitionKey, sortKey), data);
-            return decode(data);
-        });
+        return dynamoTable.getItem(getItemEnhancedRequest).thenApply(this::decode);
     }
 
     protected Flux<T> getBySecondaryIndex(String index, String partitionKey, String sortKey){
