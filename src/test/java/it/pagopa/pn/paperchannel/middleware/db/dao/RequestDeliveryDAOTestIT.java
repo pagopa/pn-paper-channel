@@ -230,6 +230,31 @@ class RequestDeliveryDAOTestIT extends BaseTest {
     }
 
     @Test
+    void updateDataWithoutGetTest() {
+
+        // Given
+        PnDeliveryRequest deliveryRequest = this.buildDeliveryRequest("updateWithoutGetTestId");
+        deliveryRequest.setStatusCode("INITIAL");
+        this.requestDeliveryDAO.createWithAddress(deliveryRequest, null, null).block();
+
+        // Modifica i dati da aggiornare
+        PnDeliveryRequest updatedRequest = new PnDeliveryRequest();
+        updatedRequest.setRequestId("updateWithoutGetTestId");
+        updatedRequest.setStatusCode("UPDATED");
+
+        // When
+        Mockito.when(dataVaultEncryption.encode(Mockito.any(), Mockito.any())).thenReturn("returnOk");
+        Mockito.when(dataVaultEncryption.decode(Mockito.any())).thenReturn("returnOk");
+
+        this.requestDeliveryDAO.updateDataWithoutGet(updatedRequest, true).block();
+
+        // Then
+        PnDeliveryRequest result = this.requestDeliveryDAO.getByRequestId("updateWithoutGetTestId").block();
+        assertNotNull(result);
+        assertEquals("UPDATED", result.getStatusCode());
+    }
+
+    @Test
     void updateUpdateApplyRasterizationStartedValueNull(){
         // Given
         PnDeliveryRequest request = new PnDeliveryRequest();
