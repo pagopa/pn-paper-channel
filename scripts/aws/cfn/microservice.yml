@@ -919,6 +919,9 @@ Resources:
                 - pipes.amazonaws.com
             Action:
               - sts:AssumeRole
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref "AWS::AccountId"
       Policies:
         - PolicyName: !Sub ${ProjectName}-paper-channel-to-delayer-source-policy
           PolicyDocument:
