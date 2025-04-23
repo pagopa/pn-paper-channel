@@ -960,7 +960,6 @@ Resources:
           DetailType: "PreparePhaseOneOutcomeEvent"
         InputTemplate: !Sub |
           {
-            "source": "${PaperChannelToDelayerQueueName}",
             "body": <$.body>
           }
       Target: !Sub arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/${ProjectName}-CoreEventBus
@@ -1191,7 +1190,7 @@ Resources:
               }       
         - Id: !Sub '${ProjectName}-DelayerToPaperChannelQueue'
           Arn: !Ref DelayerToPaperChannelQueueARN
-          InputPath: $.detail
+          InputPath: $.detail.body
           DeadLetterConfig:
             Arn: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:pn-CoreEventBus-DLQ
 
