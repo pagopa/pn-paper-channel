@@ -631,7 +631,7 @@ Parameters:
     Type: String
     Description: Events from pn-delayer TO pn-paper-channel queue ARN
 
-  DelayerToPaperChannelQueueURL:
+  DelayerToPaperChannelQueueQueueURL:
     Type: String
     Description: Events from pn-delayer TO pn-paper-channel queue URL
 
@@ -1229,7 +1229,7 @@ Resources:
     Type: AWS::SQS::QueuePolicy
     Properties:
       Queues:
-        - !Ref DelayerToPaperChannelQueueURL
+        - !Ref DelayerToPaperChannelQueueQueueURL
       PolicyDocument:
         Statement:
           - Sid: "SendEventsToDLQ"
