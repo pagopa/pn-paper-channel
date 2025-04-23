@@ -958,8 +958,8 @@ Resources:
       TargetParameters:
         InputTemplate: !Sub |
           {
-            "source": "${PaperChannelToDelayerQueueName}"
-            "detail-type": "PreparePhaseOneOutcomeEvent"
+            "source": "${PaperChannelToDelayerQueueName}",
+            "detail-type": "PreparePhaseOneOutcomeEvent",
             "detail": {
               "requestId": <$.body.requestId>,
               "iun": <$.body.iun>,
