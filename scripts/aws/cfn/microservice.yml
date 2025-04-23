@@ -1204,6 +1204,9 @@ Resources:
             Effect: Allow
             Principal:
               Service: events.amazonaws.com
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref "AWS::AccountId"
         Version: "2012-10-17"
       Policies:
         - PolicyName: !Sub ${ProjectName}-paper-channel-eventBusRuleQueuePolicy
