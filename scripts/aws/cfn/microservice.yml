@@ -1233,6 +1233,9 @@ Resources:
             Principal: 
               Service: 
                 - "events.amazonaws.com"
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref "AWS::AccountId"
             Action: 
               - "SQS:SendMessage"
             Resource:
