@@ -956,15 +956,12 @@ Resources:
         SqsQueueParameters:
           BatchSize: 10
       TargetParameters:
+        EventBridgeEventBusParameters:
+          DetailType: "PreparePhaseOneOutcomeEvent"
         InputTemplate: !Sub |
           {
             "source": "${PaperChannelToDelayerQueueName}",
-            "detail-type": "PreparePhaseOneOutcomeEvent",
-            "detail": {
-              "requestId": <$.body.requestId>,
-              "iun": <$.body.iun>,
-              "recipientNormalizedAddress": <$.body.recipientNormalizedAddress>
-            }
+            "body": <$.body>
           }
       Target: !Sub arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/${ProjectName}-CoreEventBus
       #Target: !Ref DelayerToPaperChannelQueueARN
