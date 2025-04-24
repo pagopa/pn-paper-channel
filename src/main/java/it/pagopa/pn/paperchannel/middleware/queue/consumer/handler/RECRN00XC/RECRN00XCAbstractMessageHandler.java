@@ -193,6 +193,8 @@ public abstract class RECRN00XCAbstractMessageHandler extends SendToDeliveryPush
     protected boolean isDifferenceGreaterOrEqualToRefinementDuration (
             Instant recrn010Timestamp,
             Instant recrn00xATimestamp) {
+        log.debug("recrn010Timestamp={}, recrn00xATimestamp={}, refinementDuration={}",
+                recrn010Timestamp, recrn00xATimestamp, pnPaperChannelConfig.getRefinementDuration());
         return getDurationBetweenDates(recrn010Timestamp, recrn00xATimestamp)
                 .compareTo(pnPaperChannelConfig.getRefinementDuration()) >= 0;
     }
@@ -208,6 +210,8 @@ public abstract class RECRN00XCAbstractMessageHandler extends SendToDeliveryPush
     protected boolean isDifferenceGreaterOrEqualToStockDuration (
             Instant recrn010Timestamp,
             Instant recrn005ATimestamp) {
+        log.debug("recrn010Timestamp={}, recrn005ATimestamp={}, refinementDuration={}",
+                recrn010Timestamp, recrn005ATimestamp, pnPaperChannelConfig.getCompiutaGiacenzaArDuration());
         return getDurationBetweenDates(recrn010Timestamp, recrn005ATimestamp)
                 .compareTo(pnPaperChannelConfig.getCompiutaGiacenzaArDuration()) >= 0;
     }

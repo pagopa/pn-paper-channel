@@ -26,9 +26,9 @@ public class RECRN003CMessageHandler extends RECRN00XCAbstractMessageHandler {
         log.info("{} handling statusCode={}", RECRN003CMessageHandler.class.getSimpleName(), paperRequest.getStatusCode());
 
         return super.checkIfDuplicateEvent(entity, paperRequest)
-                .flatMap(recrn011AndRecrn00Xa -> {
-                    PnEventMeta eventrecrn010 = recrn011AndRecrn00Xa.getT1();   // Inesito
-                    PnEventMeta eventrecrn003a = recrn011AndRecrn00Xa.getT2();  // Consegnato presso Punti di Giacenza
+                .flatMap(recrn010AndRecrn00Xa -> {
+                    PnEventMeta eventrecrn010 = recrn010AndRecrn00Xa.getT1();   // Inesito
+                    PnEventMeta eventrecrn003a = recrn010AndRecrn00Xa.getT2();  // Consegnato presso Punti di Giacenza
 
                     // Se il tempo che intercorre tra RECRN0010 e RECRN003A è >= 10gg (troncando le ore)
                     // Allora genera PNRN012 con data RECRN0010.date + 10gg (troncando le ore)
