@@ -71,10 +71,10 @@ class RECRN003CMessageHandlerTest {
     }
 
     @Test
-    void when_RECRN003AGreaterThenRECRN010Of10Days_then_pushPNRN012Status(){
+    void when_RECRN003AGreaterThanRECRN010Of10Days_then_pushPNRN012Status(){
         // Arrange
         var now = Instant.now();
-        PnEventMeta eventMetaRECRN010 = getEventMeta(STATUS_RECRN010, now.minus(DAYS_REFINEMENT, ChronoUnit.DAYS));
+        PnEventMeta eventMetaRECRN010 = getEventMeta(STATUS_RECRN010, now.minus(DAYS_REFINEMENT+1, ChronoUnit.DAYS));
         PnEventMeta eventMetaRECRN003A = getEventMeta(STATUS_RECRN003A, now);
 
         when(eventMetaDAO.getDeliveryEventMeta(META_STRING.concat(requestId), META_STRING.concat(STATUS_RECRN010)))
@@ -129,10 +129,10 @@ class RECRN003CMessageHandlerTest {
     }
 
     @Test
-    void when_RECRN004ALessThenRECRN010Of10Days_then_pushOnQueue(){
+    void when_RECRN004ALessThanOrEqualToRECRN010Of10Days_then_pushOnQueue(){
         // Arrange
         var now = Instant.now();
-        PnEventMeta eventMetaRECRN010 = getEventMeta(STATUS_RECRN010, now.minus(DAYS_REFINEMENT-1, ChronoUnit.DAYS));
+        PnEventMeta eventMetaRECRN010 = getEventMeta(STATUS_RECRN010, now.minus(DAYS_REFINEMENT, ChronoUnit.DAYS));
         PnEventMeta eventMetaRECRN003A = getEventMeta(STATUS_RECRN003A, now);
 
         when(eventMetaDAO.getDeliveryEventMeta(META_STRING.concat(requestId), META_STRING.concat(STATUS_RECRN010)))

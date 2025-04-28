@@ -12,9 +12,9 @@ import reactor.core.publisher.Mono;
  * <p>
  * Gestisce l'evento di tipo "Consegna presso punto di giacenza" (RECRN003C).
  * <p>
- * - Se il tempo che intercorre tra RECRN010 (inesito) e RECRN003A è inferiore alla durata configurata
+ * - Se il tempo che intercorre tra RECRN010 (inesito) e RECRN003A è inferiore o uguale alla durata configurata
  *   (`RefinementDuration`), genera un evento di feedback RECRN003C.
- * - Se la differenza di tempo (considerando solo la data, senza orario) è maggiore o uguale a `RefinementDuration`,
+ * - Se la differenza di tempo (considerando solo la data, senza orario) è maggiore a `RefinementDuration`,
  *   genera un evento PNRN012 con data calcolata come: data di RECRN010 (troncata) + `RefinementDuration`.
  */
 @Slf4j
@@ -30,9 +30,9 @@ public class RECRN003CMessageHandler extends RECRN00XCAbstractMessageHandler {
                     PnEventMeta eventrecrn010 = recrn010AndRecrn00Xa.getT1();   // Inesito
                     PnEventMeta eventrecrn003a = recrn010AndRecrn00Xa.getT2();  // Consegnato presso Punti di Giacenza
 
-                    // Se il tempo che intercorre tra RECRN0010 e RECRN003A è >= 10gg (troncando le ore)
+                    // Se il tempo che intercorre tra RECRN0010 e RECRN003A è > 10gg (troncando le ore)
                     // Allora genera PNRN012 con data RECRN0010.date + 10gg (troncando le ore)
-                    if (super.isDifferenceGreaterOrEqualToRefinementDuration(
+                    if (super.isDifferenceGreaterRefinementDuration(
                             eventrecrn010.getStatusDateTime(), eventrecrn003a.getStatusDateTime())) {
                         return super.sendPNRN012Event(eventrecrn010, entity, paperRequest);
                     }

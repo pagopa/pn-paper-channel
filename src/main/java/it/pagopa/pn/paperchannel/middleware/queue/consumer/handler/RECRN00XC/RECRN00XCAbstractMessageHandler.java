@@ -184,19 +184,19 @@ public abstract class RECRN00XCAbstractMessageHandler extends SendToDeliveryPush
 
     /**
      * Checks whether the time difference between RECRN010 and RECRN00xA is
-     * greater than or equal to {@link it.pagopa.pn.paperchannel.config.PnPaperChannelConfig#getRefinementDuration()}.
+     * greater than {@link it.pagopa.pn.paperchannel.config.PnPaperChannelConfig#getRefinementDuration()}.
      *
      * @param recrn010Timestamp  The {@link Instant} of RECRN010.
      * @param recrn00xATimestamp The {@link Instant} of RECRN00xA (e.g., RECRN003A).
-     * @return {@code true} if the difference is &ge; the configured refinement duration; otherwise, {@code false}.
+     * @return {@code true} if the difference is > the configured refinement duration; otherwise, {@code false}.
      */
-    protected boolean isDifferenceGreaterOrEqualToRefinementDuration (
+    protected boolean isDifferenceGreaterRefinementDuration (
             Instant recrn010Timestamp,
             Instant recrn00xATimestamp) {
         log.debug("recrn010Timestamp={}, recrn00xATimestamp={}, refinementDuration={}",
                 recrn010Timestamp, recrn00xATimestamp, pnPaperChannelConfig.getRefinementDuration());
         return getDurationBetweenDates(recrn010Timestamp, recrn00xATimestamp)
-                .compareTo(pnPaperChannelConfig.getRefinementDuration()) >= 0;
+                .compareTo(pnPaperChannelConfig.getRefinementDuration()) > 0;
     }
 
     /**
