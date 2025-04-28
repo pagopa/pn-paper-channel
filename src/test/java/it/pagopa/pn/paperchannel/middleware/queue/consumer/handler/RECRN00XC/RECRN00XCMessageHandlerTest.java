@@ -92,7 +92,7 @@ class RECRN00XCAbstractMessageHandlerTest {
     }
 
     @Test
-    void testIsDifferenceGreaterOrEqualToRefinementDuration() {
+    void testIsDifferenceGreaterRefinementDuration() {
         // Arrange
         Instant now = Instant.now();
         Instant nineDaysAfter = now.plus(Duration.ofDays(9));
@@ -102,26 +102,26 @@ class RECRN00XCAbstractMessageHandlerTest {
         // Act
         Boolean result9 = ReflectionTestUtils.invokeMethod(
                 handler,
-                "isDifferenceGreaterOrEqualToRefinementDuration",
+                "isDifferenceGreaterRefinementDuration",
                 now,
                 nineDaysAfter
         );
         Boolean result10 = ReflectionTestUtils.invokeMethod(
                 handler,
-                "isDifferenceGreaterOrEqualToRefinementDuration",
+                "isDifferenceGreaterRefinementDuration",
                 now,
                 tenDaysAfter
         );
         Boolean result11 = ReflectionTestUtils.invokeMethod(
                 handler,
-                "isDifferenceGreaterOrEqualToRefinementDuration",
+                "isDifferenceGreaterRefinementDuration",
                 now,
                 elevenDaysAfter
         );
 
         // Assert
         assertThat(result9).isFalse();
-        assertThat(result10).isTrue();
+        assertThat(result10).isFalse();
         assertThat(result11).isTrue();
     }
 
