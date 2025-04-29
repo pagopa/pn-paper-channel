@@ -4,8 +4,9 @@ import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.middleware.db.dao.*;
 import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
 import it.pagopa.pn.paperchannel.middleware.queue.consumer.MetaDematCleaner;
+import it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.RECRN00XC.RECRN004CMessageHandler;
 import it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.RECRN00XC.RECRN005CMessageHandler;
-import it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.RECRN00XC.RECRN00XCMessageHandler;
+import it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.RECRN00XC.RECRN003CMessageHandler;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum;
 import it.pagopa.pn.paperchannel.utils.SendProgressMetaConfig;
@@ -213,13 +214,23 @@ public class HandlersFactory {
                 .pnEventErrorDAO(pnEventErrorDAO)
                 .build();
 
-        RECRN00XCMessageHandler recrn00xcMessageHandler = RECRN00XCMessageHandler.builder()
+        RECRN003CMessageHandler recrn003cMessageHandler = RECRN003CMessageHandler.builder()
                 .sqsSender(sqsSender)
                 .eventMetaDAO(eventMetaDAO)
                 .requestDeliveryDAO(requestDeliveryDAO)
                 .metaDematCleaner(metaDematCleaner)
                 .pnPaperChannelConfig(pnPaperChannelConfig)
                 .pnEventErrorDAO(pnEventErrorDAO)
+                .build();
+
+        RECRN004CMessageHandler recrn004cMessageHandler = RECRN004CMessageHandler.builder()
+                .sqsSender(sqsSender)
+                .eventMetaDAO(eventMetaDAO)
+                .requestDeliveryDAO(requestDeliveryDAO)
+                .metaDematCleaner(metaDematCleaner)
+                .pnPaperChannelConfig(pnPaperChannelConfig)
+                .pnEventErrorDAO(pnEventErrorDAO)
+                .paperRequestErrorDAO(paperRequestErrorDAO)
                 .build();
 
         RECRN005CMessageHandler recrn005cMessageHandler = RECRN005CMessageHandler.builder()
@@ -303,8 +314,8 @@ public class HandlersFactory {
 
         map.put(RECRN011.name(), recrn011cMessageHandler);
 
-        map.put(RECRN003C.name(), recrn00xcMessageHandler);
-        map.put(RECRN004C.name(), recrn00xcMessageHandler);
+        map.put(RECRN003C.name(), recrn003cMessageHandler);
+        map.put(RECRN004C.name(), recrn004cMessageHandler);
         map.put(RECRN005C.name(), recrn005cMessageHandler);
         map.put(PNAG012.name(), pnag012MessageHandler);
 
@@ -385,6 +396,7 @@ public class HandlersFactory {
         map.put(ExternalChannelCodeEnum.RECRS002D.name(), handler);
         map.put(ExternalChannelCodeEnum.RECRS004A.name(), handler);
         map.put(ExternalChannelCodeEnum.RECRS005A.name(), handler);
+        map.put(ExternalChannelCodeEnum.RECRN010.name(), handler);
         map.put(ExternalChannelCodeEnum.RECRN001A.name(), handler);
         map.put(ExternalChannelCodeEnum.RECRN002A.name(), handler);
         map.put(ExternalChannelCodeEnum.RECRN002D.name(), handler);
@@ -456,7 +468,6 @@ public class HandlersFactory {
         // send "inesito" events to delivery push as progresses
         map.put(ExternalChannelCodeEnum.RECAG010.name(), handler);
         map.put(ExternalChannelCodeEnum.RECRS010.name(), handler);
-        map.put(ExternalChannelCodeEnum.RECRN010.name(), handler);
     }
 
     private void addAggregatorStatusCodes(ConcurrentHashMap<String, MessageHandler> map, AggregatorMessageHandler handler) {
