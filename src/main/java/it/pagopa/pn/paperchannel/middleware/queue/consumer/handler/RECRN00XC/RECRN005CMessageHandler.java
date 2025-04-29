@@ -12,14 +12,15 @@ import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
-import java.time.Duration;
-import java.time.Instant;
-
 /**
  * RECRN005C message handler.
- * This class handles the storage duration verification between RECRN011 (start of storage) and RECRN005A (storage completion) events.
- * If the duration is equal to or greater than 30 days, it generates a PNRN012 event.
- * Otherwise, it creates and saves an error record.
+ * <p>
+ * Gestisce l'evento di tipo "Compiuta giacenza" (RECRN005C).
+ * <p>
+ * - Se il tempo che intercorre tra RECRN010 (inesito) e RECRN005A è maggiore o uguale a 30 giorni
+ *   (durata configurata tramite `CompiutaGiacenzaArDuration`), considerando solo la data senza l'orario,
+ *   viene generato un evento PNRN012 con data: data di RECRN010 (troncata) + `RefinementDuration`.
+ * - In caso contrario, l'evento viene scartato e memorizzato nella tabella `pn-PaperEventError`
  */
 @Slf4j
 @SuperBuilder
@@ -34,37 +35,32 @@ public class RECRN005CMessageHandler extends RECRN00XCAbstractMessageHandler {
                 pnPaperChannelConfig.getCompiutaGiacenzaArDuration());
 
         return super.checkIfDuplicateEvent(entity, paperRequest)
-                .flatMap(recrn011AndRecrn005a -> {
-                    PnEventMeta eventRecrn011 = recrn011AndRecrn005a.getT1(); // Inizio giacenza
-                    PnEventMeta eventRecrn005A = recrn011AndRecrn005a.getT2(); // Pre-esito fine giacenza
+                .flatMap(recrn010AndRecrn005a -> {
+                    PnEventMeta eventRecrn010 = recrn010AndRecrn005a.getT1(); // Inesito
+                    PnEventMeta eventRecrn005a = recrn010AndRecrn005a.getT2(); // Pre-esito fine giacenza
 
-                    // Se il tempo che intercorre tra RECRN0011 e RECRN005A è >= 30gg
-                    // Allora genera PNRN012 con data RECRN0011.date + 10gg
-                    if (isAValidStockInterval(eventRecrn011.getStatusDateTime(), eventRecrn005A.getStatusDateTime())) {
-                        return super.sendPNRN012Event(eventRecrn011, entity, paperRequest);
+                    // Se il tempo che intercorre tra RECRN0010 e RECRN005A è >= 30gg (troncando le ore)
+                    // Allora genera PNRN012 con data RECRN0010.date + 10gg (troncando le ore)
+                    if (super.isDifferenceGreaterOrEqualToStockDuration
+                            (eventRecrn010.getStatusDateTime(), eventRecrn005a.getStatusDateTime())) {
+                        return super.sendPNRN012Event(eventRecrn010, entity, paperRequest);
                     }
 
-                    // Altrimenti memorizza l'evento su PnPaperError
-                    return buildAndSavePnEventError(entity, paperRequest, eventRecrn011, eventRecrn005A).then();
+                    // Altrimenti memorizza l'evento su pn-PaperEventError
+                    return buildAndSavePnEventError(entity, paperRequest, eventRecrn010, eventRecrn005a).then();
                 });
-    }
-
-    private boolean isAValidStockInterval(Instant recrn011, Instant recrn005A){
-
-        return Duration.between(recrn011, recrn005A)
-                .compareTo(this.pnPaperChannelConfig.getCompiutaGiacenzaArDuration()) >= 0;
     }
 
     private Mono<PnRequestError> buildAndSavePnEventError(
             PnDeliveryRequest entity,
             PaperProgressStatusEventDto paperRequest,
-            PnEventMeta recrn011,
-            PnEventMeta recrn005A){
+            PnEventMeta recrn010,
+            PnEventMeta recrn005a){
         PnRequestError requestError = PnRequestError.builder()
                 .requestId(paperRequest.getRequestId())
                 .paId(entity.getRequestPaId())
-                .error(String.format("RECRN005A statusDateTime: %s, RECRN011 statusDateTime: %s",
-                        recrn005A.getStatusDateTime(), recrn011.getStatusDateTime()))
+                .error(String.format("RECRN005A statusDateTime: %s, RECRN010 statusDateTime: %s",
+                        recrn005a.getStatusDateTime(), recrn010.getStatusDateTime()))
                 .flowThrow(FlowTypeEnum.RECRN005C.name()) // RECRN005
                 .category(RequestErrorCategoryEnum.RENDICONTAZIONE_SCARTATA)
                 .cause(RequestErrorCauseEnum.GIACENZA_DATE_ERROR)
