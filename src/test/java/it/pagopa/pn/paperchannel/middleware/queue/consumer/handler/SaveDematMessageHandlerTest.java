@@ -15,6 +15,8 @@ import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.Const;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.MDC;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -88,8 +90,9 @@ class SaveDematMessageHandlerTest {
         verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
     }
 
-    @Test
-    void handleMessageWithDocumentTypeCADTest() {
+    @ParameterizedTest
+    @ValueSource(strings = {"CAD", "ARCAD"})
+    void handleMessageWithDocumentTypeCADARCADTest(String documentType) {
         OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
         PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
                 .requestId("requestId")
@@ -97,7 +100,7 @@ class SaveDematMessageHandlerTest {
                 .statusDateTime(instant)
                 .clientRequestTimeStamp(instant)
                 .attachments(List.of(new AttachmentDetailsDto()
-                        .documentType("CAD")
+                        .documentType(documentType)
                         .date(instant)
                         .uri("https://safestorage.it"))
                 );
@@ -108,7 +111,7 @@ class SaveDematMessageHandlerTest {
         entity.setStatusDetail(StatusCodeEnum.PROGRESS.getValue());
 
         PnEventDemat pnEventDemat = handler.buildPnEventDemat(paperRequest, paperRequest.getAttachments().get(0));
-        SendEvent sendEventNotExpected = SendEventMapper.createSendEventMessage(entity, paperRequest);
+        SendEvent sendEventExpected = SendEventMapper.createSendEventMessage(entity, paperRequest);
 
         when(mockDao.createOrUpdate(pnEventDemat)).thenReturn(Mono.just(pnEventDemat));
 
@@ -116,8 +119,8 @@ class SaveDematMessageHandlerTest {
 
         //mi aspetto che salvi l'evento
         verify(mockDao, times(1)).createOrUpdate(pnEventDemat);
-        //mi aspetto che non mandi il messaggio a delivery-push
-        verify(mockSqsSender, times(0)).pushSendEvent(sendEventNotExpected);
+        //mi aspetto che mandi il messaggio a delivery-push
+        verify(mockSqsSender, times(1)).pushSendEvent(sendEventExpected);
 
         // not call because it is a PROGRESS event
         verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
@@ -163,8 +166,8 @@ class SaveDematMessageHandlerTest {
         verify(mockDao, times(1)).createOrUpdate(pnEventDematCAD);
         //mi aspetto che salvi l'evento Plico
         verify(mockDao, times(1)).createOrUpdate(pnEventDemat23L);
-        //mi aspetto che NON mandi il messaggio a delivery-push per l'evento CAD
-        verify(mockSqsSender, times(0)).pushSendEvent(sendEventCAD);
+        //mi aspetto che mandi il messaggio a delivery-push per l'evento CAD
+        verify(mockSqsSender, times(1)).pushSendEvent(sendEventCAD);
         //mi aspetto che mandi il messaggio a delivery-push per l'evento 23L
         verify(mockSqsSender, times(1)).pushSendEvent(sendEvent23L);
         // not call because it is a PROGRESS event

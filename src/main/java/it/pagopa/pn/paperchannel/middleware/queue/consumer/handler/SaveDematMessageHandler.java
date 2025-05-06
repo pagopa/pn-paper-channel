@@ -31,7 +31,9 @@ public class SaveDematMessageHandler extends SendToDeliveryPushHandler {
             "Plico",
             "AR",
             "Indagine",
-            "23L"
+            "23L",
+            "CAD",
+            "ARCAD"
     );
 
     protected final EventDematDAO eventDematDAO;
