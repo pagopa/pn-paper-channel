@@ -61,7 +61,7 @@ class CostMapperTest {
     private CostDTO getContractDto(){
         CostDTO contractDto = new CostDTO();
         //contractDto.setCap("00061");
-        contractDto.setZone(InternationalZoneEnum._1);
+        contractDto.setZone(InternationalZoneEnum.ZONE_1);
         contractDto.setPrice(BigDecimal.valueOf(0.1F));
         contractDto.setPriceAdditional(BigDecimal.valueOf(0.2F));
         contractDto.setProductType(ProductTypeEnumDto.AR);

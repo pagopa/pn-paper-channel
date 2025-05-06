@@ -26,7 +26,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
@@ -44,16 +44,16 @@ class Paper_890IT extends BaseTest {
     @Autowired
     private PaperResultAsyncService paperResultAsyncService;
 
-    @MockBean
+    @MockitoBean
     private SqsSender sqsSender;
 
-    @MockBean
+    @MockitoBean
     private RequestDeliveryDAO requestDeliveryDAO;
 
-    @MockBean
+    @MockitoBean
     private ExternalChannelClient mockExtChannel;
 
-    @MockBean
+    @MockitoBean
     private AddressDAO mockAddressDAO;
 
 

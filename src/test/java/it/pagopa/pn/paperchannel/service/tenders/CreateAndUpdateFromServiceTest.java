@@ -420,7 +420,7 @@ class CreateAndUpdateFromServiceTest {
     @DisplayName("whenCreateCostWithoutDriverThenThrowError")
     void createCostWithoutDriver(){
         CostDTO dto = getCostDTO();
-        dto.setZone(InternationalZoneEnum._1);
+        dto.setZone(InternationalZoneEnum.ZONE_1);
 
         Mockito.when(this.deliveryDriverDAO.getDeliveryDriver(Mockito.any(), Mockito.any()))
                         .thenReturn(Mono.empty());
@@ -474,7 +474,7 @@ class CreateAndUpdateFromServiceTest {
     @DisplayName("whenCreateCostThenReturnResponse")
     void createCostOK(){
         CostDTO dto = getCostDTO();
-        dto.setZone(InternationalZoneEnum._1);
+        dto.setZone(InternationalZoneEnum.ZONE_1);
         PnDeliveryDriver driver = InstanceCreator.getDriver(true);
 
                 Mockito.when(this.deliveryDriverDAO.getDeliveryDriver(Mockito.any(), Mockito.any()))
