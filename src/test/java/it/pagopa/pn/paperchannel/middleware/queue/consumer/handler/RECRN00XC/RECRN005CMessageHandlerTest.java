@@ -45,7 +45,7 @@ class RECRN005CMessageHandlerTest {
     private static final String STATUS_RECRN005C = "RECRN005C";
     private static final String STATUS_PNRN012 = "PNRN012";
 
-    private static final String requestId = "1234LL-GGGG-SSSS";
+    private static final String REQUEST_ID = "1234LL-GGGG-SSSS";
     private static final String META_STRING = "META##";
     private static final int DAYS_REFINEMENT = 10;
     private static final int STORAGE_DURATION_AR_DAYS = 30;
@@ -83,25 +83,26 @@ class RECRN005CMessageHandlerTest {
     @Test
     void should_pushPNRN012_when_RECRN005AGreaterOrEqualsRECRN010By30Days (){
         // Arrange
-        var now = Instant.now();
+        var now = Instant.parse("2025-04-09T09:02:10Z");
+        // minus 30 because the month of now (April) has 30 days
         PnEventMeta eventMetaRECRN010 = getEventMeta(STATUS_RECRN010,now.minus(STORAGE_DURATION_AR_DAYS, ChronoUnit.DAYS));
         PnEventMeta eventMetaRECRN005A = getEventMeta(STATUS_RECRN005A, now);
 
-        when(eventMetaDAO.getDeliveryEventMeta(META_STRING.concat(requestId), META_STRING.concat(STATUS_RECRN010)))
+        when(eventMetaDAO.getDeliveryEventMeta(META_STRING.concat(REQUEST_ID), META_STRING.concat(STATUS_RECRN010)))
                 .thenReturn(Mono.just(eventMetaRECRN010));
-        when(eventMetaDAO.getDeliveryEventMeta(META_STRING.concat(requestId), META_STRING.concat(STATUS_RECRN005A)))
+        when(eventMetaDAO.getDeliveryEventMeta(META_STRING.concat(REQUEST_ID), META_STRING.concat(STATUS_RECRN005A)))
                 .thenReturn(Mono.just(eventMetaRECRN005A));
-        when(metaDematCleaner.clean(requestId)).thenReturn(Mono.empty());
+        when(metaDematCleaner.clean(REQUEST_ID)).thenReturn(Mono.empty());
         doNothing().when(sqsSender).pushSendEvent(Mockito.any());
 
         PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
-                .requestId(requestId)
+                .requestId(REQUEST_ID)
                 .statusCode(STATUS_RECRN005C)
                 .statusDateTime(OffsetDateTime.now())
                 .clientRequestTimeStamp(OffsetDateTime.now());
 
         PnDeliveryRequest entity = new PnDeliveryRequest();
-        entity.setRequestId(requestId);
+        entity.setRequestId(REQUEST_ID);
         entity.setStatusDetail(STATUS_RECRN005C);
         entity.setStatusCode(ExternalChannelCodeEnum.getStatusCode(paperRequest.getStatusCode()));
 
@@ -134,25 +135,25 @@ class RECRN005CMessageHandlerTest {
     @Test
     void should_savePnEventError_when_RECRN005ALessRECRN010By1Days() {
         // Arrange
-        var now = Instant.now();
+        var now = Instant.parse("2025-04-09T09:02:10Z");
         PnEventMeta eventMetaRECRN010 = getEventMeta(STATUS_RECRN010, now);
         PnEventMeta eventMetaRECRN005A = getEventMeta(STATUS_RECRN005A, now.minus(1, ChronoUnit.DAYS));
 
-        when(eventMetaDAO.getDeliveryEventMeta(META_STRING.concat(requestId), META_STRING.concat(STATUS_RECRN010)))
+        when(eventMetaDAO.getDeliveryEventMeta(META_STRING.concat(REQUEST_ID), META_STRING.concat(STATUS_RECRN010)))
                 .thenReturn(Mono.just(eventMetaRECRN010));
-        when(eventMetaDAO.getDeliveryEventMeta(META_STRING.concat(requestId), META_STRING.concat(STATUS_RECRN005A)))
+        when(eventMetaDAO.getDeliveryEventMeta(META_STRING.concat(REQUEST_ID), META_STRING.concat(STATUS_RECRN005A)))
                 .thenReturn(Mono.just(eventMetaRECRN005A));
         when(paperRequestErrorDAO.created(any())).thenReturn(Mono.just(new PnRequestError()));
 
         PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
-                .requestId(requestId)
+                .requestId(REQUEST_ID)
                 .statusCode(STATUS_RECRN005C)
                 .statusDateTime(OffsetDateTime.now())
                 .clientRequestTimeStamp(OffsetDateTime.now())
                 .deliveryFailureCause("M02");
 
         PnDeliveryRequest entity = new PnDeliveryRequest();
-        entity.setRequestId(requestId);
+        entity.setRequestId(REQUEST_ID);
         entity.setStatusDetail(STATUS_RECRN005C);
         entity.setStatusCode(ExternalChannelCodeEnum.getStatusCode(paperRequest.getStatusCode()));
 
@@ -167,7 +168,7 @@ class RECRN005CMessageHandlerTest {
         // Verify requestError
         verify(paperRequestErrorDAO, times(1)).created(argThat(error -> {
             assertThat(error).isNotNull();
-            assertThat(error.getRequestId()).isEqualTo(requestId);
+            assertThat(error.getRequestId()).isEqualTo(REQUEST_ID);
             assertThat(error.getError()).contains("RECRN005A statusDateTime", "RECRN010 statusDateTime");
             assertThat(error.getFlowThrow()).isEqualTo("RECRN005C");
             assertThat(error.getCategory()).isEqualTo(RequestErrorCategoryEnum.RENDICONTAZIONE_SCARTATA.getValue());
@@ -185,21 +186,21 @@ class RECRN005CMessageHandlerTest {
         PnEventMeta eventMetaRECRN010 = getEventMeta(STATUS_RECRN010, recrn010StatusDateTime);
         PnEventMeta eventMetaRECRN005A = getEventMeta(STATUS_RECRN005A, recrn005AStatusDateTime);
 
-        when(eventMetaDAO.getDeliveryEventMeta(META_STRING.concat(requestId), META_STRING.concat(STATUS_RECRN010)))
+        when(eventMetaDAO.getDeliveryEventMeta(META_STRING.concat(REQUEST_ID), META_STRING.concat(STATUS_RECRN010)))
                 .thenReturn(Mono.just(eventMetaRECRN010));
-        when(eventMetaDAO.getDeliveryEventMeta(META_STRING.concat(requestId), META_STRING.concat(STATUS_RECRN005A)))
+        when(eventMetaDAO.getDeliveryEventMeta(META_STRING.concat(REQUEST_ID), META_STRING.concat(STATUS_RECRN005A)))
                 .thenReturn(Mono.just(eventMetaRECRN005A));
-        when(metaDematCleaner.clean(requestId)).thenReturn(Mono.empty());
+        when(metaDematCleaner.clean(REQUEST_ID)).thenReturn(Mono.empty());
         doNothing().when(sqsSender).pushSendEvent(Mockito.any());
 
         PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
-                .requestId(requestId)
+                .requestId(REQUEST_ID)
                 .statusCode(STATUS_RECRN005C)
                 .statusDateTime(OffsetDateTime.now())
                 .clientRequestTimeStamp(OffsetDateTime.now());
 
         PnDeliveryRequest entity = new PnDeliveryRequest();
-        entity.setRequestId(requestId);
+        entity.setRequestId(REQUEST_ID);
         entity.setStatusDetail(STATUS_RECRN005C);
         entity.setStatusCode(ExternalChannelCodeEnum.getStatusCode(paperRequest.getStatusCode()));
 
@@ -238,21 +239,21 @@ class RECRN005CMessageHandlerTest {
         PnEventMeta eventMetaRECRN010 = getEventMeta(STATUS_RECRN010, recrn010StatusDateTime);
         PnEventMeta eventMetaRECRN005A = getEventMeta(STATUS_RECRN005A, recrn005AStatusDateTime);
 
-        when(eventMetaDAO.getDeliveryEventMeta(META_STRING.concat(requestId), META_STRING.concat(STATUS_RECRN010)))
+        when(eventMetaDAO.getDeliveryEventMeta(META_STRING.concat(REQUEST_ID), META_STRING.concat(STATUS_RECRN010)))
                 .thenReturn(Mono.just(eventMetaRECRN010));
-        when(eventMetaDAO.getDeliveryEventMeta(META_STRING.concat(requestId), META_STRING.concat(STATUS_RECRN005A)))
+        when(eventMetaDAO.getDeliveryEventMeta(META_STRING.concat(REQUEST_ID), META_STRING.concat(STATUS_RECRN005A)))
                 .thenReturn(Mono.just(eventMetaRECRN005A));
         when(paperRequestErrorDAO.created(any())).thenReturn(Mono.just(new PnRequestError()));
 
         PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
-                .requestId(requestId)
+                .requestId(REQUEST_ID)
                 .statusCode(STATUS_RECRN005C)
                 .statusDateTime(OffsetDateTime.now())
                 .clientRequestTimeStamp(OffsetDateTime.now())
                 .deliveryFailureCause("M02");
 
         PnDeliveryRequest entity = new PnDeliveryRequest();
-        entity.setRequestId(requestId);
+        entity.setRequestId(REQUEST_ID);
         entity.setStatusDetail(STATUS_RECRN005C);
         entity.setStatusCode(ExternalChannelCodeEnum.getStatusCode(paperRequest.getStatusCode()));
 
@@ -267,7 +268,7 @@ class RECRN005CMessageHandlerTest {
         // Verify requestError
         verify(paperRequestErrorDAO, times(1)).created(argThat(error -> {
             assertThat(error).isNotNull();
-            assertThat(error.getRequestId()).isEqualTo(requestId);
+            assertThat(error.getRequestId()).isEqualTo(REQUEST_ID);
             assertThat(error.getError()).contains("RECRN005A statusDateTime", "RECRN010 statusDateTime");
             assertThat(error.getFlowThrow()).isEqualTo("RECRN005C");
             assertThat(error.getCategory()).isEqualTo(RequestErrorCategoryEnum.RENDICONTAZIONE_SCARTATA.getValue());
@@ -281,7 +282,7 @@ class RECRN005CMessageHandlerTest {
         final PnDiscoveredAddress address1 = new PnDiscoveredAddress();
         address1.setAddress("discoveredAddress1");
         var eventMeta = new PnEventMeta();
-        eventMeta.setMetaRequestId(META_STRING.concat(requestId));
+        eventMeta.setMetaRequestId(META_STRING.concat(REQUEST_ID));
         eventMeta.setMetaStatusCode(META_STRING.concat(statusCode));
         eventMeta.setRequestId("1234");
         eventMeta.setStatusCode(statusCode);
