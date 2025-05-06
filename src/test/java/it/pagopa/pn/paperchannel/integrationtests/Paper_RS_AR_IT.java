@@ -530,8 +530,9 @@ class Paper_RS_AR_IT extends BaseTest {
         //
         // demat PROGRESS -> send to delivery push
         ArgumentCaptor<SendEvent> capturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
-        var now = Instant.now();
+        var now = Instant.parse("2025-04-09T09:02:10Z");
 
+        // minus 30 because the month of now (April) has 30 days
         generateEvent(RECRN010_STATUS_CODE, null, null, null, now.minus(30, ChronoUnit.DAYS));
         generateEvent(RECRN011_STATUS_CODE, null, null, null, now.minus(30, ChronoUnit.DAYS));
 
