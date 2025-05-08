@@ -685,6 +685,7 @@ Parameters:
       
 Conditions:
   UseExternalChannelMock: !Equals [ !Ref ExternalChannelBaseUrl, "Mock" ]
+  IsEnabledPnDelayerToPaperChannelEventBusRule: !Equals [ !Ref EnablePnDelayerToPaperChannelEventBusRule, true ]
 
 Resources:
   # PN-Paper-Channel microservice
