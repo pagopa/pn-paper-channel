@@ -31,7 +31,9 @@ public class SaveDematMessageHandler extends SendToDeliveryPushHandler {
             "Plico",
             "AR",
             "Indagine",
-            "23L"
+            "23L",
+            "CAD",
+            "ARCAD"
     );
 
     protected final EventDematDAO eventDematDAO;
@@ -46,7 +48,7 @@ public class SaveDematMessageHandler extends SendToDeliveryPushHandler {
         var attachments = new ArrayList<>(paperRequest.getAttachments());
 
         return Flux.fromIterable(attachments)
-                .flatMap(attachmentDetailsDto -> {
+                .concatMap(attachmentDetailsDto -> {
                     if(isZipHandleFlow(entity.getRequestId(), attachmentDetailsDto)) {
                         log.debug("[{}] Zip Handle Flow", paperRequest.getRequestId());
                         //manda nella coda interna
