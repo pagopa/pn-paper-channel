@@ -53,6 +53,7 @@
     "PaperChannelPrepareToDelayerQueuePipeDesiredState": "RUNNING",
     "PrepareTwoPhases": "true",
     "EnableRetryCon996": "true",
-    "EnableTruncatedDateForRefinementCheck": "false"
+    "EnableTruncatedDateForRefinementCheck": "false",
+    "EnablePnDelayerToPaperChannelEventBusRule": "true"
   }
 }

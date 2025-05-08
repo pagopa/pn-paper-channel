@@ -675,8 +675,17 @@ Parameters:
     Type: String
     Default: 'FATAL'
 
+  EnablePnDelayerToPaperChannelEventBusRule:
+    Type: String
+    Default: true
+    Description: 'EventBridge Rule To DelayerToPaperChannel'
+    AllowedValues:
+      - 'true'
+      - 'false'
+      
 Conditions:
   UseExternalChannelMock: !Equals [ !Ref ExternalChannelBaseUrl, "Mock" ]
+  IsEnabledPnDelayerToPaperChannelEventBusRule: !Equals [ !Ref EnablePnDelayerToPaperChannelEventBusRule, true ]
 
 Resources:
   # PN-Paper-Channel microservice
@@ -1180,6 +1189,10 @@ Resources:
       Description: Route pn-CoreEventBus Events to DelayerToPaperChannel queue
       RoleArn: !GetAtt "EventBusEnqueueRole.Arn" 
       EventBusName: !Sub '${ProjectName}-CoreEventBus'
+      State: !If 
+        - IsEnabledPnDelayerToPaperChannelEventBusRule
+        - ENABLED
+        - DISABLED
       EventPattern:
         detail-type: [ "PreparePhaseOneOutcomeEvent" ]
       Targets: 
