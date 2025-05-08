@@ -685,7 +685,7 @@ Parameters:
       
 Conditions:
   UseExternalChannelMock: !Equals [ !Ref ExternalChannelBaseUrl, "Mock" ]
-  EnablePnDelayerToPaperChannelEventBusRule: !Equals [ !Ref EnablePnDelayerToPaperChannelEventBusRule, true ]
+  IsEnabledPnDelayerToPaperChannelEventBusRule: !Equals [ !Ref EnablePnDelayerToPaperChannelEventBusRule, true ]
 
 Resources:
   # PN-Paper-Channel microservice
@@ -1190,7 +1190,7 @@ Resources:
       RoleArn: !GetAtt "EventBusEnqueueRole.Arn" 
       EventBusName: !Sub '${ProjectName}-CoreEventBus'
       State: !If 
-        - EnablePnDelayerToPaperChannelEventBusRule
+        - IsEnabledPnDelayerToPaperChannelEventBusRule
         - ENABLED
         - DISABLED
       EventPattern:
