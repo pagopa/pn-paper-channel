@@ -1,6 +1,8 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
+import it.pagopa.pn.api.dto.events.PnPreparePaperchannelToDelayerPayload;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
@@ -8,11 +10,14 @@ import it.pagopa.pn.paperchannel.model.PrepareNormalizeAddressEvent;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -148,6 +153,42 @@ class PrepareFlowStarterImplTest {
 
         verify(sqsSender, times(1)).pushToInternalQueue(expectedEvent);
 
+    }
+
+    @Test
+    void pushPreparePhaseOneOutputTest() {
+
+        PnDeliveryRequest deliveryRequest = new PnDeliveryRequest();
+        deliveryRequest.setRequestId("requestId");
+        deliveryRequest.setIun("iun");
+        deliveryRequest.setProductType("productType");
+        deliveryRequest.setSenderPaId("senderPaId");
+        deliveryRequest.setTenderCode("tenderId");
+        deliveryRequest.setFiscalCode("recipientId");
+
+        PnAddress recipientNormalizedAddress = new PnAddress();
+        recipientNormalizedAddress.setCap("00100");
+        recipientNormalizedAddress.setPr("RM");
+
+        String unifiedDeliveryDriver = "unifiedDriver";
+
+        ArgumentCaptor<PnPreparePaperchannelToDelayerPayload> captor = ArgumentCaptor.forClass(PnPreparePaperchannelToDelayerPayload.class);
+
+        prepareFlowStarterImpl.pushPreparePhaseOneOutput(deliveryRequest, recipientNormalizedAddress, unifiedDeliveryDriver);
+
+        verify(sqsSender, times(1)).pushToPaperchannelToDelayerQueue(captor.capture());
+        PnPreparePaperchannelToDelayerPayload capturedPayload = captor.getValue();
+
+        assertNotNull(capturedPayload);
+        assertEquals("requestId", capturedPayload.getRequestId());
+        assertEquals("iun", capturedPayload.getIun());
+        assertEquals("productType", capturedPayload.getProductType());
+        assertEquals("00100", capturedPayload.getRecipientNormalizedAddress().getCap());
+        assertEquals("RM", capturedPayload.getRecipientNormalizedAddress().getPr());
+        assertEquals("unifiedDriver", capturedPayload.getUnifiedDeliveryDriver());
+        assertEquals("senderPaId", capturedPayload.getSenderPaId());
+        assertEquals("tenderId", capturedPayload.getTenderId());
+        assertEquals("recipientId", capturedPayload.getRecipientId());
     }
 
 }

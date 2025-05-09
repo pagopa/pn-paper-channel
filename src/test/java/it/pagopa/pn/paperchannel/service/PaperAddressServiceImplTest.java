@@ -10,6 +10,7 @@ import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.FailureDetailCodeEnum;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.AddressManagerClient;
@@ -48,11 +49,14 @@ class PaperAddressServiceImplTest {
     @Mock
     private PrepareFlowStarter prepareFlowStarter;
 
+    @Mock
+    private RequestDeliveryDAO requestDeliveryDAO;
+
     @BeforeEach
-    public void init() {
+    void init() {
         paperProperties = new PnPaperChannelConfig();
         var secondAttemptFlowHandlerFactory = new SecondAttemptFlowHandlerFactory(addressManagerClient, paperProperties);
-        paperAddressService = new PaperAddressServiceImpl(null, null, addressDAO, secondAttemptFlowHandlerFactory, nationalRegistryService, prepareFlowStarter);
+        paperAddressService = new PaperAddressServiceImpl(requestDeliveryDAO, null, addressDAO, secondAttemptFlowHandlerFactory, nationalRegistryService, prepareFlowStarter);
     }
 
     @Deprecated
@@ -175,6 +179,9 @@ class PaperAddressServiceImplTest {
 
         when(addressManagerClient.deduplicates(any(), eq(addressFirstAttempt), eq(addressDiscovered)))
                 .thenReturn(Mono.just(mockDeduplicationResponse));
+
+        when(requestDeliveryDAO.getByRequestId(requestId, true))
+                .thenReturn(Mono.just(deliveryRequest));
 
         StepVerifier.create(paperAddressService.getCorrectAddress(deliveryRequest, addressDiscovered, 0))
                 .expectErrorMatches(throwable ->
@@ -320,6 +327,9 @@ class PaperAddressServiceImplTest {
 
         when(addressManagerClient.deduplicates(any(), eq(addressFirstAttempt), eq(addressDiscovered)))
                 .thenReturn(Mono.just(mockDeduplicationResponse));
+
+        when(requestDeliveryDAO.getByRequestId(requestId, true))
+                .thenReturn(Mono.just(deliveryRequest));
 
         paperProperties.setPnaddr001continueFlow(true);
 

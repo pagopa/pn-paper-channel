@@ -338,6 +338,9 @@ components:
               \ documentUrl può rispondere (alla GET) con un 403 per redirect vs servizio\
               \ (i.e. lambda, safe storage, presigned url vs bucket s3 non cifrato).\
               \ Utilizzato per recuperare il conteggio delle pagine da stampare"
+        senderPaId:
+          type: string
+          description: Identificativo della PA mittente
     AnalogAddress:
       required:
       - address
