@@ -3,19 +3,33 @@ package it.pagopa.pn.paperchannel.middleware.db.dao;
 import it.pagopa.pn.paperchannel.config.BaseTest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
+import org.apache.poi.ss.formula.functions.T;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
+import software.amazon.awssdk.enhanced.dynamodb.model.GetItemEnhancedRequest;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
+@ExtendWith(MockitoExtension.class)
 class AddressDAOTestIT extends BaseTest {
 
     @Autowired
     private AddressDAO addressDAO;
+
+    @Mock
+    private DynamoDbAsyncTable<T> dynamoTable;
 
     private final PnAddress address = new PnAddress();
     private final PnAddress address1 = new PnAddress();
@@ -69,6 +83,13 @@ class AddressDAOTestIT extends BaseTest {
         assertEquals(pnAddress.getCap(), address.getCap());
         assertEquals(pnAddress.getRequestId(), address.getRequestId());
         assertEquals(pnAddress.getTypology(), address.getTypology());
+    }
+
+    @Test
+    void findByRequestIdEmptyTest(){
+        PnAddress pnAddress = this.addressDAO.findByRequestId("INVALID_REQUEST_ID").block();
+        Assertions.assertNull(pnAddress);
+        //verify(dynamoTable, times(2)).getItem(any(GetItemEnhancedRequest.class));
     }
 
     @Test
