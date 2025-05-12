@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,14 +23,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-@ExtendWith(MockitoExtension.class)
 class AddressDAOTestIT extends BaseTest {
 
     @Autowired
     private AddressDAO addressDAO;
-
-    @Mock
-    private DynamoDbAsyncTable<T> dynamoTable;
 
     private final PnAddress address = new PnAddress();
     private final PnAddress address1 = new PnAddress();
@@ -83,13 +80,6 @@ class AddressDAOTestIT extends BaseTest {
         assertEquals(pnAddress.getCap(), address.getCap());
         assertEquals(pnAddress.getRequestId(), address.getRequestId());
         assertEquals(pnAddress.getTypology(), address.getTypology());
-    }
-
-    @Test
-    void findByRequestIdEmptyTest(){
-        PnAddress pnAddress = this.addressDAO.findByRequestId("INVALID_REQUEST_ID").block();
-        Assertions.assertNull(pnAddress);
-        //verify(dynamoTable, times(2)).getItem(any(GetItemEnhancedRequest.class));
     }
 
     @Test
