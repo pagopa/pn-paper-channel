@@ -77,17 +77,10 @@ public class PrepareFlowStarterImpl implements PrepareFlowStarter {
      * @param recipientNormalizedAddress Possible normalized address for the shipping
      */
     @Override
-    public void pushPreparePhaseOneOutput(PnDeliveryRequest deliveryRequest, PnAddress recipientNormalizedAddress) {
+    public void pushPreparePhaseOneOutput(PnDeliveryRequest deliveryRequest, PnAddress recipientNormalizedAddress, String unifiedDeliveryDriver) {
         PnAddressItem addressItem = PnAddressItem.builder()
-                .address(recipientNormalizedAddress.getAddress())
-                .addressRow2(recipientNormalizedAddress.getAddressRow2())
                 .cap(recipientNormalizedAddress.getCap())
-                .city(recipientNormalizedAddress.getCity())
-                .city2(recipientNormalizedAddress.getCity2())
                 .pr(recipientNormalizedAddress.getPr())
-                .country(recipientNormalizedAddress.getCountry())
-                .fullName(recipientNormalizedAddress.getFullName())
-                .nameRow2(recipientNormalizedAddress.getNameRow2())
                 .build();
 
         PnPreparePaperchannelToDelayerPayload payload = PnPreparePaperchannelToDelayerPayload.builder()
@@ -95,6 +88,10 @@ public class PrepareFlowStarterImpl implements PrepareFlowStarter {
                 .iun(deliveryRequest.getIun())
                 .productType(deliveryRequest.getProductType())
                 .recipientNormalizedAddress(addressItem)
+                .unifiedDeliveryDriver(unifiedDeliveryDriver)
+                .senderPaId(deliveryRequest.getSenderPaId())
+                .tenderId(deliveryRequest.getTenderCode())
+                .recipientId(deliveryRequest.getFiscalCode())
                 .build();
 
         this.sqsSender.pushToPaperchannelToDelayerQueue(payload);
