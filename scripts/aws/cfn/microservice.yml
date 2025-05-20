@@ -1164,8 +1164,19 @@ Resources:
             Period: !Ref AutoscalingCheckPeriod
             Stat: Average
           ReturnData: False
+        - Id: m8
+          MetricStat:
+            Metric:
+              Dimensions:
+                - Name: QueueName
+                  Value: !Ref "DelayerToPaperChannelQueueName"
+              Namespace: "AWS/SQS"
+              MetricName: "ApproximateNumberOfMessagesVisible"
+            Period: !Ref AutoscalingCheckPeriod
+            Stat: Average
+          ReturnData: False
         - Id: code
-          Expression: !Sub "IF(m5==0, 101, (100*(m1+m2+m3+m7)) / (${ConsumedQueueMessagePerMinute} * m5) )"
+          Expression: !Sub "IF(m5==0, 101, (100*(m1+m2+m3+m6+m7+m8)) / (${ConsumedQueueMessagePerMinute} * m5) )"
           Label: !Sub "${ProjectName}-paper-channel-queue-custom-metric"
           ReturnData: False
         - Id: http
