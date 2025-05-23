@@ -11,7 +11,6 @@ import org.junit.jupiter.api.*;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.UpdateItemResponse;
 
 import java.time.Instant;
@@ -33,6 +32,32 @@ class RequestDeliveryDAOTestIT extends BaseTest {
 
     @MockBean
     private DataVaultEncryptionImpl dataVaultEncryption;
+
+    @Test
+    void createWithAddressesWithSenderPaIdTest(){
+
+        // Given
+        PnAddress address = new PnAddress();
+        address.setAddress("Via Aldo Moro");
+        address.setCap("21004");
+        address.setRequestId("LOP-DF3-412");
+        address.setTypology(AddressTypeEnum.RECEIVER_ADDRESS.name());
+
+        PnDeliveryRequest deliveryRequest = this.buildDeliveryRequest(REQUEST_WITH_ADDRESS_ID);
+
+        deliveryRequest.setRequestId("testSenderPaId");
+
+        // When
+        Mockito.when(dataVaultEncryption.encode(Mockito.any(), Mockito.any())).thenReturn("returnOk");
+        Mockito.when(dataVaultEncryption.decode(Mockito.any())).thenReturn("returnOk");
+
+        this.requestDeliveryDAO.createWithAddress(deliveryRequest, address, null).block();
+        PnDeliveryRequest pnDeliveryRequest = this.requestDeliveryDAO.getByRequestId(deliveryRequest.getRequestId()).block();
+
+        // Then
+        assertNotNull(pnDeliveryRequest);
+        assertEquals(pnDeliveryRequest.getSenderPaId(), deliveryRequest.getSenderPaId());
+    }
 
     @Test
     @Order(1)
@@ -205,6 +230,31 @@ class RequestDeliveryDAOTestIT extends BaseTest {
     }
 
     @Test
+    void updateDataWithoutGetTest() {
+
+        // Given
+        PnDeliveryRequest deliveryRequest = this.buildDeliveryRequest("updateWithoutGetTestId");
+        deliveryRequest.setStatusCode("INITIAL");
+        this.requestDeliveryDAO.createWithAddress(deliveryRequest, null, null).block();
+
+        // Modifica i dati da aggiornare
+        PnDeliveryRequest updatedRequest = new PnDeliveryRequest();
+        updatedRequest.setRequestId("updateWithoutGetTestId");
+        updatedRequest.setStatusCode("UPDATED");
+
+        // When
+        Mockito.when(dataVaultEncryption.encode(Mockito.any(), Mockito.any())).thenReturn("returnOk");
+        Mockito.when(dataVaultEncryption.decode(Mockito.any())).thenReturn("returnOk");
+
+        this.requestDeliveryDAO.updateDataWithoutGet(updatedRequest, true).block();
+
+        // Then
+        PnDeliveryRequest result = this.requestDeliveryDAO.getByRequestId("updateWithoutGetTestId").block();
+        assertNotNull(result);
+        assertEquals("UPDATED", result.getStatusCode());
+    }
+
+    @Test
     void updateUpdateApplyRasterizationStartedValueNull(){
         // Given
         PnDeliveryRequest request = new PnDeliveryRequest();
@@ -318,6 +368,7 @@ class RequestDeliveryDAOTestIT extends BaseTest {
         request.setReceiverType("PF");
         request.setRefined(false);
         request.setAarWithRadd(true);
+        request.setSenderPaId("senderPaId");
 
         return request;
     }

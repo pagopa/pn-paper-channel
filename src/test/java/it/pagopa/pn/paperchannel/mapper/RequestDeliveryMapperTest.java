@@ -28,6 +28,7 @@ class RequestDeliveryMapperTest {
         Assertions.assertEquals(response.getFiscalCode(), prepareRequest.getReceiverFiscalCode());
         Assertions.assertEquals(response.getNotificationSentAt(), prepareRequest.getNotificationSentAt());
         Assertions.assertEquals(response.getAttachments().stream().map(PnAttachmentInfo::getFileKey).toList(), prepareRequest.getAttachmentUrls());
+        Assertions.assertEquals(response.getSenderPaId(), prepareRequest.getSenderPaId());
     }
 
     private PrepareRequest getPrepareRequest() {
@@ -47,6 +48,7 @@ class RequestDeliveryMapperTest {
         analogAddress.setFullname("Ettore Fieramosca");
 
         prepareRequest.setRequestId("12345ABC");
+        prepareRequest.setSenderPaId("senderPaId");
         prepareRequest.setAttachmentUrls(attachmentUrls);
         prepareRequest.setDiscoveredAddress(analogAddress);
         prepareRequest.setIun("iun");

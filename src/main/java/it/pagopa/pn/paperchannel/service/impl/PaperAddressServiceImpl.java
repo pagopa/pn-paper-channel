@@ -124,13 +124,14 @@ public class PaperAddressServiceImpl extends GenericService implements PaperAddr
 
     private <T> Mono<T> handlePnAddressFlowException(PnAddressFlowException ex, PnDeliveryRequest deliveryRequest, Address fromNationalRegistry, int attemptRetry) {
         if (ex.getExceptionType() == ATTEMPT_ADDRESS_NATIONAL_REGISTRY){
-            nationalRegistryService.finderAddressFromNationalRegistries(
-                    deliveryRequest.getRequestId(),
-                    deliveryRequest.getRelatedRequestId(),
-                    deliveryRequest.getFiscalCode(),
-                    deliveryRequest.getReceiverType(),
-                    deliveryRequest.getIun(), 0);
-            return Mono.error(ex);
+            return this.requestDeliveryDAO.getByRequestId(deliveryRequest.getRequestId(), true) // Ho bisogno del CF in chiaro da mandare a national registries
+                            .doOnNext(pnDeliveryRequestWithDecodedCF -> nationalRegistryService.finderAddressFromNationalRegistries(
+                                    pnDeliveryRequestWithDecodedCF.getRequestId(),
+                                    pnDeliveryRequestWithDecodedCF.getRelatedRequestId(),
+                                    pnDeliveryRequestWithDecodedCF.getFiscalCode(),
+                                    pnDeliveryRequestWithDecodedCF.getReceiverType(),
+                                    pnDeliveryRequestWithDecodedCF.getIun(), 0))
+                    .then(Mono.error(ex));
         }
         if (ex.getExceptionType() == ADDRESS_MANAGER_ERROR){
             prepareFlowStarter.redrivePreparePhaseOneAfterAddressManagerError(deliveryRequest, attemptRetry, fromNationalRegistry);

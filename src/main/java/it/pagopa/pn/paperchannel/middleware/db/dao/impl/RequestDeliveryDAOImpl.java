@@ -114,6 +114,11 @@ public class RequestDeliveryDAOImpl extends BaseDAO<PnDeliveryRequest> implement
     }
 
     @Override
+    public Mono<PnDeliveryRequest> updateDataWithoutGet(PnDeliveryRequest pnDeliveryRequest, boolean ignorableNulls) {
+        return Mono.fromFuture(this.update(pnDeliveryRequest, ignorableNulls));
+    }
+
+    @Override
     public Mono<UpdateItemResponse> updateApplyRasterization(String requestId, Boolean applyRasterization) {
         Map<String, AttributeValue> key = new HashMap<>();
         key.put(COL_REQUEST_ID, AttributeValue.builder().s(requestId).build());
