@@ -15,11 +15,14 @@ import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.Const;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.MDC;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -88,8 +91,9 @@ class SaveDematMessageHandlerTest {
         verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
     }
 
-    @Test
-    void handleMessageWithDocumentTypeCADTest() {
+    @ParameterizedTest
+    @ValueSource(strings = {"CAD", "ARCAD"})
+    void handleMessageWithDocumentTypeCADARCADTest(String documentType) {
         OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
         PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
                 .requestId("requestId")
@@ -97,7 +101,7 @@ class SaveDematMessageHandlerTest {
                 .statusDateTime(instant)
                 .clientRequestTimeStamp(instant)
                 .attachments(List.of(new AttachmentDetailsDto()
-                        .documentType("CAD")
+                        .documentType(documentType)
                         .date(instant)
                         .uri("https://safestorage.it"))
                 );
@@ -108,7 +112,7 @@ class SaveDematMessageHandlerTest {
         entity.setStatusDetail(StatusCodeEnum.PROGRESS.getValue());
 
         PnEventDemat pnEventDemat = handler.buildPnEventDemat(paperRequest, paperRequest.getAttachments().get(0));
-        SendEvent sendEventNotExpected = SendEventMapper.createSendEventMessage(entity, paperRequest);
+        SendEvent sendEventExpected = SendEventMapper.createSendEventMessage(entity, paperRequest);
 
         when(mockDao.createOrUpdate(pnEventDemat)).thenReturn(Mono.just(pnEventDemat));
 
@@ -116,8 +120,8 @@ class SaveDematMessageHandlerTest {
 
         //mi aspetto che salvi l'evento
         verify(mockDao, times(1)).createOrUpdate(pnEventDemat);
-        //mi aspetto che non mandi il messaggio a delivery-push
-        verify(mockSqsSender, times(0)).pushSendEvent(sendEventNotExpected);
+        //mi aspetto che mandi il messaggio a delivery-push
+        verify(mockSqsSender, times(1)).pushSendEvent(sendEventExpected);
 
         // not call because it is a PROGRESS event
         verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
@@ -163,12 +167,67 @@ class SaveDematMessageHandlerTest {
         verify(mockDao, times(1)).createOrUpdate(pnEventDematCAD);
         //mi aspetto che salvi l'evento Plico
         verify(mockDao, times(1)).createOrUpdate(pnEventDemat23L);
-        //mi aspetto che NON mandi il messaggio a delivery-push per l'evento CAD
-        verify(mockSqsSender, times(0)).pushSendEvent(sendEventCAD);
+        //mi aspetto che mandi il messaggio a delivery-push per l'evento CAD
+        verify(mockSqsSender, times(1)).pushSendEvent(sendEventCAD);
         //mi aspetto che mandi il messaggio a delivery-push per l'evento 23L
         verify(mockSqsSender, times(1)).pushSendEvent(sendEvent23L);
         // not call because it is a PROGRESS event
         verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
+    }
+
+    @Test
+    void handleMessageWithManyDocumentAttachmentsTest() {
+        final int attachmentsSize = 1500;
+        OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
+
+        // Creazione di una lista di x attachments con documentType alternati e uri incrementali
+        List<AttachmentDetailsDto> attachments = new ArrayList<>();
+        String[] documentTypes = {"CAD", "ARCAD", "Plico"};
+        for (int i = 1; i <= attachmentsSize; i++) {
+            attachments.add(new AttachmentDetailsDto()
+                    .documentType(documentTypes[(i - 1) % documentTypes.length])
+                    .date(instant)
+                    .uri("https://safestorage" + i + ".it"));
+        }
+
+        PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
+                .requestId("requestId")
+                .statusCode("RECAG011B")
+                .statusDateTime(instant)
+                .clientRequestTimeStamp(instant)
+                .attachments(attachments);
+
+        PnDeliveryRequest entity = new PnDeliveryRequest();
+        entity.setRequestId("requestId");
+        entity.setStatusCode("statusDetail");
+        entity.setStatusDetail(StatusCodeEnum.PROGRESS.getValue());
+
+        // Mock delle chiamate per ogni attachment
+        for (int i = 1; i <= attachmentsSize; i++) {
+            AttachmentDetailsDto attachment = attachments.get(i - 1);
+            PnEventDemat pnEventDemat = handler.buildPnEventDemat(paperRequest, attachment);
+            when(mockDao.createOrUpdate(pnEventDemat)).thenReturn(Mono.just(pnEventDemat));
+        }
+
+        assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
+
+        verify(mockDao, times(attachmentsSize)).createOrUpdate(any(PnEventDemat.class));
+
+        verify(mockSqsSender, times(attachmentsSize)).pushSendEvent(any(SendEvent.class));
+
+        // Verifica che ogni invio a deliveryPush abbia un solo attachment
+        for (int i = 1; i <= attachmentsSize; i++) {
+            PaperProgressStatusEventDto expectedPaperRequest = new PaperProgressStatusEventDto()
+                    .requestId("requestId")
+                    .statusCode("RECAG011B")
+                    .statusDateTime(instant)
+                    .clientRequestTimeStamp(instant)
+                    .attachments(List.of(attachments.get(i - 1)));
+
+            SendEvent expectedSendEvent = SendEventMapper.createSendEventMessage(entity, expectedPaperRequest);
+
+            verify(mockSqsSender).pushSendEvent(expectedSendEvent);
+        }
     }
 
     @Test

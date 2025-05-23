@@ -146,8 +146,8 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
         entity23L = eventDematDAO.getDeliveryEventDemat(metadataRequestExpected, metadataStatusCode23LExpected).block();
         assertThat(entity23L).isNotNull();
 
-        // verifico che è stato inviato 1 solo evento a delivery-push
-        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(any(SendEvent.class));
+        // verifico che sono stati inviati 2 eventi a delivery-push
+        verify(sqsSender, timeout(2000).times(2)).pushSendEvent(any(SendEvent.class));
 
     }
 
