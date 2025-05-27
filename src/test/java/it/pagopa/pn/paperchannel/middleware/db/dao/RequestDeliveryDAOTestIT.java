@@ -10,7 +10,8 @@ import it.pagopa.pn.paperchannel.utils.DateUtils;
 import org.junit.jupiter.api.*;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.UpdateItemResponse;
 
 import java.time.Instant;
@@ -30,7 +31,7 @@ class RequestDeliveryDAOTestIT extends BaseTest {
     @Autowired
     private RequestDeliveryDAO requestDeliveryDAO;
 
-    @MockBean
+    @MockitoBean
     private DataVaultEncryptionImpl dataVaultEncryption;
 
     @Test
