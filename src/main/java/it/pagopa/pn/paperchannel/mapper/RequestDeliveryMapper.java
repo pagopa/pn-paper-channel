@@ -25,6 +25,7 @@ public class RequestDeliveryMapper {
         entity.setIun(request.getIun());
         entity.setRelatedRequestId(request.getRelatedRequestId());
         entity.setNotificationSentAt(request.getNotificationSentAt());
+        entity.setSenderPaId(request.getSenderPaId());
 
         changeState(entity, IN_PROCESSING.getCode(), IN_PROCESSING.getDescription(), IN_PROCESSING.getDetail(), null, null);
 

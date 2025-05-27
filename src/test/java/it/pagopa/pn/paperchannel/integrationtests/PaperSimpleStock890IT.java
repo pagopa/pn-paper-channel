@@ -93,6 +93,7 @@ class PaperSimpleStock890IT extends BasePaperStock890IT {
 
         Map<String, StatusCodeEnum> assertionLookupTable = Map.of(
             "RECAG011A", StatusCodeEnum.PROGRESS,
+            "RECAG011B", StatusCodeEnum.PROGRESS,
             "RECAG005B", StatusCodeEnum.PROGRESS,
             "RECAG005C", StatusCodeEnum.PROGRESS,
             "RECAG012", StatusCodeEnum.OK
@@ -123,6 +124,7 @@ class PaperSimpleStock890IT extends BasePaperStock890IT {
 
         Map<String, StatusCodeEnum> assertionLookupTable = Map.of(
             "RECAG011A", StatusCodeEnum.PROGRESS,
+            "RECAG011B", StatusCodeEnum.PROGRESS,
             "RECAG005B", StatusCodeEnum.PROGRESS,
             "RECAG005C", StatusCodeEnum.PROGRESS,
             "RECAG012", StatusCodeEnum.OK
@@ -151,6 +153,7 @@ class PaperSimpleStock890IT extends BasePaperStock890IT {
         SingleStatusUpdateDto RECAG005C = buildStatusUpdateDto("RECAG005C",null, null);
 
         Map<String, StatusCodeEnum> assertionLookupTable = Map.of(
+            "RECAG011B", StatusCodeEnum.PROGRESS,
             "RECAG005B", StatusCodeEnum.PROGRESS,
             "RECAG005C", StatusCodeEnum.PROGRESS,
             "RECAG012", StatusCodeEnum.OK
@@ -203,6 +206,7 @@ class PaperSimpleStock890IT extends BasePaperStock890IT {
 
         Map<String, StatusCodeEnum> assertionLookupTable = Map.of(
             "RECAG011B", StatusCodeEnum.PROGRESS,
+            "RECAG011BCad", StatusCodeEnum.PROGRESS,
             "RECAG005C", StatusCodeEnum.PROGRESS,
             "RECAG012", StatusCodeEnum.OK
         );
@@ -227,6 +231,7 @@ class PaperSimpleStock890IT extends BasePaperStock890IT {
 
         Map<String, StatusCodeEnum> assertionLookupTable = Map.of(
             "RECAG011B", StatusCodeEnum.PROGRESS,
+            "RECAG011BCad", StatusCodeEnum.PROGRESS,
             "RECAG005C", StatusCodeEnum.PROGRESS,
             "RECAG012", StatusCodeEnum.OK
         );
@@ -252,6 +257,7 @@ class PaperSimpleStock890IT extends BasePaperStock890IT {
 
         Map<String, StatusCodeEnum> assertionLookupTable = Map.of(
             "RECAG011B", StatusCodeEnum.PROGRESS,
+            "RECAG011BCad", StatusCodeEnum.PROGRESS,
             "RECAG005C", StatusCodeEnum.PROGRESS,
             "RECAG012", StatusCodeEnum.OK
         );
@@ -292,7 +298,9 @@ class PaperSimpleStock890IT extends BasePaperStock890IT {
         SingleStatusUpdateDto RECAG005C = buildStatusUpdateDto("RECAG005C",null, null);
         SingleStatusUpdateDto RECAG011BCad = buildStatusUpdateDto("RECAG011B", List.of("CAD"), null);
 
-        Map<String, StatusCodeEnum> assertionLookupTable = Map.of();
+        Map<String, StatusCodeEnum> assertionLookupTable = Map.of(
+            "RECAG011B", StatusCodeEnum.PROGRESS
+        );
 
         // When
         generateEvent(RECAG012, null);
@@ -317,7 +325,8 @@ class PaperSimpleStock890IT extends BasePaperStock890IT {
         SingleStatusUpdateDto RECAG011BCad = buildStatusUpdateDto("RECAG011B", List.of("CAD"), null);
 
         Map<String, StatusCodeEnum> assertionLookupTable = Map.of(
-            "RECAG011B", StatusCodeEnum.PROGRESS
+            "RECAG011B", StatusCodeEnum.PROGRESS,
+            "RECAG011BCad", StatusCodeEnum.PROGRESS
         );
 
         // When
@@ -397,6 +406,7 @@ class PaperSimpleStock890IT extends BasePaperStock890IT {
 
         Map<String, StatusCodeEnum> assertionLookupTable = Map.of(
             "RECAG011A", StatusCodeEnum.PROGRESS,
+            "RECAG011B", StatusCodeEnum.PROGRESS,
             "RECAG006B", StatusCodeEnum.PROGRESS,
             "RECAG006C", StatusCodeEnum.PROGRESS,
             "RECAG012", StatusCodeEnum.OK
@@ -427,6 +437,7 @@ class PaperSimpleStock890IT extends BasePaperStock890IT {
 
         Map<String, StatusCodeEnum> assertionLookupTable = Map.of(
             "RECAG011A", StatusCodeEnum.PROGRESS,
+            "RECAG011B", StatusCodeEnum.PROGRESS,
             "RECAG006B", StatusCodeEnum.PROGRESS,
             "RECAG006C", StatusCodeEnum.PROGRESS,
             "RECAG012", StatusCodeEnum.OK
@@ -455,6 +466,7 @@ class PaperSimpleStock890IT extends BasePaperStock890IT {
         SingleStatusUpdateDto RECAG006C = buildStatusUpdateDto("RECAG006C",null, null);
 
         Map<String, StatusCodeEnum> assertionLookupTable = Map.of(
+            "RECAG011B", StatusCodeEnum.PROGRESS,
             "RECAG006B", StatusCodeEnum.PROGRESS,
             "RECAG006C", StatusCodeEnum.PROGRESS,
             "RECAG012", StatusCodeEnum.OK
@@ -507,6 +519,7 @@ class PaperSimpleStock890IT extends BasePaperStock890IT {
 
         Map<String, StatusCodeEnum> assertionLookupTable = Map.of(
             "RECAG011B", StatusCodeEnum.PROGRESS,
+            "RECAG011BCad", StatusCodeEnum.PROGRESS,
             "RECAG006C", StatusCodeEnum.PROGRESS,
             "RECAG012", StatusCodeEnum.OK
         );
@@ -531,6 +544,7 @@ class PaperSimpleStock890IT extends BasePaperStock890IT {
 
         Map<String, StatusCodeEnum> assertionLookupTable = Map.of(
             "RECAG011B", StatusCodeEnum.PROGRESS,
+            "RECAG011BCad", StatusCodeEnum.PROGRESS,
             "RECAG006C", StatusCodeEnum.PROGRESS,
             "RECAG012", StatusCodeEnum.OK
         );
@@ -556,6 +570,7 @@ class PaperSimpleStock890IT extends BasePaperStock890IT {
 
         Map<String, StatusCodeEnum> assertionLookupTable = Map.of(
             "RECAG011B", StatusCodeEnum.PROGRESS,
+            "RECAG011BCad", StatusCodeEnum.PROGRESS,
             "RECAG006C", StatusCodeEnum.PROGRESS,
             "RECAG012", StatusCodeEnum.OK
         );
@@ -596,7 +611,9 @@ class PaperSimpleStock890IT extends BasePaperStock890IT {
         SingleStatusUpdateDto RECAG006C = buildStatusUpdateDto("RECAG006C",null, null);
         SingleStatusUpdateDto RECAG011BCad = buildStatusUpdateDto("RECAG011B", List.of("CAD"), null);
 
-        Map<String, StatusCodeEnum> assertionLookupTable = Map.of();
+        Map<String, StatusCodeEnum> assertionLookupTable = Map.of(
+            "RECAG011B", StatusCodeEnum.PROGRESS
+        );
 
         // When
         generateEvent(RECAG012, null);
@@ -621,7 +638,8 @@ class PaperSimpleStock890IT extends BasePaperStock890IT {
         SingleStatusUpdateDto RECAG011BCad = buildStatusUpdateDto("RECAG011B", List.of("CAD"), null);
 
         Map<String, StatusCodeEnum> assertionLookupTable = Map.of(
-            "RECAG011B", StatusCodeEnum.PROGRESS
+            "RECAG011B", StatusCodeEnum.PROGRESS,
+            "RECAG011BCad", StatusCodeEnum.PROGRESS
         );
 
         // When
@@ -694,6 +712,7 @@ class PaperSimpleStock890IT extends BasePaperStock890IT {
 
         Map<String, StatusCodeEnum> assertionLookupTable = Map.of(
             "RECAG011A", StatusCodeEnum.PROGRESS,
+            "RECAG011B", StatusCodeEnum.PROGRESS,
             "RECAG007B", StatusCodeEnum.PROGRESS,
             "RECAG007C", StatusCodeEnum.OK
         );
@@ -722,6 +741,7 @@ class PaperSimpleStock890IT extends BasePaperStock890IT {
 
         Map<String, StatusCodeEnum> assertionLookupTable = Map.of(
             "RECAG011A", StatusCodeEnum.PROGRESS,
+            "RECAG011B", StatusCodeEnum.PROGRESS,
             "RECAG007B", StatusCodeEnum.PROGRESS,
             "RECAG007C", StatusCodeEnum.PROGRESS,
             "RECAG012", StatusCodeEnum.OK
@@ -750,6 +770,7 @@ class PaperSimpleStock890IT extends BasePaperStock890IT {
         SingleStatusUpdateDto RECAG007C = buildStatusUpdateDto("RECAG007C",null, null);
 
         Map<String, StatusCodeEnum> assertionLookupTable = Map.of(
+            "RECAG011B", StatusCodeEnum.PROGRESS,
             "RECAG007B", StatusCodeEnum.PROGRESS,
             "RECAG007C", StatusCodeEnum.PROGRESS,
             "RECAG012", StatusCodeEnum.OK
@@ -800,6 +821,7 @@ class PaperSimpleStock890IT extends BasePaperStock890IT {
 
         Map<String, StatusCodeEnum> assertionLookupTable = Map.of(
             "RECAG011B", StatusCodeEnum.PROGRESS,
+            "RECAG011BCad", StatusCodeEnum.PROGRESS,
             "RECAG007C", StatusCodeEnum.PROGRESS,
             "RECAG012", StatusCodeEnum.OK
         );
@@ -824,6 +846,7 @@ class PaperSimpleStock890IT extends BasePaperStock890IT {
 
         Map<String, StatusCodeEnum> assertionLookupTable = Map.of(
             "RECAG011B", StatusCodeEnum.PROGRESS,
+            "RECAG011BCad", StatusCodeEnum.PROGRESS,
             "RECAG007C", StatusCodeEnum.PROGRESS,
             "RECAG012", StatusCodeEnum.OK
         );
@@ -849,6 +872,7 @@ class PaperSimpleStock890IT extends BasePaperStock890IT {
 
         Map<String, StatusCodeEnum> assertionLookupTable = Map.of(
             "RECAG011B", StatusCodeEnum.PROGRESS,
+            "RECAG011BCad", StatusCodeEnum.PROGRESS,
             "RECAG008C", StatusCodeEnum.PROGRESS,
             "RECAG012", StatusCodeEnum.OK
         );
@@ -875,6 +899,7 @@ class PaperSimpleStock890IT extends BasePaperStock890IT {
 
         Map<String, StatusCodeEnum> assertionLookupTable = Map.of(
             "RECAG011B", StatusCodeEnum.PROGRESS,
+            "RECAG011BArcad", StatusCodeEnum.PROGRESS,
             "RECAG008B", StatusCodeEnum.PROGRESS,
             "RECAG008C", StatusCodeEnum.PROGRESS,
             "RECAG012", StatusCodeEnum.OK
@@ -903,6 +928,7 @@ class PaperSimpleStock890IT extends BasePaperStock890IT {
 
         Map<String, StatusCodeEnum> assertionLookupTable = Map.of(
             "RECAG011B", StatusCodeEnum.PROGRESS,
+            "RECAG011BCad", StatusCodeEnum.PROGRESS,
             "RECAG008C", StatusCodeEnum.PROGRESS,
             "RECAG012", StatusCodeEnum.OK
         );
@@ -925,7 +951,9 @@ class PaperSimpleStock890IT extends BasePaperStock890IT {
         SingleStatusUpdateDto RECAG008C = buildStatusUpdateDto("RECAG008C",null, null);
         SingleStatusUpdateDto RECAG011BCad = buildStatusUpdateDto("RECAG011B", List.of("CAD"), null);
 
-        Map<String, StatusCodeEnum> assertionLookupTable = Map.of();
+        Map<String, StatusCodeEnum> assertionLookupTable = Map.of(
+            "RECAG011B", StatusCodeEnum.PROGRESS
+        );
 
         // When
         generateEvent(RECAG012, null);
@@ -952,6 +980,7 @@ class PaperSimpleStock890IT extends BasePaperStock890IT {
 
         Map<String, StatusCodeEnum> assertionLookupTable = Map.of(
             "RECAG008B", StatusCodeEnum.PROGRESS,
+            "RECAG008BCad", StatusCodeEnum.PROGRESS,
             "RECAG008C", StatusCodeEnum.PROGRESS,
             "RECAG012", StatusCodeEnum.OK
         );

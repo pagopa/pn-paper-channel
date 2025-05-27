@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
+import it.pagopa.pn.api.dto.events.PnPrepareDelayerToPaperchannelPayload;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.*;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
@@ -15,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
 
 import java.time.Instant;
 
@@ -36,6 +38,9 @@ public class PreparePhaseOneAsyncServiceImpl implements PreparePhaseOneAsyncServ
     private final PaperCalculatorUtils paperCalculatorUtils;
     private final AttachmentsConfigService attachmentsConfigService;
     private final PrepareFlowStarter prepareFlowStarter;
+    private final PaperTenderService paperTenderService;
+    private final PaperChannelDeliveryDriverDAO paperChannelDeliveryDriverDAO;
+    private final SqsSender sqsSender;
 
 
     @Override
@@ -45,21 +50,39 @@ public class PreparePhaseOneAsyncServiceImpl implements PreparePhaseOneAsyncServ
         final String requestId = event.getRequestId();
         Address addressFromNationalRegistry = event.getAddress();
 
-
-        return requestDeliveryDAO.getByRequestId(requestId, true)
+        return requestDeliveryDAO.getByRequestId(requestId, false)
                 .zipWhen(deliveryRequest -> checkAndUpdateAddress(deliveryRequest, addressFromNationalRegistry, event)
                         .onErrorResume(PnUntracebleException.class, ex -> this.handleUntraceableError(deliveryRequest, event, ex)))
                 .flatMap(deliveryRequestWithAddress -> attachmentsConfigService
                         .filterAttachmentsToSend(deliveryRequestWithAddress.getT1(), deliveryRequestWithAddress.getT1().getAttachments(), deliveryRequestWithAddress.getT2())
                         .thenReturn(deliveryRequestWithAddress))
-                .doOnNext(deliveryRequestWithAddress -> prepareFlowStarter.pushPreparePhaseOneOutput(deliveryRequestWithAddress.getT1(), deliveryRequestWithAddress.getT2()))
-                .flatMap(deliveryRequestWithAddress -> this.updateRequestInSendToDelayer(deliveryRequestWithAddress.getT1()))
+                .flatMap(deliveryRequestWithAddress ->  Utility.isNational(deliveryRequestWithAddress.getT2().getCountry()) ?
+                        prepareAndSendToPhaseOneOutput(deliveryRequestWithAddress) : sendToPhaseTwoQueue(deliveryRequestWithAddress))
                 .doOnNext(deliveryRequest -> {
                     log.info("End of prepare async phase one");
                     log.logEndingProcess(PROCESS_NAME);
                 })
                 .onErrorResume(ex -> handlePrepareAsyncError(requestId, ex));
+    }
 
+    private Mono<PnDeliveryRequest> sendToPhaseTwoQueue(Tuple2<PnDeliveryRequest, PnAddress> deliveryRequestWithAddress) {
+        PnPrepareDelayerToPaperchannelPayload payload = PnPrepareDelayerToPaperchannelPayload.builder()
+                .requestId(deliveryRequestWithAddress.getT1().getRequestId())
+                .iun(deliveryRequestWithAddress.getT1().getIun())
+                .attempt(0)
+                .build();
+        return Mono.fromRunnable(() -> sqsSender.pushToDelayerToPaperchennelQueue(payload)).thenReturn(deliveryRequestWithAddress.getT1())
+                .doOnNext(deliveryRequest -> log.info("Foreign address, sent to phase two queue"));
+    }
+
+    private Mono<PnDeliveryRequest> prepareAndSendToPhaseOneOutput(Tuple2<PnDeliveryRequest, PnAddress> deliveryRequestWithAddress) {
+        return paperTenderService.getSimplifiedCost(deliveryRequestWithAddress.getT2().getCap(), deliveryRequestWithAddress.getT1().getProductType())
+                .doOnNext(pnPaperChannelCostDTO -> deliveryRequestWithAddress.getT1().setTenderCode(pnPaperChannelCostDTO.getTenderId()))
+                .flatMap(cost -> paperChannelDeliveryDriverDAO.getByDeliveryDriverId(cost.getDeliveryDriverId()))
+                .map(PaperChannelDeliveryDriver::getUnifiedDeliveryDriver)
+                .doOnNext(unifiedDeliveryDriver -> prepareFlowStarter.pushPreparePhaseOneOutput(deliveryRequestWithAddress.getT1(), deliveryRequestWithAddress.getT2(), unifiedDeliveryDriver))
+                .thenReturn(deliveryRequestWithAddress.getT1())
+                .flatMap(this::updateRequestInSendToDelayer);
     }
 
     private Mono<PnDeliveryRequest> updateRequestInSendToDelayer(PnDeliveryRequest pnDeliveryRequest){
@@ -72,7 +95,7 @@ public class PreparePhaseOneAsyncServiceImpl implements PreparePhaseOneAsyncServ
                 null
         );
 
-         return this.requestDeliveryDAO.updateData(pnDeliveryRequest);
+        return this.requestDeliveryDAO.updateDataWithoutGet(pnDeliveryRequest, false);
     }
 
     private Mono<PnAddress> checkAndUpdateAddress(PnDeliveryRequest pnDeliveryRequest, Address fromNationalRegistries, PrepareNormalizeAddressEvent queueModel){

@@ -95,6 +95,9 @@ public class PnDeliveryRequest implements Serializable {
 
     public static final String COL_APPLY_RASTERIZATION = "applyRasterization";
 
+    public static final String COL_SENDER_PAID = "senderPaId";
+
+
     @Getter(onMethod = @__({@DynamoDbPartitionKey,@DynamoDbAttribute(COL_REQUEST_ID)}))
     private String requestId;
 
@@ -194,4 +197,7 @@ public class PnDeliveryRequest implements Serializable {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_APPLY_RASTERIZATION)}))
     private Boolean applyRasterization;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_SENDER_PAID)}))
+    private String senderPaId;
 }

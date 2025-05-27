@@ -7,12 +7,10 @@ import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.FailureDetailCo
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.PaperChannelDeliveryDriverDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnRequestError;
+import it.pagopa.pn.paperchannel.middleware.db.entities.*;
 import it.pagopa.pn.paperchannel.model.*;
 import it.pagopa.pn.paperchannel.service.*;
 import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
@@ -20,7 +18,6 @@ import it.pagopa.pn.paperchannel.utils.PaperCalculatorUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -31,7 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static it.pagopa.pn.paperchannel.utils.Const.RACCOMANDATA_SEMPLICE;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -49,10 +46,13 @@ class PreparePhaseOneAsyncServiceImplTest {
 
     @Mock
     private AddressDAO addressDAO;
+
     @Mock
     private RequestDeliveryDAO requestDeliveryDAO;
+
     @Mock
     private AttachmentsConfigService attachmentsConfigService;
+
     @Mock
     private PrepareFlowStarter prepareFlowStarter;
 
@@ -62,9 +62,16 @@ class PreparePhaseOneAsyncServiceImplTest {
     @Mock
     private PnPaperChannelConfig config;
 
+    @Mock
+    private PaperTenderService paperTenderService;
 
     @Mock
-    private PnPaperChannelConfig pnPaperChannelConfig;
+    private PaperChannelDeliveryDriverDAO paperChannelDeliveryDriverDAO;
+
+    @Mock
+    private SqsSender sqsSender;
+
+
 
     private final PrepareNormalizeAddressEvent request = new PrepareNormalizeAddressEvent();
 
@@ -90,19 +97,27 @@ class PreparePhaseOneAsyncServiceImplTest {
 
         PnAddress addressEntity = AddressMapper.toEntity(address, deliveryRequest.getRequestId(), AddressTypeEnum.RECEIVER_ADDRESS, config);
 
-        when(requestDeliveryDAO.getByRequestId(requestId, true)).thenReturn(Mono.just(deliveryRequest));
+        var cost = new PnPaperChannelCostDTO();
+        cost.setTenderId("TENDER_ID");
+        cost.setDeliveryDriverId("DRIVER_ID");
+
+        var driver = new PaperChannelDeliveryDriver();
+        driver.setUnifiedDeliveryDriver("UNIFIED_DRIVER");
+
+        when(requestDeliveryDAO.getByRequestId(requestId, false)).thenReturn(Mono.just(deliveryRequest));
         when(paperAddressService.getCorrectAddress(deliveryRequest, null, 0)).thenReturn(Mono.just(address));
         when(addressDAO.create(any(PnAddress.class))).thenReturn(Mono.just(addressEntity));
         when(attachmentsConfigService.filterAttachmentsToSend(deliveryRequest, deliveryRequest.getAttachments(), addressEntity)).thenReturn(Mono.just(deliveryRequest));
-        when(requestDeliveryDAO.updateData(deliveryRequest)).thenReturn(Mono.just(deliveryRequest));
-
+        when(paperTenderService.getSimplifiedCost(address.getCap(), deliveryRequest.getProductType())).thenReturn(Mono.just(cost));
+        when(paperChannelDeliveryDriverDAO.getByDeliveryDriverId("DRIVER_ID")).thenReturn(Mono.just(driver));
+        when(requestDeliveryDAO.updateDataWithoutGet(deliveryRequest, false)).thenReturn(Mono.just(deliveryRequest));
 
         StepVerifier.create(preparePhaseOneAsyncService.preparePhaseOneAsync(event))
                 .expectNext(deliveryRequest)
                 .verifyComplete();
 
         //verifico che viene inviato l'evento di output della PREPARE fase 1
-        verify(prepareFlowStarter, times(1)).pushPreparePhaseOneOutput(deliveryRequest, addressEntity);
+        verify(prepareFlowStarter, times(1)).pushPreparePhaseOneOutput(deliveryRequest, addressEntity, "UNIFIED_DRIVER");
         verify(prepareFlowStarter, never()).pushResultPrepareEvent(any(), any(), any(), any(), any());
     }
 
@@ -110,8 +125,15 @@ class PreparePhaseOneAsyncServiceImplTest {
     void preparePhaseOneAsyncAttemptOneTest() {
         var requestId = "PREPARE_ANALOG_DOMICILE.IUN_GJWA-HMEK-RGUJ-202307-H-1.RECINDEX_0.ATTEMPT_1";
         var iun = "GJWA-HMEK-RGUJ-202307-H-1";
-        var deliveryRequest =  getDeliveryRequest(requestId, iun);
+        var deliveryRequest = getDeliveryRequest(requestId, iun);
         var address = getAddress();
+
+        var cost = new PnPaperChannelCostDTO();
+        cost.setTenderId("TENDER_ID");
+        cost.setDeliveryDriverId("DRIVER_ID");
+
+        var driver = new PaperChannelDeliveryDriver();
+        driver.setUnifiedDeliveryDriver("UNIFIED_DRIVER");
 
         PrepareNormalizeAddressEvent event = PrepareNormalizeAddressEvent.builder()
                 .requestId(requestId)
@@ -122,11 +144,14 @@ class PreparePhaseOneAsyncServiceImplTest {
 
         PnAddress addressEntity = AddressMapper.toEntity(address, deliveryRequest.getRequestId(), AddressTypeEnum.RECEIVER_ADDRESS, config);
 
-        when(requestDeliveryDAO.getByRequestId(requestId, true)).thenReturn(Mono.just(deliveryRequest));
+
+        when(requestDeliveryDAO.getByRequestId(requestId, false)).thenReturn(Mono.just(deliveryRequest));
         when(paperAddressService.getCorrectAddress(deliveryRequest, address, 0)).thenReturn(Mono.just(address));
         when(addressDAO.create(any(PnAddress.class))).thenReturn(Mono.just(addressEntity));
         when(attachmentsConfigService.filterAttachmentsToSend(deliveryRequest, deliveryRequest.getAttachments(), addressEntity)).thenReturn(Mono.just(deliveryRequest));
-        when(requestDeliveryDAO.updateData(deliveryRequest)).thenReturn(Mono.just(deliveryRequest));
+        when(paperTenderService.getSimplifiedCost(address.getCap(), deliveryRequest.getProductType())).thenReturn(Mono.just(cost));
+        when(paperChannelDeliveryDriverDAO.getByDeliveryDriverId("DRIVER_ID")).thenReturn(Mono.just(driver));
+        when(requestDeliveryDAO.updateDataWithoutGet(deliveryRequest, false)).thenReturn(Mono.just(deliveryRequest));
 
 
         StepVerifier.create(preparePhaseOneAsyncService.preparePhaseOneAsync(event))
@@ -134,7 +159,7 @@ class PreparePhaseOneAsyncServiceImplTest {
                 .verifyComplete();
 
         //verifico che viene inviato l'evento di output della PREPARE fase 1
-        verify(prepareFlowStarter, times(1)).pushPreparePhaseOneOutput(deliveryRequest, addressEntity);
+        verify(prepareFlowStarter, times(1)).pushPreparePhaseOneOutput(deliveryRequest, addressEntity, "UNIFIED_DRIVER");
         verify(prepareFlowStarter, never()).pushResultPrepareEvent(any(), any(), any(), any(), any());
     }
 
@@ -174,16 +199,38 @@ class PreparePhaseOneAsyncServiceImplTest {
 
         // VERIFICO CHE È STATO INVIATO L'EVENTO DI KOUNREACHABLE A DELIVERY PUSH
         verify(this.prepareFlowStarter, times(1)).pushResultPrepareEvent(eq(deliveryRequest), isNull(), isNull(), eq(StatusCodeEnum.KO), eq(koReason));
-        verify(prepareFlowStarter, never()).pushPreparePhaseOneOutput(any(), any());
+        verify(prepareFlowStarter, never()).pushPreparePhaseOneOutput(any(), any(), any());
+    }
+
+    @Test
+    void preparePhaseOneAsyncForeignAddressTest() {
+        var requestId = "PREPARE_ANALOG_DOMICILE.IUN_TEST.RECINDEX_0.ATTEMPT_0";
+        var iun = "TEST";
+        var deliveryRequest = getDeliveryRequest(requestId, iun);
+        var address = getAddress();
+        address.setCountry("ForeignCountry"); // Indirizzo estero
+        var addressEntity = AddressMapper.toEntity(address, deliveryRequest.getRequestId(), AddressTypeEnum.RECEIVER_ADDRESS, config);
+
+        when(requestDeliveryDAO.getByRequestId(requestId, false)).thenReturn(Mono.just(deliveryRequest));
+        when(paperAddressService.getCorrectAddress(deliveryRequest, null, 0)).thenReturn(Mono.just(address));
+        when(addressDAO.create(any(PnAddress.class))).thenReturn(Mono.just(addressEntity));
+        when(attachmentsConfigService.filterAttachmentsToSend(deliveryRequest, deliveryRequest.getAttachments(), addressEntity)).thenReturn(Mono.just(deliveryRequest));
+
+        StepVerifier.create(preparePhaseOneAsyncService.preparePhaseOneAsync(PrepareNormalizeAddressEvent.builder()
+                        .requestId(requestId)
+                        .iun(iun)
+                        .attempt(0)
+                        .build()))
+                .expectNext(deliveryRequest)
+                .verifyComplete();
+
+        verify(sqsSender, times(1)).pushToDelayerToPaperchennelQueue(any());
+        verify(prepareFlowStarter, never()).pushPreparePhaseOneOutput(any(), any(), any());
     }
 
 
 
-
-
-
     private void inizialize(){
-
 
     }
 

@@ -638,6 +638,10 @@ Parameters:
     Type: String
     Description: Events from pn-delayer TO pn-paper-channel queue ARN
 
+  DelayerToPaperChannelQueueQueueURL:
+    Type: String
+    Description: Events from pn-delayer TO pn-paper-channel queue URL
+
   PaperChannelPrepareToDelayerQueuePipeDesiredState:
     Type: String
     Default: 'RUNNING'
@@ -671,6 +675,14 @@ Parameters:
     Type: String
     Default: 'FATAL'
 
+  PnDelayerToPaperChannelEventBusRuleStatus:
+    Type: String
+    Default: ENABLED
+    AllowedValues:
+      - ENABLED
+      - DISABLED
+    Description: 'EventBridge Rule To DelayerToPaperChannel'
+      
 Conditions:
   UseExternalChannelMock: !Equals [ !Ref ExternalChannelBaseUrl, "Mock" ]
 
@@ -923,6 +935,9 @@ Resources:
                 - pipes.amazonaws.com
             Action:
               - sts:AssumeRole
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref "AWS::AccountId"
       Policies:
         - PolicyName: !Sub ${ProjectName}-paper-channel-to-delayer-source-policy
           PolicyDocument:
@@ -934,19 +949,15 @@ Resources:
                   - 'sqs:DeleteMessage'
                   - 'sqs:GetQueueAttributes'
                 Resource: !Ref PaperChannelToDelayerQueueARN
-        - PolicyName: !Sub ${ProjectName}-paper-channel-to-delayer-target-policy
+        - PolicyName: !Sub ${ProjectName}-paper-channel-to-event-core-bus
           PolicyDocument:
             Version: 2012-10-17
             Statement:
-              - Effect: Allow
+              - Sid: PutEvents
+                Effect: Allow
                 Action:
-                  - 'sqs:ChangeMessageVisibility'
-                  - 'sqs:ChangeMessageVisibilityBatch'
-                  - 'sqs:GetQueueAttributes'
-                  - 'sqs:GetQueueUrl'
-                  - 'sqs:SendMessage'
-                  - 'sqs:SendMessageBatch'
-                Resource: !Ref DelayerToPaperChannelQueueARN
+                  - "events:PutEvents"
+                Resource: !Sub "arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:event-bus/pn-CoreEventBus"
 
   # pn-paper-channel
   PaperChannelPrepareToDelayerQueuePipe:
@@ -961,13 +972,14 @@ Resources:
         SqsQueueParameters:
           BatchSize: 10
       TargetParameters:
-        InputTemplate: |
+        EventBridgeEventBusParameters:
+          DetailType: "PreparePhaseOneOutcomeEvent"
+        InputTemplate: !Sub |
           {
-            "requestId": <$.body.requestId>,
-            "iun": <$.body.iun>,
-            "recipientNormalizedAddress": <$.body.recipientNormalizedAddress>
+            "body": <$.body>
           }
-      Target: !Ref DelayerToPaperChannelQueueARN
+      Target: !Sub arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/${ProjectName}-CoreEventBus
+      #Target: !Ref DelayerToPaperChannelQueueARN
 
   # Dashboard
   PaperChannelMicroserviceCloudWatchDashboard:
@@ -1152,8 +1164,19 @@ Resources:
             Period: !Ref AutoscalingCheckPeriod
             Stat: Average
           ReturnData: False
+        - Id: m8
+          MetricStat:
+            Metric:
+              Dimensions:
+                - Name: QueueName
+                  Value: !Ref "DelayerToPaperChannelQueueName"
+              Namespace: "AWS/SQS"
+              MetricName: "ApproximateNumberOfMessagesVisible"
+            Period: !Ref AutoscalingCheckPeriod
+            Stat: Average
+          ReturnData: False
         - Id: code
-          Expression: !Sub "IF(m5==0, 101, (100*(m1+m2+m3+m7)) / (${ConsumedQueueMessagePerMinute} * m5) )"
+          Expression: !Sub "IF(m5==0, 101, (100*(m1+m2+m3+m6+m7+m8)) / (${ConsumedQueueMessagePerMinute} * m5) )"
           Label: !Sub "${ProjectName}-paper-channel-queue-custom-metric"
           ReturnData: False
         - Id: http
@@ -1169,3 +1192,79 @@ Resources:
         - !GetAtt PaperChannelMicroservice.Outputs.ScaleUpPolicy
       OKActions:
         - !GetAtt PaperChannelMicroservice.Outputs.ScaleDownPolicy
+
+  PnCoreEventBusToDelayerToPaperchannelQueue:
+    Type: AWS::Events::Rule
+    Properties: 
+      Description: Route pn-CoreEventBus Events to DelayerToPaperChannel queue
+      RoleArn: !GetAtt "EventBusEnqueueRole.Arn" 
+      EventBusName: !Sub '${ProjectName}-CoreEventBus'
+      State: !Ref PnDelayerToPaperChannelEventBusRuleStatus
+      EventPattern:
+        detail-type: [ "PreparePhaseOneOutcomeEvent" ]
+      Targets: 
+        - Arn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:PnCoreEventBusMatchedEventLogger
+          Id: !Sub ${ProjectName}-Logger-DelayerToPaperChannelQueue
+          InputTransformer:
+            InputPathsMap:
+              "timestamp": "$.time"
+            InputTemplate: |
+              {
+                  "timestamp": <timestamp>,
+                  "ruleArn": <aws.events.rule-arn>,
+                  "ruleName": <aws.events.rule-name>,
+                  "ingestionTime": <aws.events.event.ingestion-time>,
+                  "originalEvent": <aws.events.event.json>
+              }       
+        - Id: !Sub '${ProjectName}-DelayerToPaperChannelQueue'
+          Arn: !Ref DelayerToPaperChannelQueueARN
+          InputPath: $.detail.body
+          DeadLetterConfig:
+            Arn: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:pn-CoreEventBus-DLQ
+
+  EventBusEnqueueRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: events.amazonaws.com
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref "AWS::AccountId"
+        Version: "2012-10-17"
+      Policies:
+        - PolicyName: !Sub ${ProjectName}-paper-channel-eventBusRuleQueuePolicy
+          PolicyDocument:
+            Statement:
+              - Sid: putEvents
+                Action:
+                  - sqs:ChangeMessageVisibility
+                  - sqs:GetQueueAttributes
+                  - sqs:GetQueueUrl
+                  - sqs:SendMessage
+                Effect: Allow
+                Resource: 
+                  - !Ref DelayerToPaperChannelQueueARN
+
+  PnDeliveryQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref DelayerToPaperChannelQueueQueueURL
+      PolicyDocument:
+        Statement:
+          - Sid: "SendEventsToDLQ"
+            Effect: "Allow"
+            Principal: 
+              Service: 
+                - "events.amazonaws.com"
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref "AWS::AccountId"
+            Action: 
+              - "SQS:SendMessage"
+            Resource:
+              - !Ref "DelayerToPaperChannelQueueARN"
