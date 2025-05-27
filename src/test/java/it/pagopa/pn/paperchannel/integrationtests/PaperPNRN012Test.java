@@ -65,7 +65,7 @@ class PaperPNRN012Test extends BaseTest.WithOutLocalStackTest {
     private EventMetaDAO eventMetaDAO;
     @MockitoBean
     private MetaDematCleaner metaDematCleaner;
-    @MockBean
+    @MockitoBean
     private PaperRequestErrorDAOImpl requestErrorDAO;
 
     @Test
