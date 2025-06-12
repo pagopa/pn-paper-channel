@@ -19,6 +19,7 @@ import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 
 import java.time.*;
+import java.time.temporal.ChronoUnit;
 
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
 
@@ -155,7 +156,7 @@ public abstract class RECRN00XCAbstractMessageHandler extends SendToDeliveryPush
     protected Duration getDurationBetweenDates(Instant instant1, Instant instant2) {
         return pnPaperChannelConfig.isEnableTruncatedDateForRefinementCheck()
                 ? Duration.ofDays(
-                        Period.between(toRomeDate(instant1), toRomeDate(instant2)).getDays())
+                    Math.abs(ChronoUnit.DAYS.between(toRomeDate(instant1), toRomeDate(instant2))))
                 : Duration.between(instant1, instant2);
     }
 
