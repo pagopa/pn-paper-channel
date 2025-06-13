@@ -1,6 +1,6 @@
 package it.pagopa.pn.paperchannel.integrationtests;
 
-import io.awspring.cloud.autoconfigure.messaging.SqsAutoConfiguration;
+import io.awspring.cloud.autoconfigure.sqs.SqsAutoConfiguration;
 import it.pagopa.pn.paperchannel.config.BaseTest;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.AttachmentDetailsDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
@@ -24,8 +24,7 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.cloud.function.context.config.ContextFunctionCatalogAutoConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ActiveProfiles;
 import reactor.core.publisher.Mono;
 
@@ -44,7 +43,7 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest
-@EnableAutoConfiguration(exclude= {SqsAutoConfiguration.class, ContextFunctionCatalogAutoConfiguration.class})
+@EnableAutoConfiguration(exclude= {SqsAutoConfiguration.class })
 @ActiveProfiles("test")
 class PaperPNRN012Test extends BaseTest.WithOutLocalStackTest {
     private static final String REQUEST_ID = "abc-234-SDSS";
@@ -56,17 +55,17 @@ class PaperPNRN012Test extends BaseTest.WithOutLocalStackTest {
     @Autowired
     private PaperResultAsyncService paperResultAsyncService;
 
-    @MockBean
+    @MockitoBean
     private SqsSender sqsSender;
-    @MockBean
+    @MockitoBean
     private RequestDeliveryDAO requestDeliveryDAO;
-    @MockBean
+    @MockitoBean
     private EventDematDAO eventDematDAO;
-    @MockBean
+    @MockitoBean
     private EventMetaDAO eventMetaDAO;
-    @MockBean
+    @MockitoBean
     private MetaDematCleaner metaDematCleaner;
-    @MockBean
+    @MockitoBean
     private PaperRequestErrorDAOImpl requestErrorDAO;
 
     @Test

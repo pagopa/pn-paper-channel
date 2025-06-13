@@ -27,8 +27,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
@@ -63,25 +63,25 @@ class QueueListenerTestIT extends BaseTest
     @Autowired
     private PnPaperChannelConfig config;
 
-    @SpyBean
+    @MockitoSpyBean
     private QueueListenerService queueListenerService;
 
-    @MockBean
+    @MockitoBean
     private RequestDeliveryDAO requestDeliveryDAO;
 
-    @MockBean
+    @MockitoBean
     private AddressDAO addressDAO;
 
-    @MockBean
+    @MockitoBean
     private ExternalChannelClient externalChannelClient;
 
-    @MockBean
+    @MockitoBean
     private PaperRequestErrorDAO paperRequestErrorDAO;
 
-    @MockBean
+    @MockitoBean
     private PreparePhaseOneAsyncService preparePhaseOneAsyncService;
 
-    @MockBean
+    @MockitoBean
     private NationalRegistryService nationalRegistryService;
 
 

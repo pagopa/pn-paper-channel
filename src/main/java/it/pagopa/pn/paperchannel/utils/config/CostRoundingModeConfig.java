@@ -3,7 +3,7 @@ package it.pagopa.pn.paperchannel.utils.config;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import lombok.Getter;
 import org.springframework.stereotype.Component;
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 import java.math.RoundingMode;
 import java.util.Arrays;
 import java.util.HashSet;
