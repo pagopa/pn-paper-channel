@@ -58,6 +58,7 @@ public class PreparePhaseOneAsyncServiceImpl implements PreparePhaseOneAsyncServ
                         .thenReturn(deliveryRequestWithAddress))
                 .flatMap(deliveryRequestWithAddress ->  Utility.isNational(deliveryRequestWithAddress.getT2().getCountry()) ?
                         prepareAndSendToPhaseOneOutput(deliveryRequestWithAddress) : sendToPhaseTwoQueue(deliveryRequestWithAddress))
+                .flatMap(this::updateRequestInSendToDelayer)
                 .doOnNext(deliveryRequest -> {
                     log.info("End of prepare async phase one");
                     log.logEndingProcess(PROCESS_NAME);
@@ -81,8 +82,7 @@ public class PreparePhaseOneAsyncServiceImpl implements PreparePhaseOneAsyncServ
                 .flatMap(cost -> paperChannelDeliveryDriverDAO.getByDeliveryDriverId(cost.getDeliveryDriverId()))
                 .map(PaperChannelDeliveryDriver::getUnifiedDeliveryDriver)
                 .doOnNext(unifiedDeliveryDriver -> prepareFlowStarter.pushPreparePhaseOneOutput(deliveryRequestWithAddress.getT1(), deliveryRequestWithAddress.getT2(), unifiedDeliveryDriver))
-                .thenReturn(deliveryRequestWithAddress.getT1())
-                .flatMap(this::updateRequestInSendToDelayer);
+                .thenReturn(deliveryRequestWithAddress.getT1());
     }
 
     private Mono<PnDeliveryRequest> updateRequestInSendToDelayer(PnDeliveryRequest pnDeliveryRequest){

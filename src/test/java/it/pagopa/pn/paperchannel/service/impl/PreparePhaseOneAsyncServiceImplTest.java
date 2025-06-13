@@ -215,6 +215,7 @@ class PreparePhaseOneAsyncServiceImplTest {
         when(paperAddressService.getCorrectAddress(deliveryRequest, null, 0)).thenReturn(Mono.just(address));
         when(addressDAO.create(any(PnAddress.class))).thenReturn(Mono.just(addressEntity));
         when(attachmentsConfigService.filterAttachmentsToSend(deliveryRequest, deliveryRequest.getAttachments(), addressEntity)).thenReturn(Mono.just(deliveryRequest));
+        when(requestDeliveryDAO.updateDataWithoutGet(deliveryRequest, false)).thenReturn(Mono.just(deliveryRequest));
 
         StepVerifier.create(preparePhaseOneAsyncService.preparePhaseOneAsync(PrepareNormalizeAddressEvent.builder()
                         .requestId(requestId)
