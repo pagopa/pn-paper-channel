@@ -7,6 +7,7 @@ export enum OperationEnum {
   GET_COST = 'GET_COST',
   GET_DELIVERY_DRIVERS = 'GET_DELIVERY_DRIVERS',
   GET_GEOKEY = 'GET_GEOKEY',
+  GET_UNIFIED_DELIVERY_DRIVERS = 'GET_UNIFIED_DELIVERY_DRIVERS',
 }
 
 export const BaseEventSchema = z.object({
@@ -17,6 +18,7 @@ export const BaseEventSchema = z.object({
     OperationEnum.GET_COST,
     OperationEnum.GET_DELIVERY_DRIVERS,
     OperationEnum.GET_GEOKEY,
+    OperationEnum.GET_UNIFIED_DELIVERY_DRIVERS,
   ]),
 });
 
@@ -59,6 +61,18 @@ export const DeliveryDriversEventSchema = BaseEventSchema.extend({
   operation: z.literal(OperationEnum.GET_DELIVERY_DRIVERS)
 });
 
+export const UnifiedDeliveryDriversSchema = z.object({
+  operation: z.literal(OperationEnum.GET_UNIFIED_DELIVERY_DRIVERS),
+  tenderId: z.string(),
+  requests: z.array(
+    z.object({
+      geoKey: z.string(),
+      product: z.string(),
+      unifiedDeliveryDriver: z.string().optional(),
+    })
+  )
+});
+
 // types union
 export const EventSchema = z.union([
   TendersEventSchema,
@@ -74,5 +88,6 @@ export type TenderActiveEvent = z.infer<typeof TenderActiveEventSchema>;
 export type CostsEvent = z.infer<typeof CostsEventSchema>;
 export type CostEvent = z.infer<typeof CostEventSchema>;
 export type DeliveryDriversEvent = z.infer<typeof DeliveryDriversEventSchema>;
+export type UnifiedDeliveryDriversEvent = z.infer<typeof UnifiedDeliveryDriversSchema>;
 export type GeokeyEvent = z.infer<typeof GeokeyEventSchema>;
 export type Event = z.infer<typeof EventSchema>;

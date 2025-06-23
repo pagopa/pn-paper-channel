@@ -8,14 +8,15 @@ import {
   CostEvent,
   CostsEvent,
   DeliveryDriversEvent,
+  UnifiedDeliveryDriversEvent,
   GeokeyEvent,
   TenderActiveEvent,
   TendersEvent,
 } from '../types/schema-request-types';
-import { Page, Response, ResponseLambda } from '../types/model-types';
+import { Page, Response, ResponseLambda, PaperChannelUnifiedDeliveryDriver } from '../types/model-types';
 import { getActiveTender, getAllTenders } from '../services/tender-service';
 import { getCost, getCosts } from '../services/cost-service';
-import { getAllDeliveryDrivers } from '../services/deliveryDrivers-service';
+import { getAllDeliveryDrivers, retrieveUnifiedDeliveryDriverForGivenRequests } from '../services/deliveryDrivers-service';
 import { getGeokeys } from '../services/geokey-service';
 
 /**
@@ -159,3 +160,27 @@ export const deliveryDriversHandler = async (
     response
   );
 };
+
+/**
+ * Retrieves unified delivery driver for given geoKeys and product.
+ *
+ * This asynchronous function logs the incoming event, fetches the unified delivery driver
+ * and returns the response formatted as a ResponseLambda object containing the information.
+ *
+ * @param event - An object of type UnifiedDeliveryDriversRequestEvent.
+ * @returns A Promise that resolves to a Response containing the unified delivery driver information
+ *          as a PaperChannelUnifiedDeliveryDrivers object.
+ *
+ * @throws Will throw an NotFoundError if the delivery driver not found.
+ */
+export const unifiedDeliveryDriversHandler = async (
+  event: UnifiedDeliveryDriversEvent
+): Promise<Response<PaperChannelUnifiedDeliveryDriver[]>> => {
+  console.log('Get unifiedDeliveryDriver from event', event);
+  const response = await retrieveUnifiedDeliveryDriverForGivenRequests(event.requests, event.tenderId);
+  console.log('Response is ', response);
+  return new ResponseLambda<PaperChannelUnifiedDeliveryDriver[]>().toResponseOK(
+    response
+  );
+};
+

@@ -45,3 +45,11 @@ export class ResponseLambda<T> {
     };
   }
 }
+
+export type PaperChannelUnifiedDeliveryDriver = {
+  geoKey: string;
+  product: string;
+  unifiedDeliveryDriver: string;
+};
+
+

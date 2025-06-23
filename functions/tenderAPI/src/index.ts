@@ -9,6 +9,7 @@ import {
   tenderActiveHandler,
   tendersHandler,
   geokeyHandler,
+  unifiedDeliveryDriversHandler,
 } from './handlers/api-handler';
 
 /**
@@ -39,6 +40,8 @@ const handleRoute = async (event: Event) => {
       return deliveryDriversHandler(event);
     case OperationEnum.GET_GEOKEY:
       return geokeyHandler(event);
+    case OperationEnum.GET_UNIFIED_DELIVERY_DRIVERS:
+      return unifiedDeliveryDriversHandler(event);
   }
 };
 
