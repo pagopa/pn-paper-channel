@@ -48,18 +48,18 @@ public class ExternalChannelClientImpl extends BaseClient implements ExternalCha
     }
 
 
-    public Mono<Void> sendEngageRequest(SendRequest sendRequest, List<AttachmentInfo> attachments) {
+    public Mono<Void> sendEngageRequest(SendRequest sendRequest, List<AttachmentInfo> attachments, Boolean applyRasterization) {
         return Mono.defer(() -> {
             log.logInvokingAsyncExternalService(PnLogger.EXTERNAL_SERVICES.PN_EXTERNAL_CHANNELS, PN_EXTERNAL_CHANNEL_DESCRIPTION, sendRequest.getRequestId());
             String requestIdx = sendRequest.getRequestId();
-            var dto = buildPaperEngageRequest(sendRequest, attachments);
+            var dto = buildPaperEngageRequest(sendRequest, attachments, applyRasterization);
 
             return this.paperMessagesApi.sendPaperEngageRequest(requestIdx, this.pnPaperChannelConfig.getXPagopaExtchCxId(), dto);
         });
 
     }
 
-    private PaperEngageRequestDto buildPaperEngageRequest(SendRequest sendRequest, List<AttachmentInfo> attachments) {
+    private PaperEngageRequestDto buildPaperEngageRequest(SendRequest sendRequest, List<AttachmentInfo> attachments, Boolean applyRasterization) {
         PaperEngageRequestDto dto = new PaperEngageRequestDto();
         dto.setRequestId(sendRequest.getRequestId());
         dto.setRequestPaId(sendRequest.getRequestPaId());
@@ -107,6 +107,7 @@ public class ExternalChannelClientImpl extends BaseClient implements ExternalCha
             dto.setArCap(sendRequest.getArAddress().getCap());
             dto.setArCity(sendRequest.getArAddress().getCity());
         }
+        dto.setApplyRasterization(applyRasterization);
 
         return dto;
     }

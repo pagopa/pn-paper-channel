@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
+import it.pagopa.pn.paperchannel.model.Address;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -247,6 +248,42 @@ public class Utility {
                 StringUtils.equalsIgnoreCase(country, COUNTRY_IT) ||
                 StringUtils.equalsIgnoreCase(country, COUNTRY_ITALIA) ||
                 StringUtils.equalsIgnoreCase(country, COUNTRY_ITALY);
+    }
+
+    /**
+     * Retrieves a geokey based on the address provided.
+     * <p>
+     * If the address is located in the national territory, CAP is returned.
+     * Otherwise, the country code of the address is returned.
+     * </p>
+     *
+     * @param address The address object from which to extract the geographic key.
+     * @return The postal code if the address is national, or the country code otherwise.
+     */
+    public static String getGeokey(Address address) {
+        return isNational(address.getCountry()) ? address.getCap() : address.getCountry();
+    }
+
+    /**
+     * Retrieves the request ID for the first attempt of a delivery request.
+     * <p>
+     * If the delivery request object has the {@code relatedRequestId} field populated,
+     * it indicates that this is a second attempt. In this case, the value of
+     * {@code relatedRequestId} contains the request ID of the first attempt.
+     * </p>
+     * <p>
+     * If the {@code relatedRequestId} field is not populated, it indicates that
+     * this is the first attempt, and the method returns the {@code requestId}
+     * of the delivery request object.
+     * </p>
+     *
+     * @param pnDeliveryRequest the delivery request object containing request information
+     * @return the {@code relatedRequestId} if populated, indicating a second attempt;
+     *         otherwise, the {@code requestId} of the first attempt
+     */
+    public static String getRequestIdFirstAttempt(@NotNull PnDeliveryRequest pnDeliveryRequest) {
+        var relatedRequestId = pnDeliveryRequest.getRelatedRequestId();
+        return StringUtils.isNotBlank(relatedRequestId) ? relatedRequestId : pnDeliveryRequest.getRequestId();
     }
 
 }

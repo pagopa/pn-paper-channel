@@ -1,6 +1,9 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
+import it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.RECRN00XC.RECRN004CMessageHandler;
+import it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.RECRN00XC.RECRN005CMessageHandler;
+import it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.RECRN00XC.RECRN003CMessageHandler;
 import it.pagopa.pn.paperchannel.utils.SendProgressMetaConfig;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -42,6 +45,8 @@ class HandlersFactoryTest {
         // When
         when(mockConfig.isEnableSimple890Flow())
                 .thenReturn(featureFlags.contains(FeatureFlag.SIMPLE_890_FLOW));
+        when(mockConfig.isEnableRetryCon996())
+                .thenReturn(Boolean.TRUE);
         when(mockConfig.isSendCon020())
                 .thenReturn(true);
         when(mockSendProgressMetaConfig.isMetaEnabled())
@@ -71,15 +76,19 @@ class HandlersFactoryTest {
                     List.of(
                         new TestCase("SendToDeliveryPush",
                                 List.of("CON080", "RECRI001", "RECRI002", "RECRS001C", "RECRS003C",
-                                        "RECRS015", "RECRN015", "RECAG015", "RECAG010", "RECRS010", "RECRN010"),
+                                        "RECRS015", "RECRN015", "RECAG015", "RECAG010", "RECRS010"),
                                 SendToDeliveryPushHandler.class),
+                        new TestCase("CON996", List.of("CON996"), ProxyCON996MessageHandler.class),
                         new TestCase("SaveDemat", List.of("RECRS002B"), SaveDematMessageHandler.class),
                         new TestCase("Aggregator", List.of("RECRS002C"), AggregatorMessageHandler.class),
                         new TestCase("Retryable", List.of("RECRS006"), RetryableErrorMessageHandler.class),
                         new TestCase("NotRetryable", List.of("CON998"), NotRetryableErrorMessageHandler.class),
                         new TestCase("Log", List.of("UNKNOWN"), LogMessageHandler.class),
                         new TestCase("Complex890", List.of("RECAG005C", "RECAG006C", "RECAG007C", "RECAG008C"),
-                                Proxy890MessageHandler.class)
+                                Proxy890MessageHandler.class),
+                        new TestCase("RECRN003C", List.of("RECRN003C"), RECRN003CMessageHandler.class),
+                        new TestCase("RECRN004C", List.of("RECRN004C"), RECRN004CMessageHandler.class),
+                        new TestCase("RECRN005C", List.of("RECRN005C"), RECRN005CMessageHandler.class)
                     )),
             // SIMPLE_890_FLOW ENABLE cases
             new FFTestCases(
@@ -105,7 +114,7 @@ class HandlersFactoryTest {
                                     List.of("RECRS002A", "RECRS002D", "RECRN001A", "RECRN002A", "RECRN002D",
                                             "RECAG001A", "RECAG002A", "RECAG003A", "RECAG003D", "RECRS004A", "RECRS005A",
                                             "RECRN003A", "RECRN004A", "RECRN005A", "RECAG005A", "RECAG006A", "RECAG007A",
-                                            "RECAG008A", "RECRSI004A", "RECRI003A", "RECRI004A"),
+                                            "RECAG008A", "RECRSI004A", "RECRI003A", "RECRI004A", "RECRN010"),
                                     ChainedMessageHandler.class)
                     )),
             // SEND_PROGRESS_META DISABLE cases

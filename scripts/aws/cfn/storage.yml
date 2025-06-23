@@ -73,6 +73,7 @@ Resources:
       Description: A symmetric encryption KMS key AES-256-GCM
       KeySpec: SYMMETRIC_DEFAULT
       KeyUsage: ENCRYPT_DECRYPT
+      EnableKeyRotation: true
       KeyPolicy:
         Version: 2012-10-17
         Statement:
@@ -99,6 +100,19 @@ Resources:
       TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/sqs-queue.yaml"
       Parameters:
         QueueName: !Sub '${ProjectName}-paper_channel_requests'
+        AlarmSNSTopicName: !Ref AlarmSNSTopicName
+        DelaySeconds: 1
+        VisibilityTimeout: 60
+
+  # internal queue executing the PREPARE phase 1 flow
+  PaperNormalizeAddressQueue:
+    Type: AWS::CloudFormation::Stack
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Properties:
+      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/sqs-queue.yaml"
+      Parameters:
+        QueueName: !Sub '${ProjectName}-paper-normalize-address'
         AlarmSNSTopicName: !Ref AlarmSNSTopicName
         DelaySeconds: 1
         VisibilityTimeout: 60
@@ -366,6 +380,10 @@ Resources:
           AttributeType: "S"
         - AttributeName: "author"
           AttributeType: "S"
+        - AttributeName: "category"
+          AttributeType: "S"
+        - AttributeName: "cause"
+          AttributeType: "S"
       KeySchema:
         - AttributeName: "requestId"
           KeyType: "HASH"
@@ -377,6 +395,14 @@ Resources:
             - AttributeName: "author"
               KeyType: "HASH"
             - AttributeName: "created"
+              KeyType: "RANGE"
+          Projection:
+            ProjectionType: "ALL"
+        - IndexName: "category-index"
+          KeySchema:
+            - AttributeName: "category"
+              KeyType: "HASH"
+            - AttributeName: "cause"
               KeyType: "RANGE"
           Projection:
             ProjectionType: "ALL"
@@ -634,6 +660,17 @@ Outputs:
   ScheduledRequestsQueueARN:
     Value: !GetAtt ScheduledRequestsQueue.Outputs.QueueARN
     Description: pn-paper-channel input queue ARN
+
+  # internal queue executing the PREPARE phase 1 flow
+  PaperNormalizeAddressQueueName:
+    Value: !GetAtt PaperNormalizeAddressQueue.Outputs.QueueName
+    Description: pn-paper-normalize-address queue name
+  PaperNormalizeAddressQueueURL:
+    Value: !GetAtt PaperNormalizeAddressQueue.Outputs.QueueURL
+    Description: pn-paper-normalize-address queue URL
+  PaperNormalizeAddressQueueARN:
+    Value: !GetAtt PaperNormalizeAddressQueue.Outputs.QueueARN
+    Description: pn-paper-normalize-address queue ARN
 
   PCKmsEncDecDynamoDataKeyARN:
     Description: Name of KMS Key for Dynamo encode/decode data

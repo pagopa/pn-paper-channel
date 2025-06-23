@@ -3,6 +3,7 @@ package it.pagopa.pn.paperchannel.service.impl;
 import it.pagopa.pn.api.dto.events.PnAttachmentsConfigEventPayload;
 import it.pagopa.pn.api.dto.events.PnF24PdfSetReadyEvent;
 import it.pagopa.pn.api.dto.events.PnF24PdfSetReadyEventItem;
+import it.pagopa.pn.api.dto.events.PnPrepareDelayerToPaperchannelPayload;
 import it.pagopa.pn.commons.utils.MDCUtils;
 import it.pagopa.pn.paperchannel.exception.*;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.SingleStatusUpdateDto;
@@ -13,13 +14,11 @@ import it.pagopa.pn.paperchannel.mapper.AttachmentMapper;
 import it.pagopa.pn.paperchannel.mapper.RequestDeliveryMapper;
 import it.pagopa.pn.paperchannel.mapper.SendRequestMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
-import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnRequestError;
 import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
-import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
 import it.pagopa.pn.paperchannel.model.*;
 import it.pagopa.pn.paperchannel.service.*;
@@ -34,8 +33,10 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 
+import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import static it.pagopa.pn.commons.log.PnLogger.EXTERNAL_SERVICES.PN_NATIONAL_REGISTRIES;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
@@ -45,45 +46,58 @@ import static it.pagopa.pn.paperchannel.utils.Utility.resolveAuditLogFromRespons
 
 @Service
 @CustomLog
-public class QueueListenerServiceImpl extends BaseService implements QueueListenerService {
+public class QueueListenerServiceImpl extends GenericService implements QueueListenerService {
     private static final String NATIONAL_REGISTRY_DESCRIPTION = "Retrieve the address.";
+    private static final String PROCESS_NAME = "National Registries Response Listener";
 
     private final PaperResultAsyncService paperResultAsyncService;
     private final PaperAsyncService paperAsyncService;
+    private final PreparePhaseOneAsyncService preparePhaseOneAsyncService;
+    private final PreparePhaseTwoAsyncService preparePhaseTwoAsyncService;
     private final AddressDAO addressDAO;
     private final PaperRequestErrorDAO paperRequestErrorDAO;
     private final ExternalChannelClient externalChannelClient;
     private final F24Service f24Service;
     private final DematZipService dematZipService;
     private final AttachmentsConfigService attachmentsConfigService;
+    private final PrepareFlowStarter prepareFlowStarter;
+    private final NationalRegistryService nationalRegistryService;
 
     public QueueListenerServiceImpl(RequestDeliveryDAO requestDeliveryDAO,
-                                    CostDAO costDAO,
-                                    NationalRegistryClient nationalRegistryClient,
                                     SqsSender sqsSender,
                                     PaperResultAsyncService paperResultAsyncService,
                                     PaperAsyncService paperAsyncService,
+                                    PreparePhaseOneAsyncService preparePhaseOneAsyncService,
+                                    PreparePhaseTwoAsyncService preparePhaseTwoAsyncService,
                                     AddressDAO addressDAO,
                                     PaperRequestErrorDAO paperRequestErrorDAO,
                                     ExternalChannelClient externalChannelClient,
                                     F24Service f24Service,
                                     DematZipService dematZipService,
-                                    AttachmentsConfigService attachmentsConfigService) {
+                                    AttachmentsConfigService attachmentsConfigService,
+                                    PrepareFlowStarter prepareFlowStarter, NationalRegistryService nationalRegistryService) {
 
-        super(requestDeliveryDAO, costDAO, nationalRegistryClient, sqsSender);
+        super(sqsSender, requestDeliveryDAO);
 
         this.paperResultAsyncService = paperResultAsyncService;
         this.paperAsyncService = paperAsyncService;
+        this.preparePhaseOneAsyncService = preparePhaseOneAsyncService;
+        this.preparePhaseTwoAsyncService = preparePhaseTwoAsyncService;
         this.addressDAO = addressDAO;
         this.paperRequestErrorDAO = paperRequestErrorDAO;
         this.externalChannelClient = externalChannelClient;
         this.f24Service = f24Service;
         this.dematZipService = dematZipService;
         this.attachmentsConfigService = attachmentsConfigService;
+        this.prepareFlowStarter = prepareFlowStarter;
+        this.nationalRegistryService = nationalRegistryService;
     }
 
 
-
+    /**
+     * @deprecated This method has been replaced by  {@link #normalizeAddressListener(PrepareNormalizeAddressEvent, int)}.
+     */
+    @Deprecated(since = "2.15.0", forRemoval = true)
     @Override
     public void internalListener(PrepareAsyncRequest body, int attempt) {
         String processName = "InternalListener";
@@ -106,6 +120,22 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
 
                             throw new PnGenericException(PREPARE_ASYNC_LISTENER_EXCEPTION, PREPARE_ASYNC_LISTENER_EXCEPTION.getMessage());
                         }))
+                .block();
+    }
+
+    @Override
+    public void normalizeAddressListener(PrepareNormalizeAddressEvent data, int attempt) {
+        String processName = "NormalizeAddressListener";
+        MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, data.getRequestId());
+        log.logStartingProcess(processName);
+        MDCUtils.addMDCToContextAndExecute(Mono.just(data)
+                        .flatMap(prepareNormalizeAddressEvent -> {
+                            prepareNormalizeAddressEvent.setAttempt(attempt);
+                            return this.preparePhaseOneAsyncService.preparePhaseOneAsync(prepareNormalizeAddressEvent);
+                        })
+                        .doOnSuccess(resultFromAsync -> log.logEndingProcess(processName)
+                        )
+                )
                 .block();
     }
 
@@ -157,8 +187,7 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
 
         entity.setAttempt(attempt +1);
         saveErrorAndPushError(entity.getRequestId(), StatusDeliveryEnum.F24_ERROR, entity, payload -> {
-            log.info("attempting to pushing to internal payload={}", payload);
-            sqsSender.pushInternalError(payload, entity.getAttempt(), F24Error.class);
+            prepareFlowStarter.redrivePreparePhaseTwoAfterF24Error(entity);
             return null;
         });
     }
@@ -166,11 +195,11 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
 
     @Override
     public void f24ResponseListener(PnF24PdfSetReadyEvent.Detail body) {
-        final String PROCESS_NAME = "F24 Response Listener";
+        final String processName = "F24 Response Listener";
         String requestId = body.getPdfSetReady().getRequestId();
         MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, requestId);
 
-        log.logStartingProcess(PROCESS_NAME);
+        log.logStartingProcess(processName);
         log.info("Received message from F24 queue");
         MDCUtils.addMDCToContextAndExecute(Mono.just(body)
                         .map(msg -> {
@@ -186,12 +215,12 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
 
     @Override
     public void raddAltListener(PnAttachmentsConfigEventPayload data) {
-        final String PROCESS_NAME = "raddAltListener";
+        final String processName = "raddAltListener";
         MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, data.getConfigKey());
         log.logStartingProcess(PROCESS_NAME);
         var monoResult = Mono.just(data)
                 .flatMap(request -> attachmentsConfigService.refreshConfig(data))
-                .doOnSuccess(resultFromAsync -> log.logEndingProcess(PROCESS_NAME))
+                .doOnSuccess(resultFromAsync -> log.logEndingProcess(processName))
                 .doOnError(ex -> log.error("Error in raddAltListener with configKey: {}", data.getConfigKey(), ex));
 
         MDCUtils.addMDCToContextAndExecute(monoResult).block();
@@ -201,8 +230,6 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
     public void nationalRegistriesResponseListener(AddressSQSMessageDto body) {
 
         PnLogAudit pnLogAudit = new PnLogAudit();
-
-        final String PROCESS_NAME = "National Registries Response Listener";
         MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, body.getCorrelationId());
 
         log.logStartingProcess(PROCESS_NAME);
@@ -243,20 +270,27 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                                 throw new PnGenericException(NATIONAL_REGISTRY_LISTENER_EXCEPTION, NATIONAL_REGISTRY_LISTENER_EXCEPTION.getMessage());
                             }
 
-                            if (validatePhysicalAddressPayload(addressFromNational, entity.getRequestId())) {
-                                Address address = AddressMapper.fromNationalRegistry(addressFromNational.getPhysicalAddress());
-                                return this.retrieveRelatedAddress(entity.getRelatedRequestId(), address)
-                                        .map(updateAddress -> new PrepareAsyncRequest(entity.getRequestId(), entity.getCorrelationId(), updateAddress));
-                            }
-
-                            return Mono.just(new PrepareAsyncRequest(entity.getRequestId(), entity.getCorrelationId(), null));
-                        })
-                        .flatMap(prepareRequest -> {
-                            this.sqsSender.pushToInternalQueue(prepareRequest);
-                            log.logEndingProcess(PROCESS_NAME);
-                            return Mono.empty();
+                            return startPrepareAsync(addressFromNational, entity);
                         }))
                 .block();
+    }
+
+    private Mono<Void> startPrepareAsync(@NotNull AddressSQSMessageDto addressFromNational, PnDeliveryRequest deliveryRequest) {
+        Mono<Optional<Address>> addressMono;
+
+        if (validatePhysicalAddressPayload(addressFromNational, deliveryRequest.getRequestId())) {
+            Address address = AddressMapper.fromNationalRegistry(addressFromNational.getPhysicalAddress());
+            addressMono = this.retrieveRelatedAddress(deliveryRequest.getRelatedRequestId(), address);
+        }
+        else {
+            addressMono = Mono.just(Optional.empty());
+        }
+
+        return addressMono
+                .doOnNext(updateAddress -> prepareFlowStarter
+                        .startPreparePhaseOneFromNationalRegistriesFlow(deliveryRequest, updateAddress.orElse(null)))
+                .doOnNext(updateAddress -> log.logEndingProcess(PROCESS_NAME))
+                .then();
     }
 
     private boolean validatePhysicalAddressPayload(AddressSQSMessageDto payload, String requestId) {
@@ -273,13 +307,13 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
     @Override
     public void nationalRegistriesErrorListener(NationalRegistryError data, int attempt) {
         MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, data.getRequestId());
-        final String PROCESS_NAME = "National Registries Error Listener";
-        log.logStartingProcess(PROCESS_NAME);
+        final String processName = "National Registries Error Listener";
+        log.logStartingProcess(processName);
         MDCUtils.addMDCToContextAndExecute(Mono.just(data)
                         .doOnSuccess(nationalRegistryError -> {
                             log.info("Called national Registries");
                             log.logInvokingAsyncExternalService(PN_NATIONAL_REGISTRIES,NATIONAL_REGISTRY_DESCRIPTION, nationalRegistryError.getRequestId());
-                            this.finderAddressFromNationalRegistries(
+                            nationalRegistryService.finderAddressFromNationalRegistries(
                                     nationalRegistryError.getRequestId(),
                                     nationalRegistryError.getRelatedRequestId(),
                                     nationalRegistryError.getFiscalCode(),
@@ -287,7 +321,7 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                                     nationalRegistryError.getIun(),
                                     attempt
                             );
-                            log.logEndingProcess(PROCESS_NAME);
+                            log.logEndingProcess(processName);
                         })
                         .doOnError(throwable -> {
                             log.error(throwable.getMessage());
@@ -298,19 +332,19 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
 
     @Override
     public void externalChannelListener(SingleStatusUpdateDto data, int attempt) {
-        final String PROCESS_NAME = "External Channel Listener";
+        final String processName = "External Channel Listener";
         if (data.getAnalogMail() != null) {
             MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, data.getAnalogMail().getRequestId());
         }
 
-        log.logStartingProcess(PROCESS_NAME);
+        log.logStartingProcess(processName);
 
 
         MDCUtils.addMDCToContextAndExecute(Mono.just(data)
                         .flatMap(request -> this.paperResultAsyncService.resultAsyncBackground(request, attempt))
                         .doOnSuccess(resultFromAsync -> {
                             log.info("End of external Channel result");
-                            log.logEndingProcess(PROCESS_NAME);
+                            log.logEndingProcess(processName);
                         })
                         .onErrorResume(ex -> {
                             if (ex instanceof InvalidEventOrderException invalidEventEx
@@ -350,7 +384,7 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                     List<AttachmentInfo> attachments = request.getAttachments().stream().map(AttachmentMapper::fromEntity).toList();
                     sendRequest.setRequestId(sendRequest.getRequestId().concat(Const.RETRY).concat(newPcRetry));
                     pnLogAudit.addsBeforeSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request  to External Channel", sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY)));
-                    return this.externalChannelClient.sendEngageRequest(sendRequest, attachments)
+                    return this.externalChannelClient.sendEngageRequest(sendRequest, attachments, request.getApplyRasterization())
                             .then(Mono.defer(() -> {
                                 pnLogAudit.addsSuccessSend(
                                         request.getIun(),
@@ -383,13 +417,35 @@ public class QueueListenerServiceImpl extends BaseService implements QueueListen
                 .block();
     }
 
+    @Override
+    public void delayerListener(PnPrepareDelayerToPaperchannelPayload data, int attempt) {
+        String processName = "DelayerListener";
+        MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, data.getRequestId());
+        log.logStartingProcess(processName);
+        MDCUtils.addMDCToContextAndExecute(Mono.just(data)
+                        .flatMap(delayerRequest -> {
+                            delayerRequest.setAttempt(attempt);
+                            return this.preparePhaseTwoAsyncService.prepareAsyncPhaseTwo(data);
+                        })
+                        .doOnSuccess(resultFromAsync ->{
+                                    log.info("End of prepare async internal");
+                                    log.logEndingProcess(processName);
+                                }
+                        )
+                        .doOnError(throwable -> {
+                            log.error(throwable.getMessage());
+                            throw new PnGenericException(PREPARE_ASYNC_LISTENER_EXCEPTION, PREPARE_ASYNC_LISTENER_EXCEPTION.getMessage());
+                        }))
+                .block();
+    }
 
-    private Mono<Address> retrieveRelatedAddress(String relatedRequestId, Address fromNationalRegistry){
+
+    private Mono<Optional<Address>> retrieveRelatedAddress(String relatedRequestId, Address fromNationalRegistry){
         return addressDAO.findByRequestId(relatedRequestId)
                 .map(address -> {
                     fromNationalRegistry.setFullName(address.getFullName());
-                    return fromNationalRegistry;
-                }).switchIfEmpty(Mono.just(fromNationalRegistry));
+                    return Optional.of(fromNationalRegistry);
+                }).switchIfEmpty(Mono.just(Optional.of(fromNationalRegistry)));
 
     }
 

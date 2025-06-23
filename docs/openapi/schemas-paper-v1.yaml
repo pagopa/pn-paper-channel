@@ -161,7 +161,7 @@ components:
             - __RECRN002F__- [AR] - [KO] - Irreperibilità Assoluta - Fascicolo Chiuso <br/>
             - __RECRN003C__- [AR] - [OK] - Consegnato presso Punti di Giacenza - Fascicolo Chiuso <br/>
             - __RECRN004C__- [AR] - [KO] - Mancata consegna presso Punti di Giacenza - Fascicolo Chiuso <br/>
-            - __RECRN005C__- [AR] - [KO] - Compiuta giacenza - Fascicolo Chiuso <br/>
+            - __RECRN005C__- [AR] - [OK] - Compiuta giacenza - Fascicolo Chiuso <br/>
             - __RECRN006__- [AR] - [PROGRESS] - Furto/Smarrimanto/deterioramento <br/>
             - __RECAG001C__- [890] - [OK] - Consegnato - Fascicolo Chiuso <br/>
             - __RECAG002C__- [890] - [OK] - Consegnato a persona abilitata - Fascicolo Chiuso <br/>
@@ -338,6 +338,9 @@ components:
               \ documentUrl può rispondere (alla GET) con un 403 per redirect vs servizio\
               \ (i.e. lambda, safe storage, presigned url vs bucket s3 non cifrato).\
               \ Utilizzato per recuperare il conteggio delle pagine da stampare"
+        senderPaId:
+          type: string
+          description: Identificativo della PA mittente
     AnalogAddress:
       required:
       - address

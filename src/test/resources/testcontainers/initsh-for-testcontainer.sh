@@ -1,10 +1,10 @@
 echo "### CREATE AWS OBJECTS FOR IT TESTS ###"
 
-bash <(curl -s https://raw.githubusercontent.com/pagopa/pn-paper-channel/a0c052bc3779bd563a013e5fc53da819bed64ab9/src/test/resources/testcontainers/init.sh)
+bash <(curl -s https://raw.githubusercontent.com/pagopa/pn-paper-channel/1bd29cd4cb43f513ac86387ce29fec02cbe3ee07/src/test/resources/testcontainers/init.sh)
 
 
 echo "### CREATE TEST IT QUEUES ###"
-queues="local-ext-channels-outputs-test local-ext-channels-outputs-test-DLQ local-radd-alt-to-paper-channel"
+queues="local-ext-channels-outputs-test local-ext-channels-outputs-test-DLQ local-radd-alt-to-paper-channel local-paperchannel_to_delayer local-paper-normalize-address-test"
 for qn in  $( echo $queues | tr " " "\n" ) ; do
     echo creating queue $qn ...
     aws --profile default --region us-east-1 --endpoint-url http://localstack:4566 \

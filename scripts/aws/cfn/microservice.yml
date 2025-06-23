@@ -162,6 +162,17 @@ Parameters:
     Type: String
     Description: 'Duration for refinement'
 
+  CompiutaGiacenzaArDuration:
+    Type: String
+    Description: 'Duration for compiuta giacenza (e.g., 5d, 5h, 5m, 5s)'
+
+  EnableTruncatedDateForRefinementCheck:
+    Type: String
+    Description: 'If enabled truncate datetime to local date for refinement check'
+    AllowedValues:
+      - 'true'
+      - 'false'
+
   CloudwatchMetricCron:
     Type: String
     Description: 'Time before send metric'
@@ -371,6 +382,14 @@ Parameters:
   ScheduledRequestsQueueARN:
     Type: String
     Description: 'Send and pull requests in this queue'
+
+  PaperNormalizeAddressQueueName:
+    Type: String
+    Description: 'Name of the queue executing the flow of PREPARE phase 1'
+
+  PaperNormalizeAddressQueueARN:
+    Type: String
+    Description: 'ARN of the queue executing the flow of PREPARE phase 1'
 
   RaddAltToPaperChannelQueueName:
     Type: String
@@ -601,6 +620,52 @@ Parameters:
       - 'true'
       - 'false'
 
+  EnableRetryCon996:
+    Type: String
+    Default: 'true'
+    Description: 'Variable that defines whether to enable the retry of CON996 messages'
+    AllowedValues:
+      - 'true'
+      - 'false'
+
+  # pn-paper-channel TO pn-delayer events
+  PaperChannelToDelayerQueueARN:
+    Type: String
+    Description: Events from pn-paper-channel TO pn-delayer queue ARN
+
+  # pn-delayer TO pn-paper-channel events
+  DelayerToPaperChannelQueueARN:
+    Type: String
+    Description: Events from pn-delayer TO pn-paper-channel queue ARN
+
+  DelayerToPaperChannelQueueQueueURL:
+    Type: String
+    Description: Events from pn-delayer TO pn-paper-channel queue URL
+
+  PaperChannelPrepareToDelayerQueuePipeDesiredState:
+    Type: String
+    Default: 'RUNNING'
+    Description: 'Desired state of the pipe'
+    AllowedValues:
+      - 'RUNNING'
+      - 'STOPPED'
+
+  PrepareTwoPhases:
+    Type: String
+    Description: 'Activation of the PREPARE flow in two phases'
+    AllowedValues:
+      - 'true'
+      - 'false'
+
+  PaperChannelToDelayerQueueName:
+    Type: String
+    Description: 'Paper Channel to Delayer queue name'
+
+  DelayerToPaperChannelQueueName:
+    Type: String
+    Description: 'Delayer to Paper Channel queue name'
+
+
   # Log group parameters
   EcsLogGroup:
     Type: String
@@ -609,6 +674,14 @@ Parameters:
   LogAlarmStrategy:
     Type: String
     Default: 'FATAL'
+
+  PnDelayerToPaperChannelEventBusRuleStatus:
+    Type: String
+    Default: ENABLED
+    AllowedValues:
+      - ENABLED
+      - DISABLED
+    Description: 'EventBridge Rule To DelayerToPaperChannel'
 
   TenderAPILambdaName:
     Type: String
@@ -740,6 +813,13 @@ Resources:
         ContainerEnvEntry75: !Sub 'PN_PAPERCHANNEL_SENDPROGRESSMETA=${SendProgressMeta}'
         ContainerEnvEntry76: !Sub 'PN_PAPERCHANNEL_COSTROUNDINGMODE=${CostRoundingMode}'
         ContainerEnvEntry77: !Sub 'PN_PAPERCHANNEL_SENDCON020=${SendCon020}'
+        ContainerEnvEntry78: !Sub 'PN_PAPERCHANNEL_PREPARETWOPHASES=${PrepareTwoPhases}'
+        ContainerEnvEntry79: !Sub 'PN_PAPERCHANNEL_QUEUENORMALIZEADDRESS=${PaperNormalizeAddressQueueName}'
+        ContainerEnvEntry80: !Sub 'PN_PAPERCHANNEL_QUEUEPAPERCHANNELTODELAYER=${PaperChannelToDelayerQueueName}'
+        ContainerEnvEntry81: !Sub 'PN_PAPERCHANNEL_QUEUEDELAYERTOPAPERCHANNEL=${DelayerToPaperChannelQueueName}'
+        ContainerEnvEntry82: !Sub 'PN_PAPERCHANNEL_COMPIUTAGIACENZAARDURATION=${CompiutaGiacenzaArDuration}'
+        ContainerEnvEntry83: !Sub 'PN_PAPERCHANNEL_ENABLERETRYCON996=${EnableRetryCon996}'
+        ContainerEnvEntry84: !Sub 'PN_PAPERCHANNEL_ENABLETRUNCATEDDATEFORREFINEMENTCHECK=${EnableTruncatedDateForRefinementCheck}'
         ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-PaperChannel-Secrets
         MappedPaths: '/paper-channel-bo/*,/paper-channel-private/*'
@@ -783,6 +863,9 @@ Resources:
               - !Ref ExternalChannelsOutputsQueueARN
               - !Ref ExternalChannels2PaperChannelQueueARN
               - !Ref ScheduledRequestsQueueARN
+              - !Ref PaperNormalizeAddressQueueARN
+              - !Ref PaperChannelToDelayerQueueARN
+              - !Ref DelayerToPaperChannelQueueARN
               - !Ref NationalRegistries2PaperChannelQueueARN
               - !Ref F24ToPaperChannelQueueARN
               - !Ref RaddAltToPaperChannelQueueARN
@@ -854,6 +937,69 @@ Resources:
             Resource:
               - "*"
 
+
+  ###            Paper Channel Queue to Delayer Queue Pipe                                  ###
+  ############################################################################
+
+  # pn-paper-channel
+  PaperChannelPrepareToDelayerQueuePipeRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - pipes.amazonaws.com
+            Action:
+              - sts:AssumeRole
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref "AWS::AccountId"
+      Policies:
+        - PolicyName: !Sub ${ProjectName}-paper-channel-to-delayer-source-policy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'sqs:ReceiveMessage'
+                  - 'sqs:DeleteMessage'
+                  - 'sqs:GetQueueAttributes'
+                Resource: !Ref PaperChannelToDelayerQueueARN
+        - PolicyName: !Sub ${ProjectName}-paper-channel-to-event-core-bus
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: PutEvents
+                Effect: Allow
+                Action:
+                  - "events:PutEvents"
+                Resource: !Sub "arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:event-bus/pn-CoreEventBus"
+
+  # pn-paper-channel
+  PaperChannelPrepareToDelayerQueuePipe:
+    Type: AWS::Pipes::Pipe
+    Properties:
+      Name: !Sub ${ProjectName}-paper-channel-to-delayer-pipe
+      Description: 'Pipe from Paper Channel Queue to Delayer queue'
+      RoleArn: !GetAtt PaperChannelPrepareToDelayerQueuePipeRole.Arn
+      DesiredState: !Ref PaperChannelPrepareToDelayerQueuePipeDesiredState
+      Source: !Ref PaperChannelToDelayerQueueARN
+      SourceParameters:
+        SqsQueueParameters:
+          BatchSize: 10
+      TargetParameters:
+        EventBridgeEventBusParameters:
+          DetailType: "PreparePhaseOneOutcomeEvent"
+        InputTemplate: !Sub |
+          {
+            "body": <$.body>
+          }
+      Target: !Sub arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/${ProjectName}-CoreEventBus
+      #Target: !Ref DelayerToPaperChannelQueueARN
+
   # Dashboard
   PaperChannelMicroserviceCloudWatchDashboard:
     Type: AWS::CloudFormation::Stack
@@ -896,12 +1042,13 @@ Resources:
           - - !Ref ExternalChannelsOutputsQueueARN
             - !Ref ExternalChannels2PaperChannelQueueARN
             - !Ref ScheduledRequestsQueueARN
+            - !Ref PaperNormalizeAddressQueueARN
             - !Ref NationalRegistries2PaperChannelQueueARN
             - !Ref F24ToPaperChannelQueueARN
             - !Ref RaddAltToPaperChannelQueueARN
         LogGroupsNames: !Join
           - ','
-          - - !Sub '/aws/ecs/${ProjectName}-paper-channel'
+          - - !Sub '/aws/ecs/${ProjectName}-paper-channel'   
 
 
   # Lambda function
@@ -1055,6 +1202,17 @@ Resources:
             Period: !Ref AutoscalingCheckPeriod
             Stat: Average
           ReturnData: False
+        - Id: m7
+          MetricStat:
+            Metric:
+              Dimensions:
+                - Name: QueueName
+                  Value: !Ref "PaperNormalizeAddressQueueName"
+              Namespace: "AWS/SQS"
+              MetricName: "ApproximateNumberOfMessagesVisible"
+            Period: !Ref AutoscalingCheckPeriod
+            Stat: Average
+          ReturnData: False
         - Id: m4
           MetricStat:
             Metric:
@@ -1090,8 +1248,19 @@ Resources:
             Period: !Ref AutoscalingCheckPeriod
             Stat: Average
           ReturnData: False
+        - Id: m8
+          MetricStat:
+            Metric:
+              Dimensions:
+                - Name: QueueName
+                  Value: !Ref "DelayerToPaperChannelQueueName"
+              Namespace: "AWS/SQS"
+              MetricName: "ApproximateNumberOfMessagesVisible"
+            Period: !Ref AutoscalingCheckPeriod
+            Stat: Average
+          ReturnData: False
         - Id: code
-          Expression: !Sub "IF(m5==0, 101, (100*(m1+m2+m3)) / (${ConsumedQueueMessagePerMinute} * m5) )"
+          Expression: !Sub "IF(m5==0, 101, (100*(m1+m2+m3+m6+m7+m8)) / (${ConsumedQueueMessagePerMinute} * m5) )"
           Label: !Sub "${ProjectName}-paper-channel-queue-custom-metric"
           ReturnData: False
         - Id: http
@@ -1107,3 +1276,79 @@ Resources:
         - !GetAtt PaperChannelMicroservice.Outputs.ScaleUpPolicy
       OKActions:
         - !GetAtt PaperChannelMicroservice.Outputs.ScaleDownPolicy
+
+  PnCoreEventBusToDelayerToPaperchannelQueue:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: Route pn-CoreEventBus Events to DelayerToPaperChannel queue
+      RoleArn: !GetAtt "EventBusEnqueueRole.Arn"
+      EventBusName: !Sub '${ProjectName}-CoreEventBus'
+      State: !Ref PnDelayerToPaperChannelEventBusRuleStatus
+      EventPattern:
+        detail-type: [ "PreparePhaseOneOutcomeEvent" ]
+      Targets:
+        - Arn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:PnCoreEventBusMatchedEventLogger
+          Id: !Sub ${ProjectName}-Logger-DelayerToPaperChannelQueue
+          InputTransformer:
+            InputPathsMap:
+              "timestamp": "$.time"
+            InputTemplate: |
+              {
+                  "timestamp": <timestamp>,
+                  "ruleArn": <aws.events.rule-arn>,
+                  "ruleName": <aws.events.rule-name>,
+                  "ingestionTime": <aws.events.event.ingestion-time>,
+                  "originalEvent": <aws.events.event.json>
+              }
+        - Id: !Sub '${ProjectName}-DelayerToPaperChannelQueue'
+          Arn: !Ref DelayerToPaperChannelQueueARN
+          InputPath: $.detail.body
+          DeadLetterConfig:
+            Arn: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:pn-CoreEventBus-DLQ
+
+  EventBusEnqueueRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: events.amazonaws.com
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref "AWS::AccountId"
+        Version: "2012-10-17"
+      Policies:
+        - PolicyName: !Sub ${ProjectName}-paper-channel-eventBusRuleQueuePolicy
+          PolicyDocument:
+            Statement:
+              - Sid: putEvents
+                Action:
+                  - sqs:ChangeMessageVisibility
+                  - sqs:GetQueueAttributes
+                  - sqs:GetQueueUrl
+                  - sqs:SendMessage
+                Effect: Allow
+                Resource:
+                  - !Ref DelayerToPaperChannelQueueARN
+
+  PnDeliveryQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref DelayerToPaperChannelQueueQueueURL
+      PolicyDocument:
+        Statement:
+          - Sid: "SendEventsToDLQ"
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "events.amazonaws.com"
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref "AWS::AccountId"
+            Action:
+              - "SQS:SendMessage"
+            Resource:
+              - !Ref "DelayerToPaperChannelQueueARN"

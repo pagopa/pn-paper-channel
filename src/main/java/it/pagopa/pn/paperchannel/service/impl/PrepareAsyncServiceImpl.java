@@ -9,13 +9,11 @@ import it.pagopa.pn.paperchannel.mapper.AttachmentMapper;
 import it.pagopa.pn.paperchannel.mapper.PrepareEventMapper;
 import it.pagopa.pn.paperchannel.mapper.RequestDeliveryMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
-import it.pagopa.pn.paperchannel.middleware.db.dao.CostDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnRequestError;
-import it.pagopa.pn.paperchannel.middleware.msclient.NationalRegistryClient;
 import it.pagopa.pn.paperchannel.model.*;
 import it.pagopa.pn.paperchannel.service.*;
 import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
@@ -39,7 +37,7 @@ import static it.pagopa.pn.paperchannel.utils.Const.PREFIX_REQUEST_ID_SERVICE_DE
 
 @Service
 @CustomLog
-public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncService {
+public class PrepareAsyncServiceImpl extends GenericService implements PaperAsyncService {
 
     private final SafeStorageService safeStorageService;
     private final AddressDAO addressDAO;
@@ -50,12 +48,11 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
     private final F24Service f24Service;
     private final AttachmentsConfigService attachmentsConfigService;
 
-    public PrepareAsyncServiceImpl(NationalRegistryClient nationalRegistryClient,
-                                   RequestDeliveryDAO requestDeliveryDAO, SqsSender sqsQueueSender, CostDAO costDAO,
+    public PrepareAsyncServiceImpl(RequestDeliveryDAO requestDeliveryDAO, SqsSender sqsQueueSender,
                                    SafeStorageService safeStorageService, AddressDAO addressDAO, PnPaperChannelConfig paperChannelConfig,
                                    PaperRequestErrorDAO paperRequestErrorDAO, PaperAddressService paperAddressService,
                                    PaperCalculatorUtils paperCalculatorUtils, F24Service f24Service, AttachmentsConfigService attachmentsConfigService) {
-        super(requestDeliveryDAO, costDAO, nationalRegistryClient, sqsQueueSender);
+        super(sqsQueueSender, requestDeliveryDAO);
         this.safeStorageService = safeStorageService;
         this.addressDAO = addressDAO;
         this.paperChannelConfig = paperChannelConfig;
@@ -190,7 +187,7 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
 
     private Mono<PnAddress> checkAndUpdateAddress(PnDeliveryRequest pnDeliveryRequest, Address fromNationalRegistries, PrepareAsyncRequest queueModel){
         final String VALIDATION_NAME = "Check and update address";
-        return this.paperAddressService.getCorrectAddress(pnDeliveryRequest, fromNationalRegistries, queueModel)
+        return this.paperAddressService.getCorrectAddress(pnDeliveryRequest, fromNationalRegistries, queueModel.getAttemptRetry())
                 .flatMap(newAddress -> {
                     log.logCheckingOutcome(VALIDATION_NAME, true);
                     pnDeliveryRequest.setAddressHash(newAddress.convertToHash());
@@ -207,11 +204,9 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
         if(ex instanceof PnUntracebleException) {
             // se l'eccezione PnGenericException è di tipo UNTRACEABLE, ALLORA NON SCRIVO L'ERRORE SU DB
             return Mono.error(ex);
-
-        }
-        else {
+        } else {
             // ALTRIMENTI SCRIVO L'ERRORE SU DB
-            return traceError(requestId, ex.getMessage(), "CHECK_ADDRESS_FLOW").then(Mono.error(ex));
+            return traceError(requestId, ex, "CHECK_ADDRESS_FLOW").then(Mono.error(ex));
         }
     }
 
@@ -267,19 +262,19 @@ public class PrepareAsyncServiceImpl extends BaseService implements PaperAsyncSe
                 });
     }
 
-
-
     private void sendUnreachableEvent(PnDeliveryRequest request, String clientId, KOReason koReason){
         log.debug("Send Unreachable Event request id - {}, iun - {}", request.getRequestId(), request.getIun());
         this.pushPrepareEvent(request, null, clientId, StatusCodeEnum.KO, koReason);
     }
 
-    private Mono<Void> traceError(String requestId, String error, String flowType){
+    private Mono<Void> traceError(String requestId, PnGenericException ex, String flowType){
+        String geokey = (ex instanceof StopFlowSecondAttemptException) ? ((StopFlowSecondAttemptException) ex).getGeokey() : null;
 
         PnRequestError pnRequestError = PnRequestError.builder()
                 .requestId(requestId)
-                .error(error)
+                .error(ex.getMessage())
                 .flowThrow(flowType)
+                .geokey(geokey)
                 .build();
 
         return this.paperRequestErrorDAO.created(pnRequestError).then();
