@@ -4,6 +4,7 @@ import {
   geokeyHandler,
   tenderActiveHandler,
   tendersHandler,
+  unifiedDeliveryDriversHandler,
 } from '../../../src/handlers/api-handler';
 import {
   CostEvent,
@@ -12,6 +13,7 @@ import {
   OperationEnum,
   TenderActiveEvent,
   TendersEvent,
+  UnifiedDeliveryDriversEvent,
 } from '../../../src/types/schema-request-types';
 import {
   getActiveTender,
@@ -21,10 +23,12 @@ import { costItem, geokeyItem, pageTender, tender } from '../config/model-mock';
 import { NotFoundError } from '../../../src/types/error-types';
 import { getCost, getCosts } from '../../../src/services/cost-service';
 import { getGeokeys } from '../../../src/services/geokey-service';
+import { retrieveUnifiedDeliveryDriverForGivenRequests } from '../../../src/services/deliveryDrivers-service';
 
 jest.mock('../../../src/services/tender-service');
 jest.mock('../../../src/services/cost-service');
 jest.mock('../../../src/services/geokey-service');
+jest.mock('../../../src/services/deliveryDrivers-service');
 
 describe('API Handlers', () => {
   describe('Tenders handler test', () => {
@@ -249,6 +253,76 @@ describe('API Handlers', () => {
         statusCode: 200,
         description: 'OK',
         body: geokeys,
+      });
+    });
+  });
+
+  describe('unifiedDeliveryDriver handler test', () => {
+    test('when unifiedDelieryDriver is empty should throw an error', async () => {
+      (retrieveUnifiedDeliveryDriverForGivenRequests as jest.Mock).mockReturnValue(
+        Promise.reject(new NotFoundError('UnifiedDeliveryDriverNotFound'))
+      );
+
+      const event: UnifiedDeliveryDriversEvent = {
+        operation: OperationEnum.GET_UNIFIED_DELIVERY_DRIVERS,
+        tenderId: '1234',
+        requests: [
+          {
+            geoKey: '95869',
+            product: 'AR',
+          },
+          {
+            geoKey: '95870',
+            product: 'AR',
+          },
+        ],
+      };
+
+      // Act
+      await expect(() => unifiedDeliveryDriversHandler(event)).rejects.toThrow(
+        new NotFoundError('UnifiedDeliveryDriverNotFound')
+      );
+    });
+
+    test('when unifiedDeliveryDriver is not empty should return unifiedDeliveryDrivers', async () => {
+      const response = [
+        {
+          geoKey: '95869',
+          product: 'AR',
+          unifiedDeliveryDriver: 'Driver1',
+        },
+        { 
+          geoKey: '95870',
+          product: 'AR',
+          unifiedDeliveryDriver: 'Driver2',
+        },
+      ];
+
+      (retrieveUnifiedDeliveryDriverForGivenRequests as jest.Mock).mockReturnValue(Promise.resolve(response));
+
+       const event: UnifiedDeliveryDriversEvent = {
+        operation: OperationEnum.GET_UNIFIED_DELIVERY_DRIVERS,
+        tenderId: '1234',
+        requests: [
+          {
+            geoKey: '95869',
+            product: 'AR',
+          },
+          {
+            geoKey: '95870',
+            product: 'AR',
+          },
+        ],
+      };
+
+      // Act
+      const result = await unifiedDeliveryDriversHandler(event);
+
+      // Assert
+      expect(result).toEqual({
+        statusCode: 200,
+        description: 'OK',
+        body: response,
       });
     });
   });

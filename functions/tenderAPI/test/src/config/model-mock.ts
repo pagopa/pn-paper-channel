@@ -77,7 +77,7 @@ export const costItem: PaperChannelTenderCosts = {
   createdAt: '2024-10-07T14:30:15.000Z',
 };
 
-const getDeliveryDriverItem: Record<string, AttributeValue> = {
+export const getDeliveryDriverItem: Record<string, AttributeValue> = {
   deliveryDriverId: {
     S: '12345',
   },
@@ -102,6 +102,9 @@ const getDeliveryDriverItem: Record<string, AttributeValue> = {
   createdAt: {
     S: '2024-10-09T14:30:15.000Z',
   },
+  unifiedDeliveryDriver: {
+    S: 'POSTE',
+  },
 };
 
 export const deliveryDriverItem: PaperChannelDeliveryDriver = {
@@ -113,6 +116,7 @@ export const deliveryDriverItem: PaperChannelDeliveryDriver = {
   phoneNumber: '06123456',
   registeredOffice: 'Rome',
   createdAt: '2024-10-09T14:30:15.000Z',
+  unifiedDeliveryDriver: "POSTE"
 };
 
 export const getGeokey = (

@@ -14,7 +14,7 @@ describe('Validator tests', () => {
         {
           fieldId: 'operation',
           message:
-            "Invalid enum value. Expected 'GET_TENDERS' | 'GET_TENDER_ACTIVE' | 'GET_COSTS' | 'GET_COST' | 'GET_DELIVERY_DRIVERS' | 'GET_GEOKEY', received 'XXX'",
+            "Invalid enum value. Expected 'GET_TENDERS' | 'GET_TENDER_ACTIVE' | 'GET_COSTS' | 'GET_COST' | 'GET_DELIVERY_DRIVERS' | 'GET_GEOKEY' | 'GET_UNIFIED_DELIVERY_DRIVERS', received 'XXX'",
         },
       ];
 
@@ -127,6 +127,32 @@ describe('Validator tests', () => {
 
       expect(result).toEqual({
         operation: 'GET_DELIVERY_DRIVERS'
+      });
+    });
+
+    test('should return valid Unified Delivery Driver Event', () => {
+      const event = {
+        operation: 'GET_UNIFIED_DELIVERY_DRIVERS',
+        tenderId: "GARA_2024",
+        requests: [
+          {
+            geoKey: '85994',
+            product: 'AR',
+          }
+        ],
+      };
+
+      const result = validatorEvent(event);
+
+      expect(result).toEqual({
+        operation: 'GET_UNIFIED_DELIVERY_DRIVERS',
+        tenderId: "GARA_2024",
+        requests: [
+          {
+            geoKey: '85994',
+            product: 'AR',
+          }
+        ],
       });
     });
   });

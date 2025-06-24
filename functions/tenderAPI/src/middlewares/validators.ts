@@ -6,6 +6,7 @@ import {
   Event, GeokeyEventSchema,
   TenderActiveEventSchema,
   TendersEventSchema,
+  UnifiedDeliveryDriversSchema,
 } from '../types/schema-request-types';
 import { ValidationField } from '../types/model-types';
 import { ZodIssueCode } from 'zod';
@@ -40,7 +41,8 @@ export const validatorEvent = (event: unknown): Event => {
     CostsEventSchema,
     CostEventSchema,
     DeliveryDriversEventSchema,
-    GeokeyEventSchema
+    GeokeyEventSchema,
+    UnifiedDeliveryDriversSchema,
   ];
 
   for (const schema of eventSchemas) {

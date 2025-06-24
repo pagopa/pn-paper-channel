@@ -178,6 +178,7 @@ export const unifiedDeliveryDriversHandler = async (
 ): Promise<Response<PaperChannelUnifiedDeliveryDriver[]>> => {
   console.log('Get unifiedDeliveryDriver from event', event);
   const response = await retrieveUnifiedDeliveryDriverForGivenRequests(event.requests, event.tenderId);
+
   console.log('Response is ', response);
   return new ResponseLambda<PaperChannelUnifiedDeliveryDriver[]>().toResponseOK(
     response
