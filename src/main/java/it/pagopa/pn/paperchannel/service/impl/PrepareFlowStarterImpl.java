@@ -15,6 +15,7 @@ import it.pagopa.pn.paperchannel.service.SqsSender;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Nullable;
 
@@ -91,6 +92,9 @@ public class PrepareFlowStarterImpl implements PrepareFlowStarter {
                 .unifiedDeliveryDriver(unifiedDeliveryDriver)
                 .senderPaId(deliveryRequest.getSenderPaId())
                 .tenderId(deliveryRequest.getTenderCode())
+                .notificationSentAt(deliveryRequest.getNotificationSentAt().toString())
+                .attempt(StringUtils.hasText(deliveryRequest.getRelatedRequestId()) ? 1 : 0)
+                .prepareRequestDate(deliveryRequest.getStartDate())
                 .recipientId(deliveryRequest.getFiscalCode())
                 .build();
 
