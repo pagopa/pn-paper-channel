@@ -321,6 +321,43 @@ paths:
               schema:
                 $ref: 'remote-refs.yaml#/components/schemas/Problem'
 
+  /paper-channel-private/pc-retry/{requestId}:
+    get:
+      tags:
+        - PaperRetry
+      summary: Verifica se ci sono altri retry
+      description: ""
+      operationId: getPcRetry
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          style: simple
+          explode: false
+          schema:
+            maxLength: 100
+            minLength: 5
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PcRetryResponse'
+        "404":
+          description: Indica che la richiesta con requestId non è stata trovata
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+
 components:
 
   #############################################################################################
@@ -488,6 +525,19 @@ components:
           description: Costo calcolato alla spedizione in eurocents
           format: int32
           example: 350
+
+    PcRetryResponse:
+      type: object
+      properties:
+        requestId:
+          type: string
+          description: Identificativo singola richiesta per spedizione analogica
+        deliveryDriverId:
+          type: string
+          description: Id recapitista
+        retryFound:
+          type: boolean
+          description: Indica se sono stati trovati retry per la richiesta
 
 #  securitySchemes:        # ONLY EXTERNAL
 #    ApiKeyAuth:           # ONLY EXTERNAL
