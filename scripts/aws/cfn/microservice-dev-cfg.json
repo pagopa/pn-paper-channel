@@ -54,6 +54,8 @@
     "PrepareTwoPhases": "true",
     "EnableRetryCon996": "true",
     "EnableTruncatedDateForRefinementCheck": "false",
-    "PnDelayerToPaperChannelEventBusRuleStatus": "ENABLED"
+    "PnDelayerToPaperChannelEventBusRuleStatus": "ENABLED",
+    "PaperChannelOcrInputsQueueARN": "TODO",
+    "PaperChannelOcrInputsQueueUrl": "TODO"
   }
 }

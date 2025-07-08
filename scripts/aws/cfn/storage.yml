@@ -117,6 +117,20 @@ Resources:
         DelaySeconds: 1
         VisibilityTimeout: 60
 
+ # OCR queue to receive responses
+  PaperChannelOcrOutputQueue:
+    Type: AWS::CloudFormation::Stack
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Properties:
+      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/sqs-queue.yaml"
+      Parameters:
+        QueueName: !Sub '${ProjectName}-paper_channel_ocr_outputs'
+        AlarmSNSTopicName: !Ref AlarmSNSTopicName
+        DelaySeconds: 1
+        VisibilityTimeout: 60
+  # TODO Aggiungere policy con permessi in lettura per DL
+
   RequestDeliveryDynamoTable:
     Type: AWS::DynamoDB::Table
     UpdateReplacePolicy: Retain
@@ -659,6 +673,17 @@ Outputs:
   PaperNormalizeAddressQueueARN:
     Value: !GetAtt PaperNormalizeAddressQueue.Outputs.QueueARN
     Description: pn-paper-normalize-address queue ARN
+
+  # Queue OCR response outputs
+  PaperChannelOcrOutputQueueName:
+    Value: !GetAtt PaperChannelOcrOutputQueue.Outputs.QueueName
+    Description: pn-paper_channel_ocr_outputs queue name
+  PaperChannelOcrOutputQueueURL:
+    Value: !GetAtt PaperChannelOcrOutputQueue.Outputs.QueueURL
+    Description: pn-paper_channel_ocr_outputs queue URL
+  PaperChannelOcrOutputQueueARN:
+    Value: !GetAtt PaperChannelOcrOutputQueue.Outputs.QueueARN
+    Description: pn-paper_channel_ocr_outputs queue ARN
 
   PCKmsEncDecDynamoDataKeyARN:
     Description: Name of KMS Key for Dynamo encode/decode data
