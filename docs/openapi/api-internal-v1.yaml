@@ -321,6 +321,35 @@ paths:
               schema:
                 $ref: 'remote-refs.yaml#/components/schemas/Problem'
 
+  /paper-channel-private/v1/b2b/pc-retry/{requestId}:
+    get:
+      tags:
+        - PcRetry
+      summary: Verifica se ci sono altri retry
+      description: ""
+      operationId: getPcRetry
+      parameters:
+        - $ref: '#/components/parameters/pathRequestId'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PcRetryResponse'
+        "404":
+          description: Indica che la richiesta con requestId non è stata trovata
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+
 components:
 
   #############################################################################################
@@ -413,6 +442,19 @@ components:
             $ref: '#/components/schemas/ShipmentCalculateResponse'
 
   schemas:
+
+    PcRetryResponse:
+      type: object
+      properties:
+        requestId:
+          type: string
+          description: Identificativo singola richiesta per spedizione analogica
+        deliveryDriverId:
+          type: string
+          description: Id recapitista
+        retryFound:
+          type: boolean
+          description: Indica se sono stati trovati retry per la richiesta
 
     ######################################################
     ### - DTO PER RICEZIONE ASINCRONA AVANZAMENTI RICHIESTE
