@@ -1,5 +1,5 @@
 import { PaperChannelTenderCosts } from '../types/dynamo-types';
-import { findCost, findCosts } from '../dao/pn-cost-dao';
+import { findCost, findCosts, batchGetCost } from '../dao/pn-cost-dao';
 import { findGeokey } from '../dao/pn-geokey-dao';
 import { NotFoundError } from '../types/error-types';
 import { formatNotFoundError } from '../utils/errors';
@@ -78,3 +78,27 @@ export const getCost = async (
   console.log(costEntity);
   return costEntity;
 };
+
+export const batchRetrieveCosts = async (
+  requests: String[],
+  tenderId: string
+): Promise<PaperChannelTenderCosts[]> => {
+
+  const costs: PaperChannelTenderCosts[] = [];
+  let chunkedArray = chunkArray(requests, 25);
+  for (const chunk of chunkedArray) {
+    try {
+      const cost = await batchGetCost(chunk, tenderId);
+      costs.push(...cost);
+    } catch (error) {
+      console.error(`Error retrieving cost`, error);
+    }
+  }
+  return costs;
+}
+
+function chunkArray(list: String[] | any[] , size: number) {
+    return Array.from({ length: Math.ceil(list.length / size) },
+    (_, i) => list.slice(i * size, i * size + size));
+}
+

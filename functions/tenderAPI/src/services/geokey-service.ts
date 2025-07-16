@@ -1,4 +1,4 @@
-import { findAllGeokeys } from '../dao/pn-geokey-dao';
+import { findAllGeokeys, findGeokey } from '../dao/pn-geokey-dao';
 import { PaperChannelGeokey } from '../types/dynamo-types';
 
 /**
@@ -19,4 +19,12 @@ export const getGeokeys = async (
   geokey: string
 ): Promise<PaperChannelGeokey[]> => {
   return await findAllGeokeys(tenderId, product, geokey);
+};
+
+export const getGeokey = async (
+  tenderId: string,
+  product: string,
+  geokey: string
+): Promise<PaperChannelGeokey | undefined> => {
+  return await findGeokey(tenderId, product, geokey);
 };

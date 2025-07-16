@@ -1,89 +1,101 @@
 
-import { findDeliveryDrivers, findDeliveryDriverByDriverId } from '../../../src/dao/pn-deliveryDriver-dao';
+import { findDeliveryDrivers, findDeliveryDriversByDriverIds } from '../../../src/dao/pn-deliveryDriver-dao';
 import * as costService from '../../../src/services/cost-service';
 import { NotFoundError } from '../../../src/types/error-types';
 import {
 getAllDeliveryDrivers,
-retrieveUnifiedDeliveryDriverForGivenRequests,
+retrieveUnifiedDeliveryDrivers,
 } from '../../../src/services/deliveryDrivers-service';
 
 jest.mock('../../../src/dao/pn-deliveryDriver-dao');
 jest.mock('../../../src/services/cost-service');
 
 describe('deliveryDrivers-service', () => {
-afterEach(() => {
-    jest.clearAllMocks();
-});
-
-describe('getAllDeliveryDrivers', () => {
-    it('should return all delivery drivers', async () => {
-        const mockDrivers = [
-            { id: 'driver1', name: 'Driver One' },
-            { id: 'driver2', name: 'Driver Two' },
-        ];
-        (findDeliveryDrivers as jest.Mock).mockResolvedValue(mockDrivers);
-
-        const result = await getAllDeliveryDrivers();
-
-        expect(findDeliveryDrivers).toHaveBeenCalled();
-        expect(result).toEqual(mockDrivers);
-    });
-});
-
-describe('retrieveUnifiedDeliveryDriverForGivenRequests', () => {
-    const tenderId = 'tender123';
-    const body = [
-        { product: 'productA', geoKey: 'geo1' },
-        { product: 'productB', geoKey: 'geo2' },
-    ];
-
-    it('should return unified delivery drivers for valid requests', async () => {
-        (costService.getCost as jest.Mock)
-            .mockResolvedValueOnce({ deliveryDriverId: 'driverA' })
-            .mockResolvedValueOnce({ deliveryDriverId: 'driverB' });
-
-        (findDeliveryDriverByDriverId as jest.Mock)
-            .mockResolvedValueOnce({ unifiedDeliveryDriver: 'unifiedA' })
-            .mockResolvedValueOnce({ unifiedDeliveryDriver: 'unifiedB' });
-
-        const result = await retrieveUnifiedDeliveryDriverForGivenRequests(body, tenderId);
-
-        expect(costService.getCost).toHaveBeenCalledTimes(2);
-        expect(findDeliveryDriverByDriverId).toHaveBeenCalledTimes(2);
-        expect(result).toEqual([
-            { geoKey: 'geo1', product: 'productA', unifiedDeliveryDriver: 'unifiedA' },
-            { geoKey: 'geo2', product: 'productB', unifiedDeliveryDriver: 'unifiedB' },
-        ]);
+    afterEach(() => {
+        jest.clearAllMocks();
     });
 
-    it('should throw NotFoundError if cost is not found', async () => {
-        (costService.getCost as jest.Mock).mockResolvedValueOnce(undefined);
+    describe('getAllDeliveryDrivers', () => {
+        it('should return all delivery drivers', async () => {
+            const mockDrivers = [
+                { id: 'driver1', name: 'Driver One' },
+                { id: 'driver2', name: 'Driver Two' },
+            ];
+            (findDeliveryDrivers as jest.Mock).mockResolvedValue(mockDrivers);
 
-        await expect(
-            retrieveUnifiedDeliveryDriverForGivenRequests(body, tenderId)
-        ).rejects.toThrow(NotFoundError);
+            const result = await getAllDeliveryDrivers();
 
-        if (body[0]) {
-            expect(costService.getCost).toHaveBeenCalledWith(tenderId, body[0].product, body[0].geoKey);
-        }
+            expect(findDeliveryDrivers).toHaveBeenCalled();
+            expect(result).toEqual(mockDrivers);
+        });
     });
 
-    it('should throw NotFoundError if delivery driver is not found', async () => {
-        (costService.getCost as jest.Mock).mockResolvedValueOnce({ deliveryDriverId: 'driverA' });
-        (findDeliveryDriverByDriverId as jest.Mock).mockResolvedValueOnce(undefined);
+    describe('retrieveUnifiedDeliveryDrivers', () => {
 
-        await expect(
-            retrieveUnifiedDeliveryDriverForGivenRequests(body, tenderId)
-        ).rejects.toThrow(NotFoundError);
-    });
+        it('should retrieve unified delivery drivers correctly', async () => {
+            const deliveryDriverGeoKeyProductTupleMap = {
+            'driver1': ['geo1#productA', 'geo2#productB'],
+            'driver2': ['geo3#productC']
+            };
+            const mockDrivers = [
+                {
+                    deliveryDriverId: 'driver1',
+                    unifiedDeliveryDriver: 'unified1'
+                },
+                {
+                    deliveryDriverId: 'driver2',
+                    unifiedDeliveryDriver: 'unified2'
+                }
+            ];
+            (findDeliveryDriversByDriverIds as jest.Mock).mockResolvedValue(mockDrivers);
 
-    it('should throw NotFoundError if unifiedDeliveryDriver is missing', async () => {
-        (costService.getCost as jest.Mock).mockResolvedValueOnce({ deliveryDriverId: 'driverA' });
-        (findDeliveryDriverByDriverId as jest.Mock).mockResolvedValueOnce({});
+            const result = await retrieveUnifiedDeliveryDrivers(deliveryDriverGeoKeyProductTupleMap);
 
-        await expect(
-            retrieveUnifiedDeliveryDriverForGivenRequests(body, tenderId)
-        ).rejects.toThrow(NotFoundError);
-    });
-});
+            expect(findDeliveryDriversByDriverIds).toHaveBeenCalledWith(['driver1', 'driver2']);
+            expect(result).toEqual([
+                {
+                    geoKey: 'geo1',
+                    product: 'productA',
+                    unifiedDeliveryDriver: 'unified1'
+                },
+                {
+                    geoKey: 'geo2',
+                    product: 'productB',
+                    unifiedDeliveryDriver: 'unified1'
+                },
+                {
+                    geoKey: 'geo3',
+                    product: 'productC',
+                    unifiedDeliveryDriver: 'unified2'
+                }
+            ]);
+        });
+
+        it('should throw NotFoundError if no delivery drivers found', async () => {
+            const deliveryDriverGeoKeyProductTupleMap = {
+                'driver1': ['geo1#productA']
+            };
+            (findDeliveryDriversByDriverIds as jest.Mock).mockResolvedValue([]);
+
+            await expect(
+                retrieveUnifiedDeliveryDrivers(deliveryDriverGeoKeyProductTupleMap)
+            ).rejects.toThrow(NotFoundError);
+        });
+
+        it('should throw NotFoundError if unifiedDeliveryDriver is missing', async () => {
+            const deliveryDriverGeoKeyProductTupleMap = {
+                'driver1': ['geo1#productA']
+            };
+            const mockDrivers = [
+                {
+                    deliveryDriverId: 'driver1',
+                    unifiedDeliveryDriver: undefined
+                }
+            ];
+            (findDeliveryDriversByDriverIds as jest.Mock).mockResolvedValue(mockDrivers);
+
+            await expect(
+                retrieveUnifiedDeliveryDrivers(deliveryDriverGeoKeyProductTupleMap)
+            ).rejects.toThrow(NotFoundError);
+        }); });
 });

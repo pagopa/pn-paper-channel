@@ -51,5 +51,3 @@ export type PaperChannelUnifiedDeliveryDriver = {
   product: string;
   unifiedDeliveryDriver: string;
 };
-
-

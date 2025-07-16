@@ -8,6 +8,8 @@ import {
 import { PaperChannelTenderCosts } from '../types/dynamo-types';
 import { dynamoDBClient, QueryCommandBuilder } from '../utils/awsClients';
 import { unmarshall } from '@aws-sdk/util-dynamodb';
+import { DynamoDBDocumentClient, BatchGetCommand} from '@aws-sdk/lib-dynamodb';
+
 
 /**
  * Fetches the cost information for a specific tender, product, lot, and zone from the DynamoDB table.
@@ -47,6 +49,39 @@ export const findCost = async (
 
   return unmarshall(getItemOutput.Item) as PaperChannelTenderCosts;
 };
+
+
+export const batchGetCost = async (
+  requests: String [],
+  tenderId: string
+): Promise<PaperChannelTenderCosts[]> => {
+  const docClient = DynamoDBDocumentClient.from(dynamoDBClient);
+  const tableName: string = PN_COST_TABLE_NAME ?? (() => { throw new Error('PN_COST_TABLE_NAME is undefined'); })();
+  const params = {
+    RequestItems: {
+      [tableName]: {
+        Keys: requests.map(request => (
+            {
+              tenderId: {
+                S: tenderId,
+              },
+              productLotZone: {
+                S: request,
+              },
+            }
+        ))
+      }
+    }
+  };
+  const command = new BatchGetCommand(params);
+  return await docClient.send(command).then(response => {
+    const items = response?.Responses?.[PN_COST_TABLE_NAME as string];
+    if (!items || items.length === 0) {
+      return [];
+    }
+    return items.map(item => unmarshall(item) as PaperChannelTenderCosts);
+  });
+}
 
 /**
  * Fetches cost information for a specific tender, optionally filtered by product, lot, zone, and delivery driver ID.

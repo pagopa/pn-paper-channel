@@ -3,6 +3,8 @@ import { getCost, getCosts } from '../../../src/services/cost-service';
 import { NotFoundError } from '../../../src/types/error-types';
 import { costItem, geokeyItem } from '../config/model-mock';
 import { findCost, findCosts } from '../../../src/dao/pn-cost-dao';
+import { batchRetrieveCosts } from '../../../src/services/cost-service';
+import { batchGetCost } from '../../../src/dao/pn-cost-dao';
 
 jest.mock('../../../src/dao/pn-geokey-dao');
 jest.mock('../../../src/dao/pn-cost-dao');
@@ -74,6 +76,47 @@ describe('Cost Service Test', () => {
       const result = await getCost(tenderId, product, geokey);
 
       expect(result).toEqual(costEntity);
+    });
+
+    describe('batchRetrieveCosts Service Test', () => {
+      afterEach(() => {
+        jest.clearAllMocks();
+      });
+
+      test('should return costs when batchGetCost resolves', async () => {
+        const requests = Array.from({ length: 30 }, (_, i) => `req${i}`);
+        const tenderId = 'tender1';
+        const mockCost = [{ id: 'cost1' }, { id: 'cost2' }];
+        (batchGetCost as jest.Mock).mockResolvedValue(mockCost);
+
+        const result = await batchRetrieveCosts(requests, tenderId);
+
+        expect(batchGetCost).toHaveBeenCalledTimes(2); 
+        expect(result).toEqual([...mockCost, ...mockCost]);
+      });
+
+      test('should handle errors and continue processing other chunks', async () => {
+        const requests = Array.from({ length: 50 }, (_, i) => `req${i}`);
+        const tenderId = 'tender2';
+        (batchGetCost as jest.Mock)
+          .mockRejectedValueOnce(new Error('fail'))
+          .mockResolvedValueOnce([{ id: 'cost3' }]);
+
+        const result = await batchRetrieveCosts(requests, tenderId);
+
+        expect(batchGetCost).toHaveBeenCalledTimes(2);
+        expect(result).toEqual([{ id: 'cost3' }]);
+      });
+
+      test('should return empty array if no costs found', async () => {
+        const requests: string[] = [];
+        const tenderId = 'tender3';
+
+        const result = await batchRetrieveCosts(requests, tenderId);
+
+        expect(batchGetCost).not.toHaveBeenCalled();
+        expect(result).toEqual([]);
+      });
     });
   });
 });

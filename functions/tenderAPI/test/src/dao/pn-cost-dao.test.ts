@@ -7,7 +7,6 @@ import {
   QueryCommand,
   QueryInput,
 } from '@aws-sdk/client-dynamodb';
-import { mockClient } from 'aws-sdk-client-mock';
 import {
   costItem,
   getItemCostOutput,
@@ -15,6 +14,9 @@ import {
 } from '../config/model-mock';
 import { findCost, findCosts } from '../../../src/dao/pn-cost-dao';
 import { dynamoDBClient } from '../../../src/utils/awsClients';
+import { batchGetCost } from '../../../src/dao/pn-cost-dao';
+import { DynamoDBDocumentClient, BatchGetCommand } from '@aws-sdk/lib-dynamodb';
+import { mockClient } from 'aws-sdk-client-mock';
 
 describe('Cost DAO tests', () => {
   const dynamoMockClient = mockClient(dynamoDBClient);
@@ -259,6 +261,64 @@ describe('Cost DAO tests', () => {
       expect(result![0]!.zone).toEqual(zone);
       expect(result![0]!.deliveryDriverId).toEqual(deliveryDriverId);
       expect(dynamoMockClient.calls()).toHaveLength(1);
+    });
+
+    describe('batchGetCost', () => {
+      const docClientMock = mockClient(DynamoDBDocumentClient);
+
+      beforeEach(() => {
+        docClientMock.reset();
+      });
+
+      test('should return costs when items exist', async () => {
+        const tableName = PN_COST_TABLE_NAME ?? (() => { throw new Error('PN_COST_TABLE_NAME is undefined'); })();
+        const tenderId = '12345';
+        const requests = ['AR|LOT_1|EU', 'AR|LOT_2|EU'];
+        const items = getItemCostListOutput.Items || [];
+        docClientMock
+          .on(BatchGetCommand)
+          .resolves({
+            Responses: {
+              [tableName]: items,
+            },
+          });
+
+        const result = await batchGetCost(requests, tenderId);
+
+        expect(result).toHaveLength(items.length);
+        expect(result[0]).toMatchObject(costItem);
+      });
+
+      test('should return empty array when no items exist', async () => {
+        const tableName = PN_COST_TABLE_NAME ?? (() => { throw new Error('PN_COST_TABLE_NAME is undefined'); })();
+        const tenderId = '12345';
+        const requests = ['AR|LOT_1|EU'];
+        docClientMock
+          .on(BatchGetCommand)
+          .resolves({
+            Responses: {
+              [tableName]: [],
+            },
+          });
+
+        const result = await batchGetCost(requests, tenderId);
+
+        expect(result).toEqual([]);
+      });
+
+      test('should return empty array when Responses is undefined', async () => {
+        const tenderId = '12345';
+        const requests = ['AR|LOT_1|EU'];
+        docClientMock
+          .on(BatchGetCommand)
+          .resolves({
+            Responses: undefined,
+          });
+
+        const result = await batchGetCost(requests, tenderId);
+
+        expect(result).toEqual([]);
+      });
     });
   });
 

@@ -3,8 +3,7 @@ import { ScanCommand, ScanInput } from '@aws-sdk/client-dynamodb';
 import { PN_DELIVERY_DRIVER_TABLE_NAME } from '../config';
 import { dynamoDBClient } from '../utils/awsClients';
 import { unmarshall } from '@aws-sdk/util-dynamodb';
-import { GetItemCommand } from '@aws-sdk/client-dynamodb';
-import { GetCommand, DynamoDBDocumentClient} from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, BatchGetCommand} from '@aws-sdk/lib-dynamodb';
 
 /**
  * Retrieves a paginated list of tenders filtered by activation date.
@@ -35,22 +34,28 @@ export const findDeliveryDrivers = async (): Promise<
   return drivers;
 };
 
-export const findDeliveryDriverByDriverId = async (
-  deliveryDriverId: string
-): Promise<PaperChannelDeliveryDriver | null> => {
-  const ddbDocClient = DynamoDBDocumentClient.from(dynamoDBClient);
-  const command = new GetCommand({
-    TableName: PN_DELIVERY_DRIVER_TABLE_NAME,
-    Key: {
-      deliveryDriverId: deliveryDriverId 
+export const findDeliveryDriversByDriverIds = async (
+  deliveryDriverIds: string[]
+): Promise<PaperChannelDeliveryDriver[]> => {
+  const docClient = DynamoDBDocumentClient.from(dynamoDBClient);
+  const tableName: string = PN_DELIVERY_DRIVER_TABLE_NAME ?? (() => { throw new Error('PN_DELIVERY_DRIVER_TABLE_NAME is undefined'); })();
+  const params = {
+    RequestItems: {
+      [tableName]: {
+        Keys: deliveryDriverIds.map(key => (
+            {
+              requestId: key
+            }
+        ))
+      }
     }
+  };
+  const command = new BatchGetCommand(params);
+  return await docClient.send(command).then(response => {
+    const items = response?.Responses?.[PN_DELIVERY_DRIVER_TABLE_NAME as string];
+    if (!items || items.length === 0) {
+      return [];
+    }
+    return items as PaperChannelDeliveryDriver[];
   });
-
-  const response = await ddbDocClient.send(command);
-
-  if (!response.Item) {
-    return null;
-  }
-
-  return unmarshall(response.Item) as PaperChannelDeliveryDriver;
-};
+}

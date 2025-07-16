@@ -1,9 +1,7 @@
 import { PaperChannelDeliveryDriver } from '../types/dynamo-types';
-import { findDeliveryDrivers, findDeliveryDriverByDriverId } from '../dao/pn-deliveryDriver-dao';
-import { getCost } from './cost-service';
+import { findDeliveryDrivers, findDeliveryDriversByDriverIds } from '../dao/pn-deliveryDriver-dao';
 import { PaperChannelUnifiedDeliveryDriver } from '../types/model-types';
 import { NotFoundError } from '../types/error-types';
-import { UnifiedDeliveryDriverRequestType } from '../types/schema-request-types';
 
 /**
  * Retrieves a list of all delivery driver.
@@ -19,25 +17,35 @@ export const getAllDeliveryDrivers = async (): Promise<
   return response;
 };
 
-export const retrieveUnifiedDeliveryDriverForGivenRequests = async (
-  body: UnifiedDeliveryDriverRequestType[],
-  tenderId: string
+function chunkArray<T>(requests: T[], size: number): T[][] {
+    return Array.from({ length: Math.ceil(requests.length / size) },
+    (_, i) => requests.slice(i * size, i * size + size));
+}
+
+export const retrieveUnifiedDeliveryDrivers = async (
+  deliveryDriverGeoKeyProductTupleMap: Record<string, string[]>
 ): Promise<PaperChannelUnifiedDeliveryDriver[]> => {
   let response: PaperChannelUnifiedDeliveryDriver[] = [];
-  for (const driver of body) {
-    let paperChannelCost = await getCost(tenderId, driver.product, driver.geoKey);
-    if( !paperChannelCost) {
-      throw new NotFoundError(`Cost not found for tenderId: ${tenderId}, product: ${driver.product}, geokey: ${driver.geoKey}`);
-    }
-    const deliveryDriver = await findDeliveryDriverByDriverId(paperChannelCost.deliveryDriverId);
-    if (!deliveryDriver || !deliveryDriver.unifiedDeliveryDriver) {
-      throw new NotFoundError(`Delivery driver not found for ID: ${paperChannelCost.deliveryDriverId}`);
-    }
-    response.push({
-      geoKey: driver.geoKey,
-      product: driver.product,
-      unifiedDeliveryDriver: deliveryDriver.unifiedDeliveryDriver,
-    } as PaperChannelUnifiedDeliveryDriver);
+  let chunks = chunkArray(Object.keys(deliveryDriverGeoKeyProductTupleMap), 25);
+  for (const chunk of chunks) {
+      const deliveryDriver = await findDeliveryDriversByDriverIds(chunk);
+      if (deliveryDriver.length === 0) {
+        throw new NotFoundError(`Delivery driver not found for IDs: ${chunk.join(', ')}`);
+      }
+      for (const driver of deliveryDriver) {
+        if (!driver.unifiedDeliveryDriver) {
+          throw new NotFoundError(`Unified delivery driver not found for ID: ${driver.deliveryDriverId}`);
+        }
+        const geoKeysProduct = deliveryDriverGeoKeyProductTupleMap[driver.deliveryDriverId] || [];
+        for (const geoKeyProductTuple of geoKeysProduct) {
+            const [geoKey, product] = geoKeyProductTuple.split('#');
+            response.push({
+              geoKey,
+              product,
+              unifiedDeliveryDriver: driver.unifiedDeliveryDriver
+            } as PaperChannelUnifiedDeliveryDriver);
+        }
+      }
   }
   console.log('Retrieved unified delivery drivers for given requests');
   return response;

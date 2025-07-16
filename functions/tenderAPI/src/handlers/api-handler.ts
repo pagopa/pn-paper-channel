@@ -15,9 +15,9 @@ import {
 } from '../types/schema-request-types';
 import { Page, Response, ResponseLambda, PaperChannelUnifiedDeliveryDriver } from '../types/model-types';
 import { getActiveTender, getAllTenders } from '../services/tender-service';
-import { getCost, getCosts } from '../services/cost-service';
-import { getAllDeliveryDrivers, retrieveUnifiedDeliveryDriverForGivenRequests } from '../services/deliveryDrivers-service';
-import { getGeokeys } from '../services/geokey-service';
+import { getCost, getCosts, batchRetrieveCosts } from '../services/cost-service';
+import { getAllDeliveryDrivers, retrieveUnifiedDeliveryDrivers } from '../services/deliveryDrivers-service';
+import { getGeokeys, getGeokey } from '../services/geokey-service';
 
 /**
  * Handles the retrieval of all tenders based on the provided event parameters.
@@ -176,12 +176,33 @@ export const deliveryDriversHandler = async (
 export const unifiedDeliveryDriversHandler = async (
   event: UnifiedDeliveryDriversEvent
 ): Promise<Response<PaperChannelUnifiedDeliveryDriver[]>> => {
-  console.log('Get unifiedDeliveryDriver from event', event);
-  const response = await retrieveUnifiedDeliveryDriverForGivenRequests(event.requests, event.tenderId);
+  console.log('Get unifiedDeliveryDrivers from event', event);
 
-  console.log('Response is ', response);
-  return new ResponseLambda<PaperChannelUnifiedDeliveryDriver[]>().toResponseOK(
-    response
+  const geoKeyMap: Record<string, string[]> = {};
+
+  await Promise.all(
+    event.requests.map(async req => {
+      let geoKey = await getGeokey(event.tenderId, req.product, req.geoKey);
+      const key = `${geoKey?.product}#${geoKey?.lot}#${geoKey?.zone}`;
+      geoKeyMap[key] = geoKeyMap[key] || [];
+      geoKeyMap[key].push(`${geoKey?.geokey}#${geoKey?.product}`);
+    })
   );
+
+  const deliveryDriverGeoKeyProductTupleMap: Record<string, string[]> = {}
+
+  const paperCosts = await batchRetrieveCosts(Object.keys(geoKeyMap), event.tenderId);
+  for (const cost of paperCosts) {
+    const key = `${cost.product}#${cost.lot}#${cost.zone}`;
+    const geoKeysForCost = geoKeyMap[key] || [];
+    deliveryDriverGeoKeyProductTupleMap[cost.deliveryDriverId] = [
+      ...(deliveryDriverGeoKeyProductTupleMap[cost.deliveryDriverId] || []),
+      ...geoKeysForCost,
+    ];
+  }
+
+  const response = await retrieveUnifiedDeliveryDrivers(deliveryDriverGeoKeyProductTupleMap);
+  console.log('Response is ', response);
+  return new ResponseLambda<PaperChannelUnifiedDeliveryDriver[]>().toResponseOK(response);
 };
 

@@ -21,9 +21,9 @@ import {
 } from '../../../src/services/tender-service';
 import { costItem, geokeyItem, pageTender, tender } from '../config/model-mock';
 import { NotFoundError } from '../../../src/types/error-types';
-import { getCost, getCosts } from '../../../src/services/cost-service';
-import { getGeokeys } from '../../../src/services/geokey-service';
-import { retrieveUnifiedDeliveryDriverForGivenRequests } from '../../../src/services/deliveryDrivers-service';
+import { getCost, getCosts, batchRetrieveCosts } from '../../../src/services/cost-service';
+import { getGeokeys, getGeokey } from '../../../src/services/geokey-service';
+import { retrieveUnifiedDeliveryDrivers } from '../../../src/services/deliveryDrivers-service';
 
 jest.mock('../../../src/services/tender-service');
 jest.mock('../../../src/services/cost-service');
@@ -258,33 +258,50 @@ describe('API Handlers', () => {
   });
 
   describe('unifiedDeliveryDriver handler test', () => {
-    test('when unifiedDelieryDriver is empty should throw an error', async () => {
-      (retrieveUnifiedDeliveryDriverForGivenRequests as jest.Mock).mockReturnValue(
-        Promise.reject(new NotFoundError('UnifiedDeliveryDriverNotFound'))
-      );
+    test('when unifiedDeliveryDriver is not empty should return unifiedDeliveryDrivers', async () => {
 
-      const event: UnifiedDeliveryDriversEvent = {
-        operation: OperationEnum.GET_UNIFIED_DELIVERY_DRIVERS,
+      const geokeyItem1 = {
         tenderId: '1234',
-        requests: [
-          {
-            geoKey: '95869',
-            product: 'AR',
-          },
-          {
-            geoKey: '95870',
-            product: 'AR',
-          },
-        ],
+        product: 'AR',
+        lot: 'LOT_1',
+        zone: 'ZONE_1',
+        geokey: '95869',
+        coverFlag: true,
+        dismissed: false,
       };
 
-      // Act
-      await expect(() => unifiedDeliveryDriversHandler(event)).rejects.toThrow(
-        new NotFoundError('UnifiedDeliveryDriverNotFound')
-      );
-    });
+      const geokeyItem2 = {
+        tenderId: '1234',
+        product: '890',
+        lot: 'LOT_1',
+        zone: 'ZONE_1',
+        geokey: '95869',
+        coverFlag: true,
+        dismissed: false,
+      };
 
-    test('when unifiedDeliveryDriver is not empty should return unifiedDeliveryDrivers', async () => {
+      (getGeokey as jest.Mock).mockReturnValueOnce(Promise.resolve(geokeyItem1)).mockReturnValueOnce(Promise.resolve(geokeyItem2));
+
+      const costItem1 = {
+        tenderId: '1234',
+        product: 'AR',
+        lot: 'LOT_1',
+        zone: 'ZONE_1',
+        deliveryDriverId: 'driver1',
+        cost: 10.0,
+      };
+
+       const costItem2 = {
+        tenderId: '1234',
+        product: '890',
+        lot: 'LOT_1',
+        zone: 'ZONE_1',
+        deliveryDriverId: 'driver2',
+        cost: 10.0,
+      };
+
+      (batchRetrieveCosts as jest.Mock).mockReturnValue(Promise.resolve([costItem1, costItem2]));
+
       const response = [
         {
           geoKey: '95869',
@@ -298,7 +315,7 @@ describe('API Handlers', () => {
         },
       ];
 
-      (retrieveUnifiedDeliveryDriverForGivenRequests as jest.Mock).mockReturnValue(Promise.resolve(response));
+      (retrieveUnifiedDeliveryDrivers as jest.Mock).mockReturnValue(Promise.resolve(response));
 
        const event: UnifiedDeliveryDriversEvent = {
         operation: OperationEnum.GET_UNIFIED_DELIVERY_DRIVERS,
@@ -315,10 +332,8 @@ describe('API Handlers', () => {
         ],
       };
 
-      // Act
       const result = await unifiedDeliveryDriversHandler(event);
 
-      // Assert
       expect(result).toEqual({
         statusCode: 200,
         description: 'OK',
