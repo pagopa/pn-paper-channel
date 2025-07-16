@@ -63,7 +63,7 @@ export const DeliveryDriversEventSchema = BaseEventSchema.extend({
 
 const UnifiedDeliveryDriverRequest = z.object({
   geoKey: z.string(),
-  product: z.string(),
+  product: z.string()
 });
 
 export const UnifiedDeliveryDriversSchema = z.object({
