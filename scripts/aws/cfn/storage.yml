@@ -118,7 +118,7 @@ Resources:
         VisibilityTimeout: 60
 
  # OCR queue to receive responses
-  PaperChannelOcrOutputQueue:
+  PaperChannelOcrOutputsQueue:
     Type: AWS::CloudFormation::Stack
     UpdateReplacePolicy: Retain
     DeletionPolicy: Retain
@@ -129,7 +129,6 @@ Resources:
         AlarmSNSTopicName: !Ref AlarmSNSTopicName
         DelaySeconds: 1
         VisibilityTimeout: 60
-  # TODO Aggiungere policy con permessi in lettura per DL
 
   RequestDeliveryDynamoTable:
     Type: AWS::DynamoDB::Table
@@ -675,14 +674,14 @@ Outputs:
     Description: pn-paper-normalize-address queue ARN
 
   # Queue OCR response outputs
-  PaperChannelOcrOutputQueueName:
-    Value: !GetAtt PaperChannelOcrOutputQueue.Outputs.QueueName
+  PaperChannelOcrOutputsQueueName:
+    Value: !GetAtt PaperChannelOcrOutputsQueue.Outputs.QueueName
     Description: pn-paper_channel_ocr_outputs queue name
-  PaperChannelOcrOutputQueueURL:
-    Value: !GetAtt PaperChannelOcrOutputQueue.Outputs.QueueURL
+  PaperChannelOcrOutputsQueueURL:
+    Value: !GetAtt PaperChannelOcrOutputsQueue.Outputs.QueueURL
     Description: pn-paper_channel_ocr_outputs queue URL
-  PaperChannelOcrOutputQueueARN:
-    Value: !GetAtt PaperChannelOcrOutputQueue.Outputs.QueueARN
+  PaperChannelOcrOutputsQueueARN:
+    Value: !GetAtt PaperChannelOcrOutputsQueue.Outputs.QueueARN
     Description: pn-paper_channel_ocr_outputs queue ARN
 
   PCKmsEncDecDynamoDataKeyARN:

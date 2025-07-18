@@ -669,10 +669,21 @@ Parameters:
     Type: String
     Description: 'Events to OCR service'
 
-  PaperChannelOcrInputsQueueUrl:
+  PaperChannelOcrInputsQueueURL:
     Type: String
     Description: 'Push OCR request messages to this Queue'
 
+  PaperChannelOcrOutputsQueueARN:
+    Type: String
+    Description: 'pn-paper_channel_ocr_outputs queue ARN'
+
+  PaperChannelOcrOutputsQueueURL:
+    Type: String
+    Description: 'pn-paper_channel_ocr_outputs queue URL'
+
+  OcrAwsAccountId:
+    Type: String
+    Description: 'AwsAccountId of pn-paper_channel_ocr_outputs sender'
 
   # Log group parameters
   EcsLogGroup:
@@ -859,7 +870,8 @@ Resources:
               - !Ref NationalRegistries2PaperChannelQueueARN
               - !Ref F24ToPaperChannelQueueARN
               - !Ref RaddAltToPaperChannelQueueARN
-              - !Ref PaperChannelOcrInputsQueueARN
+              - !Ref PaperChannelOcrOutputsQueueARN
+          # Send events to data-lake queue
           - Effect: Allow
             Action:
               - sqs:SendMessage
@@ -1284,3 +1296,24 @@ Resources:
               - "SQS:SendMessage"
             Resource:
               - !Ref "DelayerToPaperChannelQueueARN"
+
+  PaperChannelOcrOutputsQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref PaperChannelOcrOutputsQueueURL
+      PolicyDocument:
+        Statement:
+          - Sid: AllowCrossAccountSend
+            Effect: Allow
+            Principal:
+              Service:
+                - events.amazonaws.com
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref OcrAwsAccountId
+            Action:
+              - sqs:SendMessage
+              - sqs:SendMessageBatch
+            Resource:
+              - !Ref PaperChannelOcrOutputsQueueURL
