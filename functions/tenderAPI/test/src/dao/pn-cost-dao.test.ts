@@ -1,0 +1,345 @@
+import { PN_COST_TABLE_NAME } from '../../../src/config';
+import { buildCostSortKey } from '../../../src/utils/builders';
+import {
+  AttributeValue,
+  GetItemCommand,
+  GetItemCommandInput,
+  QueryCommand,
+  QueryInput,
+} from '@aws-sdk/client-dynamodb';
+import {
+  costItem,
+  getItemCostOutput,
+  getItemCostListOutput,
+} from '../config/model-mock';
+import { findCost, findCosts } from '../../../src/dao/pn-cost-dao';
+import { dynamoDBClient } from '../../../src/utils/awsClients';
+import { batchGetCost } from '../../../src/dao/pn-cost-dao';
+import { DynamoDBDocumentClient, BatchGetCommand } from '@aws-sdk/lib-dynamodb';
+import { mockClient } from 'aws-sdk-client-mock';
+
+describe('Cost DAO tests', () => {
+  const dynamoMockClient = mockClient(dynamoDBClient);
+
+  describe('Find Cost', () => {
+    beforeEach(() => {
+      dynamoMockClient.reset();
+    });
+
+    test('when cost exists should return entity', async () => {
+      // Arrange:
+      const tenderId = '12345';
+      const product = 'AR';
+      const lot = 'LOT_1';
+      const zone = 'EU';
+      const inputCommand = {
+        TableName: PN_COST_TABLE_NAME,
+        Key: {
+          tenderId: {
+            S: tenderId,
+          },
+          productLotZone: {
+            S: buildCostSortKey(product, lot, zone),
+          },
+        },
+      } as GetItemCommandInput;
+
+      dynamoMockClient
+        .on(GetItemCommand, inputCommand)
+        .resolves(Promise.resolve(getItemCostOutput));
+
+      // Act
+      const result = await findCost(tenderId, product, lot, zone);
+
+      // Assert
+      expect(result).toEqual(costItem);
+    });
+
+    test('when cost not exists should return undefined', async () => {
+      // Arrange:
+      const tenderId = '12345';
+      const product = 'AR';
+      const lot = 'LOT_1';
+      const zone = 'EU';
+      const inputCommand = {
+        TableName: PN_COST_TABLE_NAME,
+        Key: {
+          tenderId: {
+            S: tenderId,
+          },
+          productLotZone: {
+            S: buildCostSortKey(product, lot, zone),
+          },
+        },
+      } as GetItemCommandInput;
+
+      const outputCommand = {
+        ...getItemCostOutput,
+        Item: undefined,
+      };
+
+      dynamoMockClient
+        .on(GetItemCommand, inputCommand)
+        .resolves(Promise.resolve(outputCommand));
+
+      // Act
+      const result = await findCost(tenderId, product, lot, zone);
+
+      // Assert
+      expect(result).toBeUndefined();
+    });
+
+    test('when tenderId is found then a list of costs is returned', async () => {
+      // Arrange
+      const tenderId = '12345';
+      const keyCondition: string = 'tenderId = :tenderId';
+      const expressionValues: Record<string, AttributeValue> = {
+        ':tenderId': {
+          S: tenderId,
+        },
+      };
+
+      const queryInput = getQueryInput(undefined, expressionValues, keyCondition);
+      const queryOutput = getQueryOutput();
+
+      dynamoMockClient
+        .on(QueryCommand, queryInput)
+        .resolves(Promise.resolve(queryOutput));
+
+      // Act
+      const result = await findCosts(
+        tenderId,
+        undefined,
+        undefined,
+        undefined,
+        undefined
+      );
+
+      // Assert
+      expect(result).toBeDefined();
+      expect(result![0]!.tenderId).toEqual(tenderId);
+      expect(dynamoMockClient.calls()).toHaveLength(1);
+    });
+
+    test('when tenderId and product are found then a list of costs is returned', async () => {
+      // Arrange
+      const tenderId = '12345';
+      const product = 'AR';
+      const keyCondition: string = "tenderId = :tenderId"
+      const expressionValues: Record<string, AttributeValue> = {
+        ':tenderId': {
+          S: tenderId,
+        }
+      };
+
+      const queryInput = getQueryInput(undefined, expressionValues, keyCondition);
+      const queryOutput = getQueryOutput();
+
+      dynamoMockClient
+        .on(QueryCommand, queryInput)
+        .resolves(Promise.resolve(queryOutput));
+
+      // Act
+      const result = await findCosts(
+        tenderId,
+        product,
+        undefined,
+        undefined,
+        undefined
+      );
+
+      // Assert
+      expect(result).toBeDefined();
+      expect(result![0]!.tenderId).toEqual(tenderId);
+      expect(result![0]!.product).toEqual(product);
+      expect(dynamoMockClient.calls()).toHaveLength(1);
+    });
+
+    test('when tenderId, product and lot are found then a list of costs is returned', async () => {
+      // Arrange
+      const tenderId = '12345';
+      const product = 'AR';
+      const lot = 'LOT_1';
+      const keyCondition: string = "tenderId = :tenderId"
+      const expressionValues: Record<string, AttributeValue> = {
+        ':tenderId': {
+          S: tenderId,
+        },
+      };
+
+      const queryInput = getQueryInput(undefined, expressionValues, keyCondition);
+      const queryOutput = getQueryOutput();
+
+      dynamoMockClient
+        .on(QueryCommand, queryInput)
+        .resolves(Promise.resolve(queryOutput));
+
+      // Act
+      const result = await findCosts(
+        tenderId,
+        product,
+        lot,
+        undefined,
+        undefined
+      );
+
+      // Assert
+      expect(result).toBeDefined();
+      expect(result![0]!.tenderId).toEqual(tenderId);
+      expect(result![0]!.product).toEqual(product);
+      expect(result![0]!.lot).toEqual(lot);
+      expect(dynamoMockClient.calls()).toHaveLength(1);
+    });
+
+    test('when tenderId, product, lot and zone are found then a list of costs is returned', async () => {
+      // Arrange
+      const tenderId = '12345';
+      const product = 'AR';
+      const lot = 'LOT_1';
+      const zone = 'EU';
+      const keyCondition: string = "tenderId = :tenderId";
+      const expressionValues: Record<string, AttributeValue> = {
+        ':tenderId': {
+          S: tenderId,
+        },
+      };
+
+      const queryInput = getQueryInput(undefined, expressionValues, keyCondition);
+      const queryOutput = getQueryOutput();
+
+      dynamoMockClient
+        .on(QueryCommand, queryInput)
+        .resolves(Promise.resolve(queryOutput));
+
+      // Act
+      const result = await findCosts(tenderId, product, lot, zone, undefined);
+
+      // Assert
+      expect(result).toBeDefined();
+      expect(result![0]!.tenderId).toEqual(tenderId);
+      expect(result![0]!.product).toEqual(product);
+      expect(result![0]!.lot).toEqual(lot);
+      expect(result![0]!.zone).toEqual(zone);
+      expect(dynamoMockClient.calls()).toHaveLength(1);
+    });
+
+    test('when tenderId, product, lot, zone and deliveryDriverId are found then a list of costs is returned', async () => {
+      // Arrange
+      const tenderId = '12345';
+      const product = 'AR';
+      const lot = 'LOT_1';
+      const zone = 'EU';
+      const deliveryDriverId = '121212';
+      const keyCondition: string = "tenderId = :tenderId";
+      const expressionValues: Record<string, AttributeValue> = {
+        ':tenderId': {
+          S: tenderId,
+        }
+      };
+
+      const queryInput = getQueryInput(undefined, expressionValues, keyCondition);
+      const queryOutput = getQueryOutput();
+
+      dynamoMockClient
+        .on(QueryCommand, queryInput)
+        .resolves(Promise.resolve(queryOutput));
+
+      // Act
+      const result = await findCosts(
+        tenderId,
+        product,
+        lot,
+        zone,
+        deliveryDriverId
+      );
+
+      // Assert
+      expect(result).toBeDefined();
+      expect(result![0]!.tenderId).toEqual(tenderId);
+      expect(result![0]!.product).toEqual(product);
+      expect(result![0]!.lot).toEqual(lot);
+      expect(result![0]!.zone).toEqual(zone);
+      expect(result![0]!.deliveryDriverId).toEqual(deliveryDriverId);
+      expect(dynamoMockClient.calls()).toHaveLength(1);
+    });
+
+    describe('batchGetCost', () => {
+      const docClientMock = mockClient(DynamoDBDocumentClient);
+
+      beforeEach(() => {
+        docClientMock.reset();
+      });
+
+      test('should return costs when items exist', async () => {
+        const tableName = PN_COST_TABLE_NAME ?? (() => { throw new Error('PN_COST_TABLE_NAME is undefined'); })();
+        const tenderId = '12345';
+        const requests = ['AR|LOT_1|EU', 'AR|LOT_2|EU'];
+        const items = getItemCostListOutput.Items || [];
+        docClientMock
+          .on(BatchGetCommand)
+          .resolves({
+            Responses: {
+              [tableName]: items,
+            },
+          });
+
+        const result = await batchGetCost(requests, tenderId);
+
+        expect(result).toHaveLength(items.length);
+        expect(result[0]).toMatchObject(costItem);
+      });
+
+      test('should return empty array when no items exist', async () => {
+        const tableName = PN_COST_TABLE_NAME ?? (() => { throw new Error('PN_COST_TABLE_NAME is undefined'); })();
+        const tenderId = '12345';
+        const requests = ['AR|LOT_1|EU'];
+        docClientMock
+          .on(BatchGetCommand)
+          .resolves({
+            Responses: {
+              [tableName]: [],
+            },
+          });
+
+        const result = await batchGetCost(requests, tenderId);
+
+        expect(result).toEqual([]);
+      });
+
+      test('should return empty array when Responses is undefined', async () => {
+        const tenderId = '12345';
+        const requests = ['AR|LOT_1|EU'];
+        docClientMock
+          .on(BatchGetCommand)
+          .resolves({
+            Responses: undefined,
+          });
+
+        const result = await batchGetCost(requests, tenderId);
+
+        expect(result).toEqual([]);
+      });
+    });
+  });
+
+
+});
+
+const getQueryInput = (
+  filterExpression: string | undefined,
+  expressionValues: Record<string, AttributeValue>,
+  keyExpression: string | undefined = undefined
+): QueryInput => {
+  return {
+    TableName: PN_COST_TABLE_NAME,
+    KeyConditionExpression: keyExpression,
+    FilterExpression: filterExpression,
+    ExpressionAttributeValues: expressionValues,
+  } as QueryInput;
+};
+
+const getQueryOutput = () => {
+  return {
+    ...getItemCostListOutput,
+  };
+};

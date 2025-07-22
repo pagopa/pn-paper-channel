@@ -682,7 +682,26 @@ Parameters:
       - ENABLED
       - DISABLED
     Description: 'EventBridge Rule To DelayerToPaperChannel'
-      
+
+  TenderAPILambdaName:
+    Type: String
+    Description: "TenderAPILambdaName"
+
+  TenderAPILambdaRuntime:
+    Type: String
+    Default: nodejs20.x
+    Description: Runtime of the DataIndexer Lambda.
+
+  TenderAPILambdaTimeout:
+    Type: Number
+    Default: 30
+    Description: Timeout TenderAPI Lambda.
+
+  TenderAPILambdaMemorySize:
+    Type: Number
+    Default: 512
+    Description: Memory size TenderAPI Lambda.
+
 Conditions:
   UseExternalChannelMock: !Equals [ !Ref ExternalChannelBaseUrl, "Mock" ]
 
@@ -1031,6 +1050,71 @@ Resources:
           - ','
           - - !Sub '/aws/ecs/${ProjectName}-paper-channel'   
 
+
+  # Lambda function
+  TenderAPILambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Ref TenderAPILambdaName
+      Runtime: !Ref TenderAPILambdaRuntime
+      Handler: "index.handler"
+      Code:
+        S3Bucket: !Ref MicroserviceBucketName
+        S3Key: !Sub "${MicroserviceBucketBaseKey}/functions_zip/tenderAPI.zip"
+      Role: !GetAtt TenderAPILambdaRole.Arn
+      Environment:
+        Variables:
+          REGION: !Sub ${AWS::Region}
+          AWS_DYNAMODBPAPERCHANNELTENDERTABLE: !Ref PaperChannelTenderDynamoTableName
+          AWS_DYNAMODBPAPERCHANNELGEOKEYTABLE: !Ref PaperChannelGeokeyDynamoTableName
+          AWS_DYNAMODBPAPERCHANNELCOSTTABLE: !Ref PaperChannelCostDynamoTableName
+          AWS_DYNAMODBPAPERCHANNELDELIVERYDRIVERTABLE: !Ref PaperChannelDeliveryDriverDynamoTableName
+      TracingConfig:
+        Mode: Active
+      Layers:
+        - !Sub "arn:aws:lambda:${AWS::Region}:339249233099:layer:LambdaInsightsExtension:13"
+      Timeout: !Ref TenderAPILambdaTimeout
+      MemorySize: !Ref TenderAPILambdaMemorySize
+
+  # Lambda function role
+  TenderAPILambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${TenderAPILambdaName}Role
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: DynamoDbAccess
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: DynamoDbScan
+                Effect: Allow
+                Action:
+                  - dynamodb:Scan
+                Resource:
+                  - !Sub "${PaperChannelTenderDynamoTableArn}"
+                  - !Sub "${PaperChannelDeliveryDriverDynamoTableArn}"
+              - Sid: DynamoDbGet
+                Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:Query
+                Resource:
+                  - !Sub "${PaperChannelTenderDynamoTableArn}"
+                  - !Sub "${PaperChannelGeokeyDynamoTableArn}"
+                  - !Sub "${PaperChannelDeliveryDriverDynamoTableArn}"
+                  - !Sub "${PaperChannelCostDynamoTableArn}"
+
   PaperChannelGatewayDeliveryDriver:
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -1195,14 +1279,14 @@ Resources:
 
   PnCoreEventBusToDelayerToPaperchannelQueue:
     Type: AWS::Events::Rule
-    Properties: 
+    Properties:
       Description: Route pn-CoreEventBus Events to DelayerToPaperChannel queue
-      RoleArn: !GetAtt "EventBusEnqueueRole.Arn" 
+      RoleArn: !GetAtt "EventBusEnqueueRole.Arn"
       EventBusName: !Sub '${ProjectName}-CoreEventBus'
       State: !Ref PnDelayerToPaperChannelEventBusRuleStatus
       EventPattern:
         detail-type: [ "PreparePhaseOneOutcomeEvent" ]
-      Targets: 
+      Targets:
         - Arn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:PnCoreEventBusMatchedEventLogger
           Id: !Sub ${ProjectName}-Logger-DelayerToPaperChannelQueue
           InputTransformer:
@@ -1215,7 +1299,7 @@ Resources:
                   "ruleName": <aws.events.rule-name>,
                   "ingestionTime": <aws.events.event.ingestion-time>,
                   "originalEvent": <aws.events.event.json>
-              }       
+              }
         - Id: !Sub '${ProjectName}-DelayerToPaperChannelQueue'
           Arn: !Ref DelayerToPaperChannelQueueARN
           InputPath: $.detail.body
@@ -1246,7 +1330,7 @@ Resources:
                   - sqs:GetQueueUrl
                   - sqs:SendMessage
                 Effect: Allow
-                Resource: 
+                Resource:
                   - !Ref DelayerToPaperChannelQueueARN
 
   PnDeliveryQueuePolicy:
@@ -1258,13 +1342,13 @@ Resources:
         Statement:
           - Sid: "SendEventsToDLQ"
             Effect: "Allow"
-            Principal: 
-              Service: 
+            Principal:
+              Service:
                 - "events.amazonaws.com"
             Condition:
               StringEquals:
                 aws:SourceAccount: !Ref "AWS::AccountId"
-            Action: 
+            Action:
               - "SQS:SendMessage"
             Resource:
               - !Ref "DelayerToPaperChannelQueueARN"
