@@ -47,6 +47,7 @@ public class PnPaperChannelConfig {
     private String queueDelayerToPaperchannel;
     private String queueInternal;
     private String queueUrlOcrInputs;
+    private String queueRegionOcrInputs;
     private Integer attemptSafeStorage;
     private Integer attemptQueueSafeStorage;
     private Integer attemptQueueExternalChannel;
