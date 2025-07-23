@@ -44,7 +44,7 @@ export const findDeliveryDriversByDriverIds = async (
       [tableName]: {
         Keys: deliveryDriverIds.map(key => (
             {
-              requestId: key
+              deliveryDriverId: key
             }
         ))
       }
