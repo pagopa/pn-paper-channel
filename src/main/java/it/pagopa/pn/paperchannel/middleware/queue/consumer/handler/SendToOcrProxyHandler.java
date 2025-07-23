@@ -21,6 +21,8 @@ import reactor.core.publisher.Mono;
 
 import java.time.Instant;
 import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.INVALID_SAFE_STORAGE;
 import static it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum.*;
@@ -68,39 +70,63 @@ public class SendToOcrProxyHandler implements MessageHandler {
      */
     @Override
     public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
+        log.info("{} handling statusCode={}", SendToOcrProxyHandler.class.getSimpleName(), paperRequest.getStatusCode());
 
         // Remove suffix 'C' and replace with 'A' or 'B'
         // RECRN00xC -> RECRN00xA
-        final String metaStatusCode = changeStatusCodeToMeta(paperRequest.getStatusCode());
-        final String dematStatusCode = changeStatusCodeToDemat(paperRequest.getStatusCode());
+        Optional<String> metaStatusCode = parseMetaStatusCode(paperRequest.getStatusCode());
+        Optional<String> dematStatusCode = parseDematStatusCode(paperRequest.getStatusCode());
+        Optional<DocumentType> documentType = dematStatusCode.flatMap(this::getDocumentType);
 
-        var documentType = STATUS_CODE_DOCUMENT_TYPE.get(ExternalChannelCodeEnum.valueOf(dematStatusCode));
+        // If meta, demat or documentType is empty -> statusCode not implemented -> runs only handleMessage and ends
+        if (metaStatusCode.isEmpty() || dematStatusCode.isEmpty() ||
+                documentType.isEmpty() || !paperChannelConfig.isEnableOcr()) {
+            log.info("StatusCode {} not implemented for OCR, executing only messageHandler", paperRequest.getStatusCode());
+            return messageHandler.handleMessage(entity, paperRequest);
+        }
 
         final String metaRequestId = buildMetaRequestId(paperRequest.getRequestId());
         final String dematRequestId = buildDematRequestId(paperRequest.getRequestId());
 
-        // If documentType is null -> statusCode not implemented -> runs only handleMessage and ends
-        if (documentType == null || !paperChannelConfig.isEnableOcr()) {
-            log.info("StatusCode {} not implemented for OCR, executing only messageHandler", dematStatusCode);
-            return messageHandler.handleMessage(entity, paperRequest);
-        }
-
         // Retrieve and save metadata
         var metaEventMono = this.eventMetaDAO
-                .getDeliveryEventMeta(metaRequestId, buildMetaStatusCode(metaStatusCode));
+                .getDeliveryEventMeta(metaRequestId, buildMetaStatusCode(metaStatusCode.get()))
+                .map(Optional::of)
+                .switchIfEmpty(Mono.fromCallable(() -> {
+                    log.info("EventMeta not found for requestId: {}", metaRequestId);
+                    return Optional.empty();
+                }));
 
         // Retrieve and save demat
         var dematEventMono = this.eventDematDAO
-                .getDeliveryEventDemat(dematRequestId, buildDocumentTypeStatusCode(documentType.name(), dematStatusCode));
+                .getDeliveryEventDemat(dematRequestId, buildDocumentTypeStatusCode(documentType.get().name(),
+                        dematStatusCode.get()))
+                .map(Optional::of)
+                .switchIfEmpty(Mono.fromCallable(() -> {
+                    log.info("EventDemat not found for requestId: {}", dematRequestId);
+                    return Optional.empty();
+                }));
 
         // Save meta e demat, then call handler
         return Mono.zip(metaEventMono, dematEventMono)
                 .flatMap(tuple -> {
-                    PnEventMeta meta = tuple.getT1();
-                    PnEventDemat demat = tuple.getT2();
+                    Optional<PnEventMeta> metaOpt = tuple.getT1();
+                    Optional<PnEventDemat> dematOpt = tuple.getT2();
 
                     return messageHandler.handleMessage(entity, paperRequest)
-                            .then(sendOcrIfNeeded(entity, paperRequest, meta, demat, documentType));
+                            .then(Mono.defer(() -> {
+                                if (metaOpt.isPresent() && dematOpt.isPresent()) {
+                                    return sendOcrIfNeeded(
+                                            entity,
+                                            paperRequest,
+                                            metaOpt.get(),
+                                            dematOpt.get(),
+                                            documentType.get());
+                                } else {
+                                    log.info("Skipping OCR: meta or demat is missing.");
+                                    return Mono.empty();
+                                }
+                            }));
                 });
     }
 
@@ -130,7 +156,6 @@ public class SendToOcrProxyHandler implements MessageHandler {
                         var presignedUrl = urlAndDriver.getT1();
                         var unifiedDeliveryDriver = urlAndDriver.getT2();
                         var ocrPayload = buildOcrInputPayload(
-                                paperRequest.getRequestId(),
                                 documentType,
                                 ProductType.valueOf(paperRequest.getProductType()),
                                 unifiedDeliveryDriver,
@@ -190,7 +215,6 @@ public class SendToOcrProxyHandler implements MessageHandler {
     /**
      * Builds the payload to be sent to the OCR service.
      *
-     * @param requestId unique request identifier
      * @param documentType type of the document
      * @param productType type of the postal product
      * @param unifiedDeliveryDriver delivery driver ID
@@ -199,14 +223,13 @@ public class SendToOcrProxyHandler implements MessageHandler {
      * @return the payload to be pushed to the OCR queue
      */
     private static OcrInputPayload buildOcrInputPayload(
-            String requestId,
             DocumentType documentType,
             ProductType productType,
             String unifiedDeliveryDriver,
             PaperProgressStatusEventDto paperRequest,
             String attachmentUrl) {
         return OcrInputPayload.builder()
-                .commandId(requestId)
+                .commandId(UUID.randomUUID().toString())
                 .commandType(OcrInputPayload.CommandType.postal)
                 .data(OcrInputPayload.DataDto.builder()
                         .productType(productType)
@@ -221,6 +244,51 @@ public class SendToOcrProxyHandler implements MessageHandler {
                                 .build())
                         .build())
                 .build();
+    }
+
+    /**
+     * Parses a status code and attempts to convert it to its META equivalent.
+     * If the conversion fails due to an invalid input, returns an empty Optional.
+     *
+     * @param statusCode the original status code to convert
+     * @return an Optional containing the Meta-equivalent status code, or empty if conversion fails
+     */
+    private Optional<String> parseMetaStatusCode(String statusCode) {
+        try {
+            return Optional.of(changeStatusCodeToMeta(statusCode));
+        } catch (IllegalArgumentException e) {
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Parses a status code and attempts to convert it to its DEMAT equivalent.
+     * If the conversion fails due to an invalid input, returns an empty Optional.
+     *
+     * @param statusCode the original status code to convert
+     * @return an Optional containing the Demat-equivalent status code, or empty if conversion fails
+     */
+    private Optional<String> parseDematStatusCode(String statusCode) {
+        try {
+            return Optional.of(changeStatusCodeToDemat(statusCode));
+        } catch (IllegalArgumentException e) {
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Attempts to retrieve the {@link DocumentType} associated with the given Demat status code.
+     * If the status code is not valid or not mapped, returns an empty Optional.
+     *
+     * @param dematStatusCode the Demat status code
+     * @return an Optional containing the corresponding DocumentType, or empty if not found or invalid
+     */
+    private Optional<DocumentType> getDocumentType(String dematStatusCode) {
+        try {
+            return Optional.ofNullable(STATUS_CODE_DOCUMENT_TYPE.get(ExternalChannelCodeEnum.valueOf(dematStatusCode)));
+        } catch (IllegalArgumentException e) {
+            return Optional.empty();
+        }
     }
 }
 
