@@ -62,12 +62,8 @@ export const batchGetCost = async (
       [tableName]: {
         Keys: requests.map(request => (
             {
-              tenderId: {
-                S: tenderId,
-              },
-              productLotZone: {
-                S: request,
-              },
+              tenderId: tenderId,
+              productLotZone: request
             }
         ))
       }
@@ -79,7 +75,7 @@ export const batchGetCost = async (
     if (!items || items.length === 0) {
       return [];
     }
-    return items.map(item => unmarshall(item) as PaperChannelTenderCosts);
+    return items as PaperChannelTenderCosts[];
   });
 }
 
