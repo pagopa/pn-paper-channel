@@ -270,11 +270,11 @@ describe('Cost DAO tests', () => {
         docClientMock.reset();
       });
 
-      test('should return costs when items exist', async () => {
+        test('should return costs when items exist', async () => {
         const tableName = PN_COST_TABLE_NAME ?? (() => { throw new Error('PN_COST_TABLE_NAME is undefined'); })();
         const tenderId = '12345';
         const requests = ['AR|LOT_1|EU', 'AR|LOT_2|EU'];
-        const items = getItemCostListOutput.Items || [];
+        const items = [costItem, costItem];
         docClientMock
           .on(BatchGetCommand)
           .resolves({
@@ -287,6 +287,7 @@ describe('Cost DAO tests', () => {
 
         expect(result).toHaveLength(items.length);
         expect(result[0]).toMatchObject(costItem);
+        expect(result[1]).toMatchObject(costItem);
       });
 
       test('should return empty array when no items exist', async () => {
