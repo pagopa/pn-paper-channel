@@ -12,7 +12,6 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventDemat;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
 import it.pagopa.pn.paperchannel.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.paperchannel.middleware.queue.model.OcrInputPayload;
-import it.pagopa.pn.paperchannel.middleware.queue.producer.OcrProducer;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum;
 import lombok.experimental.SuperBuilder;
@@ -50,7 +49,6 @@ public class SendToOcrProxyHandler implements MessageHandler {
             RECRN005B, DocumentType.Plico
     );
 
-    private final OcrProducer ocrProducer;
     private final EventDematDAO eventDematDAO;
     private final EventMetaDAO eventMetaDAO;
     private final MessageHandler messageHandler;
@@ -80,8 +78,12 @@ public class SendToOcrProxyHandler implements MessageHandler {
 
         // If meta, demat or documentType is empty -> statusCode not implemented -> runs only handleMessage and ends
         if (metaStatusCode.isEmpty() || dematStatusCode.isEmpty() ||
-                documentType.isEmpty() || !paperChannelConfig.isEnableOcr()) {
-            log.info("StatusCode {} not implemented for OCR, executing only messageHandler", paperRequest.getStatusCode());
+                documentType.isEmpty()) {
+            log.warn("StatusCode {} not implemented for OCR, executing only messageHandler", paperRequest.getStatusCode());
+            return messageHandler.handleMessage(entity, paperRequest);
+        }
+        if (!paperChannelConfig.isEnableOcr()) {
+            log.info("EnableOcr config false, executing only messageHandler");
             return messageHandler.handleMessage(entity, paperRequest);
         }
 
@@ -165,6 +167,10 @@ public class SendToOcrProxyHandler implements MessageHandler {
                         sqsSender.pushToOcr(ocrPayload);
                         return Mono.empty();
                     })
+                    .onErrorResume((e) -> {
+                        log.error("Error on sending payload to OCR:", e);
+                        return Mono.empty();
+                    })
                     .then();
         }
         return Mono.empty();
@@ -239,7 +245,11 @@ public class SendToOcrProxyHandler implements MessageHandler {
                                 .deliveryDetailCode(paperRequest.getStatusCode())
                                 .notificationDate(paperRequest.getStatusDateTime().toInstant())
                                 .registeredLetterCode(paperRequest.getRegisteredLetterCode())
-                                .deliveryFailureCause(DeliveryFailureCause.valueOf(paperRequest.getDeliveryFailureCause()))
+                                .deliveryFailureCause(
+                                        Optional.ofNullable(paperRequest.getDeliveryFailureCause())
+                                                .map(DeliveryFailureCause::valueOf)
+                                                .orElse(null)
+                                )
                                 .attachment(attachmentUrl)
                                 .build())
                         .build())

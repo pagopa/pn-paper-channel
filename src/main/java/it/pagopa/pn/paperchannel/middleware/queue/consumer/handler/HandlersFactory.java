@@ -114,7 +114,6 @@ public class HandlersFactory {
                 .paperChannelConfig(pnPaperChannelConfig)
                 .eventMetaDAO(eventMetaDAO)
                 .eventDematDAO(eventDematDAO)
-                .ocrProducer(ocrProducer)
                 .safeStorageClient(safeStorageClient)
                 .deliveryDriverDAO(deliveryDriverDAO)
                 .build();
@@ -134,7 +133,6 @@ public class HandlersFactory {
                 .paperChannelConfig(pnPaperChannelConfig)
                 .eventMetaDAO(eventMetaDAO)
                 .eventDematDAO(eventDematDAO)
-                .ocrProducer(ocrProducer)
                 .safeStorageClient(safeStorageClient)
                 .deliveryDriverDAO(deliveryDriverDAO)
                 .build();
@@ -259,7 +257,6 @@ public class HandlersFactory {
                 .paperChannelConfig(pnPaperChannelConfig)
                 .eventMetaDAO(eventMetaDAO)
                 .eventDematDAO(eventDematDAO)
-                .ocrProducer(ocrProducer)
                 .safeStorageClient(safeStorageClient)
                 .deliveryDriverDAO(deliveryDriverDAO)
                 .build();
@@ -280,7 +277,6 @@ public class HandlersFactory {
                 .paperChannelConfig(pnPaperChannelConfig)
                 .eventMetaDAO(eventMetaDAO)
                 .eventDematDAO(eventDematDAO)
-                .ocrProducer(ocrProducer)
                 .safeStorageClient(safeStorageClient)
                 .deliveryDriverDAO(deliveryDriverDAO)
                 .build();
@@ -301,7 +297,6 @@ public class HandlersFactory {
                 .paperChannelConfig(pnPaperChannelConfig)
                 .eventMetaDAO(eventMetaDAO)
                 .eventDematDAO(eventDematDAO)
-                .ocrProducer(ocrProducer)
                 .safeStorageClient(safeStorageClient)
                 .deliveryDriverDAO(deliveryDriverDAO)
                 .build();
@@ -361,9 +356,11 @@ public class HandlersFactory {
         addSaveMetadataStatusCodes(map, saveMetadataMessageHandler);
         addSaveDematStatusCodes(map, saveDematMessageHandler);
         addRecagxxxbSaveDematStatusCodes(map, recagxxxbMessageHandler);
-        addAggregatorStatusCodes(map, aggregatorMessageHandler, aggregatorOcrProxyMessageHandler);
+        addAggregatorStatusCodes(map, aggregatorMessageHandler);
+        addAggregatorSendToOcrStatusCodes(map, aggregatorOcrProxyMessageHandler);
         addDirectlySendStatusCodes(map, sendToDeliveryPushHandler);
-        addCustomAggregatorStatusCodes(map, customAggregatorMessageHandler, customAggregatorOcrProxyMessageHandler);
+        addCustomAggregatorStatusCodes(map, customAggregatorMessageHandler);
+        addCustomAggregatorSendToOcrStatusCodes(map, customAggregatorOcrProxyMessageHandler);
 
         //casi 890
         map.put("RECAG011A", recag011AMessageHandler);
@@ -532,15 +529,11 @@ public class HandlersFactory {
         map.put(ExternalChannelCodeEnum.RECRS010.name(), handler);
     }
 
-    private void addAggregatorStatusCodes(ConcurrentHashMap<String, MessageHandler> map,
-                                          AggregatorMessageHandler handler,
-                                          SendToOcrProxyHandler proxyHandler) {
+    private void addAggregatorStatusCodes(ConcurrentHashMap<String, MessageHandler> map, AggregatorMessageHandler handler) {
         map.put(ExternalChannelCodeEnum.RECRS002C.name(), handler);
         map.put(ExternalChannelCodeEnum.RECRS002F.name(), handler);
         map.put(ExternalChannelCodeEnum.RECRS004C.name(), handler);
         map.put(ExternalChannelCodeEnum.RECRS005C.name(), handler);
-        map.put(ExternalChannelCodeEnum.RECRN001C.name(), proxyHandler);
-        map.put(ExternalChannelCodeEnum.RECRN002F.name(), proxyHandler);
         map.put(ExternalChannelCodeEnum.RECAG001C.name(), handler);
         map.put(ExternalChannelCodeEnum.RECAG002C.name(), handler);
         map.put(ExternalChannelCodeEnum.RECAG003F.name(), handler);
@@ -550,11 +543,17 @@ public class HandlersFactory {
         map.put(ExternalChannelCodeEnum.RECRSI004C.name(), handler);
     }
 
-    private void addCustomAggregatorStatusCodes(ConcurrentHashMap<String, MessageHandler> map,
-                                                CustomAggregatorMessageHandler handler,
-                                                SendToOcrProxyHandler proxyHandler){
-        map.put(ExternalChannelCodeEnum.RECRN002C.name(), proxyHandler);
+    private void addAggregatorSendToOcrStatusCodes(ConcurrentHashMap<String, MessageHandler> map, SendToOcrProxyHandler proxyHandler) {
+        map.put(ExternalChannelCodeEnum.RECRN001C.name(), proxyHandler);
+        map.put(ExternalChannelCodeEnum.RECRN002F.name(), proxyHandler);
+    }
+
+    private void addCustomAggregatorStatusCodes(ConcurrentHashMap<String, MessageHandler> map, CustomAggregatorMessageHandler handler){
         map.put(ExternalChannelCodeEnum.RECAG003C.name(), handler);
+    }
+
+    private void addCustomAggregatorSendToOcrStatusCodes(ConcurrentHashMap<String, MessageHandler> map, SendToOcrProxyHandler proxyHandler){
+        map.put(ExternalChannelCodeEnum.RECRN002C.name(), proxyHandler);
     }
 
     public MessageHandler getHandler(@NotNull String code) {
