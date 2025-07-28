@@ -1,0 +1,53 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Data quality template, creates a nested stack for Glue Table and Crawler
+
+Parameters:
+  TemplateBucketBaseUrl:
+    Type: String
+    Description: The S3 bucket from which to fetch the templates used by this stack.
+  GlueServiceRoleArn:
+    Type: String
+    Description: Service role for the Glue Crawler.
+  LogsBucketName:
+    Type: String
+    Description: Logs bucket name
+  GlueDatabaseName:
+    Type: String
+    Description: Name of the Glue Database
+  PaperRequestErrorDynamoTableName:
+    Type: String
+    Description: |
+      DynamoDb table name for pn-PaperRequestError, valorized by the related output
+      in the storage.yaml template, used also for identifying the S3 bucket
+      directory where related CDC files are stored.
+  
+  PaperRequestErrorGlueTableName:
+    Type: String
+    AllowedPattern: ^[a-z_]+$
+    ConstraintDescription: Glue table name for pn-PaperRequestError, accept only lowercase values and underscore.
+    Default: pn_paper_request_error
+
+Resources:
+  PnPaperRequestErrorDataQualityStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub ${TemplateBucketBaseUrl}/fragments/cdc-glue.yaml
+      Parameters:
+        DynamoTableName: !Ref PaperRequestErrorDynamoTableName
+        GlueTableName: !Ref PaperRequestErrorGlueTableName
+        GlueServiceRoleArn: !Ref GlueServiceRoleArn
+        LogsBucketName: !Ref LogsBucketName
+        GlueDatabaseName: !Ref GlueDatabaseName
+        DynamoDBKeysStructure: |
+          struct<requestId:struct<S:string>,created:struct<S:string>>
+        DynamoDBNewImageStructure: |
+          struct<
+            flowThrow:struct<S:string>,
+            category:struct<S:string>,
+            created:struct<S:string>,
+            cause:struct<S:string>,
+            error:struct<S:string>,
+            author:struct<S:string>,
+            paId:struct<S:string>,
+            requestId:struct<S:string>
+          >
