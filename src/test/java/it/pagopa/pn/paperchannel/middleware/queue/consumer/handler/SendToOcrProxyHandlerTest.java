@@ -63,7 +63,6 @@ class SendToOcrProxyHandlerTest {
     void setUp() {
         // Arrange - Common test data setup
         handler = SendToOcrProxyHandler.builder()
-                .ocrProducer(ocrProducer)
                 .eventDematDAO(eventDematDAO)
                 .eventMetaDAO(eventMetaDAO)
                 .messageHandler(messageHandler)
@@ -342,8 +341,7 @@ class SendToOcrProxyHandlerTest {
 
             // Assert
             StepVerifier.create(result)
-                    .expectError(PnGenericException.class)
-                    .verify();
+                    .verifyComplete();
 
             verify(messageHandler).handleMessage(entity, paperRequest);
             verify(sqsSender, never()).pushToOcr(any());
@@ -369,8 +367,7 @@ class SendToOcrProxyHandlerTest {
 
             // Assert
             StepVerifier.create(result)
-                    .expectError(PnGenericException.class)
-                    .verify();
+                    .verifyComplete();
         }
 
         @Test
