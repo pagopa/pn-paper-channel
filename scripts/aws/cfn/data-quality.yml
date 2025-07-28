@@ -14,7 +14,7 @@ Parameters:
   GlueDatabaseName:
     Type: String
     Description: Name of the Glue Database
-  PaperRequestErrorDynamoTableName:
+  PaperRequestErrorTableName:
     Type: String
     Description: |
       DynamoDb table name for pn-PaperRequestError, valorized by the related output
@@ -33,7 +33,7 @@ Resources:
     Properties:
       TemplateURL: !Sub ${TemplateBucketBaseUrl}/fragments/cdc-glue.yaml
       Parameters:
-        DynamoTableName: !Ref PaperRequestErrorDynamoTableName
+        DynamoTableName: !Ref PaperRequestErrorTableName
         GlueTableName: !Ref PaperRequestErrorGlueTableName
         GlueServiceRoleArn: !Ref GlueServiceRoleArn
         LogsBucketName: !Ref LogsBucketName
