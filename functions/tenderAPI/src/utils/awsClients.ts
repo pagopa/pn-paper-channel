@@ -4,7 +4,7 @@ import {
   QueryInput,
 } from '@aws-sdk/client-dynamodb';
 
-const dynamoDBClient = new DynamoDBClient({ region: 'eu-south-1' });
+const dynamoDBClient = new DynamoDBClient();
 
 class QueryCommandBuilder {
   private readonly tableName: string | undefined;
