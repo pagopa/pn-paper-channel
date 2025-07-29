@@ -843,7 +843,7 @@ Resources:
         ContainerEnvEntry82: !Sub 'PN_PAPERCHANNEL_COMPIUTAGIACENZAARDURATION=${CompiutaGiacenzaArDuration}'
         ContainerEnvEntry83: !Sub 'PN_PAPERCHANNEL_ENABLERETRYCON996=${EnableRetryCon996}'
         ContainerEnvEntry84: !Sub 'PN_PAPERCHANNEL_ENABLETRUNCATEDDATEFORREFINEMENTCHECK=${EnableTruncatedDateForRefinementCheck}'
-        ContainerEnvEntry85: !Sub 'PN_PAPERCHANNEL_QUEUEURLOCRINPUTS=${PaperChannelOcrInputsQueueUrl}'
+        ContainerEnvEntry85: !Sub 'PN_PAPERCHANNEL_QUEUEURLOCRINPUTS=${PaperChannelOcrInputsQueueURL}'
         ContainerEnvEntry86: !Sub 'PN_PAPERCHANNEL_QUEUEREGIONOCRINPUTS=${PaperChannelOcrInputsQueueRegion}'
         ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-PaperChannel-Secrets
