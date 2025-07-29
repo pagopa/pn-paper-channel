@@ -49,5 +49,6 @@ Resources:
             error:struct<S:string>,
             author:struct<S:string>,
             paId:struct<S:string>,
-            requestId:struct<S:string>
+            requestId:struct<S:string>,
+            geokey:struct<S:string>
           >
