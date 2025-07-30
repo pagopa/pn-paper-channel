@@ -279,7 +279,7 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
                 .build();
 
         return paperRequestErrorDAO.created(pnRequestError)
-                .then(Mono.error(new PnGenericException(exceptionTypeEnum, exceptionTypeEnum.getMessage())));
+                .then(Mono.error(new PnGenericException(exceptionTypeEnum, exceptionTypeEnum.getMessage() + " " + requestId)));
     }
 
     private Mono<Void> startPrepareAsync(@NotNull AddressSQSMessageDto addressFromNational, PnDeliveryRequest deliveryRequest) {
