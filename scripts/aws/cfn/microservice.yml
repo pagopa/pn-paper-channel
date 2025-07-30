@@ -46,6 +46,10 @@ Parameters:
   VpcId:
     Type: String
     Description: 'VpcId where the microservice is going to be deployed'
+
+  VpcEgressSubnetsIds:
+    Type: String
+    Description: 'Egress subnets'
   
   EcsDefaultSecurityGroup:
     Type: String
@@ -849,7 +853,7 @@ Resources:
         MicroServiceSecretPrefix: pn-PaperChannel-Secrets
         MappedPaths: '/paper-channel-bo/*,/paper-channel-private/*'
         ECSClusterName: !Ref ECSClusterName
-        Subnets: !Ref SubnetsIds
+        Subnets: !Ref VpcEgressSubnetsIds
         VpcId: !Ref VpcId
         EcsDefaultSecurityGroup: !Ref EcsDefaultSecurityGroup
         LoadBalancerListenerArn: !Ref ApplicationLoadBalancerListenerArn
