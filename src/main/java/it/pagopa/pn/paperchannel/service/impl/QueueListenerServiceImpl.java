@@ -32,8 +32,10 @@ import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
+import reactor.util.retry.Retry;
 
 import javax.validation.constraints.NotNull;
+import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -235,15 +237,17 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
         log.logStartingProcess(PROCESS_NAME);
         log.info("Received message from National Registry queue");
         MDCUtils.addMDCToContextAndExecute(Mono.just(body)
-                        .map(msg -> {
+                        .doOnNext(msg -> {
                             if (msg==null || StringUtils.isBlank(msg.getCorrelationId())) throw new PnGenericException(CORRELATION_ID_NOT_FOUND, CORRELATION_ID_NOT_FOUND.getMessage());
-                            else return msg;
                         })
                         .zipWhen(msgDto -> {
                             String correlationId = msgDto.getCorrelationId();
-                            log.info("Received message from National Registry queue with correlationId "+correlationId);
+                            log.info("Received message from National Registry queue with correlationId: {} ", correlationId);
                             return requestDeliveryDAO.getByCorrelationId(correlationId)
-                                    .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage())));
+                                    // probabile errore di read consistency, riprovo un'unica volta la getItem dopo 3 secondi
+                                    .retryWhen(Retry.fixedDelay(1, Duration.ofSeconds(3)))
+                                    .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage())))
+                                    .onErrorResume(throwable -> saveToPaperError(correlationId, DELIVERY_REQUEST_NOT_EXIST));
                         })
                         .doOnNext(addressAndEntity -> resolveAuditLogFromResponse(addressAndEntity.getT2(), addressAndEntity.getT1().getError(), pnLogAudit, PN_NATIONAL_REGISTRIES, addressAndEntity.getT2().getCorrelationId()))
 
@@ -257,22 +261,25 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
                             PnDeliveryRequest entity = addressAndEntity.getT2();
                             // check error body
                             if (StringUtils.isNotEmpty(addressFromNational.getError())) {
-                                log.info("Error message is not empty for correlationId" +addressFromNational.getCorrelationId());
+                                log.warn("Error message is not empty for correlationId: {}", addressFromNational.getCorrelationId());
 
-                                PnRequestError pnRequestError = PnRequestError.builder()
-                                        .requestId(entity.getRequestId())
-                                        .error(NATIONAL_REGISTRY_LISTENER_EXCEPTION.getTitle())
-                                        .flowThrow(NATIONAL_REGISTRY_LISTENER_EXCEPTION.getMessage())
-                                        .build();
+                                return saveToPaperError(entity.getRequestId(), NATIONAL_REGISTRY_LISTENER_EXCEPTION);
 
-                                paperRequestErrorDAO.created(pnRequestError);
-
-                                throw new PnGenericException(NATIONAL_REGISTRY_LISTENER_EXCEPTION, NATIONAL_REGISTRY_LISTENER_EXCEPTION.getMessage());
                             }
-
                             return startPrepareAsync(addressFromNational, entity);
                         }))
                 .block();
+    }
+
+    private Mono<PnDeliveryRequest> saveToPaperError(String requestId, ExceptionTypeEnum exceptionTypeEnum) {
+        PnRequestError pnRequestError = PnRequestError.builder()
+                .requestId(requestId)
+                .error(exceptionTypeEnum.getTitle())
+                .flowThrow(exceptionTypeEnum.getMessage())
+                .build();
+
+        return paperRequestErrorDAO.created(pnRequestError)
+                .then(Mono.error(new PnGenericException(exceptionTypeEnum, exceptionTypeEnum.getMessage())));
     }
 
     private Mono<Void> startPrepareAsync(@NotNull AddressSQSMessageDto addressFromNational, PnDeliveryRequest deliveryRequest) {

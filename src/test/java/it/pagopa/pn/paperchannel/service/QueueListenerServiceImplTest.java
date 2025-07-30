@@ -128,10 +128,13 @@ class QueueListenerServiceImplTest {
     @Test
     void nationalRegistriesResponseListenerDeliveryNotExistsTest (){
         Mockito.when(this.requestDeliveryDAO.getByCorrelationId(Mockito.anyString())).thenReturn(Mono.empty());
+        Mockito.when(this.paperRequestErrorDAO.created(Mockito.any())).thenReturn(Mono.just(new PnRequestError()));
         AddressSQSMessageDto addressSQSMessageDto = new AddressSQSMessageDto();
         addressSQSMessageDto.setCorrelationId("1234");
         try{
             this.queueListenerService.nationalRegistriesResponseListener(addressSQSMessageDto);
+            Mockito.verify(this.requestDeliveryDAO, Mockito.times(2)).getByCorrelationId(Mockito.anyString());
+            Mockito.verify(this.paperRequestErrorDAO, Mockito.times(1)).created(Mockito.any());
         }
         catch(PnGenericException ex){
             Assertions.assertEquals(DELIVERY_REQUEST_NOT_EXIST, ex.getExceptionType());
@@ -162,12 +165,15 @@ class QueueListenerServiceImplTest {
 
         // When
         Mockito.when(this.requestDeliveryDAO.getByCorrelationId(Mockito.anyString())).thenReturn(Mono.just(deliveryRequest));
+        Mockito.when(this.paperRequestErrorDAO.created(Mockito.any())).thenReturn(Mono.just(new PnRequestError()));
 
         // Then
         try{
             this.queueListenerService.nationalRegistriesResponseListener(addressSQSMessageDto);
         } catch(PnGenericException ex){
             Assertions.assertEquals(NATIONAL_REGISTRY_LISTENER_EXCEPTION, ex.getExceptionType());
+            Mockito.verify(this.requestDeliveryDAO, Mockito.times(1)).getByCorrelationId(Mockito.anyString());
+            Mockito.verify(this.paperRequestErrorDAO, Mockito.times(1)).created(Mockito.any());
         }
     }
 
