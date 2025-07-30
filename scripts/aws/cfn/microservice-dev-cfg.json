@@ -58,6 +58,8 @@
     "PaperChannelOcrInputsQueueARN": "arn:aws:sqs:eu-south-1:830192246553:pn-mock_ocr_inputs",
     "PaperChannelOcrInputsQueueURL": "https://sqs.eu-south-1.amazonaws.com/830192246553/pn-mock_ocr_inputs",
     "OcrAwsAccountId": "830192246553",
-    "PaperChannelOcrInputsQueueRegion": "eu-south-1"
+    "PaperChannelOcrInputsQueueRegion": "eu-south-1",
+    "PaperTrackerEnabled": "true",
+    "PaperTrackerProductList": "AR"
   }
 }
