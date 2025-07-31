@@ -689,9 +689,9 @@ Parameters:
     Type: String
     Description: 'pn-paper_channel_ocr_outputs queue URL'
 
-  OcrAwsAccountId:
+  OcrAwsRoleARN:
     Type: String
-    Description: 'AwsAccountId of pn-paper_channel_ocr_outputs sender'
+    Description: 'ARN of pn-paper_channel_ocr_outputs sender'
 
   # Log group parameters
   EcsLogGroup:
@@ -1400,14 +1400,12 @@ Resources:
         Statement:
           - Sid: AllowCrossAccountSend
             Effect: Allow
-            Principal:
-              Service:
-                - events.amazonaws.com
-            Condition:
-              StringEquals:
-                aws:SourceAccount: !Ref OcrAwsAccountId
+            Principal: "*"
             Action:
               - sqs:SendMessage
               - sqs:SendMessageBatch
             Resource:
               - !Ref PaperChannelOcrOutputsQueueURL
+            Condition:
+              StringEquals:
+                aws:PrincipalArn: !Ref OcrAwsRoleARN

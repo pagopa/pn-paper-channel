@@ -55,9 +55,9 @@
     "EnableRetryCon996": "true",
     "EnableTruncatedDateForRefinementCheck": "false",
     "PnDelayerToPaperChannelEventBusRuleStatus": "ENABLED",
-    "PaperChannelOcrInputsQueueARN": "arn:aws:sqs:eu-south-1:830192246553:pn-mock_ocr_inputs",
-    "PaperChannelOcrInputsQueueURL": "https://sqs.eu-south-1.amazonaws.com/830192246553/pn-mock_ocr_inputs",
-    "OcrAwsAccountId": "830192246553",
-    "PaperChannelOcrInputsQueueRegion": "eu-south-1"
+    "PaperChannelOcrInputsQueueARN": "arn:aws:sqs:eu-central-1:379196425703:send-receipt-validation-input",
+    "PaperChannelOcrInputsQueueURL": "https://sqs.eu-central-1.amazonaws.com/379196425703/send-receipt-validation-input",
+    "PaperChannelOcrInputsQueueRegion": "eu-central-1",
+    "OcrAwsRoleARN": "arn:aws:iam::379196425703:role/receipt_validator_execution_role"
   }
 }
