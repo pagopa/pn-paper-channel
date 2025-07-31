@@ -14,6 +14,7 @@ import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
 import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
 import it.pagopa.pn.paperchannel.model.AttachmentInfo;
 import it.pagopa.pn.paperchannel.utils.Const;
+import it.pagopa.pn.paperchannel.utils.PcRetryUtils;
 import it.pagopa.pn.paperchannel.utils.PnLogAudit;
 import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
@@ -34,13 +35,14 @@ public class RetryableErrorMessageHandler extends SendToDeliveryPushHandler {
     private final ExternalChannelClient externalChannelClient;
     private final AddressDAO addressDAO;
     private final PaperRequestErrorDAO paperRequestErrorDAO;
+    private final PcRetryUtils pcRetryUtils;
 
     @Override
     public Mono<Void> handleMessage(PnDeliveryRequest entity, PaperProgressStatusEventDto paperRequest) {
 
-        if (hasOtherAttempt(paperRequest.getRequestId())) {
+        if (pcRetryUtils.hasOtherAttempt(paperRequest.getRequestId())) {
             //invio di nuovo la richiesta a ext-channels
-            return sendEngageRequest(entity, setRetryRequestId(paperRequest.getRequestId()))
+            return sendEngageRequest(entity, pcRetryUtils.setRetryRequestId(paperRequest.getRequestId()))
                     .flatMap(pnDeliveryRequest -> super.handleMessage(entity, paperRequest));
         } else {
 
@@ -56,27 +58,6 @@ public class RetryableErrorMessageHandler extends SendToDeliveryPushHandler {
                     .flatMap(requestError -> super.handleMessage(entity, paperRequest));
         }
 
-    }
-
-    private boolean hasOtherAttempt(String requestId) {
-        return pnPaperChannelConfig.getAttemptQueueExternalChannel() != -1 || pnPaperChannelConfig.getAttemptQueueExternalChannel() < getRetryAttempt(requestId);
-    }
-
-    private int getRetryAttempt(String requestId) {
-        int retry = 0;
-        if (requestId.contains(Const.RETRY)) {
-            retry = Integer.parseInt(requestId.substring(requestId.lastIndexOf("_")+1));
-        }
-        return retry;
-    }
-
-    private String setRetryRequestId(String requestId) {
-        if (requestId.contains(Const.RETRY)) {
-            String prefix = requestId.substring(0, requestId.indexOf(Const.RETRY));
-            String attempt = String.valueOf(getRetryAttempt(requestId)+1);
-            requestId = prefix.concat(Const.RETRY).concat(attempt);
-        }
-        return requestId;
     }
 
     private Mono<PnDeliveryRequest> sendEngageRequest(PnDeliveryRequest pnDeliveryRequest, String requestId) {

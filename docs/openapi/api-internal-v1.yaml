@@ -448,10 +448,15 @@ components:
       properties:
         requestId:
           type: string
-          description: Identificativo singola richiesta per spedizione analogica
+          description: Nuovo identificativo con PcRetry se presente
+        parentRequestId:
+          type: string
+          description: requestId padre da cui è stato generato il nuovo requestId
         deliveryDriverId:
           type: string
           description: Id recapitista
+        pcRetry:
+          type: string
         retryFound:
           type: boolean
           description: Indica se sono stati trovati retry per la richiesta

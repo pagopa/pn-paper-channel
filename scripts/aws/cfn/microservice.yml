@@ -96,6 +96,11 @@ Parameters:
     Description: 'Number of attempts for called zip handle'
     Default: 3
 
+  MaxPcRetry:
+    Type: Number
+    Description: 'Maximum number for PcRetry'
+    Default: 3
+
   ZipHandleActive:
     Type: String
     Description: 'Activation feature flag for Zip handler in Demat Flow'
@@ -801,6 +806,7 @@ Resources:
         ContainerEnvEntry82: !Sub 'PN_PAPERCHANNEL_COMPIUTAGIACENZAARDURATION=${CompiutaGiacenzaArDuration}'
         ContainerEnvEntry83: !Sub 'PN_PAPERCHANNEL_ENABLERETRYCON996=${EnableRetryCon996}'
         ContainerEnvEntry84: !Sub 'PN_PAPERCHANNEL_ENABLETRUNCATEDDATEFORREFINEMENTCHECK=${EnableTruncatedDateForRefinementCheck}'
+        ConteinerEnvEntry85: !Sub 'PN_PAPERCHANNEL_MAXPCRETRY=${MaxPcRetry}'
         ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-PaperChannel-Secrets
         MappedPaths: '/paper-channel-bo/*,/paper-channel-private/*'
