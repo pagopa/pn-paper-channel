@@ -1085,8 +1085,13 @@ Resources:
             - !Ref RaddAltToPaperChannelQueueARN
         LogGroupsNames: !Join
           - ','
-          - - !Sub '/aws/ecs/${ProjectName}-paper-channel'   
+          - - !Sub '/aws/ecs/${ProjectName}-paper-channel'
 
+  TenderAPILambdaSecGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Sub '${TenderAPILambdaName}-sec-group'
+      VpcId: !Ref VpcId
 
   # Lambda function
   TenderAPILambda:
@@ -1112,6 +1117,10 @@ Resources:
         - !Sub "arn:aws:lambda:${AWS::Region}:339249233099:layer:LambdaInsightsExtension:13"
       Timeout: !Ref TenderAPILambdaTimeout
       MemorySize: !Ref TenderAPILambdaMemorySize
+      VpcConfig:
+        SubnetIds: !Split [ ",", !Ref SubnetsIds ]
+        SecurityGroupIds:
+          - !GetAtt TenderAPILambdaSecGroup.GroupId
 
   # Lambda function role
   TenderAPILambdaRole:
@@ -1129,6 +1138,7 @@ Resources:
               - sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
       Policies:
         - PolicyName: DynamoDbAccess
           PolicyDocument:
