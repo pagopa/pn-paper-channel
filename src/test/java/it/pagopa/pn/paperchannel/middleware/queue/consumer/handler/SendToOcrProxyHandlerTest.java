@@ -1,10 +1,7 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
-import it.pagopa.pn.paperchannel.exception.PnGenericException;
-import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.AttachmentDetailsDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
-import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileCreationResponseDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileDownloadInfoDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileDownloadResponseDto;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
@@ -32,9 +29,7 @@ import reactor.test.StepVerifier;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.List;
 
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.INVALID_SAFE_STORAGE;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -97,7 +92,7 @@ class SendToOcrProxyHandlerTest {
 
         eventDemat = new PnEventDemat();
         eventDemat.setStatusDateTime(testInstant);
-        eventDemat.setUri("safestorage://uri");
+        eventDemat.setUri("safestorage://uri.pdf");
 
         deliveryDriver = new PaperChannelDeliveryDriver();
         deliveryDriver.setUnifiedDeliveryDriver("Fulmine");
@@ -134,7 +129,7 @@ class SendToOcrProxyHandlerTest {
             verify(eventMetaDAO).getDeliveryEventMeta(eq("META##TEST_REQUEST_ID"), eq("META##RECRN001A"));
             verify(eventDematDAO).getDeliveryEventDemat(eq("DEMAT##TEST_REQUEST_ID"), eq("AR##RECRN001B"));
             verify(deliveryDriverDAO).getByDeliveryDriverId("FULMINE");
-            verify(safeStorageClient).getFile("safestorage://uri");
+            verify(safeStorageClient).getFile("safestorage://uri.pdf");
 
             verifyOcrPayloadCorrectness(OcrInputPayload.DataDto.DocumentType.AR);
         }
@@ -167,7 +162,7 @@ class SendToOcrProxyHandlerTest {
             verify(eventMetaDAO).getDeliveryEventMeta(eq("META##TEST_REQUEST_ID"), eq("META##RECRN002D"));
             verify(eventDematDAO).getDeliveryEventDemat(eq("DEMAT##TEST_REQUEST_ID"), eq("Plico##RECRN002E"));
             verify(deliveryDriverDAO).getByDeliveryDriverId("FULMINE");
-            verify(safeStorageClient).getFile("safestorage://uri");
+            verify(safeStorageClient).getFile("safestorage://uri.pdf");
 
             verifyOcrPayloadCorrectness(OcrInputPayload.DataDto.DocumentType.Plico);
         }
@@ -304,6 +299,29 @@ class SendToOcrProxyHandlerTest {
             // Arrange
             eventMeta.setStatusDateTime(Instant.now().minusSeconds(10));
             eventDemat.setStatusDateTime(Instant.now().minusSeconds(5));
+
+            when(paperChannelConfig.isEnableOcr()).thenReturn(true);
+            when(messageHandler.handleMessage(any(), any())).thenReturn(Mono.empty());
+            when(eventMetaDAO.getDeliveryEventMeta(anyString(), anyString())).thenReturn(Mono.just(eventMeta));
+            when(eventDematDAO.getDeliveryEventDemat(anyString(), anyString())).thenReturn(Mono.just(eventDemat));
+            when(deliveryDriverDAO.getByDeliveryDriverId(anyString())).thenReturn(Mono.just(deliveryDriver));
+            when(safeStorageClient.getFile(anyString())).thenReturn(Mono.just(new FileDownloadResponseDto()));
+
+            // Act
+            Mono<Void> result = handler.handleMessage(entity, paperRequest);
+
+            // Assert
+            StepVerifier.create(result)
+                    .verifyComplete();
+
+            verify(messageHandler).handleMessage(entity, paperRequest);
+            verify(sqsSender, never()).pushToOcr(any());
+        }
+
+        @Test
+        void shouldSkipOcrWhenAttachmentIsNotPdf() {
+            // Arrange
+            eventDemat.setUri("safestorage://uri.zip");
 
             when(paperChannelConfig.isEnableOcr()).thenReturn(true);
             when(messageHandler.handleMessage(any(), any())).thenReturn(Mono.empty());
