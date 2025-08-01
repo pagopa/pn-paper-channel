@@ -159,9 +159,11 @@ public abstract class RECRN00XCAbstractMessageHandler extends SendToDeliveryPush
      * @see it.pagopa.pn.paperchannel.config.PnPaperChannelConfig#isEnableTruncatedDateForRefinementCheck()
      */
     protected Duration getDurationBetweenDates(Instant instant1, Instant instant2) {
-        return pnPaperChannelConfig.isEnableTruncatedDateForRefinementCheck()
+        Duration result = pnPaperChannelConfig.isEnableTruncatedDateForRefinementCheck()
                 ? Duration.ofDays(ChronoUnit.DAYS.between(toRomeDate(instant1), toRomeDate(instant2)))
                 : Duration.between(instant1, instant2);
+        log.debug("Duration between dates i1={} i2={} result={}",instant1, instant2, result);
+        return result;
     }
 
     /**
