@@ -1,0 +1,5 @@
+{
+  "Parameters" : {
+    "PaperRequestErrorGlueTableName": "pn_paper_request_error"
+  }
+}
