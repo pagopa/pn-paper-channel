@@ -277,6 +277,51 @@ class RECRN005CMessageHandlerTest {
         }));
     }
 
+    @Test
+    void should_savePnEventError_when_RECRN005ALessRECRN010By60Days() {
+        // Arrange
+        var RECRN010Instant = Instant.parse("2025-05-31T09:02:10Z");
+        var RECRN005AInstant = Instant.parse("2025-04-08T19:02:10Z");
+        PnEventMeta eventMetaRECRN010 = getEventMeta(STATUS_RECRN010, RECRN010Instant);
+        PnEventMeta eventMetaRECRN005A = getEventMeta(STATUS_RECRN005A, RECRN005AInstant);
+
+        when(eventMetaDAO.getDeliveryEventMeta(META_STRING.concat(REQUEST_ID), META_STRING.concat(STATUS_RECRN010)))
+                .thenReturn(Mono.just(eventMetaRECRN010));
+        when(eventMetaDAO.getDeliveryEventMeta(META_STRING.concat(REQUEST_ID), META_STRING.concat(STATUS_RECRN005A)))
+                .thenReturn(Mono.just(eventMetaRECRN005A));
+        when(paperRequestErrorDAO.created(any())).thenReturn(Mono.just(new PnRequestError()));
+
+        PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
+                .requestId(REQUEST_ID)
+                .statusCode(STATUS_RECRN005C)
+                .statusDateTime(OffsetDateTime.now())
+                .clientRequestTimeStamp(OffsetDateTime.now());
+
+        PnDeliveryRequest entity = new PnDeliveryRequest();
+        entity.setRequestId(REQUEST_ID);
+        entity.setStatusDetail(STATUS_RECRN005C);
+        entity.setStatusCode(ExternalChannelCodeEnum.getStatusCode(paperRequest.getStatusCode()));
+
+        // Act
+        Mono<Void> mono = this.handler.handleMessage(entity, paperRequest);
+        Assertions.assertDoesNotThrow(() -> mono.block());
+
+        // Assert
+        verify(sqsSender, never()).pushSendEvent(any());
+        verify(requestDeliveryDAO, never()).updateConditionalOnFeedbackStatus(any(), anyBoolean());
+
+        // Verify requestError
+        verify(paperRequestErrorDAO, times(1)).created(argThat(error -> {
+            assertThat(error).isNotNull();
+            assertThat(error.getRequestId()).isEqualTo(REQUEST_ID);
+            assertThat(error.getError()).contains("RECRN005A statusDateTime", "RECRN010 statusDateTime");
+            assertThat(error.getFlowThrow()).isEqualTo("RECRN005C");
+            assertThat(error.getCategory()).isEqualTo(RequestErrorCategoryEnum.RENDICONTAZIONE_SCARTATA.getValue());
+            assertThat(error.getCause()).startsWith(RequestErrorCauseEnum.GIACENZA_DATE_ERROR.getValue());
+            return true;
+        }));
+    }
+
     private PnEventMeta getEventMeta(String statusCode, Instant time){
         final int ttlOffsetDays = 365;
         final PnDiscoveredAddress address1 = new PnDiscoveredAddress();
