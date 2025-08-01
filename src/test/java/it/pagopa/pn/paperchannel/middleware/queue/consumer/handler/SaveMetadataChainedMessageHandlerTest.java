@@ -50,7 +50,7 @@ public class SaveMetadataChainedMessageHandlerTest {
                 .eventMetaDAO(mockEventMetaDAO)
                 .pnPaperChannelConfig(mockConfig)
                 .build();
-        handlersFactory = new HandlersFactory(null, null, null,
+        handlersFactory = new HandlersFactory(null, null, null,null,
                 mockConfig, mockSqsSender, mockEventMetaDAO, null, null,
                 mockRequestDeliveryDAO, mockPnEventErrorDAO, mockSendProgressMetaConfig);
     }
