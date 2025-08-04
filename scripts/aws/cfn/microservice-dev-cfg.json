@@ -58,6 +58,7 @@
     "PaperChannelOcrInputsQueueARN": "arn:aws:sqs:eu-central-1:379196425703:send-receipt-validation-input",
     "PaperChannelOcrInputsQueueURL": "https://sqs.eu-central-1.amazonaws.com/379196425703/send-receipt-validation-input",
     "PaperChannelOcrInputsQueueRegion": "eu-central-1",
-    "OcrAwsRoleARN": "arn:aws:iam::379196425703:role/receipt_validator_step_function_role"
+    "OcrAwsRoleARN": "arn:aws:iam::379196425703:role/receipt_validator_step_function_role",
+    "OcrAwsAccountId": "379196425703"
   }
 }
