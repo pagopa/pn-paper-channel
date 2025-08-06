@@ -1418,7 +1418,6 @@ Resources:
               AWS: !Sub "arn:aws:iam::${OcrAwsAccountId}:root"
             Action:
               - sqs:SendMessage
-              - sqs:SendMessageBatch
             Resource:
               - !Ref PaperChannelOcrOutputsQueueURL
             Condition:
