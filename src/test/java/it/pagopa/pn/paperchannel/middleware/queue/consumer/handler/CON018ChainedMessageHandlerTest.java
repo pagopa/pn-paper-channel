@@ -45,7 +45,8 @@ public class CON018ChainedMessageHandlerTest {
 
         handlersFactory = new HandlersFactory(null, null, null,
                 mockConfig, mockSqsSender, mockEventMetaDAO, null, null,
-                mockRequestDeliveryDAO, mockPnEventErrorDAO, mockSendProgressMetaConfig);
+                mockRequestDeliveryDAO, mockPnEventErrorDAO, mockSendProgressMetaConfig, null,
+                null, null);
     }
 
     @Test
