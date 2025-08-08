@@ -21,6 +21,7 @@ import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum;
+import it.pagopa.pn.paperchannel.utils.PcRetryUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -55,6 +56,9 @@ class Paper_890IT extends BaseTest {
 
     @MockBean
     private AddressDAO mockAddressDAO;
+
+    @Autowired
+    private PcRetryUtils pcRetryUtils;
 
 
 

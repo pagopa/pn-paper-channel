@@ -56,6 +56,7 @@ public class PnPaperChannelConfig {
     private Integer attemptQueueAddressManager;
     private Integer attemptQueueF24;
     private Integer attemptQueueZipHandle;
+    private Integer maxPcRetry;
     private Long ttlPrepare;
     private Long ttlExecutionN_890;
     private Long ttlExecutionN_AR;

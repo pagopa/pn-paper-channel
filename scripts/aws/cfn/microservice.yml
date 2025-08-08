@@ -50,7 +50,7 @@ Parameters:
   VpcEgressSubnetsIds:
     Type: String
     Description: 'Egress subnets'
-  
+
   EcsDefaultSecurityGroup:
     Type: String
     Description: 'Default security group required by infrastructure'
@@ -98,6 +98,11 @@ Parameters:
   AttemptQueueZipHandle:
     Type: Number
     Description: 'Number of attempts for called zip handle'
+    Default: 3
+
+  MaxPcRetry:
+    Type: Number
+    Description: 'Maximum number for PcRetry'
     Default: 3
 
   ZipHandleActive:
@@ -869,6 +874,7 @@ Resources:
         ContainerEnvEntry87: !Sub 'PN_PAPERCHANNEL_PAPERTRACKERENABLED=${PaperTrackerEnabled}'
         ContainerEnvEntry88: !Sub 'PN_PAPERCHANNEL_PAPERTRACKERPRODUCTLIST=${PaperTrackerProductList}'
         ContainerEnvEntry89: !Sub 'PN_PAPERCHANNEL_CLIENTPAPERTRACKERBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
+        ConteinerEnvEntry85: !Sub 'PN_PAPERCHANNEL_MAXPCRETRY=${MaxPcRetry}'
         ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-PaperChannel-Secrets
         MappedPaths: '/paper-channel-bo/*,/paper-channel-private/*'

@@ -38,7 +38,7 @@ class HandlersFactoryTest {
     void testHandler(EnumSet<FeatureFlag> featureFlags, List<String> statusCodes,
                          Class<? extends MessageHandler> expectedHandlerClass) {
         // Given
-        handlersFactory = new HandlersFactory(null, null, null,
+        handlersFactory = new HandlersFactory(null, null, null, null,
                 mockConfig, null, null, null, null,
                 null, null, mockSendProgressMetaConfig,
                 null, null, null);

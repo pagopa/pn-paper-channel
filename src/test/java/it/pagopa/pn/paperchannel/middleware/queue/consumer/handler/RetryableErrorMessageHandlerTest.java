@@ -16,9 +16,12 @@ import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
 import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
+import it.pagopa.pn.paperchannel.utils.PcRetryUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 
 import java.time.OffsetDateTime;
@@ -29,6 +32,7 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.EXTERNAL_CHA
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class RetryableErrorMessageHandlerTest {
 
     private RetryableErrorMessageHandler handler;
@@ -39,6 +43,7 @@ class RetryableErrorMessageHandlerTest {
     private PaperRequestErrorDAO mockRequestError;
     private AddressDAO mockAddressDAO;
     private RequestDeliveryDAO requestDeliveryDAO;
+    private PcRetryUtils pcRetryUtils;
 
 
     @BeforeEach
@@ -49,9 +54,12 @@ class RetryableErrorMessageHandlerTest {
         mockRequestError = mock(PaperRequestErrorDAO.class);
         requestDeliveryDAO = mock(RequestDeliveryDAO.class);
         mockConfig = mock(PnPaperChannelConfig.class);
+        pcRetryUtils = mock(PcRetryUtils.class);
+
 
         handler = RetryableErrorMessageHandler.builder()
                 .sqsSender(mockSqsSender)
+                .pcRetryUtils(pcRetryUtils)
                 .externalChannelClient(mockExtChannel)
                 .addressDAO(mockAddressDAO)
                 .paperRequestErrorDAO(mockRequestError)
@@ -83,9 +91,10 @@ class RetryableErrorMessageHandlerTest {
         pnAddress.setCity("Milan");
         pnAddress.setCap("");
 
-        when(mockConfig.getAttemptQueueExternalChannel()).thenReturn(1);
+        when(pcRetryUtils.hasOtherAttempt(any())).thenReturn(Boolean.TRUE);
+        when(pcRetryUtils.setRetryRequestId(any())).thenReturn("REQUEST.PCRETRY_1");
         when(mockAddressDAO.findAllByRequestId(currentRequestId)).thenReturn(Mono.just(List.of(pnAddress)));
-        when(mockExtChannel.sendEngageRequest(any(SendRequest.class), anyList(), eq(Boolean.TRUE))).thenReturn(Mono.empty());
+        when(mockExtChannel.sendEngageRequest(any(), any(), eq(Boolean.TRUE))).thenReturn(Mono.empty());
         assertDoesNotThrow(() -> handler.handleMessage(pnDeliveryRequest, paperRequest).block());
 
         //verifico che viene invocato ext-channels
@@ -117,7 +126,7 @@ class RetryableErrorMessageHandlerTest {
         paperRequest.setClientRequestTimeStamp(instant);
 
         // When
-        when(mockConfig.getAttemptQueueExternalChannel()).thenReturn(-1);
+        when(pcRetryUtils.hasOtherAttempt(any())).thenReturn(Boolean.FALSE);
         when(mockRequestError.created(Mockito.any(PnRequestError.class))).thenReturn(Mono.just(new PnRequestError()));
 
         // Then
