@@ -693,6 +693,10 @@ Parameters:
     Type: String
     Description: 'ARN of pn-paper_channel_ocr_outputs sender'
 
+  OcrAwsAccountId:
+    Type: String
+    Description: 'Account id of pn-paper_channel_ocr_outputs sender'
+
   # Log group parameters
   EcsLogGroup:
     Type: String
@@ -1426,10 +1430,10 @@ Resources:
         Statement:
           - Sid: AllowCrossAccountSend
             Effect: Allow
-            Principal: "*"
+            Principal:
+              AWS: !Sub "arn:aws:iam::${OcrAwsAccountId}:root"
             Action:
               - sqs:SendMessage
-              - sqs:SendMessageBatch
             Resource:
               - !Ref PaperChannelOcrOutputsQueueURL
             Condition:

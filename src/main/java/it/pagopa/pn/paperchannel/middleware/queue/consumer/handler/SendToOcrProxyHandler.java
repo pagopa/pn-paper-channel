@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -152,7 +153,9 @@ public class SendToOcrProxyHandler implements MessageHandler {
         var safeStorageUrlMono = getSafeStoragePresignedUrl(demat.getUri());
         var unifiedDeliveryDriverMono = getUnifiedDeliveryDriver(entity.getDriverCode());
 
-        if(Boolean.TRUE.equals(entity.getRefined()) && checkDate(meta, demat, paperRequest)) {
+        if(Boolean.TRUE.equals(entity.getRefined()) &&
+                checkDate(meta, demat, paperRequest) &&
+                isPdfDocument(demat.getUri())){
             return Mono.zip(safeStorageUrlMono, unifiedDeliveryDriverMono)
                     .flatMap(urlAndDriver -> {
                         var presignedUrl = urlAndDriver.getT1();
@@ -299,6 +302,15 @@ public class SendToOcrProxyHandler implements MessageHandler {
         } catch (IllegalArgumentException e) {
             return Optional.empty();
         }
+    }
+
+    /**
+     * Check if a SafeStorage uri is a PDF or not
+     * @param safeStorageUri file uri
+     * @return true if file is a PDF, false otherwise
+     */
+    private boolean isPdfDocument(String safeStorageUri){
+        return safeStorageUri.toLowerCase(Locale.ROOT).endsWith(".pdf");
     }
 }
 
