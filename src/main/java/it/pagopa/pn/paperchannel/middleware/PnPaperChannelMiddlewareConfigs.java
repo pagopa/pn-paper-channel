@@ -5,6 +5,7 @@ import it.pagopa.pn.api.dto.events.PnPreparePaperchannelToDelayerEvent;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.middleware.queue.model.AttemptPushEvent;
 import it.pagopa.pn.paperchannel.middleware.queue.model.InternalPushEvent;
+import it.pagopa.pn.paperchannel.middleware.queue.model.OcrInputEvent;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.*;
 import it.pagopa.pn.paperchannel.middleware.queue.model.DeliveryPushEvent;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ActiveProfiles;
+import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.sqs.SqsClient;
 
 @ActiveProfiles("local")
@@ -48,6 +50,15 @@ public class PnPaperChannelMiddlewareConfigs {
     @Bean
     public DelayerToPaperchannelInternalProducer delayerToPaperchannelInternalProducer(SqsClient sqsClient, ObjectMapper objMapper) {
         return new DelayerToPaperchannelInternalProducer(sqsClient, this.pnPaperChannelConfig.getQueueDelayerToPaperchannel(), objMapper, AttemptPushEvent.class);
+    }
+
+    @Bean
+    public OcrProducer ocrInputsProducer(ObjectMapper objMapper) {
+        SqsClient sqsClient = SqsClient.builder()
+                .region(Region.of(this.pnPaperChannelConfig.getQueueRegionOcrInputs()))
+                .build();
+        String ocrInputQueueUrl = this.pnPaperChannelConfig.getQueueUrlOcrInputs();
+        return new OcrProducer(sqsClient, ocrInputQueueUrl, ocrInputQueueUrl, objMapper, OcrInputEvent.class);
     }
 }
 

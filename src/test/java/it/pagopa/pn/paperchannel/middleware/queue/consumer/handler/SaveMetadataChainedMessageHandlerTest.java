@@ -52,7 +52,8 @@ public class SaveMetadataChainedMessageHandlerTest {
                 .build();
         handlersFactory = new HandlersFactory(null, null, null,null,
                 mockConfig, mockSqsSender, mockEventMetaDAO, null, null,
-                mockRequestDeliveryDAO, mockPnEventErrorDAO, mockSendProgressMetaConfig);
+                mockRequestDeliveryDAO, mockPnEventErrorDAO, mockSendProgressMetaConfig, null,
+                null, null);
     }
 
     @Test

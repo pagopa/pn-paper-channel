@@ -5,6 +5,8 @@ import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
 
+import java.util.Map;
+
 
 public class MetaDematUtils {
 
@@ -69,5 +71,54 @@ public class MetaDematUtils {
                         entity.getRequestId(), singleStatusUpdateDto.toString().replaceAll("\n", ""), entity.getStatusCode()));
     }
 
+    /**
+     * Converts a final status code to its Meta equivalent.
+     * Replaces the last character:
+     * - 'C' -> 'A'
+     * - 'F' -> 'D'
+     *
+     * @param statusCode the original status code ending with 'C' or 'F'
+     * @return the transformed status code
+     * @throws IllegalArgumentException if the input is null, empty, or ends with an unsupported character
+     */
+    public static String changeStatusCodeToMeta(String statusCode) {
+        return changeLastChar(statusCode, Map.of('C', 'A', 'F', 'D'));
+    }
 
+    /**
+     * Converts a final status code to its Demat equivalent.
+     * Replaces the last character:
+     * - 'C' -> 'B'
+     * - 'F' -> 'E'
+     *
+     * @param statusCode the original status code ending with 'C' or 'F'
+     * @return the transformed status code
+     * @throws IllegalArgumentException if the input is null, empty, or ends with an unsupported character
+     */
+    public static String changeStatusCodeToDemat(String statusCode) {
+        return changeLastChar(statusCode, Map.of('C', 'B', 'F', 'E'));
+    }
+
+    /**
+     * Replaces the last character of the input string based on a given mapping.
+     *
+     * @param code the input string
+     * @param replacements a map defining which characters to replace and with what
+     * @return the input string with its last character replaced accordingly
+     * @throws IllegalArgumentException if the input is null, empty, or the last character has no replacement
+     */
+    private static String changeLastChar(String code, Map<Character, Character> replacements) {
+        if (code == null || code.isEmpty()) {
+            throw new IllegalArgumentException("invalid statusCode");
+        }
+
+        char lastChar = code.charAt(code.length() - 1);
+        Character newChar = replacements.get(lastChar);
+
+        if (newChar == null) {
+            throw new IllegalArgumentException("Last char not handled: " + lastChar);
+        }
+
+        return code.substring(0, code.length() - 1) + newChar;
+    }
 }

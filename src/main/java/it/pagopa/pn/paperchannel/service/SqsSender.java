@@ -5,6 +5,7 @@ import it.pagopa.pn.api.dto.events.PnPreparePaperchannelToDelayerPayload;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PrepareEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
+import it.pagopa.pn.paperchannel.middleware.queue.model.OcrInputPayload;
 import it.pagopa.pn.paperchannel.model.DematInternalEvent;
 import it.pagopa.pn.paperchannel.model.F24Error;
 import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
@@ -34,4 +35,5 @@ public interface SqsSender {
     <T> void redrivePreparePhaseOneAfterError(T entity, int attempt, Class<T> tClass);
     void pushErrorDelayerToPaperChannelAfterSafeStorageErrorQueue(PnPrepareDelayerToPaperchannelPayload entity);
     void pushF24ErrorDelayerToPaperChannelQueue(F24Error entity);
+    void pushToOcr(OcrInputPayload entity);
 }
