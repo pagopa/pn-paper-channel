@@ -457,7 +457,7 @@
                         </goals>
                         <phase>generate-resources</phase>
                         <configuration>
-                            <inputSpec>https://raw.githubusercontent.com/pagopa/pn-paper-tracker/0e27b0e44e0a6986ec7348adea17bd0e22eb61e2/docs/openapi/api-internal-v1.yaml</inputSpec>
+                            <inputSpec>https://raw.githubusercontent.com/pagopa/pn-paper-tracker/88e350325e880685474a34768e1a82e3164061ca/docs/openapi/api-internal-v1.yaml</inputSpec>
                             <generatorName>java</generatorName>
                             <library>webclient</library>
                             <generateApiDocumentation>false</generateApiDocumentation>

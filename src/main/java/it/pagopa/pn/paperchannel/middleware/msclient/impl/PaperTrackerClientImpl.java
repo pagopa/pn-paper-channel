@@ -1,8 +1,8 @@
 package it.pagopa.pn.paperchannel.middleware.msclient.impl;
 
 import it.pagopa.pn.commons.exceptions.PnIdConflictException;
-import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnpapertracker.v1.api.PaperTrackerEventApi;
-import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnpapertracker.v1.dto.TrackerCreationRequestDto;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnpapertracker.v1.api.PaperTrackerTrackingApi;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnpapertracker.v1.dto.TrackingCreationRequestDto;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.PaperTrackerClient;
 import lombok.RequiredArgsConstructor;
@@ -19,11 +19,11 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.PAPER_TRACKE
 @RequiredArgsConstructor
 public class PaperTrackerClientImpl implements PaperTrackerClient {
 
-    private final PaperTrackerEventApi paperTrackerEventApi;
+    private final PaperTrackerTrackingApi paperTrackerEventApi;
 
     public Mono<PnDeliveryRequest> initPaperTracking(PnDeliveryRequest pnDeliveryRequest, String unifiedDeliveryDriver){
-        TrackerCreationRequestDto trackerCreationRequestDto = new TrackerCreationRequestDto();
-        trackerCreationRequestDto.setRequestId(pnDeliveryRequest.getRequestId());
+        TrackingCreationRequestDto trackerCreationRequestDto = new TrackingCreationRequestDto();
+        trackerCreationRequestDto.setTrackingId(pnDeliveryRequest.getRequestId());
         trackerCreationRequestDto.setProductType(pnDeliveryRequest.getProductType());
         trackerCreationRequestDto.setUnifiedDeliveryDriver(unifiedDeliveryDriver);
         return paperTrackerEventApi.initTracking(trackerCreationRequestDto)
