@@ -626,7 +626,7 @@ class PaperMessagesServiceTest {
                         .thenReturn(Mono.just(paperChannelDeliveryDriver));
 
         Mockito.when(paperTrackerClient.initPaperTracking(any(), any(),any()))
-                        .thenReturn(Mono.just(request));
+                        .thenReturn(Mono.empty());
 
         //MOCK GET DELIVERY REQUEST
         Mockito.when(requestDeliveryDAO.getByRequestId("TST-IOR.2332"))

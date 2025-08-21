@@ -21,19 +21,19 @@ public class PaperTrackerClientImpl implements PaperTrackerClient {
 
     private final PaperTrackerTrackingApi paperTrackerEventApi;
 
-    public Mono<PnDeliveryRequest> initPaperTracking(String trackingId, String productType, String unifiedDeliveryDriver){
+    public Mono<Void> initPaperTracking(String trackingId, String productType, String unifiedDeliveryDriver){
         TrackingCreationRequestDto trackerCreationRequestDto = new TrackingCreationRequestDto();
-        trackerCreationRequestDto.setTrackingId(trackingId);
+        trackerCreationRequestDto.setAttemptId(trackingId.split("\\.")[0]);
+        trackerCreationRequestDto.setPcRetry(trackingId.split("\\.")[1]);
         trackerCreationRequestDto.setProductType(productType);
         trackerCreationRequestDto.setUnifiedDeliveryDriver(unifiedDeliveryDriver);
         return paperTrackerEventApi.initTracking(trackerCreationRequestDto)
                 .onErrorMap(ex -> {
                     if (ex instanceof WebClientResponseException exception && exception.getStatusCode() == HttpStatus.CONFLICT) {
-                        return new PnIdConflictException(PAPER_TRACKER_REQUEST_CONFLICT.getTitle(), Map.of("trackingId", pnDeliveryRequest.getRequestId()));
+                        return new PnIdConflictException(PAPER_TRACKER_REQUEST_CONFLICT.getTitle(), Map.of("trackingId", trackingId));
                     }
                     return ex;
-                })
-                .thenReturn(pnDeliveryRequest);
+                });
     }
 
 }
