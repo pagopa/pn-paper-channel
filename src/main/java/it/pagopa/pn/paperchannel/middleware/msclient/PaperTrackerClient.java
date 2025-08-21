@@ -5,5 +5,5 @@ import reactor.core.publisher.Mono;
 
 public interface PaperTrackerClient {
 
-    Mono<PnDeliveryRequest> initPaperTracking(PnDeliveryRequest pnDeliveryRequest, String unifiedDeliveryDriver);
+    Mono<PnDeliveryRequest> initPaperTracking(String trackingId, String productType, String unifiedDeliveryDriver);
 }

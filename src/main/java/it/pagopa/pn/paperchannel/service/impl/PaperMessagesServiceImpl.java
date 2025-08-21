@@ -270,7 +270,7 @@ public class PaperMessagesServiceImpl extends GenericService implements PaperMes
                         if (pnPaperChannelConfig.isPaperTrackerEnabled() && pnPaperChannelConfig.getPaperTrackerProductList().contains(pnDeliveryRequest.getProductType())) {
                             return paperChannelDeliveryDriverDAO.getByDeliveryDriverId(pnDeliveryRequest.getDriverCode())
                                     .map(PaperChannelDeliveryDriver::getUnifiedDeliveryDriver)
-                                    .flatMap(unifiedDeliveryDriver -> paperTrackerClient.initPaperTracking(pnDeliveryRequest, unifiedDeliveryDriver))
+                                    .flatMap(unifiedDeliveryDriver -> paperTrackerClient.initPaperTracking(Utility.getRequestIdWithParams(requestId, "0", null), pnDeliveryRequest.getProductType(), unifiedDeliveryDriver))
                                     .onErrorResume(PnIdConflictException.class, ex -> Mono.just(pnDeliveryRequest))
                                     .flatMap(unused -> sendEngage(requestId, sendResponse, sendRequest, pnDeliveryRequest, attachments, pnLogAudit));
                         } else {
