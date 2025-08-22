@@ -94,9 +94,9 @@ public class PrepareFlowStarterImpl implements PrepareFlowStarter {
                 .unifiedDeliveryDriver(unifiedDeliveryDriver)
                 .senderPaId(deliveryRequest.getSenderPaId())
                 .tenderId(deliveryRequest.getTenderCode())
-                //.notificationSentAt(Objects.nonNull(deliveryRequest.getNotificationSentAt()) ? deliveryRequest.getNotificationSentAt().toString() : null)
-                //.attempt(StringUtils.hasText(deliveryRequest.getRelatedRequestId()) ? 1 : 0)
-                //.prepareRequestDate(deliveryRequest.getStartDate())
+                .notificationSentAt(Objects.nonNull(deliveryRequest.getNotificationSentAt()) ? deliveryRequest.getNotificationSentAt().toString() : null)
+                .attempt(StringUtils.hasText(deliveryRequest.getRelatedRequestId()) ? 1 : 0)
+                .prepareRequestDate(deliveryRequest.getStartDate())
                 .recipientId(deliveryRequest.getFiscalCode())
                 .build();
 
