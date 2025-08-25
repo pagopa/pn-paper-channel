@@ -26,7 +26,6 @@ import reactor.core.publisher.Mono;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
-import java.util.List;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.EXTERNAL_CHANNEL_API_EXCEPTION;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -60,8 +59,6 @@ class RetryableErrorMessageHandlerTest {
         handler = RetryableErrorMessageHandler.builder()
                 .sqsSender(mockSqsSender)
                 .pcRetryUtils(pcRetryUtils)
-                .externalChannelClient(mockExtChannel)
-                .addressDAO(mockAddressDAO)
                 .paperRequestErrorDAO(mockRequestError)
                 .requestDeliveryDAO(requestDeliveryDAO)
                 .pnPaperChannelConfig(mockConfig)
@@ -72,7 +69,6 @@ class RetryableErrorMessageHandlerTest {
     void handleMessageHasOtherAttemptTest() {
 
         String currentRequestId = "REQUEST.PCRETRY_0";
-        String nextRequestId = "REQUEST.PCRETRY_1";
         OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T16:33:00.000Z");
         PnDeliveryRequest pnDeliveryRequest = new PnDeliveryRequest();
         pnDeliveryRequest.setRequestId(currentRequestId);
@@ -93,13 +89,8 @@ class RetryableErrorMessageHandlerTest {
 
         when(pcRetryUtils.hasOtherAttempt(any())).thenReturn(Boolean.TRUE);
         when(pcRetryUtils.setRetryRequestId(any())).thenReturn("REQUEST.PCRETRY_1");
-        when(mockAddressDAO.findAllByRequestId(currentRequestId)).thenReturn(Mono.just(List.of(pnAddress)));
-        when(mockExtChannel.sendEngageRequest(any(), any(), eq(Boolean.TRUE))).thenReturn(Mono.empty());
+        when(pcRetryUtils.sendEngageRequest(any(), any())).thenReturn(Mono.just(pnDeliveryRequest));
         assertDoesNotThrow(() -> handler.handleMessage(pnDeliveryRequest, paperRequest).block());
-
-        //verifico che viene invocato ext-channels
-        verify(mockExtChannel, timeout(2000).times(1))
-                .sendEngageRequest(argThat( (SendRequest sr) -> sr.getRequestId().equals(nextRequestId)), anyList(), anyBoolean() );
 
         //verifico che viene inviato l'evento a delivery-push
         verify(mockSqsSender, times(1)).pushSendEvent(argThat((SendEvent se) -> se.getRequestId().equals(currentRequestId) ));

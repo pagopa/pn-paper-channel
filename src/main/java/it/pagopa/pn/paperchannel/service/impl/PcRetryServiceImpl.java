@@ -4,8 +4,6 @@ import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PcRetryResponse;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PaperChannelDeliveryDriverDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PaperChannelDeliveryDriver;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.service.PcRetryService;
 import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.PcRetryUtils;
@@ -30,11 +28,13 @@ public class PcRetryServiceImpl implements PcRetryService {
     public Mono<PcRetryResponse> getPcRetry(String requestId) {
         return requestDeliveryDAO.getByRequestId(getPrefixRequestId(requestId))
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)))
-                .map(PnDeliveryRequest::getDriverCode)
-                .flatMap(paperChannelDeliveryDriverDAO::getByDeliveryDriverId)
-                .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_DRIVER_NOT_EXISTED, DELIVERY_DRIVER_NOT_EXISTED.getMessage(), HttpStatus.NOT_FOUND)))
-                .map(PaperChannelDeliveryDriver::getUnifiedDeliveryDriver)
-                .map(unifiedDeliveryDriver -> pcRetryUtils.checkHasOtherAttemptAndMapPcRetryResponse(requestId, unifiedDeliveryDriver));
+                .flatMap(pnDeliveryRequest ->
+                        paperChannelDeliveryDriverDAO.getByDeliveryDriverId(pnDeliveryRequest.getDriverCode())
+                                .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_DRIVER_NOT_EXISTED, DELIVERY_DRIVER_NOT_EXISTED.getMessage(), HttpStatus.NOT_FOUND)))
+                                .flatMap(paperChannelDeliveryDriver ->
+                                        pcRetryUtils.checkHasOtherAttemptAndMapPcRetryResponse(requestId, paperChannelDeliveryDriver.getUnifiedDeliveryDriver(), pnDeliveryRequest)
+                                )
+                );
     }
 
     private String getPrefixRequestId(String requestId) {
