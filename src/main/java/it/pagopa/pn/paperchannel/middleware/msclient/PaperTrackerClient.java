@@ -4,5 +4,5 @@ import reactor.core.publisher.Mono;
 
 public interface PaperTrackerClient {
 
-    Mono<Void> initPaperTracking(String trackingId, String productType, String unifiedDeliveryDriver);
+    Mono<Void> initPaperTracking(String attemptId, String pcRetry, String productType, String unifiedDeliveryDriver);
 }

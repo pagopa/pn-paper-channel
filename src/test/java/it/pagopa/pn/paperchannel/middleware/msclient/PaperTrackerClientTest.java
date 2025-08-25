@@ -30,7 +30,7 @@ public class PaperTrackerClientTest  {
     void testOk(){
         PnDeliveryRequest pnDeliveryRequest = new PnDeliveryRequest();
         when(PaperTrackerTrackingApi.initTracking(any())).thenReturn(Mono.empty());
-        StepVerifier.create(paperTrackerClient.initPaperTracking("requestId.PCRETRY_0","AR","driver"))
+        StepVerifier.create(paperTrackerClient.initPaperTracking("requestId", "PCRETRY_0", "AR","driver"))
                 .verifyComplete();
     }
 
@@ -41,7 +41,7 @@ public class PaperTrackerClientTest  {
         WebClientResponseException exception = WebClientResponseException.create(
                 409, "Conflict", null, null, null);
         when(PaperTrackerTrackingApi.initTracking(any())).thenReturn(Mono.error(exception));
-        StepVerifier.create(paperTrackerClient.initPaperTracking("requestId.PCRETRY_0","AR","driver"))
+        StepVerifier.create(paperTrackerClient.initPaperTracking("requestId", "PCRETRY_0","AR","driver"))
                 .verifyError(PnIdConflictException.class);
     }
 
@@ -51,7 +51,7 @@ public class PaperTrackerClientTest  {
         WebClientResponseException exception = WebClientResponseException.create(
                 500, "Conflict", null, null, null);
         when(PaperTrackerTrackingApi.initTracking(any())).thenReturn(Mono.error(exception));
-        StepVerifier.create(paperTrackerClient.initPaperTracking("requestId.PCRETRY_0","AR","driver"))
+        StepVerifier.create(paperTrackerClient.initPaperTracking("requestId", "PCRETRY_0","AR","driver"))
                 .verifyError(WebClientResponseException.class);
     }
 }
