@@ -1419,7 +1419,7 @@ Resources:
             Action:
               - sqs:SendMessage
             Resource:
-              - !Ref PaperChannelOcrOutputsQueueURL
+              - !Ref PaperChannelOcrOutputsQueueARN
             Condition:
               StringEquals:
                 aws:PrincipalArn: !Ref OcrAwsRoleARN
