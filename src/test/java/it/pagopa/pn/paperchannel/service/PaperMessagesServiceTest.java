@@ -8,11 +8,14 @@ import it.pagopa.pn.paperchannel.exception.PnInputValidatorException;
 import it.pagopa.pn.paperchannel.exception.PnPaperEventException;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.PaperChannelDeliveryDriverDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PaperChannelDeliveryDriver;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
+import it.pagopa.pn.paperchannel.middleware.msclient.PaperTrackerClient;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.service.impl.PaperMessagesServiceImpl;
@@ -61,6 +64,12 @@ class PaperMessagesServiceTest {
 
     @MockBean
     private AddressDAO addressDAO;
+
+    @MockBean
+    private PaperChannelDeliveryDriverDAO deliveryDriverDAO;
+
+    @MockBean
+    private PaperTrackerClient paperTrackerClient;
 
     @MockBean
     private PaperTenderService paperTenderService;
@@ -606,11 +615,49 @@ class PaperMessagesServiceTest {
         }));
     }
 
-    private void mocksExecutionPaperOK() {
+    private void mocksExecutionPaperTrackerEnableProductAROK() {
         PnDeliveryRequest request = getPnDeliveryRequest();
         request.setStatusCode(StatusDeliveryEnum.TAKING_CHARGE.getCode());
 
+        PaperChannelDeliveryDriver paperChannelDeliveryDriver = new PaperChannelDeliveryDriver();
+        paperChannelDeliveryDriver.setUnifiedDeliveryDriver("unifiedDeliveryDriver");
 
+        Mockito.when(deliveryDriverDAO.getByDeliveryDriverId(any()))
+                        .thenReturn(Mono.just(paperChannelDeliveryDriver));
+
+        Mockito.when(paperTrackerClient.initPaperTracking(any(), any(), any(),any()))
+                        .thenReturn(Mono.empty());
+
+        //MOCK GET DELIVERY REQUEST
+        Mockito.when(requestDeliveryDAO.getByRequestId("TST-IOR.2332"))
+                .thenReturn(Mono.just(request));
+
+        //MOCK VALIDATOR
+        sendRequestValidatorMockedStatic.when(() -> {
+            SendRequestValidator.compareRequestEntity(Mockito.any(), Mockito.any());
+        }).thenAnswer((Answer<Void>) invocation -> null);
+
+        //MOCK ALL CREATE ADDRESS
+        Mockito.when(addressDAO.create(Mockito.any())).thenReturn(Mono.just(new PnAddress()));
+
+        //MOCK SEND ENGAGE EXTERNAL CHANNEL
+        Mockito.when(externalChannelClient.sendEngageRequest(any(), any(), eq(null)))
+                .thenReturn(Mono.just("").then());
+
+        //MOCK UPDATE DELIVERY REQUEST
+        Mockito.when(requestDeliveryDAO.updateData(Mockito.any()))
+                .thenReturn(Mono.just(request));
+
+        //MOCK RETRIEVE NATIONAL COST
+        Mockito.when(paperTenderService.getCostFrom(Mockito.any(), Mockito.any(), Mockito.any()))
+                .thenReturn(Mono.just(getNationalCost()));
+
+        Mockito.when(dateChargeCalculationModesUtils.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.AAR);
+    }
+
+    private void mocksExecutionPaperOK() {
+        PnDeliveryRequest request = getPnDeliveryRequest();
+        request.setStatusCode(StatusDeliveryEnum.TAKING_CHARGE.getCode());
 
         //MOCK GET DELIVERY REQUEST
         Mockito.when(requestDeliveryDAO.getByRequestId("TST-IOR.2332"))
@@ -641,6 +688,8 @@ class PaperMessagesServiceTest {
 
     @Test
     void executionPaperWithoutContextAndWithStatusTakingChargeTest() {
+        when(pnPaperChannelConfig.getPaperTrackerProductList()).thenReturn(List.of("AR"));
+        when(pnPaperChannelConfig.isPaperTrackerEnabled()).thenReturn(Boolean.FALSE);
         mocksExecutionPaperOK();
 
         SendRequest sendRequest = getRequest("TST-IOR.2332");
@@ -662,10 +711,14 @@ class PaperMessagesServiceTest {
 
         assertEquals(100,response.getAmount());
         assertEquals(3, response.getNumberOfPages());
+        Mockito.verify(paperTrackerClient, times(0)).initPaperTracking(any(), any(), any(), any());
+        Mockito.verify(deliveryDriverDAO, times(0)).getByDeliveryDriverId(anyString());
         /* -----------------------------  */
     }
     @Test
     void executionPaperWithContextAndWithStatusTakingChargeTest() {
+        when(pnPaperChannelConfig.getPaperTrackerProductList()).thenReturn(List.of("890"));
+        when(pnPaperChannelConfig.isPaperTrackerEnabled()).thenReturn(Boolean.TRUE);
         mocksExecutionPaperOK();
 
         SendRequest sendRequest = getRequest("TST-IOR.2332");
@@ -688,6 +741,41 @@ class PaperMessagesServiceTest {
 
         assertEquals(100,response.getAmount());
         assertEquals(3, response.getNumberOfPages());
+        Mockito.verify(paperTrackerClient, times(0)).initPaperTracking(any(), any(), any(), any());
+        Mockito.verify(deliveryDriverDAO, times(0)).getByDeliveryDriverId(anyString());
+
+        /* ----------------------------- */
+    }
+
+    @Test
+    void executionPaperWithARWithPaperTrackerEnabled() {
+        when(pnPaperChannelConfig.getPaperTrackerProductList()).thenReturn(List.of("AR"));
+        when(pnPaperChannelConfig.isPaperTrackerEnabled()).thenReturn(Boolean.TRUE);
+        mocksExecutionPaperTrackerEnableProductAROK();
+
+        SendRequest sendRequest = getRequest("TST-IOR.2332");
+        sendRequest.setRequestPaId("request-pad-id");
+        sendRequest.setPrintType("FRONTE-RETRO");
+
+        /* TEST WITH CONTEXT SETTING */
+        SendResponse response = paperMessagesService.executionPaper("TST-IOR.2332", sendRequest)
+                .contextWrite(ctx -> ctx.put(Const.CONTEXT_KEY_PREFIX_CLIENT_ID, "001"))
+                .block();
+
+        ArgumentCaptor<SendRequest> captureSendRequest = ArgumentCaptor.forClass(SendRequest.class);
+
+        // verifico che è stato invocato externalChannel
+        verify(externalChannelClient, timeout(2000).times(1)).sendEngageRequest(captureSendRequest.capture(), any(), any());
+
+        // verifico il nuovo requestID da inviare ad ExtChannel - {CLIENTID}.{REQUESTID}.PCRETRY_{ATTEMPT}
+        assertNotNull(captureSendRequest.getValue());
+        assertEquals("001.TST-IOR.2332.PCRETRY_0", captureSendRequest.getValue().getRequestId());
+
+        assertEquals(100,response.getAmount());
+        assertEquals(3, response.getNumberOfPages());
+        Mockito.verify(paperTrackerClient, times(1)).initPaperTracking(any(), any(), any(), any());
+        Mockito.verify(deliveryDriverDAO, times(1)).getByDeliveryDriverId(anyString());
+
         /* ----------------------------- */
     }
 

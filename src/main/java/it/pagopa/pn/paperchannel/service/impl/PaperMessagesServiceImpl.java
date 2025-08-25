@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
+import it.pagopa.pn.commons.exceptions.PnIdConflictException;
 import it.pagopa.pn.commons.utils.LogUtils;
 import it.pagopa.pn.commons.utils.MDCUtils;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
@@ -9,10 +10,15 @@ import it.pagopa.pn.paperchannel.exception.PnPaperEventException;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.paperchannel.mapper.*;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.DeliveryDriverDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.PaperChannelDeliveryDriverDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PaperChannelDeliveryDriver;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryDriver;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
+import it.pagopa.pn.paperchannel.middleware.msclient.PaperTrackerClient;
 import it.pagopa.pn.paperchannel.model.*;
 import it.pagopa.pn.paperchannel.service.*;
 import it.pagopa.pn.paperchannel.utils.*;
@@ -37,31 +43,35 @@ import static it.pagopa.pn.paperchannel.utils.Const.CONTEXT_KEY_PREFIX_CLIENT_ID
 
 @CustomLog
 @Service
-public class  PaperMessagesServiceImpl extends GenericService implements PaperMessagesService {
-    
+public class PaperMessagesServiceImpl extends GenericService implements PaperMessagesService {
+
     private static final String PN_DELIVERY_REQUEST_LOG = "PnDeliveryRequest";
     private static final String ADDRESS_ENTITY_LOG = "addressEntity";
     private static final String INSERTED_IN_DYNAMO_LOG = "Inserted data in DynamoDb table {}";
     private static final String INSERTING_IN_DYNAMO_LOG = "Inserting data {} with requestId {} in DynamoDb table {}";
-    
+
     private final AddressDAO addressDAO;
+    private final PaperChannelDeliveryDriverDAO paperChannelDeliveryDriverDAO;
     private final ExternalChannelClient externalChannelClient;
     private final PnPaperChannelConfig pnPaperChannelConfig;
     private final PaperCalculatorUtils paperCalculatorUtils;
     private final PrepareFlowStarter prepareFlowStarter;
     private final NationalRegistryService nationalRegistryService;
+    private final PaperTrackerClient paperTrackerClient;
 
 
-    public PaperMessagesServiceImpl(RequestDeliveryDAO requestDeliveryDAO, SqsSender sqsSender, AddressDAO addressDAO,
+    public PaperMessagesServiceImpl(RequestDeliveryDAO requestDeliveryDAO, SqsSender sqsSender, AddressDAO addressDAO, PaperChannelDeliveryDriverDAO paperChannelDeliveryDriverDAO,
                                     ExternalChannelClient externalChannelClient, PnPaperChannelConfig pnPaperChannelConfig,
-                                    PaperCalculatorUtils paperCalculatorUtils, PrepareFlowStarter prepareFlowStarter, NationalRegistryService nationalRegistryService) {
+                                    PaperCalculatorUtils paperCalculatorUtils, PrepareFlowStarter prepareFlowStarter, NationalRegistryService nationalRegistryService, PaperTrackerClient paperTrackerClient) {
         super(sqsSender, requestDeliveryDAO);
         this.addressDAO = addressDAO;
+        this.paperChannelDeliveryDriverDAO = paperChannelDeliveryDriverDAO;
         this.externalChannelClient = externalChannelClient;
         this.pnPaperChannelConfig = pnPaperChannelConfig;
         this.paperCalculatorUtils = paperCalculatorUtils;
         this.prepareFlowStarter = prepareFlowStarter;
         this.nationalRegistryService = nationalRegistryService;
+        this.paperTrackerClient = paperTrackerClient;
     }
 
     @Override
@@ -257,21 +267,33 @@ public class  PaperMessagesServiceImpl extends GenericService implements PaperMe
                         pnDeliveryRequest.setRequestPaId(sendRequest.getRequestPaId());
                         pnDeliveryRequest.setPrintType(sendRequest.getPrintType());
 
-                        return sendEngageExternalChannel(sendRequest, attachments, pnDeliveryRequest.getApplyRasterization())
-                                .then(Mono.defer(() -> {
-                                    log.debug("Updating data {} with requestId {} in DynamoDb table {}", PN_DELIVERY_REQUEST_LOG, requestId, PnDeliveryRequest.REQUEST_DELIVERY_DYNAMO_TABLE_NAME);
-                                    return this.requestDeliveryDAO.updateData(pnDeliveryRequest);
-                                }))
-                                .doOnNext(requestUpdated -> log.info("Updated data in DynamoDb table {}", PnDeliveryRequest.REQUEST_DELIVERY_DYNAMO_TABLE_NAME))
-                                .map(requestUpdated -> sendResponse)
-                                .doOnError(ex -> {
-                                    String logString = "prepare requestId = %s, trace_id = %s  request to  External Channel";
-                                    logString = String.format(logString, sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY));
-                                    pnLogAudit.addsFailSend(sendRequest.getIun(), logString);
-                                });
-
+                        if (pnPaperChannelConfig.isPaperTrackerEnabled() && pnPaperChannelConfig.getPaperTrackerProductList().contains(pnDeliveryRequest.getProductType())) {
+                            return paperChannelDeliveryDriverDAO.getByDeliveryDriverId(pnDeliveryRequest.getDriverCode())
+                                    .map(PaperChannelDeliveryDriver::getUnifiedDeliveryDriver)
+                                    .flatMap(unifiedDeliveryDriver -> paperTrackerClient.initPaperTracking(requestId, Const.PCRETRY.concat("0"), pnDeliveryRequest.getProductType(), unifiedDeliveryDriver))
+                                    .thenReturn(pnDeliveryRequest)
+                                    .onErrorResume(PnIdConflictException.class, ex -> Mono.just(pnDeliveryRequest))
+                                    .flatMap(unused -> sendEngage(requestId, sendResponse, sendRequest, pnDeliveryRequest, attachments, pnLogAudit));
+                        } else {
+                            return sendEngage(requestId, sendResponse, sendRequest, pnDeliveryRequest, attachments, pnLogAudit);
+                        }
                     }
                     return Mono.just(sendResponse);
+                });
+    }
+
+    private Mono<SendResponse> sendEngage(String requestId, SendResponse sendResponse, SendRequest sendRequest, PnDeliveryRequest pnDeliveryRequest,  List<AttachmentInfo> attachments, PnLogAudit pnLogAudit) {
+        return sendEngageExternalChannel(sendRequest, attachments, pnDeliveryRequest.getApplyRasterization())
+                .then(Mono.defer(() -> {
+                    log.debug("Updating data {} with requestId {} in DynamoDb table {}", PN_DELIVERY_REQUEST_LOG, requestId, PnDeliveryRequest.REQUEST_DELIVERY_DYNAMO_TABLE_NAME);
+                    return this.requestDeliveryDAO.updateData(pnDeliveryRequest);
+                }))
+                .doOnNext(requestUpdated -> log.info("Updated data in DynamoDb table {}", PnDeliveryRequest.REQUEST_DELIVERY_DYNAMO_TABLE_NAME))
+                .map(requestUpdated -> sendResponse)
+                .doOnError(ex -> {
+                    String logString = "prepare requestId = %s, trace_id = %s  request to  External Channel";
+                    logString = String.format(logString, sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY));
+                    pnLogAudit.addsFailSend(sendRequest.getIun(), logString);
                 });
     }
 

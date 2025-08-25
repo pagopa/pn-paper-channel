@@ -29,6 +29,7 @@ public class PnPaperChannelConfig {
     private String clientSafeStorageBasepath;
     private String clientNationalRegistriesBasepath;
     private String clientExternalChannelBasepath;
+    private String clientPaperTrackerBasepath;
     private String clientF24Basepath;
     private String clientDataVaultBasepath;
     private String clientAddressManagerBasepath;
@@ -55,6 +56,7 @@ public class PnPaperChannelConfig {
     private Integer attemptQueueAddressManager;
     private Integer attemptQueueF24;
     private Integer attemptQueueZipHandle;
+    private Integer maxPcRetry;
     private Long ttlPrepare;
     private Long ttlExecutionN_890;
     private Long ttlExecutionN_AR;
@@ -84,6 +86,8 @@ public class PnPaperChannelConfig {
     private Duration compiutaGiacenzaArDuration;
     private boolean enableTruncatedDateForRefinementCheck;
     private boolean enableOcr;
+    private boolean paperTrackerEnabled;
+    private List<String> paperTrackerProductList;
 
     /**
      * Per l'errore PNADDR001 flusso NR: True se il failureDetailCode D01 deve essere mandato a delivery push (specificando anche l'indirizzo),
