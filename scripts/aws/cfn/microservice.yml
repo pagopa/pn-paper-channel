@@ -872,9 +872,12 @@ Resources:
         ContainerEnvEntry85: !Sub 'PN_PAPERCHANNEL_QUEUEURLOCRINPUTS=${PaperChannelOcrInputsQueueURL}'
         ContainerEnvEntry86: !Sub 'PN_PAPERCHANNEL_QUEUEREGIONOCRINPUTS=${PaperChannelOcrInputsQueueRegion}'
         ContainerEnvEntry87: !Sub 'PN_PAPERCHANNEL_PAPERTRACKERENABLED=${PaperTrackerEnabled}'
-        ContainerEnvEntry88: !Sub 'PN_PAPERCHANNEL_PAPERTRACKERPRODUCTLIST=${PaperTrackerProductList}'
+        ContainerEnvEntry88:
+          Fn::Sub:
+            - 'PN_PAPERCHANNEL_PAPERTRACKERPRODUCTLIST=${ProductList}'
+            - { ProductList: !Join [ ",", !Ref PaperTrackerProductList ] }
         ContainerEnvEntry89: !Sub 'PN_PAPERCHANNEL_CLIENTPAPERTRACKERBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
-        ConteinerEnvEntry90: !Sub 'PN_PAPERCHANNEL_MAXPCRETRY=${MaxPcRetry}'
+        ContainerEnvEntry90: !Sub 'PN_PAPERCHANNEL_MAXPCRETRY=${MaxPcRetry}'
         ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-PaperChannel-Secrets
         MappedPaths: '/paper-channel-bo/*,/paper-channel-private/*'

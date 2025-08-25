@@ -625,8 +625,8 @@ class PaperMessagesServiceTest {
         Mockito.when(deliveryDriverDAO.getByDeliveryDriverId(any()))
                         .thenReturn(Mono.just(paperChannelDeliveryDriver));
 
-        Mockito.when(paperTrackerClient.initPaperTracking(any(),any()))
-                        .thenReturn(Mono.just(request));
+        Mockito.when(paperTrackerClient.initPaperTracking(any(), any(), any(),any()))
+                        .thenReturn(Mono.empty());
 
         //MOCK GET DELIVERY REQUEST
         Mockito.when(requestDeliveryDAO.getByRequestId("TST-IOR.2332"))
@@ -711,7 +711,7 @@ class PaperMessagesServiceTest {
 
         assertEquals(100,response.getAmount());
         assertEquals(3, response.getNumberOfPages());
-        Mockito.verify(paperTrackerClient, times(0)).initPaperTracking(any(), any());
+        Mockito.verify(paperTrackerClient, times(0)).initPaperTracking(any(), any(), any(), any());
         Mockito.verify(deliveryDriverDAO, times(0)).getByDeliveryDriverId(anyString());
         /* -----------------------------  */
     }
@@ -741,7 +741,7 @@ class PaperMessagesServiceTest {
 
         assertEquals(100,response.getAmount());
         assertEquals(3, response.getNumberOfPages());
-        Mockito.verify(paperTrackerClient, times(0)).initPaperTracking(any(), any());
+        Mockito.verify(paperTrackerClient, times(0)).initPaperTracking(any(), any(), any(), any());
         Mockito.verify(deliveryDriverDAO, times(0)).getByDeliveryDriverId(anyString());
 
         /* ----------------------------- */
@@ -773,7 +773,7 @@ class PaperMessagesServiceTest {
 
         assertEquals(100,response.getAmount());
         assertEquals(3, response.getNumberOfPages());
-        Mockito.verify(paperTrackerClient, times(1)).initPaperTracking(any(), any());
+        Mockito.verify(paperTrackerClient, times(1)).initPaperTracking(any(), any(), any(), any());
         Mockito.verify(deliveryDriverDAO, times(1)).getByDeliveryDriverId(anyString());
 
         /* ----------------------------- */

@@ -7,7 +7,9 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PaperChannelDeliveryDriver;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.service.PcRetryService;
+import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.PcRetryUtils;
+import it.pagopa.pn.paperchannel.utils.Utility;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -26,12 +28,20 @@ public class PcRetryServiceImpl implements PcRetryService {
 
     @Override
     public Mono<PcRetryResponse> getPcRetry(String requestId) {
-        return requestDeliveryDAO.getByRequestId(requestId)
+        return requestDeliveryDAO.getByRequestId(getPrefixRequestId(requestId))
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)))
                 .map(PnDeliveryRequest::getDriverCode)
                 .flatMap(paperChannelDeliveryDriverDAO::getByDeliveryDriverId)
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_DRIVER_NOT_EXISTED, DELIVERY_DRIVER_NOT_EXISTED.getMessage(), HttpStatus.NOT_FOUND)))
                 .map(PaperChannelDeliveryDriver::getUnifiedDeliveryDriver)
                 .map(unifiedDeliveryDriver -> pcRetryUtils.checkHasOtherAttemptAndMapPcRetryResponse(requestId, unifiedDeliveryDriver));
+    }
+
+    private String getPrefixRequestId(String requestId) {
+        requestId = Utility.getRequestIdWithoutPrefixClientId(requestId);
+        if (requestId.contains(Const.RETRY)) {
+            requestId = requestId.substring(0, requestId.indexOf(Const.RETRY));
+        }
+        return requestId;
     }
 }

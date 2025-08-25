@@ -31,6 +31,7 @@ public class Const {
     public static final String EXECUTION = "EXECUTION";
     public static final String PREPARE = "PREPARE";
     public static final String RETRY = ".PCRETRY_";
+    public static final String PCRETRY = "PCRETRY_";
     public static final String PAPERSEND = "PAPERSEND";
     public static final String DISCARDNOTIFICATION = "DISCARDNOTIFICATION";
     public static final String PREFIX_REQUEST_ID_SERVICE_DESK = "SERVICE_DESK_OPID-";

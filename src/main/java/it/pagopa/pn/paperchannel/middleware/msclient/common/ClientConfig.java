@@ -5,7 +5,7 @@ import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.api.DeduplicatesAddressServiceApi;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.api.PaperMessagesApi;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnnationalregistries.v1.api.AddressApi;
-import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnpapertracker.v1.api.PaperTrackerEventApi;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnpapertracker.v1.api.PaperTrackerTrackingApi;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.ApiClient;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.api.FileDownloadApi;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.safestorage_reactive.api.FileUploadApi;
@@ -63,11 +63,11 @@ public class ClientConfig extends CommonBaseClient {
     }
 
     @Bean
-    public PaperTrackerEventApi getPaperTrackerEventApi(PnPaperChannelConfig pnPaperChannelConfig){
+    public PaperTrackerTrackingApi getPaperTrackerEventApi(PnPaperChannelConfig pnPaperChannelConfig){
 
         it.pagopa.pn.paperchannel.generated.openapi.msclient.pnpapertracker.v1.ApiClient newApiClient = new it.pagopa.pn.paperchannel.generated.openapi.msclient.pnpapertracker.v1.ApiClient(super.initWebClient(it.pagopa.pn.paperchannel.generated.openapi.msclient.pnpapertracker.v1.ApiClient.buildWebClientBuilder()));
         newApiClient.setBasePath(pnPaperChannelConfig.getClientPaperTrackerBasepath());
-        return new PaperTrackerEventApi(newApiClient);
+        return new PaperTrackerTrackingApi(newApiClient);
 
     }
 }
