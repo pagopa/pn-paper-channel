@@ -46,6 +46,10 @@ Parameters:
   VpcId:
     Type: String
     Description: 'VpcId where the microservice is going to be deployed'
+
+  VpcEgressSubnetsIds:
+    Type: String
+    Description: 'Egress subnets'
   
   EcsDefaultSecurityGroup:
     Type: String
@@ -665,6 +669,33 @@ Parameters:
     Type: String
     Description: 'Delayer to Paper Channel queue name'
 
+  PaperChannelOcrInputsQueueARN:
+    Type: String
+    Description: 'Events to OCR service'
+
+  PaperChannelOcrInputsQueueURL:
+    Type: String
+    Description: 'Push OCR request messages to this Queue'
+
+  PaperChannelOcrInputsQueueRegion:
+    Type: String
+    Description: 'OCR AWS account region'
+
+  PaperChannelOcrOutputsQueueARN:
+    Type: String
+    Description: 'pn-paper_channel_ocr_outputs queue ARN'
+
+  PaperChannelOcrOutputsQueueURL:
+    Type: String
+    Description: 'pn-paper_channel_ocr_outputs queue URL'
+
+  OcrAwsRoleARN:
+    Type: String
+    Description: 'ARN of pn-paper_channel_ocr_outputs sender'
+
+  OcrAwsAccountId:
+    Type: String
+    Description: 'Account id of pn-paper_channel_ocr_outputs sender'
 
   # Log group parameters
   EcsLogGroup:
@@ -820,11 +851,13 @@ Resources:
         ContainerEnvEntry82: !Sub 'PN_PAPERCHANNEL_COMPIUTAGIACENZAARDURATION=${CompiutaGiacenzaArDuration}'
         ContainerEnvEntry83: !Sub 'PN_PAPERCHANNEL_ENABLERETRYCON996=${EnableRetryCon996}'
         ContainerEnvEntry84: !Sub 'PN_PAPERCHANNEL_ENABLETRUNCATEDDATEFORREFINEMENTCHECK=${EnableTruncatedDateForRefinementCheck}'
+        ContainerEnvEntry85: !Sub 'PN_PAPERCHANNEL_QUEUEURLOCRINPUTS=${PaperChannelOcrInputsQueueURL}'
+        ContainerEnvEntry86: !Sub 'PN_PAPERCHANNEL_QUEUEREGIONOCRINPUTS=${PaperChannelOcrInputsQueueRegion}'
         ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-PaperChannel-Secrets
         MappedPaths: '/paper-channel-bo/*,/paper-channel-private/*'
         ECSClusterName: !Ref ECSClusterName
-        Subnets: !Ref SubnetsIds
+        Subnets: !Ref VpcEgressSubnetsIds
         VpcId: !Ref VpcId
         EcsDefaultSecurityGroup: !Ref EcsDefaultSecurityGroup
         LoadBalancerListenerArn: !Ref ApplicationLoadBalancerListenerArn
@@ -869,6 +902,14 @@ Resources:
               - !Ref NationalRegistries2PaperChannelQueueARN
               - !Ref F24ToPaperChannelQueueARN
               - !Ref RaddAltToPaperChannelQueueARN
+              - !Ref PaperChannelOcrOutputsQueueARN
+          # Send events to data-lake queue
+          - Effect: Allow
+            Action:
+              - sqs:SendMessage
+              - sqs:SendMessageBatch
+            Resource:
+              - !Ref PaperChannelOcrInputsQueueARN
           - Effect: Allow
             Action:
               - events:PutEvents
@@ -1363,3 +1404,22 @@ Resources:
               - "SQS:SendMessage"
             Resource:
               - !Ref "DelayerToPaperChannelQueueARN"
+
+  PaperChannelOcrOutputsQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref PaperChannelOcrOutputsQueueURL
+      PolicyDocument:
+        Statement:
+          - Sid: AllowCrossAccountSend
+            Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${OcrAwsAccountId}:root"
+            Action:
+              - sqs:SendMessage
+            Resource:
+              - !Ref PaperChannelOcrOutputsQueueURL
+            Condition:
+              StringEquals:
+                aws:PrincipalArn: !Ref OcrAwsRoleARN

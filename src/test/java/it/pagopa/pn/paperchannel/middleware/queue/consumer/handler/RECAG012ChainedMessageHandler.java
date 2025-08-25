@@ -62,7 +62,8 @@ public class RECAG012ChainedMessageHandler {
                 .build();
         handlersFactory = new HandlersFactory(null, null, null,
                 mockConfig, mockSqsSender, mockEventMetaDAO, mockEventDematDAO, null,
-                mockRequestDeliveryDAO, mockPnEventErrorDAO, mockSendProgressMetaConfig);
+                mockRequestDeliveryDAO, mockPnEventErrorDAO, mockSendProgressMetaConfig, null,
+                null, null);
     }
 
     @Test
