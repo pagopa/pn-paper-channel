@@ -50,8 +50,8 @@ public class PcRetryServiceImplTest {
         response.setRetryFound(true);
         response.setRequestId("requestId_.PCRETRY_2");
         response.setPcRetry("PCRETRY_2");
-        Mockito.when(pcRetryUtils.checkHasOtherAttemptAndMapPcRetryResponse("requestId", "unifiedDriver1"))
-                .thenReturn(response);
+        Mockito.when(pcRetryUtils.checkHasOtherAttemptAndMapPcRetryResponse("requestId", "unifiedDriver1", pnDeliveryRequest))
+                .thenReturn(Mono.just(response));
 
         StepVerifier.create(pcRetryService.getPcRetry("requestId"))
                 .expectNext(response)
@@ -72,8 +72,8 @@ public class PcRetryServiceImplTest {
         response.setParentRequestId("requestId");
         response.setDeliveryDriverId("unifiedDriver1");
         response.setRetryFound(false);
-        Mockito.when(pcRetryUtils.checkHasOtherAttemptAndMapPcRetryResponse("requestId", "unifiedDriver1"))
-                .thenReturn(response);
+        Mockito.when(pcRetryUtils.checkHasOtherAttemptAndMapPcRetryResponse("requestId", "unifiedDriver1", pnDeliveryRequest))
+                .thenReturn(Mono.just(response));
 
         StepVerifier.create(pcRetryService.getPcRetry("requestId"))
                 .expectNext(response)
