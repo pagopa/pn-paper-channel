@@ -13,7 +13,6 @@
     "AttemptQueueAddressManager": "3",
     "AttemptQueueF24": "3",
     "AttemptQueueZipHandle": "3",
-    "MaxPcRetry": "3",
     "TtlPrepare": "14",
     "TtlExecutionRNAR": "12",
     "TtlExecutionRN890" : "11" ,
@@ -61,7 +60,5 @@
     "PaperChannelOcrInputsQueueRegion": "eu-south-1",
     "OcrAwsRoleARN": "arn:aws:iam::830192246553:role/pn-external-channels-TaskRole",
     "OcrAwsAccountId": "830192246553",
-    "PaperTrackerEnabled": "true",
-    "PaperTrackerProductList": "AR"
   }
 }
