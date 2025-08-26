@@ -1,6 +1,7 @@
 package it.pagopa.pn.paperchannel.integrationtests;
 
 import it.pagopa.pn.paperchannel.config.BaseTest;
+import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.AttachmentDetailsDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.DiscoveredAddressDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
@@ -21,12 +22,18 @@ import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum;
+import it.pagopa.pn.paperchannel.utils.PcRetryUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.test.context.ContextConfiguration;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
@@ -137,7 +144,6 @@ class Paper_RS_AR_IT extends BaseTest {
         pnAddress.setTypology(AddressTypeEnum.RECEIVER_ADDRESS.name());
         pnAddress.setCity("Milan");
         pnAddress.setCap("");
-
         when(mockAddressDAO.findAllByRequestId(anyString())).thenReturn(Mono.just(List.of(pnAddress)));
         when(mockExtChannel.sendEngageRequest(any(SendRequest.class), anyList(), any())).thenReturn(Mono.empty());
 

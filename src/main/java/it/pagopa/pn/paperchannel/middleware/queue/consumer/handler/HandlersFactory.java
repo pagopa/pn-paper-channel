@@ -2,15 +2,15 @@ package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.middleware.db.dao.*;
-import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.paperchannel.middleware.queue.consumer.MetaDematCleaner;
+import it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.RECRN00XC.RECRN003CMessageHandler;
 import it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.RECRN00XC.RECRN004CMessageHandler;
 import it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.RECRN00XC.RECRN005CMessageHandler;
-import it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.RECRN00XC.RECRN003CMessageHandler;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.OcrProducer;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum;
+import it.pagopa.pn.paperchannel.utils.PcRetryUtils;
 import it.pagopa.pn.paperchannel.utils.SendProgressMetaConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,9 +33,7 @@ import static it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum.*;
 @Slf4j
 public class HandlersFactory {
 
-    private final ExternalChannelClient externalChannelClient;
-
-    private final AddressDAO addressDAO;
+    private final PcRetryUtils pcRetryUtils;
 
     private final PaperRequestErrorDAO paperRequestErrorDAO;
 
@@ -79,11 +77,10 @@ public class HandlersFactory {
 
         RetryableErrorMessageHandler retryableErrorExtChannelsMessageHandler = RetryableErrorMessageHandler.builder()
                 .sqsSender(sqsSender)
-                .externalChannelClient(externalChannelClient)
-                .addressDAO(addressDAO)
                 .paperRequestErrorDAO(paperRequestErrorDAO)
                 .requestDeliveryDAO(requestDeliveryDAO)
                 .pnPaperChannelConfig(pnPaperChannelConfig)
+                .pcRetryUtils(pcRetryUtils)
                 .pnEventErrorDAO(pnEventErrorDAO)
                 .build();
 

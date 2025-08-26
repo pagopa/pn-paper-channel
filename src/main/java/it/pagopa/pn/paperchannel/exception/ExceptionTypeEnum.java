@@ -4,6 +4,7 @@ import lombok.Getter;
 
 @Getter
 public enum ExceptionTypeEnum{
+    PAPER_TRACKER_REQUEST_CONFLICT("PAPER_TRACKER_REQUEST_CONFLICT", "Il tracking della richiesta è già stato avviato"),
     CLIENT_ID_NOT_PRESENT("CLIENT_ID_NOT_PRESENT", "Client non censito."),
     CLIENT_ID_EMPTY("CLIENT_ID_EMPTY", "Non è stato inserito alcun valore per l'header clientID"),
     CLIENT_ID_NOT_IN_CONTEXT("CLIENT_ID_NOT_IN_CONTEXT", "Non è stato possibile recuperare il valore del client id nel contesto"),
