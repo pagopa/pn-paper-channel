@@ -37,7 +37,7 @@ public class PcRetryUtils {
     private int getRetryAttempt(String requestId) {
         int retry = 0;
         if (requestId.contains(Const.RETRY)) {
-            retry = Integer.parseInt(requestId.substring(requestId.lastIndexOf("_") + 1));
+            retry = Integer.parseInt(requestId.substring(requestId.lastIndexOf("_")+1));
         }
         return retry;
     }
@@ -52,13 +52,10 @@ public class PcRetryUtils {
     }
 
 
-    private void setRetryRequestIdAndPcRetry(PcRetryResponse pcRetryResponse) {
-        if (pcRetryResponse.getParentRequestId().contains(Const.RETRY)) {
-            String prefix = pcRetryResponse.getParentRequestId().substring(0, pcRetryResponse.getParentRequestId().indexOf(Const.RETRY));
-            String attempt = String.valueOf(getRetryAttempt(pcRetryResponse.getParentRequestId()) + 1);
-            pcRetryResponse.setPcRetry(Const.RETRY.replaceFirst("^\\.", "").concat(attempt));
-            pcRetryResponse.setRequestId(prefix.concat(Const.RETRY).concat(attempt));
-        }
+    private void setRetryRequestIdAndPcRetry(PcRetryResponse pcRetryResponse, String newRequestId) {
+        String suffix = newRequestId.substring(newRequestId.indexOf(Const.PCRETRY), newRequestId.length());
+        pcRetryResponse.setPcRetry(suffix);
+        pcRetryResponse.setRequestId(newRequestId);
     }
 
     public Mono<PcRetryResponse> checkHasOtherAttemptAndMapPcRetryResponse(String requestId, String unifiedDeliveryDriver, PnDeliveryRequest pnDeliveryRequest) {
@@ -68,8 +65,9 @@ public class PcRetryUtils {
 
         if (hasOtherAttempt(requestId)) {
             pcRetryResponse.setRetryFound(true);
-            setRetryRequestIdAndPcRetry(pcRetryResponse);
-            return sendEngageRequest(pnDeliveryRequest, requestId).thenReturn(pcRetryResponse);
+            String newRequestId = setRetryRequestId(requestId);
+            setRetryRequestIdAndPcRetry(pcRetryResponse, newRequestId);
+            return sendEngageRequest(pnDeliveryRequest, newRequestId).thenReturn(pcRetryResponse);
         }
 
         pcRetryResponse.setRetryFound(false);
