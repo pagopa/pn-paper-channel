@@ -37,23 +37,23 @@ public class PcRetryServiceImplTest {
     @Test
     void getPcRetryFoundTest() {
         PnDeliveryRequest pnDeliveryRequest = new PnDeliveryRequest();
-        pnDeliveryRequest.setRequestId("requestId");
+        pnDeliveryRequest.setRequestId("requestId_.PCRETRY_0");
         pnDeliveryRequest.setDriverCode("driver1");
-        Mockito.when(requestDeliveryDAO.getByRequestId("requestId")).thenReturn(Mono.just(pnDeliveryRequest));
+        Mockito.when(requestDeliveryDAO.getByRequestId("requestId_")).thenReturn(Mono.just(pnDeliveryRequest));
         PaperChannelDeliveryDriver paperChannelDeliveryDriver = new PaperChannelDeliveryDriver();
         paperChannelDeliveryDriver.setUnifiedDeliveryDriver("unifiedDriver1");
         Mockito.when(paperChannelDeliveryDriverDAO.getByDeliveryDriverId("driver1")).thenReturn(Mono.just(paperChannelDeliveryDriver));
 
         PcRetryResponse response = new PcRetryResponse();
-        response.setParentRequestId("requestId");
+        response.setParentRequestId("requestId_.PCRETRY_0");
         response.setDeliveryDriverId("unifiedDriver1");
         response.setRetryFound(true);
-        response.setRequestId("requestId_.PCRETRY_2");
-        response.setPcRetry("PCRETRY_2");
-        Mockito.when(pcRetryUtils.checkHasOtherAttemptAndMapPcRetryResponse("requestId", "unifiedDriver1", pnDeliveryRequest))
+        response.setRequestId("requestId_.PCRETRY_1");
+        response.setPcRetry("PCRETRY_1");
+        Mockito.when(pcRetryUtils.checkHasOtherAttemptAndMapPcRetryResponse("requestId_.PCRETRY_0", "unifiedDriver1", pnDeliveryRequest))
                 .thenReturn(Mono.just(response));
 
-        StepVerifier.create(pcRetryService.getPcRetry("requestId"))
+        StepVerifier.create(pcRetryService.getPcRetry("requestId_.PCRETRY_0"))
                 .expectNext(response)
                 .verifyComplete();
     }
