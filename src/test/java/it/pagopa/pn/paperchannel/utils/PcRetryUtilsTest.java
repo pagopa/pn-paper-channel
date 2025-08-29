@@ -6,7 +6,6 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
-import it.pagopa.pn.paperchannel.model.Address;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -79,6 +78,23 @@ public class PcRetryUtilsTest {
         Assertions.assertEquals("IUN.ATTEMPT_0.PCRETRY_1", response.getRequestId());
         verify(addressDAO).findAllByRequestId(pnDeliveryRequest.getRequestId());
         verify(externalChannelClient).sendEngageRequest(any(), any(), any());
+    }
+
+    @Test
+    void testCheckHasOtherAttemptAndMapPcRetryResponse_WithRetry_noSendEngage() {
+        PnDeliveryRequest pnDeliveryRequest = getPnDeliveryRequest();
+        when(config.getMaxPcRetry()).thenReturn(10);
+        when(config.getPaperTrackerOnRetrySendEngageProducts()).thenReturn(List.of());
+
+        PcRetryResponse response = pcRetryUtils.checkHasOtherAttemptAndMapPcRetryResponse("IUN.ATTEMPT_0.PCRETRY_0", "driver-1", pnDeliveryRequest).block();
+
+        Assertions.assertEquals("IUN.ATTEMPT_0.PCRETRY_0", response.getParentRequestId());
+        Assertions.assertEquals("driver-1", response.getDeliveryDriverId());
+        Assertions.assertTrue(response.getRetryFound());
+        Assertions.assertEquals("PCRETRY_1", response.getPcRetry());
+        Assertions.assertEquals("IUN.ATTEMPT_0.PCRETRY_1", response.getRequestId());
+        verifyNoInteractions(addressDAO);
+        verifyNoInteractions(externalChannelClient);
     }
 
     @Test
