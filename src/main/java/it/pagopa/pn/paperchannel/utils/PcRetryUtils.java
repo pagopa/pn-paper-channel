@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
@@ -75,10 +76,13 @@ public class PcRetryUtils {
     }
 
     public Mono<PnDeliveryRequest> sendEngageRequest(PnDeliveryRequest pnDeliveryRequest, String requestId) {
+        List<String> retryProducts = pnPaperChannelConfig.getPaperTrackerOnRetrySendEngageProducts();
 
-        return addressDAO.findAllByRequestId(pnDeliveryRequest.getRequestId())
-                .flatMap(pnAddresses -> callExternalChannel(pnAddresses, pnDeliveryRequest, requestId));
+        if (!CollectionUtils.isEmpty(retryProducts) && retryProducts.contains(pnDeliveryRequest.getProductType()))
+            return addressDAO.findAllByRequestId(pnDeliveryRequest.getRequestId())
+                    .flatMap(pnAddresses -> callExternalChannel(pnAddresses, pnDeliveryRequest, requestId));
 
+        return Mono.empty();
     }
 
     private Mono<PnDeliveryRequest> callExternalChannel(List<PnAddress> pnAddresses, PnDeliveryRequest pnDeliveryRequest, String requestId) {

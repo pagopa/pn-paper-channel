@@ -66,6 +66,7 @@ public class PcRetryUtilsTest {
     void testCheckHasOtherAttemptAndMapPcRetryResponse_WithRetry() {
         PnDeliveryRequest pnDeliveryRequest = getPnDeliveryRequest();
         when(config.getMaxPcRetry()).thenReturn(10);
+        when(config.getPaperTrackerOnRetrySendEngageProducts()).thenReturn(List.of("AR"));
         when(addressDAO.findAllByRequestId(pnDeliveryRequest.getRequestId())).thenReturn(Mono.just(new ArrayList<>()));
         when(externalChannelClient.sendEngageRequest(any(), any(), any())).thenReturn(Mono.empty());
 
