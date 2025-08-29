@@ -1,6 +1,7 @@
 package it.pagopa.pn.paperchannel.integrationtests;
 
 import it.pagopa.pn.paperchannel.config.BaseTest;
+import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.AttachmentDetailsDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.DiscoveredAddressDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
@@ -23,7 +24,6 @@ import it.pagopa.pn.paperchannel.utils.DateUtils;
 import it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum;
 import it.pagopa.pn.paperchannel.utils.PcRetryUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,6 +60,8 @@ class Paper_890IT extends BaseTest {
     @Autowired
     private PcRetryUtils pcRetryUtils;
 
+    @Autowired
+    private PnPaperChannelConfig pnPaperChannelConfig;
 
 
     @Test
@@ -194,6 +196,7 @@ class Paper_890IT extends BaseTest {
         pnAddress.setCity("Milan");
         pnAddress.setCap("");
 
+        pnPaperChannelConfig.setPaperTrackerOnRetrySendEngageProducts(List.of("_890"));
 
         when(mockAddressDAO.findAllByRequestId(anyString())).thenReturn(Mono.just(List.of(pnAddress)));
         when(mockExtChannel.sendEngageRequest(any(SendRequest.class), anyList(), any())).thenReturn(Mono.empty());
@@ -218,6 +221,8 @@ class Paper_890IT extends BaseTest {
         pnAddress.setTypology(AddressTypeEnum.RECEIVER_ADDRESS.name());
         pnAddress.setCity("Milan");
         pnAddress.setCap("");
+
+        pnPaperChannelConfig.setPaperTrackerOnRetrySendEngageProducts(List.of("_890"));
 
         when(mockAddressDAO.findAllByRequestId(anyString())).thenReturn(Mono.just(List.of(pnAddress)));
         when(mockExtChannel.sendEngageRequest(any(SendRequest.class), anyList(), any())).thenReturn(Mono.empty());
