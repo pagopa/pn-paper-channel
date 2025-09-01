@@ -1,10 +1,6 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
-import it.pagopa.pn.paperchannel.dao.ExcelDAO;
-import it.pagopa.pn.paperchannel.dao.common.ExcelEngine;
-import it.pagopa.pn.paperchannel.dao.model.DeliveriesData;
 import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
-import it.pagopa.pn.paperchannel.exception.PnExcelValidatorException;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.paperchannel.mapper.*;
@@ -13,8 +9,6 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.DeliveryDriverDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.FileDownloadDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.TenderDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.*;
-import it.pagopa.pn.paperchannel.model.FileStatusCodeEnum;
-import it.pagopa.pn.paperchannel.s3.S3Bucket;
 import it.pagopa.pn.paperchannel.service.PaperChannelService;
 import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.PnLogAudit;
@@ -22,24 +16,17 @@ import it.pagopa.pn.paperchannel.utils.Utility;
 import it.pagopa.pn.paperchannel.validator.CostValidator;
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
-import reactor.util.function.Tuples;
 
-import java.io.File;
-import java.io.InputStream;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
@@ -52,9 +39,7 @@ public class PaperChannelServiceImpl implements PaperChannelService {
     private final CostDAO costDAO;
     private final DeliveryDriverDAO deliveryDriverDAO;
     private final TenderDAO tenderDAO;
-    private final ExcelDAO<DeliveriesData> excelDAO;
     private final FileDownloadDAO fileDownloadDAO;
-    private final S3Bucket s3Bucket;
 
 
     @Override
@@ -126,157 +111,6 @@ public class PaperChannelServiceImpl implements PaperChannelService {
                 .map(CostMapper::toPageableResponse);
     }
 
-    @Override
-    public Mono<PresignedUrlResponseDto> getPresignedUrl() {
-        return s3Bucket.presignedUrl()
-                .flatMap(presignedUrlResponseDto ->
-                        fileDownloadDAO.create(PresignedUrlResponseMapper.toEntity(presignedUrlResponseDto))
-                                .map(pnDeliveryFile -> presignedUrlResponseDto)
-                );
-    }
-
-    public Mono<InfoDownloadDTO> downloadTenderFile(String tenderCode,String uuid) {
-        if(StringUtils.isNotEmpty(uuid)) {
-            return fileDownloadDAO.getUuid(uuid)
-                    .map(item -> {
-                        byte[] result = null;
-                        try {
-                            result = s3Bucket.getObjectData(item.getFilename());
-                        } catch (Exception e) {
-                            log.warn("File is not ready");
-                        }
-                        return FileMapper.toDownloadFile(item, result);
-                    })
-                    .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)));
-        }
-
-        String uid= UUID.randomUUID().toString();
-        PnDeliveryFile file = new PnDeliveryFile();
-        file.setUuid(uid);
-        file.setStatus(InfoDownloadDTO.StatusEnum.UPLOADING.getValue());
-
-        return fileDownloadDAO.create(file)
-                .map(item -> {
-                    createAndUploadFileAsync(tenderCode, item.getUuid());
-                    return FileMapper.toDownloadFile(item, null);
-                });
-    }
-
-    @Override
-    public Mono<NotifyResponseDto> notifyUpload(String tenderCode, NotifyUploadRequestDto uploadRequestDto) {
-        if (StringUtils.isEmpty(uploadRequestDto.getUuid())) {
-            return Mono.error(new PnGenericException(ExceptionTypeEnum.BADLY_REQUEST, ExceptionTypeEnum.BADLY_REQUEST.getMessage(), HttpStatus.BAD_REQUEST));
-        }
-
-        return fileDownloadDAO.getUuid(uploadRequestDto.getUuid())
-                .switchIfEmpty(Mono.error(new PnGenericException(FILE_REQUEST_ASYNC_NOT_FOUND, FILE_REQUEST_ASYNC_NOT_FOUND.getMessage(), HttpStatus.NOT_FOUND)))
-                .flatMap(item -> {
-                    if (StringUtils.equals(item.getStatus(), FileStatusCodeEnum.ERROR.getCode())) {
-                        if (CollectionUtils.isEmpty(item.getErrorMessage().getErrorDetails())) {
-                            return Mono.error(new PnGenericException(ExceptionTypeEnum.EXCEL_BADLY_CONTENT, item.getErrorMessage().getMessage()));
-                        }
-                        return Mono.error(new PnExcelValidatorException(ExceptionTypeEnum.BADLY_REQUEST, ErrorDetailMapper.toDtos(item.getErrorMessage().getErrorDetails())));
-
-                    } else if (StringUtils.equals(item.getStatus(), FileStatusCodeEnum.UPLOADING.getCode())) {
-                        String fileName = S3Bucket.PREFIX_URL + uploadRequestDto.getUuid();
-                        InputStream inputStream = s3Bucket.getFileInputStream(fileName);
-                        if (inputStream != null) {
-                            notifyUploadAsync(item, inputStream, tenderCode).subscribeOn(Schedulers.parallel()).subscribe();
-                            item.setStatus(FileStatusCodeEnum.IN_PROGRESS.getCode());
-                            return this.fileDownloadDAO.create(item).map(NotifyResponseMapper::toDto);
-                        }
-                    }
-                    return Mono.just(NotifyResponseMapper.toDto(item));
-                });
-    }
-
-    public Mono<Void> notifyUploadAsync(PnDeliveryFile item, InputStream inputStream, String tenderCode){
-        return Mono.just("")
-                .map(nothing -> this.excelDAO.readData(inputStream))
-                .map(deliveriesData -> DeliveryDriverMapper.toEntityFromExcel(deliveriesData, tenderCode))
-                .zipWhen(driversAndCost -> deleteAllDriverFromTender(tenderCode), (a, b) -> a )
-                .flatMap(this::createFromMap)
-                .flatMap(nothing -> {
-                    item.setStatus(FileStatusCodeEnum.COMPLETE.getCode());
-                    return fileDownloadDAO.create(item).then();
-                })
-                .onErrorResume(ex -> {
-                    item.setStatus(FileStatusCodeEnum.ERROR.getCode());
-                    if (ex instanceof PnExcelValidatorException){
-                        item.setErrorMessage(ErrorMessageMapper.toEntity((PnExcelValidatorException)ex));
-                    } else {
-                        PnErrorMessage pnErrorMessage = new PnErrorMessage();
-                        pnErrorMessage.setMessage(ex.getMessage());
-                        item.setErrorMessage(pnErrorMessage);
-                    }
-
-                    return  fileDownloadDAO.create(item).flatMap(entity -> Mono.error(ex));
-                });
-
-    }
-
-    private Mono<String> createFromMap(Map<PnDeliveryDriver, List<PnCost>> driversAndCosts) {
-        return  Flux.fromStream(driversAndCosts.keySet().stream())
-                .flatMap(driver -> deliveryDriverDAO.createOrUpdate(driver)
-                                        .flatMap(driverEntity -> Flux.fromStream(driversAndCosts.get(driver).stream())
-                                                                    .flatMap(cost -> this.costDAO.createOrUpdate(cost))
-                                                                    .collectList()
-                                        ).map(costs -> driver)
-                ).collectList()
-                .map(list -> "");
-
-    }
-
-    private Mono<String> deleteAllDriverFromTender(String tenderCode) {
-        String processName = "Delete All Driver From Tender";
-        log.logStartingProcess(processName);
-        return this.deliveryDriverDAO.getDeliveryDriverFromTender(tenderCode, null)
-                .flatMap(driver -> this.deleteDriver(tenderCode, driver.getTaxId()))
-                .collectList()
-                .map(list -> {
-                    log.logEndingProcess(processName);
-                    return tenderCode;
-                });
-    }
-
-    private void createAndUploadFileAsync(String tenderCode,String uuid){
-        String processName = "Create And Upload File Async";
-        log.logStartingProcess(processName);
-        Mono.delay(Duration.ofMillis(10)).publishOn(Schedulers.boundedElastic())
-                .flatMap(i ->  {
-                    if (StringUtils.isNotBlank(tenderCode)) {
-                        return this.deliveryDriverDAO.getDeliveryDriverFromTender(tenderCode, null)
-                                .collectList()
-                                .zipWhen(drivers -> this.costDAO.findAllFromTenderCode(tenderCode, null).collectList())
-                                .flatMap(driversAndCosts -> {
-                                    ExcelEngine excelEngine = this.excelDAO.create(ExcelModelMapper.fromDeliveriesDrivers(driversAndCosts.getT1(),driversAndCosts.getT2()));
-                                    File file = excelEngine.saveOnDisk();
-                                    return Mono.just(file);
-                                });
-                    } else {
-                        ExcelEngine excelEngine = this.excelDAO.create(new DeliveriesData());
-                        File f = excelEngine.saveOnDisk();
-                        return Mono.just(f);
-                    }
-                })
-                .publishOn(Schedulers.boundedElastic())
-                .zipWhen(s3Bucket::putObject)
-                .zipWhen(file -> fileDownloadDAO.getUuid(uuid))
-                .map(entityAndFile -> Tuples.of(entityAndFile.getT1().getT1(), entityAndFile.getT2()))
-                .flatMap(entityAndFile -> {
-                    entityAndFile.getT2().setFilename(entityAndFile.getT1().getName());
-                    entityAndFile.getT2().setStatus(InfoDownloadDTO.StatusEnum.UPLOADED.getValue());
-                    // save item and delete file
-                    return fileDownloadDAO.create(entityAndFile.getT2())
-                            .map(file -> {
-                                boolean delete = entityAndFile.getT1().delete();
-                                log.debug("Deleted file "+delete);
-                                log.logEndingProcess(processName);
-                                return FileMapper.toDownloadFile(entityAndFile.getT2(), s3Bucket.getObjectData(entityAndFile.getT2().getFilename()));
-                            });
-                })
-                .subscribeOn(Schedulers.boundedElastic()).subscribe();
-    }
 
     @Override
     public Mono<TenderCreateResponseDTO> createOrUpdateTender(TenderCreateRequestDTO request) {

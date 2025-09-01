@@ -214,10 +214,6 @@ Parameters:
     Type: String
     Description: 'Name of KMS Key for Dynamo encode/decode data'
 
-  PaperDeliveryDriversBucketName:
-    Type: String
-    Description: 'Name of S3 bucket'
-
   RequestDeliveryDynamoTableName:
     Type: String
     Description: 'Name of dynamodb table containing request'
@@ -813,7 +809,7 @@ Resources:
         ContainerEnvEntry26: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUESAFESTORAGE=${AttemptQueueSafeStorage}'
         ContainerEnvEntry27: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUENATIONALREGISTRIES=${AttemptQueueNationalRegistries}'
         ContainerEnvEntry28: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUEEXTERNALCHANNEL=${AttemptQueueExternalChannel}'
-        ContainerEnvEntry29: !Sub 'AWS_BUCKET_NAME=${PaperDeliveryDriversBucketName}'
+        ContainerEnvEntry29: !Sub 'PN_PAPERCHANNEL_CLIENTPAPERTRACKERBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
         ContainerEnvEntry30: !Sub 'PN_PAPERCHANNEL_NATIONALREGISTRYCXID=${NationalRegistryCxId}'
         ContainerEnvEntry31: !Sub 'PN_PAPERCHANNEL_TTLPREPARE=${TtlPrepare}'
         ContainerEnvEntry32: !Sub 'PN_PAPERCHANNEL_TTLEXECUTIONNAR=${TtlExecutionRNAR}'
@@ -871,7 +867,6 @@ Resources:
         ContainerEnvEntry84: !Sub 'PN_PAPERCHANNEL_ENABLETRUNCATEDDATEFORREFINEMENTCHECK=${EnableTruncatedDateForRefinementCheck}'
         ContainerEnvEntry85: !Sub 'PN_PAPERCHANNEL_QUEUEURLOCRINPUTS=${PaperChannelOcrInputsQueueURL}'
         ContainerEnvEntry86: !Sub 'PN_PAPERCHANNEL_QUEUEREGIONOCRINPUTS=${PaperChannelOcrInputsQueueRegion}'
-        ContainerEnvEntry89: !Sub 'PN_PAPERCHANNEL_CLIENTPAPERTRACKERBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
         ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-PaperChannel-Secrets
         MappedPaths: '/paper-channel-bo/*,/paper-channel-private/*'
@@ -894,12 +889,6 @@ Resources:
       PolicyDocument:
         Version: 2012-10-17
         Statement:
-          - Effect: Allow
-            Action:
-              - s3:*
-            Resource:
-              - !Sub arn:aws:s3:::${PaperDeliveryDriversBucketName}
-              - !Sub arn:aws:s3:::${PaperDeliveryDriversBucketName}/*
           - Effect: Allow
             Action:
               - sqs:ChangeMessageVisibility

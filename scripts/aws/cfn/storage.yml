@@ -37,33 +37,6 @@ Parameters:
     Default: 14
 
 Resources:
-  PaperDeliveryDriversBucket:
-    Type: AWS::S3::Bucket
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
-    Properties:
-      ObjectLockEnabled: true
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: true
-        BlockPublicPolicy: true
-        IgnorePublicAcls: true
-        RestrictPublicBuckets: true
-      VersioningConfiguration:
-        Status: Enabled
-      CorsConfiguration:
-        CorsRules:
-          - AllowedHeaders:
-              - "*"
-            AllowedMethods:
-              - GET
-              - PUT
-              - POST
-              - DELETE
-              - HEAD
-            AllowedOrigins:
-              - "*"
-            ExposedHeaders:
-              - "x-amz-version-id"
 
   PCKmsEncDecDynamoDataKey:
     Type: 'AWS::KMS::Key'
@@ -658,10 +631,6 @@ Resources:
         LogGroupPrefix: /aws/lambda
 
 Outputs:
-
-  PaperDeliveryDriversBucketName:
-    Description: Name of s3 bucket
-    Value: !Ref PaperDeliveryDriversBucket
 
   # Scheduled Requests
   ScheduledRequestsQueueName:

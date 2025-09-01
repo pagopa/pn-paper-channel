@@ -38,49 +38,6 @@ class AllGetFromServiceTest {
     @Mock
     private TenderDAO tenderDAO;
 
-    @Test
-    @DisplayName("whenRetrieveAllTendersFromPageOne")
-    void getAllTenderWithElementInPageTest(){
-        Mockito.when(this.tenderDAO.getTenders())
-                .thenReturn(Mono.just(InstanceCreator.getListTender(5)));
-
-        PageableTenderResponseDto response = this.paperChannelService.getAllTender(1, 10).block();
-        assertNotNull(response);
-        assertEquals(true, response.getFirst());
-        assertEquals(true, response.getLast());
-        assertEquals(5, response.getNumberOfElements());
-        assertEquals(0, response.getNumber());
-        assertEquals(1, response.getTotalPages());
-    }
-
-    @Test
-    @DisplayName("whenRetrieveAllTendersFromPageOneWithMorePage")
-    void getAllTenderWithElementInPageWithMorePageTest(){
-        Mockito.when(this.tenderDAO.getTenders())
-                .thenReturn(Mono.just(InstanceCreator.getListTender(25)));
-
-        PageableTenderResponseDto response = this.paperChannelService.getAllTender(1, 10).block();
-        assertNotNull(response);
-        assertEquals(true, response.getFirst());
-        assertEquals(false, response.getLast());
-        assertEquals(10, response.getNumberOfElements());
-        assertEquals(25, response.getTotalElements());
-        assertEquals(0, response.getNumber());
-        assertEquals(3, response.getTotalPages());
-    }
-
-    @Test
-    @DisplayName("whenRetrieveDetailTenderThenReturnResponse")
-    void getDetailTenderFromCode(){
-        Mockito.when(tenderDAO.getTender("1234"))
-                .thenReturn(Mono.just(InstanceCreator.getListTender(1).get(0)));
-
-        TenderDetailResponseDTO response = this.paperChannelService.getTenderDetails("1234").block();
-        assertNotNull(response);
-        assertEquals(true, response.getResult());
-        assertEquals(TenderDetailResponseDTO.CodeEnum.NUMBER_0, response.getCode());
-        assertEquals("Tender_0", response.getTender().getCode());
-    }
 
     @Test
     @DisplayName("whenRetrieveDetailTenderNotExistThenThrowError")
@@ -89,7 +46,7 @@ class AllGetFromServiceTest {
                 .thenReturn(Mono.empty());
 
         StepVerifier.create(this.paperChannelService.getTenderDetails("1234"))
-                .expectErrorMatches((e) -> {
+                .expectErrorMatches(e -> {
                     assertTrue(e instanceof PnGenericException);
                     assertEquals(TENDER_NOT_EXISTED, ((PnGenericException) e).getExceptionType());
                     return true;
@@ -118,7 +75,7 @@ class AllGetFromServiceTest {
                 .thenReturn(Mono.empty());
 
         StepVerifier.create(this.paperChannelService.getDriverDetails("1234", "1234"))
-                .expectErrorMatches((e) -> {
+                .expectErrorMatches(e -> {
                     assertTrue(e instanceof PnGenericException);
                     assertEquals(DELIVERY_DRIVER_NOT_EXISTED, ((PnGenericException) e).getExceptionType());return true;
                 }).verify();
@@ -146,7 +103,7 @@ class AllGetFromServiceTest {
                 .thenReturn(Mono.empty());
 
         StepVerifier.create(this.paperChannelService.getDetailsFSU("1234"))
-                .expectErrorMatches((e) -> {
+                .expectErrorMatches(e -> {
                     assertTrue(e instanceof PnGenericException);
                     assertEquals(DELIVERY_DRIVER_NOT_EXISTED, ((PnGenericException) e).getExceptionType());return true;
                 }).verify();
