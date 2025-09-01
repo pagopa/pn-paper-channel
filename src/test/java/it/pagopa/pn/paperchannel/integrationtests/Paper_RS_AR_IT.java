@@ -403,8 +403,6 @@ class Paper_RS_AR_IT extends BaseTest {
         //
         // progress + retry
 
-        pnPaperChannelConfig.setPaperTrackerOnRetrySendEngageProducts(List.of("RS"));
-
         CommonFinalOnlyRetrySequenceTest("RECRS006", true);
     }
 
@@ -413,8 +411,6 @@ class Paper_RS_AR_IT extends BaseTest {
         // retry paper channel
         //
         // progress + retry
-
-        pnPaperChannelConfig.setPaperTrackerOnRetrySendEngageProducts(List.of("RS"));
 
         CommonFinalOnlyRetrySequenceTest("RECRS013", false);
     }
@@ -573,8 +569,6 @@ class Paper_RS_AR_IT extends BaseTest {
         //
         // progress + retry
 
-        pnPaperChannelConfig.setPaperTrackerOnRetrySendEngageProducts(List.of("RS"));
-
         CommonFinalOnlyRetrySequenceTest("RECRN006", true);
     }
 
@@ -583,8 +577,6 @@ class Paper_RS_AR_IT extends BaseTest {
         // retry paper channel
         //
         // progress + retry
-
-        pnPaperChannelConfig.setPaperTrackerOnRetrySendEngageProducts(List.of("RS"));
 
         CommonFinalOnlyRetrySequenceTest("RECRN013", false);
     }
