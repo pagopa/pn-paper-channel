@@ -64,8 +64,9 @@ public class PcRetryUtilsTest {
     @Test
     void testCheckHasOtherAttemptAndMapPcRetryResponse_WithRetry() {
         PnDeliveryRequest pnDeliveryRequest = getPnDeliveryRequest();
+        pnDeliveryRequest.setStatusCode("RECRN006");
         when(config.getMaxPcRetry()).thenReturn(10);
-        when(config.getPaperTrackerOnRetrySendEngageProducts()).thenReturn(List.of("AR"));
+        when(config.getDisabledRetrySendEngageStatusCodes()).thenReturn(List.of());
         when(addressDAO.findAllByRequestId(pnDeliveryRequest.getRequestId())).thenReturn(Mono.just(new ArrayList<>()));
         when(externalChannelClient.sendEngageRequest(any(), any(), any())).thenReturn(Mono.empty());
 
@@ -83,8 +84,9 @@ public class PcRetryUtilsTest {
     @Test
     void testCheckHasOtherAttemptAndMapPcRetryResponse_WithRetry_noSendEngage() {
         PnDeliveryRequest pnDeliveryRequest = getPnDeliveryRequest();
+        pnDeliveryRequest.setStatusCode("RECRN006");
         when(config.getMaxPcRetry()).thenReturn(10);
-        when(config.getPaperTrackerOnRetrySendEngageProducts()).thenReturn(List.of());
+        when(config.getDisabledRetrySendEngageStatusCodes()).thenReturn(List.of("RECRN006"));
 
         PcRetryResponse response = pcRetryUtils.checkHasOtherAttemptAndMapPcRetryResponse("IUN.ATTEMPT_0.PCRETRY_0", "driver-1", pnDeliveryRequest).block();
 

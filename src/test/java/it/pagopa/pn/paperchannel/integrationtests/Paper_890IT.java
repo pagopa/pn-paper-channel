@@ -196,7 +196,7 @@ class Paper_890IT extends BaseTest {
         pnAddress.setCity("Milan");
         pnAddress.setCap("");
 
-        pnPaperChannelConfig.setPaperTrackerOnRetrySendEngageProducts(List.of("_890"));
+        pnPaperChannelConfig.setDisabledRetrySendEngageStatusCodes(List.of());
 
         when(mockAddressDAO.findAllByRequestId(anyString())).thenReturn(Mono.just(List.of(pnAddress)));
         when(mockExtChannel.sendEngageRequest(any(SendRequest.class), anyList(), any())).thenReturn(Mono.empty());
@@ -222,7 +222,7 @@ class Paper_890IT extends BaseTest {
         pnAddress.setCity("Milan");
         pnAddress.setCap("");
 
-        pnPaperChannelConfig.setPaperTrackerOnRetrySendEngageProducts(List.of("_890"));
+        pnPaperChannelConfig.setDisabledRetrySendEngageStatusCodes(List.of());
 
         when(mockAddressDAO.findAllByRequestId(anyString())).thenReturn(Mono.just(List.of(pnAddress)));
         when(mockExtChannel.sendEngageRequest(any(SendRequest.class), anyList(), any())).thenReturn(Mono.empty());
