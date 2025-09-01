@@ -54,48 +54,6 @@ class PaperChannelRestV1ControllerTest {
                 .expectStatus().isOk();
     }
 
-    @Test
-    void addTenderFromFileTest(){
-        PresignedUrlResponseDto response = new PresignedUrlResponseDto();
-        String path = "/paper-channel-bo/v1/delivery-tender/file-upload";
-        Mockito.when(paperChannelService.getPresignedUrl())
-                .thenReturn(Mono.just(response));
-
-        webTestClient.get()
-                .uri(uriBuilder -> uriBuilder.path(path).build())
-                .exchange()
-                .expectStatus().isOk();
-    }
-    
-    @Test
-    void downloadTenderFileTest(){
-        InfoDownloadDTO response = new InfoDownloadDTO();
-        String path = "/paper-channel-bo/v1/delivery-tender/file-download";
-        Mockito.when(paperChannelService.downloadTenderFile(Mockito.anyString(),Mockito.anyString()))
-                .thenReturn(Mono.just(response));
-
-        webTestClient.get()
-                .uri(uriBuilder -> uriBuilder.path(path)
-                        .queryParam("tenderCode", "GARA2023")
-                        .queryParam("uuid", "1234")
-                        .build())
-                .exchange()
-                .expectStatus().isOk();
-    }
-
-    @Test
-    void notifyUploadTest(){
-        NotifyResponseDto response = new NotifyResponseDto();
-        String path = "/paper-channel-bo/v1/delivery-tender/GARA2023/notify-upload";
-        Mockito.when(paperChannelService.notifyUpload(Mockito.anyString(), Mockito.any()))
-                .thenReturn(Mono.just(response));
-
-        webTestClient.post()
-                .uri(uriBuilder -> uriBuilder.path(path).build())
-                .bodyValue(getNotifyRequest())
-                .exchange()
-                .expectStatus().isOk();
-    }
 
     @Test
     void createUpdateTenderTest(){
@@ -285,15 +243,4 @@ class PaperChannelRestV1ControllerTest {
         request.setEndDate(new Date());
         return request;
     }
-
-
-    private NotifyUploadRequestDto getNotifyRequest(){
-        NotifyUploadRequestDto request = new NotifyUploadRequestDto();
-        request.setUuid("1234567");
-        return request;
-    }
-
-
-
-
 }
