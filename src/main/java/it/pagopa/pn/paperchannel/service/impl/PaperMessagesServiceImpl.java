@@ -278,7 +278,10 @@ public class PaperMessagesServiceImpl extends GenericService implements PaperMes
                                                                     unifiedDeliveryDriver
                                                             )
                                                     )
-                                                    .onErrorResume(PnIdConflictException.class, ex -> Mono.empty())
+                                                    .onErrorResume(PnIdConflictException.class, ex -> {
+                                                        log.error("PnIdConflictException on initPaperTracking: {}", ex.getMessage());
+                                                        return Mono.empty();
+                                                    })
                                                     .thenReturn(sendResponse)
                                     );
                         } else {

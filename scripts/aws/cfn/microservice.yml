@@ -734,11 +734,6 @@ Parameters:
     Default: 512
     Description: Memory size TenderAPI Lambda.
 
-  PaperTrackerProductList:
-    Type: CommaDelimitedList
-    Default: 'AR'
-    Description: 'List of products to track in Paper Tracker feature'
-
 Conditions:
   UseExternalChannelMock: !Equals [ !Ref ExternalChannelBaseUrl, "Mock" ]
 
