@@ -688,8 +688,7 @@ class PaperMessagesServiceTest {
 
     @Test
     void executionPaperWithoutContextAndWithStatusTakingChargeTest() {
-        when(pnPaperChannelConfig.getPaperTrackerProductList()).thenReturn(List.of("AR"));
-        when(pnPaperChannelConfig.isPaperTrackerEnabled()).thenReturn(Boolean.FALSE);
+        when(pnPaperChannelConfig.getPaperTrackerProductList()).thenReturn(List.of("890"));
         mocksExecutionPaperOK();
 
         SendRequest sendRequest = getRequest("TST-IOR.2332");
@@ -718,7 +717,6 @@ class PaperMessagesServiceTest {
     @Test
     void executionPaperWithContextAndWithStatusTakingChargeTest() {
         when(pnPaperChannelConfig.getPaperTrackerProductList()).thenReturn(List.of("890"));
-        when(pnPaperChannelConfig.isPaperTrackerEnabled()).thenReturn(Boolean.TRUE);
         mocksExecutionPaperOK();
 
         SendRequest sendRequest = getRequest("TST-IOR.2332");
@@ -750,7 +748,6 @@ class PaperMessagesServiceTest {
     @Test
     void executionPaperWithARWithPaperTrackerEnabled() {
         when(pnPaperChannelConfig.getPaperTrackerProductList()).thenReturn(List.of("AR"));
-        when(pnPaperChannelConfig.isPaperTrackerEnabled()).thenReturn(Boolean.TRUE);
         mocksExecutionPaperTrackerEnableProductAROK();
 
         SendRequest sendRequest = getRequest("TST-IOR.2332");

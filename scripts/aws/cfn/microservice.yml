@@ -734,14 +734,6 @@ Parameters:
     Default: 512
     Description: Memory size TenderAPI Lambda.
 
-  PaperTrackerEnabled:
-    Type: String
-    Default: 'false'
-    Description: 'Enable Paper Tracker feature'
-    AllowedValues:
-      - 'true'
-      - 'false'
-
   PaperTrackerProductList:
     Type: CommaDelimitedList
     Default: 'AR'
