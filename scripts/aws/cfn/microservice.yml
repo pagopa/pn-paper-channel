@@ -372,11 +372,11 @@ Parameters:
   F24ToPaperChannelQueueARN:
     Type: String
 
-  ExternalChannels2PaperChannelQueueName:
+  ExternalChannelToPaperChannelDryRunQueueName:
     Type: String
     Description: 'Pull external-channel messages from this Queue'
 
-  ExternalChannels2PaperChannelQueueARN:
+  ExternalChannelToPaperChannelDryRunQueueARN:
     Type: String
     Description: 'Pull external-channel messages from this Queue'
 
@@ -734,6 +734,19 @@ Parameters:
     Default: 512
     Description: Memory size TenderAPI Lambda.
 
+  PaperTrackerEnabled:
+    Type: String
+    Default: 'false'
+    Description: 'Enable Paper Tracker feature'
+    AllowedValues:
+      - 'true'
+      - 'false'
+
+  PaperTrackerProductList:
+    Type: CommaDelimitedList
+    Default: 'AR'
+    Description: 'List of products to track in Paper Tracker feature'
+
 Conditions:
   UseExternalChannelMock: !Equals [ !Ref ExternalChannelBaseUrl, "Mock" ]
 
@@ -789,7 +802,7 @@ Resources:
         ContainerEnvEntry19: !Sub 'AWS_KMS_KEYID=${PCKmsEncDecDynamoDataKeyARN}'
         ContainerEnvEntry20: !Sub 'PN_PAPERCHANNEL_EVENTBUS_NAME=arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/${ProjectName}-CoreEventBus'
         ContainerEnvEntry21: !Sub 'PN_PAPERCHANNEL_QUEUEDELIVERYPUSH=${ExternalChannelsOutputsQueueName}'
-        ContainerEnvEntry22: !Sub 'PN_PAPERCHANNEL_QUEUEEXTERNALCHANNEL=${ExternalChannels2PaperChannelQueueName}'
+        ContainerEnvEntry22: !Sub 'PN_PAPERCHANNEL_QUEUEEXTERNALCHANNEL=${ExternalChannelToPaperChannelDryRunQueueName}'
         ContainerEnvEntry23: !Sub 'PN_PAPERCHANNEL_QUEUENATIONALREGISTRIES=${NationalRegistries2PaperChannelQueueName}'
         ContainerEnvEntry24: !Sub 'PN_PAPERCHANNEL_QUEUEINTERNAL=${ScheduledRequestsQueueName}'
         ContainerEnvEntry25: !Sub 'PN_PAPERCHANNEL_ATTEMPTSAFESTORAGE=${AttemptSafeStorage}'
@@ -889,7 +902,7 @@ Resources:
               - sqs:SendMessageBatch
             Resource:
               - !Ref ExternalChannelsOutputsQueueARN
-              - !Ref ExternalChannels2PaperChannelQueueARN
+              - !Ref ExternalChannelToPaperChannelDryRunQueueARN
               - !Ref ScheduledRequestsQueueARN
               - !Ref PaperNormalizeAddressQueueARN
               - !Ref PaperChannelToDelayerQueueARN
@@ -1076,7 +1089,7 @@ Resources:
         QueueArns: !Join
           - ','
           - - !Ref ExternalChannelsOutputsQueueARN
-            - !Ref ExternalChannels2PaperChannelQueueARN
+            - !Ref ExternalChannelToPaperChannelDryRunQueueARN
             - !Ref ScheduledRequestsQueueARN
             - !Ref PaperNormalizeAddressQueueARN
             - !Ref NationalRegistries2PaperChannelQueueARN
@@ -1221,7 +1234,7 @@ Resources:
             Metric:
               Dimensions:
                 - Name: QueueName
-                  Value: !Ref "ExternalChannels2PaperChannelQueueName"
+                  Value: !Ref "ExternalChannelToPaperChannelDryRunQueueName"
               Namespace: "AWS/SQS"
               MetricName: "ApproximateNumberOfMessagesVisible"
             Period: !Ref AutoscalingCheckPeriod
