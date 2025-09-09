@@ -10,12 +10,10 @@ import it.pagopa.pn.paperchannel.exception.PnPaperEventException;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.paperchannel.mapper.*;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
-import it.pagopa.pn.paperchannel.middleware.db.dao.DeliveryDriverDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PaperChannelDeliveryDriverDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PaperChannelDeliveryDriver;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryDriver;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.PaperTrackerClient;
@@ -267,13 +265,25 @@ public class PaperMessagesServiceImpl extends GenericService implements PaperMes
                         pnDeliveryRequest.setRequestPaId(sendRequest.getRequestPaId());
                         pnDeliveryRequest.setPrintType(sendRequest.getPrintType());
 
-                        if (pnPaperChannelConfig.isPaperTrackerEnabled() && pnPaperChannelConfig.getPaperTrackerProductList().contains(pnDeliveryRequest.getProductType())) {
-                            return paperChannelDeliveryDriverDAO.getByDeliveryDriverId(pnDeliveryRequest.getDriverCode())
-                                    .map(PaperChannelDeliveryDriver::getUnifiedDeliveryDriver)
-                                    .flatMap(unifiedDeliveryDriver -> paperTrackerClient.initPaperTracking(requestId, Const.PCRETRY.concat("0"), pnDeliveryRequest.getProductType(), unifiedDeliveryDriver))
-                                    .thenReturn(pnDeliveryRequest)
-                                    .onErrorResume(PnIdConflictException.class, ex -> Mono.just(pnDeliveryRequest))
-                                    .flatMap(unused -> sendEngage(requestId, sendResponse, sendRequest, pnDeliveryRequest, attachments, pnLogAudit));
+                        if (pnPaperChannelConfig.getPaperTrackerProductList().contains(pnDeliveryRequest.getProductType())) {
+                            return sendEngage(requestId, sendResponse, sendRequest, pnDeliveryRequest, attachments, pnLogAudit)
+                                    .flatMap(unused ->
+                                            paperChannelDeliveryDriverDAO.getByDeliveryDriverId(pnDeliveryRequest.getDriverCode())
+                                                    .map(PaperChannelDeliveryDriver::getUnifiedDeliveryDriver)
+                                                    .flatMap(unifiedDeliveryDriver ->
+                                                            paperTrackerClient.initPaperTracking(
+                                                                    requestId,
+                                                                    Const.PCRETRY.concat("0"),
+                                                                    pnDeliveryRequest.getProductType(),
+                                                                    unifiedDeliveryDriver
+                                                            )
+                                                    )
+                                                    .onErrorResume(PnIdConflictException.class, ex -> {
+                                                        log.error("PnIdConflictException on initPaperTracking: {}", ex.getMessage());
+                                                        return Mono.empty();
+                                                    })
+                                                    .thenReturn(sendResponse)
+                                    );
                         } else {
                             return sendEngage(requestId, sendResponse, sendRequest, pnDeliveryRequest, attachments, pnLogAudit);
                         }

@@ -76,16 +76,9 @@ public class PcRetryUtils {
     }
 
     public Mono<PnDeliveryRequest> sendEngageRequest(PnDeliveryRequest pnDeliveryRequest, String requestId) {
-        List<String> disabledSendEngageStatusCodes = pnPaperChannelConfig.getDisabledRetrySendEngageStatusCodes();
-
-        if(CollectionUtils.isEmpty(disabledSendEngageStatusCodes) ||
-                (!CollectionUtils.isEmpty(disabledSendEngageStatusCodes) && !disabledSendEngageStatusCodes.contains(pnDeliveryRequest.getStatusCode()))){
-            log.info("SendEngage for status code {}", pnDeliveryRequest.getStatusCode());
-            return addressDAO.findAllByRequestId(pnDeliveryRequest.getRequestId())
-                    .flatMap(pnAddresses -> callExternalChannel(pnAddresses, pnDeliveryRequest, requestId));
-        }
-        log.info("Not calling SendEngage for status code {}", pnDeliveryRequest.getStatusCode());
-        return Mono.empty();
+        log.info("SendEngage for status code {}", pnDeliveryRequest.getStatusCode());
+        return addressDAO.findAllByRequestId(pnDeliveryRequest.getRequestId())
+                .flatMap(pnAddresses -> callExternalChannel(pnAddresses, pnDeliveryRequest, requestId));
     }
 
     private Mono<PnDeliveryRequest> callExternalChannel(List<PnAddress> pnAddresses, PnDeliveryRequest pnDeliveryRequest, String requestId) {

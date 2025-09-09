@@ -1,6 +1,8 @@
 package it.pagopa.pn.paperchannel.config;
 
 import it.pagopa.pn.commons.conf.SharedAutoConfiguration;
+
+import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
@@ -86,9 +88,7 @@ public class PnPaperChannelConfig {
     private Duration compiutaGiacenzaArDuration;
     private boolean enableTruncatedDateForRefinementCheck;
     private boolean enableOcr;
-    private boolean paperTrackerEnabled;
-    private List<String> paperTrackerProductList;
-    private List<String> disabledRetrySendEngageStatusCodes;
+    private List<String> paperTrackerProductList = new ArrayList<>();
 
     /**
      * Per l'errore PNADDR001 flusso NR: True se il failureDetailCode D01 deve essere mandato a delivery push (specificando anche l'indirizzo),
