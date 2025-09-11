@@ -238,7 +238,7 @@ public class SendToOcrProxyHandler implements MessageHandler {
             PaperProgressStatusEventDto paperRequest,
             String attachmentUrl) {
         return OcrInputPayload.builder()
-                .commandId(paperRequest.getRequestId() + "#" + UUID.randomUUID())
+                .commandId("PC"+ "#" + paperRequest.getRequestId() + "#" + UUID.randomUUID())
                 .commandType(OcrInputPayload.CommandType.postal)
                 .data(OcrInputPayload.DataDto.builder()
                         .productType(productType)
