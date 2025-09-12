@@ -271,17 +271,18 @@ public class PaperMessagesServiceImpl extends GenericService implements PaperMes
                                             paperChannelDeliveryDriverDAO.getByDeliveryDriverId(pnDeliveryRequest.getDriverCode())
                                                     .map(PaperChannelDeliveryDriver::getUnifiedDeliveryDriver)
                                                     .flatMap(unifiedDeliveryDriver ->
-                                                            paperTrackerClient.initPaperTracking(
-                                                                    requestId,
-                                                                    Const.PCRETRY.concat("0"),
-                                                                    pnDeliveryRequest.getProductType(),
-                                                                    unifiedDeliveryDriver
-                                                            )
+                                                            paperTrackerClient
+                                                                    .initPaperTracking(
+                                                                        requestId,
+                                                                        Const.PCRETRY.concat("0"),
+                                                                        pnDeliveryRequest.getProductType(),
+                                                                        unifiedDeliveryDriver)
+                                                                    .doOnSuccess(r -> log.debug("initPaperTracking done"))
+                                                                    .onErrorResume(ex -> {
+                                                                        log.error("Error on initPaperTracking: {}", ex.getMessage(), ex);
+                                                                        return Mono.empty();
+                                                                    })
                                                     )
-                                                    .onErrorResume(PnIdConflictException.class, ex -> {
-                                                        log.error("PnIdConflictException on initPaperTracking: {}", ex.getMessage());
-                                                        return Mono.empty();
-                                                    })
                                                     .thenReturn(sendResponse)
                                     );
                         } else {
