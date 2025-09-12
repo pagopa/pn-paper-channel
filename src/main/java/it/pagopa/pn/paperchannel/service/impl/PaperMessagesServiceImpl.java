@@ -279,7 +279,6 @@ public class PaperMessagesServiceImpl extends GenericService implements PaperMes
                                                                         unifiedDeliveryDriver)
                                                                     .doOnSuccess(r -> log.debug("initPaperTracking done"))
                                                                     .onErrorResume(ex -> {
-                                                                        // intercetta qualunque errore e lo "muta" in qualcos'altro
                                                                         log.error("Error on initPaperTracking: {}", ex.getMessage(), ex);
                                                                         return Mono.empty();
                                                                     })
