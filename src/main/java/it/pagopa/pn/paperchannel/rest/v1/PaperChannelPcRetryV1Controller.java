@@ -18,8 +18,8 @@ public class PaperChannelPcRetryV1Controller implements PcRetryApi {
     }
 
     @Override
-    public Mono<ResponseEntity<PcRetryResponse>> getPcRetry(String requestId, final ServerWebExchange exchange) {
-        return pcRetryService.getPcRetry(requestId)
+    public Mono<ResponseEntity<PcRetryResponse>> getPcRetry(String requestId, Boolean checkApplyRasterization, final ServerWebExchange exchange) {
+        return pcRetryService.getPcRetry(requestId, checkApplyRasterization)
                 .map(ResponseEntity::ok);
     }
 }

@@ -330,6 +330,13 @@ paths:
       operationId: getPcRetry
       parameters:
         - $ref: '#/components/parameters/pathRequestId'
+        - name: checkApplyRasterization
+          in: query
+          required: true
+          schema:
+            type: boolean
+            default: false
+          description: true in caso di richiesta per evento CON996, false per tutti gli altri eventi di retry
       responses:
         "200":
           description: OK

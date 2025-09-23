@@ -4,6 +4,8 @@ import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PcRetryResponse;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PaperChannelDeliveryDriverDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PaperChannelDeliveryDriver;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.service.PcRetryService;
 import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.PcRetryUtils;
@@ -25,17 +27,33 @@ public class PcRetryServiceImpl implements PcRetryService {
     private final PaperChannelDeliveryDriverDAO paperChannelDeliveryDriverDAO;
 
     @Override
-    public Mono<PcRetryResponse> getPcRetry(String requestId) {
+    public Mono<PcRetryResponse> getPcRetry(String requestId, Boolean checkApplyRasterization) {
         return requestDeliveryDAO.getByRequestId(getPrefixRequestId(requestId))
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)))
-                .flatMap(pnDeliveryRequest ->
-                        paperChannelDeliveryDriverDAO.getByDeliveryDriverId(pnDeliveryRequest.getDriverCode())
-                                .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_DRIVER_NOT_EXISTED, DELIVERY_DRIVER_NOT_EXISTED.getMessage(), HttpStatus.NOT_FOUND)))
-                                .flatMap(paperChannelDeliveryDriver ->
-                                        pcRetryUtils.checkHasOtherAttemptAndMapPcRetryResponse(requestId, paperChannelDeliveryDriver.getUnifiedDeliveryDriver(), pnDeliveryRequest)
-                                )
-                );
+                .flatMap(pnDeliveryRequest -> {
+                    if (Boolean.TRUE.equals(pnDeliveryRequest.getApplyRasterization()) && Boolean.TRUE.equals(checkApplyRasterization)) {
+                        return Mono.just(new PcRetryResponse().parentRequestId(requestId).retryFound(Boolean.FALSE));
+                    }
+                    return updateApplyRasterizationIfNeeded(requestId, checkApplyRasterization, pnDeliveryRequest)
+                            .flatMap(deliveryRequest -> retrieveDeliveryDriver(deliveryRequest.getDriverCode())
+                                    .flatMap(driver -> pcRetryUtils.checkHasOtherAttemptAndMapPcRetryResponse(requestId, driver.getUnifiedDeliveryDriver(), deliveryRequest)));
+                });
     }
+
+    private Mono<PnDeliveryRequest> updateApplyRasterizationIfNeeded(String requestId, Boolean checkApplyRasterization, PnDeliveryRequest pnDeliveryRequest) {
+        if (Boolean.TRUE.equals(checkApplyRasterization)) {
+            pnDeliveryRequest.setApplyRasterization(Boolean.TRUE);
+            return requestDeliveryDAO.updateApplyRasterization(getPrefixRequestId(requestId), pnDeliveryRequest.getApplyRasterization())
+                    .thenReturn(pnDeliveryRequest);
+        }
+        return Mono.just(pnDeliveryRequest);
+    }
+
+    private Mono<PaperChannelDeliveryDriver> retrieveDeliveryDriver(String driverCode) {
+        return paperChannelDeliveryDriverDAO.getByDeliveryDriverId(driverCode)
+                .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_DRIVER_NOT_EXISTED, DELIVERY_DRIVER_NOT_EXISTED.getMessage(), HttpStatus.NOT_FOUND)));
+    }
+
 
     private String getPrefixRequestId(String requestId) {
         requestId = Utility.getRequestIdWithoutPrefixClientId(requestId);

@@ -5,5 +5,5 @@ import reactor.core.publisher.Mono;
 
 public interface PcRetryService {
 
-    Mono<PcRetryResponse> getPcRetry(String requestId);
+    Mono<PcRetryResponse> getPcRetry(String requestId, Boolean checkApplyRasterization);
 }
