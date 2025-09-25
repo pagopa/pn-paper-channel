@@ -27,10 +27,10 @@ public class PaperChannelPcRetryV1ControllerTest {
     void testPcRetryFound(){
         String path = "/paper-channel-private/v1/b2b/pc-retry/{requestId}";
 
-        when(pcRetryService.getPcRetry("requestId1"))
+        when(pcRetryService.getPcRetry("requestId1", false))
                 .thenReturn(Mono.just(getPcRetryResponse(true)));
         webTestClient.get()
-                .uri(uriBuilder -> uriBuilder.path(path).build("requestId1"))
+                .uri(uriBuilder -> uriBuilder.path(path).queryParam("checkApplyRasterization", Boolean.FALSE).build("requestId1"))
                 .exchange()
                 .expectStatus()
                 .isOk()
@@ -41,10 +41,38 @@ public class PaperChannelPcRetryV1ControllerTest {
     void testPcRetryNotFound(){
         String path = "/paper-channel-private/v1/b2b/pc-retry/{requestId}";
 
-        when(pcRetryService.getPcRetry("requestId1"))
+        when(pcRetryService.getPcRetry("requestId1", false))
                 .thenReturn(Mono.just(getPcRetryResponse(false)));
         webTestClient.get()
-                .uri(uriBuilder -> uriBuilder.path(path).build("requestId1"))
+                .uri(uriBuilder -> uriBuilder.path(path).queryParam("checkApplyRasterization", Boolean.FALSE).build("requestId1"))
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .expectBody().json("{\"requestId\":null,\"parentRequestId\":\"requestId1\",\"deliveryDriverId\":\"driver1\",\"pcRetry\":null,\"retryFound\":false}");
+    }
+
+    @Test
+    void testPcRetryCON996Found(){
+        String path = "/paper-channel-private/v1/b2b/pc-retry/{requestId}";
+
+        when(pcRetryService.getPcRetry("requestId1", true))
+                .thenReturn(Mono.just(getPcRetryResponse(true)));
+        webTestClient.get()
+                .uri(uriBuilder -> uriBuilder.path(path).queryParam("checkApplyRasterization", Boolean.TRUE).build("requestId1"))
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .expectBody().json("{\"requestId\":\"requestId1.PCRETRY_2\",\"parentRequestId\":\"requestId1\",\"deliveryDriverId\":\"driver1\",\"pcRetry\":\"PCRETRY_\",\"retryFound\":true}");
+    }
+
+    @Test
+    void testPcRetryCON996NotFound(){
+        String path = "/paper-channel-private/v1/b2b/pc-retry/{requestId}";
+
+        when(pcRetryService.getPcRetry("requestId1", true))
+                .thenReturn(Mono.just(getPcRetryResponse(false)));
+        webTestClient.get()
+                .uri(uriBuilder -> uriBuilder.path(path).queryParam("checkApplyRasterization", Boolean.TRUE).build("requestId1"))
                 .exchange()
                 .expectStatus()
                 .isOk()
