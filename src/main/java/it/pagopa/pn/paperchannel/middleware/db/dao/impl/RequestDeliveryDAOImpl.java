@@ -228,6 +228,16 @@ public class RequestDeliveryDAOImpl extends BaseDAO<PnDeliveryRequest> implement
     }
 
     @Override
+    public Mono<PnDeliveryRequest> getByRequestIdStrongConsistency(String requestId, boolean decode) {
+
+        return Mono.fromFuture(super.get(requestId, null, true))
+                .map(entity -> {
+                    if (decode) return this.decode(entity);
+                    return entity;
+                });
+    }
+
+    @Override
     public Mono<PnDeliveryRequest> getByCorrelationId(String requestId, boolean decode) {
         return this.getByCorrelationId(requestId).map(entity -> {
             if (decode) return this.decode(entity);

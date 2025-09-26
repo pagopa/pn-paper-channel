@@ -54,7 +54,7 @@ public class PreparePhaseOneAsyncServiceImpl implements PreparePhaseOneAsyncServ
                 .zipWhen(deliveryRequest -> checkAndUpdateAddress(deliveryRequest, addressFromNationalRegistry, event)
                         .onErrorResume(PnUntracebleException.class, ex -> this.handleUntraceableError(deliveryRequest, event, ex)))
                 .flatMap(deliveryRequestWithAddress -> attachmentsConfigService
-                        .filterAttachmentsToSend(deliveryRequestWithAddress.getT1(), deliveryRequestWithAddress.getT1().getAttachments(), deliveryRequestWithAddress.getT2())
+                        .filterAttachmentsToSend(deliveryRequestWithAddress.getT1(), AttachmentsConfigUtils.getAllAttachments(deliveryRequestWithAddress.getT1()), deliveryRequestWithAddress.getT2())
                         .thenReturn(deliveryRequestWithAddress))
                 .flatMap(deliveryRequestWithAddress ->  Utility.isNational(deliveryRequestWithAddress.getT2().getCountry()) ?
                         prepareAndSendToPhaseOneOutput(deliveryRequestWithAddress) : sendToPhaseTwoQueue(deliveryRequestWithAddress))
