@@ -109,10 +109,13 @@ public class PreparePhaseTwoAsyncServiceImpl implements PreparePhaseTwoAsyncServ
                 null
         );
 
+        // salvo prima DB e poi mando evento a Delivery Push in modo tale che
+        // che non rischio che di ricevere la SEND prima che l'entità sia non aggiornata
         return processAllAttachments(deliveryRequest)
                 .flatMap(pnDeliveryRequestWithAttachmentOk -> addressDAO.findByRequestId(deliveryRequest.getRequestId()))
+                .flatMap(correctAddress -> this.requestDeliveryDAO.updateDataWithoutGet(deliveryRequest, false).thenReturn(correctAddress))
                 .doOnNext(correctAddress -> this.pushPrepareEvent(deliveryRequest, AddressMapper.toDTO(correctAddress), clientId, StatusCodeEnum.OK, null))
-                .flatMap(pnAddress -> this.requestDeliveryDAO.updateDataWithoutGet(deliveryRequest, false));
+                .thenReturn(deliveryRequest);
 
     }
 

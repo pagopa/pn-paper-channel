@@ -195,7 +195,7 @@ public class PaperMessagesServiceImpl extends GenericService implements PaperMes
         sendRequest.setRequestId(requestId);
 
         log.debug("Getting  data {} with requestId {} in DynamoDb table {}", PN_DELIVERY_REQUEST_LOG, requestId, PnDeliveryRequest.REQUEST_DELIVERY_DYNAMO_TABLE_NAME);
-        return this.requestDeliveryDAO.getByRequestId(sendRequest.getRequestId())
+        return this.requestDeliveryDAO.getByRequestIdStrongConsistency(sendRequest.getRequestId(), false)
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)))
                 .map(entity -> {
                     log.info("Founded data in  DynamoDb table {}", PnDeliveryRequest.REQUEST_DELIVERY_DYNAMO_TABLE_NAME);
@@ -242,7 +242,7 @@ public class PaperMessagesServiceImpl extends GenericService implements PaperMes
                             // mi segno che la richiesta richiede una nuova prepare, impostando il flag di "reworkNeeded" a TRUE
                             if (pnGenericException.getExceptionType() == ExceptionTypeEnum.DIFFERENT_SEND_COST) {
                                 pnDeliveryRequest.setReworkNeeded(true);
-                                return requestDeliveryDAO.updateData(pnDeliveryRequest)
+                                return requestDeliveryDAO.updateDataWithoutGet(pnDeliveryRequest, false)
                                     .flatMap(x -> Mono.error(pnGenericException));
                             }
                             else
@@ -296,7 +296,7 @@ public class PaperMessagesServiceImpl extends GenericService implements PaperMes
         return sendEngageExternalChannel(sendRequest, attachments, pnDeliveryRequest.getApplyRasterization())
                 .then(Mono.defer(() -> {
                     log.debug("Updating data {} with requestId {} in DynamoDb table {}", PN_DELIVERY_REQUEST_LOG, requestId, PnDeliveryRequest.REQUEST_DELIVERY_DYNAMO_TABLE_NAME);
-                    return this.requestDeliveryDAO.updateData(pnDeliveryRequest);
+                    return this.requestDeliveryDAO.updateDataWithoutGet(pnDeliveryRequest, false);
                 }))
                 .doOnNext(requestUpdated -> log.info("Updated data in DynamoDb table {}", PnDeliveryRequest.REQUEST_DELIVERY_DYNAMO_TABLE_NAME))
                 .map(requestUpdated -> sendResponse)
