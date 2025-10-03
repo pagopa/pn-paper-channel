@@ -2,14 +2,20 @@ package it.pagopa.pn.paperchannel.utils;
 
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PcRetryResponse;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendRequest;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.PaperChannelDeliveryDriverDAO;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PaperChannelDeliveryDriver;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
+import it.pagopa.pn.paperchannel.middleware.msclient.PaperTrackerClient;
+import it.pagopa.pn.paperchannel.model.AttachmentInfo;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,13 +29,17 @@ public class PcRetryUtilsTest {
     private PnPaperChannelConfig config;
     private ExternalChannelClient externalChannelClient;
     private AddressDAO addressDAO;
+    private PaperChannelDeliveryDriverDAO paperChannelDeliveryDriverDAO;
+    private PaperTrackerClient paperTrackerClient;
 
     @BeforeEach
     void setup() {
         config = mock(PnPaperChannelConfig.class);
         externalChannelClient = mock(ExternalChannelClient.class);
         addressDAO = mock(AddressDAO.class);
-        pcRetryUtils = new PcRetryUtils(config, externalChannelClient, addressDAO);
+        paperChannelDeliveryDriverDAO = mock(PaperChannelDeliveryDriverDAO.class);
+        paperTrackerClient = mock(PaperTrackerClient.class);
+        pcRetryUtils = new PcRetryUtils(config, externalChannelClient, addressDAO, paperChannelDeliveryDriverDAO, paperTrackerClient);
     }
 
 
@@ -96,6 +106,74 @@ public class PcRetryUtilsTest {
         Assertions.assertNull(response.getPcRetry());
         Assertions.assertNull(response.getRequestId());
         verifyNoInteractions(addressDAO);
+        verifyNoInteractions(externalChannelClient);
+    }
+
+    @Test
+    void callInitTrackingAndEcSendEngage_WhenProductTracked_ShouldCallInitTrackingAndSendEngage() {
+        String requestId = "REQ123";
+        String pcRetry = "1";
+        PnDeliveryRequest pnDeliveryRequest = getPnDeliveryRequest();
+        SendRequest sendRequest = new SendRequest();
+        List<AttachmentInfo> attachmentInfos = new ArrayList<>();
+        PaperChannelDeliveryDriver driver = new PaperChannelDeliveryDriver();
+        driver.setUnifiedDeliveryDriver("poste");
+
+        when(config.getPaperTrackerProductList()).thenReturn(List.of("AR"));
+        when(paperChannelDeliveryDriverDAO.getByDeliveryDriverId("driver1"))
+                .thenReturn(Mono.just(driver));
+        when(paperTrackerClient.initPaperTracking(any(), any(), any(), any())).thenReturn(Mono.empty());
+        when(externalChannelClient.sendEngageRequest(any(), any(), any())).thenReturn(Mono.empty());
+
+        pcRetryUtils.callInitTrackingAndEcSendEngage(requestId, sendRequest, attachmentInfos, pnDeliveryRequest, pcRetry).block();
+
+        verify(paperChannelDeliveryDriverDAO).getByDeliveryDriverId("driver1");
+        verify(paperTrackerClient).initPaperTracking(requestId, "PCRETRY_1", "AR", "poste");
+        verify(externalChannelClient).sendEngageRequest(sendRequest, attachmentInfos, pnDeliveryRequest.getApplyRasterization());
+    }
+
+    @Test
+    void callInitTrackingAndEcSendEngage_WhenProductNotTracked_ShouldCallOnlySendEngage() {
+        String requestId = "REQ123";
+        String pcRetry = "1";
+        PnDeliveryRequest pnDeliveryRequest = getPnDeliveryRequest();
+        pnDeliveryRequest.setProductType("RIR");
+        SendRequest sendRequest = new SendRequest();
+        List<AttachmentInfo> attachmentInfos = new ArrayList<>();
+
+        when(config.getPaperTrackerProductList()).thenReturn(List.of("AR"));
+        when(externalChannelClient.sendEngageRequest(any(), any(), any())).thenReturn(Mono.empty());
+
+        pcRetryUtils.callInitTrackingAndEcSendEngage(requestId, sendRequest, attachmentInfos, pnDeliveryRequest, pcRetry).block();
+
+        verifyNoInteractions(paperChannelDeliveryDriverDAO);
+        verifyNoInteractions(paperTrackerClient);
+        verify(externalChannelClient).sendEngageRequest(sendRequest, attachmentInfos, pnDeliveryRequest.getApplyRasterization());
+    }
+
+    @Test
+    void callInitTrackingAndEcSendEngage_WhenInitTrackingFails_ShouldLogErrorAndThrowException() {
+        String requestId = "REQ123";
+        String pcRetry = "1";
+        PnDeliveryRequest pnDeliveryRequest = getPnDeliveryRequest();
+        SendRequest sendRequest = new SendRequest();
+        List<AttachmentInfo> attachmentInfos = new ArrayList<>();
+        PaperChannelDeliveryDriver driver = new PaperChannelDeliveryDriver();
+        driver.setUnifiedDeliveryDriver("poste");
+
+        when(config.getPaperTrackerProductList()).thenReturn(List.of("AR"));
+        when(paperChannelDeliveryDriverDAO.getByDeliveryDriverId("driver1"))
+                .thenReturn(Mono.just(driver));
+        when(paperTrackerClient.initPaperTracking(any(), any(), any(), any()))
+                .thenReturn(Mono.error(new RuntimeException("Init tracking failed")));
+
+        StepVerifier.create(pcRetryUtils.callInitTrackingAndEcSendEngage(requestId, sendRequest, attachmentInfos, pnDeliveryRequest, pcRetry))
+                .expectErrorMatches(throwable -> throwable instanceof RuntimeException &&
+                        throwable.getMessage().equals("Init tracking failed"))
+                .verify();
+
+        verify(paperChannelDeliveryDriverDAO).getByDeliveryDriverId("driver1");
+        verify(paperTrackerClient).initPaperTracking(requestId, "PCRETRY_1", "AR", "poste");
         verifyNoInteractions(externalChannelClient);
     }
 

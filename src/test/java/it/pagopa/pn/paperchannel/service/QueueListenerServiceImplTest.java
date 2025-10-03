@@ -20,11 +20,11 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnRequestError;
-import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
 import it.pagopa.pn.paperchannel.model.*;
 import it.pagopa.pn.paperchannel.service.impl.QueueListenerServiceImpl;
 import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
 import it.pagopa.pn.paperchannel.utils.FeedbackStatus;
+import it.pagopa.pn.paperchannel.utils.PcRetryUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -69,7 +69,7 @@ class QueueListenerServiceImplTest {
     private F24Service f24Service;
 
     @Mock
-    private ExternalChannelClient externalChannelClient;
+    private PcRetryUtils pcRetryUtils;
 
     @Test
     void internalListenerTest(){
@@ -513,10 +513,10 @@ class QueueListenerServiceImplTest {
 
         Mockito.when(requestDeliveryDAO.getByRequestId(requestid)).thenReturn(Mono.just(deliveryRequest));
         Mockito.when(addressDAO.findAllByRequestId(requestid)).thenReturn(Mono.just(List.of(addOne, addTwo)));
-        Mockito.when(externalChannelClient.sendEngageRequest(Mockito.any(), Mockito.any(), Mockito.any()))
-                .thenReturn(Mono.empty());
         Mockito.when(requestDeliveryDAO.updateData(Mockito.any()))
                 .thenReturn(Mono.just(deliveryRequest));
+        Mockito.when(pcRetryUtils.callInitTrackingAndEcSendEngage(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
+                .thenReturn(Mono.empty());
 
         assertThatNoException().isThrownBy(() -> queueListenerService.manualRetryExternalChannel(requestid, pcRetry));
         Mockito.verify(requestDeliveryDAO, Mockito.times(1)).updateData(Mockito.any());
@@ -538,11 +538,9 @@ class QueueListenerServiceImplTest {
 
         Mockito.when(requestDeliveryDAO.getByRequestId(requestid)).thenReturn(Mono.just(deliveryRequest));
         Mockito.when(paperRequestErrorDAO.created(Mockito.any(PnRequestError.class))).thenReturn(Mono.just(new PnRequestError()));
-
-        Mockito.when(externalChannelClient.sendEngageRequest(Mockito.any(), Mockito.any(), Mockito.any()))
-                .thenReturn(Mono.error(new NullPointerException("Error message")));
-
         Mockito.when(addressDAO.findAllByRequestId(requestid)).thenReturn(Mono.just(List.of(add)));
+        Mockito.when(pcRetryUtils.callInitTrackingAndEcSendEngage(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
+                .thenReturn(Mono.error(new NullPointerException("Error message")));
 
         assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> queueListenerService.manualRetryExternalChannel(requestid, pcRetry));
 
