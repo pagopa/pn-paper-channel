@@ -18,12 +18,12 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnRequestError;
-import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
 import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
 import it.pagopa.pn.paperchannel.model.*;
 import it.pagopa.pn.paperchannel.service.*;
 import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.FeedbackStatus;
+import it.pagopa.pn.paperchannel.utils.PcRetryUtils;
 import it.pagopa.pn.paperchannel.utils.PnLogAudit;
 
 import lombok.CustomLog;
@@ -58,12 +58,12 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
     private final PreparePhaseTwoAsyncService preparePhaseTwoAsyncService;
     private final AddressDAO addressDAO;
     private final PaperRequestErrorDAO paperRequestErrorDAO;
-    private final ExternalChannelClient externalChannelClient;
     private final F24Service f24Service;
     private final DematZipService dematZipService;
     private final AttachmentsConfigService attachmentsConfigService;
     private final PrepareFlowStarter prepareFlowStarter;
     private final NationalRegistryService nationalRegistryService;
+    private final PcRetryUtils pcRetryUtils;
 
     public QueueListenerServiceImpl(RequestDeliveryDAO requestDeliveryDAO,
                                     SqsSender sqsSender,
@@ -73,11 +73,12 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
                                     PreparePhaseTwoAsyncService preparePhaseTwoAsyncService,
                                     AddressDAO addressDAO,
                                     PaperRequestErrorDAO paperRequestErrorDAO,
-                                    ExternalChannelClient externalChannelClient,
                                     F24Service f24Service,
                                     DematZipService dematZipService,
                                     AttachmentsConfigService attachmentsConfigService,
-                                    PrepareFlowStarter prepareFlowStarter, NationalRegistryService nationalRegistryService) {
+                                    PrepareFlowStarter prepareFlowStarter,
+                                    NationalRegistryService nationalRegistryService,
+                                    PcRetryUtils pcRetryUtils) {
 
         super(sqsSender, requestDeliveryDAO);
 
@@ -87,12 +88,12 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
         this.preparePhaseTwoAsyncService = preparePhaseTwoAsyncService;
         this.addressDAO = addressDAO;
         this.paperRequestErrorDAO = paperRequestErrorDAO;
-        this.externalChannelClient = externalChannelClient;
         this.f24Service = f24Service;
         this.dematZipService = dematZipService;
         this.attachmentsConfigService = attachmentsConfigService;
         this.prepareFlowStarter = prepareFlowStarter;
         this.nationalRegistryService = nationalRegistryService;
+        this.pcRetryUtils = pcRetryUtils;
     }
 
 
@@ -391,7 +392,7 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
                     List<AttachmentInfo> attachments = request.getAttachments().stream().map(AttachmentMapper::fromEntity).toList();
                     sendRequest.setRequestId(sendRequest.getRequestId().concat(Const.RETRY).concat(newPcRetry));
                     pnLogAudit.addsBeforeSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request  to External Channel", sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY)));
-                    return this.externalChannelClient.sendEngageRequest(sendRequest, attachments, request.getApplyRasterization())
+                    return pcRetryUtils.callInitTrackingAndEcSendEngage(requestId, sendRequest, attachments, request, newPcRetry)
                             .then(Mono.defer(() -> {
                                 pnLogAudit.addsSuccessSend(
                                         request.getIun(),
