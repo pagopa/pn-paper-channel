@@ -31,7 +31,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -176,13 +175,6 @@ class RECRN005CMessageHandlerTest {
             assertThat(error.getCause()).startsWith(RequestErrorCauseEnum.GIACENZA_DATE_ERROR.getValue());
             return true;
         }));
-    }
-
-    @Test
-    void test() {
-        OffsetDateTime of = OffsetDateTime.parse("2025-05-02T10:58Z");
-        Instant i = of.toInstant();
-        System.out.println(i);
     }
 
     // Test troncamento
