@@ -31,6 +31,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -177,11 +178,18 @@ class RECRN005CMessageHandlerTest {
         }));
     }
 
+    @Test
+    void test() {
+        OffsetDateTime of = OffsetDateTime.parse("2025-05-02T10:58Z");
+        Instant i = of.toInstant();
+        System.out.println(i);
+    }
+
     // Test troncamento
     @Test
     void should_pushPNRN012_when_RECRN005GreaterOrEqualsRECRN010By30Days_withRemoveTime(){
         // Arrange
-        var recrn010StatusDateTime = Instant.parse("2025-01-09T09:02:10Z");
+        var recrn010StatusDateTime = Instant.parse("2025-01-09T09:02Z");
         var recrn005AStatusDateTime = Instant.parse("2025-02-08T06:55:24Z");
         PnEventMeta eventMetaRECRN010 = getEventMeta(STATUS_RECRN010, recrn010StatusDateTime);
         PnEventMeta eventMetaRECRN005A = getEventMeta(STATUS_RECRN005A, recrn005AStatusDateTime);
