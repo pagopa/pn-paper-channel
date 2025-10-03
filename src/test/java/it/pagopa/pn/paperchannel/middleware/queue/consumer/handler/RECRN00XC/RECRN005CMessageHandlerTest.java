@@ -181,7 +181,7 @@ class RECRN005CMessageHandlerTest {
     @Test
     void should_pushPNRN012_when_RECRN005GreaterOrEqualsRECRN010By30Days_withRemoveTime(){
         // Arrange
-        var recrn010StatusDateTime = Instant.parse("2025-01-09T09:02Z");
+        var recrn010StatusDateTime = Instant.parse("2025-01-09T09:02:10Z");
         var recrn005AStatusDateTime = Instant.parse("2025-02-08T06:55:24Z");
         PnEventMeta eventMetaRECRN010 = getEventMeta(STATUS_RECRN010, recrn010StatusDateTime);
         PnEventMeta eventMetaRECRN005A = getEventMeta(STATUS_RECRN005A, recrn005AStatusDateTime);
