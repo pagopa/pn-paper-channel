@@ -152,9 +152,8 @@ public class SendToOcrProxyHandler implements MessageHandler {
 
         var safeStorageUrlMono = getSafeStoragePresignedUrl(demat.getUri());
         var unifiedDeliveryDriverMono = getUnifiedDeliveryDriver(entity.getDriverCode());
-
-        if(Boolean.TRUE.equals(entity.getRefined()) &&
-                checkDate(meta, demat, paperRequest) &&
+        log.debug("Checking if needs to be sent to OCR");
+        if(checkDate(meta, demat, paperRequest) &&
                 isPdfDocument(demat.getUri())){
             return Mono.zip(safeStorageUrlMono, unifiedDeliveryDriverMono)
                     .flatMap(urlAndDriver -> {

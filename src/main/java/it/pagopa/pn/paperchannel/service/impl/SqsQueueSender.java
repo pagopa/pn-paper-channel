@@ -254,7 +254,7 @@ public class SqsQueueSender implements SqsSender {
     @Override
     public void pushToOcr(OcrInputPayload entity) {
         var header = GenericEventHeader.builder()
-                .eventId(entity.getCommandId())
+                .eventId(UUID.randomUUID().toString())
                 .publisher(PN_PAPER_CHANNEL)
                 .createdAt(Instant.now())
                 .eventType(OCR_REQUEST.name())
