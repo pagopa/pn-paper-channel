@@ -326,6 +326,28 @@ class RequestDeliveryDAOTestIT extends BaseTest {
     }
 
     @Test
+    void getByRequestIdStrongConsistencyWithDecodeTest(){
+        var requestId = "request1strongwithdecode";
+        PnDeliveryRequest request = new PnDeliveryRequest();
+        request.setRequestId(requestId);
+        requestDeliveryDAO.createWithAddress(request, null, null).block();
+        PnDeliveryRequest deliveryRequest = this.requestDeliveryDAO.getByRequestIdStrongConsistency(requestId, true).block();
+        assertNotNull(deliveryRequest);
+        assertEquals(request.getRequestId(), deliveryRequest.getRequestId());
+    }
+
+    @Test
+    void getByRequestIdStrongConsistencyWithoutDecodeTest(){
+        var requestId = "request1strong";
+        PnDeliveryRequest request = new PnDeliveryRequest();
+        request.setRequestId(requestId);
+        request = requestDeliveryDAO.createWithAddress(request, null, null).block();
+        PnDeliveryRequest deliveryRequest = this.requestDeliveryDAO.getByRequestIdStrongConsistency(requestId, false).block();
+        assertNotNull(deliveryRequest);
+        assertEquals(request.getRequestId(), deliveryRequest.getRequestId());
+    }
+
+    @Test
     void updateStatusTest(){
         // Given
         var requestId = UUID.randomUUID().toString();

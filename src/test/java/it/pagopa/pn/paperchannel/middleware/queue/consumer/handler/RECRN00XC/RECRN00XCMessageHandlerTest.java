@@ -383,10 +383,13 @@ class RECRN00XCAbstractMessageHandlerTest {
     }
 
     @Test
-    void getDuration_when_truncateEnabled_returns30Days() {
+    void getDuration_when_truncateEnabled_returnsNegative30Days() {
         // Arrange
         pnPaperChannelConfig.setEnableTruncatedDateForRefinementCheck(true);
+
+        // RECRN010
         Instant i1 = Instant.parse("2025-05-03T09:57:04Z");
+        // RECRN00xA
         Instant i2 = Instant.parse("2025-04-03T09:55:52Z");
 
         // Act
@@ -398,14 +401,17 @@ class RECRN00XCAbstractMessageHandlerTest {
         );
 
         // Assert
-        assertEquals(Duration.ofDays(30), result);
+        assertEquals(Duration.ofDays(-30), result);
     }
 
     @Test
-    void getDuration_when_truncateEnabled_returns29Days() {
+    void getDuration_when_truncateEnabled_returnsNegative29Days() {
         // Arrange
         pnPaperChannelConfig.setEnableTruncatedDateForRefinementCheck(true);
+
+        // RECRN010
         Instant i1 = Instant.parse("2025-05-03T09:57:04Z");
+        // RECRN00xA
         Instant i2 = Instant.parse("2025-04-04T09:55:52Z");
 
         // Act
@@ -417,14 +423,17 @@ class RECRN00XCAbstractMessageHandlerTest {
         );
 
         // Assert
-        assertEquals(Duration.ofDays(29), result);
+        assertEquals(Duration.ofDays(-29), result);
     }
 
     @Test
     void getDuration_when_truncateEnabled_returns31Days() {
         // Arrange
         pnPaperChannelConfig.setEnableTruncatedDateForRefinementCheck(true);
+
+        // RECRN010
         Instant i1 = Instant.parse("2025-05-04T09:55:52Z");
+        // RECRN00xA
         Instant i2 = Instant.parse("2025-06-04T09:57:04Z");
 
         // Act
@@ -437,6 +446,50 @@ class RECRN00XCAbstractMessageHandlerTest {
 
         // Assert
         assertEquals(Duration.ofDays(31), result);
+    }
+
+    @Test
+    void getDuration_when_truncateEnabled_returnsNegative33Days() {
+        // Arrange
+        pnPaperChannelConfig.setEnableTruncatedDateForRefinementCheck(true);
+
+        // RECRN010
+        Instant i1 = Instant.parse("2025-01-22T19:00:19Z");
+        // RECRN00xA
+        Instant i2 = Instant.parse("2024-12-20T11:54:20Z");
+
+        // Act
+        Duration result = ReflectionTestUtils.invokeMethod(
+                handler,
+                "getDurationBetweenDates",
+                i1,
+                i2
+        );
+
+        // Assert
+        assertEquals(Duration.ofDays(-33), result);
+    }
+
+    @Test
+    void getDuration_when_truncateEnabled_returnsPositive33Days() {
+        // Arrange
+        pnPaperChannelConfig.setEnableTruncatedDateForRefinementCheck(true);
+
+        // RECRN010
+        Instant i1 = Instant.parse("2024-12-20T11:54:20Z");
+        // RECRN00xA
+        Instant i2 = Instant.parse("2025-01-22T19:00:19Z");
+
+        // Act
+        Duration result = ReflectionTestUtils.invokeMethod(
+                handler,
+                "getDurationBetweenDates",
+                i1,
+                i2
+        );
+
+        // Assert
+        assertEquals(Duration.ofDays(33), result);
     }
 
 }
