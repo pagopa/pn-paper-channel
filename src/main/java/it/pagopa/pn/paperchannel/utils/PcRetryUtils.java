@@ -94,7 +94,9 @@ public class PcRetryUtils {
 
         List<AttachmentInfo> attachmentInfos = pnDeliveryRequest.getAttachments().stream().map(AttachmentMapper::fromEntity).toList();
 
-        return callInitTrackingAndEcSendEngage(pnDeliveryRequest.getRequestId(), sendRequest, attachmentInfos, pnDeliveryRequest, "0")
+        String pcRetry = String.valueOf(getRetryAttempt(requestId));
+
+        return callInitTrackingAndEcSendEngage(pnDeliveryRequest.getRequestId(), sendRequest, attachmentInfos, pnDeliveryRequest, pcRetry)
                 .doOnSuccess(unused -> pnLogAudit.addsSuccessSend(sendRequest.getIun(),
                         String.format(REQUEST_TO_EXTERNAL_CHANNEL, sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY)))
                 )
