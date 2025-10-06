@@ -1,10 +1,14 @@
 package it.pagopa.pn.paperchannel.utils;
 
 import it.pagopa.pn.api.dto.events.ConfigTypeEnum;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 
 import static it.pagopa.pn.paperchannel.service.SafeStorageService.SAFESTORAGE_PREFIX;
 
@@ -70,6 +74,37 @@ public class AttachmentsConfigUtils {
         }
 
         return fileKeyNew.toString();
+    }
+
+    /**
+     * Restituisce una lista contenente tutti gli allegati di una richiesta di consegna,
+     * includendo sia quelli dell'array attachment che quelli dell'array removedAttachments.
+     * <p>
+     * La lista risultante è una nuova istanza di {@link ArrayList}, inizializzata con
+     * gli allegati ottenuti tramite {@link PnDeliveryRequest#getAttachments()} e,
+     * se presenti, arricchita con gli allegati rimossi tramite
+     * {@link PnDeliveryRequest#getRemovedAttachments()}.
+     * </p>
+     *
+     * @param pnDeliveryRequest la richiesta di consegna da cui recuperare gli allegati;
+     *                          non deve essere {@code null}.
+     * @return una nuova lista contenente sia gli allegati dell'array attachment sia quelli dell'array removedAttachments.
+     *         Se {@code getRemovedAttachments()} restituisce {@code null} o una lista vuota,
+     *         il risultato conterrà solo gli allegati dell'array attachments.
+     * @throws NullPointerException se {@code getAttachments()} restituisce {@code null}.
+     */
+
+    public static List<PnAttachmentInfo> getAllAttachments(PnDeliveryRequest pnDeliveryRequest) {
+        List<PnAttachmentInfo> attachments = pnDeliveryRequest.getAttachments();
+        List<PnAttachmentInfo> removedAttachments = pnDeliveryRequest.getRemovedAttachments();
+
+        List<PnAttachmentInfo> merged = new ArrayList<>(attachments);
+
+        if (! CollectionUtils.isEmpty(removedAttachments)) {
+            merged.addAll(removedAttachments);
+        }
+
+        return merged;
     }
 
 }

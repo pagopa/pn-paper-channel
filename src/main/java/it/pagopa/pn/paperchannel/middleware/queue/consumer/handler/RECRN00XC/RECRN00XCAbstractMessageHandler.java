@@ -140,6 +140,9 @@ public abstract class RECRN00XCAbstractMessageHandler extends SendToDeliveryPush
      *       and preserves the full time‑of‑day component (hours, minutes, seconds, nanoseconds).</li>
      * </ul>
      *
+     * <p><strong>Note:</strong> The returned {@link Duration} may be <em>negative</em> if
+     * {@code instant2} is before {@code instant1}.</p>
+     *
      * @param instant1 the starting instant (inclusive), must not be {@code null}
      * @param instant2 the ending instant   (exclusive), must not be {@code null}
      * @return a {@link Duration} representing either
@@ -147,17 +150,22 @@ public abstract class RECRN00XCAbstractMessageHandler extends SendToDeliveryPush
      *           <li>the exact time‑based interval between the two instants, or</li>
      *           <li>a whole‑days interval measured on the local calendar in Europe/Rome,</li>
      *         </ul>
-     *         depending on the configuration flag
+     *         depending on the configuration flag.
+     *         <br>
+     *         The result may be negative if {@code instant2} precedes {@code instant1}.
      *
      * @see #toRomeDate(Instant)
      * @see Duration#between(java.time.temporal.Temporal, java.time.temporal.Temporal)
      * @see it.pagopa.pn.paperchannel.config.PnPaperChannelConfig#isEnableTruncatedDateForRefinementCheck()
      */
     protected Duration getDurationBetweenDates(Instant instant1, Instant instant2) {
-        return pnPaperChannelConfig.isEnableTruncatedDateForRefinementCheck()
-                ? Duration.ofDays(
-                    Math.abs(ChronoUnit.DAYS.between(toRomeDate(instant1), toRomeDate(instant2))))
+        LocalDate romeDate1 = toRomeDate(instant1);
+        LocalDate romeDate2 = toRomeDate(instant2);
+        Duration result = pnPaperChannelConfig.isEnableTruncatedDateForRefinementCheck()
+                ? Duration.ofDays(ChronoUnit.DAYS.between(romeDate1, romeDate2))
                 : Duration.between(instant1, instant2);
+        log.debug("Duration between dates i1={} i2={} result={}",instant1, instant2, result);
+        return result;
     }
 
     /**
