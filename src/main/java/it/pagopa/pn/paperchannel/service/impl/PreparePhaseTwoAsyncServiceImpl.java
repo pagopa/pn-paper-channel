@@ -3,7 +3,6 @@ package it.pagopa.pn.paperchannel.service.impl;
 import it.pagopa.pn.api.dto.events.PnPrepareDelayerToPaperchannelPayload;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
-import it.pagopa.pn.paperchannel.exception.PnAddressFlowException;
 import it.pagopa.pn.paperchannel.exception.PnF24FlowException;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileDownloadResponseDto;
@@ -15,7 +14,6 @@ import it.pagopa.pn.paperchannel.mapper.PrepareEventMapper;
 import it.pagopa.pn.paperchannel.mapper.RequestDeliveryMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.model.*;
@@ -26,11 +24,9 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
 
@@ -40,10 +36,8 @@ import java.time.Instant;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Function;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.INVALID_SAFE_STORAGE;
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.PREPARE_ASYNC_LISTENER_EXCEPTION;
 import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.TAKING_CHARGE;
 import static it.pagopa.pn.paperchannel.utils.Const.PREFIX_REQUEST_ID_SERVICE_DESK;
 
@@ -65,7 +59,7 @@ public class PreparePhaseTwoAsyncServiceImpl implements PreparePhaseTwoAsyncServ
     @Override
     public Mono<PnDeliveryRequest> prepareAsyncPhaseTwo(PnPrepareDelayerToPaperchannelPayload eventPayload) {
         log.logStartingProcess(PROCESS_NAME);
-        Mono<PnDeliveryRequest> deliveryRequestMono = requestDeliveryDAO.getByRequestId(eventPayload.getRequestId(), true);
+        Mono<PnDeliveryRequest> deliveryRequestMono = requestDeliveryDAO.getByRequestIdStrongConsistency(eventPayload.getRequestId(), false);
         return deliveryRequestMono
                 .flatMap(deliveryRequest -> {
                     if (f24Service.checkDeliveryRequestAttachmentForF24(deliveryRequest)) {
@@ -115,10 +109,13 @@ public class PreparePhaseTwoAsyncServiceImpl implements PreparePhaseTwoAsyncServ
                 null
         );
 
+        // salvo prima DB e poi mando evento a Delivery Push in modo tale che
+        // che non rischio che di ricevere la SEND prima che l'entità sia non aggiornata
         return processAllAttachments(deliveryRequest)
                 .flatMap(pnDeliveryRequestWithAttachmentOk -> addressDAO.findByRequestId(deliveryRequest.getRequestId()))
+                .flatMap(correctAddress -> this.requestDeliveryDAO.updateDataWithoutGet(deliveryRequest, false).thenReturn(correctAddress))
                 .doOnNext(correctAddress -> this.pushPrepareEvent(deliveryRequest, AddressMapper.toDTO(correctAddress), clientId, StatusCodeEnum.OK, null))
-                .flatMap(pnAddress -> this.requestDeliveryDAO.updateData(deliveryRequest));
+                .thenReturn(deliveryRequest);
 
     }
 

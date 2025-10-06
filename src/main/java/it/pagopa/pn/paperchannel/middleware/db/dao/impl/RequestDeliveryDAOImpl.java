@@ -18,6 +18,7 @@ import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 import software.amazon.awssdk.enhanced.dynamodb.Expression;
+import software.amazon.awssdk.enhanced.dynamodb.model.GetItemEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactPutItemEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.UpdateItemEnhancedRequest;
@@ -225,6 +226,20 @@ public class RequestDeliveryDAOImpl extends BaseDAO<PnDeliveryRequest> implement
             if (decode) return this.decode(entity);
             return entity;
         });
+    }
+
+    @Override
+    public Mono<PnDeliveryRequest> getByRequestIdStrongConsistency(String requestId, boolean decode) {
+        GetItemEnhancedRequest request = GetItemEnhancedRequest.builder()
+                .key(keyBuild(requestId, null))
+                .consistentRead(true)
+                .build();
+
+        return  Mono.fromFuture(this.dynamoTable.getItem(request))
+                .map(entity -> {
+                    if (decode) return this.decode(entity);
+                    return entity;
+                });
     }
 
     @Override

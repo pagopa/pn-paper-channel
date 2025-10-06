@@ -78,10 +78,10 @@ public class AttachmentsConfigServiceImpl extends GenericService implements Atta
     }
 
     @NotNull
-    private PnDeliveryRequest sendFilteredAttachments(PnDeliveryRequest pnDeliveryRequest, List<ListFilterChainResult<PnAttachmentInfo>> attachmentFiltered) {
+    public static PnDeliveryRequest sendFilteredAttachments(PnDeliveryRequest pnDeliveryRequest, List<ListFilterChainResult<PnAttachmentInfo>> attachmentFiltered) {
 
-        pnDeliveryRequest.setAttachments(attachmentFiltered.stream().filter(FilterChainResult::isSuccess).map(this::enrichAttachmentInfoWithFilterResult).toList());
-        pnDeliveryRequest.setRemovedAttachments(attachmentFiltered.stream().filter(x -> !x.isSuccess()).map(this::enrichAttachmentInfoWithFilterResult).toList());
+        pnDeliveryRequest.setAttachments(attachmentFiltered.stream().filter(FilterChainResult::isSuccess).map(AttachmentsConfigServiceImpl::enrichAttachmentInfoWithFilterResult).toList());
+        pnDeliveryRequest.setRemovedAttachments(attachmentFiltered.stream().filter(x -> !x.isSuccess()).map(AttachmentsConfigServiceImpl::enrichAttachmentInfoWithFilterResult).toList());
 
         if (CollectionUtils.isEmpty(pnDeliveryRequest.getRemovedAttachments()))
             log.info("filter hasn't removed attachments to send, sending all attachments list={}", pnDeliveryRequest.getAttachments());
@@ -100,7 +100,7 @@ public class AttachmentsConfigServiceImpl extends GenericService implements Atta
     }
 
     @NotNull
-    private PnAttachmentInfo enrichAttachmentInfoWithFilterResult(ListFilterChainResult<PnAttachmentInfo> res) {
+    public static PnAttachmentInfo enrichAttachmentInfoWithFilterResult(ListFilterChainResult<PnAttachmentInfo> res) {
         PnAttachmentInfo item = res.getItem();
         item.setFilterResultCode(res.getCode());
         item.setFilterResultDiagnostic(res.getDiagnostic());
