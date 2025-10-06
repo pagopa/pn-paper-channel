@@ -49,7 +49,7 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@SpringBootTest(classes = {PaperCalculatorUtils.class, PaperMessagesServiceImpl.class, DataVaultEncryptionImpl.class})
+@SpringBootTest(classes = {PaperCalculatorUtils.class, PaperMessagesServiceImpl.class, DataVaultEncryptionImpl.class, PcRetryUtils.class})
 class PaperMessagesServiceTest {
 
     @Autowired
@@ -97,6 +97,9 @@ class PaperMessagesServiceTest {
 
     @MockBean
     private CostRoundingModeConfig costRoundingModeConfig;
+
+    @Autowired
+    private PcRetryUtils pcRetryUtils;
 
     private PnDeliveryRequest deliveryRequestTakingCharge;
 

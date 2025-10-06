@@ -747,6 +747,11 @@ Parameters:
     Default: 'AR'
     Description: 'List of products to track in Paper Tracker feature'
 
+  ApplicativeEnvFileChecksum:
+    Type: String
+    Default: ''
+    Description: 'Applicative environment variable file checksum'
+
 Conditions:
   UseExternalChannelMock: !Equals [ !Ref ExternalChannelBaseUrl, "Mock" ]
 
@@ -867,6 +872,7 @@ Resources:
         ContainerEnvEntry84: !Sub 'PN_PAPERCHANNEL_ENABLETRUNCATEDDATEFORREFINEMENTCHECK=${EnableTruncatedDateForRefinementCheck}'
         ContainerEnvEntry85: !Sub 'PN_PAPERCHANNEL_QUEUEURLOCRINPUTS=${PaperChannelOcrInputsQueueURL}'
         ContainerEnvEntry86: !Sub 'PN_PAPERCHANNEL_QUEUEREGIONOCRINPUTS=${PaperChannelOcrInputsQueueRegion}'
+        ApplicativeEnvFileChecksum: !Ref ApplicativeEnvFileChecksum
         ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-PaperChannel-Secrets
         MappedPaths: '/paper-channel-bo/*,/paper-channel-private/*'

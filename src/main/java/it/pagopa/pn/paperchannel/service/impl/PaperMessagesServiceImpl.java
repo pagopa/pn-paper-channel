@@ -1,6 +1,5 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
-import it.pagopa.pn.commons.exceptions.PnIdConflictException;
 import it.pagopa.pn.commons.utils.LogUtils;
 import it.pagopa.pn.commons.utils.MDCUtils;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
@@ -10,13 +9,9 @@ import it.pagopa.pn.paperchannel.exception.PnPaperEventException;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.paperchannel.mapper.*;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
-import it.pagopa.pn.paperchannel.middleware.db.dao.PaperChannelDeliveryDriverDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PaperChannelDeliveryDriver;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
-import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
-import it.pagopa.pn.paperchannel.middleware.msclient.PaperTrackerClient;
 import it.pagopa.pn.paperchannel.model.*;
 import it.pagopa.pn.paperchannel.service.*;
 import it.pagopa.pn.paperchannel.utils.*;
@@ -49,27 +44,24 @@ public class PaperMessagesServiceImpl extends GenericService implements PaperMes
     private static final String INSERTING_IN_DYNAMO_LOG = "Inserting data {} with requestId {} in DynamoDb table {}";
 
     private final AddressDAO addressDAO;
-    private final PaperChannelDeliveryDriverDAO paperChannelDeliveryDriverDAO;
-    private final ExternalChannelClient externalChannelClient;
     private final PnPaperChannelConfig pnPaperChannelConfig;
     private final PaperCalculatorUtils paperCalculatorUtils;
     private final PrepareFlowStarter prepareFlowStarter;
     private final NationalRegistryService nationalRegistryService;
-    private final PaperTrackerClient paperTrackerClient;
+    private final PcRetryUtils pcRetryUtils;
 
 
-    public PaperMessagesServiceImpl(RequestDeliveryDAO requestDeliveryDAO, SqsSender sqsSender, AddressDAO addressDAO, PaperChannelDeliveryDriverDAO paperChannelDeliveryDriverDAO,
-                                    ExternalChannelClient externalChannelClient, PnPaperChannelConfig pnPaperChannelConfig,
-                                    PaperCalculatorUtils paperCalculatorUtils, PrepareFlowStarter prepareFlowStarter, NationalRegistryService nationalRegistryService, PaperTrackerClient paperTrackerClient) {
+    public PaperMessagesServiceImpl(RequestDeliveryDAO requestDeliveryDAO, SqsSender sqsSender, AddressDAO addressDAO,
+                                    PnPaperChannelConfig pnPaperChannelConfig, PaperCalculatorUtils paperCalculatorUtils,
+                                    PrepareFlowStarter prepareFlowStarter, NationalRegistryService nationalRegistryService,
+                                    PcRetryUtils pcRetryUtils) {
         super(sqsSender, requestDeliveryDAO);
         this.addressDAO = addressDAO;
-        this.paperChannelDeliveryDriverDAO = paperChannelDeliveryDriverDAO;
-        this.externalChannelClient = externalChannelClient;
         this.pnPaperChannelConfig = pnPaperChannelConfig;
         this.paperCalculatorUtils = paperCalculatorUtils;
         this.prepareFlowStarter = prepareFlowStarter;
         this.nationalRegistryService = nationalRegistryService;
-        this.paperTrackerClient = paperTrackerClient;
+        this.pcRetryUtils = pcRetryUtils;
     }
 
     @Override
@@ -265,36 +257,14 @@ public class PaperMessagesServiceImpl extends GenericService implements PaperMes
                         pnDeliveryRequest.setRequestPaId(sendRequest.getRequestPaId());
                         pnDeliveryRequest.setPrintType(sendRequest.getPrintType());
 
-                        if (pnPaperChannelConfig.getPaperTrackerProductList().contains(pnDeliveryRequest.getProductType())) {
-                            return sendEngage(requestId, sendResponse, sendRequest, pnDeliveryRequest, attachments, pnLogAudit)
-                                    .flatMap(unused ->
-                                            paperChannelDeliveryDriverDAO.getByDeliveryDriverId(pnDeliveryRequest.getDriverCode())
-                                                    .map(PaperChannelDeliveryDriver::getUnifiedDeliveryDriver)
-                                                    .flatMap(unifiedDeliveryDriver ->
-                                                            paperTrackerClient
-                                                                    .initPaperTracking(
-                                                                        requestId,
-                                                                        Const.PCRETRY.concat("0"),
-                                                                        pnDeliveryRequest.getProductType(),
-                                                                        unifiedDeliveryDriver)
-                                                                    .doOnSuccess(r -> log.debug("initPaperTracking done"))
-                                                                    .onErrorResume(ex -> {
-                                                                        log.error("Error on initPaperTracking: {}", ex.getMessage(), ex);
-                                                                        return Mono.empty();
-                                                                    })
-                                                    )
-                                                    .thenReturn(sendResponse)
-                                    );
-                        } else {
-                            return sendEngage(requestId, sendResponse, sendRequest, pnDeliveryRequest, attachments, pnLogAudit);
-                        }
+                        return sendEngage(requestId, sendResponse, sendRequest, pnDeliveryRequest, attachments, pnLogAudit);
                     }
                     return Mono.just(sendResponse);
                 });
     }
 
     private Mono<SendResponse> sendEngage(String requestId, SendResponse sendResponse, SendRequest sendRequest, PnDeliveryRequest pnDeliveryRequest,  List<AttachmentInfo> attachments, PnLogAudit pnLogAudit) {
-        return sendEngageExternalChannel(sendRequest, attachments, pnDeliveryRequest.getApplyRasterization())
+        return sendEngageExternalChannel(requestId, sendRequest, attachments, pnDeliveryRequest)
                 .then(Mono.defer(() -> {
                     log.debug("Updating data {} with requestId {} in DynamoDb table {}", PN_DELIVERY_REQUEST_LOG, requestId, PnDeliveryRequest.REQUEST_DELIVERY_DYNAMO_TABLE_NAME);
                     return this.requestDeliveryDAO.updateDataWithoutGet(pnDeliveryRequest, false);
@@ -309,7 +279,7 @@ public class PaperMessagesServiceImpl extends GenericService implements PaperMes
     }
 
 
-    private Mono<Void> sendEngageExternalChannel(SendRequest sendRequest, List<AttachmentInfo> attachments, Boolean applyRasterization){
+    private Mono<Void> sendEngageExternalChannel(String requestId, SendRequest sendRequest, List<AttachmentInfo> attachments, PnDeliveryRequest pnDeliveryRequest){
 
         PnLogAudit pnLogAudit = new PnLogAudit();
 
@@ -322,7 +292,7 @@ public class PaperMessagesServiceImpl extends GenericService implements PaperMes
                     logString = String.format(logString, sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY));
                     pnLogAudit.addsBeforeSend(sendRequest.getIun(), logString);
                 })
-                .flatMap(newSendRequest -> this.externalChannelClient.sendEngageRequest(newSendRequest, attachments, applyRasterization))
+                .flatMap(newSendRequest -> pcRetryUtils.callInitTrackingAndEcSendEngage(requestId, newSendRequest, attachments, pnDeliveryRequest, "0"))
                 .doOnSuccess(response -> {
                     String logString = "prepare requestId = %s, trace_id = %s  request to External Channel";
                     logString = String.format(logString, sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY));
@@ -372,7 +342,6 @@ public class PaperMessagesServiceImpl extends GenericService implements PaperMes
     /**
      * controllo se la richiesta ha il flag di reworkNeeded a true, che ricordo essere così se per qualche motivo (es: aggiornamento costo gare)
      * c'è un mismatch tra il costo calcolato nella PREPARE e usato nella generazione degli F24 e il costo calcolato nella SEND.
-     *
      * Se si RISALVA l'entity di deliveryrequest perchè voglio RIESEGUIRE la logica di calcolo del costo e generazione degli F24.
      * Da notare che questo metodo vien invocato anche nel caso della seconda raccomandata. In questo caso,
      * se il flag reworkNeeded è true, in realtà alla "prima invocazione della prepare della seconda raccomandata" ho
