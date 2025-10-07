@@ -183,9 +183,13 @@ export const unifiedDeliveryDriversHandler = async (
   await Promise.all(
     event.requests.map(async req => {
       let geoKey = await getGeokey(event.tenderId, req.product, req.geoKey);
-      const key = `${geoKey?.product}#${geoKey?.lot}#${geoKey?.zone}`;
+      if (!geoKey) return null;
+      if(!geoKey.coverFlag) {
+          geoKey.lot = 'UNCOVERED';
+      }
+      const key = `${geoKey.product}#${geoKey.lot}#${geoKey.zone}`;
       geoKeyMap[key] = geoKeyMap[key] || [];
-      geoKeyMap[key].push(`${geoKey?.geokey}#${geoKey?.product}`);
+      geoKeyMap[key].push(`${geoKey.geokey}#${geoKey.product}`);
     })
   );
 
