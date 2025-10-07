@@ -56,9 +56,9 @@ public class PreparePhaseOneAsyncServiceImpl implements PreparePhaseOneAsyncServ
                 .flatMap(deliveryRequestWithAddress -> attachmentsConfigService
                         .filterAttachmentsToSend(deliveryRequestWithAddress.getT1(), AttachmentsConfigUtils.getAllAttachments(deliveryRequestWithAddress.getT1()), deliveryRequestWithAddress.getT2())
                         .thenReturn(deliveryRequestWithAddress))
+                .flatMap(deliveryRequestWithAddress -> this.updateRequestInSendToDelayer(deliveryRequestWithAddress.getT1()).thenReturn(deliveryRequestWithAddress))
                 .flatMap(deliveryRequestWithAddress ->  Utility.isNational(deliveryRequestWithAddress.getT2().getCountry()) ?
                         prepareAndSendToPhaseOneOutput(deliveryRequestWithAddress) : sendToPhaseTwoQueue(deliveryRequestWithAddress))
-                .flatMap(this::updateRequestInSendToDelayer)
                 .doOnNext(deliveryRequest -> {
                     log.info("End of prepare async phase one");
                     log.logEndingProcess(PROCESS_NAME);
