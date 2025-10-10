@@ -99,7 +99,7 @@ Resources:
       TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/sqs-queue.yaml"
       Parameters:
         QueueName: !Sub '${ProjectName}-paper_channel_ocr_outputs'
-        AlarmSNSTopicName: !Ref AlarmSNSTopicName
+        QueueHasAlarm: false
         DelaySeconds: 1
         VisibilityTimeout: 60
 
