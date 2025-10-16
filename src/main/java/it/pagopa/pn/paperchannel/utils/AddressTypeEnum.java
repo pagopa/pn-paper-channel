@@ -6,4 +6,5 @@ public enum AddressTypeEnum {
     SENDER_ADDRES, //P.A. address
     AR_ADDRESS;
 
+
 }

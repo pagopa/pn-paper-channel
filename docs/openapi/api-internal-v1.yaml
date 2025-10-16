@@ -357,6 +357,41 @@ paths:
               schema:
                 $ref: 'remote-refs.yaml#/components/schemas/Problem'
 
+  /paper-channel-private/v1/rework/{requestId}/check-address:
+    get:
+      summary: Verifica la presenzia dell'address per una notifica
+      description: >-
+        Permette la verifica la presenzia dell'address per una notifica
+      tags:
+        - CheckAddress
+      operationId: checkAddress
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+            default: false
+      responses:
+        '200':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckAddressResponse"
+        '404':
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+        '500':
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+
 components:
 
   #############################################################################################
@@ -542,6 +577,17 @@ components:
           description: Costo calcolato alla spedizione in eurocents
           format: int32
           example: 350
+
+    CheckAddressResponse:
+      type: object
+      properties:
+        requestId:
+          type: string
+        found:
+          type: boolean
+        endValidity:
+          type: string
+          format: date-time
 
 #  securitySchemes:        # ONLY EXTERNAL
 #    ApiKeyAuth:           # ONLY EXTERNAL
