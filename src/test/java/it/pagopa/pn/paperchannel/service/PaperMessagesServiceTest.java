@@ -663,7 +663,7 @@ class PaperMessagesServiceTest {
         request.setStatusCode(StatusDeliveryEnum.TAKING_CHARGE.getCode());
 
         //MOCK GET DELIVERY REQUEST
-        Mockito.when(requestDeliveryDAO.getByRequestId("TST-IOR.2332"))
+        Mockito.when(requestDeliveryDAO.getByRequestIdStrongConsistency("TST-IOR.2332", false))
                 .thenReturn(Mono.just(request));
 
         //MOCK VALIDATOR
