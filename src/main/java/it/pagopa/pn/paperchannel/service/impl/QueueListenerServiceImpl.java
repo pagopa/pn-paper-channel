@@ -18,12 +18,12 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnRequestError;
-import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
 import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
 import it.pagopa.pn.paperchannel.model.*;
 import it.pagopa.pn.paperchannel.service.*;
 import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.FeedbackStatus;
+import it.pagopa.pn.paperchannel.utils.PcRetryUtils;
 import it.pagopa.pn.paperchannel.utils.PnLogAudit;
 
 import lombok.CustomLog;
@@ -32,8 +32,10 @@ import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
+import reactor.util.retry.Retry;
 
 import jakarta.validation.constraints.NotNull;
+import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -56,12 +58,12 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
     private final PreparePhaseTwoAsyncService preparePhaseTwoAsyncService;
     private final AddressDAO addressDAO;
     private final PaperRequestErrorDAO paperRequestErrorDAO;
-    private final ExternalChannelClient externalChannelClient;
     private final F24Service f24Service;
     private final DematZipService dematZipService;
     private final AttachmentsConfigService attachmentsConfigService;
     private final PrepareFlowStarter prepareFlowStarter;
     private final NationalRegistryService nationalRegistryService;
+    private final PcRetryUtils pcRetryUtils;
 
     public QueueListenerServiceImpl(RequestDeliveryDAO requestDeliveryDAO,
                                     SqsSender sqsSender,
@@ -71,11 +73,12 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
                                     PreparePhaseTwoAsyncService preparePhaseTwoAsyncService,
                                     AddressDAO addressDAO,
                                     PaperRequestErrorDAO paperRequestErrorDAO,
-                                    ExternalChannelClient externalChannelClient,
                                     F24Service f24Service,
                                     DematZipService dematZipService,
                                     AttachmentsConfigService attachmentsConfigService,
-                                    PrepareFlowStarter prepareFlowStarter, NationalRegistryService nationalRegistryService) {
+                                    PrepareFlowStarter prepareFlowStarter,
+                                    NationalRegistryService nationalRegistryService,
+                                    PcRetryUtils pcRetryUtils) {
 
         super(sqsSender, requestDeliveryDAO);
 
@@ -85,12 +88,12 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
         this.preparePhaseTwoAsyncService = preparePhaseTwoAsyncService;
         this.addressDAO = addressDAO;
         this.paperRequestErrorDAO = paperRequestErrorDAO;
-        this.externalChannelClient = externalChannelClient;
         this.f24Service = f24Service;
         this.dematZipService = dematZipService;
         this.attachmentsConfigService = attachmentsConfigService;
         this.prepareFlowStarter = prepareFlowStarter;
         this.nationalRegistryService = nationalRegistryService;
+        this.pcRetryUtils = pcRetryUtils;
     }
 
 
@@ -235,15 +238,17 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
         log.logStartingProcess(PROCESS_NAME);
         log.info("Received message from National Registry queue");
         MDCUtils.addMDCToContextAndExecute(Mono.just(body)
-                        .map(msg -> {
+                        .doOnNext(msg -> {
                             if (msg==null || StringUtils.isBlank(msg.getCorrelationId())) throw new PnGenericException(CORRELATION_ID_NOT_FOUND, CORRELATION_ID_NOT_FOUND.getMessage());
-                            else return msg;
                         })
                         .zipWhen(msgDto -> {
                             String correlationId = msgDto.getCorrelationId();
-                            log.info("Received message from National Registry queue with correlationId "+correlationId);
+                            log.info("Received message from National Registry queue with correlationId: {} ", correlationId);
                             return requestDeliveryDAO.getByCorrelationId(correlationId)
-                                    .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage())));
+                                    // probabile errore di read consistency, riprovo un'unica volta la getItem dopo 3 secondi
+                                    .retryWhen(Retry.fixedDelay(1, Duration.ofSeconds(3)))
+                                    .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage())))
+                                    .onErrorResume(throwable -> saveToPaperError(correlationId, DELIVERY_REQUEST_NOT_EXIST));
                         })
                         .doOnNext(addressAndEntity -> resolveAuditLogFromResponse(addressAndEntity.getT2(), addressAndEntity.getT1().getError(), pnLogAudit, PN_NATIONAL_REGISTRIES, addressAndEntity.getT2().getCorrelationId()))
 
@@ -257,22 +262,25 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
                             PnDeliveryRequest entity = addressAndEntity.getT2();
                             // check error body
                             if (StringUtils.isNotEmpty(addressFromNational.getError())) {
-                                log.info("Error message is not empty for correlationId" +addressFromNational.getCorrelationId());
+                                log.warn("Error message is not empty for correlationId: {}", addressFromNational.getCorrelationId());
 
-                                PnRequestError pnRequestError = PnRequestError.builder()
-                                        .requestId(entity.getRequestId())
-                                        .error(NATIONAL_REGISTRY_LISTENER_EXCEPTION.getTitle())
-                                        .flowThrow(NATIONAL_REGISTRY_LISTENER_EXCEPTION.getMessage())
-                                        .build();
+                                return saveToPaperError(entity.getRequestId(), NATIONAL_REGISTRY_LISTENER_EXCEPTION);
 
-                                paperRequestErrorDAO.created(pnRequestError);
-
-                                throw new PnGenericException(NATIONAL_REGISTRY_LISTENER_EXCEPTION, NATIONAL_REGISTRY_LISTENER_EXCEPTION.getMessage());
                             }
-
                             return startPrepareAsync(addressFromNational, entity);
                         }))
                 .block();
+    }
+
+    private Mono<PnDeliveryRequest> saveToPaperError(String requestId, ExceptionTypeEnum exceptionTypeEnum) {
+        PnRequestError pnRequestError = PnRequestError.builder()
+                .requestId(requestId)
+                .error(exceptionTypeEnum.getTitle())
+                .flowThrow(exceptionTypeEnum.getMessage())
+                .build();
+
+        return paperRequestErrorDAO.created(pnRequestError)
+                .then(Mono.error(new PnGenericException(exceptionTypeEnum, exceptionTypeEnum.getMessage() + " " + requestId)));
     }
 
     private Mono<Void> startPrepareAsync(@NotNull AddressSQSMessageDto addressFromNational, PnDeliveryRequest deliveryRequest) {
@@ -384,7 +392,7 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
                     List<AttachmentInfo> attachments = request.getAttachments().stream().map(AttachmentMapper::fromEntity).toList();
                     sendRequest.setRequestId(sendRequest.getRequestId().concat(Const.RETRY).concat(newPcRetry));
                     pnLogAudit.addsBeforeSend(sendRequest.getIun(), String.format("prepare requestId = %s, trace_id = %s  request  to External Channel", sendRequest.getRequestId(), MDC.get(MDCUtils.MDC_TRACE_ID_KEY)));
-                    return this.externalChannelClient.sendEngageRequest(sendRequest, attachments, request.getApplyRasterization())
+                    return pcRetryUtils.callInitTrackingAndEcSendEngage(requestId, sendRequest, attachments, request, newPcRetry)
                             .then(Mono.defer(() -> {
                                 pnLogAudit.addsSuccessSend(
                                         request.getIun(),

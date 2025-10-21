@@ -37,33 +37,6 @@ Parameters:
     Default: 14
 
 Resources:
-  PaperDeliveryDriversBucket:
-    Type: AWS::S3::Bucket
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
-    Properties:
-      ObjectLockEnabled: true
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: true
-        BlockPublicPolicy: true
-        IgnorePublicAcls: true
-        RestrictPublicBuckets: true
-      VersioningConfiguration:
-        Status: Enabled
-      CorsConfiguration:
-        CorsRules:
-          - AllowedHeaders:
-              - "*"
-            AllowedMethods:
-              - GET
-              - PUT
-              - POST
-              - DELETE
-              - HEAD
-            AllowedOrigins:
-              - "*"
-            ExposedHeaders:
-              - "x-amz-version-id"
 
   PCKmsEncDecDynamoDataKey:
     Type: 'AWS::KMS::Key'
@@ -113,6 +86,31 @@ Resources:
       TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/sqs-queue.yaml"
       Parameters:
         QueueName: !Sub '${ProjectName}-paper-normalize-address'
+        AlarmSNSTopicName: !Ref AlarmSNSTopicName
+        DelaySeconds: 1
+        VisibilityTimeout: 60
+
+ # OCR queue to receive responses
+  PaperChannelOcrOutputsQueue:
+    Type: AWS::CloudFormation::Stack
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Properties:
+      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/sqs-queue.yaml"
+      Parameters:
+        QueueName: !Sub '${ProjectName}-paper_channel_ocr_outputs'
+        QueueHasAlarm: false
+        DelaySeconds: 1
+        VisibilityTimeout: 60
+
+  ExternalChannelToPaperChannelDryRunQueue:
+    Type: AWS::CloudFormation::Stack
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Properties:
+      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/sqs-queue.yaml"
+      Parameters:
+        QueueName: !Sub '${ProjectName}-external_channel_to_paper_channel_dry_run'
         AlarmSNSTopicName: !Ref AlarmSNSTopicName
         DelaySeconds: 1
         VisibilityTimeout: 60
@@ -632,11 +630,19 @@ Resources:
         LogGroupRetention: !Ref LogRetention
         LogsKinesisSourceStreamArn: !Ref LogsKinesisSourceStreamArn
 
-Outputs:
+  # Lambda TenderAPI
+  TenderAPILambdaLogGroup:
+    Type: AWS::CloudFormation::Stack
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Properties:
+      TemplateURL: !Sub ${TemplateBucketBaseUrl}/fragments/log-group.yaml
+      Parameters:
+        LogGroupName: !Sub ${ProjectName}-paper-channel-TenderAPI
+        LogGroupRetention: !Ref LogRetention
+        LogGroupPrefix: /aws/lambda
 
-  PaperDeliveryDriversBucketName:
-    Description: Name of s3 bucket
-    Value: !Ref PaperDeliveryDriversBucket
+Outputs:
 
   # Scheduled Requests
   ScheduledRequestsQueueName:
@@ -659,6 +665,23 @@ Outputs:
   PaperNormalizeAddressQueueARN:
     Value: !GetAtt PaperNormalizeAddressQueue.Outputs.QueueARN
     Description: pn-paper-normalize-address queue ARN
+
+  # Queue OCR response outputs
+  PaperChannelOcrOutputsQueueName:
+    Value: !GetAtt PaperChannelOcrOutputsQueue.Outputs.QueueName
+    Description: pn-paper_channel_ocr_outputs queue name
+  PaperChannelOcrOutputsQueueURL:
+    Value: !GetAtt PaperChannelOcrOutputsQueue.Outputs.QueueURL
+    Description: pn-paper_channel_ocr_outputs queue URL
+  PaperChannelOcrOutputsQueueARN:
+    Value: !GetAtt PaperChannelOcrOutputsQueue.Outputs.QueueARN
+    Description: pn-paper_channel_ocr_outputs queue ARN
+
+  # Queue to receive messages from QueueProxyLambda
+  ExternalChannelToPaperChannelDryRunQueueName:
+    Value: !GetAtt ExternalChannelToPaperChannelDryRunQueue.Outputs.QueueName
+  ExternalChannelToPaperChannelDryRunQueueARN:
+    Value: !GetAtt ExternalChannelToPaperChannelDryRunQueue.Outputs.QueueARN
 
   PCKmsEncDecDynamoDataKeyARN:
     Description: Name of KMS Key for Dynamo encode/decode data
@@ -803,3 +826,6 @@ Outputs:
   # Log group exports
   EcsLogGroup:
     Value: !GetAtt PnPaperChannelLogGroup.Outputs.LogGroupName
+
+  TenderAPILambdaName:
+    Value: !Sub ${ProjectName}-paper-channel-TenderAPI

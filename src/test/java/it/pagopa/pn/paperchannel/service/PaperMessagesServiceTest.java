@@ -8,11 +8,14 @@ import it.pagopa.pn.paperchannel.exception.PnInputValidatorException;
 import it.pagopa.pn.paperchannel.exception.PnPaperEventException;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.PaperChannelDeliveryDriverDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PaperChannelDeliveryDriver;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
+import it.pagopa.pn.paperchannel.middleware.msclient.PaperTrackerClient;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.service.impl.PaperMessagesServiceImpl;
@@ -46,7 +49,7 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@SpringBootTest(classes = {PaperCalculatorUtils.class, PaperMessagesServiceImpl.class, DataVaultEncryptionImpl.class})
+@SpringBootTest(classes = {PaperCalculatorUtils.class, PaperMessagesServiceImpl.class, DataVaultEncryptionImpl.class, PcRetryUtils.class})
 class PaperMessagesServiceTest {
 
     @Autowired
@@ -61,6 +64,12 @@ class PaperMessagesServiceTest {
 
     @MockitoBean
     private AddressDAO addressDAO;
+
+    @MockitoBean
+    private PaperChannelDeliveryDriverDAO deliveryDriverDAO;
+
+    @MockitoBean
+    private PaperTrackerClient paperTrackerClient;
 
     @MockitoBean
     private PaperTenderService paperTenderService;
@@ -88,6 +97,9 @@ class PaperMessagesServiceTest {
 
     @MockitoBean
     private CostRoundingModeConfig costRoundingModeConfig;
+
+    @Autowired
+    private PcRetryUtils pcRetryUtils;
 
     private PnDeliveryRequest deliveryRequestTakingCharge;
 
@@ -516,7 +528,7 @@ class PaperMessagesServiceTest {
      */
     @Test
     void executionPaperRequestDeliveryNotFoundTest() {
-        Mockito.when(requestDeliveryDAO.getByRequestId("TST-IOR.2332")).thenReturn(Mono.empty());
+        Mockito.when(requestDeliveryDAO.getByRequestIdStrongConsistency("TST-IOR.2332", false)).thenReturn(Mono.empty());
         StepVerifier.create(this.paperMessagesService.executionPaper("TST-IOR.2332", new SendRequest()))
                 .expectErrorMatches((ex) -> {
                     assertTrue(ex instanceof PnGenericException);
@@ -529,7 +541,7 @@ class PaperMessagesServiceTest {
 
     @Test
     void executionPaperValidationThrowError() {
-        Mockito.when(requestDeliveryDAO.getByRequestId("TST-IOR.2332"))
+        Mockito.when(requestDeliveryDAO.getByRequestIdStrongConsistency("TST-IOR.2332", false))
                 .thenReturn(Mono.just(getPnDeliveryRequest()));
 
         sendRequestValidatorMockedStatic.when(() -> {
@@ -549,7 +561,7 @@ class PaperMessagesServiceTest {
     void executionPaperThrowErrorWhenStatusRequestIdInProcessing() {
         PnDeliveryRequest request = getPnDeliveryRequest();
         request.setStatusCode(StatusDeliveryEnum.IN_PROCESSING.getCode());
-        Mockito.when(requestDeliveryDAO.getByRequestId("TST-IOR.2332"))
+        Mockito.when(requestDeliveryDAO.getByRequestIdStrongConsistency("TST-IOR.2332", false))
                 .thenReturn(Mono.just(request));
 
         sendRequestValidatorMockedStatic.when(() -> {
@@ -582,7 +594,7 @@ class PaperMessagesServiceTest {
         }).thenThrow(new PnGenericException(DIFFERENT_SEND_COST, DIFFERENT_SEND_COST.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY));
 
         //MOCK GET DELIVERY REQUEST
-        Mockito.when(requestDeliveryDAO.getByRequestId("TST-IOR.2332"))
+        Mockito.when(requestDeliveryDAO.getByRequestIdStrongConsistency("TST-IOR.2332", false))
                 .thenReturn(Mono.just(request));
 
         Mockito.when(paperTenderService.getCostFrom(Mockito.any(), Mockito.any(), Mockito.any()))
@@ -597,20 +609,58 @@ class PaperMessagesServiceTest {
         int value = Assertions.assertThrows(PnGenericException.class, mono::block).getHttpStatus().value();
         Assertions.assertEquals(422, value);
 
-        Mockito.verify(requestDeliveryDAO).updateData(argThat(pnDeliveryRequest -> {
+        Mockito.verify(requestDeliveryDAO).updateDataWithoutGet(argThat(pnDeliveryRequest -> {
             assertThat(pnDeliveryRequest).isNotNull();
             assertThat(pnDeliveryRequest.getDriverCode()).isEqualTo("driverCode");
             assertThat(pnDeliveryRequest.getTenderCode()).isEqualTo("tenderCode");
 
             return true;
-        }));
+        }), Mockito.eq(false));
+    }
+
+    private void mocksExecutionPaperTrackerEnableProductAROK() {
+        PnDeliveryRequest request = getPnDeliveryRequest();
+        request.setStatusCode(StatusDeliveryEnum.TAKING_CHARGE.getCode());
+
+        PaperChannelDeliveryDriver paperChannelDeliveryDriver = new PaperChannelDeliveryDriver();
+        paperChannelDeliveryDriver.setUnifiedDeliveryDriver("unifiedDeliveryDriver");
+
+        Mockito.when(deliveryDriverDAO.getByDeliveryDriverId(any()))
+                        .thenReturn(Mono.just(paperChannelDeliveryDriver));
+
+        Mockito.when(paperTrackerClient.initPaperTracking(any(), any(), any(),any()))
+                        .thenReturn(Mono.empty());
+
+        //MOCK GET DELIVERY REQUEST
+        Mockito.when(requestDeliveryDAO.getByRequestIdStrongConsistency("TST-IOR.2332", false))
+                .thenReturn(Mono.just(request));
+
+        //MOCK VALIDATOR
+        sendRequestValidatorMockedStatic.when(() -> {
+            SendRequestValidator.compareRequestEntity(Mockito.any(), Mockito.any());
+        }).thenAnswer((Answer<Void>) invocation -> null);
+
+        //MOCK ALL CREATE ADDRESS
+        Mockito.when(addressDAO.create(Mockito.any())).thenReturn(Mono.just(new PnAddress()));
+
+        //MOCK SEND ENGAGE EXTERNAL CHANNEL
+        Mockito.when(externalChannelClient.sendEngageRequest(any(), any(), eq(null)))
+                .thenReturn(Mono.just("").then());
+
+        //MOCK UPDATE DELIVERY REQUEST
+        Mockito.when(requestDeliveryDAO.updateDataWithoutGet(Mockito.any(), Mockito.eq(false)))
+                .thenReturn(Mono.just(request));
+
+        //MOCK RETRIEVE NATIONAL COST
+        Mockito.when(paperTenderService.getCostFrom(Mockito.any(), Mockito.any(), Mockito.any()))
+                .thenReturn(Mono.just(getNationalCost()));
+
+        Mockito.when(dateChargeCalculationModesUtils.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.AAR);
     }
 
     private void mocksExecutionPaperOK() {
         PnDeliveryRequest request = getPnDeliveryRequest();
         request.setStatusCode(StatusDeliveryEnum.TAKING_CHARGE.getCode());
-
-
 
         //MOCK GET DELIVERY REQUEST
         Mockito.when(requestDeliveryDAO.getByRequestId("TST-IOR.2332"))
@@ -629,7 +679,7 @@ class PaperMessagesServiceTest {
                 .thenReturn(Mono.just("").then());
 
         //MOCK UPDATE DELIVERY REQUEST
-        Mockito.when(requestDeliveryDAO.updateData(Mockito.any()))
+        Mockito.when(requestDeliveryDAO.updateDataWithoutGet(Mockito.any(), Mockito.eq(false)))
                 .thenReturn(Mono.just(request));
 
         //MOCK RETRIEVE NATIONAL COST
@@ -641,6 +691,7 @@ class PaperMessagesServiceTest {
 
     @Test
     void executionPaperWithoutContextAndWithStatusTakingChargeTest() {
+        when(pnPaperChannelConfig.getPaperTrackerProductList()).thenReturn(List.of("890"));
         mocksExecutionPaperOK();
 
         SendRequest sendRequest = getRequest("TST-IOR.2332");
@@ -662,10 +713,13 @@ class PaperMessagesServiceTest {
 
         assertEquals(100,response.getAmount());
         assertEquals(3, response.getNumberOfPages());
+        Mockito.verify(paperTrackerClient, times(0)).initPaperTracking(any(), any(), any(), any());
+        Mockito.verify(deliveryDriverDAO, times(0)).getByDeliveryDriverId(anyString());
         /* -----------------------------  */
     }
     @Test
     void executionPaperWithContextAndWithStatusTakingChargeTest() {
+        when(pnPaperChannelConfig.getPaperTrackerProductList()).thenReturn(List.of("890"));
         mocksExecutionPaperOK();
 
         SendRequest sendRequest = getRequest("TST-IOR.2332");
@@ -688,6 +742,40 @@ class PaperMessagesServiceTest {
 
         assertEquals(100,response.getAmount());
         assertEquals(3, response.getNumberOfPages());
+        Mockito.verify(paperTrackerClient, times(0)).initPaperTracking(any(), any(), any(), any());
+        Mockito.verify(deliveryDriverDAO, times(0)).getByDeliveryDriverId(anyString());
+
+        /* ----------------------------- */
+    }
+
+    @Test
+    void executionPaperWithARWithPaperTrackerEnabled() {
+        when(pnPaperChannelConfig.getPaperTrackerProductList()).thenReturn(List.of("AR"));
+        mocksExecutionPaperTrackerEnableProductAROK();
+
+        SendRequest sendRequest = getRequest("TST-IOR.2332");
+        sendRequest.setRequestPaId("request-pad-id");
+        sendRequest.setPrintType("FRONTE-RETRO");
+
+        /* TEST WITH CONTEXT SETTING */
+        SendResponse response = paperMessagesService.executionPaper("TST-IOR.2332", sendRequest)
+                .contextWrite(ctx -> ctx.put(Const.CONTEXT_KEY_PREFIX_CLIENT_ID, "001"))
+                .block();
+
+        ArgumentCaptor<SendRequest> captureSendRequest = ArgumentCaptor.forClass(SendRequest.class);
+
+        // verifico che è stato invocato externalChannel
+        verify(externalChannelClient, timeout(2000).times(1)).sendEngageRequest(captureSendRequest.capture(), any(), any());
+
+        // verifico il nuovo requestID da inviare ad ExtChannel - {CLIENTID}.{REQUESTID}.PCRETRY_{ATTEMPT}
+        assertNotNull(captureSendRequest.getValue());
+        assertEquals("001.TST-IOR.2332.PCRETRY_0", captureSendRequest.getValue().getRequestId());
+
+        assertEquals(100,response.getAmount());
+        assertEquals(3, response.getNumberOfPages());
+        Mockito.verify(paperTrackerClient, times(1)).initPaperTracking(any(), any(), any(), any());
+        Mockito.verify(deliveryDriverDAO, times(1)).getByDeliveryDriverId(anyString());
+
         /* ----------------------------- */
     }
 
@@ -701,7 +789,7 @@ class PaperMessagesServiceTest {
         sendRequest.setPrintType("FRONTE-RETRO");
 
         //MOCK GET DELIVERY REQUEST
-        Mockito.when(requestDeliveryDAO.getByRequestId("TST-IOR.2332"))
+        Mockito.when(requestDeliveryDAO.getByRequestIdStrongConsistency("TST-IOR.2332", false))
                 .thenReturn(Mono.just(request));
 
         //MOCK VALIDATOR
@@ -747,7 +835,7 @@ class PaperMessagesServiceTest {
         sendRequest.setSenderAddress(getAnalogAddress());
 
         //MOCK GET DELIVERY REQUEST
-        Mockito.when(requestDeliveryDAO.getByRequestId("TST-IOR.2332"))
+        Mockito.when(requestDeliveryDAO.getByRequestIdStrongConsistency("TST-IOR.2332", false))
                 .thenReturn(Mono.just(request));
 
         //MOCK VALIDATOR
@@ -763,7 +851,7 @@ class PaperMessagesServiceTest {
                 .thenReturn(Mono.just("").then());
 
         //MOCK UPDATE DELIVERY REQUEST
-        Mockito.when(requestDeliveryDAO.updateData(Mockito.any()))
+        Mockito.when(requestDeliveryDAO.updateDataWithoutGet(Mockito.any(), Mockito.eq(false)))
                 .thenReturn(Mono.just(request));
 
         //MOCK RETRIEVE ZONE FROM COUNTRY
@@ -785,20 +873,20 @@ class PaperMessagesServiceTest {
                     return true;
                 }).verifyComplete();
 
-        Mockito.verify(requestDeliveryDAO).updateData(argThat(pnDeliveryRequest -> {
+        Mockito.verify(requestDeliveryDAO).updateDataWithoutGet(argThat(pnDeliveryRequest -> {
             assertThat(pnDeliveryRequest).isNotNull();
             assertThat(pnDeliveryRequest.getDriverCode()).isEqualTo("driverCode");
             assertThat(pnDeliveryRequest.getTenderCode()).isEqualTo("tenderCode");
 
             return true;
-        }));
+        }), Mockito.eq(false));
     }
 
     @Test
     void executionPaperWithAlreadyStatusReadyToSendTest() {
         PnDeliveryRequest request = getPnDeliveryRequest();
         request.setStatusCode(StatusDeliveryEnum.READY_TO_SEND.getCode());
-        Mockito.when(requestDeliveryDAO.getByRequestId("TST-IOR.2332"))
+        Mockito.when(requestDeliveryDAO.getByRequestIdStrongConsistency("TST-IOR.2332", false))
                 .thenReturn(Mono.just(request));
 
         sendRequestValidatorMockedStatic.when(() -> {

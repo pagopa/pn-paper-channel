@@ -38,9 +38,10 @@ class HandlersFactoryTest {
     void testHandler(EnumSet<FeatureFlag> featureFlags, List<String> statusCodes,
                          Class<? extends MessageHandler> expectedHandlerClass) {
         // Given
-        handlersFactory = new HandlersFactory(null, null, null,
+        handlersFactory = new HandlersFactory(null, null,
                 mockConfig, null, null, null, null,
-                null, null, mockSendProgressMetaConfig);
+                null, null, mockSendProgressMetaConfig,
+                null, null, null);
 
         // When
         when(mockConfig.isEnableSimple890Flow())
@@ -86,9 +87,9 @@ class HandlersFactoryTest {
                         new TestCase("Log", List.of("UNKNOWN"), LogMessageHandler.class),
                         new TestCase("Complex890", List.of("RECAG005C", "RECAG006C", "RECAG007C", "RECAG008C"),
                                 Proxy890MessageHandler.class),
-                        new TestCase("RECRN003C", List.of("RECRN003C"), RECRN003CMessageHandler.class),
-                        new TestCase("RECRN004C", List.of("RECRN004C"), RECRN004CMessageHandler.class),
-                        new TestCase("RECRN005C", List.of("RECRN005C"), RECRN005CMessageHandler.class)
+                        new TestCase("RECRN003C", List.of("RECRN003C"), SendToOcrProxyHandler.class),
+                        new TestCase("RECRN004C", List.of("RECRN004C"), SendToOcrProxyHandler.class),
+                        new TestCase("RECRN005C", List.of("RECRN005C"), SendToOcrProxyHandler.class)
                     )),
             // SIMPLE_890_FLOW ENABLE cases
             new FFTestCases(

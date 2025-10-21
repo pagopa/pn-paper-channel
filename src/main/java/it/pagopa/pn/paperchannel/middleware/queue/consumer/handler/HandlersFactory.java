@@ -2,13 +2,15 @@ package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.middleware.db.dao.*;
-import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
+import it.pagopa.pn.paperchannel.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.paperchannel.middleware.queue.consumer.MetaDematCleaner;
+import it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.RECRN00XC.RECRN003CMessageHandler;
 import it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.RECRN00XC.RECRN004CMessageHandler;
 import it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.RECRN00XC.RECRN005CMessageHandler;
-import it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.RECRN00XC.RECRN003CMessageHandler;
+import it.pagopa.pn.paperchannel.middleware.queue.producer.OcrProducer;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum;
+import it.pagopa.pn.paperchannel.utils.PcRetryUtils;
 import it.pagopa.pn.paperchannel.utils.SendProgressMetaConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,9 +33,7 @@ import static it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum.*;
 @Slf4j
 public class HandlersFactory {
 
-    private final ExternalChannelClient externalChannelClient;
-
-    private final AddressDAO addressDAO;
+    private final PcRetryUtils pcRetryUtils;
 
     private final PaperRequestErrorDAO paperRequestErrorDAO;
 
@@ -53,6 +53,12 @@ public class HandlersFactory {
 
     private final SendProgressMetaConfig sendProgressMetaConfig;
 
+    private final OcrProducer ocrProducer;
+
+    private final SafeStorageClient safeStorageClient;
+
+    private final PaperChannelDeliveryDriverDAO deliveryDriverDAO;
+
     private ConcurrentHashMap<String, MessageHandler> map;
 
 
@@ -71,11 +77,10 @@ public class HandlersFactory {
 
         RetryableErrorMessageHandler retryableErrorExtChannelsMessageHandler = RetryableErrorMessageHandler.builder()
                 .sqsSender(sqsSender)
-                .externalChannelClient(externalChannelClient)
-                .addressDAO(addressDAO)
                 .paperRequestErrorDAO(paperRequestErrorDAO)
                 .requestDeliveryDAO(requestDeliveryDAO)
                 .pnPaperChannelConfig(pnPaperChannelConfig)
+                .pcRetryUtils(pcRetryUtils)
                 .pnEventErrorDAO(pnEventErrorDAO)
                 .build();
 
@@ -100,6 +105,16 @@ public class HandlersFactory {
                 .pnEventErrorDAO(pnEventErrorDAO)
                 .build();
 
+        SendToOcrProxyHandler customAggregatorOcrProxyMessageHandler = SendToOcrProxyHandler.builder()
+                .sqsSender(sqsSender)
+                .messageHandler(customAggregatorMessageHandler)
+                .paperChannelConfig(pnPaperChannelConfig)
+                .eventMetaDAO(eventMetaDAO)
+                .eventDematDAO(eventDematDAO)
+                .safeStorageClient(safeStorageClient)
+                .deliveryDriverDAO(deliveryDriverDAO)
+                .build();
+
         AggregatorMessageHandler aggregatorMessageHandler = AggregatorMessageHandler.builder()
                 .sqsSender(sqsSender)
                 .eventMetaDAO(eventMetaDAO)
@@ -107,6 +122,16 @@ public class HandlersFactory {
                 .requestDeliveryDAO(requestDeliveryDAO)
                 .pnPaperChannelConfig(pnPaperChannelConfig)
                 .pnEventErrorDAO(pnEventErrorDAO)
+                .build();
+
+        SendToOcrProxyHandler aggregatorOcrProxyMessageHandler = SendToOcrProxyHandler.builder()
+                .sqsSender(sqsSender)
+                .messageHandler(aggregatorMessageHandler)
+                .paperChannelConfig(pnPaperChannelConfig)
+                .eventMetaDAO(eventMetaDAO)
+                .eventDematDAO(eventDematDAO)
+                .safeStorageClient(safeStorageClient)
+                .deliveryDriverDAO(deliveryDriverDAO)
                 .build();
 
         SendToDeliveryPushHandler sendToDeliveryPushHandler = SendToDeliveryPushHandler.builder()
@@ -152,14 +177,14 @@ public class HandlersFactory {
 
         ChainedMessageHandler recag012MessageHandler = ChainedMessageHandler.builder()
                 .handlers(
-                    Stream.of(
-                        recag012SaveMetaMessageHandler,
-                        recagSimplifiedPostLogicHandler,
-                        // SendProgressMeta feature flag (PN-12284)
-                        sendProgressMetaConfig.isRECAG012AEnabled() ? recag012AMessageHandler : null
-                    )
-                    .filter(Objects::nonNull)
-                    .toList()
+                        Stream.of(
+                                        recag012SaveMetaMessageHandler,
+                                        recagSimplifiedPostLogicHandler,
+                                        // SendProgressMeta feature flag (PN-12284)
+                                        sendProgressMetaConfig.isRECAG012AEnabled() ? recag012AMessageHandler : null
+                                )
+                                .filter(Objects::nonNull)
+                                .toList()
                 )
                 .build();
 
@@ -171,13 +196,13 @@ public class HandlersFactory {
 
         MessageHandler oldRECAG012MessageHandler = ChainedMessageHandler.builder()
                 .handlers(
-                    Stream.of(
-                        baseOldRECAG012MessageHandler,
-                        // SendProgressMeta feature flag (PN-12284)
-                        sendProgressMetaConfig.isRECAG012AEnabled() ? recag012AMessageHandler : null
-                    )
-                    .filter(Objects::nonNull)
-                    .toList()
+                        Stream.of(
+                                        baseOldRECAG012MessageHandler,
+                                        // SendProgressMeta feature flag (PN-12284)
+                                        sendProgressMetaConfig.isRECAG012AEnabled() ? recag012AMessageHandler : null
+                                )
+                                .filter(Objects::nonNull)
+                                .toList()
                 )
                 .build();
 
@@ -223,6 +248,16 @@ public class HandlersFactory {
                 .pnEventErrorDAO(pnEventErrorDAO)
                 .build();
 
+        SendToOcrProxyHandler recrn003cOcrProxyMessageHandler = SendToOcrProxyHandler.builder()
+                .sqsSender(sqsSender)
+                .messageHandler(recrn003cMessageHandler)
+                .paperChannelConfig(pnPaperChannelConfig)
+                .eventMetaDAO(eventMetaDAO)
+                .eventDematDAO(eventDematDAO)
+                .safeStorageClient(safeStorageClient)
+                .deliveryDriverDAO(deliveryDriverDAO)
+                .build();
+
         RECRN004CMessageHandler recrn004cMessageHandler = RECRN004CMessageHandler.builder()
                 .sqsSender(sqsSender)
                 .eventMetaDAO(eventMetaDAO)
@@ -233,6 +268,16 @@ public class HandlersFactory {
                 .paperRequestErrorDAO(paperRequestErrorDAO)
                 .build();
 
+        SendToOcrProxyHandler recrn004cOcrProxyMessageHandler = SendToOcrProxyHandler.builder()
+                .sqsSender(sqsSender)
+                .messageHandler(recrn004cMessageHandler)
+                .paperChannelConfig(pnPaperChannelConfig)
+                .eventMetaDAO(eventMetaDAO)
+                .eventDematDAO(eventDematDAO)
+                .safeStorageClient(safeStorageClient)
+                .deliveryDriverDAO(deliveryDriverDAO)
+                .build();
+
         RECRN005CMessageHandler recrn005cMessageHandler = RECRN005CMessageHandler.builder()
                 .sqsSender(sqsSender)
                 .eventMetaDAO(eventMetaDAO)
@@ -241,6 +286,16 @@ public class HandlersFactory {
                 .pnPaperChannelConfig(pnPaperChannelConfig)
                 .pnEventErrorDAO(pnEventErrorDAO)
                 .paperRequestErrorDAO(paperRequestErrorDAO)
+                .build();
+
+        SendToOcrProxyHandler recrn005cOcrProxyMessageHandler = SendToOcrProxyHandler.builder()
+                .sqsSender(sqsSender)
+                .messageHandler(recrn005cMessageHandler)
+                .paperChannelConfig(pnPaperChannelConfig)
+                .eventMetaDAO(eventMetaDAO)
+                .eventDematDAO(eventDematDAO)
+                .safeStorageClient(safeStorageClient)
+                .deliveryDriverDAO(deliveryDriverDAO)
                 .build();
 
         RECRN011MessageHandler recrn011cMessageHandler = RECRN011MessageHandler.builder()
@@ -280,13 +335,13 @@ public class HandlersFactory {
 
         ChainedMessageHandler saveMetadataMessageHandler = ChainedMessageHandler.builder()
                 .handlers(
-                    Stream.of(
-                        baseSaveMetadataMessageHandler,
-                        // SendProgressMeta feature flag (PN-12284)
-                        sendProgressMetaConfig.isMetaEnabled() ? sendToDeliveryPushHandler : null
-                    )
-                    .filter(Objects::nonNull)
-                    .toList()
+                        Stream.of(
+                                        baseSaveMetadataMessageHandler,
+                                        // SendProgressMeta feature flag (PN-12284)
+                                        sendProgressMetaConfig.isMetaEnabled() ? sendToDeliveryPushHandler : null
+                                )
+                                .filter(Objects::nonNull)
+                                .toList()
                 )
                 .build();
 
@@ -299,8 +354,10 @@ public class HandlersFactory {
         addSaveDematStatusCodes(map, saveDematMessageHandler);
         addRecagxxxbSaveDematStatusCodes(map, recagxxxbMessageHandler);
         addAggregatorStatusCodes(map, aggregatorMessageHandler);
+        addAggregatorSendToOcrStatusCodes(map, aggregatorOcrProxyMessageHandler);
         addDirectlySendStatusCodes(map, sendToDeliveryPushHandler);
         addCustomAggregatorStatusCodes(map, customAggregatorMessageHandler);
+        addCustomAggregatorSendToOcrStatusCodes(map, customAggregatorOcrProxyMessageHandler);
 
         //casi 890
         map.put("RECAG011A", recag011AMessageHandler);
@@ -314,9 +371,9 @@ public class HandlersFactory {
 
         map.put(RECRN011.name(), recrn011cMessageHandler);
 
-        map.put(RECRN003C.name(), recrn003cMessageHandler);
-        map.put(RECRN004C.name(), recrn004cMessageHandler);
-        map.put(RECRN005C.name(), recrn005cMessageHandler);
+        map.put(RECRN003C.name(), recrn003cOcrProxyMessageHandler);
+        map.put(RECRN004C.name(), recrn004cOcrProxyMessageHandler);
+        map.put(RECRN005C.name(), recrn005cOcrProxyMessageHandler);
         map.put(PNAG012.name(), pnag012MessageHandler);
 
         if (pnPaperChannelConfig.isEnableRetryCon996()) {
@@ -330,12 +387,12 @@ public class HandlersFactory {
 
             /* TODO use abstract factory to reduce comple-simple build complexity */
             proxy890MessageHandler = ComplexProxy890MessageHandler.builder()
-                .pnPaperChannelConfig(pnPaperChannelConfig)
-                .recag008CMessageHandler(recag008CMessageHandler)
-                .complex890MessageHandler(complex890MessageHandler)
-                .simple890MessageHandler(simple890MessageHandler)
-                .pnEventErrorDAO(pnEventErrorDAO)
-                .build();
+                    .pnPaperChannelConfig(pnPaperChannelConfig)
+                    .recag008CMessageHandler(recag008CMessageHandler)
+                    .complex890MessageHandler(complex890MessageHandler)
+                    .simple890MessageHandler(simple890MessageHandler)
+                    .pnEventErrorDAO(pnEventErrorDAO)
+                    .build();
 
             map.put(RECAG012.name(), oldRECAG012MessageHandler);
 
@@ -435,7 +492,6 @@ public class HandlersFactory {
         map.put(ExternalChannelCodeEnum.RECRI003B.name(), handler);
         map.put(ExternalChannelCodeEnum.RECRI004B.name(), handler);
         map.put(ExternalChannelCodeEnum.RECRSI004B.name(), handler);
-
     }
 
 
@@ -475,8 +531,6 @@ public class HandlersFactory {
         map.put(ExternalChannelCodeEnum.RECRS002F.name(), handler);
         map.put(ExternalChannelCodeEnum.RECRS004C.name(), handler);
         map.put(ExternalChannelCodeEnum.RECRS005C.name(), handler);
-        map.put(ExternalChannelCodeEnum.RECRN001C.name(), handler);
-        map.put(ExternalChannelCodeEnum.RECRN002F.name(), handler);
         map.put(ExternalChannelCodeEnum.RECAG001C.name(), handler);
         map.put(ExternalChannelCodeEnum.RECAG002C.name(), handler);
         map.put(ExternalChannelCodeEnum.RECAG003F.name(), handler);
@@ -486,9 +540,17 @@ public class HandlersFactory {
         map.put(ExternalChannelCodeEnum.RECRSI004C.name(), handler);
     }
 
+    private void addAggregatorSendToOcrStatusCodes(ConcurrentHashMap<String, MessageHandler> map, SendToOcrProxyHandler proxyHandler) {
+        map.put(ExternalChannelCodeEnum.RECRN001C.name(), proxyHandler);
+        map.put(ExternalChannelCodeEnum.RECRN002F.name(), proxyHandler);
+    }
+
     private void addCustomAggregatorStatusCodes(ConcurrentHashMap<String, MessageHandler> map, CustomAggregatorMessageHandler handler){
-        map.put(ExternalChannelCodeEnum.RECRN002C.name(), handler);
         map.put(ExternalChannelCodeEnum.RECAG003C.name(), handler);
+    }
+
+    private void addCustomAggregatorSendToOcrStatusCodes(ConcurrentHashMap<String, MessageHandler> map, SendToOcrProxyHandler proxyHandler){
+        map.put(ExternalChannelCodeEnum.RECRN002C.name(), proxyHandler);
     }
 
     public MessageHandler getHandler(@NotNull String code) {

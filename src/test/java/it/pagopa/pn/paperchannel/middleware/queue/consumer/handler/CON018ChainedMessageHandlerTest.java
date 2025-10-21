@@ -43,9 +43,10 @@ public class CON018ChainedMessageHandlerTest {
         long ttlDays = 365;
         when(mockConfig.getTtlExecutionDaysMeta()).thenReturn(ttlDays);
 
-        handlersFactory = new HandlersFactory(null, null, null,
+        handlersFactory = new HandlersFactory(null,null,
                 mockConfig, mockSqsSender, mockEventMetaDAO, null, null,
-                mockRequestDeliveryDAO, mockPnEventErrorDAO, mockSendProgressMetaConfig);
+                mockRequestDeliveryDAO, mockPnEventErrorDAO, mockSendProgressMetaConfig, null,
+                null, null);
     }
 
     @Test

@@ -46,7 +46,11 @@ Parameters:
   VpcId:
     Type: String
     Description: 'VpcId where the microservice is going to be deployed'
-  
+
+  VpcEgressSubnetsIds:
+    Type: String
+    Description: 'Egress subnets'
+
   EcsDefaultSecurityGroup:
     Type: String
     Description: 'Default security group required by infrastructure'
@@ -94,6 +98,11 @@ Parameters:
   AttemptQueueZipHandle:
     Type: Number
     Description: 'Number of attempts for called zip handle'
+    Default: 3
+
+  MaxPcRetry:
+    Type: Number
+    Description: 'Maximum number for PcRetry'
     Default: 3
 
   ZipHandleActive:
@@ -204,10 +213,6 @@ Parameters:
   PCKmsEncDecDynamoDataKeyARN:
     Type: String
     Description: 'Name of KMS Key for Dynamo encode/decode data'
-
-  PaperDeliveryDriversBucketName:
-    Type: String
-    Description: 'Name of S3 bucket'
 
   RequestDeliveryDynamoTableName:
     Type: String
@@ -367,11 +372,11 @@ Parameters:
   F24ToPaperChannelQueueARN:
     Type: String
 
-  ExternalChannels2PaperChannelQueueName:
+  ExternalChannelToPaperChannelDryRunQueueName:
     Type: String
     Description: 'Pull external-channel messages from this Queue'
 
-  ExternalChannels2PaperChannelQueueARN:
+  ExternalChannelToPaperChannelDryRunQueueARN:
     Type: String
     Description: 'Pull external-channel messages from this Queue'
 
@@ -665,6 +670,33 @@ Parameters:
     Type: String
     Description: 'Delayer to Paper Channel queue name'
 
+  PaperChannelOcrInputsQueueARN:
+    Type: String
+    Description: 'Events to OCR service'
+
+  PaperChannelOcrInputsQueueURL:
+    Type: String
+    Description: 'Push OCR request messages to this Queue'
+
+  PaperChannelOcrInputsQueueRegion:
+    Type: String
+    Description: 'OCR AWS account region'
+
+  PaperChannelOcrOutputsQueueARN:
+    Type: String
+    Description: 'pn-paper_channel_ocr_outputs queue ARN'
+
+  PaperChannelOcrOutputsQueueURL:
+    Type: String
+    Description: 'pn-paper_channel_ocr_outputs queue URL'
+
+  OcrAwsRoleARN:
+    Type: String
+    Description: 'ARN of pn-paper_channel_ocr_outputs sender'
+
+  OcrAwsAccountId:
+    Type: String
+    Description: 'Account id of pn-paper_channel_ocr_outputs sender'
 
   # Log group parameters
   EcsLogGroup:
@@ -682,7 +714,44 @@ Parameters:
       - ENABLED
       - DISABLED
     Description: 'EventBridge Rule To DelayerToPaperChannel'
-      
+
+  TenderAPILambdaName:
+    Type: String
+    Description: "TenderAPILambdaName"
+
+  TenderAPILambdaRuntime:
+    Type: String
+    Default: nodejs20.x
+    Description: Runtime of the DataIndexer Lambda.
+
+  TenderAPILambdaTimeout:
+    Type: Number
+    Default: 30
+    Description: Timeout TenderAPI Lambda.
+
+  TenderAPILambdaMemorySize:
+    Type: Number
+    Default: 512
+    Description: Memory size TenderAPI Lambda.
+
+  PaperTrackerEnabled:
+    Type: String
+    Default: 'false'
+    Description: 'Enable Paper Tracker feature'
+    AllowedValues:
+      - 'true'
+      - 'false'
+
+  PaperTrackerProductList:
+    Type: CommaDelimitedList
+    Default: 'AR'
+    Description: 'List of products to track in Paper Tracker feature'
+
+  ApplicativeEnvFileChecksum:
+    Type: String
+    Default: ''
+    Description: 'Applicative environment variable file checksum'
+
 Conditions:
   UseExternalChannelMock: !Equals [ !Ref ExternalChannelBaseUrl, "Mock" ]
 
@@ -738,14 +807,14 @@ Resources:
         ContainerEnvEntry19: !Sub 'AWS_KMS_KEYID=${PCKmsEncDecDynamoDataKeyARN}'
         ContainerEnvEntry20: !Sub 'PN_PAPERCHANNEL_EVENTBUS_NAME=arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/${ProjectName}-CoreEventBus'
         ContainerEnvEntry21: !Sub 'PN_PAPERCHANNEL_QUEUEDELIVERYPUSH=${ExternalChannelsOutputsQueueName}'
-        ContainerEnvEntry22: !Sub 'PN_PAPERCHANNEL_QUEUEEXTERNALCHANNEL=${ExternalChannels2PaperChannelQueueName}'
+        ContainerEnvEntry22: !Sub 'PN_PAPERCHANNEL_QUEUEEXTERNALCHANNEL=${ExternalChannelToPaperChannelDryRunQueueName}'
         ContainerEnvEntry23: !Sub 'PN_PAPERCHANNEL_QUEUENATIONALREGISTRIES=${NationalRegistries2PaperChannelQueueName}'
         ContainerEnvEntry24: !Sub 'PN_PAPERCHANNEL_QUEUEINTERNAL=${ScheduledRequestsQueueName}'
         ContainerEnvEntry25: !Sub 'PN_PAPERCHANNEL_ATTEMPTSAFESTORAGE=${AttemptSafeStorage}'
         ContainerEnvEntry26: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUESAFESTORAGE=${AttemptQueueSafeStorage}'
         ContainerEnvEntry27: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUENATIONALREGISTRIES=${AttemptQueueNationalRegistries}'
         ContainerEnvEntry28: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUEEXTERNALCHANNEL=${AttemptQueueExternalChannel}'
-        ContainerEnvEntry29: !Sub 'AWS_BUCKET_NAME=${PaperDeliveryDriversBucketName}'
+        ContainerEnvEntry29: !Sub 'PN_PAPERCHANNEL_CLIENTPAPERTRACKERBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
         ContainerEnvEntry30: !Sub 'PN_PAPERCHANNEL_NATIONALREGISTRYCXID=${NationalRegistryCxId}'
         ContainerEnvEntry31: !Sub 'PN_PAPERCHANNEL_TTLPREPARE=${TtlPrepare}'
         ContainerEnvEntry32: !Sub 'PN_PAPERCHANNEL_TTLEXECUTIONNAR=${TtlExecutionRNAR}'
@@ -801,11 +870,14 @@ Resources:
         ContainerEnvEntry82: !Sub 'PN_PAPERCHANNEL_COMPIUTAGIACENZAARDURATION=${CompiutaGiacenzaArDuration}'
         ContainerEnvEntry83: !Sub 'PN_PAPERCHANNEL_ENABLERETRYCON996=${EnableRetryCon996}'
         ContainerEnvEntry84: !Sub 'PN_PAPERCHANNEL_ENABLETRUNCATEDDATEFORREFINEMENTCHECK=${EnableTruncatedDateForRefinementCheck}'
+        ContainerEnvEntry85: !Sub 'PN_PAPERCHANNEL_QUEUEURLOCRINPUTS=${PaperChannelOcrInputsQueueURL}'
+        ContainerEnvEntry86: !Sub 'PN_PAPERCHANNEL_QUEUEREGIONOCRINPUTS=${PaperChannelOcrInputsQueueRegion}'
+        ApplicativeEnvFileChecksum: !Ref ApplicativeEnvFileChecksum
         ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-PaperChannel-Secrets
         MappedPaths: '/paper-channel-bo/*,/paper-channel-private/*'
         ECSClusterName: !Ref ECSClusterName
-        Subnets: !Ref SubnetsIds
+        Subnets: !Ref VpcEgressSubnetsIds
         VpcId: !Ref VpcId
         EcsDefaultSecurityGroup: !Ref EcsDefaultSecurityGroup
         LoadBalancerListenerArn: !Ref ApplicationLoadBalancerListenerArn
@@ -825,12 +897,6 @@ Resources:
         Statement:
           - Effect: Allow
             Action:
-              - s3:*
-            Resource:
-              - !Sub arn:aws:s3:::${PaperDeliveryDriversBucketName}
-              - !Sub arn:aws:s3:::${PaperDeliveryDriversBucketName}/*
-          - Effect: Allow
-            Action:
               - sqs:ChangeMessageVisibility
               - sqs:ChangeMessageVisibilityBatch
               - sqs:DeleteMessage
@@ -842,7 +908,7 @@ Resources:
               - sqs:SendMessageBatch
             Resource:
               - !Ref ExternalChannelsOutputsQueueARN
-              - !Ref ExternalChannels2PaperChannelQueueARN
+              - !Ref ExternalChannelToPaperChannelDryRunQueueARN
               - !Ref ScheduledRequestsQueueARN
               - !Ref PaperNormalizeAddressQueueARN
               - !Ref PaperChannelToDelayerQueueARN
@@ -850,6 +916,14 @@ Resources:
               - !Ref NationalRegistries2PaperChannelQueueARN
               - !Ref F24ToPaperChannelQueueARN
               - !Ref RaddAltToPaperChannelQueueARN
+              - !Ref PaperChannelOcrOutputsQueueARN
+          # Send events to data-lake queue
+          - Effect: Allow
+            Action:
+              - sqs:SendMessage
+              - sqs:SendMessageBatch
+            Resource:
+              - !Ref PaperChannelOcrInputsQueueARN
           - Effect: Allow
             Action:
               - events:PutEvents
@@ -1021,7 +1095,7 @@ Resources:
         QueueArns: !Join
           - ','
           - - !Ref ExternalChannelsOutputsQueueARN
-            - !Ref ExternalChannels2PaperChannelQueueARN
+            - !Ref ExternalChannelToPaperChannelDryRunQueueARN
             - !Ref ScheduledRequestsQueueARN
             - !Ref PaperNormalizeAddressQueueARN
             - !Ref NationalRegistries2PaperChannelQueueARN
@@ -1029,7 +1103,83 @@ Resources:
             - !Ref RaddAltToPaperChannelQueueARN
         LogGroupsNames: !Join
           - ','
-          - - !Sub '/aws/ecs/${ProjectName}-paper-channel'   
+          - - !Sub '/aws/ecs/${ProjectName}-paper-channel'
+
+  TenderAPILambdaSecGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Sub '${TenderAPILambdaName}-sec-group'
+      VpcId: !Ref VpcId
+
+  # Lambda function
+  TenderAPILambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Ref TenderAPILambdaName
+      Runtime: !Ref TenderAPILambdaRuntime
+      Handler: "index.handler"
+      Code:
+        S3Bucket: !Ref MicroserviceBucketName
+        S3Key: !Sub "${MicroserviceBucketBaseKey}/functions_zip/tenderAPI.zip"
+      Role: !GetAtt TenderAPILambdaRole.Arn
+      Environment:
+        Variables:
+          REGION: !Sub ${AWS::Region}
+          AWS_DYNAMODBPAPERCHANNELTENDERTABLE: !Ref PaperChannelTenderDynamoTableName
+          AWS_DYNAMODBPAPERCHANNELGEOKEYTABLE: !Ref PaperChannelGeokeyDynamoTableName
+          AWS_DYNAMODBPAPERCHANNELCOSTTABLE: !Ref PaperChannelCostDynamoTableName
+          AWS_DYNAMODBPAPERCHANNELDELIVERYDRIVERTABLE: !Ref PaperChannelDeliveryDriverDynamoTableName
+      TracingConfig:
+        Mode: Active
+      Layers:
+        - !Sub "arn:aws:lambda:${AWS::Region}:339249233099:layer:LambdaInsightsExtension:13"
+      Timeout: !Ref TenderAPILambdaTimeout
+      MemorySize: !Ref TenderAPILambdaMemorySize
+      VpcConfig:
+        SubnetIds: !Split [ ",", !Ref SubnetsIds ]
+        SecurityGroupIds:
+          - !GetAtt TenderAPILambdaSecGroup.GroupId
+
+  # Lambda function role
+  TenderAPILambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${TenderAPILambdaName}Role
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+      Policies:
+        - PolicyName: DynamoDbAccess
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: DynamoDbScan
+                Effect: Allow
+                Action:
+                  - dynamodb:Scan
+                Resource:
+                  - !Sub "${PaperChannelTenderDynamoTableArn}"
+                  - !Sub "${PaperChannelDeliveryDriverDynamoTableArn}"
+              - Sid: DynamoDbGet
+                Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:Query
+                  - dynamodb:BatchGetItem
+                Resource:
+                  - !Sub "${PaperChannelTenderDynamoTableArn}"
+                  - !Sub "${PaperChannelGeokeyDynamoTableArn}"
+                  - !Sub "${PaperChannelDeliveryDriverDynamoTableArn}"
+                  - !Sub "${PaperChannelCostDynamoTableArn}"
 
   PaperChannelGatewayDeliveryDriver:
     Type: AWS::CloudFormation::Stack
@@ -1090,7 +1240,7 @@ Resources:
             Metric:
               Dimensions:
                 - Name: QueueName
-                  Value: !Ref "ExternalChannels2PaperChannelQueueName"
+                  Value: !Ref "ExternalChannelToPaperChannelDryRunQueueName"
               Namespace: "AWS/SQS"
               MetricName: "ApproximateNumberOfMessagesVisible"
             Period: !Ref AutoscalingCheckPeriod
@@ -1195,14 +1345,14 @@ Resources:
 
   PnCoreEventBusToDelayerToPaperchannelQueue:
     Type: AWS::Events::Rule
-    Properties: 
+    Properties:
       Description: Route pn-CoreEventBus Events to DelayerToPaperChannel queue
-      RoleArn: !GetAtt "EventBusEnqueueRole.Arn" 
+      RoleArn: !GetAtt "EventBusEnqueueRole.Arn"
       EventBusName: !Sub '${ProjectName}-CoreEventBus'
       State: !Ref PnDelayerToPaperChannelEventBusRuleStatus
       EventPattern:
         detail-type: [ "PreparePhaseOneOutcomeEvent" ]
-      Targets: 
+      Targets:
         - Arn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:PnCoreEventBusMatchedEventLogger
           Id: !Sub ${ProjectName}-Logger-DelayerToPaperChannelQueue
           InputTransformer:
@@ -1215,7 +1365,7 @@ Resources:
                   "ruleName": <aws.events.rule-name>,
                   "ingestionTime": <aws.events.event.ingestion-time>,
                   "originalEvent": <aws.events.event.json>
-              }       
+              }
         - Id: !Sub '${ProjectName}-DelayerToPaperChannelQueue'
           Arn: !Ref DelayerToPaperChannelQueueARN
           InputPath: $.detail.body
@@ -1246,7 +1396,7 @@ Resources:
                   - sqs:GetQueueUrl
                   - sqs:SendMessage
                 Effect: Allow
-                Resource: 
+                Resource:
                   - !Ref DelayerToPaperChannelQueueARN
 
   PnDeliveryQueuePolicy:
@@ -1258,13 +1408,32 @@ Resources:
         Statement:
           - Sid: "SendEventsToDLQ"
             Effect: "Allow"
-            Principal: 
-              Service: 
+            Principal:
+              Service:
                 - "events.amazonaws.com"
             Condition:
               StringEquals:
                 aws:SourceAccount: !Ref "AWS::AccountId"
-            Action: 
+            Action:
               - "SQS:SendMessage"
             Resource:
               - !Ref "DelayerToPaperChannelQueueARN"
+
+  PaperChannelOcrOutputsQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref PaperChannelOcrOutputsQueueURL
+      PolicyDocument:
+        Statement:
+          - Sid: AllowCrossAccountSend
+            Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${OcrAwsAccountId}:root"
+            Action:
+              - sqs:SendMessage
+            Resource:
+              - !Ref PaperChannelOcrOutputsQueueARN
+            Condition:
+              StringEquals:
+                aws:PrincipalArn: !Ref OcrAwsRoleARN

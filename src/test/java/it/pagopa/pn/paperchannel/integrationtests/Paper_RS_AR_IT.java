@@ -1,6 +1,7 @@
 package it.pagopa.pn.paperchannel.integrationtests;
 
 import it.pagopa.pn.paperchannel.config.BaseTest;
+import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.AttachmentDetailsDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.DiscoveredAddressDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
@@ -60,6 +61,9 @@ class Paper_RS_AR_IT extends BaseTest {
 
     @MockitoBean
     private AddressDAO mockAddressDAO;
+
+    @Autowired
+    private PnPaperChannelConfig pnPaperChannelConfig;
 
     private void CommonFinalOnlySequenceTest(String event, StatusCodeEnum statusToCheck) {
         // event (final only)
@@ -137,7 +141,6 @@ class Paper_RS_AR_IT extends BaseTest {
         pnAddress.setTypology(AddressTypeEnum.RECEIVER_ADDRESS.name());
         pnAddress.setCity("Milan");
         pnAddress.setCap("");
-
         when(mockAddressDAO.findAllByRequestId(anyString())).thenReturn(Mono.just(List.of(pnAddress)));
         when(mockExtChannel.sendEngageRequest(any(SendRequest.class), anyList(), any())).thenReturn(Mono.empty());
 

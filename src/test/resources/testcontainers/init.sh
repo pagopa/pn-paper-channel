@@ -6,7 +6,7 @@ aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
 echo "### END KEY CREATION FOR KMS ###"
 
 echo "### CREATE QUEUES ###"
-queues="local-delivery-push-safestorage-inputs local-paper_channel_requests local-delivery-push-inputs local-ext-channels-inputs local-ext-channels-outputs pn-f24_to_paperchannel local-paper-normalize-address local-delayer_to_paperchannel"
+queues="local-delivery-push-safestorage-inputs local-paper_channel_requests local-delivery-push-inputs local-ext-channels-inputs local-ext-channels-outputs pn-f24_to_paperchannel local-paper-normalize-address local-delayer_to_paperchannel local-ocr-inputs"
 for qn in  $( echo $queues | tr " " "\n" ) ; do
     echo creating queue $qn ...
     aws --profile default --region us-east-1 --endpoint-url http://localstack:4566 \
@@ -14,18 +14,6 @@ for qn in  $( echo $queues | tr " " "\n" ) ; do
         --attributes '{"DelaySeconds":"2"}' \
         --queue-name $qn
     echo ending create queue
-done
-
-echo "### CREATE BUCKETS ###"
-buckets="local-doc-bucket local-legal-bucket"
-for buck in  $( echo $buckets | tr " " "\n" ) ; do
-  echo creating bucket $buck ...
-  aws --profile default --region us-east-1 --endpoint-url http://localstack:4566 \
-      s3 mb s3://$buck
-  aws --profile default --region us-east-1 --endpoint-url http://localstack:4566 \
-      s3api put-bucket-versioning \
-      --bucket $buck \
-      --versioning-configuration Status=Enabled
 done
 
 echo " - Create pn-paper-channel TABLES"

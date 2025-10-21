@@ -60,9 +60,10 @@ public class OldRECAG012ChainedMessageHandler {
                 .eventMetaDAO(mockEventMetaDAO)
                 .pnPaperChannelConfig(mockConfig)
                 .build();
-        handlersFactory = new HandlersFactory(null, null, null,
+        handlersFactory = new HandlersFactory(null, null,
                 mockConfig, mockSqsSender, mockEventMetaDAO, mockEventDematDAO, null,
-                mockRequestDeliveryDAO, mockPnEventErrorDAO, mockSendProgressMetaConfig);
+                mockRequestDeliveryDAO, mockPnEventErrorDAO, mockSendProgressMetaConfig, null,
+                null, null);
     }
 
     @Test

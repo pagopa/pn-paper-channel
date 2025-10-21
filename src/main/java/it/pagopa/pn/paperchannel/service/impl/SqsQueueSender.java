@@ -20,6 +20,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 import static it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum.*;
+import static it.pagopa.pn.paperchannel.utils.Const.PN_PAPER_CHANNEL;
 
 @Service
 @Slf4j
@@ -38,6 +39,7 @@ public class SqsQueueSender implements SqsSender {
     private final PaperchannelToDelayerMomProducer paperchannelToDelayerMomProducer;
     private final DelayerToPaperchannelInternalProducer delayerToPaperchannelInternalProducer;
     private final EventBridgeProducer eventBridgeProducer;
+    private final OcrProducer ocrProducer;
 
     @Override
     public void pushSendEvent(SendEvent event) {
@@ -247,6 +249,18 @@ public class SqsQueueSender implements SqsSender {
                 .expired(expired)
                 .build();
         this.internalQueueMomProducer.push(new InternalPushEvent<>(prepareHeader, entity));
+    }
+
+    @Override
+    public void pushToOcr(OcrInputPayload entity) {
+        var header = GenericEventHeader.builder()
+                .eventId(UUID.randomUUID().toString())
+                .publisher(PN_PAPER_CHANNEL)
+                .createdAt(Instant.now())
+                .eventType(OCR_REQUEST.name())
+                .build();
+        var event = new OcrInputEvent(header, entity);
+        this.ocrProducer.push(event);
     }
 
 
