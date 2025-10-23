@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
+import java.util.Objects;
 
 import static it.pagopa.pn.paperchannel.utils.AddressTypeEnum.RECEIVER_ADDRESS;
 
@@ -31,7 +32,7 @@ public class CheckAddressServiceImpl implements CheckAddressService {
         CheckAddressResponse response = new CheckAddressResponse();
         response.setFound(found);
         response.setRequestId(requestId);
-        if (found) {
+        if (Objects.nonNull(ttl) && found) {
             response.setEndValidity(Instant.ofEpochSecond(ttl));
         }
         return Mono.just(response);
