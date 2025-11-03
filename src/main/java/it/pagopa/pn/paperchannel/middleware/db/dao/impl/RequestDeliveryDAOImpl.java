@@ -143,7 +143,7 @@ public class RequestDeliveryDAOImpl extends BaseDAO<PnDeliveryRequest> implement
     public Mono<PnDeliveryRequest> cleanDataForNotificationRework(PnDeliveryRequest pnDeliveryRequest, String reworkId) {
         Map<String, AttributeValue> key = Map.of(COL_REQUEST_ID, AttributeValue.builder().s(pnDeliveryRequest.getRequestId()).build());
 
-        String updateExpr = "SET #feedbackStatusCode = :nullVal,#feedbackDeliveryFailureCause = :nullVal,#feedbackStatusDateTime = :nullVal,#refined = :refinedVal,#reworkId = :reworkIdVal";
+        String updateExpr = "SET #refined = :refinedVal, #reworkId = :reworkIdVal REMOVE #feedbackStatusCode, #feedbackDeliveryFailureCause, #feedbackStatusDateTime";
 
         Map<String, String> expressionAttributeNames = Map.of(
                 "#feedbackStatusCode", PnDeliveryRequest.COL_FEEDBACK_STATUS_CODE,
@@ -154,7 +154,6 @@ public class RequestDeliveryDAOImpl extends BaseDAO<PnDeliveryRequest> implement
         );
 
         Map<String, AttributeValue> expressionAttributeValues = Map.of(
-                ":nullVal", AttributeValue.builder().nul(true).build(),
                 ":refinedVal", AttributeValue.builder().bool(false).build(),
                 ":reworkIdVal", AttributeValue.builder().s(reworkId).build()
         );
