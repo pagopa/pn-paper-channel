@@ -97,14 +97,14 @@ class NotificationReworkServiceImplTest {
         Mockito.when(requestDeliveryDAO.getByRequestId(requestIdWithoutPcRetry)).thenReturn(Mono.just(deliveryRequest));
         Mockito.when(requestDeliveryDAO.cleanDataForNotificationRework(
                 Mockito.any(PnDeliveryRequest.class),
-                Mockito.eq(reworkId)
+                Mockito.any()
         )).thenReturn(Mono.just(deliveryRequest));
 
-        WebClientResponseException WebClientResponseException = Mockito.mock(WebClientResponseException.class);
-        Mockito.when(WebClientResponseException.getStatusCode()).thenReturn(HttpStatus.NOT_FOUND);
+        WebClientResponseException notFoundException = new WebClientResponseException(
+                404, "Not Found", null, null, null, null);
 
         Mockito.when(paperTrackerClient.initNotificationRework(reworkId, requestId))
-                .thenReturn(Mono.error(WebClientResponseException));
+                .thenReturn(Mono.error(notFoundException));
 
         StepVerifier.create(service.initNotificationRework(requestId, reworkId))
                 .expectErrorSatisfies(error -> {
