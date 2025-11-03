@@ -55,7 +55,7 @@ public class PcRetryServiceImpl implements PcRetryService {
     }
 
 
-    private String getPrefixRequestId(String requestId) {
+    public String getPrefixRequestId(String requestId) {
         requestId = Utility.getRequestIdWithoutPrefixClientId(requestId);
         if (requestId.contains(Const.RETRY)) {
             requestId = requestId.substring(0, requestId.indexOf(Const.RETRY));

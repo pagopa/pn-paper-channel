@@ -375,6 +375,34 @@ class RequestDeliveryDAOTestIT extends BaseTest {
 
     }
 
+   @Test
+    void cleanDataForNotificationReworkClearsFeedbackAndSetsReworkId() {
+        // Given
+        String requestId = "reworkRequestId";
+        String reworkId = "newReworkId";
+        PnDeliveryRequest request = new PnDeliveryRequest();
+        request.setRequestId(requestId);
+        request.setFeedbackStatusCode("OLD_CODE");
+        request.setFeedbackDeliveryFailureCause("OLD_CAUSE");
+        request.setFeedbackStatusDateTime(Instant.now());
+        request.setRefined(true);
+
+        requestDeliveryDAO.createWithAddress(request, null, null).block();
+
+        // When
+        PnDeliveryRequest updatedRequest = requestDeliveryDAO.cleanDataForNotificationRework(request, reworkId).block();
+
+        // Then
+        assertNotNull(updatedRequest);
+        PnDeliveryRequest result = requestDeliveryDAO.getByRequestId(requestId).block();
+        assertNotNull(result);
+        assertNull(result.getFeedbackStatusCode());
+        assertNull(result.getFeedbackDeliveryFailureCause());
+        assertNull(result.getFeedbackStatusDateTime());
+        assertFalse(result.getRefined());
+        assertEquals(reworkId, result.getNotificationReworkId());
+    }
+
     private PnDeliveryRequest buildDeliveryRequest(String requestId) {
         PnDeliveryRequest request = new PnDeliveryRequest();
 
