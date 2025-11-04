@@ -27,7 +27,7 @@ tags:
   - name: HealthCheck
     description: Metodo heartbeat
   - name: NotificationRework
-    description: Operazioni per la gestione della rielaborazione delle notifiche
+    description: Operazioni per la gestione della correzione timeline
 paths:
   '/status':
     get:
@@ -361,9 +361,7 @@ paths:
 
   /paper-channel-private/v1/{requestId}/check-address:
     get:
-      summary: Verifica la presenzia dell'address per una notifica
-      description: >-
-        Permette la verifica la presenzia dell'address per una notifica
+      summary: Verifica l'esistenza dell'indirizzo della notifica
       tags:
         - CheckAddress
       operationId: checkAddress

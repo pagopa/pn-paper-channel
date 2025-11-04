@@ -453,7 +453,7 @@
                         <phase>generate-resources</phase>
                         <configuration>
                             <!--aggiornare con commit id di develop dopo il rilascio di paper-tracker-->
-                            <inputSpec>https://raw.githubusercontent.com/pagopa/pn-paper-tracker/8ed0cc8080578a5c6026baac2e98d8eb8cf2808f/docs/openapi/api-internal-v1.yaml</inputSpec>
+                            <inputSpec>https://raw.githubusercontent.com/pagopa/pn-paper-tracker/984506ea290281aa9506f327250021c66b1cd0fd/docs/openapi/api-internal-v1.yaml</inputSpec>
                             <generatorName>java</generatorName>
                             <library>webclient</library>
                             <generateApiDocumentation>false</generateApiDocumentation>
