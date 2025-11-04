@@ -6,8 +6,13 @@ import it.pagopa.pn.paperchannel.exception.*;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
 import it.pagopa.pn.paperchannel.mapper.RequestDeliveryMapper;
-import it.pagopa.pn.paperchannel.middleware.db.dao.*;
-import it.pagopa.pn.paperchannel.middleware.db.entities.*;
+import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.PaperChannelDeliveryDriverDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PaperChannelDeliveryDriver;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.model.*;
 import it.pagopa.pn.paperchannel.service.*;
 import it.pagopa.pn.paperchannel.utils.*;
@@ -21,6 +26,7 @@ import reactor.util.function.Tuple2;
 import java.time.Instant;
 
 import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.SEND_TO_DELAYER;
+import static it.pagopa.pn.paperchannel.utils.PrepareAsyncErrorUtils.*;
 
 @Service
 @RequiredArgsConstructor
@@ -52,7 +58,7 @@ public class PreparePhaseOneAsyncServiceImpl implements PreparePhaseOneAsyncServ
 
         return requestDeliveryDAO.getByRequestId(requestId, false)
                 .zipWhen(deliveryRequest -> checkAndUpdateAddress(deliveryRequest, addressFromNationalRegistry, event)
-                        .onErrorResume(PnUntracebleException.class, ex -> this.handleUntraceableError(deliveryRequest, event, ex)))
+                        .onErrorResume(ex -> evaluateExceptionForAddressFlow(event, deliveryRequest, ex)))
                 .flatMap(deliveryRequestWithAddress -> attachmentsConfigService
                         .filterAttachmentsToSend(deliveryRequestWithAddress.getT1(), AttachmentsConfigUtils.getAllAttachments(deliveryRequestWithAddress.getT1()), deliveryRequestWithAddress.getT2())
                         .thenReturn(deliveryRequestWithAddress))
@@ -64,6 +70,17 @@ public class PreparePhaseOneAsyncServiceImpl implements PreparePhaseOneAsyncServ
                     log.logEndingProcess(PROCESS_NAME);
                 })
                 .onErrorResume(ex -> handlePrepareAsyncError(requestId, ex));
+    }
+
+    private Mono<PnAddress> evaluateExceptionForAddressFlow(PrepareNormalizeAddressEvent event, PnDeliveryRequest deliveryRequest, Throwable ex) {
+        if(ex instanceof PnUntracebleException pnUntracebleException) {
+            this.handleUntraceableError(deliveryRequest, event, pnUntracebleException);
+        }
+        if(ex instanceof PnAddressFlowException){
+            //gestita in PaperAddressServiceImpl.handlePnAddressFlowException
+            return Mono.error(ex);
+        }
+        return Mono.error(new CheckAddressFlowException(ex, extractGeoKey(ex)));
     }
 
     private Mono<PnDeliveryRequest> sendToPhaseTwoQueue(Tuple2<PnDeliveryRequest, PnAddress> deliveryRequestWithAddress) {
@@ -108,31 +125,7 @@ public class PreparePhaseOneAsyncServiceImpl implements PreparePhaseOneAsyncServ
                     //set flowType per TTL
                     newAddress.setFlowType(Const.PREPARE);
                     return addressDAO.create(AddressMapper.toEntity(newAddress, pnDeliveryRequest.getRequestId(), AddressTypeEnum.RECEIVER_ADDRESS, paperChannelConfig));
-                })
-                .onErrorResume(PnGenericException.class, ex -> handleAndThrowAgainError(ex, pnDeliveryRequest.getRequestId()));
-    }
-
-    private Mono<PnAddress> handleAndThrowAgainError(PnGenericException ex, String requestId) {
-        if(ex instanceof PnUntracebleException) {
-            // se l'eccezione PnGenericException è di tipo UNTRACEABLE, ALLORA NON SCRIVO L'ERRORE SU DB
-            return Mono.error(ex);
-        } else {
-            // ALTRIMENTI SCRIVO L'ERRORE SU DB
-            return traceError(requestId, ex, "CHECK_ADDRESS_FLOW").then(Mono.error(ex));
-        }
-    }
-
-    private Mono<Void> traceError(String requestId, PnGenericException ex, String flowType){
-        String geokey = ex instanceof StopFlowSecondAttemptException stopExc ? stopExc.getGeokey() : null;
-
-        PnRequestError pnRequestError = PnRequestError.builder()
-                .requestId(requestId)
-                .error(ex.getMessage())
-                .flowThrow(flowType)
-                .geokey(geokey)
-                .build();
-
-        return this.paperRequestErrorDAO.created(pnRequestError).then();
+                });
     }
 
     private Mono<PnAddress> handleUntraceableError(PnDeliveryRequest deliveryRequest, PrepareNormalizeAddressEvent request, PnUntracebleException ex) {
@@ -158,21 +151,21 @@ public class PreparePhaseOneAsyncServiceImpl implements PreparePhaseOneAsyncServ
     }
 
     private Mono<PnDeliveryRequest> handlePrepareAsyncError(String requestId, Throwable ex) {
-        log.error("Error prepare async requestId {}, {}", requestId, ex.getMessage(), ex);
-        if (ex instanceof PnAddressFlowException || ex instanceof PnUntracebleException) return Mono.error(ex);
+        log.error("Error in prepare async for requestId: {}", requestId, ex);
 
-        StatusDeliveryEnum statusDeliveryEnum = StatusDeliveryEnum.PAPER_CHANNEL_ASYNC_ERROR;
-
-
-        if(ex instanceof PnGenericException) {
-            statusDeliveryEnum = StatusDeliveryEnum.PAPER_CHANNEL_DEFAULT_ERROR;
+        if(ex instanceof PnUntracebleException || ex instanceof PnAddressFlowException || ex instanceof PnF24FlowException) {
+            return Mono.error(ex);
         }
 
-        return updateStatus(requestId, statusDeliveryEnum)
-                .doOnNext(o -> log.logEndingProcess(PROCESS_NAME))
-                .flatMap(entity -> Mono.error(ex));
-    }
+        StatusDeliveryEnum statusDeliveryEnum = retrieveStatusDeliveryEnum(ex);
+        ErrorFlowTypeEnum flowType = retrieveErrorFlowType(ex, true);
 
+        return paperRequestErrorDAO.created(buildError(requestId, ex, flowType.name()))
+                .flatMap(t -> updateStatus(requestId, statusDeliveryEnum))
+                .doOnSuccess(o -> log.logEndingProcess(PROCESS_NAME))
+                .flatMap(entity -> Mono.error(ex));
+
+    }
 
     private Mono<String> updateStatus(String requestId, StatusDeliveryEnum status ){
         String processName = "Update Status";
