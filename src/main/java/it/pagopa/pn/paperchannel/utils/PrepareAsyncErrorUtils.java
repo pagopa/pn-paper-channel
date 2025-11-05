@@ -24,7 +24,7 @@ public class PrepareAsyncErrorUtils {
 
     private static StatusDeliveryEnum exceptionTypeMapper(ExceptionTypeEnum ex){
         return switch (ex) {
-            case DOCUMENT_NOT_DOWNLOADED, DOCUMENT_URL_NOT_FOUND, INVALID_SAFE_STORAGE -> StatusDeliveryEnum.SAFE_STORAGE_IN_ERROR;
+            case DOCUMENT_NOT_DOWNLOADED, DOCUMENT_URL_NOT_FOUND -> StatusDeliveryEnum.SAFE_STORAGE_IN_ERROR;
             default -> StatusDeliveryEnum.PAPER_CHANNEL_DEFAULT_ERROR;
         };
     }

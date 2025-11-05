@@ -281,7 +281,7 @@ public class PreparePhaseTwoAsyncServiceImplTest {
         pnRequestError.setRequestId("PREPARE_ANALOG_DOMICILE.IUN_GJWA-HMEK-RGUJ-202307-H-1.RECINDEX_0.ATTEMPT_0");
         pnRequestError.setCreated(Instant.now());
 
-        StatusDeliveryEnum statusDeliveryEnum = StatusDeliveryEnum.SAFE_STORAGE_IN_ERROR;
+        StatusDeliveryEnum statusDeliveryEnum = StatusDeliveryEnum.PAPER_CHANNEL_DEFAULT_ERROR;
         String statusCode = statusDeliveryEnum.getCode();
         String statusDescription = statusCode + " - " + statusDeliveryEnum.getDescription();
         String statusDetail = statusDeliveryEnum.getDetail();
