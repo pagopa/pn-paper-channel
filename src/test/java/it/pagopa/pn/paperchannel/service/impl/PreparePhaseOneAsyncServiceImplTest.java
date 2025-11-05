@@ -10,7 +10,10 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PaperChannelDeliveryDriverDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
-import it.pagopa.pn.paperchannel.middleware.db.entities.*;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PaperChannelDeliveryDriver;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.model.*;
 import it.pagopa.pn.paperchannel.service.*;
 import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
@@ -163,8 +166,6 @@ class PreparePhaseOneAsyncServiceImplTest {
         verify(prepareFlowStarter, never()).pushResultPrepareEvent(any(), any(), any(), any(), any());
     }
 
-
-
     @Test
     void preparePhaseOneAsyncTestErrorUntraceableAddress(){
         PnDeliveryRequest deliveryRequest = getDeliveryRequest("FATY-FATY-2023041520230302", "FATY-FATY-2023041520230302-101111");
@@ -180,26 +181,26 @@ class PreparePhaseOneAsyncServiceImplTest {
         when(this.paperAddressService.getCorrectAddress(any(), any(), anyInt()))
                 .thenReturn(Mono.error(new PnUntracebleException(koReason)));
 
-
-
         when(this.requestDeliveryDAO.updateStatus(eq(deliveryRequest.getRequestId()), eq(statusCode), eq(statusDescription), eq(statusDetail), any())).thenReturn(Mono.empty());
 
-        doNothing().when(this.prepareFlowStarter).pushResultPrepareEvent(eq(deliveryRequest), isNull(), isNull(), eq(StatusCodeEnum.KO), eq(koReason));
+        doNothing().when(this.prepareFlowStarter).pushResultPrepareEvent(eq(deliveryRequest), isNull(),eq("clientId"), eq(StatusCodeEnum.KO), eq(koReason));
 
-        request.setCorrelationId("FFPAPERTEST.IUN_FATY");
+        PrepareNormalizeAddressEvent event = PrepareNormalizeAddressEvent.builder()
+                .requestId("FATY-FATY-2023041520230302")
+                .clientId("clientId")
+                .iun("FATY-FATY-2023041520230302-101111")
+                .attempt(0)
+                .build();
 
-        StepVerifier.create(this.preparePhaseOneAsyncService.preparePhaseOneAsync(request))
+        StepVerifier.create(this.preparePhaseOneAsyncService.preparePhaseOneAsync(event))
                 .expectErrorMatches(ex -> {
                     assertInstanceOf(PnGenericException.class, ex);
                     return true;
                 }).verify();
 
-        // VERIFICO CHE IN QUESTO CASO NON VENGA MAI CREATO IL RECORD DI ERRORE
-        verify(paperRequestErrorDAO, never()).created(any(PnRequestError.class));
-
-        // VERIFICO CHE È STATO INVIATO L'EVENTO DI KOUNREACHABLE A DELIVERY PUSH
-        verify(this.prepareFlowStarter, times(1)).pushResultPrepareEvent(eq(deliveryRequest), isNull(), isNull(), eq(StatusCodeEnum.KO), eq(koReason));
+        verify(this.prepareFlowStarter, times(1)).pushResultPrepareEvent(eq(deliveryRequest), isNull(), eq("clientId"), eq(StatusCodeEnum.KO), eq(koReason));
         verify(prepareFlowStarter, never()).pushPreparePhaseOneOutput(any(), any(), any());
+        verify(requestDeliveryDAO,times(1)).updateStatus(eq(deliveryRequest.getRequestId()), eq(statusCode), eq(statusDescription), eq(statusDetail), any());
     }
 
     @Test
