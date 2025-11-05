@@ -264,12 +264,12 @@ public class PreparePhaseTwoAsyncServiceImpl implements PreparePhaseTwoAsyncServ
     private Mono<PnDeliveryRequest> handlePrepareAsyncPhaseTwoError(String requestId, Throwable ex) {
         log.error("Error prepare async requestId {}, {}", requestId, ex.getMessage(), ex);
 
-        StatusDeliveryEnum statusDeliveryEnum = determineStatusDeliveryEnum(ex);
-        ErrorFlowTypeEnum flowType = determineFlowType(ex);
-
         if(ex instanceof  PnF24FlowException){
             return Mono.error(ex);
         }
+
+        StatusDeliveryEnum statusDeliveryEnum = retrieveStatusDeliveryEnum(ex);
+        ErrorFlowTypeEnum flowType = retrieveErrorFlowType(ex, false);
 
         return paperRequestErrorDAO.created(buildError(requestId, ex, flowType.name()))
                 .flatMap(t -> updateStatus(requestId, statusDeliveryEnum))
