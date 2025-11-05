@@ -1,0 +1,508 @@
+package it.pagopa.pn.paperchannel.service.impl;
+
+import it.pagopa.pn.api.dto.events.PnPrepareDelayerToPaperchannelPayload;
+import it.pagopa.pn.commons.exceptions.PnExceptionsCodes;
+import it.pagopa.pn.commons.exceptions.PnInternalException;
+import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
+import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
+import it.pagopa.pn.paperchannel.exception.PnF24FlowException;
+import it.pagopa.pn.paperchannel.exception.PnGenericException;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileDownloadInfoDto;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileDownloadResponseDto;
+import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnRequestError;
+import it.pagopa.pn.paperchannel.model.F24Error;
+import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
+import it.pagopa.pn.paperchannel.service.F24Service;
+import it.pagopa.pn.paperchannel.service.PrepareFlowStarter;
+import it.pagopa.pn.paperchannel.service.SafeStorageService;
+import it.pagopa.pn.paperchannel.service.SqsSender;
+import it.pagopa.pn.paperchannel.utils.PrepareAsyncErrorUtils;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.INVALID_SAFE_STORAGE;
+import static it.pagopa.pn.paperchannel.utils.Const.RACCOMANDATA_SEMPLICE;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+public class PreparePhaseTwoAsyncServiceImplTest {
+    @InjectMocks
+    private PreparePhaseTwoAsyncServiceImpl preparePhaseTwoAsyncService;
+    @Mock
+    private SqsSender sqsSender;
+    @Mock
+    private RequestDeliveryDAO requestDeliveryDAO;
+    @Mock
+    private PaperRequestErrorDAO paperRequestErrorDAO;
+    @Mock
+    private F24Service f24Service;
+    @Mock
+    private SafeStorageService safeStorageService;
+    @Mock
+    private PnPaperChannelConfig paperChannelConfig;
+    @Mock
+    private PrepareAsyncErrorUtils prepareAsyncErrorUtils;
+    @Mock
+    private AddressDAO addressDAO;
+    @Mock
+    private PrepareFlowStarter prepareFlowStarter;
+
+    private final PnAttachmentInfo attachmentInfo = new PnAttachmentInfo();
+
+    @BeforeEach
+    public void setUp(){
+        inizialize();
+    }
+
+
+    @Test
+    void prepareAsyncPhaseTwoRegularFlowOkTest() {
+        var requestId = "PREPARE_ANALOG_DOMICILE.IUN_GJWA-HMEK-RGUJ-202307-H-1.RECINDEX_0.ATTEMPT_0";
+        var iun = "GJWA-HMEK-RGUJ-202307-H-1";
+        var deliveryRequest = getDeliveryRequest(requestId, iun,true);
+
+        var pnAddress = new PnAddress();
+        pnAddress.setCity("Cicciano");
+        pnAddress.setAddress("Via Leonardo Da Vinci 10");
+        pnAddress.setCap("80033");
+        pnAddress.setCountry("IT");
+        pnAddress.setPr("NA");
+        pnAddress.setTypology("TYPOLOGY");
+
+        PnPrepareDelayerToPaperchannelPayload event = PnPrepareDelayerToPaperchannelPayload.builder()
+                .requestId(requestId)
+                .iun(iun)
+                .attempt(0)
+                .build();
+
+        // Mock flusso normale (non F24)
+        when(requestDeliveryDAO.getByRequestIdStrongConsistency(requestId, false)).thenReturn(Mono.just(deliveryRequest));
+        when(f24Service.checkDeliveryRequestAttachmentForF24(deliveryRequest)).thenReturn(false);
+        // Gli allegati sono già processati (numberOfPage > 0)
+        deliveryRequest.getAttachments().forEach(a -> a.setNumberOfPage(1));
+        when(addressDAO.findByRequestId(deliveryRequest.getRequestId())).thenReturn(Mono.just(pnAddress));
+        when(requestDeliveryDAO.updateDataWithoutGet(deliveryRequest, false)).thenReturn(Mono.just(deliveryRequest));
+
+        StepVerifier.create(preparePhaseTwoAsyncService.prepareAsyncPhaseTwo(event))
+                .expectNext(deliveryRequest)
+                .verifyComplete();
+
+        verify(sqsSender, times(1)).pushPrepareEvent(any());
+    }
+
+    @Test
+    void prepareAsyncPhaseTwoRegularOkTest() {
+        var requestId = "SERVICE_DESK_OPID-12345";
+        var iun = "GJWA-HMEK-RGUJ-202307-H-1";
+        var deliveryRequest = getDeliveryRequest(requestId, iun,true);
+
+        var pnAddress = new PnAddress();
+        pnAddress.setCity("Cicciano");
+        pnAddress.setAddress("Via Leonardo Da Vinci 10");
+        pnAddress.setCap("80033");
+        pnAddress.setCountry("IT");
+        pnAddress.setPr("NA");
+        pnAddress.setTypology("TYPOLOGY");
+
+        PnPrepareDelayerToPaperchannelPayload event = PnPrepareDelayerToPaperchannelPayload.builder()
+                .requestId(requestId)
+                .iun(iun)
+                .attempt(0)
+                .build();
+
+        when(requestDeliveryDAO.getByRequestIdStrongConsistency(requestId, false)).thenReturn(Mono.just(deliveryRequest));
+        when(f24Service.checkDeliveryRequestAttachmentForF24(deliveryRequest)).thenReturn(false);
+        deliveryRequest.getAttachments().forEach(a -> a.setNumberOfPage(1));
+        when(addressDAO.findByRequestId(deliveryRequest.getRequestId())).thenReturn(Mono.just(pnAddress));
+        when(requestDeliveryDAO.updateDataWithoutGet(deliveryRequest, false)).thenReturn(Mono.just(deliveryRequest));
+
+        StepVerifier.create(preparePhaseTwoAsyncService.prepareAsyncPhaseTwo(event))
+                .expectNext(deliveryRequest)
+                .verifyComplete();
+
+        verify(sqsSender, times(1)).pushPrepareEventOnEventBridge(any(), any());
+        verify(sqsSender, never()).pushPrepareEvent(any());
+    }
+
+
+   @Test
+    void prepareAsyncPhaseTwoRegularFlowAttachmentsToProcessTest() {
+        var requestId = "PREPARE_ANALOG_DOMICILE.IUN_GJWA-HMEK-RGUJ-202307-H-1.RECINDEX_0.ATTEMPT_0";
+        var iun = "GJWA-HMEK-RGUJ-202307-H-1";
+        PnDeliveryRequest deliveryRequest = new PnDeliveryRequest();
+        deliveryRequest.setRequestId(requestId);
+        deliveryRequest.setIun(iun);
+        deliveryRequest.setProposalProductType(RACCOMANDATA_SEMPLICE);
+
+        // Aggiungi almeno un attachment da processare
+        PnAttachmentInfo attachment = new PnAttachmentInfo();
+        attachment.setFileKey("fileKey");
+        attachment.setNumberOfPage(0);
+        deliveryRequest.setAttachments(List.of(attachment));
+
+        var pnAddress = new PnAddress();
+        pnAddress.setCity("Cicciano");
+        pnAddress.setAddress("Via Leonardo Da Vinci 10");
+        pnAddress.setCap("80033");
+        pnAddress.setCountry("IT");
+        pnAddress.setPr("NA");
+        pnAddress.setTypology("TYPOLOGY");
+
+        PnPrepareDelayerToPaperchannelPayload event = PnPrepareDelayerToPaperchannelPayload.builder()
+                .requestId(requestId)
+                .iun(iun)
+                .attempt(0)
+                .build();
+
+        when(requestDeliveryDAO.getByRequestIdStrongConsistency(requestId, false)).thenReturn(Mono.just(deliveryRequest));
+        when(f24Service.checkDeliveryRequestAttachmentForF24(deliveryRequest)).thenReturn(false);
+
+        var fileResponse = new FileDownloadResponseDto();
+        var fileInfoDownload = new FileDownloadInfoDto();
+        fileInfoDownload.setUrl("http://mocked-url");
+        fileResponse.setDownload(fileInfoDownload);
+        when(safeStorageService.getFileRecursive(any(), eq(attachment.getFileKey()), any())).thenReturn(Mono.just(fileResponse));
+        PDDocument pdDocument = new PDDocument();
+        pdDocument.addPage(new org.apache.pdfbox.pdmodel.PDPage());
+        pdDocument.addPage(new org.apache.pdfbox.pdmodel.PDPage());
+        when(safeStorageService.downloadFile(eq("http://mocked-url"))).thenReturn(Mono.just(pdDocument));
+
+        when(addressDAO.findByRequestId(deliveryRequest.getRequestId())).thenReturn(Mono.just(pnAddress));
+        when(requestDeliveryDAO.updateDataWithoutGet(deliveryRequest, false)).thenReturn(Mono.just(deliveryRequest));
+
+        StepVerifier.create(preparePhaseTwoAsyncService.prepareAsyncPhaseTwo(event))
+                .expectNext(deliveryRequest)
+                .verifyComplete();
+
+        verify(sqsSender, times(1)).pushPrepareEvent(any());
+    }
+    @Test
+    void prepareAsyncPhaseTwoAttachmentUrlNullThrowsGenericException() {
+        var requestId = "REQID-URL-NULL";
+        var iun = "IUN-URL-NULL";
+        PnDeliveryRequest deliveryRequest = new PnDeliveryRequest();
+        deliveryRequest.setRequestId(requestId);
+        deliveryRequest.setIun(iun);
+        deliveryRequest.setProposalProductType(RACCOMANDATA_SEMPLICE);
+
+        PnAttachmentInfo attachment = new PnAttachmentInfo();
+        attachment.setFileKey("fileKey");
+        attachment.setNumberOfPage(0);
+        deliveryRequest.setAttachments(List.of(attachment));
+
+        PnPrepareDelayerToPaperchannelPayload event = PnPrepareDelayerToPaperchannelPayload.builder()
+                .requestId(requestId)
+                .iun(iun)
+                .attempt(0)
+                .build();
+
+        when(requestDeliveryDAO.getByRequestIdStrongConsistency(requestId, false)).thenReturn(Mono.just(deliveryRequest));
+        when(f24Service.checkDeliveryRequestAttachmentForF24(deliveryRequest)).thenReturn(false);
+
+        var fileResponse = new FileDownloadResponseDto();
+        var fileInfoDownload = new FileDownloadInfoDto();
+        fileInfoDownload.setUrl(null);
+        fileResponse.setDownload(fileInfoDownload);
+        when(safeStorageService.getFileRecursive(any(), eq(attachment.getFileKey()), any())).thenReturn(Mono.just(fileResponse));
+
+
+        PnRequestError pnRequestError = new PnRequestError();
+        pnRequestError.setError("error");
+        pnRequestError.setFlowThrow("PREPARE_PHASE_TWO_ASYNC_DEFAULT");
+        when(paperRequestErrorDAO.created(any())).thenReturn(Mono.just(pnRequestError));
+        when(requestDeliveryDAO.updateStatus(eq(requestId), any(), any(), any(), any())).thenReturn(Mono.empty());
+
+        StepVerifier.create(preparePhaseTwoAsyncService.prepareAsyncPhaseTwo(event))
+                .expectError(PnGenericException.class)
+                .verify();
+
+        verify(sqsSender, times(1)).pushErrorDelayerToPaperChannelAfterSafeStorageErrorQueue(event);
+        verify(paperRequestErrorDAO, times(1)).created(any());
+        verify(requestDeliveryDAO, times(1)).updateStatus(eq(requestId), any(), any(), any(), any());
+    }
+
+    @Test
+    void prepareAsyncPhaseTwoAttachmentDownloadFileThrowsGenericException() {
+        var requestId = "REQID-DOWNLOAD-ERR";
+        var iun = "IUN-DOWNLOAD-ERR";
+        PnDeliveryRequest deliveryRequest = new PnDeliveryRequest();
+        deliveryRequest.setRequestId(requestId);
+        deliveryRequest.setIun(iun);
+        deliveryRequest.setProposalProductType(RACCOMANDATA_SEMPLICE);
+
+        PnAttachmentInfo attachment = new PnAttachmentInfo();
+        attachment.setFileKey("fileKey");
+        attachment.setNumberOfPage(0);
+        deliveryRequest.setAttachments(List.of(attachment));
+
+        PnPrepareDelayerToPaperchannelPayload event = PnPrepareDelayerToPaperchannelPayload.builder()
+                .requestId(requestId)
+                .iun(iun)
+                .attempt(0)
+                .build();
+
+        when(requestDeliveryDAO.getByRequestIdStrongConsistency(requestId, false)).thenReturn(Mono.just(deliveryRequest));
+        when(f24Service.checkDeliveryRequestAttachmentForF24(deliveryRequest)).thenReturn(false);
+
+        var fileResponse = new FileDownloadResponseDto();
+        var fileInfoDownload = new FileDownloadInfoDto();
+        fileInfoDownload.setUrl("http://mocked-url");
+        fileResponse.setDownload(fileInfoDownload);
+        when(safeStorageService.getFileRecursive(any(), eq(attachment.getFileKey()), any())).thenReturn(Mono.just(fileResponse));
+
+        when(safeStorageService.downloadFile(eq("http://mocked-url"))).thenReturn(Mono.error(new PnGenericException(INVALID_SAFE_STORAGE, INVALID_SAFE_STORAGE.getMessage())));
+
+        PnRequestError pnRequestError = new PnRequestError();
+        pnRequestError.setError("error");
+        pnRequestError.setFlowThrow("PREPARE_PHASE_TWO_ASYNC_DEFAULT");
+        when(paperRequestErrorDAO.created(any())).thenReturn(Mono.just(pnRequestError));
+        when(requestDeliveryDAO.updateStatus(eq(requestId), any(), any(), any(), any())).thenReturn(Mono.empty());
+
+        StepVerifier.create(preparePhaseTwoAsyncService.prepareAsyncPhaseTwo(event))
+                .expectError(PnGenericException.class)
+                .verify();
+
+        verify(sqsSender, times(1)).pushErrorDelayerToPaperChannelAfterSafeStorageErrorQueue(event);
+        verify(paperRequestErrorDAO, times(1)).created(any());
+        verify(requestDeliveryDAO, times(1)).updateStatus(eq(requestId), any(), any(), any(), any());
+    }
+
+    @Test
+    void prepareAsyncPhaseTwoF24FlowOkTest() {
+        var requestId = "PREPARE_ANALOG_DOMICILE.IUN_GJWA-HMEK-RGUJ-202307-H-1.RECINDEX_0.ATTEMPT_0";
+        var iun = "GJWA-HMEK-RGUJ-202307-H-1";
+        var deliveryRequest = getDeliveryRequest(requestId, iun,false);
+
+        PnPrepareDelayerToPaperchannelPayload event = PnPrepareDelayerToPaperchannelPayload.builder()
+                .requestId(requestId)
+                .iun(iun)
+                .attempt(0)
+                .build();
+
+        when(requestDeliveryDAO.getByRequestIdStrongConsistency(requestId, false)).thenReturn(Mono.just(deliveryRequest));
+        when(f24Service.checkDeliveryRequestAttachmentForF24(deliveryRequest)).thenReturn(true);
+        when(f24Service.preparePDF(deliveryRequest)).thenReturn(Mono.just(deliveryRequest));
+
+        StepVerifier.create(preparePhaseTwoAsyncService.prepareAsyncPhaseTwo(event))
+                .expectNext(deliveryRequest)
+                .verifyComplete();
+
+        verify(sqsSender, never()).pushPrepareEvent(any());
+    }
+
+    @Test
+    void prepareAsyncPhaseTwoErrorInGetRequest() {
+        var requestId = "PREPARE_ANALOG_DOMICILE.IUN_GJWA-HMEK-RGUJ-202307-H-1.RECINDEX_0.ATTEMPT_0";
+        var iun = "GJWA-HMEK-RGUJ-202307-H-1";
+        var deliveryRequest = getDeliveryRequest(requestId, iun,true);
+        StatusDeliveryEnum statusDeliveryEnum = StatusDeliveryEnum.PAPER_CHANNEL_ASYNC_ERROR;
+        String statusCode = statusDeliveryEnum.getCode();
+        String statusDescription = statusCode + " - " + statusDeliveryEnum.getDescription();
+        String statusDetail = statusDeliveryEnum.getDetail();
+
+        PnRequestError pnRequestError = new PnRequestError();
+        pnRequestError.setError("error");
+        pnRequestError.setGeokey(null);
+        pnRequestError.setFlowThrow("PREPARE_PHASE_TWO_ASYNC_DEFAULT");
+
+        when(requestDeliveryDAO.getByRequestIdStrongConsistency(requestId, false)).thenReturn(Mono.error(new RuntimeException()));
+        when(paperRequestErrorDAO.created(any())).thenReturn(Mono.just(pnRequestError));
+        when(requestDeliveryDAO.updateStatus(eq(deliveryRequest.getRequestId()), eq(statusCode), eq(statusDescription), eq(statusDetail), any())).thenReturn(Mono.empty());
+
+        PnPrepareDelayerToPaperchannelPayload event = PnPrepareDelayerToPaperchannelPayload.builder()
+                .requestId(requestId)
+                .iun(iun)
+                .attempt(0)
+                .build();
+
+        StepVerifier.create(preparePhaseTwoAsyncService.prepareAsyncPhaseTwo(event))
+                .expectErrorMatches(ex -> {
+                    assertInstanceOf(RuntimeException.class, ex);
+                    return true;
+                }).verify();
+
+        verify(paperRequestErrorDAO, times(1)).created(any());
+        verify(requestDeliveryDAO,times(1)).updateStatus(eq(deliveryRequest.getRequestId()), eq(statusCode), eq(statusDescription), eq(statusDetail), any());
+    }
+
+
+    @Test
+    void prepareAsyncPhaseTwoErrorInAttachmentForF24() {
+        var requestId = "PREPARE_ANALOG_DOMICILE.IUN_GJWA-HMEK-RGUJ-202307-H-1.RECINDEX_0.ATTEMPT_0";
+        var iun = "GJWA-HMEK-RGUJ-202307-H-1";
+        PnDeliveryRequest deliveryRequest = new PnDeliveryRequest();
+        deliveryRequest.setRequestId(requestId);
+        deliveryRequest.setIun(iun);
+        deliveryRequest.setAttachments(new ArrayList<>());
+
+        F24Error f24Error = new F24Error();
+        f24Error.setAttempt(1);
+
+
+        PnF24FlowException pnF24FlowException = new PnF24FlowException(ExceptionTypeEnum.F24_ERROR, f24Error, new Throwable());
+
+        when(requestDeliveryDAO.getByRequestIdStrongConsistency(requestId, false)).thenReturn(Mono.just(deliveryRequest));
+        when(f24Service.checkDeliveryRequestAttachmentForF24(deliveryRequest)).thenReturn(true);
+        when(f24Service.preparePDF(deliveryRequest)).thenReturn(Mono.error(pnF24FlowException));
+        when(requestDeliveryDAO.updateData(deliveryRequest)).thenReturn(Mono.just(deliveryRequest));
+
+        PnPrepareDelayerToPaperchannelPayload event = PnPrepareDelayerToPaperchannelPayload.builder()
+                .requestId(requestId)
+                .iun(iun)
+                .attempt(0)
+                .build();
+
+        StepVerifier.create(preparePhaseTwoAsyncService.prepareAsyncPhaseTwo(event))
+                .expectErrorMatches(ex -> {
+                    assertInstanceOf(PnF24FlowException.class, ex);
+                    return true;
+                }).verify();
+
+        verify(prepareFlowStarter, times(1)).redrivePreparePhaseTwoAfterF24Error(any(F24Error.class));
+        verify(requestDeliveryDAO, times(1)).updateData(deliveryRequest);
+    }
+    @Test
+    void prepareAsyncPhaseTwoErrorInAttachmentForF24_PnInternalException() {
+        var requestId = "PREPARE_ANALOG_DOMICILE.IUN_GJWA-HMEK-RGUJ-202307-H-1.RECINDEX_0.ATTEMPT_0";
+        var iun = "GJWA-HMEK-RGUJ-202307-H-1";
+        PnDeliveryRequest deliveryRequest = new PnDeliveryRequest();
+        deliveryRequest.setRequestId(requestId);
+        deliveryRequest.setIun(iun);
+        deliveryRequest.setAttachments(new ArrayList<>());
+
+        PnInternalException pnInternalException = new PnInternalException("Errore interno", PnExceptionsCodes.ERROR_CODE_PN_GENERIC_ERROR);
+
+        PnRequestError pnRequestError = new PnRequestError();
+        pnRequestError.setError("error");
+        pnRequestError.setFlowThrow("PREPARE_PHASE_TWO_ASYNC_DEFAULT");
+
+        StatusDeliveryEnum statusDeliveryEnum = StatusDeliveryEnum.PAPER_CHANNEL_ASYNC_ERROR;
+        String statusCode = statusDeliveryEnum.getCode();
+        String statusDescription = statusCode + " - " + statusDeliveryEnum.getDescription();
+        String statusDetail = statusDeliveryEnum.getDetail();
+
+        when(requestDeliveryDAO.getByRequestIdStrongConsistency(requestId, false)).thenReturn(Mono.just(deliveryRequest));
+        when(f24Service.checkDeliveryRequestAttachmentForF24(deliveryRequest)).thenReturn(true);
+        when(f24Service.preparePDF(deliveryRequest)).thenReturn(Mono.error(pnInternalException));
+        when(paperRequestErrorDAO.created(any())).thenReturn(Mono.just(pnRequestError));
+        when(requestDeliveryDAO.updateStatus(eq(requestId), eq(statusCode), eq(statusDescription), eq(statusDetail), any())).thenReturn(Mono.empty());
+
+        PnPrepareDelayerToPaperchannelPayload event = PnPrepareDelayerToPaperchannelPayload.builder()
+                .requestId(requestId)
+                .iun(iun)
+                .attempt(0)
+                .build();
+
+        StepVerifier.create(preparePhaseTwoAsyncService.prepareAsyncPhaseTwo(event))
+                .expectErrorMatches(ex -> {
+                    assertInstanceOf(PnInternalException.class, ex);
+                    return true;
+                }).verify();
+
+        verify(paperRequestErrorDAO, times(1)).created(any());
+        verify(requestDeliveryDAO, times(1)).updateStatus(eq(requestId), eq(statusCode), eq(statusDescription), eq(statusDetail), any());
+    }
+
+    @Test
+    void prepareAsyncPhaseTwoErrorInAttachmentForF24_RuntimeException() {
+        var requestId = "PREPARE_ANALOG_DOMICILE.IUN_GJWA-HMEK-RGUJ-202307-H-1.RECINDEX_0.ATTEMPT_0";
+        var iun = "GJWA-HMEK-RGUJ-202307-H-1";
+        PnDeliveryRequest deliveryRequest = new PnDeliveryRequest();
+        deliveryRequest.setRequestId(requestId);
+        deliveryRequest.setIun(iun);
+        deliveryRequest.setAttachments(new ArrayList<>());
+
+        RuntimeException runtimeException = new RuntimeException("Errore generico");
+
+        PnRequestError pnRequestError = new PnRequestError();
+        pnRequestError.setError("error");
+        pnRequestError.setFlowThrow("PREPARE_PHASE_TWO_ASYNC_DEFAULT");
+
+        StatusDeliveryEnum statusDeliveryEnum = StatusDeliveryEnum.PAPER_CHANNEL_ASYNC_ERROR;
+        String statusCode = statusDeliveryEnum.getCode();
+        String statusDescription = statusCode + " - " + statusDeliveryEnum.getDescription();
+        String statusDetail = statusDeliveryEnum.getDetail();
+
+        when(requestDeliveryDAO.getByRequestIdStrongConsistency(requestId, false)).thenReturn(Mono.just(deliveryRequest));
+        when(f24Service.checkDeliveryRequestAttachmentForF24(deliveryRequest)).thenReturn(true);
+        when(f24Service.preparePDF(deliveryRequest)).thenReturn(Mono.error(runtimeException));
+        when(paperRequestErrorDAO.created(any())).thenReturn(Mono.just(pnRequestError));
+        when(requestDeliveryDAO.updateStatus(eq(requestId), eq(statusCode), eq(statusDescription), eq(statusDetail), any())).thenReturn(Mono.empty());
+
+        PnPrepareDelayerToPaperchannelPayload event = PnPrepareDelayerToPaperchannelPayload.builder()
+                .requestId(requestId)
+                .iun(iun)
+                .attempt(0)
+                .build();
+
+        StepVerifier.create(preparePhaseTwoAsyncService.prepareAsyncPhaseTwo(event))
+                .expectErrorMatches(ex -> {
+                    assertInstanceOf(RuntimeException.class, ex);
+                    return true;
+                }).verify();
+
+        verify(paperRequestErrorDAO, times(1)).created(any());
+        verify(requestDeliveryDAO, times(1)).updateStatus(eq(requestId), eq(statusCode), eq(statusDescription), eq(statusDetail), any());
+    }
+
+    private void inizialize(){}
+
+    private PnDeliveryRequest getDeliveryRequest(String requestId, String iun,boolean searchAttacchmentInfo){
+        final PnDeliveryRequest deliveryRequest = new PnDeliveryRequest();
+        deliveryRequest.setRequestId(requestId);
+        deliveryRequest.setIun(iun);
+        deliveryRequest.setProposalProductType(RACCOMANDATA_SEMPLICE);
+        List<PnAttachmentInfo> attachmentInfoList;
+        if(searchAttacchmentInfo){
+            attachmentInfoList = attachmentInfoList();
+        } else {
+            attachmentInfoList = attachmentInfoListF24();
+        }
+        deliveryRequest.setAttachments(attachmentInfoList);
+        return deliveryRequest;
+    }
+
+    private List<PnAttachmentInfo> attachmentInfoList (){
+        List<PnAttachmentInfo> attachmentInfoList = new ArrayList<>();
+        attachmentInfo.setId("FFPAPERTEST.IUN_FATY-FATY-2023041520230302-101111.RECINDEX_0");
+        attachmentInfo.setDate("2023-01-01T00:20:56.630714800Z");
+        attachmentInfo.setUrl("");
+        attachmentInfo.setDocumentType("pdf");
+        attachmentInfo.setFileKey("http://localhost:8080");
+        attachmentInfo.setNumberOfPage(0);
+        attachmentInfoList.add(attachmentInfo);
+        return attachmentInfoList;
+    }
+
+    private List<PnAttachmentInfo> attachmentInfoListF24 (){
+        List<PnAttachmentInfo> attachmentInfoList = new ArrayList<>();
+        attachmentInfo.setId("FFPAPERTEST.IUN_FATY-FATY-2023041520230302-101111.RECINDEX_0");
+        attachmentInfo.setDate("2023-01-01T00:20:56.630714800Z");
+        attachmentInfo.setUrl("");
+        attachmentInfo.setDocumentType("PN_F24_SET");
+        attachmentInfo.setFileKey("f24set");
+        attachmentInfo.setNumberOfPage(0);
+        attachmentInfoList.add(attachmentInfo);
+        return attachmentInfoList;
+    }
+
+
+}
