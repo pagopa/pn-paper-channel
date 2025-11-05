@@ -24,19 +24,22 @@ import it.pagopa.pn.paperchannel.service.SafeStorageService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.PrepareAsyncErrorUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.INVALID_SAFE_STORAGE;
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 import static it.pagopa.pn.paperchannel.utils.Const.RACCOMANDATA_SEMPLICE;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.mockito.ArgumentMatchers.any;
@@ -72,7 +75,6 @@ public class PreparePhaseTwoAsyncServiceImplTest {
         inizialize();
     }
 
-
     @Test
     void prepareAsyncPhaseTwoRegularFlowOkTest() {
         var requestId = "PREPARE_ANALOG_DOMICILE.IUN_GJWA-HMEK-RGUJ-202307-H-1.RECINDEX_0.ATTEMPT_0";
@@ -93,7 +95,6 @@ public class PreparePhaseTwoAsyncServiceImplTest {
                 .attempt(0)
                 .build();
 
-        // Mock flusso normale (non F24)
         when(requestDeliveryDAO.getByRequestIdStrongConsistency(requestId, false)).thenReturn(Mono.just(deliveryRequest));
         when(f24Service.checkDeliveryRequestAttachmentForF24(deliveryRequest)).thenReturn(false);
         // Gli allegati sono già processati (numberOfPage > 0)
@@ -152,7 +153,6 @@ public class PreparePhaseTwoAsyncServiceImplTest {
         deliveryRequest.setIun(iun);
         deliveryRequest.setProposalProductType(RACCOMANDATA_SEMPLICE);
 
-        // Aggiungi almeno un attachment da processare
         PnAttachmentInfo attachment = new PnAttachmentInfo();
         attachment.setFileKey("fileKey");
         attachment.setNumberOfPage(0);
@@ -195,7 +195,7 @@ public class PreparePhaseTwoAsyncServiceImplTest {
         verify(sqsSender, times(1)).pushPrepareEvent(any());
     }
     @Test
-    void prepareAsyncPhaseTwoAttachmentUrlNullThrowsGenericException() {
+    void prepareAsyncPhaseTwoUrlNullThrowsGenericException() {
         var requestId = "REQID-URL-NULL";
         var iun = "IUN-URL-NULL";
         PnDeliveryRequest deliveryRequest = new PnDeliveryRequest();
@@ -207,6 +207,25 @@ public class PreparePhaseTwoAsyncServiceImplTest {
         attachment.setFileKey("fileKey");
         attachment.setNumberOfPage(0);
         deliveryRequest.setAttachments(List.of(attachment));
+
+        PnRequestError pnRequestError = new PnRequestError();
+        pnRequestError.setError("");
+        pnRequestError.setFlowThrow("PREPARE_PHASE_TWO_ASYNC_DEFAULT");
+        pnRequestError.setCause("UNKNOWN##"+ Instant.now().toString());
+        pnRequestError.setCategory("UNKNOWN");
+        pnRequestError.setAuthor("PN-PAPER-CHANNEL");
+        pnRequestError.setRequestId("PREPARE_ANALOG_DOMICILE.IUN_GJWA-HMEK-RGUJ-202307-H-1.RECINDEX_0.ATTEMPT_0");
+        pnRequestError.setCreated(Instant.now());
+
+        StatusDeliveryEnum statusDeliveryEnum = StatusDeliveryEnum.SAFE_STORAGE_IN_ERROR;
+        String statusCode = statusDeliveryEnum.getCode();
+        String statusDescription = statusCode + " - " + statusDeliveryEnum.getDescription();
+        String statusDetail = statusDeliveryEnum.getDetail();
+
+        ArgumentCaptor<String> descriptionCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<PnRequestError> itemErrorCaptor = ArgumentCaptor.forClass(PnRequestError.class);
+        ArgumentCaptor<String> statusCodeCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> statusDetailCaptor = ArgumentCaptor.forClass(String.class);
 
         PnPrepareDelayerToPaperchannelPayload event = PnPrepareDelayerToPaperchannelPayload.builder()
                 .requestId(requestId)
@@ -221,12 +240,7 @@ public class PreparePhaseTwoAsyncServiceImplTest {
         var fileInfoDownload = new FileDownloadInfoDto();
         fileInfoDownload.setUrl(null);
         fileResponse.setDownload(fileInfoDownload);
-        when(safeStorageService.getFileRecursive(any(), eq(attachment.getFileKey()), any())).thenReturn(Mono.just(fileResponse));
-
-
-        PnRequestError pnRequestError = new PnRequestError();
-        pnRequestError.setError("error");
-        pnRequestError.setFlowThrow("PREPARE_PHASE_TWO_ASYNC_DEFAULT");
+        when(safeStorageService.getFileRecursive(any(), eq(attachment.getFileKey()), any())).thenReturn(Mono.error(new PnGenericException(DOCUMENT_URL_NOT_FOUND, DOCUMENT_URL_NOT_FOUND.getMessage())));
         when(paperRequestErrorDAO.created(any())).thenReturn(Mono.just(pnRequestError));
         when(requestDeliveryDAO.updateStatus(eq(requestId), any(), any(), any(), any())).thenReturn(Mono.empty());
 
@@ -235,9 +249,75 @@ public class PreparePhaseTwoAsyncServiceImplTest {
                 .verify();
 
         verify(sqsSender, times(1)).pushErrorDelayerToPaperChannelAfterSafeStorageErrorQueue(event);
-        verify(paperRequestErrorDAO, times(1)).created(any());
-        verify(requestDeliveryDAO, times(1)).updateStatus(eq(requestId), any(), any(), any(), any());
+        verify(paperRequestErrorDAO, times(1)).created(itemErrorCaptor.capture());
+        verify(requestDeliveryDAO, times(1)).updateStatus(eq(requestId), statusCodeCaptor.capture(),descriptionCaptor.capture(),statusDetailCaptor.capture(), any());
+
+        Assertions.assertEquals(statusDescription, descriptionCaptor.getValue());
+        Assertions.assertEquals(statusCode, statusCodeCaptor.getValue());
+        Assertions.assertEquals(statusDetail, statusDetailCaptor.getValue());
+
     }
+
+    @Test
+    void prepareAsyncPhaseTwoAttachmentUrlNullThrowsGenericException() {
+        var requestId = "REQID-URL-NULL";
+        var iun = "IUN-URL-NULL";
+        PnDeliveryRequest deliveryRequest = new PnDeliveryRequest();
+        deliveryRequest.setRequestId(requestId);
+        deliveryRequest.setIun(iun);
+        deliveryRequest.setProposalProductType(RACCOMANDATA_SEMPLICE);
+
+        PnAttachmentInfo attachment = new PnAttachmentInfo();
+        attachment.setFileKey("fileKey");
+        attachment.setUrl(null);
+        deliveryRequest.setAttachments(List.of(attachment));
+
+        PnRequestError pnRequestError = new PnRequestError();
+        pnRequestError.setError("");
+        pnRequestError.setFlowThrow("PREPARE_PHASE_TWO_ASYNC_DEFAULT");
+        pnRequestError.setCause("UNKNOWN##"+ Instant.now().toString());
+        pnRequestError.setCategory("UNKNOWN");
+        pnRequestError.setAuthor("PN-PAPER-CHANNEL");
+        pnRequestError.setRequestId("PREPARE_ANALOG_DOMICILE.IUN_GJWA-HMEK-RGUJ-202307-H-1.RECINDEX_0.ATTEMPT_0");
+        pnRequestError.setCreated(Instant.now());
+
+        StatusDeliveryEnum statusDeliveryEnum = StatusDeliveryEnum.SAFE_STORAGE_IN_ERROR;
+        String statusCode = statusDeliveryEnum.getCode();
+        String statusDescription = statusCode + " - " + statusDeliveryEnum.getDescription();
+        String statusDetail = statusDeliveryEnum.getDetail();
+
+        ArgumentCaptor<String> descriptionCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<PnRequestError> itemErrorCaptor = ArgumentCaptor.forClass(PnRequestError.class);
+        ArgumentCaptor<String> statusCodeCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> statusDetailCaptor = ArgumentCaptor.forClass(String.class);
+
+        PnPrepareDelayerToPaperchannelPayload event = PnPrepareDelayerToPaperchannelPayload.builder()
+                .requestId(requestId)
+                .iun(iun)
+                .attempt(0)
+                .build();
+
+        when(requestDeliveryDAO.getByRequestIdStrongConsistency(requestId, false)).thenReturn(Mono.just(deliveryRequest));
+        when(f24Service.checkDeliveryRequestAttachmentForF24(deliveryRequest)).thenReturn(false);
+
+        when(safeStorageService.getFileRecursive(any(), eq(attachment.getFileKey()), any())).thenReturn(Mono.error(new PnGenericException(INVALID_SAFE_STORAGE, INVALID_SAFE_STORAGE.getMessage())));
+        when(paperRequestErrorDAO.created(any())).thenReturn(Mono.just(pnRequestError));
+        when(requestDeliveryDAO.updateStatus(eq(requestId), any(), any(), any(), any())).thenReturn(Mono.empty());
+
+        StepVerifier.create(preparePhaseTwoAsyncService.prepareAsyncPhaseTwo(event))
+                .expectError(PnGenericException.class)
+                .verify();
+
+        verify(sqsSender, times(1)).pushErrorDelayerToPaperChannelAfterSafeStorageErrorQueue(event);
+        verify(paperRequestErrorDAO, times(1)).created(itemErrorCaptor.capture());
+        verify(requestDeliveryDAO, times(1)).updateStatus(eq(requestId), statusCodeCaptor.capture(),descriptionCaptor.capture(),statusDetailCaptor.capture(), any());
+
+        Assertions.assertEquals(statusDescription, descriptionCaptor.getValue());
+        Assertions.assertEquals(statusCode, statusCodeCaptor.getValue());
+        Assertions.assertEquals(statusDetail, statusDetailCaptor.getValue());
+
+    }
+
 
     @Test
     void prepareAsyncPhaseTwoAttachmentDownloadFileThrowsGenericException() {
@@ -253,6 +333,25 @@ public class PreparePhaseTwoAsyncServiceImplTest {
         attachment.setNumberOfPage(0);
         deliveryRequest.setAttachments(List.of(attachment));
 
+        PnRequestError pnRequestError = new PnRequestError();
+        pnRequestError.setError("");
+        pnRequestError.setFlowThrow("PREPARE_PHASE_TWO_ASYNC_DEFAULT");
+        pnRequestError.setCause("UNKNOWN##"+ Instant.now().toString());
+        pnRequestError.setCategory("UNKNOWN");
+        pnRequestError.setAuthor("PN-PAPER-CHANNEL");
+        pnRequestError.setRequestId("PREPARE_ANALOG_DOMICILE.IUN_GJWA-HMEK-RGUJ-202307-H-1.RECINDEX_0.ATTEMPT_0");
+        pnRequestError.setCreated(Instant.now());
+
+        StatusDeliveryEnum statusDeliveryEnum = StatusDeliveryEnum.SAFE_STORAGE_IN_ERROR;
+        String statusCode = statusDeliveryEnum.getCode();
+        String statusDescription = statusCode + " - " + statusDeliveryEnum.getDescription();
+        String statusDetail = statusDeliveryEnum.getDetail();
+
+        ArgumentCaptor<String> descriptionCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<PnRequestError> itemErrorCaptor = ArgumentCaptor.forClass(PnRequestError.class);
+        ArgumentCaptor<String> statusCodeCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> statusDetailCaptor = ArgumentCaptor.forClass(String.class);
+
         PnPrepareDelayerToPaperchannelPayload event = PnPrepareDelayerToPaperchannelPayload.builder()
                 .requestId(requestId)
                 .iun(iun)
@@ -267,12 +366,7 @@ public class PreparePhaseTwoAsyncServiceImplTest {
         fileInfoDownload.setUrl("http://mocked-url");
         fileResponse.setDownload(fileInfoDownload);
         when(safeStorageService.getFileRecursive(any(), eq(attachment.getFileKey()), any())).thenReturn(Mono.just(fileResponse));
-
-        when(safeStorageService.downloadFile(eq("http://mocked-url"))).thenReturn(Mono.error(new PnGenericException(INVALID_SAFE_STORAGE, INVALID_SAFE_STORAGE.getMessage())));
-
-        PnRequestError pnRequestError = new PnRequestError();
-        pnRequestError.setError("error");
-        pnRequestError.setFlowThrow("PREPARE_PHASE_TWO_ASYNC_DEFAULT");
+        when(safeStorageService.downloadFile(eq("http://mocked-url"))).thenReturn(Mono.error(new PnGenericException(DOCUMENT_NOT_DOWNLOADED, DOCUMENT_NOT_DOWNLOADED.getMessage())));
         when(paperRequestErrorDAO.created(any())).thenReturn(Mono.just(pnRequestError));
         when(requestDeliveryDAO.updateStatus(eq(requestId), any(), any(), any(), any())).thenReturn(Mono.empty());
 
@@ -281,8 +375,12 @@ public class PreparePhaseTwoAsyncServiceImplTest {
                 .verify();
 
         verify(sqsSender, times(1)).pushErrorDelayerToPaperChannelAfterSafeStorageErrorQueue(event);
-        verify(paperRequestErrorDAO, times(1)).created(any());
-        verify(requestDeliveryDAO, times(1)).updateStatus(eq(requestId), any(), any(), any(), any());
+        verify(paperRequestErrorDAO, times(1)).created(itemErrorCaptor.capture());
+        verify(requestDeliveryDAO, times(1)).updateStatus(eq(requestId), statusCodeCaptor.capture(),descriptionCaptor.capture(),statusDetailCaptor.capture(), any());
+
+        Assertions.assertEquals(statusDescription, descriptionCaptor.getValue());
+        Assertions.assertEquals(statusCode, statusCodeCaptor.getValue());
+        Assertions.assertEquals(statusDetail, statusDetailCaptor.getValue());
     }
 
     @Test
@@ -323,7 +421,14 @@ public class PreparePhaseTwoAsyncServiceImplTest {
         pnRequestError.setGeokey(null);
         pnRequestError.setFlowThrow("PREPARE_PHASE_TWO_ASYNC_DEFAULT");
 
-        when(requestDeliveryDAO.getByRequestIdStrongConsistency(requestId, false)).thenReturn(Mono.error(new RuntimeException()));
+        ArgumentCaptor<String> descriptionCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> statusCodeCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> statusDetailCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<PnRequestError> itemErrorCaptor = ArgumentCaptor.forClass(PnRequestError.class);
+
+        RuntimeException runtimeException = new RuntimeException("Errore generico");
+
+        when(requestDeliveryDAO.getByRequestIdStrongConsistency(requestId, false)).thenReturn(Mono.error(runtimeException));
         when(paperRequestErrorDAO.created(any())).thenReturn(Mono.just(pnRequestError));
         when(requestDeliveryDAO.updateStatus(eq(deliveryRequest.getRequestId()), eq(statusCode), eq(statusDescription), eq(statusDetail), any())).thenReturn(Mono.empty());
 
@@ -339,8 +444,12 @@ public class PreparePhaseTwoAsyncServiceImplTest {
                     return true;
                 }).verify();
 
-        verify(paperRequestErrorDAO, times(1)).created(any());
-        verify(requestDeliveryDAO,times(1)).updateStatus(eq(deliveryRequest.getRequestId()), eq(statusCode), eq(statusDescription), eq(statusDetail), any());
+        verify(paperRequestErrorDAO, times(1)).created(itemErrorCaptor.capture());
+        verify(requestDeliveryDAO,times(1)).updateStatus(eq(deliveryRequest.getRequestId()), statusCodeCaptor.capture(), descriptionCaptor.capture(), statusDetailCaptor.capture(), any());
+
+        Assertions.assertEquals(statusDescription,descriptionCaptor.getValue());
+        Assertions.assertEquals(statusCode,statusCodeCaptor.getValue());
+        Assertions.assertEquals(statusDetail,statusDetailCaptor.getValue());
     }
 
 
@@ -354,10 +463,13 @@ public class PreparePhaseTwoAsyncServiceImplTest {
         deliveryRequest.setAttachments(new ArrayList<>());
 
         F24Error f24Error = new F24Error();
+        f24Error.setMessage(ExceptionTypeEnum.F24_ERROR.getMessage());
+        f24Error.setRequestId("PREPARE_ANALOG_DOMICILE.IUN_GJWA-HMEK-RGUJ-202307-H-1.RECINDEX_0.ATTEMPT_0");
         f24Error.setAttempt(1);
 
-
         PnF24FlowException pnF24FlowException = new PnF24FlowException(ExceptionTypeEnum.F24_ERROR, f24Error, new Throwable());
+
+        ArgumentCaptor<F24Error> f24ErrorArgumentCaptor = ArgumentCaptor.forClass(F24Error.class);
 
         when(requestDeliveryDAO.getByRequestIdStrongConsistency(requestId, false)).thenReturn(Mono.just(deliveryRequest));
         when(f24Service.checkDeliveryRequestAttachmentForF24(deliveryRequest)).thenReturn(true);
@@ -376,8 +488,10 @@ public class PreparePhaseTwoAsyncServiceImplTest {
                     return true;
                 }).verify();
 
-        verify(prepareFlowStarter, times(1)).redrivePreparePhaseTwoAfterF24Error(any(F24Error.class));
+        verify(prepareFlowStarter, times(1)).redrivePreparePhaseTwoAfterF24Error(f24ErrorArgumentCaptor.capture());
         verify(requestDeliveryDAO, times(1)).updateData(deliveryRequest);
+
+        Assertions.assertEquals(f24Error,f24ErrorArgumentCaptor.getValue());
     }
     @Test
     void prepareAsyncPhaseTwoErrorInAttachmentForF24_PnInternalException() {
@@ -388,16 +502,26 @@ public class PreparePhaseTwoAsyncServiceImplTest {
         deliveryRequest.setIun(iun);
         deliveryRequest.setAttachments(new ArrayList<>());
 
-        PnInternalException pnInternalException = new PnInternalException("Errore interno", PnExceptionsCodes.ERROR_CODE_PN_GENERIC_ERROR);
+        PnInternalException pnInternalException = new PnInternalException("missing URL f24set on f24serviceImpl", PnExceptionsCodes.ERROR_CODE_PN_GENERIC_ERROR);
 
         PnRequestError pnRequestError = new PnRequestError();
-        pnRequestError.setError("error");
+        pnRequestError.setError("Internal Server Error");
         pnRequestError.setFlowThrow("PREPARE_PHASE_TWO_ASYNC_DEFAULT");
+        pnRequestError.setCause("UNKNOWN##"+ Instant.now().toString());
+        pnRequestError.setCategory("UNKNOWN");
+        pnRequestError.setAuthor("PN-PAPER-CHANNEL");
+        pnRequestError.setRequestId("PREPARE_ANALOG_DOMICILE.IUN_GJWA-HMEK-RGUJ-202307-H-1.RECINDEX_0.ATTEMPT_0");
+        pnRequestError.setCreated(Instant.now());
 
         StatusDeliveryEnum statusDeliveryEnum = StatusDeliveryEnum.PAPER_CHANNEL_ASYNC_ERROR;
         String statusCode = statusDeliveryEnum.getCode();
         String statusDescription = statusCode + " - " + statusDeliveryEnum.getDescription();
         String statusDetail = statusDeliveryEnum.getDetail();
+
+        ArgumentCaptor<String> descriptionCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<PnRequestError> itemErrorCaptor = ArgumentCaptor.forClass(PnRequestError.class);
+        ArgumentCaptor<String> statusCodeCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> statusDetailCaptor = ArgumentCaptor.forClass(String.class);
 
         when(requestDeliveryDAO.getByRequestIdStrongConsistency(requestId, false)).thenReturn(Mono.just(deliveryRequest));
         when(f24Service.checkDeliveryRequestAttachmentForF24(deliveryRequest)).thenReturn(true);
@@ -417,8 +541,12 @@ public class PreparePhaseTwoAsyncServiceImplTest {
                     return true;
                 }).verify();
 
-        verify(paperRequestErrorDAO, times(1)).created(any());
-        verify(requestDeliveryDAO, times(1)).updateStatus(eq(requestId), eq(statusCode), eq(statusDescription), eq(statusDetail), any());
+        verify(paperRequestErrorDAO, times(1)).created(itemErrorCaptor.capture());
+        verify(requestDeliveryDAO, times(1)).updateStatus(eq(requestId), statusCodeCaptor.capture(), descriptionCaptor.capture(), statusDetailCaptor.capture(), any());
+
+        Assertions.assertEquals(statusDescription, descriptionCaptor.getValue());
+        Assertions.assertEquals(statusCode, statusCodeCaptor.getValue());
+        Assertions.assertEquals(statusDetail, statusDetailCaptor.getValue());
     }
 
     @Test
@@ -433,8 +561,18 @@ public class PreparePhaseTwoAsyncServiceImplTest {
         RuntimeException runtimeException = new RuntimeException("Errore generico");
 
         PnRequestError pnRequestError = new PnRequestError();
-        pnRequestError.setError("error");
+        pnRequestError.setError("Errore generico");
         pnRequestError.setFlowThrow("PREPARE_PHASE_TWO_ASYNC_DEFAULT");
+        pnRequestError.setCause("UNKNOWN##"+ Instant.now().toString());
+        pnRequestError.setCategory("UNKNOWN");
+        pnRequestError.setAuthor("PN-PAPER-CHANNEL");
+        pnRequestError.setRequestId("PREPARE_ANALOG_DOMICILE.IUN_GJWA-HMEK-RGUJ-202307-H-1.RECINDEX_0.ATTEMPT_0");
+        pnRequestError.setCreated(Instant.now());
+
+        ArgumentCaptor<String> descriptionCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> statusCodeCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> statusDetailCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<PnRequestError> itemErrorCaptor = ArgumentCaptor.forClass(PnRequestError.class);
 
         StatusDeliveryEnum statusDeliveryEnum = StatusDeliveryEnum.PAPER_CHANNEL_ASYNC_ERROR;
         String statusCode = statusDeliveryEnum.getCode();
@@ -459,8 +597,12 @@ public class PreparePhaseTwoAsyncServiceImplTest {
                     return true;
                 }).verify();
 
-        verify(paperRequestErrorDAO, times(1)).created(any());
-        verify(requestDeliveryDAO, times(1)).updateStatus(eq(requestId), eq(statusCode), eq(statusDescription), eq(statusDetail), any());
+        verify(paperRequestErrorDAO, times(1)).created(itemErrorCaptor.capture());
+        verify(requestDeliveryDAO, times(1)).updateStatus(eq(requestId), statusCodeCaptor.capture(), descriptionCaptor.capture(), statusDetailCaptor.capture(), any());
+
+        Assertions.assertEquals(statusDescription, descriptionCaptor.getValue());
+        Assertions.assertEquals(statusCode, statusCodeCaptor.getValue());
+        Assertions.assertEquals(statusDetail, statusDetailCaptor.getValue());
     }
 
     private void inizialize(){}
