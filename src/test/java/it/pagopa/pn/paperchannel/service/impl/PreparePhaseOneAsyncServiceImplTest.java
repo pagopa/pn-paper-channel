@@ -25,7 +25,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -33,8 +32,8 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.ADDRESS_NOT_EXIST;
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.ADDRESS_MANAGER_ERROR;
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.ATTEMPT_ADDRESS_NATIONAL_REGISTRY;
 import static it.pagopa.pn.paperchannel.utils.Const.RACCOMANDATA_SEMPLICE;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.mockito.ArgumentMatchers.*;
