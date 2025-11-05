@@ -209,7 +209,7 @@ public class PreparePhaseTwoAsyncServiceImplTest {
         deliveryRequest.setAttachments(List.of(attachment));
 
         PnRequestError pnRequestError = new PnRequestError();
-        pnRequestError.setError("");
+        pnRequestError.setError("Url allegato non disponibile");
         pnRequestError.setFlowThrow("PREPARE_PHASE_TWO_ASYNC_DEFAULT");
         pnRequestError.setCause("UNKNOWN##"+ Instant.now().toString());
         pnRequestError.setCategory("UNKNOWN");
@@ -252,9 +252,14 @@ public class PreparePhaseTwoAsyncServiceImplTest {
         verify(paperRequestErrorDAO, times(1)).created(itemErrorCaptor.capture());
         verify(requestDeliveryDAO, times(1)).updateStatus(eq(requestId), statusCodeCaptor.capture(),descriptionCaptor.capture(),statusDetailCaptor.capture(), any());
 
+        PnRequestError pnRequestErrorForAssertion = itemErrorCaptor.getValue();
+
         Assertions.assertEquals(statusDescription, descriptionCaptor.getValue());
         Assertions.assertEquals(statusCode, statusCodeCaptor.getValue());
         Assertions.assertEquals(statusDetail, statusDetailCaptor.getValue());
+        Assertions.assertEquals(pnRequestError.getError(),pnRequestErrorForAssertion.getError());
+        Assertions.assertEquals(pnRequestError.getFlowThrow(),pnRequestErrorForAssertion.getFlowThrow());
+        Assertions.assertEquals(pnRequestError.getCategory(),pnRequestErrorForAssertion.getCategory());
 
     }
 
@@ -273,7 +278,7 @@ public class PreparePhaseTwoAsyncServiceImplTest {
         deliveryRequest.setAttachments(List.of(attachment));
 
         PnRequestError pnRequestError = new PnRequestError();
-        pnRequestError.setError("");
+        pnRequestError.setError("Il Safe Storage selezionato è inesistente.");
         pnRequestError.setFlowThrow("PREPARE_PHASE_TWO_ASYNC_DEFAULT");
         pnRequestError.setCause("UNKNOWN##"+ Instant.now().toString());
         pnRequestError.setCategory("UNKNOWN");
@@ -312,9 +317,14 @@ public class PreparePhaseTwoAsyncServiceImplTest {
         verify(paperRequestErrorDAO, times(1)).created(itemErrorCaptor.capture());
         verify(requestDeliveryDAO, times(1)).updateStatus(eq(requestId), statusCodeCaptor.capture(),descriptionCaptor.capture(),statusDetailCaptor.capture(), any());
 
+        PnRequestError pnRequestErrorForAssertion = itemErrorCaptor.getValue();
+
         Assertions.assertEquals(statusDescription, descriptionCaptor.getValue());
         Assertions.assertEquals(statusCode, statusCodeCaptor.getValue());
         Assertions.assertEquals(statusDetail, statusDetailCaptor.getValue());
+        Assertions.assertEquals(pnRequestError.getError(),pnRequestErrorForAssertion.getError());
+        Assertions.assertEquals(pnRequestError.getFlowThrow(),pnRequestErrorForAssertion.getFlowThrow());
+        Assertions.assertEquals(pnRequestError.getCategory(),pnRequestErrorForAssertion.getCategory());
 
     }
 
@@ -334,7 +344,7 @@ public class PreparePhaseTwoAsyncServiceImplTest {
         deliveryRequest.setAttachments(List.of(attachment));
 
         PnRequestError pnRequestError = new PnRequestError();
-        pnRequestError.setError("");
+        pnRequestError.setError("Non è stato possibile scaricare il documento");
         pnRequestError.setFlowThrow("PREPARE_PHASE_TWO_ASYNC_DEFAULT");
         pnRequestError.setCause("UNKNOWN##"+ Instant.now().toString());
         pnRequestError.setCategory("UNKNOWN");
@@ -378,9 +388,14 @@ public class PreparePhaseTwoAsyncServiceImplTest {
         verify(paperRequestErrorDAO, times(1)).created(itemErrorCaptor.capture());
         verify(requestDeliveryDAO, times(1)).updateStatus(eq(requestId), statusCodeCaptor.capture(),descriptionCaptor.capture(),statusDetailCaptor.capture(), any());
 
+        PnRequestError pnRequestErrorForAssertion = itemErrorCaptor.getValue();
+
         Assertions.assertEquals(statusDescription, descriptionCaptor.getValue());
         Assertions.assertEquals(statusCode, statusCodeCaptor.getValue());
         Assertions.assertEquals(statusDetail, statusDetailCaptor.getValue());
+        Assertions.assertEquals(pnRequestError.getError(),pnRequestErrorForAssertion.getError());
+        Assertions.assertEquals(pnRequestError.getFlowThrow(),pnRequestErrorForAssertion.getFlowThrow());
+        Assertions.assertEquals(pnRequestError.getCategory(),pnRequestErrorForAssertion.getCategory());
     }
 
     @Test
@@ -417,8 +432,9 @@ public class PreparePhaseTwoAsyncServiceImplTest {
         String statusDetail = statusDeliveryEnum.getDetail();
 
         PnRequestError pnRequestError = new PnRequestError();
-        pnRequestError.setError("error");
+        pnRequestError.setError("Errore generico");
         pnRequestError.setGeokey(null);
+        pnRequestError.setCategory("UNKNOWN");
         pnRequestError.setFlowThrow("PREPARE_PHASE_TWO_ASYNC_DEFAULT");
 
         ArgumentCaptor<String> descriptionCaptor = ArgumentCaptor.forClass(String.class);
@@ -447,9 +463,14 @@ public class PreparePhaseTwoAsyncServiceImplTest {
         verify(paperRequestErrorDAO, times(1)).created(itemErrorCaptor.capture());
         verify(requestDeliveryDAO,times(1)).updateStatus(eq(deliveryRequest.getRequestId()), statusCodeCaptor.capture(), descriptionCaptor.capture(), statusDetailCaptor.capture(), any());
 
-        Assertions.assertEquals(statusDescription,descriptionCaptor.getValue());
-        Assertions.assertEquals(statusCode,statusCodeCaptor.getValue());
-        Assertions.assertEquals(statusDetail,statusDetailCaptor.getValue());
+        PnRequestError pnRequestErrorForAssertion = itemErrorCaptor.getValue();
+
+        Assertions.assertEquals(statusDescription, descriptionCaptor.getValue());
+        Assertions.assertEquals(statusCode, statusCodeCaptor.getValue());
+        Assertions.assertEquals(statusDetail, statusDetailCaptor.getValue());
+        Assertions.assertEquals(pnRequestError.getError(),pnRequestErrorForAssertion.getError());
+        Assertions.assertEquals(pnRequestError.getFlowThrow(),pnRequestErrorForAssertion.getFlowThrow());
+        Assertions.assertEquals(pnRequestError.getCategory(),pnRequestErrorForAssertion.getCategory());
     }
 
 
@@ -491,7 +512,9 @@ public class PreparePhaseTwoAsyncServiceImplTest {
         verify(prepareFlowStarter, times(1)).redrivePreparePhaseTwoAfterF24Error(f24ErrorArgumentCaptor.capture());
         verify(requestDeliveryDAO, times(1)).updateData(deliveryRequest);
 
+        F24Error f24ErrorForAssertion = f24ErrorArgumentCaptor.getValue();
         Assertions.assertEquals(f24Error,f24ErrorArgumentCaptor.getValue());
+        Assertions.assertEquals(f24Error.getMessage(),f24ErrorForAssertion.getMessage());
     }
     @Test
     void prepareAsyncPhaseTwoErrorInAttachmentForF24_PnInternalException() {
@@ -544,9 +567,14 @@ public class PreparePhaseTwoAsyncServiceImplTest {
         verify(paperRequestErrorDAO, times(1)).created(itemErrorCaptor.capture());
         verify(requestDeliveryDAO, times(1)).updateStatus(eq(requestId), statusCodeCaptor.capture(), descriptionCaptor.capture(), statusDetailCaptor.capture(), any());
 
+        PnRequestError pnRequestErrorForAssertion = itemErrorCaptor.getValue();
+
         Assertions.assertEquals(statusDescription, descriptionCaptor.getValue());
         Assertions.assertEquals(statusCode, statusCodeCaptor.getValue());
         Assertions.assertEquals(statusDetail, statusDetailCaptor.getValue());
+        Assertions.assertEquals(pnRequestError.getError(),pnRequestErrorForAssertion.getError());
+        Assertions.assertEquals(pnRequestError.getFlowThrow(),pnRequestErrorForAssertion.getFlowThrow());
+        Assertions.assertEquals(pnRequestError.getCategory(),pnRequestErrorForAssertion.getCategory());
     }
 
     @Test
@@ -600,9 +628,14 @@ public class PreparePhaseTwoAsyncServiceImplTest {
         verify(paperRequestErrorDAO, times(1)).created(itemErrorCaptor.capture());
         verify(requestDeliveryDAO, times(1)).updateStatus(eq(requestId), statusCodeCaptor.capture(), descriptionCaptor.capture(), statusDetailCaptor.capture(), any());
 
+        PnRequestError pnRequestErrorForAssertion = itemErrorCaptor.getValue();
+
         Assertions.assertEquals(statusDescription, descriptionCaptor.getValue());
         Assertions.assertEquals(statusCode, statusCodeCaptor.getValue());
         Assertions.assertEquals(statusDetail, statusDetailCaptor.getValue());
+        Assertions.assertEquals(pnRequestError.getError(),pnRequestErrorForAssertion.getError());
+        Assertions.assertEquals(pnRequestError.getFlowThrow(),pnRequestErrorForAssertion.getFlowThrow());
+        Assertions.assertEquals(pnRequestError.getCategory(),pnRequestErrorForAssertion.getCategory());
     }
 
     private void inizialize(){}
