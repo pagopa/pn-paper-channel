@@ -3,7 +3,6 @@ package it.pagopa.pn.paperchannel.service.impl;
 import it.pagopa.pn.api.dto.events.PnPrepareDelayerToPaperchannelPayload;
 import it.pagopa.pn.commons.exceptions.PnExceptionsCodes;
 import it.pagopa.pn.commons.exceptions.PnInternalException;
-import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnF24FlowException;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
@@ -22,7 +21,6 @@ import it.pagopa.pn.paperchannel.service.F24Service;
 import it.pagopa.pn.paperchannel.service.PrepareFlowStarter;
 import it.pagopa.pn.paperchannel.service.SafeStorageService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
-import it.pagopa.pn.paperchannel.utils.PrepareAsyncErrorUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,7 +44,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class PreparePhaseTwoAsyncServiceImplTest {
+class PreparePhaseTwoAsyncServiceImplTest {
     @InjectMocks
     private PreparePhaseTwoAsyncServiceImpl preparePhaseTwoAsyncService;
     @Mock
@@ -59,10 +57,6 @@ public class PreparePhaseTwoAsyncServiceImplTest {
     private F24Service f24Service;
     @Mock
     private SafeStorageService safeStorageService;
-    @Mock
-    private PnPaperChannelConfig paperChannelConfig;
-    @Mock
-    private PrepareAsyncErrorUtils prepareAsyncErrorUtils;
     @Mock
     private AddressDAO addressDAO;
     @Mock
@@ -223,7 +217,6 @@ public class PreparePhaseTwoAsyncServiceImplTest {
         String statusDetail = statusDeliveryEnum.getDetail();
 
         ArgumentCaptor<String> descriptionCaptor = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<PnRequestError> itemErrorCaptor = ArgumentCaptor.forClass(PnRequestError.class);
         ArgumentCaptor<String> statusCodeCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> statusDetailCaptor = ArgumentCaptor.forClass(String.class);
 
@@ -236,31 +229,22 @@ public class PreparePhaseTwoAsyncServiceImplTest {
         when(requestDeliveryDAO.getByRequestIdStrongConsistency(requestId, false)).thenReturn(Mono.just(deliveryRequest));
         when(f24Service.checkDeliveryRequestAttachmentForF24(deliveryRequest)).thenReturn(false);
 
-        var fileResponse = new FileDownloadResponseDto();
         var fileInfoDownload = new FileDownloadInfoDto();
         fileInfoDownload.setUrl(null);
-        fileResponse.setDownload(fileInfoDownload);
         when(safeStorageService.getFileRecursive(any(), eq(attachment.getFileKey()), any())).thenReturn(Mono.error(new PnGenericException(DOCUMENT_URL_NOT_FOUND, DOCUMENT_URL_NOT_FOUND.getMessage())));
-        when(paperRequestErrorDAO.created(any())).thenReturn(Mono.just(pnRequestError));
         when(requestDeliveryDAO.updateStatus(eq(requestId), any(), any(), any(), any())).thenReturn(Mono.empty());
 
         StepVerifier.create(preparePhaseTwoAsyncService.prepareAsyncPhaseTwo(event))
-                .expectError(PnGenericException.class)
-                .verify();
+                .verifyComplete();
 
         verify(sqsSender, times(1)).pushErrorDelayerToPaperChannelAfterSafeStorageErrorQueue(event);
-        verify(paperRequestErrorDAO, times(1)).created(itemErrorCaptor.capture());
+        verify(paperRequestErrorDAO, never()).created(any());
         verify(requestDeliveryDAO, times(1)).updateStatus(eq(requestId), statusCodeCaptor.capture(),descriptionCaptor.capture(),statusDetailCaptor.capture(), any());
 
-        PnRequestError pnRequestErrorForAssertion = itemErrorCaptor.getValue();
 
         Assertions.assertEquals(statusDescription, descriptionCaptor.getValue());
         Assertions.assertEquals(statusCode, statusCodeCaptor.getValue());
         Assertions.assertEquals(statusDetail, statusDetailCaptor.getValue());
-        Assertions.assertEquals(pnRequestError.getError(),pnRequestErrorForAssertion.getError());
-        Assertions.assertEquals(pnRequestError.getFlowThrow(),pnRequestErrorForAssertion.getFlowThrow());
-        Assertions.assertEquals(pnRequestError.getCategory(),pnRequestErrorForAssertion.getCategory());
-
     }
 
     @Test
@@ -286,13 +270,12 @@ public class PreparePhaseTwoAsyncServiceImplTest {
         pnRequestError.setRequestId("PREPARE_ANALOG_DOMICILE.IUN_GJWA-HMEK-RGUJ-202307-H-1.RECINDEX_0.ATTEMPT_0");
         pnRequestError.setCreated(Instant.now());
 
-        StatusDeliveryEnum statusDeliveryEnum = StatusDeliveryEnum.PAPER_CHANNEL_DEFAULT_ERROR;
+        StatusDeliveryEnum statusDeliveryEnum = StatusDeliveryEnum.SAFE_STORAGE_IN_ERROR;
         String statusCode = statusDeliveryEnum.getCode();
         String statusDescription = statusCode + " - " + statusDeliveryEnum.getDescription();
         String statusDetail = statusDeliveryEnum.getDetail();
 
         ArgumentCaptor<String> descriptionCaptor = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<PnRequestError> itemErrorCaptor = ArgumentCaptor.forClass(PnRequestError.class);
         ArgumentCaptor<String> statusCodeCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> statusDetailCaptor = ArgumentCaptor.forClass(String.class);
 
@@ -306,25 +289,19 @@ public class PreparePhaseTwoAsyncServiceImplTest {
         when(f24Service.checkDeliveryRequestAttachmentForF24(deliveryRequest)).thenReturn(false);
 
         when(safeStorageService.getFileRecursive(any(), eq(attachment.getFileKey()), any())).thenReturn(Mono.error(new PnGenericException(INVALID_SAFE_STORAGE, INVALID_SAFE_STORAGE.getMessage())));
-        when(paperRequestErrorDAO.created(any())).thenReturn(Mono.just(pnRequestError));
         when(requestDeliveryDAO.updateStatus(eq(requestId), any(), any(), any(), any())).thenReturn(Mono.empty());
 
         StepVerifier.create(preparePhaseTwoAsyncService.prepareAsyncPhaseTwo(event))
-                .expectError(PnGenericException.class)
-                .verify();
+                .verifyComplete();
 
         verify(sqsSender, times(1)).pushErrorDelayerToPaperChannelAfterSafeStorageErrorQueue(event);
-        verify(paperRequestErrorDAO, times(1)).created(itemErrorCaptor.capture());
+        verify(paperRequestErrorDAO, never()).created(any());
         verify(requestDeliveryDAO, times(1)).updateStatus(eq(requestId), statusCodeCaptor.capture(),descriptionCaptor.capture(),statusDetailCaptor.capture(), any());
 
-        PnRequestError pnRequestErrorForAssertion = itemErrorCaptor.getValue();
 
         Assertions.assertEquals(statusDescription, descriptionCaptor.getValue());
         Assertions.assertEquals(statusCode, statusCodeCaptor.getValue());
         Assertions.assertEquals(statusDetail, statusDetailCaptor.getValue());
-        Assertions.assertEquals(pnRequestError.getError(),pnRequestErrorForAssertion.getError());
-        Assertions.assertEquals(pnRequestError.getFlowThrow(),pnRequestErrorForAssertion.getFlowThrow());
-        Assertions.assertEquals(pnRequestError.getCategory(),pnRequestErrorForAssertion.getCategory());
 
     }
 
@@ -358,7 +335,6 @@ public class PreparePhaseTwoAsyncServiceImplTest {
         String statusDetail = statusDeliveryEnum.getDetail();
 
         ArgumentCaptor<String> descriptionCaptor = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<PnRequestError> itemErrorCaptor = ArgumentCaptor.forClass(PnRequestError.class);
         ArgumentCaptor<String> statusCodeCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> statusDetailCaptor = ArgumentCaptor.forClass(String.class);
 
@@ -377,25 +353,19 @@ public class PreparePhaseTwoAsyncServiceImplTest {
         fileResponse.setDownload(fileInfoDownload);
         when(safeStorageService.getFileRecursive(any(), eq(attachment.getFileKey()), any())).thenReturn(Mono.just(fileResponse));
         when(safeStorageService.downloadFile(eq("http://mocked-url"))).thenReturn(Mono.error(new PnGenericException(DOCUMENT_NOT_DOWNLOADED, DOCUMENT_NOT_DOWNLOADED.getMessage())));
-        when(paperRequestErrorDAO.created(any())).thenReturn(Mono.just(pnRequestError));
         when(requestDeliveryDAO.updateStatus(eq(requestId), any(), any(), any(), any())).thenReturn(Mono.empty());
 
         StepVerifier.create(preparePhaseTwoAsyncService.prepareAsyncPhaseTwo(event))
-                .expectError(PnGenericException.class)
-                .verify();
+                .verifyComplete();
 
         verify(sqsSender, times(1)).pushErrorDelayerToPaperChannelAfterSafeStorageErrorQueue(event);
-        verify(paperRequestErrorDAO, times(1)).created(itemErrorCaptor.capture());
+        verify(paperRequestErrorDAO, never()).created(any()); // solo quando finisce i retry scrive nella tabella degli errori
         verify(requestDeliveryDAO, times(1)).updateStatus(eq(requestId), statusCodeCaptor.capture(),descriptionCaptor.capture(),statusDetailCaptor.capture(), any());
 
-        PnRequestError pnRequestErrorForAssertion = itemErrorCaptor.getValue();
 
         Assertions.assertEquals(statusDescription, descriptionCaptor.getValue());
         Assertions.assertEquals(statusCode, statusCodeCaptor.getValue());
         Assertions.assertEquals(statusDetail, statusDetailCaptor.getValue());
-        Assertions.assertEquals(pnRequestError.getError(),pnRequestErrorForAssertion.getError());
-        Assertions.assertEquals(pnRequestError.getFlowThrow(),pnRequestErrorForAssertion.getFlowThrow());
-        Assertions.assertEquals(pnRequestError.getCategory(),pnRequestErrorForAssertion.getCategory());
     }
 
     @Test

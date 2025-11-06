@@ -14,8 +14,8 @@ public class PrepareAsyncErrorUtils {
     private PrepareAsyncErrorUtils(){}
 
     public static StatusDeliveryEnum retrieveStatusDeliveryEnum(Throwable ex) {
-        if(ex instanceof PnGenericException pnGenericException) {
-            return exceptionTypeMapper(pnGenericException.getExceptionType());
+        if(ex instanceof PnGenericException) {
+            return StatusDeliveryEnum.PAPER_CHANNEL_DEFAULT_ERROR;
         }
         return PAPER_CHANNEL_ASYNC_ERROR;
     }
@@ -27,12 +27,6 @@ public class PrepareAsyncErrorUtils {
         return isPhaseOne ? PREPARE_PHASE_ONE_ASYNC_DEFAULT : PREPARE_PHASE_TWO_ASYNC_DEFAULT;
     }
 
-    private static StatusDeliveryEnum exceptionTypeMapper(ExceptionTypeEnum ex){
-        return switch (ex) {
-            case DOCUMENT_NOT_DOWNLOADED, DOCUMENT_URL_NOT_FOUND -> StatusDeliveryEnum.SAFE_STORAGE_IN_ERROR;
-            default -> StatusDeliveryEnum.PAPER_CHANNEL_DEFAULT_ERROR;
-        };
-    }
 
     public static String extractGeoKey(Throwable ex) {
         return ex instanceof StopFlowSecondAttemptException stopFlowSecondAttemptException

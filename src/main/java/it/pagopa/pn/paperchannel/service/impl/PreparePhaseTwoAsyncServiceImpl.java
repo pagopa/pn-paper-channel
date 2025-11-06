@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.INVALID_SAFE_STORAGE;
+import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.SAFE_STORAGE_IN_ERROR;
 import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.TAKING_CHARGE;
 import static it.pagopa.pn.paperchannel.utils.PrepareAsyncErrorUtils.*;
 import static it.pagopa.pn.paperchannel.utils.Const.PREFIX_REQUEST_ID_SERVICE_DESK;
@@ -72,16 +73,17 @@ public class PreparePhaseTwoAsyncServiceImpl implements PreparePhaseTwoAsyncServ
                     return handleRegularDeliveryRequest(deliveryRequest, eventPayload.getClientId())
                             .onErrorResume(ex -> {
                                 // Error -> Retry
-                                this.sqsSender.pushErrorDelayerToPaperChannelAfterSafeStorageErrorQueue(eventPayload);
-                                return Mono.error(ex);
+                                log.error("Retriable error processing attachments for requestId {}", eventPayload.getRequestId(), ex);
+                                return updateStatus(deliveryRequest.getRequestId(), SAFE_STORAGE_IN_ERROR)
+                                        .doOnNext(result -> this.sqsSender.pushErrorDelayerToPaperChannelAfterSafeStorageErrorQueue(eventPayload))
+                                        .then(Mono.empty());
                             });
                 })
                 .doOnNext(deliveryRequest -> {
                     log.info("End of prepare async phase two");
                     log.logEndingProcess(PROCESS_NAME);
                 })
-                .onErrorResume(PnF24FlowException.class, ex -> handleF24FlowException(deliveryRequestMono, ex))
-                .onErrorResume(ex -> handlePrepareAsyncPhaseTwoError(eventPayload.getRequestId(), ex));
+                .onErrorResume(ex -> handlePrepareAsyncPhaseTwoError(deliveryRequestMono, eventPayload.getRequestId(), ex));
     }
 
     /**
@@ -261,11 +263,15 @@ public class PreparePhaseTwoAsyncServiceImpl implements PreparePhaseTwoAsyncServ
      * @param ex        the exception that occurred
      * @return a Mono that completes with an error after updating the status
      */
-    private Mono<PnDeliveryRequest> handlePrepareAsyncPhaseTwoError(String requestId, Throwable ex) {
+    private Mono<PnDeliveryRequest> handlePrepareAsyncPhaseTwoError(Mono<PnDeliveryRequest> deliveryRequestMono, String requestId, Throwable ex) {
         log.error("Error prepare async requestId {}, {}", requestId, ex.getMessage(), ex);
 
-        if(ex instanceof  PnF24FlowException){
-            return Mono.error(ex);
+        if(ex instanceof  PnF24FlowException pnF24FlowException){
+            return deliveryRequestMono
+                    .flatMap(deliveryRequest -> {
+                        manageF24Exception(pnF24FlowException, deliveryRequest);
+                        return Mono.error(pnF24FlowException);
+                    });
         }
 
         StatusDeliveryEnum statusDeliveryEnum = retrieveStatusDeliveryEnum(ex);
@@ -275,14 +281,6 @@ public class PreparePhaseTwoAsyncServiceImpl implements PreparePhaseTwoAsyncServ
                 .flatMap(t -> updateStatus(requestId, statusDeliveryEnum))
                 .doOnSuccess(o -> log.logEndingProcess(PROCESS_NAME))
                 .flatMap(entity -> Mono.error(ex));
-    }
-
-    private Mono<PnDeliveryRequest> handleF24FlowException(Mono<PnDeliveryRequest> deliveryRequestMono, PnF24FlowException ex) {
-        return deliveryRequestMono
-                .flatMap(deliveryRequest -> {
-                    manageF24Exception(ex, deliveryRequest);
-                    return Mono.error(ex);
-                });
     }
 
     /**
