@@ -3,6 +3,7 @@ package it.pagopa.pn.paperchannel.service.impl;
 import it.pagopa.pn.api.dto.events.PnPrepareDelayerToPaperchannelPayload;
 import it.pagopa.pn.commons.exceptions.PnExceptionsCodes;
 import it.pagopa.pn.commons.exceptions.PnInternalException;
+import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnF24FlowException;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
@@ -61,12 +62,14 @@ class PreparePhaseTwoAsyncServiceImplTest {
     private AddressDAO addressDAO;
     @Mock
     private PrepareFlowStarter prepareFlowStarter;
+    @Mock
+    private PnPaperChannelConfig paperChannelConfig;
 
     private final PnAttachmentInfo attachmentInfo = new PnAttachmentInfo();
 
     @BeforeEach
     public void setUp(){
-        inizialize();
+
     }
 
     @Test
