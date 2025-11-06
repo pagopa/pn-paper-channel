@@ -2,7 +2,10 @@ package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.api.dto.events.PnPrepareDelayerToPaperchannelPayload;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
-import it.pagopa.pn.paperchannel.exception.*;
+import it.pagopa.pn.paperchannel.exception.CheckAddressFlowException;
+import it.pagopa.pn.paperchannel.exception.PnAddressFlowException;
+import it.pagopa.pn.paperchannel.exception.PnF24FlowException;
+import it.pagopa.pn.paperchannel.exception.PnUntracebleException;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
 import it.pagopa.pn.paperchannel.mapper.RequestDeliveryMapper;
@@ -74,7 +77,7 @@ public class PreparePhaseOneAsyncServiceImpl implements PreparePhaseOneAsyncServ
 
     private Mono<PnAddress> evaluateExceptionForAddressFlow(PrepareNormalizeAddressEvent event, PnDeliveryRequest deliveryRequest, Throwable ex) {
         if(ex instanceof PnUntracebleException pnUntracebleException) {
-            this.handleUntraceableError(deliveryRequest, event, pnUntracebleException);
+            return handleUntraceableError(deliveryRequest, event, pnUntracebleException);
         }
         if(ex instanceof PnAddressFlowException){
             //gestita in PaperAddressServiceImpl.handlePnAddressFlowException
