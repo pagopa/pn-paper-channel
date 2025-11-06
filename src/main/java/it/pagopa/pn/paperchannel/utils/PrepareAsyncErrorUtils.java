@@ -11,6 +11,8 @@ import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.PAPER_CHANNEL_A
 
 public class PrepareAsyncErrorUtils {
 
+    private PrepareAsyncErrorUtils(){}
+
     public static StatusDeliveryEnum retrieveStatusDeliveryEnum(Throwable ex) {
         if(ex instanceof PnGenericException pnGenericException) {
             return exceptionTypeMapper(pnGenericException.getExceptionType());
@@ -33,8 +35,8 @@ public class PrepareAsyncErrorUtils {
     }
 
     public static String extractGeoKey(Throwable ex) {
-        return ex instanceof StopFlowSecondAttemptException
-                ? ((StopFlowSecondAttemptException) ex).getGeokey()
+        return ex instanceof StopFlowSecondAttemptException stopFlowSecondAttemptException
+                ? stopFlowSecondAttemptException.getGeokey()
                 : null;
     }
 

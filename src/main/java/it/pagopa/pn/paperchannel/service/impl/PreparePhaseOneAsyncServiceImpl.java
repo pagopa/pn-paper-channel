@@ -4,7 +4,6 @@ import it.pagopa.pn.api.dto.events.PnPrepareDelayerToPaperchannelPayload;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.CheckAddressFlowException;
 import it.pagopa.pn.paperchannel.exception.PnAddressFlowException;
-import it.pagopa.pn.paperchannel.exception.PnF24FlowException;
 import it.pagopa.pn.paperchannel.exception.PnUntracebleException;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
