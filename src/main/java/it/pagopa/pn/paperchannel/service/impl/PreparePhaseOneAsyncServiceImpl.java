@@ -153,7 +153,7 @@ public class PreparePhaseOneAsyncServiceImpl implements PreparePhaseOneAsyncServ
     private Mono<PnDeliveryRequest> handlePrepareAsyncError(String requestId, Throwable ex) {
         log.error("Error in prepare async for requestId: {}", requestId, ex);
 
-        if(ex instanceof PnUntracebleException || ex instanceof PnAddressFlowException || ex instanceof PnF24FlowException) {
+        if(ex instanceof PnUntracebleException || ex instanceof PnAddressFlowException) {
             return Mono.error(ex);
         }
 
@@ -164,8 +164,8 @@ public class PreparePhaseOneAsyncServiceImpl implements PreparePhaseOneAsyncServ
                 .flatMap(t -> updateStatus(requestId, statusDeliveryEnum))
                 .doOnSuccess(o -> log.logEndingProcess(PROCESS_NAME))
                 .flatMap(entity -> Mono.error(ex));
-
     }
+
 
     private Mono<String> updateStatus(String requestId, StatusDeliveryEnum status ){
         String processName = "Update Status";
