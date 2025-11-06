@@ -11,6 +11,8 @@ import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.PAPER_CHANNEL_A
 
 public class PrepareAsyncErrorUtils {
 
+    private PrepareAsyncErrorUtils(){}
+
     public static StatusDeliveryEnum retrieveStatusDeliveryEnum(Throwable ex) {
         if(ex instanceof PnGenericException pnGenericException) {
             return exceptionTypeMapper(pnGenericException.getExceptionType());
@@ -19,6 +21,9 @@ public class PrepareAsyncErrorUtils {
     }
 
     public static ErrorFlowTypeEnum retrieveErrorFlowType(Throwable ex, boolean isPhaseOne) {
+        if (ex instanceof CheckAddressFlowException checkAddressFlowException){
+            return checkAddressFlowException.getFlowTypeEnum();
+        }
         return isPhaseOne ? PREPARE_PHASE_ONE_ASYNC_DEFAULT : PREPARE_PHASE_TWO_ASYNC_DEFAULT;
     }
 
@@ -29,11 +34,18 @@ public class PrepareAsyncErrorUtils {
         };
     }
 
+    public static String extractGeoKey(Throwable ex) {
+        return ex instanceof StopFlowSecondAttemptException stopFlowSecondAttemptException
+                ? stopFlowSecondAttemptException.getGeokey()
+                : null;
+    }
+
 
     public static PnRequestError buildError(String requestId, Throwable ex, String flowType) {
         return PnRequestError.builder()
                 .requestId(requestId)
                 .error(ex.getMessage())
+                .geokey(ex instanceof CheckAddressFlowException addressFlowException ? addressFlowException.getGeoKey() : null)
                 .flowThrow(flowType)
                 .build();
     }
