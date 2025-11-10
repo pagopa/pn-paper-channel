@@ -59,7 +59,6 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
     private final AddressDAO addressDAO;
     private final PaperRequestErrorDAO paperRequestErrorDAO;
     private final F24Service f24Service;
-    private final DematZipService dematZipService;
     private final AttachmentsConfigService attachmentsConfigService;
     private final PrepareFlowStarter prepareFlowStarter;
     private final NationalRegistryService nationalRegistryService;
@@ -74,7 +73,6 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
                                     AddressDAO addressDAO,
                                     PaperRequestErrorDAO paperRequestErrorDAO,
                                     F24Service f24Service,
-                                    DematZipService dematZipService,
                                     AttachmentsConfigService attachmentsConfigService,
                                     PrepareFlowStarter prepareFlowStarter,
                                     NationalRegistryService nationalRegistryService,
@@ -89,7 +87,6 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
         this.addressDAO = addressDAO;
         this.paperRequestErrorDAO = paperRequestErrorDAO;
         this.f24Service = f24Service;
-        this.dematZipService = dematZipService;
         this.attachmentsConfigService = attachmentsConfigService;
         this.prepareFlowStarter = prepareFlowStarter;
         this.nationalRegistryService = nationalRegistryService;
@@ -141,31 +138,6 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
                 )
                 .block();
     }
-
-    @Override
-    public void dematZipInternalListener(DematInternalEvent body, int attempt) {
-        String processName = "DematZipInternalListener";
-        MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, body.getRequestId());
-        MDC.put(MDCUtils.MDC_PN_CTX_TOPIC, processName);
-        log.logStartingProcess(processName);
-        MDCUtils.addMDCToContextAndExecute(Mono.just(body)
-                        .flatMap(dematInternalEvent -> {
-                            dematInternalEvent.setAttemptRetry(attempt);
-                            return this.dematZipService.handle(dematInternalEvent);
-                        })
-                        .doOnSuccess(resultFromAsync ->{
-                                    log.info("End of dematZipInternalListener");
-                                    log.logEndingProcess(processName);
-                                }
-                        )
-                        .doOnError(throwable -> {
-                            log.error("Error in dematZipInternalListener", throwable);
-                            body.setErrorMessage(throwable.getMessage());
-                            this.sqsSender.pushInternalError(body, body.getAttemptRetry(), DematInternalEvent.class);
-                        }))
-                .block();
-    }
-
 
     public void f24ErrorListener(F24Error entity, Integer attempt) {
         log.info("Start async for {} request id", entity.getRequestId());
