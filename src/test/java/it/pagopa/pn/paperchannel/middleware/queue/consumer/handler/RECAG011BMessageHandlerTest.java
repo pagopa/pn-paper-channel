@@ -44,7 +44,7 @@ class RECAG011BMessageHandlerTest {
     private RequestDeliveryDAO requestDeliveryDAO;
 
     @BeforeEach
-    public void init() {
+    void init() {
         long ttlDays = 365;
 
         eventDematDAO = mock(EventDematDAO.class);
@@ -61,7 +61,6 @@ class RECAG011BMessageHandlerTest {
         mockConfig.setTtlExecutionDaysMeta(ttlDays);
         mockConfig.setTtlExecutionDaysDemat(ttlDays);
         mockConfig.setRequiredDemats(requiredDemats);
-        mockConfig.setZipHandleActive(false);
 
         PNAG012MessageHandler pnag012MessageHandler = PNAG012MessageHandler.builder()
                 .sqsSender(mockSqsSender)

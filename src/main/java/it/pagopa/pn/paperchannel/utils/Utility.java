@@ -193,10 +193,6 @@ public class Utility {
         return requestId.startsWith(Const.PREFIX_REQUEST_ID_SERVICE_DESK);
     }
 
-    public static boolean isNotCallCenterEvoluto(String requestId) {
-        return !isCallCenterEvoluto(requestId);
-    }
-
     public static String buildNationalRegistriesCorrelationId(@NotNull String requestId) {
         return NATIONAL_REGISTRIES_REQUEST_PREFIX + requestId;
     }

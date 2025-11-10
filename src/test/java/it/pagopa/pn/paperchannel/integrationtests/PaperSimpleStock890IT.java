@@ -20,7 +20,6 @@ import static org.mockito.Mockito.verify;
 
 @Slf4j
 @SpringBootTest(properties = {
-    "pn.paper-channel.enable-simple-890-flow=true",
     "pn.paper-channel.complex-refinement-codes=RECAG007C"
 })
 class PaperSimpleStock890IT extends BasePaperStock890IT {

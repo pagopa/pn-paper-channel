@@ -6,7 +6,6 @@ import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PrepareEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.middleware.queue.model.OcrInputPayload;
-import it.pagopa.pn.paperchannel.model.DematInternalEvent;
 import it.pagopa.pn.paperchannel.model.F24Error;
 import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
 import it.pagopa.pn.paperchannel.model.PrepareNormalizeAddressEvent;
@@ -22,7 +21,6 @@ public interface SqsSender {
     void pushToInternalQueue(PrepareAsyncRequest prepareAsyncRequest);
     void pushToNormalizeAddressQueue(PrepareNormalizeAddressEvent prepareNormalizeAddressEvent);
     void pushToPaperchannelToDelayerQueue(PnPreparePaperchannelToDelayerPayload payload);
-    void pushDematZipInternalEvent(DematInternalEvent dematZipInternalEvent);
     void pushSingleStatusUpdateEvent(SingleStatusUpdateDto singleStatusUpdateDto);
     void pushToDelayerToPaperchennelQueue(PnPrepareDelayerToPaperchannelPayload payload);
 
