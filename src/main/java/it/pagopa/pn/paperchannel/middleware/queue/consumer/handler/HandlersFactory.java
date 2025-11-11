@@ -16,8 +16,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
-import javax.validation.constraints.NotNull;
+import jakarta.annotation.PostConstruct;
+import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -380,33 +380,6 @@ public class HandlersFactory {
             map.put(CON996.name(), proxyCON996MessageHandler);
         }
 
-        /* Override mapping handlers before simple 890 (PN-10501) - Remove when feature flag will be not necessary */
-        if (!pnPaperChannelConfig.isEnableSimple890Flow()) {
-
-            log.info("Using old 890 handlers because feature flag is disabled");
-
-            /* TODO use abstract factory to reduce comple-simple build complexity */
-            proxy890MessageHandler = ComplexProxy890MessageHandler.builder()
-                    .pnPaperChannelConfig(pnPaperChannelConfig)
-                    .recag008CMessageHandler(recag008CMessageHandler)
-                    .complex890MessageHandler(complex890MessageHandler)
-                    .simple890MessageHandler(simple890MessageHandler)
-                    .pnEventErrorDAO(pnEventErrorDAO)
-                    .build();
-
-            map.put(RECAG012.name(), oldRECAG012MessageHandler);
-
-            map.put(RECAG005B.name(), saveDematMessageHandler);
-            map.put(RECAG006B.name(), saveDematMessageHandler);
-            map.put(RECAG007B.name(), saveDematMessageHandler);
-            map.put(RECAG008B.name(), saveDematMessageHandler);
-            map.put(RECAG011B.name(), recag011BMessageHandler);
-
-            map.put(RECAG005C.name(), proxy890MessageHandler);
-            map.put(RECAG006C.name(), proxy890MessageHandler);
-            map.put(RECAG007C.name(), proxy890MessageHandler);
-            map.put(RECAG008C.name(), proxy890MessageHandler);
-        }
         // SendProgressMeta feature flag (PN-12284)
         if(sendProgressMetaConfig.isCON018Enabled()){
             map.put(CON018.name(), sendToDeliveryPushHandler);

@@ -32,7 +32,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.HttpStatus;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -55,47 +55,47 @@ class PaperMessagesServiceTest {
     @Autowired
     private PaperMessagesService paperMessagesService;
 
-    @MockBean
+    @MockitoBean
     private RequestDeliveryDAO requestDeliveryDAO;
 
 
-    @MockBean
+    @MockitoBean
     private DataEncryption dataEncryption;
 
-    @MockBean
+    @MockitoBean
     private AddressDAO addressDAO;
 
-    @MockBean
+    @MockitoBean
     private PaperChannelDeliveryDriverDAO deliveryDriverDAO;
 
-    @MockBean
+    @MockitoBean
     private PaperTrackerClient paperTrackerClient;
 
-    @MockBean
+    @MockitoBean
     private PaperTenderService paperTenderService;
 
-    @MockBean
+    @MockitoBean
     private NationalRegistryService nationalRegistryService;
 
-    @MockBean
+    @MockitoBean
     private ExternalChannelClient externalChannelClient;
 
-    @MockBean
+    @MockitoBean
     private SqsSender sqsSender;
 
-    @MockBean
+    @MockitoBean
     private PrepareFlowStarter prepareFlowStarter;
 
-    @MockBean
+    @MockitoBean
     private PnPaperChannelConfig pnPaperChannelConfig;
 
-    @MockBean
+    @MockitoBean
     private DateChargeCalculationModesUtils dateChargeCalculationModesUtils;
 
     @Autowired
     private PaperCalculatorUtils paperCalculatorUtils;
 
-    @MockBean
+    @MockitoBean
     private CostRoundingModeConfig costRoundingModeConfig;
 
     @Autowired

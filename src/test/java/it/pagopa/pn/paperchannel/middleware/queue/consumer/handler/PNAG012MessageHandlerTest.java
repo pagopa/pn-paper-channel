@@ -44,7 +44,7 @@ class PNAG012MessageHandlerTest {
     private PnPaperChannelConfig mockConfig;
 
     @BeforeEach
-    public void init() {
+    void init() {
         long ttlDays = 365;
         Set<String> requiredDemats = Set.of(
                 DematDocumentTypeEnum.DEMAT_23L.getDocumentType(),
@@ -59,7 +59,6 @@ class PNAG012MessageHandlerTest {
         mockConfig = new PnPaperChannelConfig();
         mockConfig.setTtlExecutionDaysDemat(ttlDays);
         mockConfig.setTtlExecutionDaysMeta(ttlDays);
-        mockConfig.setZipHandleActive(false);
         mockConfig.setRequiredDemats(requiredDemats);
 
         handler = PNAG012MessageHandler.builder()

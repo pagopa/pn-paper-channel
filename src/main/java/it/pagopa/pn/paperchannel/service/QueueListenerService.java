@@ -11,7 +11,6 @@ public interface QueueListenerService {
 
     void internalListener(PrepareAsyncRequest data, int attempt);
     void normalizeAddressListener(PrepareNormalizeAddressEvent data, int attempt);
-    void dematZipInternalListener(DematInternalEvent body, int attempt);
     void nationalRegistriesResponseListener(AddressSQSMessageDto body);
     void nationalRegistriesErrorListener(NationalRegistryError data, int attempt);
     void externalChannelListener(SingleStatusUpdateDto data, int attempt);

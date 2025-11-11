@@ -1,8 +1,8 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.awspring.cloud.messaging.listener.SqsMessageDeletionPolicy;
-import io.awspring.cloud.messaging.listener.annotation.SqsListener;
+import io.awspring.cloud.sqs.annotation.SqsListener;
+import io.awspring.cloud.sqs.annotation.SqsListenerAcknowledgementMode;
 import it.pagopa.pn.api.dto.events.PnAttachmentsConfigEventPayload;
 import it.pagopa.pn.api.dto.events.PnF24PdfSetReadyEvent;
 import it.pagopa.pn.api.dto.events.PnPrepareDelayerToPaperchannelPayload;
@@ -54,7 +54,7 @@ public class QueueListener {
     private final ObjectMapper objectMapper;
     private final PaperRequestErrorDAO paperRequestErrorDAO;
 
-    @SqsListener(value = "${pn.paper-channel.queue-internal}", deletionPolicy = SqsMessageDeletionPolicy.ALWAYS)
+    @SqsListener(value = "${pn.paper-channel.queue-internal}", acknowledgementMode = SqsListenerAcknowledgementMode.ALWAYS)
     public void pullFromInternalQueue(@Payload String node, @Headers Map<String, Object> headers){
         log.info("Headers : {}", headers);
         setMDCContext(headers);
@@ -86,16 +86,8 @@ public class QueueListener {
             this.handleF24ErrorEvent(internalEventHeader, node);
         }
 
-        else if (internalEventHeader.getEventType().equals(EventTypeEnum.ZIP_HANDLE_ERROR.name())) {
-            this.handleZipErrorEvent(internalEventHeader, node);
-        }
-
         else if (internalEventHeader.getEventType().equals(EventTypeEnum.PREPARE_ASYNC_FLOW.name())) {
             this.handlePrepareAsyncFlowEvent(internalEventHeader, node);
-        }
-
-        else if (internalEventHeader.getEventType().equals(EventTypeEnum.SEND_ZIP_HANDLE.name())) {
-            this.handleSendZipEvent(internalEventHeader, node);
         }
 
         else if (internalEventHeader.getEventType().equals(EventTypeEnum.REDRIVE_PAPER_PROGRESS_STATUS.name())) {
@@ -104,28 +96,28 @@ public class QueueListener {
 
     }
 
-    @SqsListener(value = "${pn.paper-channel.queue-national-registries}", deletionPolicy = SqsMessageDeletionPolicy.ALWAYS)
+    @SqsListener(value = "${pn.paper-channel.queue-national-registries}", acknowledgementMode = SqsListenerAcknowledgementMode.ALWAYS)
     public void pullNationalRegistries(@Payload String node, @Headers Map<String, Object> headers){
         AddressSQSMessageDto dto = convertToObject(node, AddressSQSMessageDto.class);
         setMDCContext(headers);
         this.queueListenerService.nationalRegistriesResponseListener(dto);
     }
 
-    @SqsListener(value = "${pn.paper-channel.queue-external-channel}", deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)
+    @SqsListener(value = "${pn.paper-channel.queue-external-channel}", acknowledgementMode = SqsListenerAcknowledgementMode.ON_SUCCESS)
     public void pullExternalChannel(@Payload String node, @Headers Map<String,Object> headers){
         SingleStatusUpdateDto body = convertToObject(node, SingleStatusUpdateDto.class);
         setMDCContext(headers);
         this.queueListenerService.externalChannelListener(body, 0);
     }
 
-    @SqsListener(value = "${pn.paper-channel.queue-f24}", deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)
+    @SqsListener(value = "${pn.paper-channel.queue-f24}", acknowledgementMode = SqsListenerAcknowledgementMode.ON_SUCCESS)
     public void pullF24(@Payload String node, @Headers Map<String,Object> headers){
         PnF24PdfSetReadyEvent.Detail body = convertToObject(node, PnF24PdfSetReadyEvent.Detail.class);
         setMDCContext(headers);
         this.queueListenerService.f24ResponseListener(body);
     }
 
-    @SqsListener(value = "${pn.paper-channel.queue-radd-alt}", deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)
+    @SqsListener(value = "${pn.paper-channel.queue-radd-alt}", acknowledgementMode = SqsListenerAcknowledgementMode.ON_SUCCESS)
     public void pullRaddAlt(@Payload String node, @Headers Map<String,Object> headers){
         var body = convertToObject(node, PnAttachmentsConfigEventPayload.class);
         setMDCContext(headers);
@@ -133,7 +125,7 @@ public class QueueListener {
         this.queueListenerService.raddAltListener(body);
     }
 
-    @SqsListener(value = "${pn.paper-channel.queue-delayer-to-paperchannel}", deletionPolicy = SqsMessageDeletionPolicy.ALWAYS)
+    @SqsListener(value = "${pn.paper-channel.queue-delayer-to-paperchannel}", acknowledgementMode = SqsListenerAcknowledgementMode.ALWAYS)
     public void pullDelayerMessages(@Payload String node, @Headers Map<String,Object> headers){
         setMDCContext(headers);
 
@@ -161,7 +153,7 @@ public class QueueListener {
 
     }
 
-    @SqsListener(value = "${pn.paper-channel.queue-normalize-address}", deletionPolicy = SqsMessageDeletionPolicy.ALWAYS)
+    @SqsListener(value = "${pn.paper-channel.queue-normalize-address}", acknowledgementMode = SqsListenerAcknowledgementMode.ALWAYS)
     public void pullFromNormalizeAddressQueue(@Payload String node, @Headers Map<String, Object> headers){
         setMDCContext(headers);
 
@@ -373,32 +365,6 @@ public class QueueListener {
         }
     }
 
-    private void handleZipErrorEvent(InternalEventHeader internalEventHeader, String node) {
-
-        boolean noAttempt = (paperChannelConfig.getAttemptQueueZipHandle() -1 ) < internalEventHeader.getAttempt();
-        var error = convertToObject(node, DematInternalEvent.class);
-        execution(error, noAttempt, internalEventHeader.getAttempt(), internalEventHeader.getExpired(), DematInternalEvent.class,
-                entity -> {
-                    PnLogAudit pnLogAudit = new PnLogAudit();
-                    pnLogAudit.addsBeforeDiscard(entity.getIun(), String.format("requestId = %s finish retry zip handle error ?", entity.getRequestId()));
-
-                    PnRequestError pnRequestError = PnRequestError.builder()
-                            .requestId(entity.getRequestId())
-                            .error(entity.getErrorMessage())
-                            .flowThrow(EventTypeEnum.ZIP_HANDLE_ERROR.name())
-                            .build();
-
-                    paperRequestErrorDAO.created(pnRequestError).subscribe();
-
-                    pnLogAudit.addsSuccessDiscard(entity.getIun(), String.format("requestId = %s finish retry zip handle error", entity.getRequestId()));
-                    return null;
-                },
-                entityAndAttempt -> {
-                    this.queueListenerService.dematZipInternalListener(entityAndAttempt.getFirst(), entityAndAttempt.getSecond());
-                    return null;
-                });
-    }
-
     /**
      * @deprecated This method has been replaced by  {@link #handleNationalRegistriesErrorEvent(AttemptEventHeader, String)} (AttemptEventHeader, String)}.
      */
@@ -431,11 +397,6 @@ public class QueueListener {
 
     }
 
-    private void handleSendZipEvent(InternalEventHeader internalEventHeader, String node) {
-        log.info("Push dematZipInternal queue - first time");
-        var request = convertToObject(node, DematInternalEvent.class);
-        this.queueListenerService.dematZipInternalListener(request, internalEventHeader.getAttempt());
-    }
 
     private void handleRedrivePaperProgressStatus(InternalEventHeader internalEventHeader, String node) {
         log.info("Push redrive paper progress status queue - first time");

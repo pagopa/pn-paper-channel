@@ -2,7 +2,7 @@ package it.pagopa.pn.paperchannel.middleware.db.converter;
 
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 import java.util.Map;
 
 public final class AttributeValueConverter {

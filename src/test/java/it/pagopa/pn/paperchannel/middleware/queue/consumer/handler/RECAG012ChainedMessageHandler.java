@@ -31,7 +31,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-public class RECAG012ChainedMessageHandler {
+class RECAG012ChainedMessageHandler {
     private EventMetaDAO mockEventMetaDAO;
     private EventDematDAO mockEventDematDAO;
     private SqsSender mockSqsSender;
@@ -42,7 +42,7 @@ public class RECAG012ChainedMessageHandler {
     private HandlersFactory handlersFactory;
 
     @BeforeEach
-    public void init(){
+    void init(){
         PnPaperChannelConfig mockConfig = mock(PnPaperChannelConfig.class);
         mockEventMetaDAO = mock(EventMetaDAO.class);
         mockSqsSender = mock(SqsSender.class);
@@ -53,7 +53,6 @@ public class RECAG012ChainedMessageHandler {
 
         long ttlDays = 365;
         when(mockConfig.getTtlExecutionDaysMeta()).thenReturn(ttlDays);
-        when(mockConfig.isEnableSimple890Flow()).thenReturn(true);
         when(mockConfig.getRequiredDemats()).thenReturn(Set.of("23L"));
 
         saveMetadataMessageHandler = SaveMetadataMessageHandler.builder()

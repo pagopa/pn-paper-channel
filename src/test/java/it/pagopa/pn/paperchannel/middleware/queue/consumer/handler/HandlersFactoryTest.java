@@ -1,9 +1,6 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
-import it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.RECRN00XC.RECRN004CMessageHandler;
-import it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.RECRN00XC.RECRN005CMessageHandler;
-import it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.RECRN00XC.RECRN003CMessageHandler;
 import it.pagopa.pn.paperchannel.utils.SendProgressMetaConfig;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -44,8 +41,6 @@ class HandlersFactoryTest {
                 null, null, null);
 
         // When
-        when(mockConfig.isEnableSimple890Flow())
-                .thenReturn(featureFlags.contains(FeatureFlag.SIMPLE_890_FLOW));
         when(mockConfig.isEnableRetryCon996())
                 .thenReturn(Boolean.TRUE);
         when(mockConfig.isSendCon020())
@@ -98,14 +93,6 @@ class HandlersFactoryTest {
                             new TestCase("RECAG012", List.of("RECAG012"), ChainedMessageHandler.class),
                             new TestCase("RECAG011B", List.of("RECAG011B"), ChainedMessageHandler.class),
                             new TestCase("RECAG007B", List.of("RECAG007B"), ChainedMessageHandler.class)
-                    )),
-            // SIMPLE_890_FLOW DISABLE cases
-            new FFTestCases(
-                    EnumSet.noneOf(FeatureFlag.class),
-                    List.of(
-                            new TestCase("RECAG012", List.of("RECAG012"), ChainedMessageHandler.class),
-                            new TestCase("RECAG011B", List.of("RECAG011B"), RECAG011BMessageHandler.class),
-                            new TestCase("RECAG007B", List.of("RECAG007B"), SaveDematMessageHandler.class)
                     )),
             // SEND_PROGRESS_META ENABLE cases
             new FFTestCases(

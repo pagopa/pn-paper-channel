@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 
@@ -21,9 +21,9 @@ import java.util.List;
 class PaperChannelRestV1ControllerTest {
     @Autowired
     private WebTestClient webTestClient;
-    @MockBean
+    @MockitoBean
     private PaperChannelService paperChannelService;
-    @MockBean
+    @MockitoBean
     private PnClientDAO pnClientDAO;
 
     @Test
@@ -217,7 +217,7 @@ class PaperChannelRestV1ControllerTest {
         request.setPriceAdditional(BigDecimal.valueOf(11.2f));
         request.setProductType(ProductTypeEnumDto.AR);
         request.setCap(caps);
-        request.setZone(InternationalZoneEnum._1);
+        request.setZone(InternationalZoneEnum.ZONE_1);
         return request;
     }
 

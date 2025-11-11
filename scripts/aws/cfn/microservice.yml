@@ -105,11 +105,6 @@ Parameters:
     Description: 'Maximum number for PcRetry'
     Default: 3
 
-  ZipHandleActive:
-    Type: String
-    Description: 'Activation feature flag for Zip handler in Demat Flow'
-    Default: 'false'
-
   SafeStorageCxId:
     Type: String
     Description: 'SafeStorage cx-id'
@@ -427,11 +422,6 @@ Parameters:
     Type: String
     Default: 'RECAG005C,RECAG006C,RECAG007C'
     Description: 'Variable that defines all the 890 codes that must be managed using old complex flow'
-
-  EnableSimple890Flow:
-    Type: String
-    Description: 'Variable that defines whether to enable the simplified workflow'
-    Default: 'false'
 
   EnableSimplifiedTenderFlow:
     Type: String
@@ -845,34 +835,32 @@ Resources:
         ContainerEnvEntry57: !Sub 'PN_PAPERCHANNEL_F24CLIENT_RETRYMAXATTEMPTS=${F24ClientRetryMaxAttempts}'
         ContainerEnvEntry58: !Sub 'PN_PAPERCHANNEL_REQUIREDDEMATS=${RequiredDemats}'
         ContainerEnvEntry59: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUEZIPHANDLE=${AttemptQueueZipHandle}'
-        ContainerEnvEntry60: !Sub 'PN_PAPERCHANNEL_ZIPHANDLEACTIVE=${ZipHandleActive}'
-        ContainerEnvEntry61: !Sub 'AWS_DYNAMODBATTACHMENTSCONFIGTABLE=${AttachmentsConfigDynamoTableName}'
-        ContainerEnvEntry62: !Sub 'PN_PAPERCHANNEL_QUEUERADDALT=${RaddAltToPaperChannelQueueName}'
-        ContainerEnvEntry63: !Sub 'PN_PAPERCHANNEL_ENABLEDOCFILTERRULEENGINE=${EnableDocFilterRuleEngine}'
-        ContainerEnvEntry64: !Sub 'PN_PAPERCHANNEL_DEFAULTATTACHMENTCONFIGCAP=${DefaultAttachmentConfigCap}'
-        ContainerEnvEntry65: !Sub 'AWS_DYNAMODBPAPEREVENTERRORTABLE=${PaperEventErrorDynamoTableName}'
-        ContainerEnvEntry66: !Sub 'AWS_DYNAMODBPAPERCHANNELTENDERTABLE=${PaperChannelTenderDynamoTableName}'
-        ContainerEnvEntry67: !Sub 'AWS_DYNAMODBPAPERCHANNELGEOKEYTABLE=${PaperChannelGeokeyDynamoTableName}'
-        ContainerEnvEntry68: !Sub 'AWS_DYNAMODBPAPERCHANNELDELIVERYDRIVERTABLE=${PaperChannelDeliveryDriverDynamoTableName}'
-        ContainerEnvEntry69: !Sub 'AWS_DYNAMODBPAPERCHANNELCOSTTABLE=${PaperChannelCostDynamoTableName}'
-        ContainerEnvEntry70: !Sub 'PN_PAPERCHANNEL_COMPLEXREFINEMENTCODES=${ComplexRefinementCodes}'
-        ContainerEnvEntry71: !Sub 'PN_PAPERCHANNEL_ENABLESIMPLE890FLOW=${EnableSimple890Flow}'
-        ContainerEnvEntry72: !Sub 'PN_PAPERCHANNEL_ENABLESIMPLIFIEDTENDERFLOW=${EnableSimplifiedTenderFlow}'
-        ContainerEnvEntry73: !Sub 'PN_CRON_ANALYZER=${PnCronAnalyzer}'
-        ContainerEnvEntry74: !Sub 'WIRE_TAP_LOG=${WireTapLogActivation}'
-        ContainerEnvEntry75: !Sub 'PN_PAPERCHANNEL_SENDPROGRESSMETA=${SendProgressMeta}'
-        ContainerEnvEntry76: !Sub 'PN_PAPERCHANNEL_COSTROUNDINGMODE=${CostRoundingMode}'
-        ContainerEnvEntry77: !Sub 'PN_PAPERCHANNEL_SENDCON020=${SendCon020}'
-        ContainerEnvEntry78: !Sub 'PN_PAPERCHANNEL_PREPARETWOPHASES=${PrepareTwoPhases}'
-        ContainerEnvEntry79: !Sub 'PN_PAPERCHANNEL_QUEUENORMALIZEADDRESS=${PaperNormalizeAddressQueueName}'
-        ContainerEnvEntry80: !Sub 'PN_PAPERCHANNEL_QUEUEPAPERCHANNELTODELAYER=${PaperChannelToDelayerQueueName}'
-        ContainerEnvEntry81: !Sub 'PN_PAPERCHANNEL_QUEUEDELAYERTOPAPERCHANNEL=${DelayerToPaperChannelQueueName}'
-        ContainerEnvEntry82: !Sub 'PN_PAPERCHANNEL_COMPIUTAGIACENZAARDURATION=${CompiutaGiacenzaArDuration}'
-        ContainerEnvEntry83: !Sub 'PN_PAPERCHANNEL_ENABLERETRYCON996=${EnableRetryCon996}'
-        ContainerEnvEntry84: !Sub 'PN_PAPERCHANNEL_ENABLETRUNCATEDDATEFORREFINEMENTCHECK=${EnableTruncatedDateForRefinementCheck}'
-        ContainerEnvEntry85: !Sub 'PN_PAPERCHANNEL_QUEUEURLOCRINPUTS=${PaperChannelOcrInputsQueueURL}'
-        ContainerEnvEntry86: !Sub 'PN_PAPERCHANNEL_QUEUEREGIONOCRINPUTS=${PaperChannelOcrInputsQueueRegion}'
-        ContainerEnvEntry87: !Sub 'PN_PAPERCHANNEL_CLIENTRADDALTBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
+        ContainerEnvEntry60: !Sub 'AWS_DYNAMODBATTACHMENTSCONFIGTABLE=${AttachmentsConfigDynamoTableName}'
+        ContainerEnvEntry61: !Sub 'PN_PAPERCHANNEL_QUEUERADDALT=${RaddAltToPaperChannelQueueName}'
+        ContainerEnvEntry62: !Sub 'PN_PAPERCHANNEL_ENABLEDOCFILTERRULEENGINE=${EnableDocFilterRuleEngine}'
+        ContainerEnvEntry63: !Sub 'PN_PAPERCHANNEL_DEFAULTATTACHMENTCONFIGCAP=${DefaultAttachmentConfigCap}'
+        ContainerEnvEntry64: !Sub 'AWS_DYNAMODBPAPEREVENTERRORTABLE=${PaperEventErrorDynamoTableName}'
+        ContainerEnvEntry65: !Sub 'AWS_DYNAMODBPAPERCHANNELTENDERTABLE=${PaperChannelTenderDynamoTableName}'
+        ContainerEnvEntry66: !Sub 'AWS_DYNAMODBPAPERCHANNELGEOKEYTABLE=${PaperChannelGeokeyDynamoTableName}'
+        ContainerEnvEntry67: !Sub 'AWS_DYNAMODBPAPERCHANNELDELIVERYDRIVERTABLE=${PaperChannelDeliveryDriverDynamoTableName}'
+        ContainerEnvEntry68: !Sub 'AWS_DYNAMODBPAPERCHANNELCOSTTABLE=${PaperChannelCostDynamoTableName}'
+        ContainerEnvEntry69: !Sub 'PN_PAPERCHANNEL_COMPLEXREFINEMENTCODES=${ComplexRefinementCodes}'
+        ContainerEnvEntry70: !Sub 'PN_PAPERCHANNEL_ENABLESIMPLIFIEDTENDERFLOW=${EnableSimplifiedTenderFlow}'
+        ContainerEnvEntry71: !Sub 'PN_CRON_ANALYZER=${PnCronAnalyzer}'
+        ContainerEnvEntry72: !Sub 'WIRE_TAP_LOG=${WireTapLogActivation}'
+        ContainerEnvEntry73: !Sub 'PN_PAPERCHANNEL_SENDPROGRESSMETA=${SendProgressMeta}'
+        ContainerEnvEntry74: !Sub 'PN_PAPERCHANNEL_COSTROUNDINGMODE=${CostRoundingMode}'
+        ContainerEnvEntry75: !Sub 'PN_PAPERCHANNEL_SENDCON020=${SendCon020}'
+        ContainerEnvEntry76: !Sub 'PN_PAPERCHANNEL_PREPARETWOPHASES=${PrepareTwoPhases}'
+        ContainerEnvEntry77: !Sub 'PN_PAPERCHANNEL_QUEUENORMALIZEADDRESS=${PaperNormalizeAddressQueueName}'
+        ContainerEnvEntry78: !Sub 'PN_PAPERCHANNEL_QUEUEPAPERCHANNELTODELAYER=${PaperChannelToDelayerQueueName}'
+        ContainerEnvEntry79: !Sub 'PN_PAPERCHANNEL_QUEUEDELAYERTOPAPERCHANNEL=${DelayerToPaperChannelQueueName}'
+        ContainerEnvEntry80: !Sub 'PN_PAPERCHANNEL_COMPIUTAGIACENZAARDURATION=${CompiutaGiacenzaArDuration}'
+        ContainerEnvEntry81: !Sub 'PN_PAPERCHANNEL_ENABLERETRYCON996=${EnableRetryCon996}'
+        ContainerEnvEntry82: !Sub 'PN_PAPERCHANNEL_ENABLETRUNCATEDDATEFORREFINEMENTCHECK=${EnableTruncatedDateForRefinementCheck}'
+        ContainerEnvEntry83: !Sub 'PN_PAPERCHANNEL_QUEUEURLOCRINPUTS=${PaperChannelOcrInputsQueueURL}'
+        ContainerEnvEntry84: !Sub 'PN_PAPERCHANNEL_QUEUEREGIONOCRINPUTS=${PaperChannelOcrInputsQueueRegion}'
+        ContainerEnvEntry85: !Sub 'PN_PAPERCHANNEL_CLIENTRADDALTBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
         ApplicativeEnvFileChecksum: !Ref ApplicativeEnvFileChecksum
         ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-PaperChannel-Secrets
