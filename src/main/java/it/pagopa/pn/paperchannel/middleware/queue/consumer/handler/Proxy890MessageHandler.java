@@ -30,8 +30,8 @@ public class Proxy890MessageHandler implements MessageHandler {
 
     @PostConstruct
     public void postConstruct(){
-        log.info("Init Proxy890MessageHandler - complexRefinementCodes: {} , enableSimple890Flow: {}",
-                pnPaperChannelConfig.getComplexRefinementCodes(),pnPaperChannelConfig.isEnableSimple890Flow());
+        log.info("Init Proxy890MessageHandler - complexRefinementCodes: {}",
+                pnPaperChannelConfig.getComplexRefinementCodes());
     }
 
     @Override

@@ -108,23 +108,6 @@ public class SqsQueueSender implements SqsSender {
         this.paperchannelToDelayerMomProducer.push(event);
     }
 
-
-    @Override
-    public void pushDematZipInternalEvent(DematInternalEvent dematZipInternalEvent) {
-        InternalEventHeader prepareHeader= InternalEventHeader.builder()
-                .publisher(PUBLISHER_PREPARE)
-                .eventId(UUID.randomUUID().toString())
-                .createdAt(Instant.now())
-                .eventType(EventTypeEnum.SEND_ZIP_HANDLE.name())
-                .clientId("")
-                .attempt(0)
-                .expired(Instant.now())
-                .build();
-
-        InternalPushEvent<DematInternalEvent> internalPushEvent = new InternalPushEvent<>(prepareHeader, dematZipInternalEvent);
-        this.internalQueueMomProducer.push(internalPushEvent);
-    }
-
     @Override
     public void pushSingleStatusUpdateEvent(SingleStatusUpdateDto singleStatusUpdateDto) {
         InternalEventHeader prepareHeader= InternalEventHeader.builder()
@@ -272,7 +255,6 @@ public class SqsQueueSender implements SqsSender {
         if (tClass == PrepareAsyncRequest.class) typeEnum = SAFE_STORAGE_ERROR;
         if (tClass == F24Error.class) typeEnum = F24_ERROR;
         if (tClass == PrepareAsyncRequest.class && ((PrepareAsyncRequest) entity).isAddressRetry()) typeEnum = ADDRESS_MANAGER_ERROR;
-        if (tClass == DematInternalEvent.class) typeEnum = ZIP_HANDLE_ERROR;
 
         return typeEnum;
     }

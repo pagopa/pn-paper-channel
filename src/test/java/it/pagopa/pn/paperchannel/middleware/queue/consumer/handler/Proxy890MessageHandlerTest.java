@@ -153,7 +153,6 @@ class Proxy890MessageHandlerTest {
 
         when(pnEventErrorDAO.putItem(any())).thenReturn(Mono.empty());
 
-        when(pnPaperChannelConfig.isEnableSimple890Flow()).thenReturn(true);
         when(pnPaperChannelConfig.getComplexRefinementCodes()).thenReturn(Set.of("RECAG005B"));
 
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
@@ -189,7 +188,6 @@ class Proxy890MessageHandlerTest {
 
         when(pnEventErrorDAO.putItem(any())).thenReturn(Mono.empty());
 
-        when(pnPaperChannelConfig.isEnableSimple890Flow()).thenReturn(true);
         when(pnPaperChannelConfig.getComplexRefinementCodes()).thenReturn(Set.of("RECAG005B"));
 
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());

@@ -2,7 +2,6 @@ package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.api.dto.events.PnPrepareDelayerToPaperchannelPayload;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
-import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnF24FlowException;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileDownloadResponseDto;
@@ -13,6 +12,7 @@ import it.pagopa.pn.paperchannel.mapper.AttachmentMapper;
 import it.pagopa.pn.paperchannel.mapper.PrepareEventMapper;
 import it.pagopa.pn.paperchannel.mapper.RequestDeliveryMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
+import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
@@ -38,7 +38,9 @@ import java.util.List;
 import java.util.Optional;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.INVALID_SAFE_STORAGE;
+import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.SAFE_STORAGE_IN_ERROR;
 import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.TAKING_CHARGE;
+import static it.pagopa.pn.paperchannel.utils.PrepareAsyncErrorUtils.*;
 import static it.pagopa.pn.paperchannel.utils.Const.PREFIX_REQUEST_ID_SERVICE_DESK;
 
 @Service
@@ -50,6 +52,7 @@ public class PreparePhaseTwoAsyncServiceImpl implements PreparePhaseTwoAsyncServ
 
     private final SqsSender sqsSender;
     private final RequestDeliveryDAO requestDeliveryDAO;
+    private final PaperRequestErrorDAO paperRequestErrorDAO;
     private final F24Service f24Service;
     private final SafeStorageService safeStorageService;
     private final PnPaperChannelConfig paperChannelConfig;
@@ -70,26 +73,17 @@ public class PreparePhaseTwoAsyncServiceImpl implements PreparePhaseTwoAsyncServ
                     return handleRegularDeliveryRequest(deliveryRequest, eventPayload.getClientId())
                             .onErrorResume(ex -> {
                                 // Error -> Retry
-                                this.sqsSender.pushErrorDelayerToPaperChannelAfterSafeStorageErrorQueue(eventPayload);
-                                return Mono.error(ex);
+                                log.error("Retriable error processing attachments for requestId {}", eventPayload.getRequestId(), ex);
+                                return updateStatus(deliveryRequest.getRequestId(), SAFE_STORAGE_IN_ERROR)
+                                        .doOnNext(result -> this.sqsSender.pushErrorDelayerToPaperChannelAfterSafeStorageErrorQueue(eventPayload))
+                                        .then(Mono.empty());
                             });
                 })
                 .doOnNext(deliveryRequest -> {
                     log.info("End of prepare async phase two");
                     log.logEndingProcess(PROCESS_NAME);
                 })
-                .onErrorResume(ex ->  {
-                    // F24 Flow error
-                    if (ex instanceof PnF24FlowException){
-                        return deliveryRequestMono
-                                .flatMap(deliveryRequest -> {
-                                    manageF24Exception((PnF24FlowException) ex, deliveryRequest);
-                                    return Mono.error(ex);
-                                });
-                    }
-                    // Generic error
-                    return handlePrepareAsyncPhaseTwoError(eventPayload.getRequestId(), ex);
-                });
+                .onErrorResume(ex -> handlePrepareAsyncPhaseTwoError(deliveryRequestMono, eventPayload.getRequestId(), ex));
     }
 
     /**
@@ -269,23 +263,24 @@ public class PreparePhaseTwoAsyncServiceImpl implements PreparePhaseTwoAsyncServ
      * @param ex        the exception that occurred
      * @return a Mono that completes with an error after updating the status
      */
-    private Mono<PnDeliveryRequest> handlePrepareAsyncPhaseTwoError(String requestId, Throwable ex) {
+    private Mono<PnDeliveryRequest> handlePrepareAsyncPhaseTwoError(Mono<PnDeliveryRequest> deliveryRequestMono, String requestId, Throwable ex) {
         log.error("Error prepare async requestId {}, {}", requestId, ex.getMessage(), ex);
 
-        StatusDeliveryEnum statusDeliveryEnum = StatusDeliveryEnum.PAPER_CHANNEL_ASYNC_ERROR;
-        if(ex instanceof PnGenericException pnGenericException) {
-            statusDeliveryEnum = exceptionTypeMapper(pnGenericException.getExceptionType());
+        if(ex instanceof  PnF24FlowException pnF24FlowException){
+            return deliveryRequestMono
+                    .flatMap(deliveryRequest -> {
+                        manageF24Exception(pnF24FlowException, deliveryRequest);
+                        return Mono.error(pnF24FlowException);
+                    });
         }
-        return updateStatus(requestId, statusDeliveryEnum)
-                .flatMap(entity -> Mono.error(ex));
-    }
 
-    private StatusDeliveryEnum exceptionTypeMapper(ExceptionTypeEnum ex){
-        return switch (ex) {
-            case DOCUMENT_NOT_DOWNLOADED -> StatusDeliveryEnum.SAFE_STORAGE_IN_ERROR;
-            case DOCUMENT_URL_NOT_FOUND -> StatusDeliveryEnum.SAFE_STORAGE_IN_ERROR;
-            default -> StatusDeliveryEnum.PAPER_CHANNEL_DEFAULT_ERROR;
-        };
+        StatusDeliveryEnum statusDeliveryEnum = retrieveStatusDeliveryEnum(ex);
+        ErrorFlowTypeEnum flowType = retrieveErrorFlowType(ex, false);
+
+        return paperRequestErrorDAO.created(buildError(requestId, ex, flowType.name()))
+                .flatMap(t -> updateStatus(requestId, statusDeliveryEnum))
+                .doOnSuccess(o -> log.logEndingProcess(PROCESS_NAME))
+                .flatMap(entity -> Mono.error(ex));
     }
 
     /**
