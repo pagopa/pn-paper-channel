@@ -19,7 +19,7 @@ import it.pagopa.pn.paperchannel.utils.DateUtils;
 import it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -47,10 +47,10 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
     @Autowired
     private EventDematDAO eventDematDAO;
 
-    @MockBean
+    @MockitoBean
     private SqsSender sqsSender;
 
-    @MockBean
+    @MockitoBean
     private RequestDeliveryDAO requestDeliveryDAO;
 
 

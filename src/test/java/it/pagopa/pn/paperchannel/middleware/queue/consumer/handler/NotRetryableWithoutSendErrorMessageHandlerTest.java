@@ -8,7 +8,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnRequestError;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import reactor.core.publisher.Mono;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -18,7 +18,7 @@ class NotRetryableWithoutSendErrorMessageHandlerTest {
 
     private NotRetriableWithoutSendErrorMessageHandler handler;
 
-    @MockBean
+    @MockitoBean
     private PaperRequestErrorDAO paperRequestErrorDAOMock;
 
     @BeforeEach

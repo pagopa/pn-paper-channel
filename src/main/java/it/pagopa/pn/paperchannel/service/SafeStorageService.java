@@ -5,11 +5,11 @@ import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto
 import it.pagopa.pn.paperchannel.model.FileCreationWithContentRequest;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.http.MediaType;
-import org.springframework.util.Base64Utils;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.security.MessageDigest;
+import java.util.Base64;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.ERROR_CODE_PAPERCHANNEL_ZIP_HANDLE;
 
@@ -42,7 +42,7 @@ public interface SafeStorageService {
     }
 
     private String bytesToBase64(byte[] hash) {
-        return Base64Utils.encodeToString( hash );
+        return Base64.getEncoder().encodeToString( hash );
     }
 
     Mono<FileDownloadResponseDto> getFileRecursive(Integer n, String fileKey, BigDecimal millis);
