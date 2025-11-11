@@ -42,7 +42,7 @@ class RECAGSimplifiedPostLogicHandlerTest {
     private RECAGSimplifiedPostLogicHandler recagSimplifiedPostLogicHandler;
 
     @BeforeEach
-    public void init(){
+    void init(){
         long ttlDays = 365;
         Set<String> requiredDemats = Set.of(
                 DematDocumentTypeEnum.DEMAT_23L.getDocumentType(),
@@ -57,7 +57,6 @@ class RECAGSimplifiedPostLogicHandlerTest {
         pnPaperChannelConfig = new PnPaperChannelConfig();
         pnPaperChannelConfig.setTtlExecutionDaysDemat(ttlDays);
         pnPaperChannelConfig.setTtlExecutionDaysMeta(ttlDays);
-        pnPaperChannelConfig.setZipHandleActive(false);
         pnPaperChannelConfig.setRequiredDemats(requiredDemats);
 
         recagSimplifiedPostLogicHandler = RECAGSimplifiedPostLogicHandler.builder()

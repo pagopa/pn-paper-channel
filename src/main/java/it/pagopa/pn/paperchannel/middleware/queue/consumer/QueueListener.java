@@ -86,16 +86,8 @@ public class QueueListener {
             this.handleF24ErrorEvent(internalEventHeader, node);
         }
 
-        else if (internalEventHeader.getEventType().equals(EventTypeEnum.ZIP_HANDLE_ERROR.name())) {
-            this.handleZipErrorEvent(internalEventHeader, node);
-        }
-
         else if (internalEventHeader.getEventType().equals(EventTypeEnum.PREPARE_ASYNC_FLOW.name())) {
             this.handlePrepareAsyncFlowEvent(internalEventHeader, node);
-        }
-
-        else if (internalEventHeader.getEventType().equals(EventTypeEnum.SEND_ZIP_HANDLE.name())) {
-            this.handleSendZipEvent(internalEventHeader, node);
         }
 
         else if (internalEventHeader.getEventType().equals(EventTypeEnum.REDRIVE_PAPER_PROGRESS_STATUS.name())) {
@@ -373,32 +365,6 @@ public class QueueListener {
         }
     }
 
-    private void handleZipErrorEvent(InternalEventHeader internalEventHeader, String node) {
-
-        boolean noAttempt = (paperChannelConfig.getAttemptQueueZipHandle() -1 ) < internalEventHeader.getAttempt();
-        var error = convertToObject(node, DematInternalEvent.class);
-        execution(error, noAttempt, internalEventHeader.getAttempt(), internalEventHeader.getExpired(), DematInternalEvent.class,
-                entity -> {
-                    PnLogAudit pnLogAudit = new PnLogAudit();
-                    pnLogAudit.addsBeforeDiscard(entity.getIun(), String.format("requestId = %s finish retry zip handle error ?", entity.getRequestId()));
-
-                    PnRequestError pnRequestError = PnRequestError.builder()
-                            .requestId(entity.getRequestId())
-                            .error(entity.getErrorMessage())
-                            .flowThrow(EventTypeEnum.ZIP_HANDLE_ERROR.name())
-                            .build();
-
-                    paperRequestErrorDAO.created(pnRequestError).subscribe();
-
-                    pnLogAudit.addsSuccessDiscard(entity.getIun(), String.format("requestId = %s finish retry zip handle error", entity.getRequestId()));
-                    return null;
-                },
-                entityAndAttempt -> {
-                    this.queueListenerService.dematZipInternalListener(entityAndAttempt.getFirst(), entityAndAttempt.getSecond());
-                    return null;
-                });
-    }
-
     /**
      * @deprecated This method has been replaced by  {@link #handleNationalRegistriesErrorEvent(AttemptEventHeader, String)} (AttemptEventHeader, String)}.
      */
@@ -431,11 +397,6 @@ public class QueueListener {
 
     }
 
-    private void handleSendZipEvent(InternalEventHeader internalEventHeader, String node) {
-        log.info("Push dematZipInternal queue - first time");
-        var request = convertToObject(node, DematInternalEvent.class);
-        this.queueListenerService.dematZipInternalListener(request, internalEventHeader.getAttempt());
-    }
 
     private void handleRedrivePaperProgressStatus(InternalEventHeader internalEventHeader, String node) {
         log.info("Push redrive paper progress status queue - first time");
