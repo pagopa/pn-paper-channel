@@ -35,6 +35,7 @@ public class PnPaperChannelConfig {
     private String clientF24Basepath;
     private String clientDataVaultBasepath;
     private String clientAddressManagerBasepath;
+    private String clientRaddAltBasepath;
     private String addressManagerCxId;
     private String addressManagerApiKey;
     private String safeStorageCxId;

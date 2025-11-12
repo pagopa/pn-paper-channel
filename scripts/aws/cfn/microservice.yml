@@ -860,6 +860,7 @@ Resources:
         ContainerEnvEntry82: !Sub 'PN_PAPERCHANNEL_ENABLETRUNCATEDDATEFORREFINEMENTCHECK=${EnableTruncatedDateForRefinementCheck}'
         ContainerEnvEntry83: !Sub 'PN_PAPERCHANNEL_QUEUEURLOCRINPUTS=${PaperChannelOcrInputsQueueURL}'
         ContainerEnvEntry84: !Sub 'PN_PAPERCHANNEL_QUEUEREGIONOCRINPUTS=${PaperChannelOcrInputsQueueRegion}'
+        ContainerEnvEntry85: !Sub 'PN_PAPERCHANNEL_CLIENTRADDALTBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
         ApplicativeEnvFileChecksum: !Ref ApplicativeEnvFileChecksum
         ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-PaperChannel-Secrets
