@@ -14,7 +14,6 @@ import reactor.core.publisher.Mono;
 
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 
 @Service
@@ -24,7 +23,7 @@ public class RaddAltServiceImpl implements RaddAltService {
     private final RaddAltClient raddAltClient;
     @Override
     public Mono<Boolean> isAreaCovered(RaddSearchMode searchMode, PnAddress pnAddress, Instant searchDate) {
-        LocalDate searchLocalDate = LocalDateTime.ofInstant(searchDate, ZoneOffset.UTC).toLocalDate();
+        LocalDate searchLocalDate = LocalDate.ofInstant(searchDate, ZoneOffset.UTC);
         SearchModeDto searchModeDto = searchMode.toClientSearchMode();
 
         CheckCoverageRequestDto checkCoverageRequestDto = new CheckCoverageRequestDto();
