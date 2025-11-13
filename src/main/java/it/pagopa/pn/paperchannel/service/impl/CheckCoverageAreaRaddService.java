@@ -12,6 +12,7 @@ import it.pagopa.pn.paperchannel.utils.Utility;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
+import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Mono;
 
@@ -22,6 +23,7 @@ import java.util.List;
         "'${pn.paper-channel.radd-coverage-search-mode}'.equals('LIGHT') or '${pn.paper-channel.radd-coverage-search-mode}'.equals('COMPLETE')"
 )
 @RequiredArgsConstructor
+@Service
 @Slf4j
 public class CheckCoverageAreaRaddService implements CheckCoverageAreaService {
     private final PnPaperChannelConfig cfg;
