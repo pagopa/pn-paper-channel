@@ -8,7 +8,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.List;
 
-public interface AttachmentsConfigService {
+public interface CheckCoverageAreaService {
 
     Mono<Void> refreshConfig(PnAttachmentsConfigEventPayload payload);
 

@@ -59,7 +59,7 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
     private final AddressDAO addressDAO;
     private final PaperRequestErrorDAO paperRequestErrorDAO;
     private final F24Service f24Service;
-    private final AttachmentsConfigService attachmentsConfigService;
+    private final CheckCoverageAreaService checkCoverageAreaService;
     private final PrepareFlowStarter prepareFlowStarter;
     private final NationalRegistryService nationalRegistryService;
     private final PcRetryUtils pcRetryUtils;
@@ -73,7 +73,7 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
                                     AddressDAO addressDAO,
                                     PaperRequestErrorDAO paperRequestErrorDAO,
                                     F24Service f24Service,
-                                    AttachmentsConfigService attachmentsConfigService,
+                                    CheckCoverageAreaService checkCoverageAreaService,
                                     PrepareFlowStarter prepareFlowStarter,
                                     NationalRegistryService nationalRegistryService,
                                     PcRetryUtils pcRetryUtils) {
@@ -87,7 +87,7 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
         this.addressDAO = addressDAO;
         this.paperRequestErrorDAO = paperRequestErrorDAO;
         this.f24Service = f24Service;
-        this.attachmentsConfigService = attachmentsConfigService;
+        this.checkCoverageAreaService = checkCoverageAreaService;
         this.prepareFlowStarter = prepareFlowStarter;
         this.nationalRegistryService = nationalRegistryService;
         this.pcRetryUtils = pcRetryUtils;
@@ -194,7 +194,7 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
         MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, data.getConfigKey());
         log.logStartingProcess(PROCESS_NAME);
         var monoResult = Mono.just(data)
-                .flatMap(request -> attachmentsConfigService.refreshConfig(data))
+                .flatMap(request -> checkCoverageAreaService.refreshConfig(data))
                 .doOnSuccess(resultFromAsync -> log.logEndingProcess(processName))
                 .doOnError(ex -> log.error("Error in raddAltListener with configKey: {}", data.getConfigKey(), ex));
 
