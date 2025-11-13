@@ -2,6 +2,7 @@ package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
+import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.PaperTrackerClient;
 import it.pagopa.pn.paperchannel.middleware.queue.consumer.MetaDematCleaner;
 import it.pagopa.pn.paperchannel.service.NotificationReworkService;
@@ -22,6 +23,7 @@ public class NotificationReworkServiceImpl implements NotificationReworkService 
     private final MetaDematCleaner metaDematCleaner;
     private final RequestDeliveryDAO requestDeliveryDAO;
     private final PaperTrackerClient paperTrackerClient;
+    private final ExternalChannelClient externalChannelClient;
 
     @Override
     public Mono<Void> initNotificationRework(String requestId, String reworkId) {
@@ -32,7 +34,9 @@ public class NotificationReworkServiceImpl implements NotificationReworkService 
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)))
                 .flatMap(deliveryRequest -> requestDeliveryDAO.cleanDataForNotificationRework(deliveryRequest, reworkId))
                 .flatMap(deliveryRequest -> paperTrackerClient.initNotificationRework(reworkId, requestId))
-                .doOnError(error -> log.error("Error in initNotificationRework for requestId: {} and reworkId: {}", requestId, reworkId, error));
-        //todo .flatMap(api di ec) - verrà eseguito solo se tutto sopra va bene
+                .doOnError(error -> log.error("Error in initNotificationRework for requestId: {} and reworkId: {}", requestId, reworkId, error))
+                .thenReturn(requestId)
+                .flatMap(s -> externalChannelClient.patchRequestMetadata(requestId, true))
+                .doOnError(error -> log.error("Error in patchRequestMetadata for requestId: {}", requestId, error));
     }
 }

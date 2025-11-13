@@ -2,12 +2,11 @@ package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
-import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnpapertracker.v1.api.PaperTrackerTrackingApi;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
+import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.PaperTrackerClient;
 import it.pagopa.pn.paperchannel.middleware.queue.consumer.MetaDematCleaner;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -32,11 +31,13 @@ class NotificationReworkServiceImplTest {
     private RequestDeliveryDAO requestDeliveryDAO;
     @Mock
     private PaperTrackerClient paperTrackerClient;
+    @Mock
+    private ExternalChannelClient externalChannelClient;
 
 
     @Test
     void testInitNotificationReworkSuccess() {
-        String requestId = "REQ123";
+        String requestId = "REQ123.PCRETRY_0";
         String reworkId = "REW456";
         String requestIdWithoutPcRetry = "REQ123";
         PnDeliveryRequest deliveryRequest = new PnDeliveryRequest();
@@ -50,6 +51,7 @@ class NotificationReworkServiceImplTest {
                 Mockito.eq(reworkId)
         )).thenReturn(Mono.just(deliveryRequest));
         Mockito.when(paperTrackerClient.initNotificationRework(reworkId, requestId)).thenReturn(Mono.empty());
+        Mockito.when(externalChannelClient.patchRequestMetadata(requestId, true)).thenReturn(Mono.empty());
 
         StepVerifier.create(service.initNotificationRework(requestId, reworkId))
                 .verifyComplete();
@@ -60,11 +62,12 @@ class NotificationReworkServiceImplTest {
         Mockito.verify(requestDeliveryDAO, Mockito.times(1)).cleanDataForNotificationRework(
                 Mockito.any(PnDeliveryRequest.class), Mockito.eq(reworkId));
         Mockito.verify(paperTrackerClient, Mockito.times(1)).initNotificationRework(reworkId, requestId);
+        Mockito.verify(externalChannelClient, Mockito.times(1)).patchRequestMetadata(requestId, true);
     }
 
     @Test
     void testInitNotificationReworkRequestNotFound() {
-        String requestId = "REQ123";
+        String requestId = "REQ123.PCRETRY_0";
         String reworkId = "REW456";
         String requestIdWithoutPcRetry = "REQ123";
 
@@ -82,11 +85,12 @@ class NotificationReworkServiceImplTest {
                 .verify();
 
         Mockito.verify(paperTrackerClient, Mockito.never()).initNotificationRework(Mockito.any(), Mockito.any());
+        Mockito.verify(externalChannelClient, Mockito.never()).patchRequestMetadata(requestId, true);
     }
 
     @Test
     void testInitNotificationReworkNotificationNotFoundOnPaperTracker() {
-        String requestId = "REQ123";
+        String requestId = "REQ123.PCRETRY_0";
         String reworkId = "REW456";
         String requestIdWithoutPcRetry = "REQ123";
         PnDeliveryRequest deliveryRequest = new PnDeliveryRequest();
@@ -117,7 +121,7 @@ class NotificationReworkServiceImplTest {
 
     @Test
     void testInitNotificationReworkCleanDataError() {
-        String requestId = "REQ123";
+        String requestId = "REQ123.PCRETRY_0";
         String reworkId = "REW456";
         String requestIdWithoutPcRetry = "REQ123";
         PnDeliveryRequest deliveryRequest = new PnDeliveryRequest();
@@ -140,7 +144,7 @@ class NotificationReworkServiceImplTest {
 
     @Test
     void testInitNotificationReworkKeepsDeliveryRequestNotExist() {
-        String requestId = "REQ123";
+        String requestId = "REQ123.PCRETRY_0";
         String reworkId = "REW456";
         String requestIdWithoutPcRetry = "REQ123";
 

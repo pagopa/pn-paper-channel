@@ -398,6 +398,30 @@
                         </configuration>
                     </execution>
                     <execution>
+                        <id>generate-client-pn--external-channel-rework</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <phase>generate-resources</phase>
+                        <configuration>
+                            <inputSpec>https://raw.githubusercontent.com/pagopa/pn-ec/abaaf9b58c2accdb95893b4af5880c472f7d9d5b/docs/openapi/external/api-richieste-metadati-rework.yaml</inputSpec>
+                            <generatorName>java</generatorName>
+                            <library>webclient</library>
+                            <generateApiDocumentation>false</generateApiDocumentation>
+                            <generateApiTests>false</generateApiTests>
+                            <generateModelTests>false</generateModelTests>
+                            <generateSupportingFiles>true</generateSupportingFiles>
+                            <templateDirectory>${project.build.directory}/dependency-resources/scripts/openapi/templates/5.4.0/client</templateDirectory>
+                            <configOptions>
+                                <swaggerAnnotations>false</swaggerAnnotations>
+                                <openApiNullable>false</openApiNullable>
+                            </configOptions>
+                            <modelPackage>${project.groupId}.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto</modelPackage>
+                            <apiPackage>${project.groupId}.paperchannel.generated.openapi.msclient.pnextchannel.v1.api</apiPackage>
+                            <modelNameSuffix>Dto</modelNameSuffix>
+                        </configuration>
+                    </execution>
+                    <execution>
                         <id>generate-client-pn-data-vault</id>
                         <goals>
                             <goal>generate</goal>
