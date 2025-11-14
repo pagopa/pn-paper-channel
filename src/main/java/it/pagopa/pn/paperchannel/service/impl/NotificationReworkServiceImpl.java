@@ -36,7 +36,7 @@ public class NotificationReworkServiceImpl implements NotificationReworkService 
                 .flatMap(deliveryRequest -> paperTrackerClient.initNotificationRework(reworkId, requestId))
                 .doOnError(error -> log.error("Error in initNotificationRework for requestId: {} and reworkId: {}", requestId, reworkId, error))
                 .thenReturn(requestId)
-                .flatMap(s -> externalChannelClient.patchRequestMetadata(requestId, true))
+                .flatMap(s -> externalChannelClient.initNotificationRework(requestId))
                 .doOnError(error -> log.error("Error in patchRequestMetadata for requestId: {}", requestId, error));
     }
 }

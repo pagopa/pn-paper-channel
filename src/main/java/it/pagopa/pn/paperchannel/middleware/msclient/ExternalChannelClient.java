@@ -12,6 +12,6 @@ public interface ExternalChannelClient {
 
     Mono<Void> sendEngageRequest(SendRequest request, List<AttachmentInfo> attachments, Boolean applyRasterization);
 
-    Mono<Void> patchRequestMetadata(String requestIdx, boolean isOpenReworkRequest);
+    Mono<Void> initNotificationRework(String requestIdx);
 
 }

@@ -4,7 +4,6 @@ import it.pagopa.pn.commons.log.PnLogger;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.api.PaperMessagesApi;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.api.PaperRequestMetadataPatchApi;
-import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperEngageRequestAttachmentsDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperEngageRequestAttachmentsInnerDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperEngageRequestDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.RequestMetadataPatchRequestDto;
@@ -62,9 +61,10 @@ public class ExternalChannelClientImpl extends BaseClient implements ExternalCha
 
     }
 
-    public Mono<Void> patchRequestMetadata(String requestIdx, boolean isOpenReworkRequest) {
+    public Mono<Void> initNotificationRework(String requestIdx) {
         log.logInvokingAsyncExternalService(PnLogger.EXTERNAL_SERVICES.PN_EXTERNAL_CHANNELS, PN_EXTERNAL_CHANNEL_REWORK_DESCRIPTION, requestIdx);
-        var dto = new RequestMetadataPatchRequestDto().isOpenReworkRequest(isOpenReworkRequest);
+        var dto = new RequestMetadataPatchRequestDto();
+        dto.setIsOpenReworkRequest(Boolean.TRUE);
         return this.paperRequestMetadataPatchApi.patchRequestMetadata(requestIdx, this.pnPaperChannelConfig.getXPagopaExtchCxId(), dto);
     }
 

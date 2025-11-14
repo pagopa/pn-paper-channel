@@ -51,7 +51,7 @@ class NotificationReworkServiceImplTest {
                 Mockito.eq(reworkId)
         )).thenReturn(Mono.just(deliveryRequest));
         Mockito.when(paperTrackerClient.initNotificationRework(reworkId, requestId)).thenReturn(Mono.empty());
-        Mockito.when(externalChannelClient.patchRequestMetadata(requestId, true)).thenReturn(Mono.empty());
+        Mockito.when(externalChannelClient.initNotificationRework(requestId)).thenReturn(Mono.empty());
 
         StepVerifier.create(service.initNotificationRework(requestId, reworkId))
                 .verifyComplete();
@@ -62,7 +62,7 @@ class NotificationReworkServiceImplTest {
         Mockito.verify(requestDeliveryDAO, Mockito.times(1)).cleanDataForNotificationRework(
                 Mockito.any(PnDeliveryRequest.class), Mockito.eq(reworkId));
         Mockito.verify(paperTrackerClient, Mockito.times(1)).initNotificationRework(reworkId, requestId);
-        Mockito.verify(externalChannelClient, Mockito.times(1)).patchRequestMetadata(requestId, true);
+        Mockito.verify(externalChannelClient, Mockito.times(1)).initNotificationRework(requestId);
     }
 
     @Test
@@ -85,7 +85,7 @@ class NotificationReworkServiceImplTest {
                 .verify();
 
         Mockito.verify(paperTrackerClient, Mockito.never()).initNotificationRework(Mockito.any(), Mockito.any());
-        Mockito.verify(externalChannelClient, Mockito.never()).patchRequestMetadata(requestId, true);
+        Mockito.verify(externalChannelClient, Mockito.never()).initNotificationRework(requestId);
     }
 
     @Test
