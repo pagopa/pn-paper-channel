@@ -3,7 +3,6 @@ package it.pagopa.pn.paperchannel.middleware.queue.consumer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.awspring.cloud.sqs.annotation.SqsListener;
 import io.awspring.cloud.sqs.annotation.SqsListenerAcknowledgementMode;
-import it.pagopa.pn.api.dto.events.PnAttachmentsConfigEventPayload;
 import it.pagopa.pn.api.dto.events.PnF24PdfSetReadyEvent;
 import it.pagopa.pn.api.dto.events.PnPrepareDelayerToPaperchannelPayload;
 import it.pagopa.pn.commons.utils.MDCUtils;
@@ -117,14 +116,6 @@ public class QueueListener {
         this.queueListenerService.f24ResponseListener(body);
     }
 
-    @SqsListener(value = "${pn.paper-channel.queue-radd-alt}", acknowledgementMode = SqsListenerAcknowledgementMode.ON_SUCCESS)
-    public void pullRaddAlt(@Payload String node, @Headers Map<String,Object> headers){
-        var body = convertToObject(node, PnAttachmentsConfigEventPayload.class);
-        setMDCContext(headers);
-        log.debug("Handle message from raddAltListener with header {}, body:{}", headers, body);
-        this.queueListenerService.raddAltListener(body);
-    }
-
     @SqsListener(value = "${pn.paper-channel.queue-delayer-to-paperchannel}", acknowledgementMode = SqsListenerAcknowledgementMode.ALWAYS)
     public void pullDelayerMessages(@Payload String node, @Headers Map<String,Object> headers){
         setMDCContext(headers);
@@ -176,7 +167,6 @@ public class QueueListener {
         }
 
     }
-
 
     private void handleNationalRegistriesErrorEvent(AttemptEventHeader attemptEventHeader, String node) {
 

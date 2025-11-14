@@ -45,7 +45,6 @@ public class PnPaperChannelConfig {
     private String queueDeliveryPush;
     private String queueNationalRegistries;
     private String queueExternalChannel;
-    private String queueRaddAlt;
     private String queueNormalizeAddress;
     private String queuePaperchannelToDelayer;
     private String queueDelayerToPaperchannel;
