@@ -94,9 +94,9 @@ class RECAG008CMessageHandlerTest {
         // getDeliveryEventMeta call
         verify(mockMetaDao, timeout(2000).times(2)).findAllByRequestId(any(String.class));
         // deleteEventMeta call
-        verify(mockMetaDao, timeout(2000).times(1)).deleteBatch(any(String.class), any(String.class));
+        verify(mockMetaDao, timeout(2000).times(1)).deleteBatch("META##requestid", "META##RECAG012", "META##PNAG012");
         // deleteEventDemat call
-        verify(mockDematDao, timeout(2000).times(1)).deleteBatch(any(String.class), any(String.class));
+        verify(mockDematDao, timeout(2000).times(1)).deleteBatch("DEMAT##requestid", "RS##RECRS002A");
         // DeliveryPush send via SQS verification
         verify(mockSqsSender, timeout(2000).times(1)).pushSendEvent(any(SendEvent.class));
 

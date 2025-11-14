@@ -19,7 +19,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -51,13 +51,13 @@ public abstract class BasePaperStock890IT extends BaseTest {
     @Autowired
     private MetaDematCleaner metaDematCleaner;
 
-    @MockBean
+    @MockitoBean
     private DataVaultEncryptionImpl dataVaultEncryption;
 
     @Autowired
     protected PnEventErrorDAO pnEventErrorDAO;
 
-    @MockBean
+    @MockitoBean
     protected SqsSender sqsSender;
 
     @BeforeEach

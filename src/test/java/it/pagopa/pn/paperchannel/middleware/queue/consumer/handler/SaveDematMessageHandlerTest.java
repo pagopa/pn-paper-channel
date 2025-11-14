@@ -12,12 +12,10 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventDemat;
 import it.pagopa.pn.paperchannel.service.SqsSender;
-import it.pagopa.pn.paperchannel.utils.Const;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.slf4j.MDC;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -39,14 +37,13 @@ class SaveDematMessageHandlerTest {
 
 
     @BeforeEach
-    public void init() {
+    void init() {
         mockDao = mock(EventDematDAO.class);
         mockSqsSender = mock(SqsSender.class);
         requestDeliveryDAO = mock(RequestDeliveryDAO.class);
 
         mockConfig = new PnPaperChannelConfig();
         mockConfig.setTtlExecutionDaysDemat(14L);
-        mockConfig.setZipHandleActive(false);
 
         handler = SaveDematMessageHandler.builder()
                 .sqsSender(mockSqsSender)
@@ -248,84 +245,6 @@ class SaveDematMessageHandlerTest {
                 .expectError(PnDematNotValidException.class)
                 .verify();
 
-    }
-
-    @Test
-    void handleMessageWithDocumentTypePlicoWithZipHandleActiveTrueTest() {
-
-        mockConfig.setZipHandleActive(true);
-
-        OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
-        PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
-                .requestId("requestId")
-                .statusCode("RECRS002B")
-                .statusDateTime(instant)
-                .clientRequestTimeStamp(instant)
-                .attachments(List.of(new AttachmentDetailsDto()
-                        .documentType("Plico")
-                        .date(instant)
-                        .uri("safestorage://fileKey.zip"))
-                );
-
-        PnDeliveryRequest entity = new PnDeliveryRequest();
-        entity.setRequestId("requestId");
-        entity.setStatusCode("statusDetail");
-        entity.setStatusDetail(StatusCodeEnum.PROGRESS.getValue());
-
-        assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
-
-        //mi aspetto che non salvi l'evento poiché entra in funzione la gestione del demat zip
-        verify(mockDao, never()).createOrUpdate(any());
-        //mi aspetto che non mandi il messaggio a delivery-push poiché entra in funzione la gestione del demat zip
-        verify(mockSqsSender, never()).pushSendEvent(any());
-
-        //mi aspetto che mandi l'evento dematInternalEvent sulla coda interna
-        verify(mockSqsSender, times(1)).pushDematZipInternalEvent(any());
-
-        // not call because it is a PROGRESS event
-        verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
-    }
-
-    @Test
-    void handleMessageWithDocumentTypePlicoWithZipHandleActiveTrueButMessageFromCallCenterEvolutoTest() {
-
-        mockConfig.setZipHandleActive(true);
-
-        OffsetDateTime instant = OffsetDateTime.parse("2023-03-09T14:44:00.000Z");
-        PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
-                .requestId(Const.PREFIX_REQUEST_ID_SERVICE_DESK + "requestId")
-                .statusCode("RECRS002B")
-                .statusDateTime(instant)
-                .clientRequestTimeStamp(instant)
-                .attachments(List.of(new AttachmentDetailsDto()
-                        .documentType("Plico")
-                        .date(instant)
-                        .uri("safestorage://fileKey.zip"))
-                );
-
-        PnDeliveryRequest entity = new PnDeliveryRequest();
-        entity.setRequestId(Const.PREFIX_REQUEST_ID_SERVICE_DESK + "requestId");
-        entity.setStatusCode("statusDetail");
-        entity.setStatusDetail(StatusCodeEnum.PROGRESS.getValue());
-
-        PnEventDemat pnEventDematPlico = handler.buildPnEventDemat(paperRequest, paperRequest.getAttachments().get(0));
-
-        SendEvent sendEventPlico = SendEventMapper.createSendEventMessage(entity, getPaperRequestForOneAttachment(paperRequest, paperRequest.getAttachments().get(0)));
-
-        when(mockDao.createOrUpdate(pnEventDematPlico)).thenReturn(Mono.just(pnEventDematPlico));
-        MDC.put(Const.CONTEXT_KEY_CLIENT_ID, Const.PREFIX_REQUEST_ID_SERVICE_DESK);
-
-        assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
-
-        //mi aspetto che salvi l'evento Plico
-        verify(mockDao, times(1)).createOrUpdate(pnEventDematPlico);
-        //mi aspetto che mandi il messaggio in event bridge per l'evento Plico
-        verify(mockSqsSender, times(1)).pushSendEventOnEventBridge(Const.PREFIX_REQUEST_ID_SERVICE_DESK, sendEventPlico);
-
-        // not call because it is a PROGRESS event
-        verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
-
-        MDC.clear();
     }
 
     private PaperProgressStatusEventDto getPaperRequestForOneAttachment(

@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.Set;
@@ -73,9 +73,7 @@ public class PnPaperChannelConfig {
     private Duration refinementDuration;
     private String requestPaIdOverride;
     private Set<String> requiredDemats;
-    private boolean zipHandleActive;
     private Set<String> complexRefinementCodes;
-    private boolean enableSimple890Flow;
     private boolean sendCon020;
     private boolean enableRetryCon996;
     private boolean enabledocfilterruleengine;

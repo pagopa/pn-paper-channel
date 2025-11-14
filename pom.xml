@@ -5,11 +5,11 @@
     <parent>
         <groupId>it.pagopa.pn</groupId>
         <artifactId>pn-parent</artifactId>
-        <version>2.1.1</version>
+        <version>2.1.2-SPRINGBOOT3</version>
         <relativePath />
     </parent>
     <artifactId>pn-paper-channel</artifactId>
-    <version>2.19.0-SNAPSHOT</version>
+    <version>2.20.0-SPRINGBOOT3</version>
     <name>pn-paper-channel</name>
     <description>Paper Channel microservice</description>
     <properties>
@@ -19,12 +19,12 @@
         <dependency>
             <groupId>it.pagopa.pn</groupId>
             <artifactId>pn-commons</artifactId>
-            <version>2.3.1</version>
+            <version>2.15.0-SPRINGBOOT3</version>
         </dependency>
         <dependency>
             <groupId>it.pagopa.pn</groupId>
             <artifactId>pn-model</artifactId>
-            <version>2.10.0</version>
+            <version>2.11.0-SPRINGBOOT3</version>
         </dependency>
 
         <dependency>
@@ -138,20 +138,7 @@
 
         <dependency>
             <groupId>io.awspring.cloud</groupId>
-            <artifactId>spring-cloud-aws-messaging</artifactId>
-            <version>2.4.2</version>
-        </dependency>
-
-        <dependency>
-            <groupId>io.awspring.cloud</groupId>
-            <artifactId>spring-cloud-aws-context</artifactId>
-            <version>2.4.2</version>
-        </dependency>
-
-        <dependency>
-            <groupId>de.idealo.spring</groupId>
-            <artifactId>spring-cloud-stream-binder-sqs</artifactId>
-            <version>1.9.0</version>
+            <artifactId>spring-cloud-aws-starter-sqs</artifactId>
         </dependency>
 
         <dependency>
@@ -186,25 +173,16 @@
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>localstack</artifactId>
-            <version>1.18.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>1.17.6</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.awspring.cloud</groupId>
-            <artifactId>spring-cloud-starter-aws-messaging</artifactId>
-            <version>2.4.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework.data</groupId>
             <artifactId>spring-data-commons</artifactId>
-            <version>2.7.0</version>
         </dependency>
 
     </dependencies>
@@ -229,31 +207,13 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <version>3.1.2</version>
-                <executions>
-                    <execution>
-                        <id>unpack-dependencies</id>
-                        <phase>generate-resources</phase>
-                        <goals>
-                            <goal>unpack-dependencies</goal>
-                        </goals>
-                        <configuration>
-                            <includeArtifactIds>pn-commons</includeArtifactIds>
-                            <outputDirectory>${project.build.directory}/dependency-resources</outputDirectory>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
             <plugin>
                 <groupId>org.openapitools</groupId>
                 <artifactId>openapi-generator-maven-plugin</artifactId>
-                <version>5.4.0</version>
+                <version>7.12.0</version>
                 <executions>
                     <execution>
                         <id>generate-paper-channel-internal-api</id>
@@ -275,8 +235,9 @@
                             <generateApiDocumentation>false</generateApiDocumentation>
                             <generateApiTests>false</generateApiTests>
                             <generateModelTests>false</generateModelTests>
-                            <templateDirectory>${project.build.directory}/dependency-resources/scripts/openapi/templates/5.4.0/server</templateDirectory>
+<!--                            <templateDirectory>${project.build.directory}/dependency-resources/scripts/openapi/templates/5.4.0/server</templateDirectory>-->
                             <configOptions>
+                                <useSpringBoot3>true</useSpringBoot3>
                                 <dateLibrary>java11</dateLibrary>
                                 <delegatePattern>true</delegatePattern>
                                 <interfaceOnly>true</interfaceOnly>
@@ -306,8 +267,12 @@
                             <generateApiDocumentation>false</generateApiDocumentation>
                             <generateApiTests>false</generateApiTests>
                             <generateModelTests>false</generateModelTests>
-                            <templateDirectory>${project.build.directory}/dependency-resources/scripts/openapi/templates/5.4.0/server</templateDirectory>
+                            <schemaMappings>
+                                Pageable=org.springframework.data.domain.Pageable
+                            </schemaMappings>
+<!--                            <templateDirectory>${project.build.directory}/dependency-resources/scripts/openapi/templates/5.4.0/server</templateDirectory>-->
                             <configOptions>
+                                <useSpringBoot3>true</useSpringBoot3>
                                 <dateLibrary>java11</dateLibrary>
                                 <delegatePattern>true</delegatePattern>
                                 <interfaceOnly>true</interfaceOnly>
@@ -338,8 +303,9 @@
                             <generateApiTests>false</generateApiTests>
                             <generateModelTests>false</generateModelTests>
                             <generateSupportingFiles>true</generateSupportingFiles>
-                            <templateDirectory>${project.build.directory}/dependency-resources/scripts/openapi/templates/5.4.0/client</templateDirectory>
+<!--                            <templateDirectory>${project.build.directory}/dependency-resources/scripts/openapi/templates/5.4.0/client</templateDirectory>-->
                             <configOptions>
+                                <useJakartaEe>true</useJakartaEe>
                                 <swaggerAnnotations>false</swaggerAnnotations>
                                 <openApiNullable>false</openApiNullable>
                             </configOptions>
@@ -362,8 +328,9 @@
                             <generateApiTests>false</generateApiTests>
                             <generateModelTests>false</generateModelTests>
                             <generateSupportingFiles>true</generateSupportingFiles>
-                            <templateDirectory>${project.build.directory}/dependency-resources/scripts/openapi/templates/5.4.0/client</templateDirectory>
+<!--                            <templateDirectory>${project.build.directory}/dependency-resources/scripts/openapi/templates/5.4.0/client</templateDirectory>-->
                             <configOptions>
+                                <useJakartaEe>true</useJakartaEe>
                                 <swaggerAnnotations>false</swaggerAnnotations>
                                 <openApiNullable>false</openApiNullable>
                             </configOptions>
@@ -387,8 +354,9 @@
                             <generateApiTests>false</generateApiTests>
                             <generateModelTests>false</generateModelTests>
                             <generateSupportingFiles>true</generateSupportingFiles>
-                            <templateDirectory>${project.build.directory}/dependency-resources/scripts/openapi/templates/5.4.0/client</templateDirectory>
+<!--                            <templateDirectory>${project.build.directory}/dependency-resources/scripts/openapi/templates/5.4.0/client</templateDirectory>-->
                             <configOptions>
+                                <useJakartaEe>true</useJakartaEe>
                                 <swaggerAnnotations>false</swaggerAnnotations>
                                 <openApiNullable>false</openApiNullable>
                             </configOptions>
@@ -411,8 +379,9 @@
                             <generateApiTests>false</generateApiTests>
                             <generateModelTests>false</generateModelTests>
                             <generateSupportingFiles>true</generateSupportingFiles>
-                            <templateDirectory>${project.build.directory}/dependency-resources/scripts/openapi/templates/5.4.0/client</templateDirectory>
+<!--                            <templateDirectory>${project.build.directory}/dependency-resources/scripts/openapi/templates/5.4.0/client</templateDirectory>-->
                             <configOptions>
+                                <useJakartaEe>true</useJakartaEe>
                                 <swaggerAnnotations>false</swaggerAnnotations>
                                 <openApiNullable>false</openApiNullable>
                             </configOptions>
@@ -428,15 +397,16 @@
                         </goals>
                         <phase>generate-resources</phase>
                         <configuration>
-                            <inputSpec>https://raw.githubusercontent.com/pagopa/pn-address-manager/672cbe7854f77f9745a11c582121daf8da6ae603/docs/openapi/pn-address-manager-v1.yaml</inputSpec>
+                            <inputSpec>https://raw.githubusercontent.com/pagopa/pn-address-manager/aeb3c6287a12d07ac89aa2bf237de233f3d2bd97/docs/openapi/pn-address-manager-v1.yaml</inputSpec>
                             <generatorName>java</generatorName>
                             <library>webclient</library>
                             <generateApiDocumentation>false</generateApiDocumentation>
                             <generateApiTests>false</generateApiTests>
                             <generateModelTests>false</generateModelTests>
                             <generateSupportingFiles>true</generateSupportingFiles>
-                            <templateDirectory>${project.build.directory}/dependency-resources/scripts/openapi/templates/5.4.0/client</templateDirectory>
+<!--                            <templateDirectory>${project.build.directory}/dependency-resources/scripts/openapi/templates/5.4.0/client</templateDirectory>-->
                             <configOptions>
+                                <useJakartaEe>true</useJakartaEe>
                                 <swaggerAnnotations>false</swaggerAnnotations>
                                 <openApiNullable>false</openApiNullable>
                             </configOptions>
@@ -460,8 +430,9 @@
                             <generateApiTests>false</generateApiTests>
                             <generateModelTests>false</generateModelTests>
                             <generateSupportingFiles>true</generateSupportingFiles>
-                            <templateDirectory>${project.build.directory}/dependency-resources/scripts/openapi/templates/5.4.0/client</templateDirectory>
+<!--                            <templateDirectory>${project.build.directory}/dependency-resources/scripts/openapi/templates/5.4.0/client</templateDirectory>-->
                             <configOptions>
+                                <useJakartaEe>true</useJakartaEe>
                                 <swaggerAnnotations>false</swaggerAnnotations>
                                 <openApiNullable>false</openApiNullable>
                             </configOptions>
@@ -484,8 +455,9 @@
                             <generateApiTests>false</generateApiTests>
                             <generateModelTests>false</generateModelTests>
                             <generateSupportingFiles>true</generateSupportingFiles>
-                            <templateDirectory>${project.build.directory}/dependency-resources/scripts/openapi/templates/5.4.0/client</templateDirectory>
+<!--                            <templateDirectory>${project.build.directory}/dependency-resources/scripts/openapi/templates/5.4.0/client</templateDirectory>-->
                             <configOptions>
+                                <useJakartaEe>true</useJakartaEe>
                                 <swaggerAnnotations>false</swaggerAnnotations>
                                 <openApiNullable>false</openApiNullable>
                             </configOptions>
@@ -507,8 +479,9 @@
                             <library>webclient</library>
                             <generateApiTests>false</generateApiTests>
                             <generateModelTests>false</generateModelTests>
-                            <templateDirectory>${project.build.directory}/dependency-resources/scripts/openapi/templates/5.4.0/client</templateDirectory>
+<!--                            <templateDirectory>${project.build.directory}/dependency-resources/scripts/openapi/templates/5.4.0/client</templateDirectory>-->
                             <configOptions>
+                                <useJakartaEe>true</useJakartaEe>
                                 <apiPackage>${project.groupId}.paperchannel.generated.openapi.msclient.safestorage-reactive.api</apiPackage>
                                 <modelPackage>${project.groupId}.paperchannel.generated.openapi.msclient.safestorage.model</modelPackage>
                                 <dateLibrary>java8</dateLibrary>

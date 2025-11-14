@@ -38,19 +38,18 @@ import static it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest
 @Slf4j
 public class RequestDeliveryDAOImpl extends BaseDAO<PnDeliveryRequest> implements RequestDeliveryDAO {
 
-    @Autowired
-    @Qualifier("dataVaultEncryption")
-    private DataEncryption dataVaultEncryption;
-    @Autowired
-    private AddressDAO addressDAO;
 
+    private final AddressDAO addressDAO;
 
-    public RequestDeliveryDAOImpl(DataEncryption dataVaultEncryption,
+    public RequestDeliveryDAOImpl(@Qualifier("dataVaultEncryption") DataEncryption dataVaultEncryption,
                                   DynamoDbEnhancedAsyncClient dynamoDbEnhancedAsyncClient,
                                   DynamoDbAsyncClient dynamoDbAsyncClient,
-                                  AwsPropertiesConfig awsPropertiesConfig) {
+                                  AwsPropertiesConfig awsPropertiesConfig,
+                                  AddressDAO addressDAO) {
         super(dataVaultEncryption, dynamoDbEnhancedAsyncClient, dynamoDbAsyncClient,
                 awsPropertiesConfig.getDynamodbRequestDeliveryTable(), PnDeliveryRequest.class);
+
+        this.addressDAO = addressDAO;
     }
 
 
