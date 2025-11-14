@@ -44,12 +44,10 @@ public class CheckCoverageAreaRaddService implements CheckCoverageAreaService {
         if (checkZipCoverage(pnDeliveryRequest, pnAddress)) {
             log.debug("Perform checkZipCoverage");
             return raddAltService.isAreaCovered(cfg.getRaddCoverageSearchMode(), pnAddress, pnDeliveryRequest.getNotificationSentAt())
-                    .map(isCovered -> {
-                        if (!isCovered) {
-                            return sendAllAttachments(pnDeliveryRequest, attachmentInfoList);
-                        }
-                        return applyFilter(pnDeliveryRequest, attachmentInfoList);
-                    });
+                    .map(isCovered -> Boolean.TRUE.equals(isCovered)
+                        ? applyFilter(pnDeliveryRequest, attachmentInfoList)
+                        : sendAllAttachments(pnDeliveryRequest, attachmentInfoList)
+                    );
         } else {
             log.debug("Skip checkZipCoverage, sending all attachments");
             return Mono.just(sendAllAttachments(pnDeliveryRequest, attachmentInfoList));

@@ -127,6 +127,7 @@ class CheckCoverageAreaRaddServiceTest {
         when(cfg.getRaddCoverageSearchMode()).thenReturn(RaddSearchMode.valueOf("LIGHT"));
         when(raddAltService.isAreaCovered(any(), any(), any())).thenReturn(Mono.just(true));
 
-        assertThrows(PnInvalidChainRuleException.class, () -> service.filterAttachmentsToSend(req, attachments, address).block());
+        Mono<PnDeliveryRequest> resultMono = service.filterAttachmentsToSend(req, attachments, address);
+        assertThrows(PnInvalidChainRuleException.class, resultMono::block);
     }
 }
