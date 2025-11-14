@@ -1,10 +1,7 @@
 package it.pagopa.pn.paperchannel.service;
 
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
-import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
-import it.pagopa.pn.paperchannel.exception.PnAddressFlowException;
-import it.pagopa.pn.paperchannel.exception.PnGenericException;
-import it.pagopa.pn.paperchannel.exception.PnUntracebleException;
+import it.pagopa.pn.paperchannel.exception.*;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.dto.AnalogAddressDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.dto.DeduplicatesResponseDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.FailureDetailCodeEnum;
@@ -375,14 +372,10 @@ class PaperAddressServiceImplTest {
         when(addressManagerClient.deduplicates(any(), eq(addressFirstAttempt), eq(addressDiscovered)))
                 .thenReturn(Mono.just(mockDeduplicationResponse));
 
-        paperProperties.setPnaddr001continueFlow(false);
+        paperProperties.setPnaddr001continueFlow(true);
 
         StepVerifier.create(paperAddressService.getCorrectAddress(deliveryRequest, null, 0))
-                .expectErrorMatches(throwable -> {
-                    boolean isPnGenericException = throwable instanceof PnGenericException;
-                    boolean isNotPnUntracebleException = !(throwable instanceof PnUntracebleException);
-                    return isPnGenericException && isNotPnUntracebleException;
-                })
+                .expectErrorMatches(StopFlowSecondAttemptException.class::isInstance)
                 .verify();
 
     }
@@ -418,14 +411,10 @@ class PaperAddressServiceImplTest {
         when(addressManagerClient.deduplicates(any(), eq(addressFirstAttempt), eq(addressDiscovered)))
                 .thenReturn(Mono.just(mockDeduplicationResponse));
 
-        paperProperties.setPnaddr001continueFlow(false);
+        paperProperties.setPnaddr001continueFlow(true);
 
         StepVerifier.create(paperAddressService.getCorrectAddress(deliveryRequest, null, 0))
-                .expectErrorMatches(throwable -> {
-                    boolean isPnGenericException = throwable instanceof PnGenericException;
-                    boolean isNotPnUntracebleException = !(throwable instanceof PnUntracebleException);
-                    return isPnGenericException && isNotPnUntracebleException;
-                })
+                .expectErrorMatches(StopFlowSecondAttemptException.class::isInstance)
                 .verify();
 
     }
@@ -457,11 +446,7 @@ class PaperAddressServiceImplTest {
 
 
         StepVerifier.create(paperAddressService.getCorrectAddress(deliveryRequest, fromNationalRegistry, 0))
-                .expectErrorMatches(throwable -> {
-                    boolean isPnGenericException = throwable instanceof PnGenericException;
-                    boolean isNotPnUntracebleException = !(throwable instanceof PnUntracebleException);
-                    return isPnGenericException && isNotPnUntracebleException;
-                })
+                .expectErrorMatches(StopFlowSecondAttemptException.class::isInstance)
                 .verify();
 
     }
