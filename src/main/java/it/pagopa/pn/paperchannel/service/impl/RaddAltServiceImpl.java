@@ -3,6 +3,7 @@ package it.pagopa.pn.paperchannel.service.impl;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnraddalt.v1.dto.CheckCoverageRequestDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnraddalt.v1.dto.CheckCoverageResponseDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnraddalt.v1.dto.SearchModeDto;
+import it.pagopa.pn.paperchannel.mapper.AddressMapper;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.msclient.RaddAltClient;
 import it.pagopa.pn.paperchannel.model.RaddSearchMode;
@@ -25,10 +26,8 @@ public class RaddAltServiceImpl implements RaddAltService {
     public Mono<Boolean> isAreaCovered(RaddSearchMode searchMode, PnAddress pnAddress, Instant searchDate) {
         LocalDate searchLocalDate = LocalDate.ofInstant(searchDate, ZoneOffset.UTC);
         SearchModeDto searchModeDto = searchMode.toClientSearchMode();
+        CheckCoverageRequestDto checkCoverageRequestDto = AddressMapper.toCheckCoverageRequestDto(pnAddress);
 
-        CheckCoverageRequestDto checkCoverageRequestDto = new CheckCoverageRequestDto();
-        checkCoverageRequestDto.setCap(pnAddress.getCap());
-        checkCoverageRequestDto.setCity(pnAddress.getCity());
         return raddAltClient.checkCoverage(searchModeDto,  checkCoverageRequestDto, searchLocalDate)
                 .map(CheckCoverageResponseDto::getHasCoverage)
                 .doOnNext(coverage -> log.info("Address for requestId {} covered: {}", pnAddress.getRequestId(), coverage))
