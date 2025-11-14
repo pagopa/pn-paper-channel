@@ -3,8 +3,11 @@ package it.pagopa.pn.paperchannel.middleware.msclient.impl;
 import it.pagopa.pn.commons.log.PnLogger;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.api.PaperMessagesApi;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.api.PaperRequestMetadataPatchApi;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperEngageRequestAttachmentsDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperEngageRequestAttachmentsInnerDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperEngageRequestDto;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.RequestMetadataPatchRequestDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.common.BaseClient;
@@ -16,16 +19,12 @@ import lombok.CustomLog;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
-import reactor.util.retry.Retry;
 
 import java.math.BigDecimal;
-import java.net.ConnectException;
-import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static it.pagopa.pn.paperchannel.utils.Const.PN_AAR;
@@ -36,15 +35,19 @@ import static it.pagopa.pn.paperchannel.utils.Const.PN_AAR;
 public class ExternalChannelClientImpl extends BaseClient implements ExternalChannelClient {
 
     private static final String PN_EXTERNAL_CHANNEL_DESCRIPTION = "External Channel sendEngageRequest";
+    private static final String PN_EXTERNAL_CHANNEL_REWORK_DESCRIPTION = "External Channel patchRequestMetadata";
+
 
     private final PnPaperChannelConfig pnPaperChannelConfig;
     private final PaperMessagesApi paperMessagesApi;
+    private final PaperRequestMetadataPatchApi paperRequestMetadataPatchApi;
 
 
 
-    public ExternalChannelClientImpl(PnPaperChannelConfig pnPaperChannelConfig, PaperMessagesApi paperMessagesApi) {
+    public ExternalChannelClientImpl(PnPaperChannelConfig pnPaperChannelConfig, PaperMessagesApi paperMessagesApi, PaperRequestMetadataPatchApi paperRequestMetadataPatchApi) {
         this.pnPaperChannelConfig = pnPaperChannelConfig;
         this.paperMessagesApi = paperMessagesApi;
+        this.paperRequestMetadataPatchApi = paperRequestMetadataPatchApi;
     }
 
 
@@ -57,6 +60,12 @@ public class ExternalChannelClientImpl extends BaseClient implements ExternalCha
             return this.paperMessagesApi.sendPaperEngageRequest(requestIdx, this.pnPaperChannelConfig.getXPagopaExtchCxId(), dto);
         });
 
+    }
+
+    public Mono<Void> patchRequestMetadata(String requestIdx, boolean isOpenReworkRequest) {
+        log.logInvokingAsyncExternalService(PnLogger.EXTERNAL_SERVICES.PN_EXTERNAL_CHANNELS, PN_EXTERNAL_CHANNEL_REWORK_DESCRIPTION, requestIdx);
+        var dto = new RequestMetadataPatchRequestDto().isOpenReworkRequest(isOpenReworkRequest);
+        return this.paperRequestMetadataPatchApi.patchRequestMetadata(requestIdx, this.pnPaperChannelConfig.getXPagopaExtchCxId(), dto);
     }
 
     private PaperEngageRequestDto buildPaperEngageRequest(SendRequest sendRequest, List<AttachmentInfo> attachments, Boolean applyRasterization) {
