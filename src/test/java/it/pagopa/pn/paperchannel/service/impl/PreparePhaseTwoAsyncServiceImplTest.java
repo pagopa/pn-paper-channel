@@ -3,7 +3,6 @@ package it.pagopa.pn.paperchannel.service.impl;
 import it.pagopa.pn.api.dto.events.PnPrepareDelayerToPaperchannelPayload;
 import it.pagopa.pn.commons.exceptions.PnExceptionsCodes;
 import it.pagopa.pn.commons.exceptions.PnInternalException;
-import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnF24FlowException;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
@@ -18,10 +17,8 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnRequestError;
 import it.pagopa.pn.paperchannel.model.F24Error;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
-import it.pagopa.pn.paperchannel.service.F24Service;
-import it.pagopa.pn.paperchannel.service.PrepareFlowStarter;
-import it.pagopa.pn.paperchannel.service.SafeStorageService;
-import it.pagopa.pn.paperchannel.service.SqsSender;
+import it.pagopa.pn.paperchannel.service.*;
+import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -62,8 +59,9 @@ class PreparePhaseTwoAsyncServiceImplTest {
     private AddressDAO addressDAO;
     @Mock
     private PrepareFlowStarter prepareFlowStarter;
+
     @Mock
-    private PnPaperChannelConfig paperChannelConfig;
+    private AttachmentsConfigService attachmentsConfigService;
 
     private final PnAttachmentInfo attachmentInfo = new PnAttachmentInfo();
 
@@ -92,6 +90,12 @@ class PreparePhaseTwoAsyncServiceImplTest {
                 .attempt(0)
                 .build();
 
+
+        when(addressDAO.findByRequestId(anyString(), eq(AddressTypeEnum.RECEIVER_ADDRESS)))
+                .thenReturn(Mono.just(pnAddress));
+
+        when(attachmentsConfigService.filterAttachmentsToSend(any(), any(), any()))
+                .thenReturn(Mono.just(deliveryRequest));
         when(requestDeliveryDAO.getByRequestIdStrongConsistency(requestId, false)).thenReturn(Mono.just(deliveryRequest));
         when(f24Service.checkDeliveryRequestAttachmentForF24(deliveryRequest)).thenReturn(false);
         // Gli allegati sono già processati (numberOfPage > 0)
@@ -126,6 +130,11 @@ class PreparePhaseTwoAsyncServiceImplTest {
                 .attempt(0)
                 .build();
 
+        when(addressDAO.findByRequestId(anyString(), eq(AddressTypeEnum.RECEIVER_ADDRESS)))
+                .thenReturn(Mono.just(pnAddress));
+
+        when(attachmentsConfigService.filterAttachmentsToSend(any(), any(), any()))
+                .thenReturn(Mono.just(deliveryRequest));
         when(requestDeliveryDAO.getByRequestIdStrongConsistency(requestId, false)).thenReturn(Mono.just(deliveryRequest));
         when(f24Service.checkDeliveryRequestAttachmentForF24(deliveryRequest)).thenReturn(false);
         deliveryRequest.getAttachments().forEach(a -> a.setNumberOfPage(1));
@@ -168,7 +177,11 @@ class PreparePhaseTwoAsyncServiceImplTest {
                 .iun(iun)
                 .attempt(0)
                 .build();
+       when(addressDAO.findByRequestId(anyString(), eq(AddressTypeEnum.RECEIVER_ADDRESS)))
+               .thenReturn(Mono.just(pnAddress));
 
+       when(attachmentsConfigService.filterAttachmentsToSend(any(), any(), any()))
+               .thenReturn(Mono.just(deliveryRequest));
         when(requestDeliveryDAO.getByRequestIdStrongConsistency(requestId, false)).thenReturn(Mono.just(deliveryRequest));
         when(f24Service.checkDeliveryRequestAttachmentForF24(deliveryRequest)).thenReturn(false);
 
@@ -229,6 +242,12 @@ class PreparePhaseTwoAsyncServiceImplTest {
                 .attempt(0)
                 .build();
 
+        var pnAddress = new PnAddress();
+        when(addressDAO.findByRequestId(anyString(), eq(AddressTypeEnum.RECEIVER_ADDRESS)))
+                .thenReturn(Mono.just(pnAddress));
+
+        when(attachmentsConfigService.filterAttachmentsToSend(any(), any(), any()))
+                .thenReturn(Mono.just(deliveryRequest));
         when(requestDeliveryDAO.getByRequestIdStrongConsistency(requestId, false)).thenReturn(Mono.just(deliveryRequest));
         when(f24Service.checkDeliveryRequestAttachmentForF24(deliveryRequest)).thenReturn(false);
 
@@ -288,6 +307,13 @@ class PreparePhaseTwoAsyncServiceImplTest {
                 .attempt(0)
                 .build();
 
+        var pnAddress = new PnAddress();
+
+        when(addressDAO.findByRequestId(anyString(), eq(AddressTypeEnum.RECEIVER_ADDRESS)))
+                .thenReturn(Mono.just(pnAddress));
+
+        when(attachmentsConfigService.filterAttachmentsToSend(any(), any(), any()))
+                .thenReturn(Mono.just(deliveryRequest));
         when(requestDeliveryDAO.getByRequestIdStrongConsistency(requestId, false)).thenReturn(Mono.just(deliveryRequest));
         when(f24Service.checkDeliveryRequestAttachmentForF24(deliveryRequest)).thenReturn(false);
 
@@ -347,6 +373,13 @@ class PreparePhaseTwoAsyncServiceImplTest {
                 .attempt(0)
                 .build();
 
+        var pnAddress = new PnAddress();
+
+        when(addressDAO.findByRequestId(anyString(), eq(AddressTypeEnum.RECEIVER_ADDRESS)))
+                .thenReturn(Mono.just(pnAddress));
+
+        when(attachmentsConfigService.filterAttachmentsToSend(any(), any(), any()))
+                .thenReturn(Mono.just(deliveryRequest));
         when(requestDeliveryDAO.getByRequestIdStrongConsistency(requestId, false)).thenReturn(Mono.just(deliveryRequest));
         when(f24Service.checkDeliveryRequestAttachmentForF24(deliveryRequest)).thenReturn(false);
 
@@ -383,6 +416,18 @@ class PreparePhaseTwoAsyncServiceImplTest {
                 .attempt(0)
                 .build();
 
+        var pnAddress = new PnAddress();
+        pnAddress.setCity("Cicciano");
+        pnAddress.setAddress("Via Leonardo Da Vinci 10");
+        pnAddress.setCap("80033");
+        pnAddress.setCountry("IT");
+        pnAddress.setPr("NA");
+        pnAddress.setTypology("TYPOLOGY");
+        when(addressDAO.findByRequestId(anyString(), eq(AddressTypeEnum.RECEIVER_ADDRESS)))
+                .thenReturn(Mono.just(pnAddress));
+
+        when(attachmentsConfigService.filterAttachmentsToSend(any(), any(), any()))
+                .thenReturn(Mono.just(deliveryRequest));
         when(requestDeliveryDAO.getByRequestIdStrongConsistency(requestId, false)).thenReturn(Mono.just(deliveryRequest));
         when(f24Service.checkDeliveryRequestAttachmentForF24(deliveryRequest)).thenReturn(true);
         when(f24Service.preparePDF(deliveryRequest)).thenReturn(Mono.just(deliveryRequest));
@@ -417,7 +462,10 @@ class PreparePhaseTwoAsyncServiceImplTest {
 
         RuntimeException runtimeException = new RuntimeException("Errore generico");
 
-        when(requestDeliveryDAO.getByRequestIdStrongConsistency(requestId, false)).thenReturn(Mono.error(runtimeException));
+        when(requestDeliveryDAO.getByRequestIdStrongConsistency(requestId, false)).thenReturn(Mono.just(deliveryRequest));
+        when(addressDAO.findByRequestId(any(),any())).thenReturn(Mono.just(new PnAddress()));
+        when(attachmentsConfigService.filterAttachmentsToSend(any(), any(), any()))
+                .thenReturn(Mono.error(runtimeException));
         when(paperRequestErrorDAO.created(any())).thenReturn(Mono.just(pnRequestError));
         when(requestDeliveryDAO.updateStatus(eq(deliveryRequest.getRequestId()), eq(statusCode), eq(statusDescription), eq(statusDetail), any())).thenReturn(Mono.empty());
 
@@ -465,6 +513,19 @@ class PreparePhaseTwoAsyncServiceImplTest {
 
         ArgumentCaptor<F24Error> f24ErrorArgumentCaptor = ArgumentCaptor.forClass(F24Error.class);
 
+        var pnAddress = new PnAddress();
+        pnAddress.setCity("Cicciano");
+        pnAddress.setAddress("Via Leonardo Da Vinci 10");
+        pnAddress.setCap("80033");
+        pnAddress.setCountry("IT");
+        pnAddress.setPr("NA");
+        pnAddress.setTypology("TYPOLOGY");
+
+        when(addressDAO.findByRequestId(anyString(), eq(AddressTypeEnum.RECEIVER_ADDRESS)))
+                .thenReturn(Mono.just(pnAddress));
+
+        when(attachmentsConfigService.filterAttachmentsToSend(any(), any(), any()))
+                .thenReturn(Mono.just(deliveryRequest));
         when(requestDeliveryDAO.getByRequestIdStrongConsistency(requestId, false)).thenReturn(Mono.just(deliveryRequest));
         when(f24Service.checkDeliveryRequestAttachmentForF24(deliveryRequest)).thenReturn(true);
         when(f24Service.preparePDF(deliveryRequest)).thenReturn(Mono.error(pnF24FlowException));
@@ -519,6 +580,19 @@ class PreparePhaseTwoAsyncServiceImplTest {
         ArgumentCaptor<String> statusCodeCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> statusDetailCaptor = ArgumentCaptor.forClass(String.class);
 
+        var pnAddress = new PnAddress();
+        pnAddress.setCity("Cicciano");
+        pnAddress.setAddress("Via Leonardo Da Vinci 10");
+        pnAddress.setCap("80033");
+        pnAddress.setCountry("IT");
+        pnAddress.setPr("NA");
+        pnAddress.setTypology("TYPOLOGY");
+
+        when(addressDAO.findByRequestId(anyString(), eq(AddressTypeEnum.RECEIVER_ADDRESS)))
+                .thenReturn(Mono.just(pnAddress));
+
+        when(attachmentsConfigService.filterAttachmentsToSend(any(), any(), any()))
+                .thenReturn(Mono.just(deliveryRequest));
         when(requestDeliveryDAO.getByRequestIdStrongConsistency(requestId, false)).thenReturn(Mono.just(deliveryRequest));
         when(f24Service.checkDeliveryRequestAttachmentForF24(deliveryRequest)).thenReturn(true);
         when(f24Service.preparePDF(deliveryRequest)).thenReturn(Mono.error(pnInternalException));
@@ -551,65 +625,72 @@ class PreparePhaseTwoAsyncServiceImplTest {
     }
 
     @Test
-    void prepareAsyncPhaseTwoErrorInAttachmentForF24_RuntimeException() {
-        var requestId = "PREPARE_ANALOG_DOMICILE.IUN_GJWA-HMEK-RGUJ-202307-H-1.RECINDEX_0.ATTEMPT_0";
-        var iun = "GJWA-HMEK-RGUJ-202307-H-1";
-        PnDeliveryRequest deliveryRequest = new PnDeliveryRequest();
-        deliveryRequest.setRequestId(requestId);
-        deliveryRequest.setIun(iun);
-        deliveryRequest.setAttachments(new ArrayList<>());
+        void prepareAsyncPhaseTwoErrorInAttachmentForF24_RuntimeException() {
+            var requestId = "PREPARE_ANALOG_DOMICILE.IUN_GJWA-HMEK-RGUJ-202307-H-1.RECINDEX_0.ATTEMPT_0";
+            var iun = "GJWA-HMEK-RGUJ-202307-H-1";
+            PnDeliveryRequest deliveryRequest = new PnDeliveryRequest();
+            deliveryRequest.setRequestId(requestId);
+            deliveryRequest.setIun(iun);
+            deliveryRequest.setAttachments(new ArrayList<>());
 
-        RuntimeException runtimeException = new RuntimeException("Errore generico");
+            RuntimeException runtimeException = new RuntimeException("Errore generico");
 
-        PnRequestError pnRequestError = new PnRequestError();
-        pnRequestError.setError("Errore generico");
-        pnRequestError.setFlowThrow("PREPARE_PHASE_TWO_ASYNC_DEFAULT");
-        pnRequestError.setCause("UNKNOWN##"+ Instant.now().toString());
-        pnRequestError.setCategory("UNKNOWN");
-        pnRequestError.setAuthor("PN-PAPER-CHANNEL");
-        pnRequestError.setRequestId("PREPARE_ANALOG_DOMICILE.IUN_GJWA-HMEK-RGUJ-202307-H-1.RECINDEX_0.ATTEMPT_0");
-        pnRequestError.setCreated(Instant.now());
+            PnRequestError pnRequestError = new PnRequestError();
+            pnRequestError.setError("Errore generico");
+            pnRequestError.setFlowThrow("PREPARE_PHASE_TWO_ASYNC_DEFAULT");
+            pnRequestError.setCause("UNKNOWN##" + Instant.now().toString());
+            pnRequestError.setCategory("UNKNOWN");
+            pnRequestError.setAuthor("PN-PAPER-CHANNEL");
+            pnRequestError.setRequestId(requestId);
+            pnRequestError.setCreated(Instant.now());
 
-        ArgumentCaptor<String> descriptionCaptor = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<String> statusCodeCaptor = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<String> statusDetailCaptor = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<PnRequestError> itemErrorCaptor = ArgumentCaptor.forClass(PnRequestError.class);
+            ArgumentCaptor<String> descriptionCaptor = ArgumentCaptor.forClass(String.class);
+            ArgumentCaptor<String> statusCodeCaptor = ArgumentCaptor.forClass(String.class);
+            ArgumentCaptor<String> statusDetailCaptor = ArgumentCaptor.forClass(String.class);
+            ArgumentCaptor<PnRequestError> itemErrorCaptor = ArgumentCaptor.forClass(PnRequestError.class);
 
-        StatusDeliveryEnum statusDeliveryEnum = StatusDeliveryEnum.PAPER_CHANNEL_ASYNC_ERROR;
-        String statusCode = statusDeliveryEnum.getCode();
-        String statusDescription = statusCode + " - " + statusDeliveryEnum.getDescription();
-        String statusDetail = statusDeliveryEnum.getDetail();
+            StatusDeliveryEnum statusDeliveryEnum = StatusDeliveryEnum.PAPER_CHANNEL_ASYNC_ERROR;
+            String statusCode = statusDeliveryEnum.getCode();
+            String statusDescription = statusCode + " - " + statusDeliveryEnum.getDescription();
+            String statusDetail = statusDeliveryEnum.getDetail();
 
-        when(requestDeliveryDAO.getByRequestIdStrongConsistency(requestId, false)).thenReturn(Mono.just(deliveryRequest));
-        when(f24Service.checkDeliveryRequestAttachmentForF24(deliveryRequest)).thenReturn(true);
-        when(f24Service.preparePDF(deliveryRequest)).thenReturn(Mono.error(runtimeException));
-        when(paperRequestErrorDAO.created(any())).thenReturn(Mono.just(pnRequestError));
-        when(requestDeliveryDAO.updateStatus(eq(requestId), eq(statusCode), eq(statusDescription), eq(statusDetail), any())).thenReturn(Mono.empty());
+            var pnAddress = new PnAddress();
 
-        PnPrepareDelayerToPaperchannelPayload event = PnPrepareDelayerToPaperchannelPayload.builder()
-                .requestId(requestId)
-                .iun(iun)
-                .attempt(0)
-                .build();
+            when(requestDeliveryDAO.getByRequestIdStrongConsistency(anyString(), anyBoolean()))
+                    .thenReturn(Mono.just(deliveryRequest));
+            when(addressDAO.findByRequestId(anyString(), eq(AddressTypeEnum.RECEIVER_ADDRESS)))
+                    .thenReturn(Mono.just(pnAddress));
 
-        StepVerifier.create(preparePhaseTwoAsyncService.prepareAsyncPhaseTwo(event))
-                .expectErrorMatches(ex -> {
-                    assertInstanceOf(RuntimeException.class, ex);
-                    return true;
-                }).verify();
+            when(attachmentsConfigService.filterAttachmentsToSend(any(), any(), any()))
+                    .thenReturn(Mono.just(deliveryRequest));
+            when(requestDeliveryDAO.getByRequestIdStrongConsistency(requestId, false)).thenReturn(Mono.just(deliveryRequest));
+            when(f24Service.checkDeliveryRequestAttachmentForF24(deliveryRequest)).thenReturn(true);
+            when(f24Service.preparePDF(deliveryRequest)).thenReturn(Mono.error(runtimeException));
+            when(paperRequestErrorDAO.created(any())).thenReturn(Mono.just(pnRequestError));
+            when(requestDeliveryDAO.updateStatus(eq(requestId), eq(statusCode), eq(statusDescription), eq(statusDetail), any())).thenReturn(Mono.empty());
 
-        verify(paperRequestErrorDAO, times(1)).created(itemErrorCaptor.capture());
-        verify(requestDeliveryDAO, times(1)).updateStatus(eq(requestId), statusCodeCaptor.capture(), descriptionCaptor.capture(), statusDetailCaptor.capture(), any());
+            PnPrepareDelayerToPaperchannelPayload event = PnPrepareDelayerToPaperchannelPayload.builder()
+                    .requestId(requestId)
+                    .iun(iun)
+                    .attempt(0)
+                    .build();
 
-        PnRequestError pnRequestErrorForAssertion = itemErrorCaptor.getValue();
+            StepVerifier.create(preparePhaseTwoAsyncService.prepareAsyncPhaseTwo(event))
+                    .expectErrorMatches(ex -> ex instanceof RuntimeException)
+                    .verify();
 
-        Assertions.assertEquals(statusDescription, descriptionCaptor.getValue());
-        Assertions.assertEquals(statusCode, statusCodeCaptor.getValue());
-        Assertions.assertEquals(statusDetail, statusDetailCaptor.getValue());
-        Assertions.assertEquals(pnRequestError.getError(),pnRequestErrorForAssertion.getError());
-        Assertions.assertEquals(pnRequestError.getFlowThrow(),pnRequestErrorForAssertion.getFlowThrow());
-        Assertions.assertEquals(pnRequestError.getCategory(),pnRequestErrorForAssertion.getCategory());
-    }
+            verify(paperRequestErrorDAO, times(1)).created(itemErrorCaptor.capture());
+            verify(requestDeliveryDAO, times(1)).updateStatus(eq(requestId), statusCodeCaptor.capture(), descriptionCaptor.capture(), statusDetailCaptor.capture(), any());
+
+            PnRequestError pnRequestErrorForAssertion = itemErrorCaptor.getValue();
+
+            Assertions.assertEquals(statusDescription, descriptionCaptor.getValue());
+            Assertions.assertEquals(statusCode, statusCodeCaptor.getValue());
+            Assertions.assertEquals(statusDetail, statusDetailCaptor.getValue());
+            Assertions.assertEquals(pnRequestError.getError(), pnRequestErrorForAssertion.getError());
+            Assertions.assertEquals(pnRequestError.getFlowThrow(), pnRequestErrorForAssertion.getFlowThrow());
+            Assertions.assertEquals(pnRequestError.getCategory(), pnRequestErrorForAssertion.getCategory());
+        }
 
     private void inizialize(){}
 

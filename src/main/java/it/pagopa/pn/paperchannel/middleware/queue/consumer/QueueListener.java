@@ -54,7 +54,7 @@ public class QueueListener {
     private final PaperRequestErrorDAO paperRequestErrorDAO;
 
     @SqsListener(value = "${pn.paper-channel.queue-internal}", acknowledgementMode = SqsListenerAcknowledgementMode.ALWAYS)
-    public void pullFromInternalQueue(@Payload String node, @Headers Map<String, Object> headers){
+    public void pullFromInternalQueue(@Payload String node, @Headers Map<String, Object> headers) {
         log.info("Headers : {}", headers);
         setMDCContext(headers);
         InternalEventHeader internalEventHeader = toInternalEventHeader(headers);
@@ -63,116 +63,83 @@ public class QueueListener {
 
         if (internalEventHeader.getEventType().equals(EventTypeEnum.NATIONAL_REGISTRIES_ERROR.name())) {
             this.handleNationalRegistriesErrorEvent(internalEventHeader, node);
-        }
-
-        else if (internalEventHeader.getEventType().equals(EventTypeEnum.MANUAL_RETRY_EXTERNAL_CHANNEL.name())) {
+        } else if (internalEventHeader.getEventType().equals(EventTypeEnum.MANUAL_RETRY_EXTERNAL_CHANNEL.name())) {
             this.handleManualRetryExternalChannelEvent(node);
-        }
-
-        else if (internalEventHeader.getEventType().equals(EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name())) {
+        } else if (internalEventHeader.getEventType().equals(EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name())) {
             this.handleExternalChannelErrorEvent(internalEventHeader, node);
-        }
-
-        else if (internalEventHeader.getEventType().equals(EventTypeEnum.SAFE_STORAGE_ERROR.name())) {
+        } else if (internalEventHeader.getEventType().equals(EventTypeEnum.SAFE_STORAGE_ERROR.name())) {
             this.handleSafeStorageErrorEvent(internalEventHeader, node);
-        }
-
-        else if (internalEventHeader.getEventType().equals(EventTypeEnum.ADDRESS_MANAGER_ERROR.name())) {
+        } else if (internalEventHeader.getEventType().equals(EventTypeEnum.ADDRESS_MANAGER_ERROR.name())) {
             this.handleAddressManagerErrorEvent(internalEventHeader, node);
-        }
-
-        else if (internalEventHeader.getEventType().equals(EventTypeEnum.F24_ERROR.name())) {
+        } else if (internalEventHeader.getEventType().equals(EventTypeEnum.F24_ERROR.name())) {
             this.handleF24ErrorEvent(internalEventHeader, node);
-        }
-
-        else if (internalEventHeader.getEventType().equals(EventTypeEnum.PREPARE_ASYNC_FLOW.name())) {
+        } else if (internalEventHeader.getEventType().equals(EventTypeEnum.PREPARE_ASYNC_FLOW.name())) {
             this.handlePrepareAsyncFlowEvent(internalEventHeader, node);
-        }
-
-        else if (internalEventHeader.getEventType().equals(EventTypeEnum.REDRIVE_PAPER_PROGRESS_STATUS.name())) {
+        } else if (internalEventHeader.getEventType().equals(EventTypeEnum.REDRIVE_PAPER_PROGRESS_STATUS.name())) {
             this.handleRedrivePaperProgressStatus(internalEventHeader, node);
         }
 
     }
 
     @SqsListener(value = "${pn.paper-channel.queue-national-registries}", acknowledgementMode = SqsListenerAcknowledgementMode.ALWAYS)
-    public void pullNationalRegistries(@Payload String node, @Headers Map<String, Object> headers){
+    public void pullNationalRegistries(@Payload String node, @Headers Map<String, Object> headers) {
         AddressSQSMessageDto dto = convertToObject(node, AddressSQSMessageDto.class);
         setMDCContext(headers);
         this.queueListenerService.nationalRegistriesResponseListener(dto);
     }
 
     @SqsListener(value = "${pn.paper-channel.queue-external-channel}", acknowledgementMode = SqsListenerAcknowledgementMode.ON_SUCCESS)
-    public void pullExternalChannel(@Payload String node, @Headers Map<String,Object> headers){
+    public void pullExternalChannel(@Payload String node, @Headers Map<String, Object> headers) {
         SingleStatusUpdateDto body = convertToObject(node, SingleStatusUpdateDto.class);
         setMDCContext(headers);
         this.queueListenerService.externalChannelListener(body, 0);
     }
 
     @SqsListener(value = "${pn.paper-channel.queue-f24}", acknowledgementMode = SqsListenerAcknowledgementMode.ON_SUCCESS)
-    public void pullF24(@Payload String node, @Headers Map<String,Object> headers){
+    public void pullF24(@Payload String node, @Headers Map<String, Object> headers) {
         PnF24PdfSetReadyEvent.Detail body = convertToObject(node, PnF24PdfSetReadyEvent.Detail.class);
         setMDCContext(headers);
         this.queueListenerService.f24ResponseListener(body);
     }
 
     @SqsListener(value = "${pn.paper-channel.queue-delayer-to-paperchannel}", acknowledgementMode = SqsListenerAcknowledgementMode.ALWAYS)
-    public void pullDelayerMessages(@Payload String node, @Headers Map<String,Object> headers){
+    public void pullDelayerMessages(@Payload String node, @Headers Map<String, Object> headers) {
         setMDCContext(headers);
 
-        if(log.isTraceEnabled()){ //TODO cambiare da TRACE a DEBUG una volta introdotto il delayer (perchè senza il delayer, stampa l'indirizzo normalizzato)
+        if (log.isTraceEnabled()) { //TODO cambiare da TRACE a DEBUG una volta introdotto il delayer (perchè senza il delayer, stampa l'indirizzo normalizzato)
             log.trace("Message from pullDelayerMessages, headers={}, payload: {}", headers, node);
-        }
-        else {
+        } else {
             log.info("Message from pullDelayerMessages, payload: {}", node);
         }
 
         AttemptEventHeader attemptEventHeader = toAttemptEventHeader(headers);
-        if(attemptEventHeader == null) {
+        if (attemptEventHeader == null) {
             //evento che viene dal delayer
             this.handlePreparePhaseTwoAsyncFlowEvent(null, node);
-        }
-        else {
+        } else {
             //evento che viene da paper-channel stesso
             switch (EventTypeEnum.valueOf(attemptEventHeader.getEventType())) {
-                case PREPARE_ASYNC_FLOW:  this.handlePreparePhaseTwoAsyncFlowEvent(attemptEventHeader, node); break; // evento inviato dal consumer di f24
-                case F24_ERROR:  this.handleF24ErrorEvent(attemptEventHeader, node); break;
-                case SAFE_STORAGE_ERROR: this.handleSafeStorageErrorEventFromPreparePhaseTwo(attemptEventHeader, node); break;
-                default: log.error("Event type not allowed in Prepare Async Phase Two Flow: {}", attemptEventHeader.getEventType());
+                case PREPARE_ASYNC_FLOW:
+                    this.handlePreparePhaseTwoAsyncFlowEvent(attemptEventHeader, node);
+                    break; // evento inviato dal consumer di f24
+                case F24_ERROR:
+                    this.handleF24ErrorEvent(attemptEventHeader, node);
+                    break;
+                case SAFE_STORAGE_ERROR:
+                    this.handleSafeStorageErrorEventFromPreparePhaseTwo(attemptEventHeader, node);
+                    break;
+                default:
+                    log.error("Event type not allowed in Prepare Async Phase Two Flow: {}", attemptEventHeader.getEventType());
             }
-        }
-
-    }
-
-    @SqsListener(value = "${pn.paper-channel.queue-normalize-address}", acknowledgementMode = SqsListenerAcknowledgementMode.ALWAYS)
-    public void pullFromNormalizeAddressQueue(@Payload String node, @Headers Map<String, Object> headers){
-        setMDCContext(headers);
-
-        if(log.isDebugEnabled()){
-            log.debug("Message from pullFromNormalizeAddressQueue, headers={}, payload: {}", headers, node);
-        }
-        else {
-            log.info("Message from pullFromNormalizeAddressQueue, payload: {}", node);
-        }
-
-        AttemptEventHeader attemptEventHeader = toAttemptEventHeader(headers);
-
-        if (attemptEventHeader == null) return;
-
-        switch (EventTypeEnum.valueOf(attemptEventHeader.getEventType())) {
-            case PREPARE_ASYNC_FLOW: this.handlePreparePhaseOneAsyncFlowEvent(attemptEventHeader, node); break;
-            case NATIONAL_REGISTRIES_ERROR:  this.handleNationalRegistriesErrorEvent(attemptEventHeader, node); break;
-            case ADDRESS_MANAGER_ERROR: this.handleAddressManagerErrorEventFromPreparePhaseOne(attemptEventHeader, node); break;
-            default: log.error("Event type not allowed in Prepare Async Phase One Flow: {}", attemptEventHeader.getEventType());
         }
 
     }
 
     private void handleNationalRegistriesErrorEvent(AttemptEventHeader attemptEventHeader, String node) {
 
-        boolean noAttempt = (paperChannelConfig.getAttemptQueueNationalRegistries()-1) < attemptEventHeader.getAttempt();
+        boolean noAttempt = (paperChannelConfig.getAttemptQueueNationalRegistries() - 1) < attemptEventHeader.getAttempt();
         NationalRegistryError entity = convertToObject(node, NationalRegistryError.class);
-        if(noAttempt) {
+        if (noAttempt) {
             PnLogAudit pnLogAudit = new PnLogAudit();
             pnLogAudit.addsBeforeDiscard(entity.getIun(), String.format("requestId = %s finish retry to National Registry", entity.getRequestId()));
 
@@ -185,8 +152,7 @@ public class QueueListener {
             paperRequestErrorDAO.created(pnRequestError).subscribe();
 
             pnLogAudit.addsSuccessDiscard(entity.getIun(), String.format("requestId = %s finish retry to National Registry", entity.getRequestId()));
-        }
-        else {
+        } else {
             this.queueListenerService.nationalRegistriesErrorListener(entity, attemptEventHeader.getAttempt());
         }
 
@@ -199,7 +165,7 @@ public class QueueListener {
 
     private void handleExternalChannelErrorEvent(InternalEventHeader internalEventHeader, String node) {
 
-        boolean noAttempt = (paperChannelConfig.getAttemptQueueExternalChannel()-1) < internalEventHeader.getAttempt();
+        boolean noAttempt = (paperChannelConfig.getAttemptQueueExternalChannel() - 1) < internalEventHeader.getAttempt();
         ExternalChannelError error = convertToObject(node, ExternalChannelError.class);
         execution(error, noAttempt, internalEventHeader.getAttempt(), internalEventHeader.getExpired(), ExternalChannelError.class,
                 entity -> {
@@ -231,7 +197,7 @@ public class QueueListener {
     @Deprecated(since = "2.15.0", forRemoval = true)
     private void handleSafeStorageErrorEvent(InternalEventHeader internalEventHeader, String node) {
 
-        boolean noAttempt = (paperChannelConfig.getAttemptQueueSafeStorage()-1) < internalEventHeader.getAttempt();
+        boolean noAttempt = (paperChannelConfig.getAttemptQueueSafeStorage() - 1) < internalEventHeader.getAttempt();
         PrepareAsyncRequest error = convertToObject(node, PrepareAsyncRequest.class);
         execution(error, noAttempt, internalEventHeader.getAttempt(), internalEventHeader.getExpired(), PrepareAsyncRequest.class,
                 entity -> {
@@ -257,9 +223,9 @@ public class QueueListener {
 
     private void handleSafeStorageErrorEventFromPreparePhaseTwo(AttemptEventHeader attemptEventHeader, String node) {
 
-        boolean noAttempt = (paperChannelConfig.getAttemptQueueSafeStorage()-1) < attemptEventHeader.getAttempt();
+        boolean noAttempt = (paperChannelConfig.getAttemptQueueSafeStorage() - 1) < attemptEventHeader.getAttempt();
         PnPrepareDelayerToPaperchannelPayload error = convertToObject(node, PnPrepareDelayerToPaperchannelPayload.class);
-        if(noAttempt) {
+        if (noAttempt) {
             PnLogAudit pnLogAudit = new PnLogAudit();
             pnLogAudit.addsBeforeDiscard(error.getIun(), String.format("requestId = %s finish retry to Safe Storage from PREPARE phase 2", error.getRequestId()));
 
@@ -272,20 +238,19 @@ public class QueueListener {
             paperRequestErrorDAO.created(pnRequestError).subscribe();
 
             pnLogAudit.addsSuccessDiscard(error.getIun(), String.format("requestId = %s finish retry to Safe Storage from PREPARE phase 2", error.getRequestId()));
-        }
-        else {
+        } else {
             this.queueListenerService.delayerListener(error, attemptEventHeader.getAttempt());
         }
     }
 
 
     /**
-     * @deprecated This method has been replaced by  {@link #handleAddressManagerErrorEventFromPreparePhaseOne(AttemptEventHeader, String)}.
+     * @deprecated This method has been replaced by  {#handleAddressManagerErrorEventFromPreparePhaseOne(AttemptEventHeader, String)}.
      */
     @Deprecated(since = "2.15.0", forRemoval = true)
     private void handleAddressManagerErrorEvent(InternalEventHeader internalEventHeader, String node) {
 
-        boolean noAttempt = (paperChannelConfig.getAttemptQueueAddressManager()-1) < internalEventHeader.getAttempt();
+        boolean noAttempt = (paperChannelConfig.getAttemptQueueAddressManager() - 1) < internalEventHeader.getAttempt();
         PrepareAsyncRequest error = convertToObject(node, PrepareAsyncRequest.class);
         execution(error, noAttempt, internalEventHeader.getAttempt(), internalEventHeader.getExpired(), PrepareAsyncRequest.class,
                 entity -> {
@@ -309,34 +274,11 @@ public class QueueListener {
                 });
     }
 
-    private void handleAddressManagerErrorEventFromPreparePhaseOne(AttemptEventHeader attemptEventHeader, String node) {
-
-        boolean noAttempt = (paperChannelConfig.getAttemptQueueAddressManager()-1) < attemptEventHeader.getAttempt();
-        PrepareNormalizeAddressEvent entity = convertToObject(node, PrepareNormalizeAddressEvent.class);
-        if(noAttempt) {
-            PnLogAudit pnLogAudit = new PnLogAudit();
-            pnLogAudit.addsBeforeDiscard(entity.getIun(), String.format("requestId = %s finish retry address manager error ?", entity.getRequestId()));
-
-            PnRequestError pnRequestError = PnRequestError.builder()
-                    .requestId(entity.getRequestId())
-                    .error(ADDRESS_MANAGER_ERROR.getMessage())
-                    .flowThrow(EventTypeEnum.ADDRESS_MANAGER_ERROR.name())
-                    .build();
-
-            paperRequestErrorDAO.created(pnRequestError).subscribe();
-
-            pnLogAudit.addsSuccessDiscard(entity.getIun(), String.format("requestId = %s finish retry address manager error", entity.getRequestId()));
-        }
-        else {
-            this.queueListenerService.normalizeAddressListener(entity, attemptEventHeader.getAttempt());
-        }
-    }
-
     private void handleF24ErrorEvent(AttemptEventHeader internalEventHeader, String node) {
 
-        boolean noAttempt = (paperChannelConfig.getAttemptQueueF24()-1) < internalEventHeader.getAttempt();
+        boolean noAttempt = (paperChannelConfig.getAttemptQueueF24() - 1) < internalEventHeader.getAttempt();
         F24Error error = convertToObject(node, F24Error.class);
-        if(noAttempt) {
+        if (noAttempt) {
             PnLogAudit pnLogAudit = new PnLogAudit();
             pnLogAudit.addsBeforeDiscard(error.getIun(), String.format("requestId = %s finish retry f24 error ?", error.getRequestId()));
 
@@ -349,8 +291,7 @@ public class QueueListener {
             paperRequestErrorDAO.created(pnRequestError).subscribe();
 
             pnLogAudit.addsSuccessDiscard(error.getIun(), String.format("requestId = %s finish retry f24 error", error.getRequestId()));
-        }
-        else {
+        } else {
             this.queueListenerService.f24ErrorListener(error, internalEventHeader.getAttempt());
         }
     }
@@ -365,20 +306,13 @@ public class QueueListener {
         this.queueListenerService.internalListener(request, internalEventHeader.getAttempt());
     }
 
-    private void handlePreparePhaseOneAsyncFlowEvent(AttemptEventHeader internalEventHeader, String node) {
-        log.info("Push prepare phase one queue - first time");
-        PrepareNormalizeAddressEvent request = convertToObject(node, PrepareNormalizeAddressEvent.class);
-        this.queueListenerService.normalizeAddressListener(request, internalEventHeader.getAttempt());
-    }
-
     private void handlePreparePhaseTwoAsyncFlowEvent(AttemptEventHeader attemptEventHeader, String node) {
         var body = convertToObject(node, PnPrepareDelayerToPaperchannelPayload.class);
         int attempt;
-        if(attemptEventHeader == null) {
+        if (attemptEventHeader == null) {
             log.info("Push prepare phase two queue from delayer");
             attempt = 0;
-        }
-        else {
+        } else {
             attempt = attemptEventHeader.getAttempt();
             log.info("Push prepare phase two queue from internal, attempt = {}", attempt);
         }
@@ -387,25 +321,24 @@ public class QueueListener {
 
     }
 
-
     private void handleRedrivePaperProgressStatus(InternalEventHeader internalEventHeader, String node) {
         log.info("Push redrive paper progress status queue - first time");
         var request = convertToObject(node, SingleStatusUpdateDto.class);
         this.queueListenerService.externalChannelListener(request, internalEventHeader.getAttempt());
     }
 
-    private InternalEventHeader toInternalEventHeader(Map<String, Object> headers){
+    private InternalEventHeader toInternalEventHeader(Map<String, Object> headers) {
         if (headers.containsKey(PN_EVENT_HEADER_EVENT_TYPE) &&
                 headers.containsKey(PN_EVENT_HEADER_EXPIRED) &&
-                headers.containsKey(PN_EVENT_HEADER_ATTEMPT)){
+                headers.containsKey(PN_EVENT_HEADER_ATTEMPT)) {
             String headerEventType = headers.get(PN_EVENT_HEADER_EVENT_TYPE) instanceof String ? (String) headers.get(PN_EVENT_HEADER_EVENT_TYPE) : "";
 
             int headerAttempt = 0;
             Instant headerExpired = null;
             try {
                 headerAttempt = Integer.parseInt((String) headers.get(PN_EVENT_HEADER_ATTEMPT));
-                headerExpired = Instant.parse((String)headers.get(PN_EVENT_HEADER_EXPIRED));
-            } catch (NumberFormatException | DateTimeParseException ex ){
+                headerExpired = Instant.parse((String) headers.get(PN_EVENT_HEADER_EXPIRED));
+            } catch (NumberFormatException | DateTimeParseException ex) {
                 log.warn("QueueListener#toInternalEventHeader - Ignoring exception: {}", ex.getClass().getCanonicalName());
             }
             return InternalEventHeader.builder()
@@ -418,16 +351,16 @@ public class QueueListener {
         return null;
     }
 
-    private AttemptEventHeader toAttemptEventHeader(Map<String, Object> headers){
+    private AttemptEventHeader toAttemptEventHeader(Map<String, Object> headers) {
         if (headers.containsKey(PN_EVENT_HEADER_EVENT_TYPE) &&
-                headers.containsKey(PN_EVENT_HEADER_ATTEMPT)){
+                headers.containsKey(PN_EVENT_HEADER_ATTEMPT)) {
 
             String headerEventType = headers.get(PN_EVENT_HEADER_EVENT_TYPE) instanceof String headerEventTypeString ? headerEventTypeString : "";
 
             int headerAttempt = 0;
             try {
                 headerAttempt = Integer.parseInt((String) headers.get(PN_EVENT_HEADER_ATTEMPT));
-            } catch (NumberFormatException | DateTimeParseException ex ){
+            } catch (NumberFormatException | DateTimeParseException ex) {
                 log.warn("QueueListener#toInternalEventHeader - Ignoring exception: {}", ex.getClass().getCanonicalName());
             }
             return AttemptEventHeader.builder()
@@ -441,13 +374,13 @@ public class QueueListener {
 
     private <T> void execution(T entity, boolean noAttempt, int attempt, Instant expired, Class<T> tClass,
                                Function<T, Void> traceErrorDB,
-                               Function<Pair<T, Integer>, Void> pushQueue){
+                               Function<Pair<T, Integer>, Void> pushQueue) {
         if (noAttempt) {
             traceErrorDB.apply(entity);
             return;
         }
 
-        if (expired.isAfter(Instant.now())){
+        if (expired.isAfter(Instant.now())) {
             Mono.delay(Duration.ofMillis(1)).publishOn(Schedulers.boundedElastic())
                     .map(i -> {
                         this.sqsSender.rePushInternalError(entity, attempt, expired, tClass);
@@ -458,21 +391,21 @@ public class QueueListener {
         pushQueue.apply(Pair.of(entity, attempt));
     }
 
-    private <T> T convertToObject(String body, Class<T> tClass){
+    private <T> T convertToObject(String body, Class<T> tClass) {
         T entity = Utility.jsonToObject(this.objectMapper, body, tClass);
         if (entity == null) throw new PnGenericException(MAPPER_ERROR, MAPPER_ERROR.getMessage());
         return entity;
     }
 
-    private void setMDCContext(Map<String, Object> headers){
+    private void setMDCContext(Map<String, Object> headers) {
         MDCUtils.clearMDCKeys();
 
-        if (headers.containsKey("id")){
+        if (headers.containsKey("id")) {
             String awsMessageId = headers.get("id").toString();
             MDC.put(MDCUtils.MDC_PN_CTX_MESSAGE_ID, awsMessageId);
         }
 
-        if (headers.containsKey("AWSTraceHeader")){
+        if (headers.containsKey("AWSTraceHeader")) {
             String traceId = headers.get("AWSTraceHeader").toString();
             MDC.put(MDCUtils.MDC_TRACE_ID_KEY, traceId);
         } else {
