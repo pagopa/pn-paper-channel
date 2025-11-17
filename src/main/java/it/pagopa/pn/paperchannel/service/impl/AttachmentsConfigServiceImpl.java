@@ -1,11 +1,9 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
-import it.pagopa.pn.api.dto.events.PnAttachmentsConfigEventPayload;
 import it.pagopa.pn.commons.rules.model.FilterChainResult;
 import it.pagopa.pn.commons.rules.model.ListFilterChainResult;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.PnInvalidChainRuleException;
-import it.pagopa.pn.paperchannel.mapper.AttachmentsConfigMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PnAttachmentsConfigDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
@@ -128,16 +126,5 @@ public class AttachmentsConfigServiceImpl extends GenericService implements Chec
                         return Mono.just(CollectionUtils.isEmpty(x.getRules())?List.of():x.getRules());
                     }
                 });
-    }
-
-
-    public Mono<Void> refreshConfig(PnAttachmentsConfigEventPayload payload) {
-        return Mono.defer(() -> {
-            String configKey = payload.getConfigKey();
-            String configType = payload.getConfigType();
-            String partitionKey = AttachmentsConfigUtils.buildPartitionKey(configKey, configType);
-            var pnAttachmentsConfigs = AttachmentsConfigMapper.toPnAttachmentsConfig(configKey, configType, payload.getConfigs(), pnPaperChannelConfig.getDefaultattachmentconfigcap());
-            return pnAttachmentsConfigDAO.refreshConfig(partitionKey, pnAttachmentsConfigs);
-        });
     }
 }

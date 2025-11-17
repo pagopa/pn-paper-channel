@@ -1,6 +1,5 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
-import it.pagopa.pn.api.dto.events.PnAttachmentsConfigEventPayload;
 import it.pagopa.pn.api.dto.events.PnF24PdfSetReadyEvent;
 import it.pagopa.pn.api.dto.events.PnF24PdfSetReadyEventItem;
 import it.pagopa.pn.api.dto.events.PnPrepareDelayerToPaperchannelPayload;
@@ -59,7 +58,6 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
     private final AddressDAO addressDAO;
     private final PaperRequestErrorDAO paperRequestErrorDAO;
     private final F24Service f24Service;
-    private final CheckCoverageAreaService checkCoverageAreaService;
     private final PrepareFlowStarter prepareFlowStarter;
     private final NationalRegistryService nationalRegistryService;
     private final PcRetryUtils pcRetryUtils;
@@ -73,7 +71,6 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
                                     AddressDAO addressDAO,
                                     PaperRequestErrorDAO paperRequestErrorDAO,
                                     F24Service f24Service,
-                                    CheckCoverageAreaService checkCoverageAreaService,
                                     PrepareFlowStarter prepareFlowStarter,
                                     NationalRegistryService nationalRegistryService,
                                     PcRetryUtils pcRetryUtils) {
@@ -87,7 +84,6 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
         this.addressDAO = addressDAO;
         this.paperRequestErrorDAO = paperRequestErrorDAO;
         this.f24Service = f24Service;
-        this.checkCoverageAreaService = checkCoverageAreaService;
         this.prepareFlowStarter = prepareFlowStarter;
         this.nationalRegistryService = nationalRegistryService;
         this.pcRetryUtils = pcRetryUtils;
@@ -186,19 +182,6 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
                                                 payload.getGeneratedPdfsUrls().stream().map(PnF24PdfSetReadyEventItem::getUri).toList()))
                 )
                 .block();
-    }
-
-    @Override
-    public void raddAltListener(PnAttachmentsConfigEventPayload data) {
-        final String processName = "raddAltListener";
-        MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, data.getConfigKey());
-        log.logStartingProcess(PROCESS_NAME);
-        var monoResult = Mono.just(data)
-                .flatMap(request -> checkCoverageAreaService.refreshConfig(data))
-                .doOnSuccess(resultFromAsync -> log.logEndingProcess(processName))
-                .doOnError(ex -> log.error("Error in raddAltListener with configKey: {}", data.getConfigKey(), ex));
-
-        MDCUtils.addMDCToContextAndExecute(monoResult).block();
     }
 
     @Override

@@ -391,14 +391,6 @@ Parameters:
     Type: String
     Description: 'ARN of the queue executing the flow of PREPARE phase 1'
 
-  RaddAltToPaperChannelQueueName:
-    Type: String
-    Description: 'Pull radd-alt messages from this Queue'
-
-  RaddAltToPaperChannelQueueARN:
-    Type: String
-    Description: 'Pull radd-alt messages from this Queue'
-
   DateChargeCalculationModes:
     Type: String
     Description: 'Variable that determines which calculation mode to use,  in startConfigurationTime;calculationMode format.'
@@ -836,7 +828,6 @@ Resources:
         ContainerEnvEntry58: !Sub 'PN_PAPERCHANNEL_REQUIREDDEMATS=${RequiredDemats}'
         ContainerEnvEntry59: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUEZIPHANDLE=${AttemptQueueZipHandle}'
         ContainerEnvEntry60: !Sub 'AWS_DYNAMODBATTACHMENTSCONFIGTABLE=${AttachmentsConfigDynamoTableName}'
-        ContainerEnvEntry61: !Sub 'PN_PAPERCHANNEL_QUEUERADDALT=${RaddAltToPaperChannelQueueName}'
         ContainerEnvEntry62: !Sub 'PN_PAPERCHANNEL_ENABLEDOCFILTERRULEENGINE=${EnableDocFilterRuleEngine}'
         ContainerEnvEntry63: !Sub 'PN_PAPERCHANNEL_DEFAULTATTACHMENTCONFIGCAP=${DefaultAttachmentConfigCap}'
         ContainerEnvEntry64: !Sub 'AWS_DYNAMODBPAPEREVENTERRORTABLE=${PaperEventErrorDynamoTableName}'
@@ -905,7 +896,6 @@ Resources:
               - !Ref DelayerToPaperChannelQueueARN
               - !Ref NationalRegistries2PaperChannelQueueARN
               - !Ref F24ToPaperChannelQueueARN
-              - !Ref RaddAltToPaperChannelQueueARN
               - !Ref PaperChannelOcrOutputsQueueARN
           # Send events to data-lake queue
           - Effect: Allow
