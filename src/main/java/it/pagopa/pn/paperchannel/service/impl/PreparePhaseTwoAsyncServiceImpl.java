@@ -70,6 +70,7 @@ public class PreparePhaseTwoAsyncServiceImpl implements PreparePhaseTwoAsyncServ
                 .zipWhen(deliveryRequest -> addressDAO.findByRequestId(deliveryRequest.getRequestId(), AddressTypeEnum.RECEIVER_ADDRESS))
                 .flatMap(deliveryRequestWithAddress -> attachmentsConfigService
                         .filterAttachmentsToSend(deliveryRequestWithAddress.getT1(), AttachmentsConfigUtils.getAllAttachments(deliveryRequestWithAddress.getT1()), deliveryRequestWithAddress.getT2())
+                        )
                         .flatMap(deliveryRequest -> {
                             if (f24Service.checkDeliveryRequestAttachmentForF24(deliveryRequest)) {
                                 // Calcolo del costo analogico se sono presenti gli F24
@@ -89,8 +90,9 @@ public class PreparePhaseTwoAsyncServiceImpl implements PreparePhaseTwoAsyncServ
                             log.info("End of prepare async phase two");
                             log.logEndingProcess(PROCESS_NAME);
                         })
-                        .onErrorResume(ex -> handlePrepareAsyncPhaseTwoError(deliveryRequestMono, eventPayload.getRequestId(), ex)));
+                        .onErrorResume(ex -> handlePrepareAsyncPhaseTwoError(deliveryRequestMono, eventPayload.getRequestId(), ex));
     }
+
 
     /**
      * Handles delivery request processing attachments.

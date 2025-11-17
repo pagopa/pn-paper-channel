@@ -3,6 +3,7 @@ package it.pagopa.pn.paperchannel.service.impl;
 import it.pagopa.pn.api.dto.events.PnPrepareDelayerToPaperchannelPayload;
 import it.pagopa.pn.commons.exceptions.PnExceptionsCodes;
 import it.pagopa.pn.commons.exceptions.PnInternalException;
+import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnF24FlowException;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
@@ -59,6 +60,8 @@ class PreparePhaseTwoAsyncServiceImplTest {
     private AddressDAO addressDAO;
     @Mock
     private PrepareFlowStarter prepareFlowStarter;
+    @Mock
+    private PnPaperChannelConfig pnPaperChannelConfig;
 
     @Mock
     private AttachmentsConfigService attachmentsConfigService;
@@ -375,6 +378,7 @@ class PreparePhaseTwoAsyncServiceImplTest {
 
         var pnAddress = new PnAddress();
 
+        when(pnPaperChannelConfig.getAttemptSafeStorage()).thenReturn(1);
         when(addressDAO.findByRequestId(anyString(), eq(AddressTypeEnum.RECEIVER_ADDRESS)))
                 .thenReturn(Mono.just(pnAddress));
 
@@ -493,7 +497,6 @@ class PreparePhaseTwoAsyncServiceImplTest {
         Assertions.assertEquals(pnRequestError.getFlowThrow(),pnRequestErrorForAssertion.getFlowThrow());
         Assertions.assertEquals(pnRequestError.getCategory(),pnRequestErrorForAssertion.getCategory());
     }
-
 
     @Test
     void prepareAsyncPhaseTwoErrorInAttachmentForF24() {
