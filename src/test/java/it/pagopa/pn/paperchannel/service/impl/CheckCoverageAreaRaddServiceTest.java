@@ -1,6 +1,5 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
-import it.pagopa.pn.api.dto.events.PnAttachmentsConfigEventPayload;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.PnInvalidChainRuleException;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
@@ -30,12 +29,6 @@ class CheckCoverageAreaRaddServiceTest {
         cfg = mock(PnPaperChannelConfig.class);
         raddAltService = mock(RaddAltService.class);
         service = new CheckCoverageAreaRaddService(cfg, raddAltService);
-    }
-
-    @Test
-    void testRefreshConfigReturnsEmpty() {
-        Mono<Void> result = service.refreshConfig(mock(PnAttachmentsConfigEventPayload.class));
-        assertTrue(result.blockOptional().isEmpty());
     }
 
     @Test

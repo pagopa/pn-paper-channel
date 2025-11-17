@@ -1,6 +1,5 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
-import it.pagopa.pn.api.dto.events.PnAttachmentsConfigEventPayload;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.PnInvalidChainRuleException;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
@@ -33,11 +32,6 @@ public class CheckCoverageAreaRaddService implements CheckCoverageAreaService {
     private static final String CODE_REQUIRED = "DOC_TAG_REQUIRED";
     private static final String CODE_SKIPPED = "DOC_TAG_SKIPPED";
     private static final String AAR_TAG = "AAR";
-
-    @Override
-    public Mono<Void> refreshConfig(PnAttachmentsConfigEventPayload payload) {
-        return Mono.empty();
-    }
 
     @Override
     public Mono<PnDeliveryRequest> filterAttachmentsToSend(PnDeliveryRequest pnDeliveryRequest, List<PnAttachmentInfo> attachmentInfoList, PnAddress pnAddress) {
