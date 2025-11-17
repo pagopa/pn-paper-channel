@@ -4,6 +4,8 @@ import it.pagopa.pn.commons.conf.SharedAutoConfiguration;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import it.pagopa.pn.paperchannel.model.RaddSearchMode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -27,7 +29,7 @@ import java.util.Set;
 @Import(SharedAutoConfiguration.class)
 @Slf4j
 public class PnPaperChannelConfig {
-
+    private RaddSearchMode raddCoverageSearchMode;
     private String clientSafeStorageBasepath;
     private String clientNationalRegistriesBasepath;
     private String clientExternalChannelBasepath;

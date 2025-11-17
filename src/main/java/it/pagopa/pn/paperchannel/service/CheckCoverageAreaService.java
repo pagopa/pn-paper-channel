@@ -7,7 +7,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.List;
 
-public interface AttachmentsConfigService {
+public interface CheckCoverageAreaService {
 
     Mono<PnDeliveryRequest> filterAttachmentsToSend(PnDeliveryRequest pnDeliveryRequest, List<PnAttachmentInfo> attachmentInfoList, PnAddress pnAddress);
 }
