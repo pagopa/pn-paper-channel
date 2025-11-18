@@ -644,6 +644,14 @@ Parameters:
       - 'true'
       - 'false'
 
+  EnablePreparePhaseOne:
+    Type: String
+    Description: 'Activation of the consumer for phase one PREPARE flow'
+    Default: 'true'
+    AllowedValues:
+      - 'true'
+      - 'false'
+
   PaperChannelToDelayerQueueName:
     Type: String
     Description: 'Paper Channel to Delayer queue name'
@@ -853,6 +861,7 @@ Resources:
         ContainerEnvEntry84: !Sub 'PN_PAPERCHANNEL_QUEUEREGIONOCRINPUTS=${PaperChannelOcrInputsQueueRegion}'
         ContainerEnvEntry85: !Sub 'PN_PAPERCHANNEL_CLIENTRADDALTBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
         ContainerEnvEntry86: !Sub 'PN_PAPERCHANNEL_RADDCOVERAGESEARCHMODE={{resolve:ssm:/config/radd-coverage/search-mode}}'
+        ContainerEnvEntry87: !Sub 'PN_PAPERCHANNEL_ENABLEPREPAREPHASEONE=${EnablePreparePhaseOne}'
         ApplicativeEnvFileChecksum: !Ref ApplicativeEnvFileChecksum
         ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-PaperChannel-Secrets
