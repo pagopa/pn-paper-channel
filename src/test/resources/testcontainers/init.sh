@@ -6,7 +6,7 @@ aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
 echo "### END KEY CREATION FOR KMS ###"
 
 echo "### CREATE QUEUES ###"
-queues="local-delivery-push-safestorage-inputs local-paper_channel_requests local-delivery-push-inputs local-ext-channels-inputs local-ext-channels-outputs pn-f24_to_paperchannel local-paper-normalize-address local-delayer_to_paperchannel local-ocr-inputs"
+queues="local-delivery-push-safestorage-inputs local-paper_channel_requests local-delivery-push-inputs local-ext-channels-inputs local-ext-channels-outputs pn-f24_to_paperchannel local-paper-normalize-address local-delayer_to_paperchannel local-ocr-inputs local-paperchannel_to_delayer"
 for qn in  $( echo $queues | tr " " "\n" ) ; do
     echo creating queue $qn ...
     aws --profile default --region us-east-1 --endpoint-url http://localstack:4566 \
