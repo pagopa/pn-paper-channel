@@ -448,6 +448,7 @@ components:
             taxId:
               x-field-extra-annotation: "@lombok.ToString.Exclude"
               type: string
+              format: password
               example: AAAZZZ00H00T000Z
             referenceRequestDate:
               type: string
