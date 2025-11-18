@@ -55,9 +55,6 @@ class PreparePhaseOneAsyncServiceImplTest {
     private RequestDeliveryDAO requestDeliveryDAO;
 
     @Mock
-    private CheckCoverageAreaService checkCoverageAreaService;
-
-    @Mock
     private PrepareFlowStarter prepareFlowStarter;
 
     @Mock
@@ -111,7 +108,6 @@ class PreparePhaseOneAsyncServiceImplTest {
         when(requestDeliveryDAO.getByRequestId(requestId, false)).thenReturn(Mono.just(deliveryRequest));
         when(paperAddressService.getCorrectAddress(deliveryRequest, null, 0)).thenReturn(Mono.just(address));
         when(addressDAO.create(any(PnAddress.class))).thenReturn(Mono.just(addressEntity));
-        when(checkCoverageAreaService.filterAttachmentsToSend(deliveryRequest, deliveryRequest.getAttachments(), addressEntity)).thenReturn(Mono.just(deliveryRequest));
         when(paperTenderService.getSimplifiedCost(address.getCap(), deliveryRequest.getProductType())).thenReturn(Mono.just(cost));
         when(paperChannelDeliveryDriverDAO.getByDeliveryDriverId("DRIVER_ID")).thenReturn(Mono.just(driver));
         when(requestDeliveryDAO.updateDataWithoutGet(deliveryRequest, false)).thenReturn(Mono.just(deliveryRequest));
@@ -152,7 +148,6 @@ class PreparePhaseOneAsyncServiceImplTest {
         when(requestDeliveryDAO.getByRequestId(requestId, false)).thenReturn(Mono.just(deliveryRequest));
         when(paperAddressService.getCorrectAddress(deliveryRequest, address, 0)).thenReturn(Mono.just(address));
         when(addressDAO.create(any(PnAddress.class))).thenReturn(Mono.just(addressEntity));
-        when(checkCoverageAreaService.filterAttachmentsToSend(deliveryRequest, deliveryRequest.getAttachments(), addressEntity)).thenReturn(Mono.just(deliveryRequest));
         when(paperTenderService.getSimplifiedCost(address.getCap(), deliveryRequest.getProductType())).thenReturn(Mono.just(cost));
         when(paperChannelDeliveryDriverDAO.getByDeliveryDriverId("DRIVER_ID")).thenReturn(Mono.just(driver));
         when(requestDeliveryDAO.updateDataWithoutGet(deliveryRequest, false)).thenReturn(Mono.just(deliveryRequest));
@@ -252,7 +247,6 @@ class PreparePhaseOneAsyncServiceImplTest {
         when(requestDeliveryDAO.getByRequestId(requestId, false)).thenReturn(Mono.just(deliveryRequest));
         when(paperAddressService.getCorrectAddress(deliveryRequest, null, 0)).thenReturn(Mono.just(address));
         when(addressDAO.create(any(PnAddress.class))).thenReturn(Mono.just(addressEntity));
-        when(checkCoverageAreaService.filterAttachmentsToSend(deliveryRequest, deliveryRequest.getAttachments(), addressEntity)).thenReturn(Mono.just(deliveryRequest));
         when(requestDeliveryDAO.updateDataWithoutGet(deliveryRequest, false)).thenReturn(Mono.just(deliveryRequest));
         when(paperTenderService.getSimplifiedCost(address.getCap(), deliveryRequest.getProductType())).thenReturn(Mono.error(runtimeException));
         when(requestDeliveryDAO.updateStatus(any(), any(), any(), any(), any())).thenReturn(Mono.empty());
@@ -322,7 +316,6 @@ class PreparePhaseOneAsyncServiceImplTest {
         when(requestDeliveryDAO.getByRequestId(requestId, false)).thenReturn(Mono.just(deliveryRequest));
         when(paperAddressService.getCorrectAddress(deliveryRequest, null, 0)).thenReturn(Mono.just(address));
         when(addressDAO.create(any(PnAddress.class))).thenReturn(Mono.just(addressEntity));
-        when(checkCoverageAreaService.filterAttachmentsToSend(deliveryRequest, deliveryRequest.getAttachments(), addressEntity)).thenReturn(Mono.error(runtimeException));
         when(requestDeliveryDAO.updateStatus(any(), any(), any(), any(), any())).thenReturn(Mono.empty());
         when(paperRequestErrorDAO.created(any())).thenReturn(Mono.just(pnRequestError));
 
@@ -392,7 +385,6 @@ class PreparePhaseOneAsyncServiceImplTest {
         when(paperAddressService.getCorrectAddress(deliveryRequest, null, 0)).thenReturn(Mono.just(address));
         when(addressDAO.create(any(PnAddress.class))).thenReturn(Mono.just(addressEntity));
         when(requestDeliveryDAO.updateStatus(any(), any(), any(), any(), any())).thenReturn(Mono.empty());
-        when(checkCoverageAreaService.filterAttachmentsToSend(deliveryRequest, deliveryRequest.getAttachments(), addressEntity)).thenReturn(Mono.error(nullPointerException));
         when(paperRequestErrorDAO.created(any())).thenReturn(Mono.just(pnRequestError));
 
         StepVerifier.create(this.preparePhaseOneAsyncService.preparePhaseOneAsync(event))
@@ -600,7 +592,6 @@ class PreparePhaseOneAsyncServiceImplTest {
         when(requestDeliveryDAO.getByRequestId(requestId, false)).thenReturn(Mono.just(deliveryRequest));
         when(paperAddressService.getCorrectAddress(deliveryRequest, null, 0)).thenReturn(Mono.just(address));
         when(addressDAO.create(any(PnAddress.class))).thenReturn(Mono.just(addressEntity));
-        when(checkCoverageAreaService.filterAttachmentsToSend(deliveryRequest, deliveryRequest.getAttachments(), addressEntity)).thenReturn(Mono.just(deliveryRequest));
         when(requestDeliveryDAO.updateDataWithoutGet(deliveryRequest, false)).thenReturn(Mono.just(deliveryRequest));
 
         StepVerifier.create(preparePhaseOneAsyncService.preparePhaseOneAsync(PrepareNormalizeAddressEvent.builder()

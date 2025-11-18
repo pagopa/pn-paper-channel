@@ -60,7 +60,7 @@ public class PreparePhaseTwoAsyncServiceImpl implements PreparePhaseTwoAsyncServ
     private final PnPaperChannelConfig paperChannelConfig;
     private final AddressDAO addressDAO;
     private final PrepareFlowStarter prepareFlowStarter;
-    private final AttachmentsConfigService attachmentsConfigService;
+    private final CheckCoverageAreaService checkCoverageAreaService;
 
     @Override
     public Mono<PnDeliveryRequest> prepareAsyncPhaseTwo(PnPrepareDelayerToPaperchannelPayload eventPayload) {
@@ -68,31 +68,30 @@ public class PreparePhaseTwoAsyncServiceImpl implements PreparePhaseTwoAsyncServ
         Mono<PnDeliveryRequest> deliveryRequestMono = requestDeliveryDAO.getByRequestIdStrongConsistency(eventPayload.getRequestId(), false);
         return deliveryRequestMono
                 .zipWhen(deliveryRequest -> addressDAO.findByRequestId(deliveryRequest.getRequestId(), AddressTypeEnum.RECEIVER_ADDRESS))
-                .flatMap(deliveryRequestWithAddress -> attachmentsConfigService
+                .flatMap(deliveryRequestWithAddress -> checkCoverageAreaService
                         .filterAttachmentsToSend(deliveryRequestWithAddress.getT1(), AttachmentsConfigUtils.getAllAttachments(deliveryRequestWithAddress.getT1()), deliveryRequestWithAddress.getT2())
-                        )
-                        .flatMap(deliveryRequest -> {
-                            if (f24Service.checkDeliveryRequestAttachmentForF24(deliveryRequest)) {
-                                // Calcolo del costo analogico se sono presenti gli F24
-                                return f24Service.preparePDF(deliveryRequest);
-                            }
-                            // Handle regular flow
-                            return handleRegularDeliveryRequest(deliveryRequest, eventPayload.getClientId())
-                                    .onErrorResume(ex -> {
-                                        // Error -> Retry
-                                        log.error("Retriable error processing attachments for requestId {}", eventPayload.getRequestId(), ex);
-                                        return updateStatus(deliveryRequest.getRequestId(), SAFE_STORAGE_IN_ERROR)
-                                                .doOnNext(result -> this.sqsSender.pushErrorDelayerToPaperChannelAfterSafeStorageErrorQueue(eventPayload))
-                                                .then(Mono.empty());
-                                    });
-                        })
-                        .doOnNext(deliveryRequest -> {
-                            log.info("End of prepare async phase two");
-                            log.logEndingProcess(PROCESS_NAME);
-                        })
-                        .onErrorResume(ex -> handlePrepareAsyncPhaseTwoError(deliveryRequestMono, eventPayload.getRequestId(), ex));
+                )
+                .flatMap(deliveryRequest -> {
+                    if (f24Service.checkDeliveryRequestAttachmentForF24(deliveryRequest)) {
+                        // Calcolo del costo analogico se sono presenti gli F24
+                        return f24Service.preparePDF(deliveryRequest);
+                    }
+                    // Handle regular flow
+                    return handleRegularDeliveryRequest(deliveryRequest, eventPayload.getClientId())
+                            .onErrorResume(ex -> {
+                                // Error -> Retry
+                                log.error("Retriable error processing attachments for requestId {}", eventPayload.getRequestId(), ex);
+                                return updateStatus(deliveryRequest.getRequestId(), SAFE_STORAGE_IN_ERROR)
+                                        .doOnNext(result -> this.sqsSender.pushErrorDelayerToPaperChannelAfterSafeStorageErrorQueue(eventPayload))
+                                        .then(Mono.empty());
+                            });
+                })
+                .doOnNext(deliveryRequest -> {
+                    log.info("End of prepare async phase two");
+                    log.logEndingProcess(PROCESS_NAME);
+                })
+                .onErrorResume(ex -> handlePrepareAsyncPhaseTwoError(deliveryRequestMono, eventPayload.getRequestId(), ex));
     }
-
 
     /**
      * Handles delivery request processing attachments.

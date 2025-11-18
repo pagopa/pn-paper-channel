@@ -62,9 +62,8 @@ class PreparePhaseTwoAsyncServiceImplTest {
     private PrepareFlowStarter prepareFlowStarter;
     @Mock
     private PnPaperChannelConfig pnPaperChannelConfig;
-
     @Mock
-    private AttachmentsConfigService attachmentsConfigService;
+    private CheckCoverageAreaService checkCoverageAreaService;
 
     private final PnAttachmentInfo attachmentInfo = new PnAttachmentInfo();
 
@@ -97,7 +96,7 @@ class PreparePhaseTwoAsyncServiceImplTest {
         when(addressDAO.findByRequestId(anyString(), eq(AddressTypeEnum.RECEIVER_ADDRESS)))
                 .thenReturn(Mono.just(pnAddress));
 
-        when(attachmentsConfigService.filterAttachmentsToSend(any(), any(), any()))
+        when(checkCoverageAreaService.filterAttachmentsToSend(any(), any(), any()))
                 .thenReturn(Mono.just(deliveryRequest));
         when(requestDeliveryDAO.getByRequestIdStrongConsistency(requestId, false)).thenReturn(Mono.just(deliveryRequest));
         when(f24Service.checkDeliveryRequestAttachmentForF24(deliveryRequest)).thenReturn(false);
@@ -136,7 +135,7 @@ class PreparePhaseTwoAsyncServiceImplTest {
         when(addressDAO.findByRequestId(anyString(), eq(AddressTypeEnum.RECEIVER_ADDRESS)))
                 .thenReturn(Mono.just(pnAddress));
 
-        when(attachmentsConfigService.filterAttachmentsToSend(any(), any(), any()))
+        when(checkCoverageAreaService.filterAttachmentsToSend(any(), any(), any()))
                 .thenReturn(Mono.just(deliveryRequest));
         when(requestDeliveryDAO.getByRequestIdStrongConsistency(requestId, false)).thenReturn(Mono.just(deliveryRequest));
         when(f24Service.checkDeliveryRequestAttachmentForF24(deliveryRequest)).thenReturn(false);
@@ -183,7 +182,7 @@ class PreparePhaseTwoAsyncServiceImplTest {
        when(addressDAO.findByRequestId(anyString(), eq(AddressTypeEnum.RECEIVER_ADDRESS)))
                .thenReturn(Mono.just(pnAddress));
 
-       when(attachmentsConfigService.filterAttachmentsToSend(any(), any(), any()))
+       when(checkCoverageAreaService.filterAttachmentsToSend(any(), any(), any()))
                .thenReturn(Mono.just(deliveryRequest));
         when(requestDeliveryDAO.getByRequestIdStrongConsistency(requestId, false)).thenReturn(Mono.just(deliveryRequest));
         when(f24Service.checkDeliveryRequestAttachmentForF24(deliveryRequest)).thenReturn(false);
@@ -249,7 +248,7 @@ class PreparePhaseTwoAsyncServiceImplTest {
         when(addressDAO.findByRequestId(anyString(), eq(AddressTypeEnum.RECEIVER_ADDRESS)))
                 .thenReturn(Mono.just(pnAddress));
 
-        when(attachmentsConfigService.filterAttachmentsToSend(any(), any(), any()))
+        when(checkCoverageAreaService.filterAttachmentsToSend(any(), any(), any()))
                 .thenReturn(Mono.just(deliveryRequest));
         when(requestDeliveryDAO.getByRequestIdStrongConsistency(requestId, false)).thenReturn(Mono.just(deliveryRequest));
         when(f24Service.checkDeliveryRequestAttachmentForF24(deliveryRequest)).thenReturn(false);
@@ -315,7 +314,7 @@ class PreparePhaseTwoAsyncServiceImplTest {
         when(addressDAO.findByRequestId(anyString(), eq(AddressTypeEnum.RECEIVER_ADDRESS)))
                 .thenReturn(Mono.just(pnAddress));
 
-        when(attachmentsConfigService.filterAttachmentsToSend(any(), any(), any()))
+        when(checkCoverageAreaService.filterAttachmentsToSend(any(), any(), any()))
                 .thenReturn(Mono.just(deliveryRequest));
         when(requestDeliveryDAO.getByRequestIdStrongConsistency(requestId, false)).thenReturn(Mono.just(deliveryRequest));
         when(f24Service.checkDeliveryRequestAttachmentForF24(deliveryRequest)).thenReturn(false);
@@ -378,11 +377,10 @@ class PreparePhaseTwoAsyncServiceImplTest {
 
         var pnAddress = new PnAddress();
 
-        when(pnPaperChannelConfig.getAttemptSafeStorage()).thenReturn(1);
         when(addressDAO.findByRequestId(anyString(), eq(AddressTypeEnum.RECEIVER_ADDRESS)))
                 .thenReturn(Mono.just(pnAddress));
 
-        when(attachmentsConfigService.filterAttachmentsToSend(any(), any(), any()))
+        when(checkCoverageAreaService.filterAttachmentsToSend(any(), any(), any()))
                 .thenReturn(Mono.just(deliveryRequest));
         when(requestDeliveryDAO.getByRequestIdStrongConsistency(requestId, false)).thenReturn(Mono.just(deliveryRequest));
         when(f24Service.checkDeliveryRequestAttachmentForF24(deliveryRequest)).thenReturn(false);
@@ -430,7 +428,7 @@ class PreparePhaseTwoAsyncServiceImplTest {
         when(addressDAO.findByRequestId(anyString(), eq(AddressTypeEnum.RECEIVER_ADDRESS)))
                 .thenReturn(Mono.just(pnAddress));
 
-        when(attachmentsConfigService.filterAttachmentsToSend(any(), any(), any()))
+        when(checkCoverageAreaService.filterAttachmentsToSend(any(), any(), any()))
                 .thenReturn(Mono.just(deliveryRequest));
         when(requestDeliveryDAO.getByRequestIdStrongConsistency(requestId, false)).thenReturn(Mono.just(deliveryRequest));
         when(f24Service.checkDeliveryRequestAttachmentForF24(deliveryRequest)).thenReturn(true);
@@ -468,7 +466,7 @@ class PreparePhaseTwoAsyncServiceImplTest {
 
         when(requestDeliveryDAO.getByRequestIdStrongConsistency(requestId, false)).thenReturn(Mono.just(deliveryRequest));
         when(addressDAO.findByRequestId(any(),any())).thenReturn(Mono.just(new PnAddress()));
-        when(attachmentsConfigService.filterAttachmentsToSend(any(), any(), any()))
+        when(checkCoverageAreaService.filterAttachmentsToSend(any(), any(), any()))
                 .thenReturn(Mono.error(runtimeException));
         when(paperRequestErrorDAO.created(any())).thenReturn(Mono.just(pnRequestError));
         when(requestDeliveryDAO.updateStatus(eq(deliveryRequest.getRequestId()), eq(statusCode), eq(statusDescription), eq(statusDetail), any())).thenReturn(Mono.empty());
@@ -527,7 +525,7 @@ class PreparePhaseTwoAsyncServiceImplTest {
         when(addressDAO.findByRequestId(anyString(), eq(AddressTypeEnum.RECEIVER_ADDRESS)))
                 .thenReturn(Mono.just(pnAddress));
 
-        when(attachmentsConfigService.filterAttachmentsToSend(any(), any(), any()))
+        when(checkCoverageAreaService.filterAttachmentsToSend(any(), any(), any()))
                 .thenReturn(Mono.just(deliveryRequest));
         when(requestDeliveryDAO.getByRequestIdStrongConsistency(requestId, false)).thenReturn(Mono.just(deliveryRequest));
         when(f24Service.checkDeliveryRequestAttachmentForF24(deliveryRequest)).thenReturn(true);
@@ -594,7 +592,7 @@ class PreparePhaseTwoAsyncServiceImplTest {
         when(addressDAO.findByRequestId(anyString(), eq(AddressTypeEnum.RECEIVER_ADDRESS)))
                 .thenReturn(Mono.just(pnAddress));
 
-        when(attachmentsConfigService.filterAttachmentsToSend(any(), any(), any()))
+        when(checkCoverageAreaService.filterAttachmentsToSend(any(), any(), any()))
                 .thenReturn(Mono.just(deliveryRequest));
         when(requestDeliveryDAO.getByRequestIdStrongConsistency(requestId, false)).thenReturn(Mono.just(deliveryRequest));
         when(f24Service.checkDeliveryRequestAttachmentForF24(deliveryRequest)).thenReturn(true);
@@ -659,14 +657,13 @@ class PreparePhaseTwoAsyncServiceImplTest {
 
             var pnAddress = new PnAddress();
 
-            when(requestDeliveryDAO.getByRequestIdStrongConsistency(anyString(), anyBoolean()))
-                    .thenReturn(Mono.just(deliveryRequest));
+            when(requestDeliveryDAO.getByRequestIdStrongConsistency(requestId, false)).thenReturn(Mono.just(deliveryRequest));
+
             when(addressDAO.findByRequestId(anyString(), eq(AddressTypeEnum.RECEIVER_ADDRESS)))
                     .thenReturn(Mono.just(pnAddress));
 
-            when(attachmentsConfigService.filterAttachmentsToSend(any(), any(), any()))
+            when(checkCoverageAreaService.filterAttachmentsToSend(any(), any(), any()))
                     .thenReturn(Mono.just(deliveryRequest));
-            when(requestDeliveryDAO.getByRequestIdStrongConsistency(requestId, false)).thenReturn(Mono.just(deliveryRequest));
             when(f24Service.checkDeliveryRequestAttachmentForF24(deliveryRequest)).thenReturn(true);
             when(f24Service.preparePDF(deliveryRequest)).thenReturn(Mono.error(runtimeException));
             when(paperRequestErrorDAO.created(any())).thenReturn(Mono.just(pnRequestError));
