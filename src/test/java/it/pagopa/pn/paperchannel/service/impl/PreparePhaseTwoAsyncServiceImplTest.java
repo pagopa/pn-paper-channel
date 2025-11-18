@@ -93,7 +93,7 @@ class PreparePhaseTwoAsyncServiceImplTest {
                 .build();
 
 
-        when(addressDAO.findByRequestId(anyString(), eq(AddressTypeEnum.RECEIVER_ADDRESS)))
+        when(addressDAO.getPnAddress(anyString(), eq(AddressTypeEnum.RECEIVER_ADDRESS), anyBoolean()))
                 .thenReturn(Mono.just(pnAddress));
 
         when(checkCoverageAreaService.filterAttachmentsToSend(any(), any(), any()))
@@ -132,7 +132,7 @@ class PreparePhaseTwoAsyncServiceImplTest {
                 .attempt(0)
                 .build();
 
-        when(addressDAO.findByRequestId(anyString(), eq(AddressTypeEnum.RECEIVER_ADDRESS)))
+        when(addressDAO.getPnAddress(anyString(), eq(AddressTypeEnum.RECEIVER_ADDRESS), anyBoolean()))
                 .thenReturn(Mono.just(pnAddress));
 
         when(checkCoverageAreaService.filterAttachmentsToSend(any(), any(), any()))
@@ -179,7 +179,7 @@ class PreparePhaseTwoAsyncServiceImplTest {
                 .iun(iun)
                 .attempt(0)
                 .build();
-       when(addressDAO.findByRequestId(anyString(), eq(AddressTypeEnum.RECEIVER_ADDRESS)))
+       when(addressDAO.getPnAddress(requestId, AddressTypeEnum.RECEIVER_ADDRESS, true))
                .thenReturn(Mono.just(pnAddress));
 
        when(checkCoverageAreaService.filterAttachmentsToSend(any(), any(), any()))
@@ -245,7 +245,7 @@ class PreparePhaseTwoAsyncServiceImplTest {
                 .build();
 
         var pnAddress = new PnAddress();
-        when(addressDAO.findByRequestId(anyString(), eq(AddressTypeEnum.RECEIVER_ADDRESS)))
+        when(addressDAO.getPnAddress(requestId, AddressTypeEnum.RECEIVER_ADDRESS, true))
                 .thenReturn(Mono.just(pnAddress));
 
         when(checkCoverageAreaService.filterAttachmentsToSend(any(), any(), any()))
@@ -311,7 +311,7 @@ class PreparePhaseTwoAsyncServiceImplTest {
 
         var pnAddress = new PnAddress();
 
-        when(addressDAO.findByRequestId(anyString(), eq(AddressTypeEnum.RECEIVER_ADDRESS)))
+        when(addressDAO.getPnAddress(requestId, AddressTypeEnum.RECEIVER_ADDRESS, true))
                 .thenReturn(Mono.just(pnAddress));
 
         when(checkCoverageAreaService.filterAttachmentsToSend(any(), any(), any()))
@@ -377,7 +377,7 @@ class PreparePhaseTwoAsyncServiceImplTest {
 
         var pnAddress = new PnAddress();
 
-        when(addressDAO.findByRequestId(anyString(), eq(AddressTypeEnum.RECEIVER_ADDRESS)))
+        when(addressDAO.getPnAddress(requestId, AddressTypeEnum.RECEIVER_ADDRESS, true))
                 .thenReturn(Mono.just(pnAddress));
 
         when(checkCoverageAreaService.filterAttachmentsToSend(any(), any(), any()))
@@ -425,7 +425,7 @@ class PreparePhaseTwoAsyncServiceImplTest {
         pnAddress.setCountry("IT");
         pnAddress.setPr("NA");
         pnAddress.setTypology("TYPOLOGY");
-        when(addressDAO.findByRequestId(anyString(), eq(AddressTypeEnum.RECEIVER_ADDRESS)))
+        when(addressDAO.getPnAddress(requestId, AddressTypeEnum.RECEIVER_ADDRESS, true))
                 .thenReturn(Mono.just(pnAddress));
 
         when(checkCoverageAreaService.filterAttachmentsToSend(any(), any(), any()))
@@ -465,7 +465,7 @@ class PreparePhaseTwoAsyncServiceImplTest {
         RuntimeException runtimeException = new RuntimeException("Errore generico");
 
         when(requestDeliveryDAO.getByRequestIdStrongConsistency(requestId, false)).thenReturn(Mono.just(deliveryRequest));
-        when(addressDAO.findByRequestId(any(),any())).thenReturn(Mono.just(new PnAddress()));
+        when(addressDAO.getPnAddress(requestId, AddressTypeEnum.RECEIVER_ADDRESS, true)).thenReturn(Mono.just(new PnAddress()));
         when(checkCoverageAreaService.filterAttachmentsToSend(any(), any(), any()))
                 .thenReturn(Mono.error(runtimeException));
         when(paperRequestErrorDAO.created(any())).thenReturn(Mono.just(pnRequestError));
@@ -522,7 +522,7 @@ class PreparePhaseTwoAsyncServiceImplTest {
         pnAddress.setPr("NA");
         pnAddress.setTypology("TYPOLOGY");
 
-        when(addressDAO.findByRequestId(anyString(), eq(AddressTypeEnum.RECEIVER_ADDRESS)))
+        when(addressDAO.getPnAddress(requestId, AddressTypeEnum.RECEIVER_ADDRESS, true))
                 .thenReturn(Mono.just(pnAddress));
 
         when(checkCoverageAreaService.filterAttachmentsToSend(any(), any(), any()))
@@ -589,7 +589,7 @@ class PreparePhaseTwoAsyncServiceImplTest {
         pnAddress.setPr("NA");
         pnAddress.setTypology("TYPOLOGY");
 
-        when(addressDAO.findByRequestId(anyString(), eq(AddressTypeEnum.RECEIVER_ADDRESS)))
+        when(addressDAO.getPnAddress(requestId, AddressTypeEnum.RECEIVER_ADDRESS, true))
                 .thenReturn(Mono.just(pnAddress));
 
         when(checkCoverageAreaService.filterAttachmentsToSend(any(), any(), any()))
@@ -659,7 +659,7 @@ class PreparePhaseTwoAsyncServiceImplTest {
 
             when(requestDeliveryDAO.getByRequestIdStrongConsistency(requestId, false)).thenReturn(Mono.just(deliveryRequest));
 
-            when(addressDAO.findByRequestId(anyString(), eq(AddressTypeEnum.RECEIVER_ADDRESS)))
+            when(addressDAO.getPnAddress(requestId, AddressTypeEnum.RECEIVER_ADDRESS, true))
                     .thenReturn(Mono.just(pnAddress));
 
             when(checkCoverageAreaService.filterAttachmentsToSend(any(), any(), any()))

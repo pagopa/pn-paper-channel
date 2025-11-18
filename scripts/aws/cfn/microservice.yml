@@ -647,6 +647,7 @@ Parameters:
   EnablePreparePhaseOne:
     Type: String
     Description: 'Activation of the consumer for phase one PREPARE flow'
+    Default: 'true'
     AllowedValues:
       - 'true'
       - 'false'

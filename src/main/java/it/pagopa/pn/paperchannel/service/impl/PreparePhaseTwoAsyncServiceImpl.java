@@ -67,7 +67,7 @@ public class PreparePhaseTwoAsyncServiceImpl implements PreparePhaseTwoAsyncServ
         log.logStartingProcess(PROCESS_NAME);
         Mono<PnDeliveryRequest> deliveryRequestMono = requestDeliveryDAO.getByRequestIdStrongConsistency(eventPayload.getRequestId(), false);
         return deliveryRequestMono
-                .zipWhen(deliveryRequest -> addressDAO.findByRequestId(deliveryRequest.getRequestId(), AddressTypeEnum.RECEIVER_ADDRESS))
+                .zipWhen(deliveryRequest -> addressDAO.getPnAddress(deliveryRequest.getRequestId(), AddressTypeEnum.RECEIVER_ADDRESS, true))
                 .flatMap(deliveryRequestWithAddress -> checkCoverageAreaService
                         .filterAttachmentsToSend(deliveryRequestWithAddress.getT1(), AttachmentsConfigUtils.getAllAttachments(deliveryRequestWithAddress.getT1()), deliveryRequestWithAddress.getT2())
                 )
