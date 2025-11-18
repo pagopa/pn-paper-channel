@@ -502,7 +502,7 @@
                         </goals>
                         <phase>generate-resources</phase>
                         <configuration>
-                            <inputSpec>https://raw.githubusercontent.com/pagopa/pn-radd-alt/36d7e139830a1d6c95dd9361fae65fb016552a53/docs/openapi/pn-radd-alt-private.yaml</inputSpec>
+                            <inputSpec>https://raw.githubusercontent.com/pagopa/pn-radd-alt/a2b743cb4c17244d12eb3a9e856597e1813083b9/docs/openapi/pn-radd-alt-private.yaml</inputSpec>
                             <generatorName>java</generatorName>
                             <library>webclient</library>
                             <generateApiDocumentation>false</generateApiDocumentation>

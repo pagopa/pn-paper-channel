@@ -44,7 +44,7 @@ public class PreparePhaseOneAsyncServiceImpl implements PreparePhaseOneAsyncServ
     private final PaperRequestErrorDAO paperRequestErrorDAO;
     private final PaperAddressService paperAddressService;
     private final PaperCalculatorUtils paperCalculatorUtils;
-    private final AttachmentsConfigService attachmentsConfigService;
+    private final CheckCoverageAreaService checkCoverageAreaService;
     private final PrepareFlowStarter prepareFlowStarter;
     private final PaperTenderService paperTenderService;
     private final PaperChannelDeliveryDriverDAO paperChannelDeliveryDriverDAO;
@@ -61,7 +61,7 @@ public class PreparePhaseOneAsyncServiceImpl implements PreparePhaseOneAsyncServ
         return requestDeliveryDAO.getByRequestId(requestId, false)
                 .zipWhen(deliveryRequest -> checkAndUpdateAddress(deliveryRequest, addressFromNationalRegistry, event)
                         .onErrorResume(ex -> evaluateExceptionForAddressFlow(event, deliveryRequest, ex)))
-                .flatMap(deliveryRequestWithAddress -> attachmentsConfigService
+                .flatMap(deliveryRequestWithAddress -> checkCoverageAreaService
                         .filterAttachmentsToSend(deliveryRequestWithAddress.getT1(), AttachmentsConfigUtils.getAllAttachments(deliveryRequestWithAddress.getT1()), deliveryRequestWithAddress.getT2())
                         .thenReturn(deliveryRequestWithAddress))
                 .flatMap(deliveryRequestWithAddress -> this.updateRequestInSendToDelayer(deliveryRequestWithAddress.getT1()).thenReturn(deliveryRequestWithAddress))

@@ -11,12 +11,13 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentsRule;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.rule.handler.PaperListChainEngine;
-import it.pagopa.pn.paperchannel.service.AttachmentsConfigService;
+import it.pagopa.pn.paperchannel.service.CheckCoverageAreaService;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.AttachmentsConfigUtils;
 import it.pagopa.pn.paperchannel.utils.Utility;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Mono;
@@ -30,7 +31,8 @@ import static it.pagopa.pn.paperchannel.utils.AttachmentsConfigUtils.ZIPCODE_PK_
 
 @Service
 @Slf4j
-public class AttachmentsConfigServiceImpl extends GenericService implements AttachmentsConfigService {
+@ConditionalOnProperty(name = "pn.paper-channel.radd-coverage-search-mode", havingValue = "OLD")
+public class AttachmentsConfigServiceImpl extends GenericService implements CheckCoverageAreaService {
 
     private final PnAttachmentsConfigDAO pnAttachmentsConfigDAO;
     private final PaperListChainEngine paperListChainEngine;
