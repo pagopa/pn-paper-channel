@@ -33,7 +33,7 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.MAPPER_ERROR
 import static it.pagopa.pn.paperchannel.middleware.queue.model.AttemptEventHeader.PN_EVENT_HEADER_ATTEMPT;
 
 @Configuration
-@ConditionalOnProperty(name = "pn.paper-channel.pn.paper-channel.enable-prepare-phase-one", havingValue = "true")
+@ConditionalOnProperty(name = "pn.paper-channel.enable-prepare-phase-one", havingValue = "true")
 @Slf4j
 @RequiredArgsConstructor
 public class ToggleableQueueListener {
