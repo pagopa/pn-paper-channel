@@ -18,6 +18,8 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.model.*;
 import it.pagopa.pn.paperchannel.service.*;
+import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
+import it.pagopa.pn.paperchannel.utils.AttachmentsConfigUtils;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
@@ -58,12 +60,17 @@ public class PreparePhaseTwoAsyncServiceImpl implements PreparePhaseTwoAsyncServ
     private final PnPaperChannelConfig paperChannelConfig;
     private final AddressDAO addressDAO;
     private final PrepareFlowStarter prepareFlowStarter;
+    private final CheckCoverageAreaService checkCoverageAreaService;
 
     @Override
     public Mono<PnDeliveryRequest> prepareAsyncPhaseTwo(PnPrepareDelayerToPaperchannelPayload eventPayload) {
         log.logStartingProcess(PROCESS_NAME);
         Mono<PnDeliveryRequest> deliveryRequestMono = requestDeliveryDAO.getByRequestIdStrongConsistency(eventPayload.getRequestId(), false);
         return deliveryRequestMono
+                .zipWhen(deliveryRequest -> addressDAO.getPnAddress(deliveryRequest.getRequestId(), AddressTypeEnum.RECEIVER_ADDRESS, true))
+                .flatMap(deliveryRequestWithAddress -> checkCoverageAreaService
+                        .filterAttachmentsToSend(deliveryRequestWithAddress.getT1(), AttachmentsConfigUtils.getAllAttachments(deliveryRequestWithAddress.getT1()), deliveryRequestWithAddress.getT2())
+                )
                 .flatMap(deliveryRequest -> {
                     if (f24Service.checkDeliveryRequestAttachmentForF24(deliveryRequest)) {
                         // Calcolo del costo analogico se sono presenti gli F24
@@ -108,7 +115,7 @@ public class PreparePhaseTwoAsyncServiceImpl implements PreparePhaseTwoAsyncServ
         return processAllAttachments(deliveryRequest)
                 .flatMap(pnDeliveryRequestWithAttachmentOk -> addressDAO.findByRequestId(deliveryRequest.getRequestId()))
                 .flatMap(correctAddress -> this.requestDeliveryDAO.updateDataWithoutGet(deliveryRequest, false).thenReturn(correctAddress))
-                .doOnNext(correctAddress -> this.pushPrepareEvent(deliveryRequest, AddressMapper.toDTO(correctAddress), clientId, StatusCodeEnum.OK, null))
+                .doOnNext(correctAddress -> this.pushPrepareEvent(deliveryRequest, AddressMapper.toDTO(correctAddress), clientId))
                 .thenReturn(deliveryRequest);
 
     }
@@ -238,14 +245,12 @@ public class PreparePhaseTwoAsyncServiceImpl implements PreparePhaseTwoAsyncServ
     /**
      * Sends a PrepareEvent based on the given parameters to the appropriate destination (EventBridge or delivery-push).
      *
-     * @param request   the delivery request containing the details of the event
-     * @param address   the address information to include in the event
-     * @param clientId  the client identifier
-     * @param statusCode the status code of the event
-     * @param koReason  the reason for failure, if applicable
+     * @param request  the delivery request containing the details of the event
+     * @param address  the address information to include in the event
+     * @param clientId the client identifier
      */
-    private void pushPrepareEvent(PnDeliveryRequest request, Address address, String clientId, StatusCodeEnum statusCode, KOReason koReason){
-        PrepareEvent prepareEvent = PrepareEventMapper.toPrepareEvent(request, address, statusCode, koReason);
+    private void pushPrepareEvent(PnDeliveryRequest request, Address address, String clientId){
+        PrepareEvent prepareEvent = PrepareEventMapper.toPrepareEvent(request, address, StatusCodeEnum.OK, null);
         if (request.getRequestId().contains(PREFIX_REQUEST_ID_SERVICE_DESK)){
             log.info("Sending event to EventBridge: {}", prepareEvent);
             this.sqsSender.pushPrepareEventOnEventBridge(clientId, prepareEvent);
@@ -315,16 +320,16 @@ public class PreparePhaseTwoAsyncServiceImpl implements PreparePhaseTwoAsyncServ
         int attempt = f24Error.getAttempt();
         f24Error.setAttempt(attempt +1);
 
-        changeStatusDeliveryRequest(deliveryRequest, StatusDeliveryEnum.F24_ERROR);
+        changeStatusDeliveryRequest(deliveryRequest);
         prepareFlowStarter.redrivePreparePhaseTwoAfterF24Error(f24Error);
     }
 
-    private Mono<PnDeliveryRequest> changeStatusDeliveryRequest(PnDeliveryRequest deliveryRequest, StatusDeliveryEnum status){
+    private Mono<PnDeliveryRequest> changeStatusDeliveryRequest(PnDeliveryRequest deliveryRequest){
         RequestDeliveryMapper.changeState(
                 deliveryRequest,
-                status.getCode(),
-                status.getDescription(),
-                status.getDetail(),
+                StatusDeliveryEnum.F24_ERROR.getCode(),
+                StatusDeliveryEnum.F24_ERROR.getDescription(),
+                StatusDeliveryEnum.F24_ERROR.getDetail(),
                 deliveryRequest.getProductType(), null);
         return this.requestDeliveryDAO.updateData(deliveryRequest).flatMap(Mono::just);
     }

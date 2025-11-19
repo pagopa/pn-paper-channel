@@ -6,7 +6,6 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.common.BaseDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentsConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
-import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
@@ -17,7 +16,6 @@ import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 import java.time.Instant;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @Repository
@@ -58,44 +56,6 @@ public class PnAttachmentsConfigDAOImpl extends BaseDAO<PnAttachmentsConfig> imp
     @Override
     public Mono<PnAttachmentsConfig> putItem(PnAttachmentsConfig pnAttachmentsConfig) {
         return Mono.fromFuture(super.put(pnAttachmentsConfig));
-    }
-
-    /**
-     *
-     * @param configKey the partitionKey that is used to retrieve all the records with that key and then delete them
-     * @param pnAttachmentsConfigs the new configurations to be saved.
-     * @return Mono.empty
-     */
-    @Override
-    public Mono<Void> putItemInTransaction(String configKey, List<PnAttachmentsConfig> pnAttachmentsConfigs) {
-        final TransactWriteItemsEnhancedRequest.Builder builder = TransactWriteItemsEnhancedRequest.builder();
-
-        return this.findAllByConfigKey(configKey)
-                .doOnNext(pnAttachmentsConfig -> builder.addDeleteItem(this.dynamoTable, Key.builder().partitionValue(configKey).sortValue(pnAttachmentsConfig.getStartValidity().toString()).build()))
-                .then(Mono.defer(() -> {
-                    for (PnAttachmentsConfig pnAttachmentsConfig : pnAttachmentsConfigs) {
-                        builder.addPutItem(this.dynamoTable, pnAttachmentsConfig);
-                    }
-                    return Mono.fromFuture(dynamoDbEnhancedAsyncClient.transactWriteItems(builder.build()));
-                }))
-                .doOnError(throwable -> log.error("Error in putItemInTransaction with key: {}", configKey, throwable));
-    }
-
-    public Mono<Void> refreshConfig(String configKey, List<PnAttachmentsConfig> pnAttachmentsConfigs) {
-        return this.findAllByConfigKey(configKey)
-                .map(configToRemove -> configToRemove.getStartValidity().toString())
-                .collectList()
-                .doOnNext(sortKeysToRemove -> log.debug("Remove config with pk: {}, sk: {}", configKey, sortKeysToRemove))
-                .flatMap(sortKeysToRemove -> {
-                    if(CollectionUtils.isEmpty(sortKeysToRemove)) {
-                        return Mono.empty();
-                    }
-                    return super.deleteBatch(configKey, sortKeysToRemove.toArray(new String[]{}));
-                })
-                .then(Mono.defer(() -> {
-                    log.debug("Add configs: {}", pnAttachmentsConfigs);
-                    return super.putBatch(pnAttachmentsConfigs);
-                }));
     }
 
     /**

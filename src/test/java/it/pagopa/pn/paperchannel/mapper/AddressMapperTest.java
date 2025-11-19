@@ -71,6 +71,12 @@ class AddressMapperTest {
         AnalogAddress addresss=AddressMapper.toPojo(address);
         Assertions.assertNotNull(addresss);
     }
+    @Test
+    void toCheckCoverageRequestDto() {
+        PnAddress pnAddress = getPnAddress();
+        var dto = AddressMapper.toCheckCoverageRequestDto(pnAddress);
+        Assertions.assertNotNull(dto);
+    }
 
     public Address getAddress(){
         Address address= new Address();
@@ -109,6 +115,19 @@ class AddressMapperTest {
         analogAddress.setFullname("Ettore Fieramosca");
         analogAddress.setNameRow2("Ettore");
         return analogAddress;
+    }
+
+    public PnAddress getPnAddress() {
+        PnAddress pnAddress = new PnAddress();
+        pnAddress.setNameRow2("Ettore Fieramosca");
+        pnAddress.setAddress("via roma");
+        pnAddress.setAddressRow2("via lazio");
+        pnAddress.setCap("00061");
+        pnAddress.setCity("roma");
+        pnAddress.setCity2("viterbo");
+        pnAddress.setPr("RM");
+        pnAddress.setCountry("italia");
+        return pnAddress;
     }
 
 }

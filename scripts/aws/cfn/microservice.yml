@@ -391,14 +391,6 @@ Parameters:
     Type: String
     Description: 'ARN of the queue executing the flow of PREPARE phase 1'
 
-  RaddAltToPaperChannelQueueName:
-    Type: String
-    Description: 'Pull radd-alt messages from this Queue'
-
-  RaddAltToPaperChannelQueueARN:
-    Type: String
-    Description: 'Pull radd-alt messages from this Queue'
-
   DateChargeCalculationModes:
     Type: String
     Description: 'Variable that determines which calculation mode to use,  in startConfigurationTime;calculationMode format.'
@@ -652,6 +644,14 @@ Parameters:
       - 'true'
       - 'false'
 
+  EnablePreparePhaseOne:
+    Type: String
+    Description: 'Activation of the consumer for phase one PREPARE flow'
+    Default: 'true'
+    AllowedValues:
+      - 'true'
+      - 'false'
+
   PaperChannelToDelayerQueueName:
     Type: String
     Description: 'Paper Channel to Delayer queue name'
@@ -836,7 +836,6 @@ Resources:
         ContainerEnvEntry58: !Sub 'PN_PAPERCHANNEL_REQUIREDDEMATS=${RequiredDemats}'
         ContainerEnvEntry59: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUEZIPHANDLE=${AttemptQueueZipHandle}'
         ContainerEnvEntry60: !Sub 'AWS_DYNAMODBATTACHMENTSCONFIGTABLE=${AttachmentsConfigDynamoTableName}'
-        ContainerEnvEntry61: !Sub 'PN_PAPERCHANNEL_QUEUERADDALT=${RaddAltToPaperChannelQueueName}'
         ContainerEnvEntry62: !Sub 'PN_PAPERCHANNEL_ENABLEDOCFILTERRULEENGINE=${EnableDocFilterRuleEngine}'
         ContainerEnvEntry63: !Sub 'PN_PAPERCHANNEL_DEFAULTATTACHMENTCONFIGCAP=${DefaultAttachmentConfigCap}'
         ContainerEnvEntry64: !Sub 'AWS_DYNAMODBPAPEREVENTERRORTABLE=${PaperEventErrorDynamoTableName}'
@@ -860,6 +859,9 @@ Resources:
         ContainerEnvEntry82: !Sub 'PN_PAPERCHANNEL_ENABLETRUNCATEDDATEFORREFINEMENTCHECK=${EnableTruncatedDateForRefinementCheck}'
         ContainerEnvEntry83: !Sub 'PN_PAPERCHANNEL_QUEUEURLOCRINPUTS=${PaperChannelOcrInputsQueueURL}'
         ContainerEnvEntry84: !Sub 'PN_PAPERCHANNEL_QUEUEREGIONOCRINPUTS=${PaperChannelOcrInputsQueueRegion}'
+        ContainerEnvEntry85: !Sub 'PN_PAPERCHANNEL_CLIENTRADDALTBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
+        ContainerEnvEntry86: 'PN_PAPERCHANNEL_RADDCOVERAGESEARCHMODE={{resolve:ssm:/config/radd-coverage/search-mode}}'
+        ContainerEnvEntry87: !Sub 'PN_PAPERCHANNEL_ENABLEPREPAREPHASEONE=${EnablePreparePhaseOne}'
         ApplicativeEnvFileChecksum: !Ref ApplicativeEnvFileChecksum
         ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-PaperChannel-Secrets
@@ -903,7 +905,6 @@ Resources:
               - !Ref DelayerToPaperChannelQueueARN
               - !Ref NationalRegistries2PaperChannelQueueARN
               - !Ref F24ToPaperChannelQueueARN
-              - !Ref RaddAltToPaperChannelQueueARN
               - !Ref PaperChannelOcrOutputsQueueARN
           # Send events to data-lake queue
           - Effect: Allow
@@ -1088,7 +1089,6 @@ Resources:
             - !Ref PaperNormalizeAddressQueueARN
             - !Ref NationalRegistries2PaperChannelQueueARN
             - !Ref F24ToPaperChannelQueueARN
-            - !Ref RaddAltToPaperChannelQueueARN
         LogGroupsNames: !Join
           - ','
           - - !Sub '/aws/ecs/${ProjectName}-paper-channel'
