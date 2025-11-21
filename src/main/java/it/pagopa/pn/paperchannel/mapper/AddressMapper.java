@@ -4,6 +4,7 @@ import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.dto.AnalogAddressDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.DiscoveredAddressDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnnationalregistries.v1.dto.AddressSQSMessagePhysicalAddressDto;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnraddalt.v1.dto.CheckCoverageRequestDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.AnalogAddress;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ProductTypeEnum;
 import it.pagopa.pn.paperchannel.mapper.common.BaseMapper;
@@ -137,6 +138,20 @@ public class AddressMapper {
         address.setCountry(analogAddress.getCountry());
         address.setNameRow2(analogAddress.getNameRow2());
         return address;
+    }
+
+    public static CheckCoverageRequestDto toCheckCoverageRequestDto(PnAddress address){
+        if(address == null) return null;
+        CheckCoverageRequestDto dto = new CheckCoverageRequestDto();
+        dto.setNameRow2(address.getNameRow2());
+        dto.setAddressRow(address.getAddress());
+        dto.setAddressRow2(address.getAddressRow2());
+        dto.setCap(address.getCap());
+        dto.setCity(address.getCity());
+        dto.setCity2(address.getCity2());
+        dto.setPr(address.getPr());
+        dto.setCountry(address.getCountry());
+        return dto;
     }
 
 }
