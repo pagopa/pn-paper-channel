@@ -1,6 +1,5 @@
 package it.pagopa.pn.paperchannel.utils;
 
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnCap;
 import it.pagopa.pn.paperchannel.model.Address;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -71,14 +70,6 @@ class UtilityTest {
         List<String> caps = Utility.isValidCap(capListOk);
         assertNotNull(caps);
         Assertions.assertEquals(17,caps.size());
-    }
-
-    @Test
-    void objectToJsonTest(){
-        PnCap cap = new PnCap();
-        cap.setCap("00166");
-        String json = Utility.objectToJson(cap);
-        log.info(json);
     }
 
 

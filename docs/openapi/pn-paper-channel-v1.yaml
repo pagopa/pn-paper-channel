@@ -454,42 +454,6 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /paper-channel-bo/v1/cap:
-    get:
-      tags:
-        - SelectList
-      operationId: getAllCap
-      x-api-permissions:
-        - 'tender-read'
-      summary: Elenco di tutti i cap.
-      description: API che consente il recupero di tutti i cap
-      parameters:
-        - name: value
-          in: query
-          description: Cap
-          required: false
-          schema:
-            type: string
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CapResponseDto'
-        '400':
-          $ref: '#/components/responses/Invalid'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '405':
-          $ref: '#/components/responses/NotAllowed'
-        '500':
-          $ref: '#/components/responses/InternalError'
-
 components:
   schemas:
     InfoDownloadDTO:

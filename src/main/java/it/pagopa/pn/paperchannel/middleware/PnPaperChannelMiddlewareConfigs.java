@@ -8,9 +8,8 @@ import it.pagopa.pn.paperchannel.middleware.queue.model.InternalPushEvent;
 import it.pagopa.pn.paperchannel.middleware.queue.model.OcrInputEvent;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.*;
 import it.pagopa.pn.paperchannel.middleware.queue.model.DeliveryPushEvent;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ActiveProfiles;
@@ -20,11 +19,11 @@ import software.amazon.awssdk.services.sqs.SqsClient;
 @ActiveProfiles("local")
 @Configuration
 @Slf4j
+@RequiredArgsConstructor
 public class PnPaperChannelMiddlewareConfigs {
 
-    @Qualifier("pnPaperChannelConfig")
-    @Autowired
-    private PnPaperChannelConfig pnPaperChannelConfig;
+
+    private final PnPaperChannelConfig pnPaperChannelConfig;
 
 
     @Bean
