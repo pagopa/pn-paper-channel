@@ -1,0 +1,78 @@
+[
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/radd-net-private/api/v1/coverages/check",
+      "body": {
+        "type": "JSON_SCHEMA",
+        "jsonSchema": {
+          "type": "object",
+          "properties": {
+            "cap": {
+              "type": "string",
+              "minLength": 1
+            },
+            "city": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": ["cap", "city"]
+        }
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "Content-Type": ["application/json"]
+      },
+      "body": {
+        "hasCoverage": true
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/radd-net-private/api/v1/coverages/check",
+      "body": {
+        "not": true,
+        "type": "JSON_SCHEMA",
+        "jsonSchema": {
+          "type": "object",
+          "properties": {
+            "cap": {
+              "type": "string",
+              "minLength": 1
+            },
+            "city": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": ["cap", "city"]
+        }
+      }
+    },
+    "httpResponse": {
+      "statusCode": 400,
+      "headers": {
+        "Content-Type": ["application/json"]
+      },
+      "body": {
+        "status": 400,
+        "title": "string",
+        "detail": "string",
+        "traceId": "string",
+        "timestamp": 0,
+        "errors": [
+          {
+            "code": "string",
+            "element": "string",
+            "detail": "string"
+          }
+        ]
+      }
+    }
+  }
+]

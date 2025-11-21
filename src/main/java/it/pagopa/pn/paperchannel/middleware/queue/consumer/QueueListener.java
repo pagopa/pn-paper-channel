@@ -3,7 +3,6 @@ package it.pagopa.pn.paperchannel.middleware.queue.consumer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.awspring.cloud.sqs.annotation.SqsListener;
 import io.awspring.cloud.sqs.annotation.SqsListenerAcknowledgementMode;
-import it.pagopa.pn.api.dto.events.PnAttachmentsConfigEventPayload;
 import it.pagopa.pn.api.dto.events.PnF24PdfSetReadyEvent;
 import it.pagopa.pn.api.dto.events.PnPrepareDelayerToPaperchannelPayload;
 import it.pagopa.pn.commons.utils.MDCUtils;
@@ -55,7 +54,7 @@ public class QueueListener {
     private final PaperRequestErrorDAO paperRequestErrorDAO;
 
     @SqsListener(value = "${pn.paper-channel.queue-internal}", acknowledgementMode = SqsListenerAcknowledgementMode.ALWAYS)
-    public void pullFromInternalQueue(@Payload String node, @Headers Map<String, Object> headers){
+    public void pullFromInternalQueue(@Payload String node, @Headers Map<String, Object> headers) {
         log.info("Headers : {}", headers);
         setMDCContext(headers);
         InternalEventHeader internalEventHeader = toInternalEventHeader(headers);
@@ -117,14 +116,6 @@ public class QueueListener {
         this.queueListenerService.f24ResponseListener(body);
     }
 
-    @SqsListener(value = "${pn.paper-channel.queue-radd-alt}", acknowledgementMode = SqsListenerAcknowledgementMode.ON_SUCCESS)
-    public void pullRaddAlt(@Payload String node, @Headers Map<String,Object> headers){
-        var body = convertToObject(node, PnAttachmentsConfigEventPayload.class);
-        setMDCContext(headers);
-        log.debug("Handle message from raddAltListener with header {}, body:{}", headers, body);
-        this.queueListenerService.raddAltListener(body);
-    }
-
     @SqsListener(value = "${pn.paper-channel.queue-delayer-to-paperchannel}", acknowledgementMode = SqsListenerAcknowledgementMode.ALWAYS)
     public void pullDelayerMessages(@Payload String node, @Headers Map<String,Object> headers){
         setMDCContext(headers);
@@ -152,31 +143,6 @@ public class QueueListener {
         }
 
     }
-
-    @SqsListener(value = "${pn.paper-channel.queue-normalize-address}", acknowledgementMode = SqsListenerAcknowledgementMode.ALWAYS)
-    public void pullFromNormalizeAddressQueue(@Payload String node, @Headers Map<String, Object> headers){
-        setMDCContext(headers);
-
-        if(log.isDebugEnabled()){
-            log.debug("Message from pullFromNormalizeAddressQueue, headers={}, payload: {}", headers, node);
-        }
-        else {
-            log.info("Message from pullFromNormalizeAddressQueue, payload: {}", node);
-        }
-
-        AttemptEventHeader attemptEventHeader = toAttemptEventHeader(headers);
-
-        if (attemptEventHeader == null) return;
-
-        switch (EventTypeEnum.valueOf(attemptEventHeader.getEventType())) {
-            case PREPARE_ASYNC_FLOW: this.handlePreparePhaseOneAsyncFlowEvent(attemptEventHeader, node); break;
-            case NATIONAL_REGISTRIES_ERROR:  this.handleNationalRegistriesErrorEvent(attemptEventHeader, node); break;
-            case ADDRESS_MANAGER_ERROR: this.handleAddressManagerErrorEventFromPreparePhaseOne(attemptEventHeader, node); break;
-            default: log.error("Event type not allowed in Prepare Async Phase One Flow: {}", attemptEventHeader.getEventType());
-        }
-
-    }
-
 
     private void handleNationalRegistriesErrorEvent(AttemptEventHeader attemptEventHeader, String node) {
 
@@ -290,7 +256,7 @@ public class QueueListener {
 
 
     /**
-     * @deprecated This method has been replaced by  {@link #handleAddressManagerErrorEventFromPreparePhaseOne(AttemptEventHeader, String)}.
+     * @deprecated This method has been replaced by  {#handleAddressManagerErrorEventFromPreparePhaseOne(AttemptEventHeader, String)}.
      */
     @Deprecated(since = "2.15.0", forRemoval = true)
     private void handleAddressManagerErrorEvent(InternalEventHeader internalEventHeader, String node) {
@@ -317,29 +283,6 @@ public class QueueListener {
                     this.queueListenerService.internalListener(entityAndAttempt.getFirst(), entityAndAttempt.getSecond());
                     return null;
                 });
-    }
-
-    private void handleAddressManagerErrorEventFromPreparePhaseOne(AttemptEventHeader attemptEventHeader, String node) {
-
-        boolean noAttempt = (paperChannelConfig.getAttemptQueueAddressManager()-1) < attemptEventHeader.getAttempt();
-        PrepareNormalizeAddressEvent entity = convertToObject(node, PrepareNormalizeAddressEvent.class);
-        if(noAttempt) {
-            PnLogAudit pnLogAudit = new PnLogAudit();
-            pnLogAudit.addsBeforeDiscard(entity.getIun(), String.format("requestId = %s finish retry address manager error ?", entity.getRequestId()));
-
-            PnRequestError pnRequestError = PnRequestError.builder()
-                    .requestId(entity.getRequestId())
-                    .error(ADDRESS_MANAGER_ERROR.getMessage())
-                    .flowThrow(EventTypeEnum.ADDRESS_MANAGER_ERROR.name())
-                    .build();
-
-            paperRequestErrorDAO.created(pnRequestError).subscribe();
-
-            pnLogAudit.addsSuccessDiscard(entity.getIun(), String.format("requestId = %s finish retry address manager error", entity.getRequestId()));
-        }
-        else {
-            this.queueListenerService.normalizeAddressListener(entity, attemptEventHeader.getAttempt());
-        }
     }
 
     private void handleF24ErrorEvent(AttemptEventHeader internalEventHeader, String node) {
@@ -375,12 +318,6 @@ public class QueueListener {
         this.queueListenerService.internalListener(request, internalEventHeader.getAttempt());
     }
 
-    private void handlePreparePhaseOneAsyncFlowEvent(AttemptEventHeader internalEventHeader, String node) {
-        log.info("Push prepare phase one queue - first time");
-        PrepareNormalizeAddressEvent request = convertToObject(node, PrepareNormalizeAddressEvent.class);
-        this.queueListenerService.normalizeAddressListener(request, internalEventHeader.getAttempt());
-    }
-
     private void handlePreparePhaseTwoAsyncFlowEvent(AttemptEventHeader attemptEventHeader, String node) {
         var body = convertToObject(node, PnPrepareDelayerToPaperchannelPayload.class);
         int attempt;
@@ -396,7 +333,6 @@ public class QueueListener {
         this.queueListenerService.delayerListener(body, attempt);
 
     }
-
 
     private void handleRedrivePaperProgressStatus(InternalEventHeader internalEventHeader, String node) {
         log.info("Push redrive paper progress status queue - first time");
