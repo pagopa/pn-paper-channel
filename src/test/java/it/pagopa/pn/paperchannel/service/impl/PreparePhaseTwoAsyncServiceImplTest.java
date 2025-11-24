@@ -452,7 +452,7 @@ class PreparePhaseTwoAsyncServiceImplTest {
         String statusDetail = statusDeliveryEnum.getDetail();
 
         PnRequestError pnRequestError = new PnRequestError();
-        pnRequestError.setError("Errore generico");
+        pnRequestError.setError("class java.lang.RuntimeException -> Errore generico");
         pnRequestError.setGeokey(null);
         pnRequestError.setCategory("UNKNOWN");
         pnRequestError.setFlowThrow("PREPARE_PHASE_TWO_ASYNC_DEFAULT");
@@ -563,7 +563,7 @@ class PreparePhaseTwoAsyncServiceImplTest {
         PnInternalException pnInternalException = new PnInternalException("missing URL f24set on f24serviceImpl", PnExceptionsCodes.ERROR_CODE_PN_GENERIC_ERROR);
 
         PnRequestError pnRequestError = new PnRequestError();
-        pnRequestError.setError("Internal Server Error");
+        pnRequestError.setError("class it.pagopa.pn.commons.exceptions.PnInternalException -> Internal Server Error");
         pnRequestError.setFlowThrow("PREPARE_PHASE_TWO_ASYNC_DEFAULT");
         pnRequestError.setCause("UNKNOWN##"+ Instant.now().toString());
         pnRequestError.setCategory("UNKNOWN");
@@ -637,7 +637,7 @@ class PreparePhaseTwoAsyncServiceImplTest {
             RuntimeException runtimeException = new RuntimeException("Errore generico");
 
             PnRequestError pnRequestError = new PnRequestError();
-            pnRequestError.setError("Errore generico");
+            pnRequestError.setError("class java.lang.RuntimeException -> Errore generico");
             pnRequestError.setFlowThrow("PREPARE_PHASE_TWO_ASYNC_DEFAULT");
             pnRequestError.setCause("UNKNOWN##" + Instant.now().toString());
             pnRequestError.setCategory("UNKNOWN");
