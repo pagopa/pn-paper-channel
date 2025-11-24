@@ -13,6 +13,7 @@ import reactor.test.StepVerifier;
 import java.time.Instant;
 
 import static it.pagopa.pn.paperchannel.utils.AddressTypeEnum.RECEIVER_ADDRESS;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -21,16 +22,20 @@ class CheckAddressServiceImplTest {
     @Mock
     private AddressDAO addressDAO;
 
+    @Mock
+    private PcRetryServiceImpl pcRetryService;
+
     @InjectMocks
     private CheckAddressServiceImpl checkAddressService;
 
     @Test
     void checkAddressRequestReturnsFoundResponseWhenAddressExists() {
-        String requestId = "12345";
+        String requestId = "PREPARE_ANALOG_DOMICILE.IUN_IUN-PROVA-prova.RECINDEX_0.ATTEMPT_0.PCRETRY_0";
         PnAddress address = new PnAddress();
         address.setTtl(Instant.now().getEpochSecond() + 3600);
 
-        when(addressDAO.findByRequestId(requestId, RECEIVER_ADDRESS)).thenReturn(Mono.just(address));
+        when(addressDAO.findByRequestId("PREPARE_ANALOG_DOMICILE.IUN_IUN-PROVA-prova.RECINDEX_0.ATTEMPT_0", RECEIVER_ADDRESS)).thenReturn(Mono.just(address));
+        when(pcRetryService.getPrefixRequestId(anyString())).thenReturn("PREPARE_ANALOG_DOMICILE.IUN_IUN-PROVA-prova.RECINDEX_0.ATTEMPT_0");
 
         StepVerifier.create(checkAddressService.checkAddressRequest(requestId))
                 .expectNextMatches(response -> response.getFound() &&
@@ -41,9 +46,10 @@ class CheckAddressServiceImplTest {
 
     @Test
     void checkAddressRequestReturnsNotFoundResponseWhenAddressDoesNotExist() {
-        String requestId = "12345";
+        String requestId = "PREPARE_ANALOG_DOMICILE.IUN_IUN-PROVA-prova.RECINDEX_0.ATTEMPT_0.PCRETRY_0";
 
-        when(addressDAO.findByRequestId(requestId, RECEIVER_ADDRESS)).thenReturn(Mono.empty());
+        when(addressDAO.findByRequestId("PREPARE_ANALOG_DOMICILE.IUN_IUN-PROVA-prova.RECINDEX_0.ATTEMPT_0", RECEIVER_ADDRESS)).thenReturn(Mono.empty());
+        when(pcRetryService.getPrefixRequestId(anyString())).thenReturn("PREPARE_ANALOG_DOMICILE.IUN_IUN-PROVA-prova.RECINDEX_0.ATTEMPT_0");
 
         StepVerifier.create(checkAddressService.checkAddressRequest(requestId))
                 .expectNextMatches(response -> !response.getFound() &&
