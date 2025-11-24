@@ -22,4 +22,5 @@ public interface RequestDeliveryDAO {
     Mono<PnDeliveryRequest> getByCorrelationId(String requestId, boolean decode);
     Mono<PnDeliveryRequest> getByCorrelationId(String correlationId);
     Mono<UpdateItemResponse> updateApplyRasterization(String requestId, Boolean applyRasterization);
+    Mono<PnDeliveryRequest> cleanDataForNotificationRework(PnDeliveryRequest pnDeliveryRequest, String reworkId);
 }

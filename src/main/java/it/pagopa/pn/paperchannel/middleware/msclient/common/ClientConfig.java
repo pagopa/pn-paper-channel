@@ -4,7 +4,9 @@ import it.pagopa.pn.commons.pnclients.CommonBaseClient;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.api.DeduplicatesAddressServiceApi;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.api.PaperMessagesApi;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.api.PaperRequestMetadataPatchApi;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnnationalregistries.v1.api.AddressApi;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnpapertracker.v1.api.NotificationReworkApi;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnpapertracker.v1.api.PaperTrackerTrackingApi;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnraddalt.v1.api.CoveragePrivateApi;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.ApiClient;
@@ -70,6 +72,21 @@ public class ClientConfig extends CommonBaseClient {
         newApiClient.setBasePath(pnPaperChannelConfig.getClientPaperTrackerBasepath());
         return new PaperTrackerTrackingApi(newApiClient);
 
+    }
+
+    @Bean
+    public NotificationReworkApi getNotificationReworkApi(PnPaperChannelConfig pnPaperChannelConfig){
+        it.pagopa.pn.paperchannel.generated.openapi.msclient.pnpapertracker.v1.ApiClient newApiClient = new it.pagopa.pn.paperchannel.generated.openapi.msclient.pnpapertracker.v1.ApiClient(super.initWebClient(it.pagopa.pn.paperchannel.generated.openapi.msclient.pnpapertracker.v1.ApiClient.buildWebClientBuilder()));
+        newApiClient.setBasePath(pnPaperChannelConfig.getClientPaperTrackerBasepath());
+        return new NotificationReworkApi(newApiClient);
+
+    }
+
+    @Bean
+    public PaperRequestMetadataPatchApi patchRequestMetadata(PnPaperChannelConfig pnPaperChannelConfig){
+        it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.ApiClient newApiClient = new it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.ApiClient(super.initWebClient(it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.ApiClient.buildWebClientBuilder()));
+        newApiClient.setBasePath(pnPaperChannelConfig.getClientExternalChannelBasepath());
+        return new PaperRequestMetadataPatchApi(newApiClient);
     }
 
     @Bean
