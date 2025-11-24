@@ -8,6 +8,7 @@ import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.api.
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnnationalregistries.v1.api.AddressApi;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnpapertracker.v1.api.NotificationReworkApi;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnpapertracker.v1.api.PaperTrackerTrackingApi;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnraddalt.v1.api.CoveragePrivateApi;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.ApiClient;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.api.FileDownloadApi;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.safestorage_reactive.api.FileUploadApi;
@@ -86,5 +87,14 @@ public class ClientConfig extends CommonBaseClient {
         it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.ApiClient newApiClient = new it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.ApiClient(super.initWebClient(it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.ApiClient.buildWebClientBuilder()));
         newApiClient.setBasePath(pnPaperChannelConfig.getClientExternalChannelBasepath());
         return new PaperRequestMetadataPatchApi(newApiClient);
+    }
+
+    @Bean
+    public CoveragePrivateApi getCoveragePrivateApi(PnPaperChannelConfig pnPaperChannelConfig){
+
+        it.pagopa.pn.paperchannel.generated.openapi.msclient.pnraddalt.v1.ApiClient newApiClient = new it.pagopa.pn.paperchannel.generated.openapi.msclient.pnraddalt.v1.ApiClient(super.initWebClient(it.pagopa.pn.paperchannel.generated.openapi.msclient.pnraddalt.v1.ApiClient.buildWebClientBuilder()));
+        newApiClient.setBasePath(pnPaperChannelConfig.getClientRaddAltBasepath());
+        return new CoveragePrivateApi(newApiClient);
+
     }
 }

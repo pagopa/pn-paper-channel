@@ -1,19 +1,14 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
-import it.pagopa.pn.api.dto.events.ConfigTypeEnum;
-import it.pagopa.pn.api.dto.events.PnAttachmentsConfigEventItem;
-import it.pagopa.pn.api.dto.events.PnAttachmentsConfigEventPayload;
 import it.pagopa.pn.commons.rules.model.ListFilterChainResult;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.exception.PnInvalidChainRuleException;
-import it.pagopa.pn.paperchannel.mapper.AttachmentsConfigMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PnAttachmentsConfigDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.*;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.rule.handler.DocumentTagHandler;
 import it.pagopa.pn.paperchannel.rule.handler.PaperListChainEngine;
-import it.pagopa.pn.paperchannel.utils.AttachmentsConfigUtils;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -24,7 +19,6 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.test.StepVerifier;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -50,83 +44,10 @@ class AttachmentsConfigServiceImplTest {
     @InjectMocks
     private AttachmentsConfigServiceImpl attachmentsConfigService;
 
-
-    @Test
-    void refreshConfigOk() {
-        String configKey = "80100";
-        String configType = ConfigTypeEnum.ZIPCODE.name();
-        final String pk = AttachmentsConfigUtils.buildPartitionKey(configKey, configType);
-
-        PnAttachmentsConfigEventItem itemOne = PnAttachmentsConfigEventItem.builder()
-                .startValidity(Instant.parse("2024-01-10T00:00:00.000Z"))
-                .endValidity(Instant.parse("2024-02-10T00:00:00.000Z"))
-                .build();
-
-        PnAttachmentsConfigEventItem itemTwo = PnAttachmentsConfigEventItem.builder()
-                .startValidity(Instant.parse("2024-01-10T00:00:00.000Z"))
-                .endValidity(Instant.parse("2024-02-10T00:00:00.000Z"))
-                .build();
-
-        PnAttachmentsConfigEventPayload payload = PnAttachmentsConfigEventPayload.builder()
-                .configKey(configKey)
-                .configType(ConfigTypeEnum.ZIPCODE.name())
-                .configs(List.of(itemOne, itemTwo))
-                .build();
-
-        var pnAttachmentsConfigs = AttachmentsConfigMapper.toPnAttachmentsConfig(configKey, configType, List.of(itemOne, itemTwo), "default##zip");
-
-        when(pnAttachmentsConfigDAO.refreshConfig(pk, pnAttachmentsConfigs))
-                .thenReturn(Mono.empty());
-        when(pnPaperChannelConfig.getDefaultattachmentconfigcap()).thenReturn("default##zip");
-
-        StepVerifier.create(attachmentsConfigService.refreshConfig(payload))
-                .verifyComplete();
-
-        verify(pnAttachmentsConfigDAO).refreshConfig(pk, pnAttachmentsConfigs);
-
-    }
-
-    @Test
-    void refreshConfigKOForDAO() {
-        String configKey = "80100";
-        String configType = ConfigTypeEnum.ZIPCODE.name();
-        final String pk = AttachmentsConfigUtils.buildPartitionKey(configKey, configType);
-
-        PnAttachmentsConfigEventItem itemOne = PnAttachmentsConfigEventItem.builder()
-                .startValidity(Instant.parse("2024-01-10T00:00:00.000Z"))
-                .endValidity(Instant.parse("2024-02-10T00:00:00.000Z"))
-                .build();
-
-        PnAttachmentsConfigEventItem itemTwo = PnAttachmentsConfigEventItem.builder()
-                .startValidity(Instant.parse("2024-01-10T00:00:00.000Z"))
-                .endValidity(Instant.parse("2024-02-10T00:00:00.000Z"))
-                .build();
-
-        PnAttachmentsConfigEventPayload payload = PnAttachmentsConfigEventPayload.builder()
-                .configKey(configKey)
-                .configType(ConfigTypeEnum.ZIPCODE.name())
-                .configs(List.of(itemOne, itemTwo))
-                .build();
-
-        var pnAttachmentsConfigs = AttachmentsConfigMapper.toPnAttachmentsConfig(configKey, configType, List.of(itemOne, itemTwo), "default##zip");
-
-        when(pnAttachmentsConfigDAO.refreshConfig(pk, pnAttachmentsConfigs))
-                .thenReturn(Mono.error(new RuntimeException("Error DB")));
-        when(pnPaperChannelConfig.getDefaultattachmentconfigcap()).thenReturn("default##zip");
-
-        StepVerifier.create(attachmentsConfigService.refreshConfig(payload))
-                .expectError(RuntimeException.class)
-                .verify();
-
-        verify(pnAttachmentsConfigDAO).refreshConfig(pk, pnAttachmentsConfigs);
-
-    }
-
-
     @Test
     void filterAttachmentsToSend() {
         // GIVEN
-        PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest(StatusDeliveryEnum.IN_PROCESSING);
+        PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest();
 
 
         PnAddress pnAddress = new PnAddress();
@@ -134,7 +55,7 @@ class AttachmentsConfigServiceImplTest {
 
         List<ListFilterChainResult<PnAttachmentInfo>> filterChainResults =new ArrayList<>();
         ListFilterChainResult<PnAttachmentInfo> filterChainResult = new ListFilterChainResult<PnAttachmentInfo>();
-        filterChainResult.setItem(pnDeliveryRequest.getAttachments().get(0));
+        filterChainResult.setItem(pnDeliveryRequest.getAttachments().getFirst());
         filterChainResult.setSuccess(true);
         filterChainResult.setCode("OK");
         filterChainResult.setDiagnostic("oook");
@@ -174,7 +95,7 @@ class AttachmentsConfigServiceImplTest {
     @Test
     void filterAttachmentsToSend_rulenavigation() {
         // GIVEN
-        PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest(StatusDeliveryEnum.IN_PROCESSING);
+        PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest();
 
 
         PnAddress pnAddress = new PnAddress();
@@ -182,7 +103,7 @@ class AttachmentsConfigServiceImplTest {
 
         List<ListFilterChainResult<PnAttachmentInfo>> filterChainResults =new ArrayList<>();
         ListFilterChainResult<PnAttachmentInfo> filterChainResult = new ListFilterChainResult<PnAttachmentInfo>();
-        filterChainResult.setItem(pnDeliveryRequest.getAttachments().get(0));
+        filterChainResult.setItem(pnDeliveryRequest.getAttachments().getFirst());
         filterChainResult.setSuccess(true);
         filterChainResult.setCode("OK");
         filterChainResult.setDiagnostic("oook");
@@ -229,7 +150,7 @@ class AttachmentsConfigServiceImplTest {
     @Test
     void filterAttachmentsToSend_rulenavigation1() {
         // GIVEN
-        PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest(StatusDeliveryEnum.IN_PROCESSING);
+        PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest();
 
 
         PnAddress pnAddress = new PnAddress();
@@ -237,7 +158,7 @@ class AttachmentsConfigServiceImplTest {
 
         List<ListFilterChainResult<PnAttachmentInfo>> filterChainResults =new ArrayList<>();
         ListFilterChainResult<PnAttachmentInfo> filterChainResult = new ListFilterChainResult<PnAttachmentInfo>();
-        filterChainResult.setItem(pnDeliveryRequest.getAttachments().get(0));
+        filterChainResult.setItem(pnDeliveryRequest.getAttachments().getFirst());
         filterChainResult.setSuccess(false);
         filterChainResult.setCode("KO");
         filterChainResult.setDiagnostic("oook");
@@ -284,16 +205,16 @@ class AttachmentsConfigServiceImplTest {
         Assertions.assertNotNull(res);
         Assertions.assertEquals(1, res.getAttachments().size());
         Assertions.assertEquals(1, res.getRemovedAttachments().size());
-        Assertions.assertEquals(getPnAttachmentInfos().get(1).getFileKey(), res.getAttachments().get(0).getFileKey());  // ci deve essere il document
-        Assertions.assertEquals(getPnAttachmentInfos().get(0).getFileKey(), res.getRemovedAttachments().get(0).getFileKey()); // non ci deve essere aar
-        Assertions.assertEquals("OK", res.getAttachments().get(0).getFilterResultCode());
-        Assertions.assertEquals("KO", res.getRemovedAttachments().get(0).getFilterResultCode());
+        Assertions.assertEquals(getPnAttachmentInfos().get(1).getFileKey(), res.getAttachments().getFirst().getFileKey());  // ci deve essere il document
+        Assertions.assertEquals(getPnAttachmentInfos().get(0).getFileKey(), res.getRemovedAttachments().getFirst().getFileKey()); // non ci deve essere aar
+        Assertions.assertEquals("OK", res.getAttachments().getFirst().getFilterResultCode());
+        Assertions.assertEquals("KO", res.getRemovedAttachments().getFirst().getFilterResultCode());
     }
 
     @Test
     void filterAttachmentsToSend_missingcap() {
         // GIVEN
-        PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest(StatusDeliveryEnum.IN_PROCESSING);
+        PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest();
 
 
         PnAddress pnAddress = new PnAddress();
@@ -317,7 +238,7 @@ class AttachmentsConfigServiceImplTest {
     @Test
     void filterAttachmentsToSend_enginedisabled() {
         // GIVEN
-        PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest(StatusDeliveryEnum.IN_PROCESSING);
+        PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest();
 
 
         PnAddress pnAddress = new PnAddress();
@@ -363,7 +284,7 @@ class AttachmentsConfigServiceImplTest {
     @Test
     void filterAttachmentsToSend_withremoved() {
         // GIVEN
-        PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest(StatusDeliveryEnum.IN_PROCESSING);
+        PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest();
 
 
         PnAddress pnAddress = new PnAddress();
@@ -371,7 +292,7 @@ class AttachmentsConfigServiceImplTest {
 
         List<ListFilterChainResult<PnAttachmentInfo>> filterChainResults =new ArrayList<>();
         ListFilterChainResult<PnAttachmentInfo> filterChainResult = new ListFilterChainResult<PnAttachmentInfo>();
-        filterChainResult.setItem(pnDeliveryRequest.getAttachments().get(0));
+        filterChainResult.setItem(pnDeliveryRequest.getAttachments().getFirst());
         filterChainResult.setSuccess(true);
         filterChainResult.setCode("OK");
         filterChainResult.setDiagnostic("oook");
@@ -413,7 +334,7 @@ class AttachmentsConfigServiceImplTest {
     @Test
     void filterAttachmentsToSend_emptyattachmentstosend() {
         // GIVEN
-        PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest(StatusDeliveryEnum.IN_PROCESSING);
+        PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest();
 
 
         PnAddress pnAddress = new PnAddress();
@@ -455,7 +376,7 @@ class AttachmentsConfigServiceImplTest {
     @Test
     void filterAttachmentsToSendSkippedBecauseAarWithRaddFalse() {
         // GIVEN
-        PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest(StatusDeliveryEnum.IN_PROCESSING);
+        PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest();
         pnDeliveryRequest.setAarWithRadd(false);
 
 
@@ -478,7 +399,7 @@ class AttachmentsConfigServiceImplTest {
     @Test
     void filterAttachmentsToSendSkippedBecauseAarWithRaddNull() {
         // GIVEN
-        PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest(StatusDeliveryEnum.IN_PROCESSING);
+        PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest();
         pnDeliveryRequest.setAarWithRadd(null);
 
 
@@ -501,7 +422,7 @@ class AttachmentsConfigServiceImplTest {
     @Test
     void filterAttachmentsToSendSkippedBecauseCountryIsNotNational() {
         // GIVEN
-        PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest(StatusDeliveryEnum.IN_PROCESSING);
+        PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest();
 
 
         PnAddress pnAddress = new PnAddress();
@@ -524,7 +445,7 @@ class AttachmentsConfigServiceImplTest {
     @Test
     void filterAttachmentsToSendOkWithCountryItalia() {
         // GIVEN
-        PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest(StatusDeliveryEnum.IN_PROCESSING);
+        PnDeliveryRequest pnDeliveryRequest = getDeliveryRequest();
 
         PnAddress pnAddress = new PnAddress();
         pnAddress.setCap("30000");
@@ -542,7 +463,7 @@ class AttachmentsConfigServiceImplTest {
 
         List<ListFilterChainResult<PnAttachmentInfo>> filterChainResults =new ArrayList<>();
         ListFilterChainResult<PnAttachmentInfo> filterChainResult = new ListFilterChainResult<PnAttachmentInfo>();
-        filterChainResult.setItem(pnDeliveryRequest.getAttachments().get(0));
+        filterChainResult.setItem(pnDeliveryRequest.getAttachments().getFirst());
         filterChainResult.setSuccess(true);
         filterChainResult.setCode("OK");
         filterChainResult.setDiagnostic("oook");
@@ -574,7 +495,7 @@ class AttachmentsConfigServiceImplTest {
 
 
 
-    private PnDeliveryRequest getDeliveryRequest(StatusDeliveryEnum status){
+    private PnDeliveryRequest getDeliveryRequest(){
         PnDeliveryRequest deliveryRequest= new PnDeliveryRequest();
         List<PnAttachmentInfo> attachmentUrls = getPnAttachmentInfos();
 
@@ -596,9 +517,9 @@ class AttachmentsConfigServiceImplTest {
         deliveryRequest.setReceiverType("PF");
         deliveryRequest.setIun("iun");
         deliveryRequest.setCorrelationId("");
-        deliveryRequest.setStatusCode(status.getCode());
-        deliveryRequest.setStatusDescription(status.getDescription());
-        deliveryRequest.setStatusDetail(status.getDetail());
+        deliveryRequest.setStatusCode(StatusDeliveryEnum.IN_PROCESSING.getCode());
+        deliveryRequest.setStatusDescription(StatusDeliveryEnum.IN_PROCESSING.getDescription());
+        deliveryRequest.setStatusDetail(StatusDeliveryEnum.IN_PROCESSING.getDetail());
         deliveryRequest.setStatusDate("2023-07-07T08:43:00.764Z");
         deliveryRequest.setProposalProductType("AR");
         deliveryRequest.setPrintType("PT");

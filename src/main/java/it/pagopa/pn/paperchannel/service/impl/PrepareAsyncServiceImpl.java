@@ -46,12 +46,12 @@ public class PrepareAsyncServiceImpl extends GenericService implements PaperAsyn
     private final PaperAddressService paperAddressService;
     private final PaperCalculatorUtils paperCalculatorUtils;
     private final F24Service f24Service;
-    private final AttachmentsConfigService attachmentsConfigService;
+    private final CheckCoverageAreaService checkCoverageAreaService;
 
     public PrepareAsyncServiceImpl(RequestDeliveryDAO requestDeliveryDAO, SqsSender sqsQueueSender,
                                    SafeStorageService safeStorageService, AddressDAO addressDAO, PnPaperChannelConfig paperChannelConfig,
                                    PaperRequestErrorDAO paperRequestErrorDAO, PaperAddressService paperAddressService,
-                                   PaperCalculatorUtils paperCalculatorUtils, F24Service f24Service, AttachmentsConfigService attachmentsConfigService) {
+                                   PaperCalculatorUtils paperCalculatorUtils, F24Service f24Service, CheckCoverageAreaService checkCoverageAreaService) {
         super(sqsQueueSender, requestDeliveryDAO);
         this.safeStorageService = safeStorageService;
         this.addressDAO = addressDAO;
@@ -60,7 +60,7 @@ public class PrepareAsyncServiceImpl extends GenericService implements PaperAsyn
         this.paperAddressService = paperAddressService;
         this.paperCalculatorUtils = paperCalculatorUtils;
         this.f24Service = f24Service;
-        this.attachmentsConfigService = attachmentsConfigService;
+        this.checkCoverageAreaService = checkCoverageAreaService;
     }
 
     @Override
@@ -88,7 +88,7 @@ public class PrepareAsyncServiceImpl extends GenericService implements PaperAsyn
                     }
                     else {
                         return checkAndUpdateAddress(deliveryRequest, addressFromNationalRegistry, request)
-                                .zipWhen(pnAddress -> attachmentsConfigService.filterAttachmentsToSend(deliveryRequest, deliveryRequest.getAttachments(), pnAddress));
+                                .zipWhen(pnAddress -> checkCoverageAreaService.filterAttachmentsToSend(deliveryRequest, deliveryRequest.getAttachments(), pnAddress));
                     }
                 }) // nel caso sia settato il flag di f24FlowResponse, vuol dire che ho già eseguito questo step.
                 .flatMap(pnDeliveryRequestWithAddress -> {

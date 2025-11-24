@@ -55,9 +55,6 @@ class PreparePhaseOneAsyncServiceImplTest {
     private RequestDeliveryDAO requestDeliveryDAO;
 
     @Mock
-    private AttachmentsConfigService attachmentsConfigService;
-
-    @Mock
     private PrepareFlowStarter prepareFlowStarter;
 
     @Mock
@@ -111,7 +108,6 @@ class PreparePhaseOneAsyncServiceImplTest {
         when(requestDeliveryDAO.getByRequestId(requestId, false)).thenReturn(Mono.just(deliveryRequest));
         when(paperAddressService.getCorrectAddress(deliveryRequest, null, 0)).thenReturn(Mono.just(address));
         when(addressDAO.create(any(PnAddress.class))).thenReturn(Mono.just(addressEntity));
-        when(attachmentsConfigService.filterAttachmentsToSend(deliveryRequest, deliveryRequest.getAttachments(), addressEntity)).thenReturn(Mono.just(deliveryRequest));
         when(paperTenderService.getSimplifiedCost(address.getCap(), deliveryRequest.getProductType())).thenReturn(Mono.just(cost));
         when(paperChannelDeliveryDriverDAO.getByDeliveryDriverId("DRIVER_ID")).thenReturn(Mono.just(driver));
         when(requestDeliveryDAO.updateDataWithoutGet(deliveryRequest, false)).thenReturn(Mono.just(deliveryRequest));
@@ -152,7 +148,6 @@ class PreparePhaseOneAsyncServiceImplTest {
         when(requestDeliveryDAO.getByRequestId(requestId, false)).thenReturn(Mono.just(deliveryRequest));
         when(paperAddressService.getCorrectAddress(deliveryRequest, address, 0)).thenReturn(Mono.just(address));
         when(addressDAO.create(any(PnAddress.class))).thenReturn(Mono.just(addressEntity));
-        when(attachmentsConfigService.filterAttachmentsToSend(deliveryRequest, deliveryRequest.getAttachments(), addressEntity)).thenReturn(Mono.just(deliveryRequest));
         when(paperTenderService.getSimplifiedCost(address.getCap(), deliveryRequest.getProductType())).thenReturn(Mono.just(cost));
         when(paperChannelDeliveryDriverDAO.getByDeliveryDriverId("DRIVER_ID")).thenReturn(Mono.just(driver));
         when(requestDeliveryDAO.updateDataWithoutGet(deliveryRequest, false)).thenReturn(Mono.just(deliveryRequest));
@@ -252,7 +247,6 @@ class PreparePhaseOneAsyncServiceImplTest {
         when(requestDeliveryDAO.getByRequestId(requestId, false)).thenReturn(Mono.just(deliveryRequest));
         when(paperAddressService.getCorrectAddress(deliveryRequest, null, 0)).thenReturn(Mono.just(address));
         when(addressDAO.create(any(PnAddress.class))).thenReturn(Mono.just(addressEntity));
-        when(attachmentsConfigService.filterAttachmentsToSend(deliveryRequest, deliveryRequest.getAttachments(), addressEntity)).thenReturn(Mono.just(deliveryRequest));
         when(requestDeliveryDAO.updateDataWithoutGet(deliveryRequest, false)).thenReturn(Mono.just(deliveryRequest));
         when(paperTenderService.getSimplifiedCost(address.getCap(), deliveryRequest.getProductType())).thenReturn(Mono.error(runtimeException));
         when(requestDeliveryDAO.updateStatus(any(), any(), any(), any(), any())).thenReturn(Mono.empty());
@@ -273,144 +267,6 @@ class PreparePhaseOneAsyncServiceImplTest {
         Assertions.assertEquals(statusDescription, descriptionCaptor.getValue());
         Assertions.assertEquals(statusCode, statusCodeCaptor.getValue());
         Assertions.assertEquals(statusDetail, statusDetailCaptor.getValue());
-    }
-
-    @Test
-    void preparePhaseOneAsyncFilterAttachmentTest() {
-        var requestId = "PREPARE_ANALOG_DOMICILE.IUN_GJWA-HMEK-RGUJ-202307-H-1.RECINDEX_0.ATTEMPT_0";
-        var iun = "GJWA-HMEK-RGUJ-202307-H-1";
-        var deliveryRequest =  getDeliveryRequest(requestId, iun);
-        PrepareNormalizeAddressEvent event = PrepareNormalizeAddressEvent.builder()
-                .requestId(requestId)
-                .iun(iun)
-                .attempt(0)
-                .build();
-
-        var address = getAddress();
-
-        ArgumentCaptor<String> descriptionCaptor = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<String> statusCodeCaptor = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<String> statusDetailCaptor = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<PnRequestError> itemErrorCaptor = ArgumentCaptor.forClass(PnRequestError.class);
-
-        StatusDeliveryEnum statusDeliveryEnum = StatusDeliveryEnum.PAPER_CHANNEL_ASYNC_ERROR;
-        String statusCode = statusDeliveryEnum.getCode();
-        String statusDescription = statusCode + " - " + statusDeliveryEnum.getDescription();
-        String statusDetail = statusDeliveryEnum.getDetail();
-
-        PnRequestError pnRequestError = new PnRequestError();
-        pnRequestError.setError("Generic error");
-        pnRequestError.setGeokey("geokey");
-        pnRequestError.setFlowThrow("PREPARE_PHASE_ONE_ASYNC_DEFAULT");
-        pnRequestError.setCause("UNKNOWN##"+ Instant.now().toString());
-        pnRequestError.setCategory("UNKNOWN");
-        pnRequestError.setAuthor("PN-PAPER-CHANNEL");
-        pnRequestError.setRequestId("FATY-FATY-2023041520230302");
-        pnRequestError.setCreated(Instant.now());
-
-        RuntimeException runtimeException = new RuntimeException("Generic error");
-
-        PnAddress addressEntity = AddressMapper.toEntity(address, deliveryRequest.getRequestId(), AddressTypeEnum.RECEIVER_ADDRESS, config);
-
-        var cost = new PnPaperChannelCostDTO();
-        cost.setTenderId("TENDER_ID");
-        cost.setDeliveryDriverId("DRIVER_ID");
-
-        var driver = new PaperChannelDeliveryDriver();
-        driver.setUnifiedDeliveryDriver("UNIFIED_DRIVER");
-
-        when(requestDeliveryDAO.getByRequestId(requestId, false)).thenReturn(Mono.just(deliveryRequest));
-        when(paperAddressService.getCorrectAddress(deliveryRequest, null, 0)).thenReturn(Mono.just(address));
-        when(addressDAO.create(any(PnAddress.class))).thenReturn(Mono.just(addressEntity));
-        when(attachmentsConfigService.filterAttachmentsToSend(deliveryRequest, deliveryRequest.getAttachments(), addressEntity)).thenReturn(Mono.error(runtimeException));
-        when(requestDeliveryDAO.updateStatus(any(), any(), any(), any(), any())).thenReturn(Mono.empty());
-        when(paperRequestErrorDAO.created(any())).thenReturn(Mono.just(pnRequestError));
-
-        StepVerifier.create(this.preparePhaseOneAsyncService.preparePhaseOneAsync(event))
-                .expectErrorMatches(ex -> {
-                    assertInstanceOf(RuntimeException.class, ex);
-                    return true;
-                }).verify();
-
-        verify(this.prepareFlowStarter, never()).pushResultPrepareEvent(eq(deliveryRequest), isNull(), eq("clientId"), eq(StatusCodeEnum.KO), isNull());
-        verify(paperRequestErrorDAO, times(1)).created(itemErrorCaptor.capture());
-        verify(requestDeliveryDAO, times(1)).updateStatus(eq(requestId), statusCodeCaptor.capture(), descriptionCaptor.capture(), statusDetailCaptor.capture(), any());
-
-        assertionItemCapturedWithItemError(itemErrorCaptor, pnRequestError);
-
-        Assertions.assertEquals(statusDescription, descriptionCaptor.getValue());
-        Assertions.assertEquals(statusCode, statusCodeCaptor.getValue());
-        Assertions.assertEquals(statusDetail, statusDetailCaptor.getValue());
-    }
-
-    @Test
-    void preparePhaseOneAsyncFilterAttachmentNotificationSentAtNullTest() {
-        var requestId = "PREPARE_ANALOG_DOMICILE.IUN_GJWA-HMEK-RGUJ-202307-H-1.RECINDEX_0.ATTEMPT_0";
-        var iun = "GJWA-HMEK-RGUJ-202307-H-1";
-        var deliveryRequest =  getDeliveryRequest(requestId, iun);
-        deliveryRequest.setNotificationSentAt(null); //per test nullpointer bug
-        PrepareNormalizeAddressEvent event = PrepareNormalizeAddressEvent.builder()
-                .requestId(requestId)
-                .iun(iun)
-                .attempt(0)
-                .build();
-
-        var address = getAddress();
-
-        ArgumentCaptor<String> descriptionCaptor = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<String> statusCodeCaptor = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<String> statusDetailCaptor = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<PnRequestError> itemErrorCaptor = ArgumentCaptor.forClass(PnRequestError.class);
-
-        StatusDeliveryEnum statusDeliveryEnum = StatusDeliveryEnum.PAPER_CHANNEL_ASYNC_ERROR;
-        String statusCode = statusDeliveryEnum.getCode();
-        String statusDescription = statusCode + " - " + statusDeliveryEnum.getDescription();
-        String statusDetail = statusDeliveryEnum.getDetail();
-
-        PnRequestError pnRequestError = new PnRequestError();
-        pnRequestError.setError("is null");
-        pnRequestError.setGeokey("geokey");
-        pnRequestError.setFlowThrow("PREPARE_PHASE_ONE_ASYNC_DEFAULT");
-        pnRequestError.setCause("UNKNOWN##"+ Instant.now().toString());
-        pnRequestError.setCategory("UNKNOWN");
-        pnRequestError.setAuthor("PN-PAPER-CHANNEL");
-        pnRequestError.setRequestId("FATY-FATY-2023041520230302");
-        pnRequestError.setCreated(Instant.now());
-
-        NullPointerException nullPointerException = new NullPointerException("is null");
-
-        PnAddress addressEntity = AddressMapper.toEntity(address, deliveryRequest.getRequestId(), AddressTypeEnum.RECEIVER_ADDRESS, config);
-
-        var cost = new PnPaperChannelCostDTO();
-        cost.setTenderId("TENDER_ID");
-        cost.setDeliveryDriverId("DRIVER_ID");
-
-        var driver = new PaperChannelDeliveryDriver();
-        driver.setUnifiedDeliveryDriver("UNIFIED_DRIVER");
-
-        when(requestDeliveryDAO.getByRequestId(requestId, false)).thenReturn(Mono.just(deliveryRequest));
-        when(paperAddressService.getCorrectAddress(deliveryRequest, null, 0)).thenReturn(Mono.just(address));
-        when(addressDAO.create(any(PnAddress.class))).thenReturn(Mono.just(addressEntity));
-        when(requestDeliveryDAO.updateStatus(any(), any(), any(), any(), any())).thenReturn(Mono.empty());
-        when(attachmentsConfigService.filterAttachmentsToSend(deliveryRequest, deliveryRequest.getAttachments(), addressEntity)).thenReturn(Mono.error(nullPointerException));
-        when(paperRequestErrorDAO.created(any())).thenReturn(Mono.just(pnRequestError));
-
-        StepVerifier.create(this.preparePhaseOneAsyncService.preparePhaseOneAsync(event))
-                .expectErrorMatches(ex -> {
-                    assertInstanceOf(NullPointerException.class, ex);
-                    return true;
-                }).verify();
-
-        verify(this.prepareFlowStarter, never()).pushResultPrepareEvent(eq(deliveryRequest), isNull(), eq("clientId"), eq(StatusCodeEnum.KO), isNull());
-        verify(paperRequestErrorDAO, times(1)).created(itemErrorCaptor.capture());
-        verify(requestDeliveryDAO, times(1)).updateStatus(eq(requestId), statusCodeCaptor.capture(), descriptionCaptor.capture(), statusDetailCaptor.capture(), any());
-
-        assertionItemCapturedWithItemError(itemErrorCaptor, pnRequestError);
-
-        Assertions.assertEquals(statusDescription, descriptionCaptor.getValue());
-        Assertions.assertEquals(statusCode, statusCodeCaptor.getValue());
-        Assertions.assertEquals(statusDetail, statusDetailCaptor.getValue());
-
     }
 
     private void assertionItemCapturedWithItemError(ArgumentCaptor<PnRequestError> itemErrorCaptor, PnRequestError pnRequestError) {
@@ -600,7 +456,6 @@ class PreparePhaseOneAsyncServiceImplTest {
         when(requestDeliveryDAO.getByRequestId(requestId, false)).thenReturn(Mono.just(deliveryRequest));
         when(paperAddressService.getCorrectAddress(deliveryRequest, null, 0)).thenReturn(Mono.just(address));
         when(addressDAO.create(any(PnAddress.class))).thenReturn(Mono.just(addressEntity));
-        when(attachmentsConfigService.filterAttachmentsToSend(deliveryRequest, deliveryRequest.getAttachments(), addressEntity)).thenReturn(Mono.just(deliveryRequest));
         when(requestDeliveryDAO.updateDataWithoutGet(deliveryRequest, false)).thenReturn(Mono.just(deliveryRequest));
 
         StepVerifier.create(preparePhaseOneAsyncService.preparePhaseOneAsync(PrepareNormalizeAddressEvent.builder()
