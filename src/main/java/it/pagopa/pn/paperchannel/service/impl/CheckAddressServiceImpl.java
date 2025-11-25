@@ -19,11 +19,13 @@ import static it.pagopa.pn.paperchannel.utils.AddressTypeEnum.RECEIVER_ADDRESS;
 public class CheckAddressServiceImpl implements CheckAddressService {
 
     private final AddressDAO addressDAO;
+    private final PcRetryServiceImpl pcRetryService;
+
 
     @Override
     public Mono<CheckAddressResponse> checkAddressRequest(String requestId){
         log.info("Finding address for requestId {}", requestId);
-        return addressDAO.findByRequestId(requestId, RECEIVER_ADDRESS)
+        return addressDAO.findByRequestId(pcRetryService.getPrefixRequestId(requestId), RECEIVER_ADDRESS)
                 .flatMap(address -> buildAddressResponse(requestId, true, address.getTtl()))
                 .switchIfEmpty(buildAddressResponse(requestId, false, null));
     }
