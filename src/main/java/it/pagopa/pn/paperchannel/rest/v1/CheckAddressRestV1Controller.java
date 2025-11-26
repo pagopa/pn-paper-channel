@@ -26,7 +26,7 @@ public class CheckAddressRestV1Controller implements CheckAddressApi {
         Mono<ResponseEntity<CheckAddressResponse>> responseEntityMono = Mono.just(requestId)
                 .flatMap(request -> checkAddressService.checkAddressRequest(requestId))
                 .map(ResponseEntity::ok)
-                .switchIfEmpty(Mono.just(ResponseEntity.noContent().build()));
+                .switchIfEmpty(Mono.just(ResponseEntity.notFound().build()));
 
         return MDCUtils.addMDCToContextAndExecute(responseEntityMono);
     }

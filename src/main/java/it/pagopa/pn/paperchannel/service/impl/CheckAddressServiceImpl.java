@@ -26,15 +26,14 @@ public class CheckAddressServiceImpl implements CheckAddressService {
     public Mono<CheckAddressResponse> checkAddressRequest(String requestId){
         log.info("Finding address for requestId {}", requestId);
         return addressDAO.findByRequestId(pcRetryService.getPrefixRequestId(requestId), RECEIVER_ADDRESS)
-                .flatMap(address -> buildAddressResponse(requestId, true, address.getTtl()))
-                .switchIfEmpty(buildAddressResponse(requestId, false, null));
+                .flatMap(address -> buildAddressResponse(requestId, address.getTtl()));
     }
 
-    private Mono<CheckAddressResponse> buildAddressResponse(String requestId, boolean found, Long ttl) {
+    private Mono<CheckAddressResponse> buildAddressResponse(String requestId, Long ttl) {
         CheckAddressResponse response = new CheckAddressResponse();
-        response.setFound(found);
+        response.setFound(Boolean.TRUE);
         response.setRequestId(requestId);
-        if (Objects.nonNull(ttl) && found) {
+        if (Objects.nonNull(ttl)) {
             response.setEndValidity(Instant.ofEpochSecond(ttl));
         }
         return Mono.just(response);
