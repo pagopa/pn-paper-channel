@@ -31,7 +31,6 @@ class CheckAddressRestV1ControllerTest {
 
         CheckAddressResponse response = new CheckAddressResponse();
         response.setRequestId("requestId2");
-        response.setFound(true);
         response.setEndValidity(now);
 
         when(checkAddressService.checkAddressRequest("requestId2"))
@@ -41,26 +40,20 @@ class CheckAddressRestV1ControllerTest {
                 .exchange()
                 .expectStatus()
                 .isOk()
-                .expectBody().json("{\"requestId\":\"requestId2\",\"found\":true,\"endValidity\":\"" + now.toString() + "\"}");
+                .expectBody().json("{\"requestId\":\"requestId2\",\"endValidity\":\"" + now.toString() + "\"}");
     }
 
     @Test
     void testCheckAddressRequestKo() {
         String path = "/paper-channel-private/v1/{requestId}/check-address";
 
-        CheckAddressResponse response = new CheckAddressResponse();
-        response.setRequestId("requestId2");
-        response.setFound(false);
-        response.setEndValidity(null);
-
         when(checkAddressService.checkAddressRequest("requestId2"))
-                .thenReturn(Mono.just(response));
+                .thenReturn(Mono.empty());
         webTestClient.get()
                 .uri(uriBuilder -> uriBuilder.path(path).queryParam("requestId", "requestId2").build("requestId2"))
                 .exchange()
                 .expectStatus()
-                .isOk()
-                .expectBody().json("{\"requestId\":\"requestId2\",\"found\":false,\"endValidity\":null}");
+                .isNotFound();
     }
 
 }

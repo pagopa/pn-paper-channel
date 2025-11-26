@@ -1,7 +1,9 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.CheckAddressResponse;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -38,9 +40,11 @@ class CheckAddressServiceImplTest {
         when(pcRetryService.getPrefixRequestId(anyString())).thenReturn("PREPARE_ANALOG_DOMICILE.IUN_IUN-PROVA-prova.RECINDEX_0.ATTEMPT_0");
 
         StepVerifier.create(checkAddressService.checkAddressRequest(requestId))
-                .expectNextMatches(response -> response.getFound() &&
-                        response.getRequestId().equals(requestId) &&
-                        response.getEndValidity() != null)
+                .expectNextMatches(response -> {
+                    Assertions.assertNotNull(response.getRequestId());
+                    return response.getRequestId().equals(requestId) &&
+                            response.getEndValidity() != null;
+                })
                 .verifyComplete();
     }
 
@@ -51,23 +55,18 @@ class CheckAddressServiceImplTest {
         when(addressDAO.findByRequestId("PREPARE_ANALOG_DOMICILE.IUN_IUN-PROVA-prova.RECINDEX_0.ATTEMPT_0", RECEIVER_ADDRESS)).thenReturn(Mono.empty());
         when(pcRetryService.getPrefixRequestId(anyString())).thenReturn("PREPARE_ANALOG_DOMICILE.IUN_IUN-PROVA-prova.RECINDEX_0.ATTEMPT_0");
 
-        StepVerifier.create(checkAddressService.checkAddressRequest(requestId))
-                .expectNextMatches(response -> !response.getFound() &&
-                        response.getRequestId().equals(requestId) &&
-                        response.getEndValidity() == null)
-                .verifyComplete();
+        CheckAddressResponse checkAddressResponse = checkAddressService.checkAddressRequest(requestId).block();
+
+        Assertions.assertNull(checkAddressResponse);
     }
 
     @Test
     void checkAddressRequestHandlesNullRequestIdGracefully() {
-        String requestId = null;
 
-        when(addressDAO.findByRequestId(requestId, RECEIVER_ADDRESS)).thenReturn(Mono.empty());
+        when(addressDAO.findByRequestId(null, RECEIVER_ADDRESS)).thenReturn(Mono.empty());
 
-        StepVerifier.create(checkAddressService.checkAddressRequest(requestId))
-                .expectNextMatches(response -> !response.getFound() &&
-                        response.getRequestId() == null &&
-                        response.getEndValidity() == null)
-                .verifyComplete();
+        CheckAddressResponse checkAddressResponse = checkAddressService.checkAddressRequest(null).block();
+
+        Assertions.assertNull(checkAddressResponse);
     }
 }
