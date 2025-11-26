@@ -31,7 +31,6 @@ public class CheckAddressServiceImpl implements CheckAddressService {
 
     private Mono<CheckAddressResponse> buildAddressResponse(String requestId, Long ttl) {
         CheckAddressResponse response = new CheckAddressResponse();
-        response.setFound(Boolean.TRUE);
         response.setRequestId(requestId);
         if (Objects.nonNull(ttl)) {
             response.setEndValidity(Instant.ofEpochSecond(ttl));

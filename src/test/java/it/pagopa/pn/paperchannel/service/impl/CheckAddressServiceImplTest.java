@@ -41,7 +41,6 @@ class CheckAddressServiceImplTest {
 
         StepVerifier.create(checkAddressService.checkAddressRequest(requestId))
                 .expectNextMatches(response -> {
-                    if (Boolean.FALSE.equals(response.getFound())) return false;
                     Assertions.assertNotNull(response.getRequestId());
                     return response.getRequestId().equals(requestId) &&
                             response.getEndValidity() != null;
