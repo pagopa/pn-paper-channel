@@ -1,6 +1,5 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
-import it.pagopa.pn.api.dto.events.PnAttachmentsConfigEventPayload;
 import it.pagopa.pn.api.dto.events.PnF24PdfSetReadyEvent;
 import it.pagopa.pn.api.dto.events.PnF24PdfSetReadyEventItem;
 import it.pagopa.pn.api.dto.events.PnPrepareDelayerToPaperchannelPayload;
@@ -34,7 +33,7 @@ import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 import reactor.util.retry.Retry;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
@@ -59,8 +58,6 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
     private final AddressDAO addressDAO;
     private final PaperRequestErrorDAO paperRequestErrorDAO;
     private final F24Service f24Service;
-    private final DematZipService dematZipService;
-    private final AttachmentsConfigService attachmentsConfigService;
     private final PrepareFlowStarter prepareFlowStarter;
     private final NationalRegistryService nationalRegistryService;
     private final PcRetryUtils pcRetryUtils;
@@ -74,8 +71,6 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
                                     AddressDAO addressDAO,
                                     PaperRequestErrorDAO paperRequestErrorDAO,
                                     F24Service f24Service,
-                                    DematZipService dematZipService,
-                                    AttachmentsConfigService attachmentsConfigService,
                                     PrepareFlowStarter prepareFlowStarter,
                                     NationalRegistryService nationalRegistryService,
                                     PcRetryUtils pcRetryUtils) {
@@ -89,8 +84,6 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
         this.addressDAO = addressDAO;
         this.paperRequestErrorDAO = paperRequestErrorDAO;
         this.f24Service = f24Service;
-        this.dematZipService = dematZipService;
-        this.attachmentsConfigService = attachmentsConfigService;
         this.prepareFlowStarter = prepareFlowStarter;
         this.nationalRegistryService = nationalRegistryService;
         this.pcRetryUtils = pcRetryUtils;
@@ -142,31 +135,6 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
                 .block();
     }
 
-    @Override
-    public void dematZipInternalListener(DematInternalEvent body, int attempt) {
-        String processName = "DematZipInternalListener";
-        MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, body.getRequestId());
-        MDC.put(MDCUtils.MDC_PN_CTX_TOPIC, processName);
-        log.logStartingProcess(processName);
-        MDCUtils.addMDCToContextAndExecute(Mono.just(body)
-                        .flatMap(dematInternalEvent -> {
-                            dematInternalEvent.setAttemptRetry(attempt);
-                            return this.dematZipService.handle(dematInternalEvent);
-                        })
-                        .doOnSuccess(resultFromAsync ->{
-                                    log.info("End of dematZipInternalListener");
-                                    log.logEndingProcess(processName);
-                                }
-                        )
-                        .doOnError(throwable -> {
-                            log.error("Error in dematZipInternalListener", throwable);
-                            body.setErrorMessage(throwable.getMessage());
-                            this.sqsSender.pushInternalError(body, body.getAttemptRetry(), DematInternalEvent.class);
-                        }))
-                .block();
-    }
-
-
     public void f24ErrorListener(F24Error entity, Integer attempt) {
         log.info("Start async for {} request id", entity.getRequestId());
 
@@ -214,19 +182,6 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
                                                 payload.getGeneratedPdfsUrls().stream().map(PnF24PdfSetReadyEventItem::getUri).toList()))
                 )
                 .block();
-    }
-
-    @Override
-    public void raddAltListener(PnAttachmentsConfigEventPayload data) {
-        final String processName = "raddAltListener";
-        MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, data.getConfigKey());
-        log.logStartingProcess(PROCESS_NAME);
-        var monoResult = Mono.just(data)
-                .flatMap(request -> attachmentsConfigService.refreshConfig(data))
-                .doOnSuccess(resultFromAsync -> log.logEndingProcess(processName))
-                .doOnError(ex -> log.error("Error in raddAltListener with configKey: {}", data.getConfigKey(), ex));
-
-        MDCUtils.addMDCToContextAndExecute(monoResult).block();
     }
 
     @Override

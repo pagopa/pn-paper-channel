@@ -34,7 +34,7 @@ public class NationalRegistryClientImpl extends BaseClient implements NationalRe
     @Override
     public Mono<AddressOKDto> finderAddress(String correlationId, String recipientTaxId, String recipientType) {
         log.logInvokingExternalService(PnLogger.EXTERNAL_SERVICES.PN_NATIONAL_REGISTRIES, PN_NATIONAL_REGISTRY_DESCRIPTION);
-        log.debug("Getting fiscalCode {} key", recipientTaxId);
+        log.trace("Getting fiscalCode {} key", recipientTaxId);
 
         AddressRequestBodyDto addressRequestBodyDto = new AddressRequestBodyDto();
         AddressRequestBodyFilterDto filterDto = new AddressRequestBodyFilterDto();

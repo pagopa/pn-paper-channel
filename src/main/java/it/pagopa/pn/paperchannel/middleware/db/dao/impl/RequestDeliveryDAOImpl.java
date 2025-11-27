@@ -38,19 +38,18 @@ import static it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest
 @Slf4j
 public class RequestDeliveryDAOImpl extends BaseDAO<PnDeliveryRequest> implements RequestDeliveryDAO {
 
-    @Autowired
-    @Qualifier("dataVaultEncryption")
-    private DataEncryption dataVaultEncryption;
-    @Autowired
-    private AddressDAO addressDAO;
 
+    private final AddressDAO addressDAO;
 
-    public RequestDeliveryDAOImpl(DataEncryption dataVaultEncryption,
+    public RequestDeliveryDAOImpl(@Qualifier("dataVaultEncryption") DataEncryption dataVaultEncryption,
                                   DynamoDbEnhancedAsyncClient dynamoDbEnhancedAsyncClient,
                                   DynamoDbAsyncClient dynamoDbAsyncClient,
-                                  AwsPropertiesConfig awsPropertiesConfig) {
+                                  AwsPropertiesConfig awsPropertiesConfig,
+                                  AddressDAO addressDAO) {
         super(dataVaultEncryption, dynamoDbEnhancedAsyncClient, dynamoDbAsyncClient,
                 awsPropertiesConfig.getDynamodbRequestDeliveryTable(), PnDeliveryRequest.class);
+
+        this.addressDAO = addressDAO;
     }
 
 
@@ -139,6 +138,37 @@ public class RequestDeliveryDAOImpl extends BaseDAO<PnDeliveryRequest> implement
                         applyRasterization, requestId));
     }
 
+    @Override
+    public Mono<PnDeliveryRequest> cleanDataForNotificationRework(PnDeliveryRequest pnDeliveryRequest, String reworkId) {
+        Map<String, AttributeValue> key = Map.of(COL_REQUEST_ID, AttributeValue.builder().s(pnDeliveryRequest.getRequestId()).build());
+
+        String updateExpr = "SET #refined = :refinedVal, #reworkId = :reworkIdVal REMOVE #feedbackStatusCode, #feedbackDeliveryFailureCause, #feedbackStatusDateTime";
+
+        Map<String, String> expressionAttributeNames = Map.of(
+                "#feedbackStatusCode", PnDeliveryRequest.COL_FEEDBACK_STATUS_CODE,
+                "#feedbackDeliveryFailureCause", PnDeliveryRequest.COL_FEEDBACK_DELIVERY_FAILURE_CAUSE,
+                "#feedbackStatusDateTime", PnDeliveryRequest.COL_FEEDBACK_STATUS_DATE_TIME,
+                "#refined", PnDeliveryRequest.COL_REFINED,
+                "#reworkId", PnDeliveryRequest.COL_REWORK_ID
+        );
+
+        Map<String, AttributeValue> expressionAttributeValues = Map.of(
+                ":refinedVal", AttributeValue.builder().bool(false).build(),
+                ":reworkIdVal", AttributeValue.builder().s(reworkId).build()
+        );
+
+        UpdateItemRequest updateRequest = UpdateItemRequest.builder()
+                .tableName(table)
+                .key(key)
+                .updateExpression(updateExpr)
+                .expressionAttributeNames(expressionAttributeNames)
+                .expressionAttributeValues(expressionAttributeValues)
+                .returnValues(ReturnValue.NONE)
+                .build();
+
+        return Mono.fromFuture(dynamoDbAsyncClient.updateItem(updateRequest))
+                .thenReturn(pnDeliveryRequest);
+    }
 
     public Mono<Void> updateStatus(String requestId, String statusCode, String statusDescription, String statusDetail, String statusDateString) {
         log.debug("[{}] Updating status in {}", requestId, statusCode);

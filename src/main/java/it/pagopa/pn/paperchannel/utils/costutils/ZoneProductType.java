@@ -5,7 +5,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import javax.swing.text.StyledEditorKit;
 import java.util.Objects;
 
 @Getter

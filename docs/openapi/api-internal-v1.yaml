@@ -26,6 +26,8 @@ tags:
     description: Operazioni per inviare e monitorare messaggi di corrispondenza cartacea
   - name: HealthCheck
     description: Metodo heartbeat
+  - name: NotificationRework
+    description: Operazioni per la gestione della correzione timeline
 paths:
   '/status':
     get:
@@ -357,6 +359,75 @@ paths:
               schema:
                 $ref: 'remote-refs.yaml#/components/schemas/Problem'
 
+  /paper-channel-private/v1/{requestId}/check-address:
+    get:
+      summary: Verifica l'esistenza dell'indirizzo della notifica
+      tags:
+        - CheckAddress
+      operationId: checkAddress
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+            default: false
+      responses:
+        '200':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckAddressResponse"
+        '404':
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+        '500':
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+
+  /paper-channel-private/v1/rework/{requestId}/init:
+    put:
+      tags:
+        - NotificationRework
+      summary: Avvia la richiesta di invalidazione timeline
+      description: effettua l'aggiornamento della deliveryRequest e la cancellazione degli eventi salvati, per accettare gli eventi di recapito correttivi
+      operationId: initNotificationRework
+      parameters:
+        - $ref: '#/components/parameters/pathRequestId'
+        - name: reworkId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Inizializzazione completata
+        "400":
+          description: Errore di validazione sintattica della richiesta
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+        "404":
+          description: RequestId non trovato
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+
 components:
 
   #############################################################################################
@@ -542,6 +613,15 @@ components:
           description: Costo calcolato alla spedizione in eurocents
           format: int32
           example: 350
+
+    CheckAddressResponse:
+      type: object
+      properties:
+        requestId:
+          type: string
+        endValidity:
+          type: string
+          format: date-time
 
 #  securitySchemes:        # ONLY EXTERNAL
 #    ApiKeyAuth:           # ONLY EXTERNAL

@@ -1,10 +1,7 @@
 package it.pagopa.pn.paperchannel.service;
 
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
-import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
-import it.pagopa.pn.paperchannel.exception.PnAddressFlowException;
-import it.pagopa.pn.paperchannel.exception.PnGenericException;
-import it.pagopa.pn.paperchannel.exception.PnUntracebleException;
+import it.pagopa.pn.paperchannel.exception.*;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.dto.AnalogAddressDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.dto.DeduplicatesResponseDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.FailureDetailCodeEnum;
@@ -375,14 +372,81 @@ class PaperAddressServiceImplTest {
         when(addressManagerClient.deduplicates(any(), eq(addressFirstAttempt), eq(addressDiscovered)))
                 .thenReturn(Mono.just(mockDeduplicationResponse));
 
-        paperProperties.setPnaddr001continueFlow(false);
+        paperProperties.setPnaddr001continueFlow(true);
 
         StepVerifier.create(paperAddressService.getCorrectAddress(deliveryRequest, null, 0))
-                .expectErrorMatches(throwable -> {
-                    boolean isPnGenericException = throwable instanceof PnGenericException;
-                    boolean isNotPnUntracebleException = !(throwable instanceof PnUntracebleException);
-                    return isPnGenericException && isNotPnUntracebleException;
-                })
+                .expectErrorMatches(StopFlowSecondAttemptException.class::isInstance)
+                .verify();
+
+    }
+
+    //Errore PNADDR003 flusso postino: (validazione response normalizzatore non superata)
+    @Test
+    void getCorrectAddressDiscoveredAddressFlowKOForDeduplicationErrorPNADDR003() {
+        DeduplicatesResponseDto mockDeduplicationResponse = new DeduplicatesResponseDto();
+        mockDeduplicationResponse.setError(PNADDR003);
+        String requestId = "";
+        String relatedRequestId = "related-request";
+        PnDeliveryRequest deliveryRequest = new PnDeliveryRequest();
+        deliveryRequest.setIun("a-iun");
+        deliveryRequest.setRequestId(requestId);
+        deliveryRequest.setCorrelationId(null); //questo campo non-null determina il fatto di scegliere il flusso NR
+        deliveryRequest.setRelatedRequestId(relatedRequestId);
+        PnAddress addressFromDb = new PnAddress();
+        addressFromDb.setRequestId(requestId);
+        addressFromDb.setAddress("via Roma");
+        PnAddress discoveredAddressFromDb = new PnAddress();
+        discoveredAddressFromDb.setRequestId(requestId);
+        discoveredAddressFromDb.setAddress("via discovered");
+
+        Address addressFirstAttempt = AddressMapper.toDTO(addressFromDb);
+        Address addressDiscovered = AddressMapper.toDTO(discoveredAddressFromDb);
+
+        when(addressDAO.findByRequestId(relatedRequestId, AddressTypeEnum.RECEIVER_ADDRESS))
+                .thenReturn(Mono.just(addressFromDb));
+
+        when(addressDAO.findByRequestId(requestId, AddressTypeEnum.DISCOVERED_ADDRESS))
+                .thenReturn(Mono.just(discoveredAddressFromDb));
+
+        when(addressManagerClient.deduplicates(any(), eq(addressFirstAttempt), eq(addressDiscovered)))
+                .thenReturn(Mono.just(mockDeduplicationResponse));
+
+        paperProperties.setPnaddr001continueFlow(true);
+
+        StepVerifier.create(paperAddressService.getCorrectAddress(deliveryRequest, null, 0))
+                .expectErrorMatches(StopFlowSecondAttemptException.class::isInstance)
+                .verify();
+
+    }
+
+    //Errore PNADDR003 flusso NR: (validazione response normalizzatore non superata)
+    @Test
+    void getCorrectAddressNationalRegistryFlowKOForDeduplicationErrorForPnaddr003() {
+        DeduplicatesResponseDto mockDeduplicationResponse = new DeduplicatesResponseDto();
+        mockDeduplicationResponse.setError(PNADDR003);
+        Address fromNationalRegistry = new Address();
+        fromNationalRegistry.setAddress("via Da NR");
+        String requestId = "";
+        String relatedRequestId = "related-request";
+        PnDeliveryRequest deliveryRequest = new PnDeliveryRequest();
+        deliveryRequest.setIun("a-iun");
+        deliveryRequest.setRequestId(requestId);
+        deliveryRequest.setRelatedRequestId(relatedRequestId);
+        String correlationId = "a-correlation-id";
+        deliveryRequest.setCorrelationId(correlationId); //questo campo non-null determina il fatto di scegliere il flusso NR
+        PnAddress addressFromDb = new PnAddress();
+        addressFromDb.setRequestId(requestId);
+        addressFromDb.setAddress("via Roma");
+        Address addressFirstAttempt = AddressMapper.toDTO(addressFromDb);
+        when(addressDAO.findByRequestId(relatedRequestId, AddressTypeEnum.RECEIVER_ADDRESS))
+                .thenReturn(Mono.just(addressFromDb));
+
+        when(addressManagerClient.deduplicates(correlationId, addressFirstAttempt, fromNationalRegistry))
+                .thenReturn(Mono.just(mockDeduplicationResponse));
+
+
+        StepVerifier.create(paperAddressService.getCorrectAddress(deliveryRequest, fromNationalRegistry, 0))
+                .expectErrorMatches(StopFlowSecondAttemptException.class::isInstance)
                 .verify();
 
     }

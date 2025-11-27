@@ -10,7 +10,8 @@ import it.pagopa.pn.paperchannel.utils.DateUtils;
 import org.junit.jupiter.api.*;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.UpdateItemResponse;
 
 import java.time.Instant;
@@ -30,7 +31,7 @@ class RequestDeliveryDAOTestIT extends BaseTest {
     @Autowired
     private RequestDeliveryDAO requestDeliveryDAO;
 
-    @MockBean
+    @MockitoBean
     private DataVaultEncryptionImpl dataVaultEncryption;
 
     @Test
@@ -373,6 +374,34 @@ class RequestDeliveryDAOTestIT extends BaseTest {
         assertThat(deliveryRequest.getStatusDescription()).isEqualTo(StatusDeliveryEnum.UNTRACEABLE.getDescription());
         assertThat(deliveryRequest.getStatusDetail()).isEqualTo(StatusDeliveryEnum.UNTRACEABLE.getDetail());
 
+    }
+
+   @Test
+    void cleanDataForNotificationReworkClearsFeedbackAndSetsReworkId() {
+        // Given
+        String requestId = "reworkRequestId";
+        String reworkId = "newReworkId";
+        PnDeliveryRequest request = new PnDeliveryRequest();
+        request.setRequestId(requestId);
+        request.setFeedbackStatusCode("OLD_CODE");
+        request.setFeedbackDeliveryFailureCause("OLD_CAUSE");
+        request.setFeedbackStatusDateTime(Instant.now());
+        request.setRefined(true);
+
+        requestDeliveryDAO.createWithAddress(request, null, null).block();
+
+        // When
+        PnDeliveryRequest updatedRequest = requestDeliveryDAO.cleanDataForNotificationRework(request, reworkId).block();
+
+        // Then
+        assertNotNull(updatedRequest);
+        PnDeliveryRequest result = requestDeliveryDAO.getByRequestId(requestId).block();
+        assertNotNull(result);
+        assertNull(result.getFeedbackStatusCode());
+        assertNull(result.getFeedbackDeliveryFailureCause());
+        assertNull(result.getFeedbackStatusDateTime());
+        assertFalse(result.getRefined());
+        assertEquals(reworkId, result.getNotificationReworkId());
     }
 
     private PnDeliveryRequest buildDeliveryRequest(String requestId) {

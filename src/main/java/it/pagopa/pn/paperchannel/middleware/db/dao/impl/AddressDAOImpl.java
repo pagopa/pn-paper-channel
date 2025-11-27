@@ -8,6 +8,7 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.common.TransactWriterInitiali
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
@@ -22,7 +23,7 @@ import java.util.List;
 @Slf4j
 public class AddressDAOImpl extends BaseDAO <PnAddress> implements AddressDAO {
 
-    public AddressDAOImpl(DataEncryption kmsEncryption,
+    public AddressDAOImpl(@Qualifier("kmsEncryption") DataEncryption kmsEncryption,
                           DynamoDbEnhancedAsyncClient dynamoDbEnhancedAsyncClient,
                           DynamoDbAsyncClient dynamoDbAsyncClient,
                           AwsPropertiesConfig awsPropertiesConfig) {
@@ -60,7 +61,8 @@ public class AddressDAOImpl extends BaseDAO <PnAddress> implements AddressDAO {
                 .switchIfEmpty(getPnAddress(requestId, addressTypeEnum, true));
     }
 
-    private Mono<PnAddress> getPnAddress(String requestId, AddressTypeEnum addressTypeEnum, boolean consistentRead) {
+    @Override
+    public Mono<PnAddress> getPnAddress(String requestId, AddressTypeEnum addressTypeEnum, boolean consistentRead) {
         return Mono.fromFuture(this.get(requestId, addressTypeEnum.toString(), consistentRead));
     }
 

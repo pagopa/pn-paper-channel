@@ -72,6 +72,16 @@ class AddressDAOTestIT extends BaseTest {
     }
 
     @Test
+    void getPnAddressTest(){
+        PnAddress pnAddress = this.addressDAO.getPnAddress(address.getRequestId(), AddressTypeEnum.RECEIVER_ADDRESS, true).block();
+        assertNotNull(pnAddress);
+        assertEquals(pnAddress.getAddress(), address.getAddress());
+        assertEquals(pnAddress.getCap(), address.getCap());
+        assertEquals(pnAddress.getRequestId(), address.getRequestId());
+        assertEquals(pnAddress.getTypology(), address.getTypology());
+    }
+
+    @Test
     void findAllByRequestIdTest(){
         List<PnAddress> addressList = this.addressDAO.findAllByRequestId(address1.getRequestId()).block();
         assertNotNull(addressList);

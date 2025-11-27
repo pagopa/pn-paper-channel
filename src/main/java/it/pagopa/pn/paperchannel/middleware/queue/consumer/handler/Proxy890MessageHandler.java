@@ -13,7 +13,7 @@ import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 import java.time.Instant;
 
 @SuperBuilder
@@ -30,8 +30,8 @@ public class Proxy890MessageHandler implements MessageHandler {
 
     @PostConstruct
     public void postConstruct(){
-        log.info("Init Proxy890MessageHandler - complexRefinementCodes: {} , enableSimple890Flow: {}",
-                pnPaperChannelConfig.getComplexRefinementCodes(),pnPaperChannelConfig.isEnableSimple890Flow());
+        log.info("Init Proxy890MessageHandler - complexRefinementCodes: {}",
+                pnPaperChannelConfig.getComplexRefinementCodes());
     }
 
     @Override

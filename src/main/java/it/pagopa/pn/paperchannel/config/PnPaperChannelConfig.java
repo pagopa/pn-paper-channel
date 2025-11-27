@@ -4,6 +4,8 @@ import it.pagopa.pn.commons.conf.SharedAutoConfiguration;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import it.pagopa.pn.paperchannel.model.RaddSearchMode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -13,7 +15,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.Set;
@@ -27,7 +29,7 @@ import java.util.Set;
 @Import(SharedAutoConfiguration.class)
 @Slf4j
 public class PnPaperChannelConfig {
-
+    private RaddSearchMode raddCoverageSearchMode;
     private String clientSafeStorageBasepath;
     private String clientNationalRegistriesBasepath;
     private String clientExternalChannelBasepath;
@@ -35,6 +37,7 @@ public class PnPaperChannelConfig {
     private String clientF24Basepath;
     private String clientDataVaultBasepath;
     private String clientAddressManagerBasepath;
+    private String clientRaddAltBasepath;
     private String addressManagerCxId;
     private String addressManagerApiKey;
     private String safeStorageCxId;
@@ -44,7 +47,6 @@ public class PnPaperChannelConfig {
     private String queueDeliveryPush;
     private String queueNationalRegistries;
     private String queueExternalChannel;
-    private String queueRaddAlt;
     private String queueNormalizeAddress;
     private String queuePaperchannelToDelayer;
     private String queueDelayerToPaperchannel;
@@ -73,9 +75,7 @@ public class PnPaperChannelConfig {
     private Duration refinementDuration;
     private String requestPaIdOverride;
     private Set<String> requiredDemats;
-    private boolean zipHandleActive;
     private Set<String> complexRefinementCodes;
-    private boolean enableSimple890Flow;
     private boolean sendCon020;
     private boolean enableRetryCon996;
     private boolean enabledocfilterruleengine;
