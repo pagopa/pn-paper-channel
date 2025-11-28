@@ -97,6 +97,8 @@ public class PnDeliveryRequest implements Serializable {
 
     public static final String COL_SENDER_PAID = "senderPaId";
 
+    public static final String COL_REWORK_ID = "reworkId";
+
 
     @Getter(onMethod = @__({@DynamoDbPartitionKey,@DynamoDbAttribute(COL_REQUEST_ID)}))
     private String requestId;
@@ -200,4 +202,7 @@ public class PnDeliveryRequest implements Serializable {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_SENDER_PAID)}))
     private String senderPaId;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_REWORK_ID)}))
+    private String notificationReworkId;
 }

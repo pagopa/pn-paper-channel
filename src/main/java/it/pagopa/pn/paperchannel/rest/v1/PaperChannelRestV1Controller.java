@@ -5,17 +5,18 @@ import it.pagopa.pn.paperchannel.generated.openapi.server.v1.api.DeliveryDriverA
 
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.paperchannel.service.PaperChannelService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 @RestController
+@RequiredArgsConstructor
 public class PaperChannelRestV1Controller implements DeliveryDriverApi {
     
-    @Autowired
-    private PaperChannelService paperChannelService;
+
+    private final PaperChannelService paperChannelService;
 
     @Override
     public Mono<ResponseEntity<PageableTenderResponseDto>> takeTender(Integer page, Integer size, ServerWebExchange exchange) {

@@ -61,7 +61,8 @@ public class AddressDAOImpl extends BaseDAO <PnAddress> implements AddressDAO {
                 .switchIfEmpty(getPnAddress(requestId, addressTypeEnum, true));
     }
 
-    private Mono<PnAddress> getPnAddress(String requestId, AddressTypeEnum addressTypeEnum, boolean consistentRead) {
+    @Override
+    public Mono<PnAddress> getPnAddress(String requestId, AddressTypeEnum addressTypeEnum, boolean consistentRead) {
         return Mono.fromFuture(this.get(requestId, addressTypeEnum.toString(), consistentRead));
     }
 

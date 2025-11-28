@@ -1,9 +1,9 @@
 package it.pagopa.pn.paperchannel.middleware.msclient.impl;
 
 import it.pagopa.pn.commons.exceptions.PnIdConflictException;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnpapertracker.v1.api.NotificationReworkApi;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnpapertracker.v1.api.PaperTrackerTrackingApi;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnpapertracker.v1.dto.TrackingCreationRequestDto;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.PaperTrackerClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -20,6 +20,7 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.PAPER_TRACKE
 public class PaperTrackerClientImpl implements PaperTrackerClient {
 
     private final PaperTrackerTrackingApi paperTrackerEventApi;
+    private final NotificationReworkApi notificationReworkApi;
 
     public Mono<Void> initPaperTracking(String attemptId, String pcRetry, String productType, String unifiedDeliveryDriver){
         TrackingCreationRequestDto trackerCreationRequestDto = new TrackingCreationRequestDto();
@@ -34,6 +35,11 @@ public class PaperTrackerClientImpl implements PaperTrackerClient {
                     }
                     return ex;
                 });
+    }
+
+    @Override
+    public Mono<Void> initNotificationRework(String reworkId, String requestId) {
+        return notificationReworkApi.initNotificationRework(reworkId, requestId);
     }
 
 }

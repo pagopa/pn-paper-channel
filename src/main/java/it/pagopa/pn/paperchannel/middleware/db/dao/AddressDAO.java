@@ -15,5 +15,6 @@ public interface AddressDAO {
 
     Mono<PnAddress> findByRequestId (String requestId);
     Mono<PnAddress> findByRequestId (String requestId, AddressTypeEnum addressTypeEnum);
+    Mono<PnAddress> getPnAddress(String requestId, AddressTypeEnum addressTypeEnum, boolean consistentRead);
     Mono<List<PnAddress>> findAllByRequestId (String requestId);
 }
