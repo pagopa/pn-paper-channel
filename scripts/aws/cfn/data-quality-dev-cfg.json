@@ -1,5 +1,7 @@
 {
   "Parameters" : {
-    "PaperRequestErrorGlueTableName": "pn_paper_request_error"
+    "PaperRequestErrorGlueTableName": "pn_paper_request_error",
+    "PaperChannelCostGlueTableName": "pn_paper_notifications_cost"
+
   }
 }
