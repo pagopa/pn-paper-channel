@@ -34,9 +34,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@aws-sdk/client-dynamodb": "^3.650.0",
-    "@aws-sdk/util-dynamodb": "^3.637.0",
-    "@aws-sdk/lib-dynamodb": "^3.650.0",
+    "@aws-sdk/client-dynamodb": "3.835.0",
+    "@aws-sdk/util-dynamodb": "3.804.0",
+    "@aws-sdk/lib-dynamodb": "3.835.0",
     "zod": "^3.23.8"
   }
 }
