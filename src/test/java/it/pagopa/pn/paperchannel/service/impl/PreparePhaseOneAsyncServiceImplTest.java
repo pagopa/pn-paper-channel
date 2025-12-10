@@ -231,7 +231,7 @@ class PreparePhaseOneAsyncServiceImplTest {
         String statusDetail = statusDeliveryEnum.getDetail();
 
         PnRequestError pnRequestError = new PnRequestError();
-        pnRequestError.setError("Generic Error");
+        pnRequestError.setError("class java.lang.RuntimeException -> Generic Error");
         pnRequestError.setGeokey("geokey");
         pnRequestError.setFlowThrow("PREPARE_PHASE_ONE_ASYNC_DEFAULT");
         pnRequestError.setCause("UNKNOWN##" + Instant.now().toString());
@@ -291,7 +291,7 @@ class PreparePhaseOneAsyncServiceImplTest {
         String statusDetail = statusDeliveryEnum.getDetail();
 
         PnRequestError pnRequestError = new PnRequestError();
-        pnRequestError.setError("Problemi con l'indirizzo");
+        pnRequestError.setError("class it.pagopa.pn.paperchannel.exception.CheckAddressFlowException -> Problemi con l'indirizzo");
         pnRequestError.setGeokey("geokey");
         pnRequestError.setFlowThrow("CHECK_ADDRESS_FLOW");
         pnRequestError.setCause("UNKNOWN##"+ Instant.now().toString());
@@ -404,7 +404,7 @@ class PreparePhaseOneAsyncServiceImplTest {
         String statusDetail = statusDeliveryEnum.getDetail();
 
         PnRequestError pnRequestError = new PnRequestError();
-        pnRequestError.setError("Generic error");
+        pnRequestError.setError("class java.lang.RuntimeException -> Generic error");
         pnRequestError.setGeokey("geokey");
         pnRequestError.setFlowThrow("PREPARE_PHASE_ONE_ASYNC_DEFAULT");
         pnRequestError.setCause("UNKNOWN##"+ Instant.now().toString());
