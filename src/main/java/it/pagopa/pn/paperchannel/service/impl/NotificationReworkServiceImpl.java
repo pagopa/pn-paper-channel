@@ -33,10 +33,10 @@ public class NotificationReworkServiceImpl implements NotificationReworkService 
                 .then(requestDeliveryDAO.getByRequestId(requestIdWithoutPcRetry))
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)))
                 .flatMap(deliveryRequest -> requestDeliveryDAO.cleanDataForNotificationRework(deliveryRequest, reworkId))
-                .flatMap(deliveryRequest -> paperTrackerClient.initNotificationRework(reworkId, requestId))
-                .doOnError(error -> log.error("Error in initNotificationRework for requestId: {} and reworkId: {}", requestId, reworkId, error))
+                .flatMap(deliveryRequest -> paperTrackerClient.initNotificationRework(reworkId, requestId)
+                        .doOnError(error -> log.error("Error in initNotificationRework for requestId: {} and reworkId: {}", requestId, reworkId, error)))
                 .thenReturn(requestId)
-                .flatMap(s -> externalChannelClient.initNotificationRework(requestId))
-                .doOnError(error -> log.error("Error in patchRequestMetadata for requestId: {}", requestId, error));
+                .flatMap(s -> externalChannelClient.initNotificationRework(requestId)
+                        .doOnError(error -> log.error("Error in patchRequestMetadata for requestId: {}", requestId, error)));
     }
 }

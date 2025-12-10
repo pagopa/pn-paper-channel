@@ -26,6 +26,20 @@ Parameters:
     AllowedPattern: ^[a-z_]+$
     ConstraintDescription: Glue table name for pn-PaperRequestError, accept only lowercase values and underscore.
     Default: pn_paper_request_error
+  
+  PaperChannelCostDynamoTableName:
+    Type: String
+    Description: |
+      DynamoDb table name for pn-PaperChannelCost, valorized by the related output
+      in the storage.yaml template, used also for identifying the S3 bucket
+      directory where related CDC files are stored.
+  
+  PaperChannelCostGlueTableName:
+    Type: String
+    AllowedPattern: ^[a-z_]+$
+    ConstraintDescription: Glue table name for pn-PaperChannelCost, accept only lowercase values and underscore.
+    Default: pn_paper_notifications_cost
+
 
 Resources:
   PnPaperRequestErrorDataQualityStack:
@@ -51,4 +65,34 @@ Resources:
             paId:struct<S:string>,
             requestId:struct<S:string>,
             geokey:struct<S:string>
+          >
+  
+  PnPaperChannelCostDataQualityStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub ${TemplateBucketBaseUrl}/fragments/cdc-glue.yaml
+      Parameters:
+        DynamoTableName: !Ref PaperChannelCostDynamoTableName
+        GlueTableName: !Ref PaperChannelCostGlueTableName
+        GlueServiceRoleArn: !Ref GlueServiceRoleArn
+        LogsBucketName: !Ref LogsBucketName
+        GlueDatabaseName: !Ref GlueDatabaseName
+        DynamoDBKeysStructure: |
+          struct<tenderId:struct<S:string>,productLotZone:struct<S:string>>
+        DynamoDBNewImageStructure: |
+          struct<
+            tenderId:struct<S:string>,
+            productLotZone:struct<S:string>,
+            product:struct<S:string,NULL:boolean>,
+            lot:struct<S:string,NULL:boolean>,
+            zone:struct<S:string,NULL:boolean>,
+            deliveryDriverName:struct<S:string,NULL:boolean>,
+            deliveryDriverId:struct<S:string,NULL:boolean>,
+            dematerializationCost:struct<N:string,NULL:boolean>,
+            rangedCosts:struct<L:array<struct<M:struct<
+              cost:struct<N:string>,
+              minWeight:struct<N:string>,
+              maxWeight:struct<N:string>
+            >>>,NULL:boolean>,
+            createdAt:struct<S:string,NULL:boolean>
           >

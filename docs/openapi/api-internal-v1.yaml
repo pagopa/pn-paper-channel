@@ -619,8 +619,6 @@ components:
       properties:
         requestId:
           type: string
-        found:
-          type: boolean
         endValidity:
           type: string
           format: date-time
