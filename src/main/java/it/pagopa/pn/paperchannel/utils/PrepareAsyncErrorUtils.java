@@ -38,7 +38,7 @@ public class PrepareAsyncErrorUtils {
     public static PnRequestError buildError(String requestId, Throwable ex, String flowType) {
         return PnRequestError.builder()
                 .requestId(requestId)
-                .error(ex.getMessage())
+                .error(String.format("%s -> %s", ex.getClass(), ex.getMessage()))
                 .geokey(ex instanceof CheckAddressFlowException addressFlowException ? addressFlowException.getGeoKey() : null)
                 .flowThrow(flowType)
                 .build();
