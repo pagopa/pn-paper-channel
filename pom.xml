@@ -397,7 +397,8 @@
                         </goals>
                         <phase>generate-resources</phase>
                         <configuration>
-                            <inputSpec>https://raw.githubusercontent.com/pagopa/pn-data-vault/43455b4cc0ab02eef418448595eb8b86d9a609cd/docs/openapi/pn-datavault-api-v1.yaml</inputSpec>
+                            <!-- aggiornare con commit id di develop dopo il rilascio di PN-17799 -->
+                            <inputSpec>https://raw.githubusercontent.com/pagopa/pn-data-vault/ad49907112fc5650920614adb6d40b367e258ece/docs/openapi/pn-datavault-api-v1.yaml</inputSpec>
                             <generatorName>java</generatorName>
                             <library>webclient</library>
                             <generateApiDocumentation>false</generateApiDocumentation>
