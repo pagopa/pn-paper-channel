@@ -3,6 +3,7 @@ package it.pagopa.pn.paperchannel.middleware.msclient.common;
 import it.pagopa.pn.commons.pnclients.CommonBaseClient;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.api.DeduplicatesAddressServiceApi;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pndatavault.v1.api.PaperAddressesApi;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.api.PaperMessagesApi;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.api.PaperRequestMetadataPatchApi;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnnationalregistries.v1.api.AddressApi;
@@ -95,6 +96,12 @@ public class ClientConfig extends CommonBaseClient {
         it.pagopa.pn.paperchannel.generated.openapi.msclient.pnraddalt.v1.ApiClient newApiClient = new it.pagopa.pn.paperchannel.generated.openapi.msclient.pnraddalt.v1.ApiClient(super.initWebClient(it.pagopa.pn.paperchannel.generated.openapi.msclient.pnraddalt.v1.ApiClient.buildWebClientBuilder()));
         newApiClient.setBasePath(pnPaperChannelConfig.getClientRaddAltBasepath());
         return new CoveragePrivateApi(newApiClient);
+    }
 
+    @Bean
+    public PaperAddressesApi getPaperAddressesApi(PnPaperChannelConfig pnPaperChannelConfig){
+        it.pagopa.pn.paperchannel.generated.openapi.msclient.pndatavault.v1.ApiClient newApiClient = new it.pagopa.pn.paperchannel.generated.openapi.msclient.pndatavault.v1.ApiClient(super.initWebClient(it.pagopa.pn.paperchannel.generated.openapi.msclient.pndatavault.v1.ApiClient.buildWebClientBuilder()));
+        newApiClient.setBasePath(pnPaperChannelConfig.getClientDataVaultBasepath());
+        return new PaperAddressesApi(newApiClient);
     }
 }

@@ -70,6 +70,7 @@ public enum ExceptionTypeEnum{
     COST_OUF_OF_RANGE("COST_OUF_OF_RANGE", "Il costo calcolato della notifica sfora il limite dell'ultimo range"),
     ERROR_CODE_PAPERCHANNEL_ZIP_HANDLE("PN_PAPERCHANNEL_ZIP_HANDLE", "Errore nel flusso di gestione dell'allegato ZIP"),
     INCORRECT_ROUNDING_MODE("INCORRECT_ROUNDING_MODE", "Modalità di rounding non è tra quelle possibili"),
+    INVALID_REQUEST_ID("INVALID_REQUEST_ID", "Non è stato possibile recuperare attempt e recIndex dal requestId"),
     DELIVERY_DRIVER_NOT_FOUND("DELIVERY_DRIVER_NOT_FOUND", "Il recapitista non è stato trovato");
 
     private final String title;
