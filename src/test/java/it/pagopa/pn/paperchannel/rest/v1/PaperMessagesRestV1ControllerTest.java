@@ -110,6 +110,8 @@ class PaperMessagesRestV1ControllerTest{
         sendRequest.setReceiverAddress(analogAddress);
         sendRequest.setPrintType("pr");
         sendRequest.setAttachmentUrls(attachmentUrls);
+        sendRequest.setAttempt(0);
+        sendRequest.setRecIndex(0);
         return sendRequest;
     }
 
@@ -141,6 +143,8 @@ class PaperMessagesRestV1ControllerTest{
         prepareRequest.setReceiverFiscalCode("FRMTTR76M06B715E");
         prepareRequest.setReceiverType("PF");
         prepareRequest.setAarWithRadd(true);
+        prepareRequest.setAttempt(0);
+        prepareRequest.setRecIndex(0);
         return prepareRequest;
     }
 }

@@ -133,6 +133,8 @@ public class InstanceCreator {
         prepareRequest.setProposalProductType(ProposalTypeEnum.AR);
         prepareRequest.setReceiverFiscalCode("FRMTTR76M06B715E");
         prepareRequest.setReceiverType("PF");
+        prepareRequest.setAttempt(0);
+        prepareRequest.setRecIndex(0);
         return prepareRequest;
     }
 
