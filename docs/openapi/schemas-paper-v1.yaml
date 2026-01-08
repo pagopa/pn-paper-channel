@@ -38,6 +38,8 @@ components:
       - requestPaId
       - senderAddress
       - iun
+      - recIndex
+      - attempt
       type: object
       properties:
         requestPaId:
@@ -56,6 +58,12 @@ components:
           $ref: '#/components/schemas/AnalogAddress'
         productType:
           $ref: '#/components/schemas/ProductTypeEnum'
+        recIndex:
+          type: integer
+          description: Indice del destinatario
+        attempt:
+          type: integer
+          description: Indice di tentativo di invio (0 per il primo invio, 1 per il secondo, ecc.)
       allOf:
       - $ref: '#/components/schemas/PaperRequest'
     SendResponse:
@@ -233,6 +241,8 @@ components:
       - receiverFiscalCode
       - receiverType
       - iun
+      - recIndex
+      - attempt
       type: object
       properties:
         relatedRequestId:
@@ -250,6 +260,12 @@ components:
         aarWithRadd:
           type: boolean
           description: Se true, indica che la notifica fa parte della sperimentazione RADD
+        recIndex:
+          type: integer
+          description: Indice del destinatario del recapito
+        attempt:
+          type: integer
+          description: Indice di tentativo di invio (0 per il primo invio, 1 per il secondo, ecc.)
       allOf:
       - $ref: '#/components/schemas/PaperRequest'
     Problem:
