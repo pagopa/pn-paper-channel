@@ -233,6 +233,14 @@ Parameters:
     Type: String
     Description: 'ARN of dynamodb table containing address of request delivery'
 
+  PaperChannelAddressDynamoTableName:
+    Type: String
+    Description: 'Name of dynamodb table containing addresses'
+
+  PaperChannelAddressDynamoTableArn:
+    Type: String
+    Description: 'ARN of dynamodb table containing addresses'
+
   TenderDynamoTableName:
     Type: String
     Description: 'Name of dynamodb table containing tenders'
@@ -862,6 +870,7 @@ Resources:
         ContainerEnvEntry85: !Sub 'PN_PAPERCHANNEL_CLIENTRADDALTBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
         ContainerEnvEntry86: 'PN_PAPERCHANNEL_RADDCOVERAGESEARCHMODE={{resolve:ssm:/config/radd-coverage/search-mode}}'
         ContainerEnvEntry87: !Sub 'PN_PAPERCHANNEL_ENABLEPREPAREPHASEONE=${EnablePreparePhaseOne}'
+        ContainerEnvEntry88: !Sub 'AWS_DYNAMODBPAPERCHANNELADDRESSTABLE=${PaperChannelAddressDynamoTableName}'
         ApplicativeEnvFileChecksum: !Ref ApplicativeEnvFileChecksum
         ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-PaperChannel-Secrets
@@ -973,6 +982,8 @@ Resources:
               - !Sub "${PaperChannelDeliveryDriverDynamoTableArn}/*"
               - !Sub "${PaperChannelCostDynamoTableArn}"
               - !Sub "${PaperChannelCostDynamoTableArn}/*"
+              - !Sub "${PaperChannelAddressDynamoTableArn}"
+              - !Sub "${PaperChannelAddressDynamoTableArn}/*"
           - Effect: Allow
             Action:
               - cloudwatch:PutMetricData
@@ -1069,6 +1080,7 @@ Resources:
             - !Ref PaperChannelGeokeyDynamoTableArn
             - !Ref PaperChannelDeliveryDriverDynamoTableArn
             - !Ref PaperChannelCostDynamoTableArn
+            - !Ref PaperChannelAddressDynamoTableArn
         RestApiStageArns: !Join
           - ','
           - - !GetAtt PaperChannelGatewayDeliveryDriver.Outputs.RestApiStageArn

@@ -181,7 +181,31 @@ Resources:
       SSESpecification:
         KMSMasterKeyId: !Ref PCKmsEncDecDynamoDataKey
         SSEEnabled: true
-        SSEType: KMS      
+        SSEType: KMS
+
+  PaperChannelAddressDynamoTable:
+    Type: AWS::DynamoDB::Table
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Properties:
+      TableName: !Sub '${ProjectName}-PaperChannelAddress'
+      AttributeDefinitions:
+        - AttributeName: "requestId"
+          AttributeType: "S"
+        - AttributeName: "addressType"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "requestId"
+          KeyType: "HASH"
+        - AttributeName: "addressType"
+          KeyType: "RANGE"
+      KinesisStreamSpecification:
+        StreamArn: !Ref CdcKinesisSourceStreamArn
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+      BillingMode: "PAY_PER_REQUEST"
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
 
   TenderDynamoTable:
     Type: AWS::DynamoDB::Table
@@ -822,6 +846,14 @@ Outputs:
   PaperChannelCostDynamoTableArn:
     Description: ARN of dynamodb table containing costs
     Value: !Sub '${PaperChannelCostDynamoTable.Arn}'
+
+  PaperChannelAddressDynamoTableName:
+    Description: Name of dynamodb table containing addresses
+    Value: !Ref PaperChannelAddressDynamoTable
+
+  PaperChannelAddressDynamoTableArn:
+    Description: ARN of dynamodb table containing addresses
+    Value: !Sub '${PaperChannelAddressDynamoTable.Arn}'
 
   # Log group exports
   EcsLogGroup:
