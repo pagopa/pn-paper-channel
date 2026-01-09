@@ -1,7 +1,11 @@
 package it.pagopa.pn.paperchannel.mapper;
 
+import it.pagopa.pn.commons.exceptions.PnInternalException;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.dto.AnalogAddressDto;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pndatavault.v1.dto.PaperAddressDto;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pndatavault.v1.dto.PaperAddressRequestDto;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pndatavault.v1.dto.PaperAddressResponseDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.DiscoveredAddressDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnnationalregistries.v1.dto.AddressSQSMessagePhysicalAddressDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnraddalt.v1.dto.CheckCoverageRequestDto;
@@ -10,13 +14,19 @@ import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ProductTypeEnum
 import it.pagopa.pn.paperchannel.mapper.common.BaseMapper;
 import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
+import it.pagopa.pn.paperchannel.middleware.db.entities.PnPaperChannelAddress;
 import it.pagopa.pn.paperchannel.model.Address;
+import it.pagopa.pn.paperchannel.model.PaperAddressRequestInternalDto;
 import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
 import it.pagopa.pn.paperchannel.utils.Const;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
+import it.pagopa.pn.paperchannel.utils.TimelineEventIdParser;
 import org.apache.commons.lang3.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
+
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.INVALID_REQUEST_ID;
 
 public class AddressMapper {
     private static final BaseMapper<Address, AnalogAddress> mapperAnalog = new BaseMapperImpl<>(Address.class, AnalogAddress.class);
@@ -153,5 +163,67 @@ public class AddressMapper {
         dto.setCountry(address.getCountry());
         return dto;
     }
+
+    public static PaperAddressRequestDto toPaperAddressRequestDto(PaperAddressRequestInternalDto requestDto, AddressTypeEnum addressType) {
+
+        if (Objects.isNull(requestDto.getAddress())) return null;
+
+        var requestIdParser = TimelineEventIdParser.parse(requestDto.getRequestId());
+
+        var dto = new PaperAddressRequestDto();
+        dto.setPaperAddress(getPaperAddressDto(requestDto.getAddress()));
+        dto.setAddressType(addressType.name());
+        dto.setNormalized(requestDto.isNormalized());
+        dto.setAttempt(Objects.nonNull(requestDto.getAttempt()) ? requestDto.getAttempt() : requestIdParser.sentAttemptMade().orElseThrow(() -> new PnInternalException(INVALID_REQUEST_ID.getMessage(), INVALID_REQUEST_ID.getTitle())));
+        dto.setRecIndex(Objects.nonNull(requestDto.getRecIndex())  ? requestDto.getRecIndex() : requestIdParser.recIndex().orElseThrow(() -> new PnInternalException(INVALID_REQUEST_ID.getMessage(), INVALID_REQUEST_ID.getTitle())));
+        dto.setPcRetry(requestDto.getPcRetry());
+        return dto;
+    }
+
+    public static PaperAddressRequestInternalDto toPaperAddressRequestInternalDto(PnAddress address, boolean normalized) {
+
+        Address addressDto = AddressMapper.toDTO(address);
+        if (Objects.isNull(address.getAddress())) return null;
+
+        var requestIdParser = TimelineEventIdParser.parse(address.getRequestId());
+        var dto = new PaperAddressRequestInternalDto();
+
+        dto.setAddress(addressDto);
+        dto.setRequestId(address.getRequestId());
+        dto.setNormalized(normalized);
+        dto.setAttempt(requestIdParser.sentAttemptMade().orElseThrow(() -> new PnInternalException(INVALID_REQUEST_ID.getMessage(), INVALID_REQUEST_ID.getTitle())));
+        dto.setRecIndex(requestIdParser.recIndex().orElseThrow(() -> new PnInternalException(INVALID_REQUEST_ID.getMessage(), INVALID_REQUEST_ID.getTitle())));
+        dto.setPcRetry(requestIdParser.pcRetry().orElseThrow(() -> new PnInternalException(INVALID_REQUEST_ID.getMessage(), INVALID_REQUEST_ID.getTitle())));
+        return dto;
+    }
+
+    private static PaperAddressDto getPaperAddressDto(Address address) {
+        PaperAddressDto addressDto = new PaperAddressDto();
+        addressDto.setAddress(address.getAddress());
+        addressDto.setAddressRow2(address.getAddressRow2());
+        addressDto.setCap(address.getCap());
+        addressDto.setCity(address.getCity());
+        addressDto.setCity2(address.getCity2());
+        addressDto.setPr(address.getPr());
+        addressDto.setCountry(address.getCountry());
+        addressDto.setName(address.getFullName());
+        addressDto.setNameRow2(address.getNameRow2());
+        return addressDto;
+    }
+
+    public static PnPaperChannelAddress getPnPaperChannelAddress(PaperAddressResponseDto addressResponse, PnAddress address) {
+        PnPaperChannelAddress paperChannelAddressDto = new PnPaperChannelAddress();
+
+        paperChannelAddressDto.setRequestId(address.getRequestId());
+        paperChannelAddressDto.setAddressType(address.getTypology());
+        paperChannelAddressDto.setAddressId(addressResponse.getPaperAddressId());
+        paperChannelAddressDto.setCap(address.getCap());
+        paperChannelAddressDto.setCity(address.getCity());
+        paperChannelAddressDto.setCountry(address.getCountry());
+        paperChannelAddressDto.setPr(address.getPr());
+        return paperChannelAddressDto;
+    }
+
+
 
 }
