@@ -711,7 +711,7 @@ Parameters:
 
   TenderAPILambdaRuntime:
     Type: String
-    Default: nodejs20.x
+    Default: nodejs24.x
     Description: Runtime of the DataIndexer Lambda.
 
   TenderAPILambdaTimeout:
