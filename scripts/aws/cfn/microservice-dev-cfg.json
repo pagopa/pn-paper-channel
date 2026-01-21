@@ -58,6 +58,7 @@
     "PaperChannelOcrInputsQueueRegion": "eu-south-1",
     "OcrAwsRoleARN": "arn:aws:iam::830192246553:role/pn-external-channels-TaskRole",
     "OcrAwsAccountId": "830192246553",
-    "EnablePreparePhaseOne": "true"
+    "EnablePreparePhaseOne": "true",
+    "TenderAPILambdaRuntime": "nodejs24.x"
   }
 }
