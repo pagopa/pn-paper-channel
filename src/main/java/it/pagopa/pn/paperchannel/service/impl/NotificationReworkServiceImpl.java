@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_NOT_EXIST;
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 
 @CustomLog
 @Service
@@ -32,7 +32,7 @@ public class NotificationReworkServiceImpl implements NotificationReworkService 
 
         return metaDematCleaner.clean(requestIdWithoutPcRetry)
                 .then(requestDeliveryDAO.getByRequestId(requestIdWithoutPcRetry))
-                .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)))
+                .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage() + requestId, HttpStatus.NOT_FOUND)))
                 .flatMap(deliveryRequest -> requestDeliveryDAO.cleanDataForNotificationRework(deliveryRequest, reworkId))
                 .flatMap(deliveryRequest -> paperTrackerClient.initNotificationRework(reworkId, requestId)
                         .onErrorResume(throwable -> {
@@ -43,8 +43,14 @@ public class NotificationReworkServiceImpl implements NotificationReworkService 
                             return Mono.error(throwable);
                         }))
                 .thenReturn(requestId)
-                .flatMap(s -> externalChannelClient.initNotificationRework(requestId)
-                        .doOnError(error -> log.error("Error in patchRequestMetadata for requestId: {}", requestId, error)));
+                .flatMap(s -> externalChannelClient.initNotificationRework(requestId))
+                .onErrorMap(ex -> {
+                    log.error("Error in patchRequestMetadata for requestId: {}", requestId, ex);
+                    if (ex instanceof WebClientResponseException exception && exception.getStatusCode() == HttpStatus.NOT_FOUND) {
+                        return new PnGenericException(ERROR_NOT_FOUND_EXTERNAL_CHANNEL, ERROR_NOT_FOUND_EXTERNAL_CHANNEL.getMessage() + requestId, HttpStatus.NOT_FOUND);
+                    }
+                    return ex;
+                });
     }
 
     private boolean isNotFoundError(Throwable throwable) {
