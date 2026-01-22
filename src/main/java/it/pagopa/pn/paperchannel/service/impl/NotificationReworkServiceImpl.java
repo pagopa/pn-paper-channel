@@ -10,6 +10,7 @@ import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_NOT_EXIST;
@@ -34,9 +35,19 @@ public class NotificationReworkServiceImpl implements NotificationReworkService 
                 .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage(), HttpStatus.NOT_FOUND)))
                 .flatMap(deliveryRequest -> requestDeliveryDAO.cleanDataForNotificationRework(deliveryRequest, reworkId))
                 .flatMap(deliveryRequest -> paperTrackerClient.initNotificationRework(reworkId, requestId)
-                        .doOnError(error -> log.error("Error in initNotificationRework for requestId: {} and reworkId: {}", requestId, reworkId, error)))
+                        .onErrorResume(throwable -> {
+                            log.error("Error in initNotificationRework for requestId: {} and reworkId: {}", requestId, reworkId, throwable);
+                            if(isNotFoundError(throwable)) {
+                                return Mono.empty();
+                            }
+                            return Mono.error(throwable);
+                        }))
                 .thenReturn(requestId)
                 .flatMap(s -> externalChannelClient.initNotificationRework(requestId)
                         .doOnError(error -> log.error("Error in patchRequestMetadata for requestId: {}", requestId, error)));
+    }
+
+    private boolean isNotFoundError(Throwable throwable) {
+        return throwable instanceof WebClientResponseException webClientResponseException && webClientResponseException.getStatusCode().equals(HttpStatus.NOT_FOUND);
     }
 }

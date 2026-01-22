@@ -109,14 +109,10 @@ class NotificationReworkServiceImplTest {
 
         Mockito.when(paperTrackerClient.initNotificationRework(reworkId, requestId))
                 .thenReturn(Mono.error(notFoundException));
+        Mockito.when(externalChannelClient.initNotificationRework(requestId)).thenReturn(Mono.empty());
 
         StepVerifier.create(service.initNotificationRework(requestId, reworkId))
-                .expectErrorSatisfies(error -> {
-                    assert error instanceof WebClientResponseException;
-                    WebClientResponseException ex = (WebClientResponseException) error;
-                    assert ex.getStatusCode() == HttpStatus.NOT_FOUND;
-                })
-                .verify();
+                .verifyComplete();
     }
 
     @Test
