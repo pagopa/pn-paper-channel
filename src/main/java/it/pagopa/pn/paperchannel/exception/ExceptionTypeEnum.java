@@ -8,7 +8,7 @@ public enum ExceptionTypeEnum{
     CLIENT_ID_NOT_PRESENT("CLIENT_ID_NOT_PRESENT", "Client non censito."),
     CLIENT_ID_EMPTY("CLIENT_ID_EMPTY", "Non è stato inserito alcun valore per l'header clientID"),
     CLIENT_ID_NOT_IN_CONTEXT("CLIENT_ID_NOT_IN_CONTEXT", "Non è stato possibile recuperare il valore del client id nel contesto"),
-    DELIVERY_REQUEST_NOT_EXIST("DELIVERY_REQUEST_NOT_EXIST", "La richiesta non esiste"),
+    DELIVERY_REQUEST_NOT_EXIST("DELIVERY_REQUEST_NOT_EXIST", "DeliveryRequest non trovata per il requestId: "),
     ADDRESS_NOT_EXIST("ADDRESS_NOT_EXIST", "L'indirizzo non è presente a DB"),
     ADDRESS_MANAGER_ERROR("ADDRESS_MANAGER_ERROR", "Problemi con l'indirizzo"),
     DELIVERY_REQUEST_IN_PROCESSING("DELIVERY_REQUEST_IN_PROCESSING", "La richiesta in elaborazione"),
@@ -70,7 +70,8 @@ public enum ExceptionTypeEnum{
     COST_OUF_OF_RANGE("COST_OUF_OF_RANGE", "Il costo calcolato della notifica sfora il limite dell'ultimo range"),
     ERROR_CODE_PAPERCHANNEL_ZIP_HANDLE("PN_PAPERCHANNEL_ZIP_HANDLE", "Errore nel flusso di gestione dell'allegato ZIP"),
     INCORRECT_ROUNDING_MODE("INCORRECT_ROUNDING_MODE", "Modalità di rounding non è tra quelle possibili"),
-    DELIVERY_DRIVER_NOT_FOUND("DELIVERY_DRIVER_NOT_FOUND", "Il recapitista non è stato trovato");
+    DELIVERY_DRIVER_NOT_FOUND("DELIVERY_DRIVER_NOT_FOUND", "Il recapitista non è stato trovato"),
+    ERROR_NOT_FOUND_EXTERNAL_CHANNEL("ERROR_NOT_FOUND_EXTERNAL_CHANNEL", "RequestId non trovato su external-channels: ");
 
     private final String title;
     private final String message;
