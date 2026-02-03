@@ -40,7 +40,7 @@ public class PNRN012Wrapper {
         pnDeliveryRequestPNRN012.setStatusCode(originalPnDeliveryRequest.getStatusDetail());
         pnDeliveryRequestPNRN012.setRequestId(originalPnDeliveryRequest.getRequestId());
         pnDeliveryRequestPNRN012.setStatusDescription(PNRN012_STATUS_DESCRIPTION);
-        pnDeliveryRequestPNRN012.setFeedbackOriginalStatusCode(originalPnDeliveryRequest.getStatusDetail());
+        pnDeliveryRequestPNRN012.setFeedbackOriginalStatusCode(originalPaperRequest.getStatusCode());
 
         paperProgressStatusEventDtoPNRN012 = new PaperProgressStatusEventDto();
         paperProgressStatusEventDtoPNRN012.setRequestId(originalPaperRequest.getRequestId());
