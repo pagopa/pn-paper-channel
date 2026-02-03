@@ -428,8 +428,11 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
         }
 
         FeedbackStatus feedback = invalidEventEx.getFeedbackStatus();
-        return invalidEventEx.getExceptionType() == ExceptionTypeEnum.WRONG_EVENT_ORDER
-                && (Objects.equals(feedback.oldFeedbackStatusCode(), feedback.newFeedbackStatusCode()) || Objects.equals(feedback.oldFeedbackOriginalStatusCode(), feedback.newFeedbackStatusCode()))
+        //L'attributo oldFeedbackOriginalStatusCode è popolato solo in caso di oldFeedbackStatusCode == PN*
+        if(StringUtils.isNotBlank(feedback.oldFeedbackOriginalStatusCode())){
+            return  Objects.equals(feedback.oldFeedbackOriginalStatusCode(), feedback.newFeedbackStatusCode());
+        }
+        return Objects.equals(feedback.oldFeedbackStatusCode(), feedback.newFeedbackStatusCode())
                 && Objects.equals(feedback.oldFeedbackDeliveryFailureCause(), feedback.newFeedbackDeliveryFailureCause())
                 && Objects.equals(feedback.oldFeedbackStatusDateTime(), feedback.newFeedbackStatusDateTime());
     }
