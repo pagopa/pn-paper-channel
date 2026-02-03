@@ -467,7 +467,7 @@ class QueueListenerServiceImplTest {
         // When
         Mockito.when(this.paperResultAsyncService.resultAsyncBackground(Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.error(
-                        new InvalidEventOrderException(WRONG_EVENT_ORDER, "test", feedbackStatus)));
+                        new InvalidEventOrderException("test", feedbackStatus)));
         // Then
         Assertions.assertDoesNotThrow(() ->
                 this.queueListenerService.externalChannelListener(data,10));
@@ -495,7 +495,7 @@ class QueueListenerServiceImplTest {
         // When
         Mockito.when(this.paperResultAsyncService.resultAsyncBackground(Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.error(
-                        new InvalidEventOrderException(WRONG_EVENT_ORDER, "test", feedbackStatus)));
+                        new InvalidEventOrderException("test", feedbackStatus)));
         // Then
         Assertions.assertDoesNotThrow(() ->
                 this.queueListenerService.externalChannelListener(data,10));
@@ -522,7 +522,7 @@ class QueueListenerServiceImplTest {
         // When
         Mockito.when(this.paperResultAsyncService.resultAsyncBackground(Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.error(
-                        new InvalidEventOrderException(WRONG_EVENT_ORDER, "test", feedbackStatus)));
+                        new InvalidEventOrderException("test", feedbackStatus)));
         // Then
         Assertions.assertThrowsExactly(PnGenericException.class, () ->
                 this.queueListenerService.externalChannelListener(data,10));
