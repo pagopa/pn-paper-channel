@@ -50,7 +50,8 @@ public class InvalidEventOrderException extends RuntimeException {
                         pnDeliveryRequest.getFeedbackStatusDateTime(),
                         paperRequest.getStatusDateTime().toInstant(),
                         pnDeliveryRequest.getFeedbackDeliveryFailureCause(),
-                        paperRequest.getDeliveryFailureCause()
+                        paperRequest.getDeliveryFailureCause(),
+                        pnDeliveryRequest.getFeedbackOriginalStatusCode()
                 )
         );
     }
