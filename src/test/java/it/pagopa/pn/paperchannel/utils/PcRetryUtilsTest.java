@@ -218,6 +218,26 @@ public class PcRetryUtilsTest {
         verify(externalChannelClient).sendEngageRequest(sendRequest, attachmentInfos, pnDeliveryRequest.getApplyRasterization());
     }
 
+    @Test
+    void callInitTrackingAndEcSendEngage_WhenReceiverAddressNull_ShouldThrowIllegalArgumentException() {
+        String requestId = "REQ123";
+        String pcRetry = "1";
+        PnDeliveryRequest pnDeliveryRequest = getPnDeliveryRequest();
+        pnDeliveryRequest.setDriverCode(null);
+        SendRequest sendRequest = new SendRequest();
+        sendRequest.setReceiverAddress(null); // receiverAddress nullo
+
+        List<AttachmentInfo> attachmentInfos = new ArrayList<>();
+
+        when(config.getPaperTrackerProductList()).thenReturn(List.of("AR"));
+
+        StepVerifier.create(pcRetryUtils.callInitTrackingAndEcSendEngage(requestId, sendRequest, attachmentInfos, pnDeliveryRequest, pcRetry))
+                .expectErrorMatches(throwable -> throwable instanceof IllegalArgumentException &&
+                        throwable.getMessage().contains("CAP is null for requestId REQ123"))
+                .verify();
+    }
+
+
     private PnDeliveryRequest getPnDeliveryRequest() {
         PnDeliveryRequest pnDeliveryRequest = new PnDeliveryRequest();
         pnDeliveryRequest.setRequestId("requestId1");

@@ -113,6 +113,10 @@ public class PcRetryUtils {
     public Mono<Void> callInitTrackingAndEcSendEngage(String requestId, SendRequest sendRequest, List<AttachmentInfo> attachmentInfos,
                                                       PnDeliveryRequest pnDeliveryRequest, String pcRetry) {
         if (pnPaperChannelConfig.getPaperTrackerProductList().contains(pnDeliveryRequest.getProductType())) {
+            if (sendRequest.getReceiverAddress() == null || sendRequest.getReceiverAddress().getCap() == null) {
+                log.error("CAP is null for requestId {}", requestId);
+                return Mono.error((new IllegalArgumentException("CAP is null for requestId " + requestId)));
+            }
             return retrieveUnifiedDeliveryDriver(pnDeliveryRequest.getDriverCode(), pnDeliveryRequest.getProductType(), sendRequest.getReceiverAddress().getCap())
                     .map(PaperChannelDeliveryDriver::getUnifiedDeliveryDriver)
                     .flatMap(unifiedDeliveryDriver -> paperTrackerClient.initPaperTracking(
