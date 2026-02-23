@@ -756,6 +756,9 @@ class PaperMessagesServiceTest {
         SendRequest sendRequest = getRequest("TST-IOR.2332");
         sendRequest.setRequestPaId("request-pad-id");
         sendRequest.setPrintType("FRONTE-RETRO");
+        AnalogAddress receiverAddress = new AnalogAddress();
+        receiverAddress.setCap("00100");
+        sendRequest.setReceiverAddress(receiverAddress);
 
         /* TEST WITH CONTEXT SETTING */
         SendResponse response = paperMessagesService.executionPaper("TST-IOR.2332", sendRequest)

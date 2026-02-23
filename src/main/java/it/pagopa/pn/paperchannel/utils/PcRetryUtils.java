@@ -14,10 +14,12 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.PaperTrackerClient;
 import it.pagopa.pn.paperchannel.model.AttachmentInfo;
+import it.pagopa.pn.paperchannel.service.PaperTenderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
@@ -32,6 +34,7 @@ public class PcRetryUtils {
     private final AddressDAO addressDAO;
     private final PaperChannelDeliveryDriverDAO paperChannelDeliveryDriverDAO;
     private final PaperTrackerClient paperTrackerClient;
+    private final PaperTenderService paperTenderService;
 
     private static final String REQUEST_TO_EXTERNAL_CHANNEL = "prepare requestId = %s, trace_id = %s  request to External Channel";
 
@@ -110,7 +113,7 @@ public class PcRetryUtils {
     public Mono<Void> callInitTrackingAndEcSendEngage(String requestId, SendRequest sendRequest, List<AttachmentInfo> attachmentInfos,
                                                       PnDeliveryRequest pnDeliveryRequest, String pcRetry) {
         if (pnPaperChannelConfig.getPaperTrackerProductList().contains(pnDeliveryRequest.getProductType())) {
-            return paperChannelDeliveryDriverDAO.getByDeliveryDriverId(pnDeliveryRequest.getDriverCode())
+            return retrieveUnifiedDeliveryDriver(pnDeliveryRequest.getDriverCode(), pnDeliveryRequest.getProductType(), sendRequest.getReceiverAddress().getCap())
                     .map(PaperChannelDeliveryDriver::getUnifiedDeliveryDriver)
                     .flatMap(unifiedDeliveryDriver -> paperTrackerClient.initPaperTracking(
                                     requestId,
@@ -124,5 +127,13 @@ public class PcRetryUtils {
                     .flatMap(sendReq -> externalChannelClient.sendEngageRequest(sendReq, attachmentInfos, pnDeliveryRequest.getApplyRasterization()));
         }
         return externalChannelClient.sendEngageRequest(sendRequest, attachmentInfos, pnDeliveryRequest.getApplyRasterization());
+    }
+
+    private Mono<PaperChannelDeliveryDriver> retrieveUnifiedDeliveryDriver(String driverCode, String productType, String geoKey) {
+        if (StringUtils.hasText(driverCode)) {
+            return paperChannelDeliveryDriverDAO.getByDeliveryDriverId(driverCode);
+        }
+        return paperTenderService.getSimplifiedCost(geoKey, productType)
+                .flatMap(cost -> paperChannelDeliveryDriverDAO.getByDeliveryDriverId(cost.getDeliveryDriverId()));
     }
 }

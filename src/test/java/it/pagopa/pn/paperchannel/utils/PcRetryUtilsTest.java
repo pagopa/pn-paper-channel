@@ -1,6 +1,7 @@
 package it.pagopa.pn.paperchannel.utils;
 
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.AnalogAddress;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PcRetryResponse;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendRequest;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
@@ -11,6 +12,8 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.PaperTrackerClient;
 import it.pagopa.pn.paperchannel.model.AttachmentInfo;
+import it.pagopa.pn.paperchannel.model.PnPaperChannelCostDTO;
+import it.pagopa.pn.paperchannel.service.PaperTenderService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,6 +34,7 @@ public class PcRetryUtilsTest {
     private AddressDAO addressDAO;
     private PaperChannelDeliveryDriverDAO paperChannelDeliveryDriverDAO;
     private PaperTrackerClient paperTrackerClient;
+    private PaperTenderService paperTenderService;
 
     @BeforeEach
     void setup() {
@@ -39,7 +43,8 @@ public class PcRetryUtilsTest {
         addressDAO = mock(AddressDAO.class);
         paperChannelDeliveryDriverDAO = mock(PaperChannelDeliveryDriverDAO.class);
         paperTrackerClient = mock(PaperTrackerClient.class);
-        pcRetryUtils = new PcRetryUtils(config, externalChannelClient, addressDAO, paperChannelDeliveryDriverDAO, paperTrackerClient);
+        paperTenderService = mock(PaperTenderService.class);
+        pcRetryUtils = new PcRetryUtils(config, externalChannelClient, addressDAO, paperChannelDeliveryDriverDAO, paperTrackerClient, paperTenderService);
     }
 
 
@@ -115,6 +120,9 @@ public class PcRetryUtilsTest {
         String pcRetry = "1";
         PnDeliveryRequest pnDeliveryRequest = getPnDeliveryRequest();
         SendRequest sendRequest = new SendRequest();
+        AnalogAddress receiverAddress = new AnalogAddress();
+        receiverAddress.setCap("00100");
+        sendRequest.setReceiverAddress(receiverAddress);
         List<AttachmentInfo> attachmentInfos = new ArrayList<>();
         PaperChannelDeliveryDriver driver = new PaperChannelDeliveryDriver();
         driver.setUnifiedDeliveryDriver("poste");
@@ -157,6 +165,9 @@ public class PcRetryUtilsTest {
         String pcRetry = "1";
         PnDeliveryRequest pnDeliveryRequest = getPnDeliveryRequest();
         SendRequest sendRequest = new SendRequest();
+        AnalogAddress receiverAddress = new AnalogAddress();
+        receiverAddress.setCap("00100");
+        sendRequest.setReceiverAddress(receiverAddress);
         List<AttachmentInfo> attachmentInfos = new ArrayList<>();
         PaperChannelDeliveryDriver driver = new PaperChannelDeliveryDriver();
         driver.setUnifiedDeliveryDriver("poste");
@@ -175,6 +186,36 @@ public class PcRetryUtilsTest {
         verify(paperChannelDeliveryDriverDAO).getByDeliveryDriverId("driver1");
         verify(paperTrackerClient).initPaperTracking(requestId, "PCRETRY_1", "AR", "poste");
         verifyNoInteractions(externalChannelClient);
+    }
+
+    @Test
+    void callInitTrackingAndEcSendEngage_WhenDriverCodeNull_shouldCallPaperTenderService() {
+        String requestId = "REQ123";
+        String pcRetry = "1";
+        PnDeliveryRequest pnDeliveryRequest = getPnDeliveryRequest();
+        pnDeliveryRequest.setDriverCode(null);
+        SendRequest sendRequest = new SendRequest();
+        AnalogAddress receiverAddress = new AnalogAddress();
+        receiverAddress.setCap("00100");
+        sendRequest.setReceiverAddress(receiverAddress);
+        List<AttachmentInfo> attachmentInfos = new ArrayList<>();
+        PaperChannelDeliveryDriver driver = new PaperChannelDeliveryDriver();
+        driver.setUnifiedDeliveryDriver("poste");
+        PnPaperChannelCostDTO pnPaperChannelCostDTO = new PnPaperChannelCostDTO();
+        pnPaperChannelCostDTO.setDeliveryDriverId("driver1");
+
+        when(config.getPaperTrackerProductList()).thenReturn(List.of("AR"));
+        when(paperTenderService.getSimplifiedCost(any(), any())).thenReturn(Mono.just(pnPaperChannelCostDTO));
+        when(paperChannelDeliveryDriverDAO.getByDeliveryDriverId("driver1"))
+                .thenReturn(Mono.just(driver));
+        when(paperTrackerClient.initPaperTracking(any(), any(), any(), any())).thenReturn(Mono.empty());
+        when(externalChannelClient.sendEngageRequest(any(), any(), any())).thenReturn(Mono.empty());
+
+        pcRetryUtils.callInitTrackingAndEcSendEngage(requestId, sendRequest, attachmentInfos, pnDeliveryRequest, pcRetry).block();
+
+        verify(paperChannelDeliveryDriverDAO).getByDeliveryDriverId("driver1");
+        verify(paperTrackerClient).initPaperTracking(requestId, "PCRETRY_1", "AR", "poste");
+        verify(externalChannelClient).sendEngageRequest(sendRequest, attachmentInfos, pnDeliveryRequest.getApplyRasterization());
     }
 
     private PnDeliveryRequest getPnDeliveryRequest() {
