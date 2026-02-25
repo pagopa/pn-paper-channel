@@ -19,7 +19,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
@@ -45,7 +44,7 @@ public class PcRetryUtils {
     private int getRetryAttempt(String requestId) {
         int retry = 0;
         if (requestId.contains(Const.RETRY)) {
-            retry = Integer.parseInt(requestId.substring(requestId.lastIndexOf("_")+1));
+            retry = Integer.parseInt(requestId.substring(requestId.lastIndexOf("_") + 1));
         }
         return retry;
     }
@@ -113,11 +112,7 @@ public class PcRetryUtils {
     public Mono<Void> callInitTrackingAndEcSendEngage(String requestId, SendRequest sendRequest, List<AttachmentInfo> attachmentInfos,
                                                       PnDeliveryRequest pnDeliveryRequest, String pcRetry) {
         if (pnPaperChannelConfig.getPaperTrackerProductList().contains(pnDeliveryRequest.getProductType())) {
-            if (sendRequest.getReceiverAddress() == null || sendRequest.getReceiverAddress().getCap() == null) {
-                log.error("CAP is null for requestId {}", requestId);
-                return Mono.error((new IllegalArgumentException("CAP is null for requestId " + requestId)));
-            }
-            return retrieveUnifiedDeliveryDriver(pnDeliveryRequest.getDriverCode(), pnDeliveryRequest.getProductType(), sendRequest.getReceiverAddress().getCap())
+            return retrieveUnifiedDeliveryDriver(sendRequest, requestId, pnDeliveryRequest.getProductType())
                     .map(PaperChannelDeliveryDriver::getUnifiedDeliveryDriver)
                     .flatMap(unifiedDeliveryDriver -> paperTrackerClient.initPaperTracking(
                                     requestId,
@@ -133,11 +128,12 @@ public class PcRetryUtils {
         return externalChannelClient.sendEngageRequest(sendRequest, attachmentInfos, pnDeliveryRequest.getApplyRasterization());
     }
 
-    private Mono<PaperChannelDeliveryDriver> retrieveUnifiedDeliveryDriver(String driverCode, String productType, String geoKey) {
-        if (StringUtils.hasText(driverCode)) {
-            return paperChannelDeliveryDriverDAO.getByDeliveryDriverId(driverCode);
+    private Mono<PaperChannelDeliveryDriver> retrieveUnifiedDeliveryDriver(SendRequest sendRequest, String requestId, String productType) {
+        if (sendRequest.getReceiverAddress() == null || sendRequest.getReceiverAddress().getCap() == null) {
+            log.error("CAP is null for requestId {}", requestId);
+            return Mono.error((new IllegalArgumentException("CAP is null for requestId " + requestId)));
         }
-        return paperTenderService.getSimplifiedCost(geoKey, productType)
+        return paperTenderService.getSimplifiedCost(sendRequest.getReceiverAddress().getCap(), productType)
                 .flatMap(cost -> paperChannelDeliveryDriverDAO.getByDeliveryDriverId(cost.getDeliveryDriverId()));
     }
 }

@@ -123,12 +123,15 @@ public class PcRetryUtilsTest {
         AnalogAddress receiverAddress = new AnalogAddress();
         receiverAddress.setCap("00100");
         sendRequest.setReceiverAddress(receiverAddress);
+        PnPaperChannelCostDTO pnPaperChannelCostDTO = new PnPaperChannelCostDTO();
+        pnPaperChannelCostDTO.setDeliveryDriverId("driver1");
         List<AttachmentInfo> attachmentInfos = new ArrayList<>();
         PaperChannelDeliveryDriver driver = new PaperChannelDeliveryDriver();
         driver.setUnifiedDeliveryDriver("poste");
 
         when(config.getPaperTrackerProductList()).thenReturn(List.of("AR"));
-        when(paperChannelDeliveryDriverDAO.getByDeliveryDriverId("driver1"))
+        when(paperTenderService.getSimplifiedCost(any(), any())).thenReturn(Mono.just(pnPaperChannelCostDTO));
+        when(paperChannelDeliveryDriverDAO.getByDeliveryDriverId(pnPaperChannelCostDTO.getDeliveryDriverId()))
                 .thenReturn(Mono.just(driver));
         when(paperTrackerClient.initPaperTracking(any(), any(), any(), any())).thenReturn(Mono.empty());
         when(externalChannelClient.sendEngageRequest(any(), any(), any())).thenReturn(Mono.empty());
@@ -168,12 +171,15 @@ public class PcRetryUtilsTest {
         AnalogAddress receiverAddress = new AnalogAddress();
         receiverAddress.setCap("00100");
         sendRequest.setReceiverAddress(receiverAddress);
+        PnPaperChannelCostDTO pnPaperChannelCostDTO = new PnPaperChannelCostDTO();
+        pnPaperChannelCostDTO.setDeliveryDriverId("driver1");
         List<AttachmentInfo> attachmentInfos = new ArrayList<>();
         PaperChannelDeliveryDriver driver = new PaperChannelDeliveryDriver();
         driver.setUnifiedDeliveryDriver("poste");
 
         when(config.getPaperTrackerProductList()).thenReturn(List.of("AR"));
-        when(paperChannelDeliveryDriverDAO.getByDeliveryDriverId("driver1"))
+        when(paperTenderService.getSimplifiedCost(any(), any())).thenReturn(Mono.just(pnPaperChannelCostDTO));
+        when(paperChannelDeliveryDriverDAO.getByDeliveryDriverId(pnPaperChannelCostDTO.getDeliveryDriverId()))
                 .thenReturn(Mono.just(driver));
         when(paperTrackerClient.initPaperTracking(any(), any(), any(), any()))
                 .thenReturn(Mono.error(new RuntimeException("Init tracking failed")));
@@ -225,7 +231,7 @@ public class PcRetryUtilsTest {
         PnDeliveryRequest pnDeliveryRequest = getPnDeliveryRequest();
         pnDeliveryRequest.setDriverCode(null);
         SendRequest sendRequest = new SendRequest();
-        sendRequest.setReceiverAddress(null); // receiverAddress nullo
+        sendRequest.setReceiverAddress(null);
 
         List<AttachmentInfo> attachmentInfos = new ArrayList<>();
 
