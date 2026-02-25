@@ -31,6 +31,7 @@ import static it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.PNAG01
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.*;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 // Questa classe di test, testa sia l'handler RECAG011BMessageHandler che PNAG012MessageHandler
@@ -126,7 +127,9 @@ class RECAG011BMessageHandlerTest {
 
         when(eventMetaDAO.putIfAbsent(pnEventMeta)).thenReturn(Mono.just(pnEventMeta));
 
-        when(requestDeliveryDAO.updateConditionalOnFeedbackStatus(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
+        ArgumentCaptor<PnDeliveryRequest> pnDeliveryRequestCaptor = ArgumentCaptor.forClass(PnDeliveryRequest.class);
+        when(requestDeliveryDAO.updateConditionalOnFeedbackStatus(pnDeliveryRequestCaptor.capture(), anyBoolean()))
+                .thenReturn(Mono.just(entity));
 
         // eseguo l'handler
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
@@ -146,6 +149,9 @@ class RECAG011BMessageHandlerTest {
         ArgumentCaptor<SendEvent> sendEventArgumentCaptor = ArgumentCaptor.forClass(SendEvent.class);
         verify(mockSqsSender, times(2)).pushSendEvent(sendEventArgumentCaptor.capture());
 
+        PnDeliveryRequest deliveryRequest = pnDeliveryRequestCaptor.getValue();
+        assertEquals("RECAG011B", deliveryRequest.getFeedbackOriginalStatusCode());
+        assertEquals("PNAG012", deliveryRequest.getFeedbackStatusCode());
         assertThat(sendEventArgumentCaptor.getAllValues().get(0).getStatusDetail()).isEqualTo("RECAG011B");
         sendPNAG012Event.setClientRequestTimeStamp(sendEventArgumentCaptor.getAllValues().get(1).getClientRequestTimeStamp());
         assertThat(sendEventArgumentCaptor.getAllValues().get(1)).isEqualTo(sendPNAG012Event);

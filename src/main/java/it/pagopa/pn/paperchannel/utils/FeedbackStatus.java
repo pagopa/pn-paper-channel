@@ -11,5 +11,6 @@ public record FeedbackStatus(String oldFeedbackStatusCode,
                              Instant oldFeedbackStatusDateTime,
                              Instant newFeedbackStatusDateTime,
                              String oldFeedbackDeliveryFailureCause,
-                             String newFeedbackDeliveryFailureCause)
+                             String newFeedbackDeliveryFailureCause,
+                             String oldFeedbackOriginalStatusCode)
                             implements Serializable {}
