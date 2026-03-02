@@ -453,7 +453,10 @@ class QueueListenerServiceImplTest {
                 "RECRN001C",
                 Instant.parse("2024-06-26T16:12:56Z"),
                 Instant.parse("2024-06-26T16:12:56Z"),
-                null, null);
+                null,
+                null,
+                null)
+        ;
 
         PaperProgressStatusEventDto paperProgressStatusEvent = new PaperProgressStatusEventDto();
         paperProgressStatusEvent.setRequestId("testRequestId");
@@ -464,7 +467,35 @@ class QueueListenerServiceImplTest {
         // When
         Mockito.when(this.paperResultAsyncService.resultAsyncBackground(Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.error(
-                        new InvalidEventOrderException(WRONG_EVENT_ORDER, "test", feedbackStatus)));
+                        new InvalidEventOrderException("test", feedbackStatus)));
+        // Then
+        Assertions.assertDoesNotThrow(() ->
+                this.queueListenerService.externalChannelListener(data,10));
+    }
+
+    @Test
+    void externalChannelListenerInvalidEventExceptionDuplicatesStockTest(){
+        // Given
+        FeedbackStatus feedbackStatus = new FeedbackStatus(
+                "PNRN012",
+                "RECRN005C",
+                Instant.parse("2024-06-26T16:12:56Z"),
+                Instant.parse("2024-06-26T16:12:56Z"),
+                null,
+                null,
+                "RECRN005C")
+                ;
+
+        PaperProgressStatusEventDto paperProgressStatusEvent = new PaperProgressStatusEventDto();
+        paperProgressStatusEvent.setRequestId("testRequestId");
+
+        SingleStatusUpdateDto data = new SingleStatusUpdateDto();
+        data.setAnalogMail(paperProgressStatusEvent);
+
+        // When
+        Mockito.when(this.paperResultAsyncService.resultAsyncBackground(Mockito.any(), Mockito.any()))
+                .thenReturn(Mono.error(
+                        new InvalidEventOrderException("test", feedbackStatus)));
         // Then
         Assertions.assertDoesNotThrow(() ->
                 this.queueListenerService.externalChannelListener(data,10));
@@ -478,7 +509,9 @@ class QueueListenerServiceImplTest {
                 "RECRN002F",
                 Instant.parse("2024-06-26T16:12:56Z"),
                 Instant.parse("2024-07-27T16:12:56Z"),
-                null, null);
+                null,
+                null,
+                null);
 
         PaperProgressStatusEventDto paperProgressStatusEvent = new PaperProgressStatusEventDto();
         paperProgressStatusEvent.setRequestId("testRequestId");
@@ -489,7 +522,7 @@ class QueueListenerServiceImplTest {
         // When
         Mockito.when(this.paperResultAsyncService.resultAsyncBackground(Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.error(
-                        new InvalidEventOrderException(WRONG_EVENT_ORDER, "test", feedbackStatus)));
+                        new InvalidEventOrderException("test", feedbackStatus)));
         // Then
         Assertions.assertThrowsExactly(PnGenericException.class, () ->
                 this.queueListenerService.externalChannelListener(data,10));

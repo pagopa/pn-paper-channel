@@ -46,6 +46,7 @@ public class PNAG012Wrapper {
         pnDeliveryRequestPNAG012.setStatusDetail(StatusCodeEnum.OK.getValue()); //evento finale OK
         pnDeliveryRequestPNAG012.setStatusCode(originalPnDeliveryRequest.getStatusDetail());
         pnDeliveryRequestPNAG012.setRequestId(originalPnDeliveryRequest.getRequestId());
+        pnDeliveryRequestPNAG012.setFeedbackOriginalStatusCode(originalPaperRequest.getStatusCode());
 
         // nelle nuova entità PaperProgressStatusEventDto valorizzo tutti i campi poiché poi questo oggetto
         // deve essere loggato negli AUDIT LOG

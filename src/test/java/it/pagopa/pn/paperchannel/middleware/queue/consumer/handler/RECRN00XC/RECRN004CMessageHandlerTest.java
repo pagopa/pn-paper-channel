@@ -100,7 +100,9 @@ class RECRN004CMessageHandlerTest {
         entity.setStatusDetail(STATUS_RECRN004C);
         entity.setStatusCode(ExternalChannelCodeEnum.getStatusCode(paperRequest.getStatusCode()));
 
-        when(requestDeliveryDAO.updateConditionalOnFeedbackStatus(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
+        ArgumentCaptor<PnDeliveryRequest> pnDeliveryRequestCaptor = ArgumentCaptor.forClass(PnDeliveryRequest.class);
+        when(requestDeliveryDAO.updateConditionalOnFeedbackStatus(pnDeliveryRequestCaptor.capture(), anyBoolean()))
+                .thenReturn(Mono.just(entity));
         ArgumentCaptor<SendEvent> capturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
         // Act
@@ -108,6 +110,7 @@ class RECRN004CMessageHandlerTest {
 
         // Assert
         assertDoesNotThrow(() -> mono.block());
+        PnDeliveryRequest deliveryRequest = pnDeliveryRequestCaptor.getValue();
         verify(sqsSender, times(2)).pushSendEvent(capturedSendEvent.capture());
         assertNotNull(capturedSendEvent.getAllValues());
         assertEquals(2, capturedSendEvent.getAllValues().size());
@@ -115,6 +118,8 @@ class RECRN004CMessageHandlerTest {
         assertEquals(StatusCodeEnum.OK, capturedSendEvent.getAllValues().get(0).getStatusCode());
         assertEquals(STATUS_RECRN004C, capturedSendEvent.getAllValues().get(1).getStatusDetail());
         assertEquals(StatusCodeEnum.PROGRESS, capturedSendEvent.getAllValues().get(1).getStatusCode());
+        assertEquals(STATUS_RECRN004C, deliveryRequest.getFeedbackOriginalStatusCode());
+        assertEquals(STATUS_PNRN012, deliveryRequest.getFeedbackStatusCode());
 
         verify(requestDeliveryDAO, times(1))
                 .updateConditionalOnFeedbackStatus(argThat(pnDeliveryRequest -> {

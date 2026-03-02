@@ -18,13 +18,12 @@ public class InvalidEventOrderException extends RuntimeException {
     /**
      * Constructs a new InvalidEventOrderException with the specified details.
      *
-     * @param exceptionType   the type of the exception
      * @param message         a descriptive message for the exception
      * @param feedbackStatus  the feedback status associated with this exception
      */
-    public InvalidEventOrderException(ExceptionTypeEnum exceptionType, String message, FeedbackStatus feedbackStatus){
+    public InvalidEventOrderException(String message, FeedbackStatus feedbackStatus){
         super(message);
-        this.exceptionType = exceptionType;
+        this.exceptionType = ExceptionTypeEnum.WRONG_EVENT_ORDER;
         this.message = message;
         this.feedbackStatus = feedbackStatus;
     }
@@ -42,7 +41,6 @@ public class InvalidEventOrderException extends RuntimeException {
                        PaperProgressStatusEventDto paperRequest,
                        String message) {
         return new InvalidEventOrderException(
-                ExceptionTypeEnum.WRONG_EVENT_ORDER,
                 message,
                 new FeedbackStatus(
                         pnDeliveryRequest.getFeedbackStatusCode(),
@@ -50,7 +48,8 @@ public class InvalidEventOrderException extends RuntimeException {
                         pnDeliveryRequest.getFeedbackStatusDateTime(),
                         paperRequest.getStatusDateTime().toInstant(),
                         pnDeliveryRequest.getFeedbackDeliveryFailureCause(),
-                        paperRequest.getDeliveryFailureCause()
+                        paperRequest.getDeliveryFailureCause(),
+                        pnDeliveryRequest.getFeedbackOriginalStatusCode()
                 )
         );
     }

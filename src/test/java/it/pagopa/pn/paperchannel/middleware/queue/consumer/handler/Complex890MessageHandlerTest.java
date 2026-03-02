@@ -32,6 +32,7 @@ import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.buildMetaRequestId;
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.buildMetaStatusCode;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 class Complex890MessageHandlerTest {
@@ -233,7 +234,9 @@ class Complex890MessageHandlerTest {
         pnEventMetaRECAG005A.setStatusDateTime(Instant.parse("2023-03-16T17:07:00.000Z"));
 
         when(eventMetaDAO.findAllByRequestId(metadataRequestid)).thenReturn(Flux.just(pnEventMetaRECAG012, pnEventMetaRECAG011A, pnEventMetaRECAG005A));
-        when(requestDeliveryDAO.updateConditionalOnFeedbackStatus(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
+        ArgumentCaptor<PnDeliveryRequest> pnDeliveryRequestCaptor = ArgumentCaptor.forClass(PnDeliveryRequest.class);
+        when(requestDeliveryDAO.updateConditionalOnFeedbackStatus(pnDeliveryRequestCaptor.capture(), anyBoolean()))
+                .thenReturn(Mono.just(entity));
 
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
 
@@ -250,6 +253,10 @@ class Complex890MessageHandlerTest {
         verify(sqsSender, times(2)).pushSendEvent(sendEventArgumentCaptor.capture());
         sendPNAG012Event.setClientRequestTimeStamp(sendEventArgumentCaptor.getAllValues().get(0).getClientRequestTimeStamp());
         assertThat(sendEventArgumentCaptor.getAllValues().get(0)).isEqualTo(sendPNAG012Event);
+
+        PnDeliveryRequest deliveryRequest = pnDeliveryRequestCaptor.getValue();
+        assertEquals("RECAG005C", deliveryRequest.getFeedbackOriginalStatusCode());
+        assertEquals("PNAG012", deliveryRequest.getFeedbackStatusCode());
 
         //verifico che viene inviato a delivery-push l'evento originale RECAG005C in stato PROGRESS
         SendEvent sendEvent = SendEventMapper.createSendEventMessage(entity, paperRequest);
