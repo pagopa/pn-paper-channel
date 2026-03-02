@@ -129,11 +129,14 @@ public class PcRetryUtils {
     }
 
     private Mono<PaperChannelDeliveryDriver> retrieveUnifiedDeliveryDriver(SendRequest sendRequest, String requestId, String productType) {
-        if (sendRequest.getReceiverAddress() == null || sendRequest.getReceiverAddress().getCap() == null) {
-            log.error("CAP is null for requestId {}", requestId);
-            return Mono.error((new IllegalArgumentException("CAP is null for requestId " + requestId)));
+        var address = sendRequest.getReceiverAddress();
+        boolean isNational = Utility.isNational(address.getCountry());
+        String geokey = (isNational) ? address.getCap() : address.getCountry();
+        if (geokey == null) {
+            log.error("GEOKEY is null for requestId {}", requestId);
+            return Mono.error((new IllegalArgumentException("GEOKEY is null for requestId " + requestId)));
         }
-        return paperTenderService.getSimplifiedCost(sendRequest.getReceiverAddress().getCap(), productType)
+        return paperTenderService.getSimplifiedCost(geokey, productType)
                 .flatMap(cost -> paperChannelDeliveryDriverDAO.getByDeliveryDriverId(cost.getDeliveryDriverId()));
     }
 }
