@@ -17,6 +17,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.PaperTrackerClient;
 import it.pagopa.pn.paperchannel.model.Address;
+import it.pagopa.pn.paperchannel.model.PnPaperChannelCostDTO;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.service.impl.PaperMessagesServiceImpl;
 import it.pagopa.pn.paperchannel.utils.*;
@@ -756,6 +757,13 @@ class PaperMessagesServiceTest {
         SendRequest sendRequest = getRequest("TST-IOR.2332");
         sendRequest.setRequestPaId("request-pad-id");
         sendRequest.setPrintType("FRONTE-RETRO");
+        AnalogAddress receiverAddress = new AnalogAddress();
+        receiverAddress.setCap("00100");
+        sendRequest.setReceiverAddress(receiverAddress);
+        PnPaperChannelCostDTO pnPaperChannelCostDTO = new PnPaperChannelCostDTO();
+        pnPaperChannelCostDTO.setDeliveryDriverId("driver1");
+
+        when(paperTenderService.getSimplifiedCost(any(), any())).thenReturn(Mono.just(pnPaperChannelCostDTO));
 
         /* TEST WITH CONTEXT SETTING */
         SendResponse response = paperMessagesService.executionPaper("TST-IOR.2332", sendRequest)
