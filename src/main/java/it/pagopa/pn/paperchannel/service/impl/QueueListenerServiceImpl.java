@@ -144,7 +144,7 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
         MDCUtils.addMDCToContextAndExecute(requestDeliveryDAO.getByRequestId(entity.getRequestId(), true)
                         .flatMap(f24Service::preparePDF)
                         .doOnSuccess(pnRequestError -> log.logEndingProcess(processName))
-                        .doOnError(throwable ->  log.logEndingProcess(processName, false, throwable.getMessage()))
+                        .doOnError(throwable ->  log.logEndingProcess(processName, false, throwable.getMessage(), throwable))
                         .onErrorResume(ex -> {
                             manageF24Exception(entity, attempt, ex);
                             return Mono.error(new PnF24FlowException(F24_ERROR, entity, ex));
