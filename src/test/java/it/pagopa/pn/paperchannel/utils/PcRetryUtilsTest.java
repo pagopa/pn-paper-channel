@@ -26,7 +26,7 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-public class PcRetryUtilsTest {
+class PcRetryUtilsTest {
 
     private PcRetryUtils pcRetryUtils;
     private PnPaperChannelConfig config;
@@ -239,7 +239,7 @@ public class PcRetryUtilsTest {
 
         StepVerifier.create(pcRetryUtils.callInitTrackingAndEcSendEngage(requestId, sendRequest, attachmentInfos, pnDeliveryRequest, pcRetry))
                 .expectErrorMatches(throwable -> throwable instanceof IllegalArgumentException &&
-                        throwable.getMessage().contains("CAP is null for requestId REQ123"))
+                        throwable.getMessage().contains("Address is null for requestId REQ123"))
                 .verify();
     }
 

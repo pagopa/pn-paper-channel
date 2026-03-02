@@ -130,6 +130,10 @@ public class PcRetryUtils {
 
     private Mono<PaperChannelDeliveryDriver> retrieveUnifiedDeliveryDriver(SendRequest sendRequest, String requestId, String productType) {
         var address = sendRequest.getReceiverAddress();
+        if(address == null) {
+            log.error("Address is null for requestId {}", requestId);
+            return Mono.error((new IllegalArgumentException("Address is null for requestId " + requestId)));
+        }
         boolean isNational = Utility.isNational(address.getCountry());
         String geokey = (isNational) ? address.getCap() : address.getCountry();
         if (geokey == null) {
