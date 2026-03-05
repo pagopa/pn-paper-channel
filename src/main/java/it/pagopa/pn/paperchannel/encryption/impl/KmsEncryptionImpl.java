@@ -1,9 +1,5 @@
 package it.pagopa.pn.paperchannel.encryption.impl;
 
-import com.amazonaws.services.kms.AWSKMS;
-import com.amazonaws.services.kms.model.DecryptRequest;
-import com.amazonaws.services.kms.model.DecryptResult;
-import com.amazonaws.services.kms.model.EncryptRequest;
 import it.pagopa.pn.paperchannel.config.AwsKmsProperties;
 import it.pagopa.pn.paperchannel.encryption.EncryptedUtils;
 import it.pagopa.pn.paperchannel.encryption.DataEncryption;
@@ -11,8 +7,13 @@ import it.pagopa.pn.paperchannel.encryption.model.EncryptionModel;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
+import software.amazon.awssdk.core.SdkBytes;
+import software.amazon.awssdk.services.kms.KmsClient;
+import software.amazon.awssdk.services.kms.model.DecryptRequest;
+import software.amazon.awssdk.services.kms.model.DecryptResponse;
+import software.amazon.awssdk.services.kms.model.EncryptRequest;
+import software.amazon.awssdk.services.kms.model.EncryptionAlgorithmSpec;
+
 import java.util.Base64;
 import java.util.Optional;
 
@@ -21,11 +22,11 @@ import java.util.Optional;
 @Qualifier("kmsEncryption")
 public class KmsEncryptionImpl implements DataEncryption {
 
-    private final AWSKMS kms;
+    private final KmsClient kms;
     private final AwsKmsProperties awsKmsProperties;
 
-    public KmsEncryptionImpl(AWSKMS awskms, AwsKmsProperties awsKmsProperties) {
-        this.kms = awskms;
+    public KmsEncryptionImpl(KmsClient kmsClient, AwsKmsProperties awsKmsProperties) {
+        this.kms = kmsClient;
         this.awsKmsProperties = awsKmsProperties;
     }
 
@@ -33,13 +34,14 @@ public class KmsEncryptionImpl implements DataEncryption {
     public String encode(String data) {
         if(StringUtils.isNotEmpty(data)) {
 
-            final EncryptRequest encryptRequest = new EncryptRequest()
-                    .withKeyId(this.awsKmsProperties.getKeyId())
-                    .withPlaintext(ByteBuffer.wrap(data.getBytes(StandardCharsets.UTF_8)));
+            final EncryptRequest encryptRequest = EncryptRequest.builder()
+                    .keyId(this.awsKmsProperties.getKeyId())
+                    .plaintext(SdkBytes.fromUtf8String(data))
+                    .build();
 
-            final ByteBuffer encryptedBytes = kms.encrypt(encryptRequest).getCiphertextBlob();
+            final byte[] encryptedBytes = kms.encrypt(encryptRequest).ciphertextBlob().asByteArray();
 
-            return extractString(encryptedBytes, false);
+            return Base64.getEncoder().encodeToString(encryptedBytes);
         } else {
             return data;
         }
@@ -50,35 +52,22 @@ public class KmsEncryptionImpl implements DataEncryption {
         if(StringUtils.isNotEmpty(data)) {
             final EncryptedUtils token = EncryptedUtils.parse(data);
 
-            final DecryptRequest decryptRequest = new DecryptRequest()
-                    .withCiphertextBlob(token.getCipherBytes())
-                    .withEncryptionContext(token.getEncryptionContext());
-
             final EncryptionModel options = token.getModel();
             final String keyId = Optional.ofNullable(options.getKeyId()).orElse(awsKmsProperties.getKeyId());
             final String algorithm = Optional.ofNullable(options.getAlgorithm()).orElse("SYMMETRIC_DEFAULT");
-            decryptRequest.setEncryptionAlgorithm(algorithm);
-            decryptRequest.setKeyId(keyId);
 
-            DecryptResult decryptResult = kms.decrypt(decryptRequest);
-            byte [] bytes = decryptResult.getPlaintext().array();
-            return new String(bytes, StandardCharsets.UTF_8);
+            final DecryptRequest decryptRequest = DecryptRequest.builder()
+                    .ciphertextBlob(SdkBytes.fromByteBuffer(token.getCipherBytes()))
+                    .encryptionContext(token.getEncryptionContext())
+                    .encryptionAlgorithm(EncryptionAlgorithmSpec.fromValue(algorithm))
+                    .keyId(keyId)
+                    .build();
+
+            DecryptResponse decryptResponse = kms.decrypt(decryptRequest);
+            return decryptResponse.plaintext().asUtf8String();
         } else {
             return data;
         }
     }
 
-
-    private static String extractString(final ByteBuffer bb, boolean isText) {
-        if (bb.hasRemaining()) {
-            final byte[] bytes = new byte[bb.remaining()];
-            bb.get(bytes, bb.arrayOffset(), bb.remaining());
-            if (isText)
-                return new String(bytes, StandardCharsets.UTF_8);
-
-            return Base64.getEncoder().encodeToString(bytes);
-        } else {
-            return "";
-        }
-    }
 }
