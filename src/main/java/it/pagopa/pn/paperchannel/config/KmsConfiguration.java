@@ -1,9 +1,5 @@
 package it.pagopa.pn.paperchannel.config;
 
-import com.amazonaws.client.builder.AwsClientBuilder;
-import com.amazonaws.services.kms.AWSKMS;
-import com.amazonaws.services.kms.AWSKMSClient;
-import com.amazonaws.services.kms.AWSKMSClientBuilder;
 import it.pagopa.pn.commons.configs.aws.AwsConfigs;
 import it.pagopa.pn.paperchannel.encryption.DataEncryption;
 import it.pagopa.pn.paperchannel.encryption.impl.KmsEncryptionImpl;
@@ -11,7 +7,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.kms.KmsClient;
 
+import java.net.URI;
 import java.util.Optional;
 
 @Configuration
@@ -23,13 +22,14 @@ public class KmsConfiguration {
 
 
     @Bean
-    public AWSKMS kms() {
-        final AWSKMSClientBuilder builder = AWSKMSClient.builder();
+    public KmsClient kmsClient() {
+        var builder = KmsClient.builder();
 
         if (Optional.ofNullable(awsConfigs.getEndpointUrl()).isPresent()) {
-            builder.withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(awsConfigs.getEndpointUrl(), awsConfigs.getRegionCode()));
+            builder.endpointOverride(URI.create(awsConfigs.getEndpointUrl()));
+            Optional.ofNullable(awsConfigs.getRegionCode()).ifPresent(r -> builder.region(Region.of(r)));
         } else {
-            Optional.ofNullable(awsConfigs.getRegionCode()).ifPresent(builder::setRegion);
+            Optional.ofNullable(awsConfigs.getRegionCode()).ifPresent(r -> builder.region(Region.of(r)));
         }
 
         return builder.build();
@@ -37,7 +37,7 @@ public class KmsConfiguration {
 
     @Bean
     @Qualifier("kmsEncryption")
-    public DataEncryption kmsEncryption(AWSKMS awskms){
-        return new KmsEncryptionImpl(awskms, this.properties);
+    public DataEncryption kmsEncryption(KmsClient kmsClient){
+        return new KmsEncryptionImpl(kmsClient, this.properties);
     }
 }
