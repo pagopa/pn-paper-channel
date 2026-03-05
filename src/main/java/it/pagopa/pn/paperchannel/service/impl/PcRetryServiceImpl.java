@@ -2,9 +2,7 @@ package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PcRetryResponse;
-import it.pagopa.pn.paperchannel.middleware.db.dao.PaperChannelDeliveryDriverDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PaperChannelDeliveryDriver;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.service.PcRetryService;
 import it.pagopa.pn.paperchannel.utils.Const;
@@ -15,7 +13,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_DRIVER_NOT_EXISTED;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_NOT_EXIST;
 
 @Component
@@ -24,7 +21,6 @@ public class PcRetryServiceImpl implements PcRetryService {
 
     private final PcRetryUtils pcRetryUtils;
     private final RequestDeliveryDAO requestDeliveryDAO;
-    private final PaperChannelDeliveryDriverDAO paperChannelDeliveryDriverDAO;
 
     @Override
     public Mono<PcRetryResponse> getPcRetry(String requestId, Boolean checkApplyRasterization) {
@@ -35,8 +31,7 @@ public class PcRetryServiceImpl implements PcRetryService {
                         return Mono.just(new PcRetryResponse().parentRequestId(requestId).retryFound(Boolean.FALSE));
                     }
                     return updateApplyRasterizationIfNeeded(requestId, checkApplyRasterization, pnDeliveryRequest)
-                            .flatMap(deliveryRequest -> retrieveDeliveryDriver(deliveryRequest.getDriverCode())
-                                    .flatMap(driver -> pcRetryUtils.checkHasOtherAttemptAndMapPcRetryResponse(requestId, driver.getUnifiedDeliveryDriver(), deliveryRequest)));
+                                    .flatMap(deliveryRequest -> pcRetryUtils.checkHasOtherAttemptAndMapPcRetryResponse(requestId, deliveryRequest));
                 });
     }
 
@@ -48,12 +43,6 @@ public class PcRetryServiceImpl implements PcRetryService {
         }
         return Mono.just(pnDeliveryRequest);
     }
-
-    private Mono<PaperChannelDeliveryDriver> retrieveDeliveryDriver(String driverCode) {
-        return paperChannelDeliveryDriverDAO.getByDeliveryDriverId(driverCode)
-                .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_DRIVER_NOT_EXISTED, DELIVERY_DRIVER_NOT_EXISTED.getMessage(), HttpStatus.NOT_FOUND)));
-    }
-
 
     public String getPrefixRequestId(String requestId) {
         requestId = Utility.getRequestIdWithoutPrefixClientId(requestId);
