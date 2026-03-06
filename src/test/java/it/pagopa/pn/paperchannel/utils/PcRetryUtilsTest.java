@@ -84,10 +84,9 @@ class PcRetryUtilsTest {
         when(addressDAO.findAllByRequestId(pnDeliveryRequest.getRequestId())).thenReturn(Mono.just(new ArrayList<>()));
         when(externalChannelClient.sendEngageRequest(any(), any(), any())).thenReturn(Mono.empty());
 
-        PcRetryResponse response = pcRetryUtils.checkHasOtherAttemptAndMapPcRetryResponse("IUN.ATTEMPT_0.PCRETRY_0", "driver-1", pnDeliveryRequest).block();
+        PcRetryResponse response = pcRetryUtils.checkHasOtherAttemptAndMapPcRetryResponse("IUN.ATTEMPT_0.PCRETRY_0", pnDeliveryRequest).block();
 
         Assertions.assertEquals("IUN.ATTEMPT_0.PCRETRY_0", response.getParentRequestId());
-        Assertions.assertEquals("driver-1", response.getDeliveryDriverId());
         Assertions.assertTrue(response.getRetryFound());
         Assertions.assertEquals("PCRETRY_1", response.getPcRetry());
         Assertions.assertEquals("IUN.ATTEMPT_0.PCRETRY_1", response.getRequestId());
@@ -103,10 +102,9 @@ class PcRetryUtilsTest {
         pnAddress.setTypology(AddressTypeEnum.RECEIVER_ADDRESS.toString());
         when(addressDAO.findAllByRequestId(anyString())).thenReturn(Mono.just(List.of(pnAddress)));
         when(externalChannelClient.sendEngageRequest(any(), any(), any())).thenReturn(Mono.empty());
-        PcRetryResponse response = pcRetryUtils.checkHasOtherAttemptAndMapPcRetryResponse("IUN.ATTEMPT_0.PCRETRY_2", "driver-1", pnDeliveryRequest).block();
+        PcRetryResponse response = pcRetryUtils.checkHasOtherAttemptAndMapPcRetryResponse("IUN.ATTEMPT_0.PCRETRY_2", pnDeliveryRequest).block();
 
         Assertions.assertEquals("IUN.ATTEMPT_0.PCRETRY_2", response.getParentRequestId());
-        Assertions.assertEquals("driver-1", response.getDeliveryDriverId());
         Assertions.assertFalse(response.getRetryFound());
         Assertions.assertNull(response.getPcRetry());
         Assertions.assertNull(response.getRequestId());

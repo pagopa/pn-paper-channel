@@ -65,10 +65,9 @@ public class PcRetryUtils {
         pcRetryResponse.setRequestId(newRequestId);
     }
 
-    public Mono<PcRetryResponse> checkHasOtherAttemptAndMapPcRetryResponse(String requestId, String unifiedDeliveryDriver, PnDeliveryRequest pnDeliveryRequest) {
+    public Mono<PcRetryResponse> checkHasOtherAttemptAndMapPcRetryResponse(String requestId, PnDeliveryRequest pnDeliveryRequest) {
         PcRetryResponse pcRetryResponse = new PcRetryResponse();
         pcRetryResponse.setParentRequestId(requestId);
-        pcRetryResponse.setDeliveryDriverId(unifiedDeliveryDriver);
 
         if (hasOtherAttempt(requestId)) {
             pcRetryResponse.setRetryFound(true);
