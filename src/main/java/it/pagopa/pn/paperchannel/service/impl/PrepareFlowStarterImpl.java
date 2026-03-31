@@ -3,6 +3,7 @@ package it.pagopa.pn.paperchannel.service.impl;
 import it.pagopa.pn.api.dto.events.PnAddressItem;
 import it.pagopa.pn.api.dto.events.PnPrepareDelayerToPaperchannelPayload;
 import it.pagopa.pn.api.dto.events.PnPreparePaperchannelToDelayerPayload;
+import it.pagopa.pn.api.dto.events.paperDeliveryCommunicationType;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PrepareEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
@@ -98,6 +99,7 @@ public class PrepareFlowStarterImpl implements PrepareFlowStarter {
                 .attempt(StringUtils.hasText(deliveryRequest.getRelatedRequestId()) ? 1 : 0)
                 .prepareRequestDate(deliveryRequest.getStartDate())
                 .recipientId(deliveryRequest.getFiscalCode())
+                .communicationType(StringUtils.hasText(deliveryRequest.getCommunicationType()) ? paperDeliveryCommunicationType.valueOf(deliveryRequest.getCommunicationType()) : null)
                 .build();
 
         this.sqsSender.pushToPaperchannelToDelayerQueue(payload);
