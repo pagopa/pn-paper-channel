@@ -16,7 +16,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventError;
 import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.Const;
-import it.pagopa.pn.paperchannel.utils.Utility;
+import it.pagopa.pn.paperchannel.utils.ClientIdHelper;
 import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
@@ -27,6 +27,8 @@ import reactor.util.function.Tuples;
 
 import java.time.ZoneOffset;
 import java.util.List;
+
+import static it.pagopa.pn.paperchannel.utils.Const.CLIENT_ID_DELIVERY_PUSH;
 
 @Slf4j
 @SuperBuilder
@@ -178,15 +180,14 @@ public class SendToDeliveryPushHandler implements MessageHandler {
         log.debug("[{}] Response of ExternalChannel from request id {}", paperRequest.getRequestId(), paperRequest);
 
         SendEvent sendEvent = SendEventMapper.createSendEventMessage(pnDeliveryRequest, paperRequest);
+        String clientId = ClientIdHelper.getClientId(pnDeliveryRequest.getRequestId(), MDC.get(Const.CONTEXT_KEY_CLIENT_ID));
 
-        if (Utility.isCallCenterEvoluto(pnDeliveryRequest.getRequestId())){
-            String clientId = MDC.get(Const.CONTEXT_KEY_CLIENT_ID);
-            log.debug("[{}] clientId from context", clientId);
-            sqsSender.pushSendEventOnEventBridge(clientId, sendEvent);
-            log.info("[{}] Sent to event-bridge: {}", paperRequest.getRequestId(), sendEvent);
-        } else {
+        if (clientId.equals(CLIENT_ID_DELIVERY_PUSH)) {
             sqsSender.pushSendEvent(sendEvent);
             log.info("[{}] Sent to delivery-push: {}", paperRequest.getRequestId(), sendEvent);
+        } else {
+            sqsSender.pushSendEventOnEventBridge(clientId, sendEvent);
+            log.info("[{}] Sent to event-bridge: {}", paperRequest.getRequestId(), sendEvent);
         }
     }
 }

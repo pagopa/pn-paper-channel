@@ -38,6 +38,8 @@ public class Const {
     public static final String HEADER_CLIENT_ID = "x-pagopa-paperchannel-cx-id";
     public static final String CONTEXT_KEY_CLIENT_ID = "CLIENT_ID";
     public static final String CONTEXT_KEY_PREFIX_CLIENT_ID = "PREFIX_CLIENT_ID";
+    public static final String SERVICE_DESK_CLIENT_ID = "SERVICE_DESK_CLIENT_ID";
+    public static final String CLIENT_ID_DELIVERY_PUSH = "CLIENT_ID_DELIVERY_PUSH";
 
     public static final String DOCUMENT_TYPE_F24_SET = "PN_F24_SET";
 
