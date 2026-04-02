@@ -8,7 +8,7 @@ import static it.pagopa.pn.paperchannel.utils.Const.*;
 @Slf4j
 public class ClientIdHelper {
 
-    public ClientIdHelper() {}
+    private ClientIdHelper() {}
 
     public static String getClientId(String requestId, String proposedClientId) {
         log.info("Getting clientId for requestId: {} with proposedClientId: {}", requestId, proposedClientId);

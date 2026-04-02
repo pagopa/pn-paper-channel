@@ -436,8 +436,7 @@ public class PaperMessagesServiceImpl extends GenericService implements PaperMes
     }
 
     private Mono<Void> createAndPushPrepareEvent(PnDeliveryRequest deliveryRequest){
-        String clientId = ClientIdHelper.getClientId(deliveryRequest.getRequestId(), deliveryRequest.getClientId());
-        return Mono.fromRunnable(() -> prepareFlowStarter.startPreparePhaseOneFromPrepareSync(deliveryRequest, clientId));
+        return Mono.fromRunnable(() -> prepareFlowStarter.startPreparePhaseOneFromPrepareSync(deliveryRequest, deliveryRequest.getClientId()));
     }
 
 }
