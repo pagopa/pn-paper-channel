@@ -11,7 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
-import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -34,15 +33,6 @@ public class Utility {
 
     private Utility() {
         throw new IllegalCallerException();
-    }
-
-
-    public static Mono<String> getFromContext(String key, String defaultValue){
-        return Mono.deferContextual(ctx -> {
-            String value = ctx.getOrDefault(key, defaultValue);
-            if (value == null) return Mono.empty();
-            return Mono.just(value);
-        });
     }
 
     public static String getRequestIdWithParams(String requestId, String attempt, String clientId){

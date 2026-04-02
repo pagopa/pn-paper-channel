@@ -3,7 +3,6 @@ package it.pagopa.pn.paperchannel.rest.v1;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ShipmentCalculateRequest;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ShipmentCalculateResponse;
-import it.pagopa.pn.paperchannel.middleware.db.dao.PnClientDAO;
 import it.pagopa.pn.paperchannel.utils.PaperCalculatorUtils;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -22,8 +21,6 @@ public class PaperCalculatorRestV2ControllerTest {
     private WebTestClient webTestClient;
     @MockitoBean
     private PaperCalculatorUtils paperCalculatorUtils;
-    @MockitoBean
-    private PnClientDAO pnClientDAO;
 
 
     @Test

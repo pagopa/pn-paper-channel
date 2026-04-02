@@ -1,12 +1,11 @@
 package it.pagopa.pn.paperchannel.rest.v1;
 
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.CheckAddressResponse;
-import it.pagopa.pn.paperchannel.middleware.db.dao.PnClientDAO;
 import it.pagopa.pn.paperchannel.service.CheckAddressService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 
@@ -19,10 +18,8 @@ class CheckAddressRestV1ControllerTest {
 
     @Autowired
     private WebTestClient webTestClient;
-    @MockBean
+    @MockitoBean
     private CheckAddressService checkAddressService;
-    @MockBean
-    private PnClientDAO pnClientDAO;
 
     @Test
     void testCheckAddressRequestOk() {

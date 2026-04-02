@@ -44,6 +44,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
+import static it.pagopa.pn.paperchannel.utils.Const.CLIENT_ID_DELIVERY_PUSH;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.argThat;
@@ -605,7 +606,6 @@ class PaperMessagesServiceTest {
         sendRequest.setRequestPaId("request-pad-id");
         sendRequest.setPrintType("FRONTE-RETRO");
 
-        /* TEST WITHOUT CONTEXT SETTING */
         Mono<SendResponse> mono = paperMessagesService.executionPaper("TST-IOR.2332", sendRequest);
         int value = Assertions.assertThrows(PnGenericException.class, mono::block).getHttpStatus().value();
         Assertions.assertEquals(422, value);
@@ -691,15 +691,21 @@ class PaperMessagesServiceTest {
     }
 
     @Test
-    void executionPaperWithoutContextAndWithStatusTakingChargeTest() {
+    void executionPaperWithClientIdAndWithStatusTakingChargeTest() {
         when(pnPaperChannelConfig.getPaperTrackerProductList()).thenReturn(List.of("890"));
         mocksExecutionPaperOK();
+
+        PnDeliveryRequest request = getPnDeliveryRequest();
+        request.setStatusCode(StatusDeliveryEnum.TAKING_CHARGE.getCode());
+        request.setClientId("001");
+
+        Mockito.when(requestDeliveryDAO.getByRequestIdStrongConsistency("TST-IOR.2332", false))
+                .thenReturn(Mono.just(request));
 
         SendRequest sendRequest = getRequest("TST-IOR.2332");
         sendRequest.setRequestPaId("request-pad-id");
         sendRequest.setPrintType("FRONTE-RETRO");
 
-        /* TEST WITHOUT CONTEXT SETTING */
         SendResponse response = paperMessagesService.executionPaper("TST-IOR.2332", sendRequest)
                 .block();
 
@@ -710,7 +716,7 @@ class PaperMessagesServiceTest {
 
         // verifico il requestID da inviare ad ExtChannel
         assertNotNull(captureSendRequest.getValue());
-        assertEquals("TST-IOR.2332.PCRETRY_0", captureSendRequest.getValue().getRequestId());
+        assertEquals("001.TST-IOR.2332.PCRETRY_0", captureSendRequest.getValue().getRequestId());
 
         assertEquals(100,response.getAmount());
         assertEquals(3, response.getNumberOfPages());
@@ -719,17 +725,22 @@ class PaperMessagesServiceTest {
         /* -----------------------------  */
     }
     @Test
-    void executionPaperWithContextAndWithStatusTakingChargeTest() {
+    void executionPaperWithNullClientIdAndWithStatusTakingChargeTest() {
         when(pnPaperChannelConfig.getPaperTrackerProductList()).thenReturn(List.of("890"));
         mocksExecutionPaperOK();
+
+        PnDeliveryRequest request = getPnDeliveryRequest();
+        request.setStatusCode(StatusDeliveryEnum.TAKING_CHARGE.getCode());
+        request.setClientId(null);
+
+        Mockito.when(requestDeliveryDAO.getByRequestIdStrongConsistency("TST-IOR.2332", false))
+                .thenReturn(Mono.just(request));
 
         SendRequest sendRequest = getRequest("TST-IOR.2332");
         sendRequest.setRequestPaId("request-pad-id");
         sendRequest.setPrintType("FRONTE-RETRO");
 
-        /* TEST WITH CONTEXT SETTING */
         SendResponse response = paperMessagesService.executionPaper("TST-IOR.2332", sendRequest)
-                .contextWrite(ctx -> ctx.put(Const.CONTEXT_KEY_PREFIX_CLIENT_ID, "001"))
                 .block();
 
         ArgumentCaptor<SendRequest> captureSendRequest = ArgumentCaptor.forClass(SendRequest.class);
@@ -739,7 +750,43 @@ class PaperMessagesServiceTest {
 
         // verifico il nuovo requestID da inviare ad ExtChannel - {CLIENTID}.{REQUESTID}.PCRETRY_{ATTEMPT}
         assertNotNull(captureSendRequest.getValue());
-        assertEquals("001.TST-IOR.2332.PCRETRY_0", captureSendRequest.getValue().getRequestId());
+        assertEquals(CLIENT_ID_DELIVERY_PUSH.concat(".TST-IOR.2332.PCRETRY_0"), captureSendRequest.getValue().getRequestId());
+
+        assertEquals(100,response.getAmount());
+        assertEquals(3, response.getNumberOfPages());
+        Mockito.verify(paperTrackerClient, times(0)).initPaperTracking(any(), any(), any(), any());
+        Mockito.verify(deliveryDriverDAO, times(0)).getByDeliveryDriverId(anyString());
+
+        /* ----------------------------- */
+    }
+
+    @Test
+    void executionPaperWithEmptyStringClientIdAndWithStatusTakingChargeTest() {
+        when(pnPaperChannelConfig.getPaperTrackerProductList()).thenReturn(List.of("890"));
+        mocksExecutionPaperOK();
+
+        PnDeliveryRequest request = getPnDeliveryRequest();
+        request.setStatusCode(StatusDeliveryEnum.TAKING_CHARGE.getCode());
+        request.setClientId("");
+
+        Mockito.when(requestDeliveryDAO.getByRequestIdStrongConsistency("TST-IOR.2332", false))
+                .thenReturn(Mono.just(request));
+
+        SendRequest sendRequest = getRequest("TST-IOR.2332");
+        sendRequest.setRequestPaId("request-pad-id");
+        sendRequest.setPrintType("FRONTE-RETRO");
+
+        SendResponse response = paperMessagesService.executionPaper("TST-IOR.2332", sendRequest)
+                .block();
+
+        ArgumentCaptor<SendRequest> captureSendRequest = ArgumentCaptor.forClass(SendRequest.class);
+
+        // verifico che è stato invocato externalChannel
+        verify(externalChannelClient, timeout(2000).times(1)).sendEngageRequest(captureSendRequest.capture(), any(), any());
+
+        // verifico il nuovo requestID da inviare ad ExtChannel - {CLIENTID}.{REQUESTID}.PCRETRY_{ATTEMPT}
+        assertNotNull(captureSendRequest.getValue());
+        assertEquals(CLIENT_ID_DELIVERY_PUSH.concat(".TST-IOR.2332.PCRETRY_0"), captureSendRequest.getValue().getRequestId());
 
         assertEquals(100,response.getAmount());
         assertEquals(3, response.getNumberOfPages());
@@ -754,6 +801,13 @@ class PaperMessagesServiceTest {
         when(pnPaperChannelConfig.getPaperTrackerProductList()).thenReturn(List.of("AR"));
         mocksExecutionPaperTrackerEnableProductAROK();
 
+        PnDeliveryRequest request = getPnDeliveryRequest();
+        request.setStatusCode(StatusDeliveryEnum.TAKING_CHARGE.getCode());
+        request.setClientId("001");
+
+        Mockito.when(requestDeliveryDAO.getByRequestIdStrongConsistency("TST-IOR.2332", false))
+                .thenReturn(Mono.just(request));
+
         SendRequest sendRequest = getRequest("TST-IOR.2332");
         sendRequest.setRequestPaId("request-pad-id");
         sendRequest.setPrintType("FRONTE-RETRO");
@@ -765,9 +819,7 @@ class PaperMessagesServiceTest {
 
         when(paperTenderService.getSimplifiedCost(any(), any())).thenReturn(Mono.just(pnPaperChannelCostDTO));
 
-        /* TEST WITH CONTEXT SETTING */
         SendResponse response = paperMessagesService.executionPaper("TST-IOR.2332", sendRequest)
-                .contextWrite(ctx -> ctx.put(Const.CONTEXT_KEY_PREFIX_CLIENT_ID, "001"))
                 .block();
 
         ArgumentCaptor<SendRequest> captureSendRequest = ArgumentCaptor.forClass(SendRequest.class);
