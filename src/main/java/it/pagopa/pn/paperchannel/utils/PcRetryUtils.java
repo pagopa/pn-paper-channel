@@ -117,7 +117,8 @@ public class PcRetryUtils {
                                     requestId,
                                     Const.PCRETRY.concat(pcRetry),
                                     pnDeliveryRequest.getProductType(),
-                                    unifiedDeliveryDriver)
+                                    unifiedDeliveryDriver,
+                                    pnDeliveryRequest.getClientId())
                             .doOnSuccess(r -> log.debug("initPaperTracking done"))
                             .doOnError(ex -> log.error("Error on initPaperTracking: {}", ex.getMessage(), ex))
                     )
