@@ -44,7 +44,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
-import static it.pagopa.pn.paperchannel.utils.Const.CLIENT_ID_DELIVERY_PUSH;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.argThat;
@@ -716,7 +715,7 @@ class PaperMessagesServiceTest {
 
         // verifico il requestID da inviare ad ExtChannel
         assertNotNull(captureSendRequest.getValue());
-        assertEquals("001.TST-IOR.2332.PCRETRY_0", captureSendRequest.getValue().getRequestId());
+        assertEquals("TST-IOR.2332.PCRETRY_0", captureSendRequest.getValue().getRequestId());
 
         assertEquals(100,response.getAmount());
         assertEquals(3, response.getNumberOfPages());
@@ -748,9 +747,9 @@ class PaperMessagesServiceTest {
         // verifico che è stato invocato externalChannel
         verify(externalChannelClient, timeout(2000).times(1)).sendEngageRequest(captureSendRequest.capture(), any(), any());
 
-        // verifico il nuovo requestID da inviare ad ExtChannel - {CLIENTID}.{REQUESTID}.PCRETRY_{ATTEMPT}
+        // verifico il nuovo requestID da inviare ad ExtChannel - {REQUESTID}.PCRETRY_{ATTEMPT}
         assertNotNull(captureSendRequest.getValue());
-        assertEquals(CLIENT_ID_DELIVERY_PUSH.concat(".TST-IOR.2332.PCRETRY_0"), captureSendRequest.getValue().getRequestId());
+        assertEquals("TST-IOR.2332.PCRETRY_0", captureSendRequest.getValue().getRequestId());
 
         assertEquals(100,response.getAmount());
         assertEquals(3, response.getNumberOfPages());
@@ -784,9 +783,9 @@ class PaperMessagesServiceTest {
         // verifico che è stato invocato externalChannel
         verify(externalChannelClient, timeout(2000).times(1)).sendEngageRequest(captureSendRequest.capture(), any(), any());
 
-        // verifico il nuovo requestID da inviare ad ExtChannel - {CLIENTID}.{REQUESTID}.PCRETRY_{ATTEMPT}
+        // verifico il nuovo requestID da inviare ad ExtChannel - {REQUESTID}.PCRETRY_{ATTEMPT}
         assertNotNull(captureSendRequest.getValue());
-        assertEquals(CLIENT_ID_DELIVERY_PUSH.concat(".TST-IOR.2332.PCRETRY_0"), captureSendRequest.getValue().getRequestId());
+        assertEquals("TST-IOR.2332.PCRETRY_0", captureSendRequest.getValue().getRequestId());
 
         assertEquals(100,response.getAmount());
         assertEquals(3, response.getNumberOfPages());
@@ -827,9 +826,9 @@ class PaperMessagesServiceTest {
         // verifico che è stato invocato externalChannel
         verify(externalChannelClient, timeout(2000).times(1)).sendEngageRequest(captureSendRequest.capture(), any(), any());
 
-        // verifico il nuovo requestID da inviare ad ExtChannel - {CLIENTID}.{REQUESTID}.PCRETRY_{ATTEMPT}
+        // verifico il nuovo requestID da inviare ad ExtChannel - {REQUESTID}.PCRETRY_{ATTEMPT}
         assertNotNull(captureSendRequest.getValue());
-        assertEquals("001.TST-IOR.2332.PCRETRY_0", captureSendRequest.getValue().getRequestId());
+        assertEquals("TST-IOR.2332.PCRETRY_0", captureSendRequest.getValue().getRequestId());
 
         assertEquals(100,response.getAmount());
         assertEquals(3, response.getNumberOfPages());

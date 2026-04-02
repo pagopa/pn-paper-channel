@@ -280,7 +280,7 @@ public class PaperMessagesServiceImpl extends GenericService implements PaperMes
 
         PnLogAudit pnLogAudit = new PnLogAudit();
 
-        return Mono.just(Utility.getRequestIdWithParams(sendRequest.getRequestId(), "0", ClientIdHelper.getClientId(requestId, pnDeliveryRequest.getClientId())))
+        return Mono.just(Utility.getRequestIdWithParams(sendRequest.getRequestId(), "0"))
                 .map(sendRequest::requestId)
                 .doOnNext(newSendRequest -> {
                     String logString = "prepare requestId = %s, trace_id = %s  request to External Channel";

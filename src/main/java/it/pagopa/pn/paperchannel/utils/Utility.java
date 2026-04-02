@@ -35,10 +35,9 @@ public class Utility {
         throw new IllegalCallerException();
     }
 
-    public static String getRequestIdWithParams(String requestId, String attempt, String clientId){
+    public static String getRequestIdWithParams(String requestId, String attempt){
         String finalRequestId = requestId.concat(Const.RETRY).concat(attempt);
-        if (StringUtils.isNotBlank(clientId))
-            finalRequestId = clientId.concat(".").concat(finalRequestId);
+        log.debug("Generated requestId with params: {}", finalRequestId);
         return finalRequestId;
     }
 
