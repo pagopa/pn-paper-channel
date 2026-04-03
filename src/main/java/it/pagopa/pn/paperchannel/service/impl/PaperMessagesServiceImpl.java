@@ -31,8 +31,6 @@ import java.util.List;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_IN_PROCESSING;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DELIVERY_REQUEST_NOT_EXIST;
 import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.READY_TO_SEND;
-import static it.pagopa.pn.paperchannel.utils.Const.CONTEXT_KEY_CLIENT_ID;
-import static it.pagopa.pn.paperchannel.utils.Const.CONTEXT_KEY_PREFIX_CLIENT_ID;
 
 @CustomLog
 @Service
@@ -138,7 +136,7 @@ public class PaperMessagesServiceImpl extends GenericService implements PaperMes
                                                             String.format("prepare requestId = %s, relatedRequestId = %s Discovered Address is present", requestId, prepareRequest.getRelatedRequestId())
                                                     );
 
-                                                    final String clientId = cxt.getOrDefault(CONTEXT_KEY_CLIENT_ID, "");
+                                                    final String clientId = ClientIdHelper.getClientId(requestId, response.getClientId());
                                                     prepareFlowStarter.startPreparePhaseOneFromPrepareSync(response, clientId);
                                                 } else {
                                                     pnLogAudit.addsSuccessResolveLogic(
@@ -278,14 +276,11 @@ public class PaperMessagesServiceImpl extends GenericService implements PaperMes
                 });
     }
 
-
     private Mono<Void> sendEngageExternalChannel(String requestId, SendRequest sendRequest, List<AttachmentInfo> attachments, PnDeliveryRequest pnDeliveryRequest){
 
         PnLogAudit pnLogAudit = new PnLogAudit();
 
-        return Utility.getFromContext(CONTEXT_KEY_PREFIX_CLIENT_ID, "")
-                .switchIfEmpty(Mono.just(""))
-                .map(clientIdPrefix -> Utility.getRequestIdWithParams(sendRequest.getRequestId(), "0", clientIdPrefix))
+        return Mono.just(Utility.getRequestIdWithParams(sendRequest.getRequestId(), "0"))
                 .map(sendRequest::requestId)
                 .doOnNext(newSendRequest -> {
                     String logString = "prepare requestId = %s, trace_id = %s  request to External Channel";
@@ -441,11 +436,7 @@ public class PaperMessagesServiceImpl extends GenericService implements PaperMes
     }
 
     private Mono<Void> createAndPushPrepareEvent(PnDeliveryRequest deliveryRequest){
-        return Utility.getFromContext(CONTEXT_KEY_CLIENT_ID, "")
-                .switchIfEmpty(Mono.just(""))
-                .doOnNext(clientId -> prepareFlowStarter.startPreparePhaseOneFromPrepareSync(deliveryRequest, clientId))
-                .then();
-
+        return Mono.fromRunnable(() -> prepareFlowStarter.startPreparePhaseOneFromPrepareSync(deliveryRequest, deliveryRequest.getClientId()));
     }
 
 }

@@ -82,7 +82,7 @@ class RECRN003CMessageHandlerTest {
         when(eventMetaDAO.getDeliveryEventMeta(META_STRING.concat(requestId), META_STRING.concat(STATUS_RECRN003A)))
                 .thenReturn(Mono.just(eventMetaRECRN003A));
         when(metaDematCleaner.clean(requestId)).thenReturn(Mono.empty());
-        doNothing().when(sqsSender).pushSendEvent(Mockito.any());
+        doNothing().when(sqsSender).pushSendEventOnEventBridge(Mockito.anyString(), Mockito.any());
 
         PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
                 .requestId(requestId)
@@ -107,7 +107,7 @@ class RECRN003CMessageHandlerTest {
         // Assert
         assertDoesNotThrow(() -> mono.block());
         PnDeliveryRequest deliveryRequest = pnDeliveryRequestCaptor.getValue();
-        verify(sqsSender, times(2)).pushSendEvent(capturedSendEvent.capture());
+        verify(sqsSender, times(2)).pushSendEventOnEventBridge(anyString(), capturedSendEvent.capture());
         assertNotNull(capturedSendEvent.getAllValues());
         assertEquals(2, capturedSendEvent.getAllValues().size());
         assertEquals(STATUS_PNRN012, capturedSendEvent.getAllValues().get(0).getStatusDetail());
@@ -165,7 +165,7 @@ class RECRN003CMessageHandlerTest {
 
         // Assert
         Assertions.assertDoesNotThrow(() -> mono.block());
-        verify(sqsSender).pushSendEvent(capturedSendEvent.capture());
+        verify(sqsSender).pushSendEventOnEventBridge(anyString(), capturedSendEvent.capture());
         log.info(capturedSendEvent.getAllValues().toString());
         SendEvent sendEvent = capturedSendEvent.getValue();
         Assertions.assertEquals(StatusCodeEnum.PROGRESS, sendEvent.getStatusCode());

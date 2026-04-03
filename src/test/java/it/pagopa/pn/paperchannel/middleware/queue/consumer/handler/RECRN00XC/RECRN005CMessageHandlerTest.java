@@ -96,7 +96,7 @@ class RECRN005CMessageHandlerTest {
         when(eventMetaDAO.getDeliveryEventMeta(META_STRING.concat(REQUEST_ID), META_STRING.concat(STATUS_RECRN005A)))
                 .thenReturn(Mono.just(eventMetaRECRN005A));
         when(metaDematCleaner.clean(REQUEST_ID)).thenReturn(Mono.empty());
-        doNothing().when(sqsSender).pushSendEvent(Mockito.any());
+        doNothing().when(sqsSender).pushSendEventOnEventBridge(Mockito.anyString(), Mockito.any());
 
         PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
                 .requestId(REQUEST_ID)
@@ -120,7 +120,7 @@ class RECRN005CMessageHandlerTest {
 
         // Assert
         PnDeliveryRequest deliveryRequest = pnDeliveryRequestCaptor.getValue();
-        verify(sqsSender, times(2)).pushSendEvent(capturedSendEvent.capture());
+        verify(sqsSender, times(2)).pushSendEventOnEventBridge(anyString(), capturedSendEvent.capture());
         assertNotNull(capturedSendEvent.getAllValues());
         assertEquals(2, capturedSendEvent.getAllValues().size());
         assertEquals(STATUS_PNRN012, capturedSendEvent.getAllValues().get(0).getStatusDetail());
@@ -173,7 +173,7 @@ class RECRN005CMessageHandlerTest {
         Assertions.assertDoesNotThrow(() -> mono.block());
 
         // Assert
-        verify(sqsSender, never()).pushSendEvent(any());
+        verify(sqsSender, never()).pushSendEventOnEventBridge(anyString(), any());
         verify(requestDeliveryDAO, never()).updateConditionalOnFeedbackStatus(any(), anyBoolean());
 
         // Verify requestError
@@ -204,7 +204,7 @@ class RECRN005CMessageHandlerTest {
         when(eventMetaDAO.getDeliveryEventMeta(META_STRING.concat(REQUEST_ID), META_STRING.concat(STATUS_RECRN005A)))
                 .thenReturn(Mono.just(eventMetaRECRN005A));
         when(metaDematCleaner.clean(REQUEST_ID)).thenReturn(Mono.empty());
-        doNothing().when(sqsSender).pushSendEvent(Mockito.any());
+        doNothing().when(sqsSender).pushSendEventOnEventBridge(Mockito.anyString(), Mockito.any());
 
         PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
                 .requestId(REQUEST_ID)
@@ -226,7 +226,7 @@ class RECRN005CMessageHandlerTest {
         Assertions.assertDoesNotThrow(() -> mono.block());
 
         // Assert
-        verify(sqsSender, times(2)).pushSendEvent(capturedSendEvent.capture());
+        verify(sqsSender, times(2)).pushSendEventOnEventBridge(anyString(), capturedSendEvent.capture());
         assertNotNull(capturedSendEvent.getAllValues());
         assertEquals(2, capturedSendEvent.getAllValues().size());
         assertEquals(STATUS_PNRN012, capturedSendEvent.getAllValues().get(0).getStatusDetail());
@@ -259,7 +259,7 @@ class RECRN005CMessageHandlerTest {
         when(eventMetaDAO.getDeliveryEventMeta(META_STRING.concat(REQUEST_ID), META_STRING.concat(STATUS_RECRN005A)))
                 .thenReturn(Mono.just(eventMetaRECRN005A));
         when(metaDematCleaner.clean(REQUEST_ID)).thenReturn(Mono.empty());
-        doNothing().when(sqsSender).pushSendEvent(Mockito.any());
+        doNothing().when(sqsSender).pushSendEventOnEventBridge(Mockito.anyString(), Mockito.any());
 
         PaperProgressStatusEventDto paperRequest = new PaperProgressStatusEventDto()
                 .requestId(REQUEST_ID)
@@ -281,7 +281,7 @@ class RECRN005CMessageHandlerTest {
         Assertions.assertDoesNotThrow(() -> mono.block());
 
         // Assert
-        verify(sqsSender, times(2)).pushSendEvent(capturedSendEvent.capture());
+        verify(sqsSender, times(2)).pushSendEventOnEventBridge(anyString(), capturedSendEvent.capture());
         assertNotNull(capturedSendEvent.getAllValues());
         assertEquals(2, capturedSendEvent.getAllValues().size());
         assertEquals(STATUS_PNRN012, capturedSendEvent.getAllValues().get(0).getStatusDetail());
@@ -330,7 +330,7 @@ class RECRN005CMessageHandlerTest {
         Assertions.assertDoesNotThrow(() -> mono.block());
 
         // Assert
-        verify(sqsSender, never()).pushSendEvent(any());
+        verify(sqsSender, never()).pushSendEventOnEventBridge(anyString(), any());
         verify(requestDeliveryDAO, never()).updateConditionalOnFeedbackStatus(any(), anyBoolean());
 
         // Verify requestError
@@ -377,7 +377,7 @@ class RECRN005CMessageHandlerTest {
         Assertions.assertDoesNotThrow(() -> mono.block());
 
         // Assert
-        verify(sqsSender, never()).pushSendEvent(any());
+        verify(sqsSender, never()).pushSendEventOnEventBridge(anyString(), any());
         verify(requestDeliveryDAO, never()).updateConditionalOnFeedbackStatus(any(), anyBoolean());
 
         // Verify requestError

@@ -30,6 +30,8 @@ import java.time.temporal.ChronoUnit;
 
 class SqsQueueSenderTestIT extends BaseTest {
 
+    private static final String CLIENT_ID = "clientId";
+
     @MockitoSpyBean
     private DeliveryPushMomProducer deliveryPushMomProducer;
 
@@ -57,7 +59,7 @@ class SqsQueueSenderTestIT extends BaseTest {
 
     @Test
     void pushSendEventOnDeliveryQueueTest(){
-        this.sqsSender.pushSendEvent(getSendEvent());
+        this.sqsSender.pushSendEventOnEventBridge(CLIENT_ID, getSendEvent());
         Mockito.verify(deliveryPushMomProducer, Mockito.times(1))
                 .push((DeliveryPushEvent) Mockito.any());
     }

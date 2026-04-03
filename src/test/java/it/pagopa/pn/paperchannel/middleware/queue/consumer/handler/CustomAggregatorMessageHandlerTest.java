@@ -108,7 +108,7 @@ class CustomAggregatorMessageHandlerTest {
         // deleteEventDemat call
         verify(mockDematDao, timeout(2000).times(1)).deleteBatch(any(String.class), any(String.class));
         // DeliveryPush send via SQS verification
-        verify(mockSqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
+        verify(mockSqsSender, timeout(2000).times(1)).pushSendEventOnEventBridge(anyString(), caturedSendEvent.capture());
 
         verify(requestDeliveryDAO, times(1)).updateConditionalOnFeedbackStatus(argThat(pnDeliveryRequest -> {
             assertThat(pnDeliveryRequest).isNotNull();
@@ -157,7 +157,7 @@ class CustomAggregatorMessageHandlerTest {
         // getDeliveryEventMeta call
         verify(mockMetaDao, timeout(2000).times(1)).getDeliveryEventMeta(any(String.class), any(String.class));
         // DeliveryPush send via SQS verification
-        verify(mockSqsSender, timeout(2000).times(0)).pushSendEvent(any());
+        verify(mockSqsSender, timeout(2000).times(0)).pushSendEventOnEventBridge(anyString(), any());
 
         verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
     }
@@ -196,7 +196,7 @@ class CustomAggregatorMessageHandlerTest {
         when(requestDeliveryDAO.updateConditionalOnFeedbackStatus(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
 
         // the SQS queue
-        doThrow(new RuntimeException()).when(mockSqsSender).pushSendEvent(Mockito.any());
+        doThrow(new RuntimeException()).when(mockSqsSender).pushSendEventOnEventBridge(Mockito.anyString(), Mockito.any());
 
         // assertThrows with call
         assertThrowsExactly(RuntimeException.class, () -> handler.handleMessage(entity, paperRequest).block());
@@ -205,7 +205,7 @@ class CustomAggregatorMessageHandlerTest {
         // getDeliveryEventMeta call
         verify(mockMetaDao, timeout(2000).times(2)).getDeliveryEventMeta(any(String.class), any(String.class));
         // DeliveryPush send via SQS verification
-        verify(mockSqsSender, timeout(2000).times(1)).pushSendEvent(any(SendEvent.class));
+        verify(mockSqsSender, timeout(2000).times(1)).pushSendEventOnEventBridge(anyString(), any(SendEvent.class));
         // deleteEventMeta call
         verify(mockMetaDao, timeout(2000).times(0)).deleteBatch(any(String.class), any(String.class));
         // deleteEventDemat call

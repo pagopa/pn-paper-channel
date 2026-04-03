@@ -54,6 +54,8 @@ class OldRECAG012ChainedMessageHandler {
         long ttlDays = 365;
         when(mockConfig.getTtlExecutionDaysMeta()).thenReturn(ttlDays);
         when(mockConfig.getRequiredDemats()).thenReturn(Set.of("23L"));
+        when(mockEventDematDAO.findAllByRequestId(anyString(), anyBoolean()))
+                .thenReturn(Flux.empty());
 
         saveMetadataMessageHandler = SaveMetadataMessageHandler.builder()
                 .eventMetaDAO(mockEventMetaDAO)
@@ -120,7 +122,7 @@ class OldRECAG012ChainedMessageHandler {
         verify(mockEventMetaDAO, times(1)).createOrUpdate(pnEventMeta);
 
         // I expect it to send the message to delivery-push by RECAG012AMessageHandler
-        verify(mockSqsSender, times(1)).pushSendEvent(sendEventExpected);
+        verify(mockSqsSender, times(1)).pushSendEventOnEventBridge(anyString(), eq(sendEventExpected));
         verify(mockSqsSender, never()).pushSingleStatusUpdateEvent( any());
         verify(mockPnEventErrorDAO, never()).findEventErrorsByRequestId( anyString());
 
@@ -168,7 +170,7 @@ class OldRECAG012ChainedMessageHandler {
         verify(mockEventMetaDAO, times(1)).createOrUpdate(pnEventMeta);
 
         // I expect it not to send the message to delivery-push
-        verify(mockSqsSender, never()).pushSendEvent(any());
+        verify(mockSqsSender, never()).pushSendEventOnEventBridge(anyString(), any());
         verify(mockSqsSender, never()).pushSingleStatusUpdateEvent( any());
         verify(mockPnEventErrorDAO, never()).findEventErrorsByRequestId( anyString());
 
@@ -233,7 +235,7 @@ class OldRECAG012ChainedMessageHandler {
         verify(mockEventMetaDAO, times(1)).createOrUpdate(pnEventMeta);
 
         // I expect it to send the message to delivery-push
-        verify(mockSqsSender, times(1)).pushSendEvent(sendEventExpected);
+        verify(mockSqsSender, times(1)).pushSendEventOnEventBridge(anyString(), eq(sendEventExpected));
         verify(mockSqsSender, never()).pushSingleStatusUpdateEvent( any());
         verify(mockPnEventErrorDAO, never()).findEventErrorsByRequestId( anyString());
 
@@ -285,7 +287,7 @@ class OldRECAG012ChainedMessageHandler {
         verify(mockEventMetaDAO, times(1)).createOrUpdate(pnEventMeta);
 
         // I expect it not to send the message to delivery-push
-        verify(mockSqsSender, never()).pushSendEvent(any());
+        verify(mockSqsSender, never()).pushSendEventOnEventBridge(anyString(), any());
         verify(mockSqsSender, never()).pushSingleStatusUpdateEvent( any());
         verify(mockPnEventErrorDAO, never()).findEventErrorsByRequestId( anyString());
 

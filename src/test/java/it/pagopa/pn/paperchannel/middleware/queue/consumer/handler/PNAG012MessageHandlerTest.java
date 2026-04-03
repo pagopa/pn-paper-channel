@@ -121,7 +121,7 @@ class PNAG012MessageHandlerTest {
 
         verify(eventMetaDAO, times(1)).getDeliveryEventMeta(anyString(), anyString());
         verify(eventMetaDAO, times(1)).putIfAbsent(any(PnEventMeta.class));
-        verify(mockSqsSender, times(1)).pushSendEvent(any(SendEvent.class));
+        verify(mockSqsSender, times(1)).pushSendEventOnEventBridge(anyString(), any(SendEvent.class));
 
         verify(requestDeliveryDAO, times(1)).updateConditionalOnFeedbackStatus(argThat(pnDeliveryRequest -> {
             assertThat(pnDeliveryRequest).isNotNull();
@@ -182,7 +182,7 @@ class PNAG012MessageHandlerTest {
 
         verify(eventMetaDAO, times(1)).getDeliveryEventMeta(anyString(), anyString());
         verify(eventMetaDAO, times(1)).putIfAbsent(any(PnEventMeta.class));
-        verify(mockSqsSender, times(1)).pushSendEvent(any(SendEvent.class));
+        verify(mockSqsSender, times(1)).pushSendEventOnEventBridge(anyString(), any(SendEvent.class));
 
         verify(requestDeliveryDAO, times(1)).updateConditionalOnFeedbackStatus(argThat(pnDeliveryRequest -> {
             assertThat(pnDeliveryRequest).isNotNull();
@@ -257,7 +257,7 @@ class PNAG012MessageHandlerTest {
 
         verify(eventMetaDAO, times(1)).getDeliveryEventMeta(anyString(), anyString());
         verify(eventMetaDAO, times(1)).putIfAbsent(any(PnEventMeta.class));
-        verify(mockSqsSender, times(1)).pushSendEvent(any(SendEvent.class));
+        verify(mockSqsSender, times(1)).pushSendEventOnEventBridge(anyString(), any(SendEvent.class));
 
         verify(requestDeliveryDAO, times(1)).updateConditionalOnFeedbackStatus(argThat(pnDeliveryRequest -> {
             assertThat(pnDeliveryRequest).isNotNull();
@@ -311,7 +311,7 @@ class PNAG012MessageHandlerTest {
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
 
         //mi aspetto che il flusso venga bloccato e quindi on invii l'evento a delivery-push
-        verify(mockSqsSender, never()).pushSendEvent(any());
+        verify(mockSqsSender, never()).pushSendEventOnEventBridge(anyString(), any());
 
         verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
     }
@@ -363,7 +363,7 @@ class PNAG012MessageHandlerTest {
         // Then
         // eseguo l'handler
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
-        verify(mockSqsSender, never()).pushSendEvent(any());
+        verify(mockSqsSender, never()).pushSendEventOnEventBridge(anyString(), any());
 
         verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
     }
@@ -405,7 +405,7 @@ class PNAG012MessageHandlerTest {
 
         verify(eventMetaDAO, never()).getDeliveryEventMeta(anyString(), anyString());
         verify(eventMetaDAO, never()).putIfAbsent(any(PnEventMeta.class));
-        verify(mockSqsSender, never()).pushSendEvent(any(SendEvent.class));
+        verify(mockSqsSender, never()).pushSendEventOnEventBridge(anyString(), any(SendEvent.class));
         verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
     }
 
@@ -460,7 +460,7 @@ class PNAG012MessageHandlerTest {
 
         // Then
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
-        verify(mockSqsSender, times(1)).pushSendEvent(any());
+        verify(mockSqsSender, times(1)).pushSendEventOnEventBridge(anyString(), any());
 
         verify(requestDeliveryDAO, times(1)).updateConditionalOnFeedbackStatus(argThat(pnDeliveryRequest -> {
             assertThat(pnDeliveryRequest).isNotNull();
@@ -526,7 +526,7 @@ class PNAG012MessageHandlerTest {
 
         // Then
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
-        verify(mockSqsSender, times(1)).pushSendEvent(any());
+        verify(mockSqsSender, times(1)).pushSendEventOnEventBridge(anyString(), any());
 
         verify(requestDeliveryDAO, times(1)).updateConditionalOnFeedbackStatus(argThat(pnDeliveryRequest -> {
             assertThat(pnDeliveryRequest).isNotNull();
@@ -573,7 +573,7 @@ class PNAG012MessageHandlerTest {
 
         //mi aspetto che non arrivi nè a fare la query dei meta nè a maggior ragione inviare l'evento a delivery-push
         verify(eventMetaDAO, never()).getDeliveryEventMeta(any(), any());
-        verify(mockSqsSender, never()).pushSendEvent(any());
+        verify(mockSqsSender, never()).pushSendEventOnEventBridge(anyString(), any());
 
         verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
     }

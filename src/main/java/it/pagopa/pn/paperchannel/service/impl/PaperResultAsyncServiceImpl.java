@@ -4,9 +4,7 @@ import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.DiscoveredAddressDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.paperchannel.mapper.RequestDeliveryMapper;
-import it.pagopa.pn.paperchannel.middleware.db.dao.PnClientDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnClientID;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.HandlersFactory;
 import it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.MessageHandler;
@@ -18,7 +16,6 @@ import it.pagopa.pn.paperchannel.utils.PnLogAudit;
 import it.pagopa.pn.paperchannel.utils.Utility;
 import lombok.CustomLog;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -28,17 +25,14 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.DATA_NULL_OR
 @Service
 public class PaperResultAsyncServiceImpl extends GenericService implements PaperResultAsyncService {
 
-    private final PnClientDAO pnClientDAO;
-
     private final HandlersFactory handlersFactory;
 
     private static final String PROCESS_NAME = "Result Async Background";
 
     public PaperResultAsyncServiceImpl(RequestDeliveryDAO requestDeliveryDAO, SqsSender sqsSender,
-                                       HandlersFactory handlersFactory,PnClientDAO pnClientDAO) {
+                                       HandlersFactory handlersFactory) {
         super(sqsSender, requestDeliveryDAO);
         this.handlersFactory = handlersFactory;
-        this.pnClientDAO = pnClientDAO;
     }
 
     @Override
@@ -59,25 +53,10 @@ public class PaperResultAsyncServiceImpl extends GenericService implements Paper
         String requestId = getPrefixRequestId(singleStatusUpdateDto.getAnalogMail().getRequestId());
         return requestDeliveryDAO.getByRequestId(requestId)
                 .doOnNext(entity -> logEntity(entity, singleStatusUpdateDto))
-                .flatMap(entity -> checkAndSetClientIdIntoContext(entity, singleStatusUpdateDto.getAnalogMail().getRequestId()))
                 .flatMap(entity -> updateEntityResult(singleStatusUpdateDto, entity))
                 .flatMap(entity -> handler.handleMessage(entity, singleStatusUpdateDto.getAnalogMail()))
                 .doOnError(ex ->  log.error("Error in retrieve EC from queue", ex));
 
-    }
-
-    private Mono<PnDeliveryRequest> checkAndSetClientIdIntoContext(PnDeliveryRequest entity,String requestIdExtChannel) {
-        String prefixClientId = Utility.getClientIdFromRequestId(requestIdExtChannel);
-        if (prefixClientId == null) return Mono.just(entity);
-
-        return this.pnClientDAO.getByPrefix(prefixClientId)
-                .switchIfEmpty(Mono.just(new PnClientID()))
-                .map(pnClientID -> {
-                    log.debug("[{}] clientId finded from prefix {}", pnClientID, prefixClientId);
-                    if (StringUtils.isBlank(pnClientID.getClientId())) return entity;
-                    MDC.put(Const.CONTEXT_KEY_CLIENT_ID, pnClientID.getClientId());
-                    return entity;
-                });
     }
 
     private void logEntity(PnDeliveryRequest entity, SingleStatusUpdateDto singleStatusUpdateDto) {

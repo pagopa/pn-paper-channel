@@ -82,7 +82,7 @@ class SaveDematMessageHandlerTest {
         //mi aspetto che salvi l'evento
         verify(mockDao, times(1)).createOrUpdate(pnEventDemat);
         //mi aspetto che mandi il messaggio a delivery-push
-        verify(mockSqsSender, times(1)).pushSendEvent(sendEventExpected);
+        verify(mockSqsSender, times(1)).pushSendEventOnEventBridge(anyString(), eq(sendEventExpected));
 
         // not call because it is a PROGRESS event
         verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
@@ -118,7 +118,7 @@ class SaveDematMessageHandlerTest {
         //mi aspetto che salvi l'evento
         verify(mockDao, times(1)).createOrUpdate(pnEventDemat);
         //mi aspetto che mandi il messaggio a delivery-push
-        verify(mockSqsSender, times(1)).pushSendEvent(sendEventExpected);
+        verify(mockSqsSender, times(1)).pushSendEventOnEventBridge(anyString(), eq(sendEventExpected));
 
         // not call because it is a PROGRESS event
         verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
@@ -165,9 +165,9 @@ class SaveDematMessageHandlerTest {
         //mi aspetto che salvi l'evento Plico
         verify(mockDao, times(1)).createOrUpdate(pnEventDemat23L);
         //mi aspetto che mandi il messaggio a delivery-push per l'evento CAD
-        verify(mockSqsSender, times(1)).pushSendEvent(sendEventCAD);
+        verify(mockSqsSender, times(1)).pushSendEventOnEventBridge(anyString(), eq(sendEventCAD));
         //mi aspetto che mandi il messaggio a delivery-push per l'evento 23L
-        verify(mockSqsSender, times(1)).pushSendEvent(sendEvent23L);
+        verify(mockSqsSender, times(1)).pushSendEventOnEventBridge(anyString(), eq(sendEvent23L));
         // not call because it is a PROGRESS event
         verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
     }
@@ -210,7 +210,7 @@ class SaveDematMessageHandlerTest {
 
         verify(mockDao, times(attachmentsSize)).createOrUpdate(any(PnEventDemat.class));
 
-        verify(mockSqsSender, times(attachmentsSize)).pushSendEvent(any(SendEvent.class));
+        verify(mockSqsSender, times(attachmentsSize)).pushSendEventOnEventBridge(anyString(), any(SendEvent.class));
 
         // Verifica che ogni invio a deliveryPush abbia un solo attachment
         for (int i = 1; i <= attachmentsSize; i++) {
@@ -223,7 +223,7 @@ class SaveDematMessageHandlerTest {
 
             SendEvent expectedSendEvent = SendEventMapper.createSendEventMessage(entity, expectedPaperRequest);
 
-            verify(mockSqsSender).pushSendEvent(expectedSendEvent);
+            verify(mockSqsSender).pushSendEventOnEventBridge(anyString(), eq(expectedSendEvent));
         }
     }
 

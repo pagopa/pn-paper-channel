@@ -12,6 +12,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.model.*;
 import it.pagopa.pn.paperchannel.service.PrepareFlowStarter;
 import it.pagopa.pn.paperchannel.service.SqsSender;
+import it.pagopa.pn.paperchannel.utils.ClientIdHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -20,8 +21,6 @@ import org.springframework.util.StringUtils;
 import jakarta.annotation.Nullable;
 
 import java.util.Objects;
-
-import static it.pagopa.pn.paperchannel.utils.Const.PREFIX_REQUEST_ID_SERVICE_DESK;
 
 /**
  * Utility class that manages the PREPARE phase.
@@ -160,13 +159,9 @@ public class PrepareFlowStarterImpl implements PrepareFlowStarter {
 
     public void pushResultPrepareEvent(PnDeliveryRequest request, Address address, String clientId, StatusCodeEnum statusCode, KOReason koReason){
         PrepareEvent prepareEvent = PrepareEventMapper.toPrepareEvent(request, address, statusCode, koReason);
-        if (request.getRequestId().contains(PREFIX_REQUEST_ID_SERVICE_DESK)){
-            log.info("Sending event to EventBridge: {}", prepareEvent);
-            this.sqsSender.pushPrepareEventOnEventBridge(clientId, prepareEvent);
-            return;
-        }
-        log.info("Sending event to delivery-push: {}", prepareEvent);
-        this.sqsSender.pushPrepareEvent(prepareEvent);
+        String resolvedClientId = ClientIdHelper.getClientId(request.getRequestId(), clientId);
+        log.info("Sending event to EventBridge: {}", prepareEvent);
+        this.sqsSender.pushPrepareEventOnEventBridge(resolvedClientId, prepareEvent);
     }
 
     public void redrivePreparePhaseTwoAfterF24Error(F24Error f24Error) {

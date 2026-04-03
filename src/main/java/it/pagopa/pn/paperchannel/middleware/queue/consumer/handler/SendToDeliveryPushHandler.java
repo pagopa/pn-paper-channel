@@ -15,12 +15,10 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PaperProgressStatusEvent
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventError;
 import it.pagopa.pn.paperchannel.service.SqsSender;
-import it.pagopa.pn.paperchannel.utils.Const;
-import it.pagopa.pn.paperchannel.utils.Utility;
+import it.pagopa.pn.paperchannel.utils.ClientIdHelper;
 import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.MDC;
 import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuples;
@@ -176,17 +174,9 @@ public class SendToDeliveryPushHandler implements MessageHandler {
     private void pushSendEvent(PnDeliveryRequest pnDeliveryRequest, PaperProgressStatusEventDto paperRequest) {
         log.debug("[{}] Sending to delivery-push or event-bridge", paperRequest.getRequestId());
         log.debug("[{}] Response of ExternalChannel from request id {}", paperRequest.getRequestId(), paperRequest);
-
         SendEvent sendEvent = SendEventMapper.createSendEventMessage(pnDeliveryRequest, paperRequest);
-
-        if (Utility.isCallCenterEvoluto(pnDeliveryRequest.getRequestId())){
-            String clientId = MDC.get(Const.CONTEXT_KEY_CLIENT_ID);
-            log.debug("[{}] clientId from context", clientId);
-            sqsSender.pushSendEventOnEventBridge(clientId, sendEvent);
-            log.info("[{}] Sent to event-bridge: {}", paperRequest.getRequestId(), sendEvent);
-        } else {
-            sqsSender.pushSendEvent(sendEvent);
-            log.info("[{}] Sent to delivery-push: {}", paperRequest.getRequestId(), sendEvent);
-        }
+        String resolvedClientId = ClientIdHelper.getClientId(pnDeliveryRequest.getRequestId(), pnDeliveryRequest.getClientId());
+        sqsSender.pushSendEventOnEventBridge(resolvedClientId, sendEvent);
+        log.info("[{}] Sent to event-bridge: {}", paperRequest.getRequestId(), sendEvent);
     }
 }
