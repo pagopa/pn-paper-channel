@@ -248,6 +248,7 @@ class PcRetryUtilsTest {
         pnDeliveryRequest.setDriverCode("driver1");
         pnDeliveryRequest.setProductType("AR");
         pnDeliveryRequest.setAttachments(new ArrayList<>());
+        pnDeliveryRequest.setClientId("clientId");
         return pnDeliveryRequest;
     }
 }
