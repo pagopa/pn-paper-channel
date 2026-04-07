@@ -15,7 +15,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PrepareRequestInt {
-    private String communicationType;
+    private CommunicationType communicationType;
     private String clientId;
     private List<String> attachmentUrls = new ArrayList<>();
     private String printType;

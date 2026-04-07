@@ -4,7 +4,7 @@ import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.AnalogAddress;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PrepareRequest;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ProposalTypeEnum;
 import it.pagopa.pn.paperchannel.model.PrepareRequestInt;
-import it.pagopa.pn.paperchannel.model.CommunicationTypeEnum;
+import it.pagopa.pn.paperchannel.model.CommunicationType;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 
@@ -13,7 +13,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class PrepareRequestMapperTest {
+class PrepareRequestMapperTest {
     private final PrepareRequestMapper mapper = Mappers.getMapper(PrepareRequestMapper.class);
 
     @Test
@@ -38,7 +38,7 @@ public class PrepareRequestMapperTest {
         String clientId = "CLIENT1";
         PrepareRequestInt result = mapper.prepareRequestToInternal(request, clientId);
 
-        assertEquals(CommunicationTypeEnum.LEGAL.name(), result.getCommunicationType());
+        assertEquals(CommunicationType.LEGAL, result.getCommunicationType());
         assertEquals(clientId, result.getClientId());
         assertEquals(request.getRequestId(), result.getRequestId());
         assertEquals(request.getIun(), result.getIun());
