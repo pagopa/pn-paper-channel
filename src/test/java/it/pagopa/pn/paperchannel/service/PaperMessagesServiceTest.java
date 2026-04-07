@@ -18,6 +18,7 @@ import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.PaperTrackerClient;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.PnPaperChannelCostDTO;
+import it.pagopa.pn.paperchannel.model.PrepareRequestInt;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.service.impl.PaperMessagesServiceImpl;
 import it.pagopa.pn.paperchannel.utils.*;
@@ -231,7 +232,7 @@ class PaperMessagesServiceTest {
 
         //ADDED RELATED REQUEST ID FOR SECOND ATTEMPT
         //ADDED DISCOVERED ADDRESS FOR START ASYNC FLOW AND NOT NATIONAL REGISTRY
-        PrepareRequest request = getRequestOK();
+        PrepareRequestInt request = getRequestOK();
         request.setRelatedRequestId("ABS-1234");
         request.setDiscoveredAddress(getAnalogAddress());
 
@@ -257,7 +258,7 @@ class PaperMessagesServiceTest {
 
         //ADDED RELATED REQUEST ID FOR SECOND ATTEMPT
         //ADDED DISCOVERED ADDRESS FOR START ASYNC FLOW AND NOT NATIONAL REGISTRY
-        PrepareRequest request = getRequestOK();
+        PrepareRequestInt request = getRequestOK();
         request.setRelatedRequestId("ABS-1234");
         request.setDiscoveredAddress(getAnalogAddress());
 
@@ -290,7 +291,7 @@ class PaperMessagesServiceTest {
 
         //ADDED RELATED REQUEST ID FOR SECOND ATTEMPT
         //ADDED DISCOVERED ADDRESS FOR START ASYNC FLOW AND NOT NATIONAL REGISTRY
-        PrepareRequest request = getRequestOK();
+        PrepareRequestInt request = getRequestOK();
         request.setRelatedRequestId("ABS-1234");
         request.setDiscoveredAddress(getAnalogAddress());
 
@@ -334,7 +335,7 @@ class PaperMessagesServiceTest {
 
         //ADDED RELATED REQUEST ID FOR SECOND ATTEMPT
         //ADDED DISCOVERED ADDRESS FOR START ASYNC FLOW AND NOT NATIONAL REGISTRY
-        PrepareRequest request = getRequestOK();
+        PrepareRequestInt request = getRequestOK();
         request.setRelatedRequestId("ABS-1234");
         request.setDiscoveredAddress(null);
 
@@ -379,7 +380,7 @@ class PaperMessagesServiceTest {
         request.setReworkNeeded(true);
         request.setApplyRasterization(Boolean.TRUE);
 
-        PrepareRequest prepareRequest = getRequestOK();
+        PrepareRequestInt prepareRequest = getRequestOK();
         prepareRequest.setRelatedRequestId(request.getRelatedRequestId());
 
         //MOCK RELATED DELIVERY REQUEST
@@ -999,7 +1000,7 @@ class PaperMessagesServiceTest {
     void paperAsyncEntityFirstAttemptApplyRasterizationTest() {
         PnAddress address = getPnAddress(deliveryRequestTakingCharge.getRequestId());
         deliveryRequestTakingCharge.setApplyRasterization(Boolean.TRUE);
-        PrepareRequest prepareRequest = getRelatedRequest();
+        PrepareRequestInt prepareRequest = getRelatedRequest();
         prepareRequest.setRelatedRequestId(null);
 
         PnDeliveryRequest newPnDeliveryRequest = getDeliveryRequest(getRequestOK().getRequestId(), StatusDeliveryEnum.TAKING_CHARGE);
@@ -1073,8 +1074,8 @@ class PaperMessagesServiceTest {
         deliveryRequest.setAttachments(attachmentUrls);
         return deliveryRequest;
     }
-    private PrepareRequest getRequestOK(){
-        PrepareRequest sendRequest= new PrepareRequest();
+    private PrepareRequestInt getRequestOK(){
+        PrepareRequestInt sendRequest= new PrepareRequestInt();
         List<String> attachmentUrls = new ArrayList<>();
         String s = "http://localhost:8080";
         attachmentUrls.add(s);
@@ -1090,8 +1091,8 @@ class PaperMessagesServiceTest {
         sendRequest.setReceiverAddress(getAnalogAddress());
         return sendRequest;
     }
-    private PrepareRequest getRelatedRequest(){
-        PrepareRequest sendRequest= new PrepareRequest();
+    private PrepareRequestInt getRelatedRequest(){
+        PrepareRequestInt sendRequest= new PrepareRequestInt();
         List<String> attachmentUrls = new ArrayList<>();
         String s = "http://localhost:8080";
         attachmentUrls.add(s);

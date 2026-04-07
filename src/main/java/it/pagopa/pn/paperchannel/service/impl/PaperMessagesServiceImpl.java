@@ -63,7 +63,7 @@ public class PaperMessagesServiceImpl extends GenericService implements PaperMes
     }
 
     @Override
-    public Mono<PaperChannelUpdate> preparePaperSync(String requestId, PrepareRequest prepareRequest){
+    public Mono<PaperChannelUpdate> preparePaperSync(String requestId, PrepareRequestInt prepareRequest){
 
         PnLogAudit pnLogAudit = new PnLogAudit();
 
@@ -347,7 +347,7 @@ public class PaperMessagesServiceImpl extends GenericService implements PaperMes
      * @param pnDeliveryRequest l'entity precedentemente salvata in db
      * @return la risposta da tornare al chiamante
      */
-    private Mono<PaperChannelUpdate> checkIfReworkNeededAndReturnPaperChannelUpdate(PrepareRequest prepareRequest, PnDeliveryRequest pnDeliveryRequest){
+    private Mono<PaperChannelUpdate> checkIfReworkNeededAndReturnPaperChannelUpdate(PrepareRequestInt prepareRequest, PnDeliveryRequest pnDeliveryRequest){
         if (Boolean.TRUE.equals(pnDeliveryRequest.getReworkNeeded()))
         {
             log.info("Call PREPARE Sync with rework-needed=true");
@@ -390,7 +390,7 @@ public class PaperMessagesServiceImpl extends GenericService implements PaperMes
     }
 
 
-    private Mono<PnDeliveryRequest> saveRequestAndAddress(PrepareRequest prepareRequest, boolean reworkNeeded, Integer reworkNeededCount, Boolean applyRasterization){
+    private Mono<PnDeliveryRequest> saveRequestAndAddress(PrepareRequestInt prepareRequest, boolean reworkNeeded, Integer reworkNeededCount, Boolean applyRasterization){
         String processName = "Save Request and Address";
         log.logStartingProcess(processName);
 
@@ -431,7 +431,7 @@ public class PaperMessagesServiceImpl extends GenericService implements PaperMes
         return requestDeliveryDAO.createWithAddress(pnDeliveryRequest, receiverAddressEntity, discoveredAddressEntity);
     }
 
-    private Mono<PnDeliveryRequest> saveRequestAndAddress(PrepareRequest prepareRequest, Boolean applyRasterization){
+    private Mono<PnDeliveryRequest> saveRequestAndAddress(PrepareRequestInt prepareRequest, Boolean applyRasterization){
         return saveRequestAndAddress(prepareRequest, false, 0, applyRasterization);
     }
 

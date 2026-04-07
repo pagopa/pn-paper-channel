@@ -221,6 +221,7 @@ paths:
             maxLength: 100
             minLength: 5
             type: string
+        - $ref: '#/components/parameters/XClientIdHeader'
       requestBody:
         content:
           application/json:
@@ -451,6 +452,15 @@ components:
         type: string
         minLength: 5
         maxLength: 100
+    XClientIdHeader:
+      name: X-Client-Id
+      in: header
+      description: Identificativo del client che effettua la richiesta
+      required: false
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
 
   responses:
 

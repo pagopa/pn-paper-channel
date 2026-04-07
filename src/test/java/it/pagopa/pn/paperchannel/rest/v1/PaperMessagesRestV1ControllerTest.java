@@ -2,6 +2,7 @@ package it.pagopa.pn.paperchannel.rest.v1;
 
 
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.*;
+import it.pagopa.pn.paperchannel.mapper.PrepareRequestMapper;
 import it.pagopa.pn.paperchannel.service.PaperMessagesService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -18,11 +19,14 @@ import java.util.List;
 @WebFluxTest(controllers = {PaperMessagesRestV1Controller.class})
 class PaperMessagesRestV1ControllerTest{
 
+    private static final String TEST_CLIENT_ID = "test-client-id";
 
     @Autowired
     private WebTestClient webTestClient;
     @MockitoBean
     private PaperMessagesService paperMessagesService;
+    @MockitoBean
+    private PrepareRequestMapper prepareRequestMapper;
 
     @Test
     void testSendPaperPrepare(){
@@ -34,6 +38,7 @@ class PaperMessagesRestV1ControllerTest{
         webTestClient.post()
                 .uri(uriBuilder -> uriBuilder.path(path).build())
                 .bodyValue(getPrepareRequest())
+                .header("X-Client-Id", TEST_CLIENT_ID)
                 .exchange()
                 .expectStatus().isOk();
     }
