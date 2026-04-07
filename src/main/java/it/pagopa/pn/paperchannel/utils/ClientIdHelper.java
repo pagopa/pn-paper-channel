@@ -11,7 +11,7 @@ public class ClientIdHelper {
     private ClientIdHelper() {}
 
     public static String getClientId(String requestId, String proposedClientId) {
-        log.info("Getting clientId for requestId: {} with proposedClientId: {}", requestId, proposedClientId);
+        log.debug("Getting clientId for requestId: {} with proposedClientId: {}", requestId, proposedClientId);
 
         if (StringUtils.hasText(proposedClientId)) {
             return proposedClientId;

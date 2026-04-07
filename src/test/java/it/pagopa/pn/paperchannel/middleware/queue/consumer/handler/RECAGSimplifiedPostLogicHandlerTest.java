@@ -90,7 +90,7 @@ class RECAGSimplifiedPostLogicHandlerTest {
         StepVerifier.create(mono)
                 .verifyComplete();
 
-        Mockito.verify(mockSqsSender, never()).pushSendEvent(Mockito.any());
+        Mockito.verify(mockSqsSender, never()).pushSendEventOnEventBridge(Mockito.anyString(), Mockito.any());
 
     }
 
@@ -125,7 +125,7 @@ class RECAGSimplifiedPostLogicHandlerTest {
         StepVerifier.create(mono)
                 .verifyComplete();
 
-        Mockito.verify(mockSqsSender, never()).pushSendEvent(Mockito.any());
+        Mockito.verify(mockSqsSender, never()).pushSendEventOnEventBridge(Mockito.anyString(), Mockito.any());
 
     }
 
@@ -161,7 +161,7 @@ class RECAGSimplifiedPostLogicHandlerTest {
                 .verifyComplete();
 
         Mockito.verify(eventMetaDAO, never()).getDeliveryEventMeta(Mockito.anyString(), Mockito.anyString(), Mockito.eq(true));
-        Mockito.verify(mockSqsSender, never()).pushSendEvent(Mockito.any());
+        Mockito.verify(mockSqsSender, never()).pushSendEventOnEventBridge(Mockito.anyString(), Mockito.any());
 
     }
 
@@ -200,7 +200,7 @@ class RECAGSimplifiedPostLogicHandlerTest {
                 .verifyComplete();
 
         Mockito.verify(eventMetaDAO, never()).getDeliveryEventMeta(Mockito.anyString(), Mockito.anyString(), Mockito.eq(true));
-        Mockito.verify(mockSqsSender).pushSendEvent(Mockito.any());
+        Mockito.verify(mockSqsSender).pushSendEventOnEventBridge(Mockito.anyString(), Mockito.any());
 
     }
 
@@ -241,7 +241,7 @@ class RECAGSimplifiedPostLogicHandlerTest {
         StepVerifier.create(mono)
                 .verifyComplete();
 
-        Mockito.verify(mockSqsSender).pushSendEvent(Mockito.any());
+        Mockito.verify(mockSqsSender).pushSendEventOnEventBridge(Mockito.anyString(), Mockito.any());
 
     }
 }

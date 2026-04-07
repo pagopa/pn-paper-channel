@@ -93,7 +93,7 @@ class RetryableErrorMessageHandlerTest {
         assertDoesNotThrow(() -> handler.handleMessage(pnDeliveryRequest, paperRequest).block());
 
         //verifico che viene inviato l'evento a delivery-push
-        verify(mockSqsSender, times(1)).pushSendEvent(argThat((SendEvent se) -> se.getRequestId().equals(currentRequestId) ));
+        verify(mockSqsSender, times(1)).pushSendEventOnEventBridge(anyString(), argThat((SendEvent se) -> se.getRequestId().equals(currentRequestId) ));
 
         verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
     }
@@ -136,7 +136,7 @@ class RetryableErrorMessageHandlerTest {
                 ));
 
         //verifico che viene inviato l'evento a delivery-push
-        verify(mockSqsSender, times(1)).pushSendEvent(any(SendEvent.class));
+        verify(mockSqsSender, times(1)).pushSendEventOnEventBridge(anyString(), any(SendEvent.class));
 
         verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
     }

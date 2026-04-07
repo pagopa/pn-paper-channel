@@ -98,7 +98,7 @@ class RECAG008CMessageHandlerTest {
         // deleteEventDemat call
         verify(mockDematDao, timeout(2000).times(1)).deleteBatch("DEMAT##requestid", "RS##RECRS002A");
         // DeliveryPush send via SQS verification
-        verify(mockSqsSender, timeout(2000).times(1)).pushSendEvent(any(SendEvent.class));
+        verify(mockSqsSender, timeout(2000).times(1)).pushSendEventOnEventBridge(anyString(), any(SendEvent.class));
 
         verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
     }
@@ -138,7 +138,7 @@ class RECAG008CMessageHandlerTest {
         when(mockMetaDao.deleteBatch(any(String.class), any(String.class))).thenReturn(Mono.empty());
         when(mockDematDao.deleteBatch(any(String.class), any(String.class))).thenReturn(Mono.empty());
         // the SQS queue
-        doThrow(new RuntimeException()).when(mockSqsSender).pushSendEvent(Mockito.any());
+        doThrow(new RuntimeException()).when(mockSqsSender).pushSendEventOnEventBridge(Mockito.anyString(), Mockito.any());
 
         // assertThrows with call
         assertThrowsExactly(RuntimeException.class, () -> handler.handleMessage(entity, paperRequest).block());
@@ -151,7 +151,7 @@ class RECAG008CMessageHandlerTest {
         // deleteEventDemat call
         verify(mockDematDao, timeout(2000).times(0)).deleteBatch(any(String.class), any(String.class));
         // DeliveryPush send via SQS verification
-        verify(mockSqsSender, timeout(2000).times(1)).pushSendEvent(any(SendEvent.class));
+        verify(mockSqsSender, timeout(2000).times(1)).pushSendEventOnEventBridge(anyString(), any(SendEvent.class));
 
         verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
     }
