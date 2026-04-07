@@ -1,8 +1,8 @@
 package it.pagopa.pn.paperchannel.mapper;
 
-import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PrepareRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
+import it.pagopa.pn.paperchannel.model.PrepareRequestInt;
 import it.pagopa.pn.paperchannel.utils.AttachmentsConfigUtils;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -17,7 +17,7 @@ public class RequestDeliveryMapper {
         throw new IllegalStateException();
     }
 
-    public static PnDeliveryRequest toEntity(PrepareRequest request){
+    public static PnDeliveryRequest toEntity(PrepareRequestInt request){
         PnDeliveryRequest entity = new PnDeliveryRequest();
         entity.setRequestId(request.getRequestId());
         entity.setProposalProductType(request.getProposalProductType().getValue());

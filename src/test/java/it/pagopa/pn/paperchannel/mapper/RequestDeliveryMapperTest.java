@@ -1,10 +1,10 @@
 package it.pagopa.pn.paperchannel.mapper;
 
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.AnalogAddress;
-import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PrepareRequest;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ProposalTypeEnum;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
+import it.pagopa.pn.paperchannel.model.PrepareRequestInt;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -16,7 +16,7 @@ class RequestDeliveryMapperTest {
 
     @Test
     void requestDeliveryMapperTest () {
-        PrepareRequest prepareRequest = getPrepareRequest();
+        PrepareRequestInt prepareRequest = getPrepareRequest();
         PnDeliveryRequest response= RequestDeliveryMapper.toEntity(prepareRequest);
         Assertions.assertNotNull(response);
         Assertions.assertEquals(response.getAarWithRadd(), prepareRequest.getAarWithRadd());
@@ -31,8 +31,8 @@ class RequestDeliveryMapperTest {
         Assertions.assertEquals(response.getSenderPaId(), prepareRequest.getSenderPaId());
     }
 
-    private PrepareRequest getPrepareRequest() {
-        PrepareRequest prepareRequest = new PrepareRequest();
+    private PrepareRequestInt getPrepareRequest() {
+        PrepareRequestInt prepareRequest = new PrepareRequestInt();
         List<String> attachmentUrls = new ArrayList<>();
         AnalogAddress analogAddress= new AnalogAddress();
         String s ="url12345";
