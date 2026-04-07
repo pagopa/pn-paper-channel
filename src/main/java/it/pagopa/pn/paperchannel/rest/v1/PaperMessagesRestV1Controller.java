@@ -24,7 +24,7 @@ public class PaperMessagesRestV1Controller implements PaperMessagesApi {
     private final PrepareRequestMapper prepareRequestMapper;
 
     @Override
-    public Mono<ResponseEntity<PaperChannelUpdate>> sendPaperPrepareRequest(String requestId, Mono<PrepareRequest> prepareRequest, String xClientId,  final ServerWebExchange exchange) {
+    public Mono<ResponseEntity<PaperChannelUpdate>> sendPaperPrepareRequest(String requestId, Mono<PrepareRequest> prepareRequest, String xClientId, ServerWebExchange exchange) {
         MDC.put( MDCUtils.MDC_PN_CTX_REQUEST_ID, "PREPARE_PHASE_" + requestId);
         Mono<ResponseEntity<PaperChannelUpdate>> responseEntityMono = prepareRequest
                 .doOnNext(request -> {
