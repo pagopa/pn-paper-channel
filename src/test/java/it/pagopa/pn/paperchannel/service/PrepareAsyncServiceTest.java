@@ -120,8 +120,6 @@ class PrepareAsyncServiceTest {
         Mockito.when(this.f24Service.checkDeliveryRequestAttachmentForF24(Mockito.any()))
                 .thenReturn(false);
 
-        Mockito.doNothing().when(this.sqsSender).pushPrepareEvent(Mockito.any());
-
         Mockito.when(this.requestDeliveryDAO.updateData(Mockito.any())).thenReturn(Mono.just(getDeliveryRequest()));
         Mockito.when(this.checkCoverageAreaService.filterAttachmentsToSend(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(Mono.just(getDeliveryRequest()));
 
@@ -148,8 +146,6 @@ class PrepareAsyncServiceTest {
 
         Mockito.when(this.requestDeliveryDAO.updateData(Mockito.any())).thenReturn(Mono.just(deliveryRequest));
 
-        Mockito.doNothing().when(this.sqsSender).pushPrepareEvent(Mockito.any());
-
         request.setCorrelationId("FFPAPERTEST.IUN_FATY");
 
         StepVerifier.create(this.prepareAsyncService.prepareAsync(request))
@@ -168,7 +164,7 @@ class PrepareAsyncServiceTest {
         PrepareEvent prepareEventExpected = PrepareEventMapper.toPrepareEvent(deliveryRequest, null, StatusCodeEnum.KO, new KOReason(FailureDetailCodeEnum.D00, null));
         ArgumentCaptor<PrepareEvent> prepareEventArgumentCaptor = ArgumentCaptor.forClass(PrepareEvent.class);
 
-        Mockito.verify(this.sqsSender).pushPrepareEvent(prepareEventArgumentCaptor.capture());
+        Mockito.verify(this.sqsSender).pushPrepareEventOnEventBridge(Mockito.anyString(), prepareEventArgumentCaptor.capture());
         PrepareEvent prepareEventActual = prepareEventArgumentCaptor.getValue();
 
         assertThat(prepareEventActual.getRequestId()).isEqualTo(prepareEventExpected.getRequestId());
@@ -317,7 +313,7 @@ class PrepareAsyncServiceTest {
 
             this.prepareAsyncService.prepareAsync(request).block();
             ArgumentCaptor<PrepareEvent> prepareEventArgumentCaptor = ArgumentCaptor.forClass(PrepareEvent.class);
-            Mockito.verify(this.sqsSender).pushPrepareEvent(prepareEventArgumentCaptor.capture());
+            Mockito.verify(this.sqsSender).pushPrepareEventOnEventBridge(Mockito.anyString(), prepareEventArgumentCaptor.capture());
 
             // VERIFICO CHE IN QUESTO CASO NON VENGA MAI CREATO IL RECORD DI ERRORE
             Mockito.verify(paperRequestErrorDAO, Mockito.never()).created(Mockito.any(PnRequestError.class));
@@ -348,8 +344,6 @@ class PrepareAsyncServiceTest {
                 .thenReturn(Mono.just(getAddress()));
         Mockito.when(this.f24Service.checkDeliveryRequestAttachmentForF24(Mockito.any()))
                 .thenReturn(false);
-
-        Mockito.doNothing().when(this.sqsSender).pushPrepareEvent(Mockito.any());
 
         Mockito.when(this.requestDeliveryDAO.updateData(Mockito.any()))
                 .thenReturn(Mono.just(deliveryRequest));

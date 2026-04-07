@@ -20,6 +20,7 @@ import it.pagopa.pn.paperchannel.model.*;
 import it.pagopa.pn.paperchannel.service.*;
 import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
 import it.pagopa.pn.paperchannel.utils.AttachmentsConfigUtils;
+import it.pagopa.pn.paperchannel.utils.ClientIdHelper;
 import it.pagopa.pn.paperchannel.utils.DateUtils;
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
@@ -43,7 +44,6 @@ import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.INVALID_SAFE
 import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.SAFE_STORAGE_IN_ERROR;
 import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.TAKING_CHARGE;
 import static it.pagopa.pn.paperchannel.utils.PrepareAsyncErrorUtils.*;
-import static it.pagopa.pn.paperchannel.utils.Const.PREFIX_REQUEST_ID_SERVICE_DESK;
 
 @Service
 @CustomLog
@@ -251,13 +251,9 @@ public class PreparePhaseTwoAsyncServiceImpl implements PreparePhaseTwoAsyncServ
      */
     private void pushPrepareEvent(PnDeliveryRequest request, Address address, String clientId){
         PrepareEvent prepareEvent = PrepareEventMapper.toPrepareEvent(request, address, StatusCodeEnum.OK, null);
-        if (request.getRequestId().contains(PREFIX_REQUEST_ID_SERVICE_DESK)){
-            log.info("Sending event to EventBridge: {}", prepareEvent);
-            this.sqsSender.pushPrepareEventOnEventBridge(clientId, prepareEvent);
-            return;
-        }
-        log.info("Sending event to delivery-push: {}", prepareEvent);
-        this.sqsSender.pushPrepareEvent(prepareEvent);
+        String resolvedClientId = ClientIdHelper.getClientId(request.getRequestId(), clientId);
+        log.info("Sending event to EventBridge: {}", prepareEvent);
+        this.sqsSender.pushPrepareEventOnEventBridge(resolvedClientId, prepareEvent);
     }
 
     /**

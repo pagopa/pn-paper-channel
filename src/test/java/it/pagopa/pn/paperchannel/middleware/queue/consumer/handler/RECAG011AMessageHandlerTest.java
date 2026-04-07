@@ -71,6 +71,6 @@ class RECAG011AMessageHandlerTest {
         verify(mockDao, times(1)).createOrUpdate(pnEventMeta);
 
         // mi aspetto che mandi il messaggio a delivery-push
-        verify(mockSqsSender, times(1)).pushSendEvent(sendEventExpected);
+        verify(mockSqsSender, times(1)).pushSendEventOnEventBridge(anyString(), eq(sendEventExpected));
     }
 }

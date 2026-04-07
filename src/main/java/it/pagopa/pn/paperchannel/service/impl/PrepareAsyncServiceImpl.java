@@ -16,10 +16,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnRequestError;
 import it.pagopa.pn.paperchannel.model.*;
 import it.pagopa.pn.paperchannel.service.*;
-import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
-import it.pagopa.pn.paperchannel.utils.Const;
-import it.pagopa.pn.paperchannel.utils.DateUtils;
-import it.pagopa.pn.paperchannel.utils.PaperCalculatorUtils;
+import it.pagopa.pn.paperchannel.utils.*;
 import lombok.CustomLog;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -33,7 +30,6 @@ import java.math.BigDecimal;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.INVALID_SAFE_STORAGE;
 import static it.pagopa.pn.paperchannel.model.StatusDeliveryEnum.TAKING_CHARGE;
-import static it.pagopa.pn.paperchannel.utils.Const.PREFIX_REQUEST_ID_SERVICE_DESK;
 
 @Service
 @CustomLog
@@ -282,13 +278,9 @@ public class PrepareAsyncServiceImpl extends GenericService implements PaperAsyn
 
     private void pushPrepareEvent(PnDeliveryRequest request, Address address, String clientId, StatusCodeEnum statusCode, KOReason koReason){
         PrepareEvent prepareEvent = PrepareEventMapper.toPrepareEvent(request, address, statusCode, koReason);
-        if (request.getRequestId().contains(PREFIX_REQUEST_ID_SERVICE_DESK)){
-            log.info("Sending event to EventBridge: {}", prepareEvent);
-            this.sqsSender.pushPrepareEventOnEventBridge(clientId, prepareEvent);
-            return;
-        }
-        log.info("Sending event to delivery-push: {}", prepareEvent);
-        this.sqsSender.pushPrepareEvent(prepareEvent);
+        String resolvedClientId = ClientIdHelper.getClientId(request.getRequestId(), clientId);
+        log.info("Sending event to EventBridge: {}", prepareEvent);
+        this.sqsSender.pushPrepareEventOnEventBridge(resolvedClientId, prepareEvent);
     }
 
 }

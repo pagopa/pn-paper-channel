@@ -73,7 +73,7 @@ class Paper_890IT extends BaseTest {
         generateEvent("RECAG001C","","",null,"", null, iun);
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
-        verify(sqsSender, timeout(2000).times(2)).pushSendEvent(caturedSendEvent.capture());
+        verify(sqsSender, timeout(2000).times(2)).pushSendEventOnEventBridge(anyString(), caturedSendEvent.capture());
 
         assertEquals(StatusCodeEnum.OK, caturedSendEvent.getValue().getStatusCode());
         log.info("Event: \n"+caturedSendEvent.getAllValues());
@@ -89,7 +89,7 @@ class Paper_890IT extends BaseTest {
         generateEvent("RECAG002C","","",null,"", null, iun);
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
-        verify(sqsSender, timeout(2000).times(2)).pushSendEvent(caturedSendEvent.capture());
+        verify(sqsSender, timeout(2000).times(2)).pushSendEventOnEventBridge(anyString(), caturedSendEvent.capture());
 
         assertEquals(StatusCodeEnum.OK, caturedSendEvent.getValue().getStatusCode());
         log.info("Event: \n"+caturedSendEvent.getAllValues());
@@ -102,7 +102,7 @@ class Paper_890IT extends BaseTest {
 
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
-        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
+        verify(sqsSender, timeout(2000).times(1)).pushSendEventOnEventBridge(anyString(), caturedSendEvent.capture());
 
         assertEquals(StatusCodeEnum.PROGRESS, caturedSendEvent.getValue().getStatusCode());
         log.info("Event: \n"+caturedSendEvent.getAllValues());
@@ -117,7 +117,7 @@ class Paper_890IT extends BaseTest {
         generateEvent("RECAG002C","","",null,"", null, iun);
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
-        verify(sqsSender, timeout(2000).times(2)).pushSendEvent(caturedSendEvent.capture());
+        verify(sqsSender, timeout(2000).times(2)).pushSendEventOnEventBridge(anyString(), caturedSendEvent.capture());
 
         assertEquals(StatusCodeEnum.OK, caturedSendEvent.getValue().getStatusCode());
         log.info("Event: \n"+caturedSendEvent.getAllValues());
@@ -130,7 +130,7 @@ class Paper_890IT extends BaseTest {
         generateEvent("RECAG003B","","",List.of("Plico"),"", null, iun);
         generateEvent("RECAG003C","","",null,"", null, iun);
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
-        verify(sqsSender, timeout(2000).times(2)).pushSendEvent(caturedSendEvent.capture());
+        verify(sqsSender, timeout(2000).times(2)).pushSendEventOnEventBridge(anyString(), caturedSendEvent.capture());
 
         // M02 -> Status OK
         assertEquals("RECAG003C", caturedSendEvent.getValue().getStatusDetail());
@@ -147,7 +147,7 @@ class Paper_890IT extends BaseTest {
         generateEvent("RECAG003B","","",List.of("Plico"),"", null, iun);
         generateEvent("RECAG003C","","",null,"", null, iun);
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
-        verify(sqsSender, timeout(2000).times(2)).pushSendEvent(caturedSendEvent.capture());
+        verify(sqsSender, timeout(2000).times(2)).pushSendEventOnEventBridge(anyString(), caturedSendEvent.capture());
 
         // M06 -> Status KO
         assertEquals("RECAG003C", caturedSendEvent.getValue().getStatusDetail());
@@ -165,7 +165,7 @@ class Paper_890IT extends BaseTest {
         generateEvent("RECAG003F","","",null,"", null, iun);
 
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
-        verify(sqsSender, timeout(2000).times(3)).pushSendEvent(caturedSendEvent.capture());
+        verify(sqsSender, timeout(2000).times(3)).pushSendEventOnEventBridge(anyString(), caturedSendEvent.capture());
         log.info("Event: \n"+caturedSendEvent.getAllValues());
 
         assertEquals(StatusCodeEnum.KO, caturedSendEvent.getValue().getStatusCode());
@@ -182,7 +182,7 @@ class Paper_890IT extends BaseTest {
         generateEvent("RECAG003F","","",null,"", null, iun);
 
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
-        verify(sqsSender, timeout(2000).times(3)).pushSendEvent(caturedSendEvent.capture());
+        verify(sqsSender, timeout(2000).times(3)).pushSendEventOnEventBridge(anyString(), caturedSendEvent.capture());
         log.info("Event: \n"+caturedSendEvent.getAllValues());
 
         assertEquals(StatusCodeEnum.KO, caturedSendEvent.getValue().getStatusCode());
@@ -204,7 +204,7 @@ class Paper_890IT extends BaseTest {
         verify(mockExtChannel, timeout(2000).times(1)).sendEngageRequest(any(SendRequest.class), anyList(), any());
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
-        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
+        verify(sqsSender, timeout(2000).times(1)).pushSendEventOnEventBridge(anyString(), caturedSendEvent.capture());
 
         assertEquals(StatusCodeEnum.PROGRESS, caturedSendEvent.getValue().getStatusCode());
         assertEquals("RECAG004", caturedSendEvent.getValue().getStatusDetail());
@@ -227,7 +227,7 @@ class Paper_890IT extends BaseTest {
 
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
-        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
+        verify(sqsSender, timeout(2000).times(1)).pushSendEventOnEventBridge(anyString(), caturedSendEvent.capture());
 
         assertEquals(StatusCodeEnum.PROGRESS, caturedSendEvent.getValue().getStatusCode());
     }
