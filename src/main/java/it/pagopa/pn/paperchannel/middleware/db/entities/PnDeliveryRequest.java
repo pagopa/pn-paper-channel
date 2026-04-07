@@ -101,6 +101,10 @@ public class PnDeliveryRequest implements Serializable {
 
     public static final String COL_FEEDBACK_ORIGINAL_STATUS_CODE = "feedbackOriginalStatusCode";
 
+    public static final String COL_COMMUNICATION_TYPE = "communicationType";
+
+    public static final String COL_CLIENT_ID = "clientId";
+
 
     @Getter(onMethod = @__({@DynamoDbPartitionKey,@DynamoDbAttribute(COL_REQUEST_ID)}))
     private String requestId;
@@ -210,4 +214,10 @@ public class PnDeliveryRequest implements Serializable {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_FEEDBACK_ORIGINAL_STATUS_CODE)}))
     private String feedbackOriginalStatusCode;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_COMMUNICATION_TYPE)}))
+    private String communicationType;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_CLIENT_ID)}))
+    private String clientId;
 }

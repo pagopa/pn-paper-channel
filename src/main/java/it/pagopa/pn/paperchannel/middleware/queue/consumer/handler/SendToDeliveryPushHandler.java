@@ -15,12 +15,11 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PaperProgressStatusEvent
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventError;
 import it.pagopa.pn.paperchannel.service.SqsSender;
-import it.pagopa.pn.paperchannel.utils.Const;
+import it.pagopa.pn.paperchannel.utils.ClientIdHelper;
 import it.pagopa.pn.paperchannel.utils.Utility;
 import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.MDC;
 import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuples;
@@ -180,7 +179,7 @@ public class SendToDeliveryPushHandler implements MessageHandler {
         SendEvent sendEvent = SendEventMapper.createSendEventMessage(pnDeliveryRequest, paperRequest);
 
         if (Utility.isCallCenterEvoluto(pnDeliveryRequest.getRequestId())){
-            String clientId = MDC.get(Const.CONTEXT_KEY_CLIENT_ID);
+            String clientId = ClientIdHelper.getClientId(pnDeliveryRequest.getRequestId(), pnDeliveryRequest.getClientId());
             log.debug("[{}] clientId from context", clientId);
             sqsSender.pushSendEventOnEventBridge(clientId, sendEvent);
             log.info("[{}] Sent to event-bridge: {}", paperRequest.getRequestId(), sendEvent);
