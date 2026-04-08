@@ -1,9 +1,9 @@
 package it.pagopa.pn.paperchannel.validator;
 
 import it.pagopa.pn.paperchannel.exception.PnInputValidatorException;
-import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PrepareRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
+import it.pagopa.pn.paperchannel.model.PrepareRequestInt;
 import it.pagopa.pn.paperchannel.service.impl.F24ServiceImpl;
 import it.pagopa.pn.paperchannel.utils.AttachmentsConfigUtils;
 import it.pagopa.pn.paperchannel.utils.Utility;
@@ -29,7 +29,7 @@ public class PrepareRequestValidator {
         throw new IllegalCallerException("the constructor must not called");
     }
 
-    public static void compareRequestEntity(PrepareRequest prepareRequest, PnDeliveryRequest pnDeliveryEntity, boolean firstAttempt, boolean skipF24Check) {
+    public static void compareRequestEntity(PrepareRequestInt prepareRequest, PnDeliveryRequest pnDeliveryEntity, boolean firstAttempt, boolean skipF24Check) {
         List<String> errors = new ArrayList<>();
         log.logChecking(VALIDATION_NAME);
 
@@ -58,49 +58,49 @@ public class PrepareRequestValidator {
         log.logCheckingOutcome(VALIDATION_NAME, true);
     }
 
-    private static void validatePrintType(PrepareRequest prepareRequest, PnDeliveryRequest pnDeliveryEntity, List<String> errors) {
+    private static void validatePrintType(PrepareRequestInt prepareRequest, PnDeliveryRequest pnDeliveryEntity, List<String> errors) {
         if (!StringUtils.equals(prepareRequest.getPrintType(), (pnDeliveryEntity.getPrintType()))) {
             errors.add("PrintType");
             log.debug("Comparison between request and entity failed, different data: PrintType");
         }
     }
 
-    private static void validateReceiverType(PrepareRequest prepareRequest, PnDeliveryRequest pnDeliveryEntity, List<String> errors) {
+    private static void validateReceiverType(PrepareRequestInt prepareRequest, PnDeliveryRequest pnDeliveryEntity, List<String> errors) {
         if (!StringUtils.equals(prepareRequest.getReceiverType(), pnDeliveryEntity.getReceiverType())) {
             errors.add("ReceiverType");
             log.debug("Comparison between request and entity failed, different data: ReceiverType");
         }
     }
 
-    private static void validateProductType(PrepareRequest prepareRequest, PnDeliveryRequest pnDeliveryEntity, List<String> errors) {
+    private static void validateProductType(PrepareRequestInt prepareRequest, PnDeliveryRequest pnDeliveryEntity, List<String> errors) {
         if (!StringUtils.equals(prepareRequest.getProposalProductType().getValue(), pnDeliveryEntity.getProposalProductType())) {
             errors.add("ProductType");
             log.debug("Comparison between request and entity failed, different data: ProductType");
         }
     }
 
-    private static void validateFiscalCode(PrepareRequest prepareRequest, PnDeliveryRequest pnDeliveryEntity, List<String> errors) {
+    private static void validateFiscalCode(PrepareRequestInt prepareRequest, PnDeliveryRequest pnDeliveryEntity, List<String> errors) {
         if (!StringUtils.equals(Utility.convertToHash(prepareRequest.getReceiverFiscalCode()), pnDeliveryEntity.getHashedFiscalCode())) {
             errors.add("FiscalCode");
             log.debug("Comparison between request and entity failed, different data: FiscalCode");
         }
     }
 
-    private static void validateIun(PrepareRequest prepareRequest, PnDeliveryRequest pnDeliveryEntity, List<String> errors) {
+    private static void validateIun(PrepareRequestInt prepareRequest, PnDeliveryRequest pnDeliveryEntity, List<String> errors) {
         if (!StringUtils.equals(prepareRequest.getIun(), pnDeliveryEntity.getIun())) {
             errors.add("Iun");
             log.debug("Comparison between request and entity failed, different data: Iun");
         }
     }
 
-    private static void validateRequestId(PrepareRequest prepareRequest, PnDeliveryRequest pnDeliveryEntity, List<String> errors) {
+    private static void validateRequestId(PrepareRequestInt prepareRequest, PnDeliveryRequest pnDeliveryEntity, List<String> errors) {
         if (!StringUtils.equals(prepareRequest.getRequestId(), pnDeliveryEntity.getRequestId())) {
             errors.add("RequestId");
             log.debug("Comparison between request and entity failed, different data: RequestId");
         }
     }
 
-    private static void validateAttachments(PrepareRequest prepareRequest, PnDeliveryRequest pnDeliveryEntity, boolean skipF24Check, List<String> errors) {
+    private static void validateAttachments(PrepareRequestInt prepareRequest, PnDeliveryRequest pnDeliveryEntity, boolean skipF24Check, List<String> errors) {
         if (pnDeliveryEntity.getAttachments() != null) {
             // escludo dal check di idempotenza gli url f24set e le filekey generate da un urlf24set
             // questo perchè:
@@ -154,7 +154,7 @@ public class PrepareRequestValidator {
     }
 
 
-    private static void validateReceiverAddress(PrepareRequest prepareRequest, PnDeliveryRequest pnDeliveryEntity, boolean firstAttempt, List<String> errors) {
+    private static void validateReceiverAddress(PrepareRequestInt prepareRequest, PnDeliveryRequest pnDeliveryEntity, boolean firstAttempt, List<String> errors) {
         if (firstAttempt) {
             if (prepareRequest.getReceiverAddress() != null) {
                 if (!StringUtils.equals(fromAnalogToAddress(prepareRequest.getReceiverAddress()).convertToHash(), (pnDeliveryEntity.getAddressHash()))) {
@@ -169,7 +169,7 @@ public class PrepareRequestValidator {
         }
     }
 
-    private static void validateAarWithRadd(PrepareRequest prepareRequest, PnDeliveryRequest pnDeliveryEntity, List<String> errors) {
+    private static void validateAarWithRadd(PrepareRequestInt prepareRequest, PnDeliveryRequest pnDeliveryEntity, List<String> errors) {
         boolean valid = pnDeliveryEntity.getAarWithRadd() == null //per retrocompatibilità, nel caso la precedente PREPARE non avesse già questo parametro a disposizione
                 ||
                 pnDeliveryEntity.getAarWithRadd().equals(prepareRequest.getAarWithRadd());
