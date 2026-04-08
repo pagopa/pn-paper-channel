@@ -42,18 +42,13 @@ public class SqsQueueSender implements SqsSender {
     private final OcrProducer ocrProducer;
 
     @Override
-    public void pushSendEvent(SendEvent event) {
-        push(event, null);
-    }
-
-    @Override
     public void pushPrepareEvent(PrepareEvent event) {
-        push(null, event);
+        push(event);
     }
 
-    private void push(SendEvent sendEvent, PrepareEvent prepareEvent){
-        log.info("Push event to queue {}", (sendEvent != null ? sendEvent.getRequestId() : prepareEvent.getRequestId()));
-        this.deliveryPushMomProducer.push(getDeliveryPushEvent(prepareEvent, sendEvent));
+    private void push(PrepareEvent prepareEvent){
+        log.info("Push event to queue {}", prepareEvent.getRequestId());
+        this.deliveryPushMomProducer.push(getDeliveryPushEvent(prepareEvent));
     }
 
 
@@ -266,17 +261,16 @@ public class SqsQueueSender implements SqsSender {
         return typeEnum;
     }
 
-    private DeliveryPushEvent getDeliveryPushEvent(PrepareEvent prepareEvent, SendEvent sendEvent){
+    private DeliveryPushEvent getDeliveryPushEvent(PrepareEvent prepareEvent){
         GenericEventHeader deliveryHeader= GenericEventHeader.builder()
                 .publisher(PUBLISHER_UPDATE)
                 .eventId(UUID.randomUUID().toString())
                 .createdAt(Instant.now())
-                .eventType((sendEvent == null) ? EventTypeEnum.PREPARE_ANALOG_RESPONSE.name(): EventTypeEnum.SEND_ANALOG_RESPONSE.name())
+                .eventType(EventTypeEnum.PREPARE_ANALOG_RESPONSE.name())
                 .build();
 
         PaperChannelUpdate paperChannelUpdate = new PaperChannelUpdate();
         paperChannelUpdate.setPrepareEvent(prepareEvent);
-        paperChannelUpdate.setSendEvent(sendEvent);
 
         DeliveryPushEvent deliveryPushEvent = new DeliveryPushEvent(deliveryHeader, paperChannelUpdate);
         if (prepareEvent != null && prepareEvent.getReceiverAddress() != null){

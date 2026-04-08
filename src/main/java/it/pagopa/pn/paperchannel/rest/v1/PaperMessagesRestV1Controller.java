@@ -29,7 +29,7 @@ public class PaperMessagesRestV1Controller implements PaperMessagesApi {
         Mono<ResponseEntity<PaperChannelUpdate>> responseEntityMono = prepareRequest
                 .doOnNext(request -> {
                     log.debug("Delivery Request of prepare flow");
-                    log.debug(request.getReceiverAddress().toString());
+                    log.debug("Receiver address: {}", request.getReceiverAddress());
                 })
                 .flatMap(request -> paperMessagesService.preparePaperSync(requestId, prepareRequestMapper.prepareRequestToInternal(request, xClientId)))
                 .map(ResponseEntity::ok)

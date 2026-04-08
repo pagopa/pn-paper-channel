@@ -4,6 +4,7 @@ import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.AnalogAddress;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ProposalTypeEnum;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
+import it.pagopa.pn.paperchannel.model.CommunicationType;
 import it.pagopa.pn.paperchannel.model.PrepareRequestInt;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -29,6 +30,8 @@ class RequestDeliveryMapperTest {
         Assertions.assertEquals(response.getNotificationSentAt(), prepareRequest.getNotificationSentAt());
         Assertions.assertEquals(response.getAttachments().stream().map(PnAttachmentInfo::getFileKey).toList(), prepareRequest.getAttachmentUrls());
         Assertions.assertEquals(response.getSenderPaId(), prepareRequest.getSenderPaId());
+        Assertions.assertEquals(response.getClientId(), prepareRequest.getClientId());
+        Assertions.assertEquals(response.getCommunicationType(), prepareRequest.getCommunicationType().name());
     }
 
     private PrepareRequestInt getPrepareRequest() {
@@ -59,6 +62,8 @@ class RequestDeliveryMapperTest {
         prepareRequest.setReceiverFiscalCode("FRMTTR76M06B715E");
         prepareRequest.setReceiverType("PF");
         prepareRequest.setAarWithRadd(true);
+        prepareRequest.setClientId("clientId");
+        prepareRequest.setCommunicationType(CommunicationType.LEGAL);
         return prepareRequest;
     }
 }

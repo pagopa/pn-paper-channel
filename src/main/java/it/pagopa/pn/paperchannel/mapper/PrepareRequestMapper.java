@@ -10,6 +10,5 @@ import org.mapstruct.Mapping;
 public interface PrepareRequestMapper {
 
     @Mapping(target = "communicationType", expression = "java(CommunicationType.LEGAL)")
-    @Mapping(target = "clientId", source = "clientId")
     PrepareRequestInt prepareRequestToInternal(PrepareRequest request, String clientId);
 }

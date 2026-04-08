@@ -145,7 +145,7 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
         assertThat(entity23L).isNotNull();
 
         // verifico che sono stati inviati 2 eventi a delivery-push
-        verify(sqsSender, timeout(2000).times(2)).pushSendEvent(any(SendEvent.class));
+        verify(sqsSender, timeout(2000).times(2)).pushSendEventOnEventBridge(anyString(), any(SendEvent.class));
 
     }
 
@@ -226,7 +226,7 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
         assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());
 
         // verifico che è stato inviato un evento a delivery-push
-        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(any(SendEvent.class));
+        verify(sqsSender, timeout(2000).times(1)).pushSendEventOnEventBridge(anyString(), any(SendEvent.class));
 
         // verifica cancellazione evento meta
         eventMetaFromDb = eventMetaDAO.getDeliveryEventMeta(eventMeta.getMetaRequestId(), eventMeta.getMetaStatusCode()).block();
@@ -268,7 +268,7 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
                                 .verify();
 
         // verifico che è stato inviato un evento a delivery-push
-        verify(sqsSender, timeout(2000).times(0)).pushSendEvent(any(SendEvent.class));
+        verify(sqsSender, timeout(2000).times(0)).pushSendEventOnEventBridge(anyString(), any(SendEvent.class));
 
         // verifica non cancellazione evento demat
         eventDematFromDB = eventDematDAO.getDeliveryEventDemat(eventDemat.getDematRequestId(), eventDemat.getDocumentTypeStatusCode()).block();
@@ -302,7 +302,7 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
         assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());
 
         // verifico che è stato inviato un evento a delivery-push
-        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(any(SendEvent.class));
+        verify(sqsSender, timeout(2000).times(1)).pushSendEventOnEventBridge(anyString(), any(SendEvent.class));
     }
 
 
@@ -418,7 +418,7 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
 
 
         // verifico che sono stati inviati 2 eventi a delivery push, un PROGRESS (RECAG011B) e un OK (PNAG012)
-        verify(sqsSender, timeout(4000).times(2)).pushSendEvent(any(SendEvent.class));
+        verify(sqsSender, timeout(4000).times(2)).pushSendEventOnEventBridge(anyString(), any(SendEvent.class));
 
     }
 
@@ -476,7 +476,7 @@ class PaperResultAsyncServiceTestIT extends BaseTest {
         //verifico che venga mandato a delivery push lo status PROGRESS
         //lo statusCode dell'entity viene modifico dall'handler
         //assertThat(afterSetForUpdate.getStatusCode()).isEqualTo(StatusCodeEnum.PROGRESS.getValue());
-        verify(sqsSender, times(1)).pushSendEvent(any(SendEvent.class));
+        verify(sqsSender, times(1)).pushSendEventOnEventBridge(anyString(), any(SendEvent.class));
 
         //verifico la clean di tutti i META e DEMAT con la stessa requestId in input
         List<PnEventMeta> resultMeta = eventMetaDAO.findAllByRequestId("META##" + requestId).collectList().block();

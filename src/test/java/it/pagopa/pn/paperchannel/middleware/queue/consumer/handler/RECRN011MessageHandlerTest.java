@@ -52,7 +52,7 @@ class RECRN011MessageHandlerTest {
         Mockito.when(eventMetaDAO.createOrUpdate(Mockito.any()))
                 .thenReturn(Mono.just(eventMetaSaved));
 
-        doNothing().when(sqsSender).pushSendEvent(any());
+        doNothing().when(sqsSender).pushSendEventOnEventBridge(anyString(), any());
 
 
 
