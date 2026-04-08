@@ -100,7 +100,7 @@ class Complex890MessageHandlerTest {
 
         verify(eventMetaDAO, times(0)).createOrUpdate(any(PnEventMeta.class));
 
-        verify(sqsSender, times(0)).pushSendEvent(any(SendEvent.class));
+        verify(sqsSender, times(0)).pushSendEventOnEventBridge(anyString(), any(SendEvent.class));
 
         verify(requestDeliveryDAO, never()).updateConditionalOnFeedbackStatus(any(PnDeliveryRequest.class), anyBoolean());
     }
@@ -141,7 +141,7 @@ class Complex890MessageHandlerTest {
         assertThat(entity.getStatusDetail()).isEqualTo(StatusCodeEnum.PROGRESS.getValue());
         SendEvent sendEvent = SendEventMapper.createSendEventMessage(entity, paperRequest);
 
-        verify(sqsSender, times(1)).pushSendEvent(sendEvent);
+        verify(sqsSender, times(1)).pushSendEventOnEventBridge(anyString(), eq(sendEvent));
 
         // Never because status code is a PROGRESS
         verify(requestDeliveryDAO, never()).updateConditionalOnFeedbackStatus(any(PnDeliveryRequest.class), anyBoolean());
@@ -186,7 +186,7 @@ class Complex890MessageHandlerTest {
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperRequest).block());
 
         ArgumentCaptor<SendEvent> sendEventArgumentCaptor = ArgumentCaptor.forClass(SendEvent.class);
-        verify(sqsSender, times(1)).pushSendEvent(sendEventArgumentCaptor.capture());
+        verify(sqsSender, times(1)).pushSendEventOnEventBridge(anyString(), sendEventArgumentCaptor.capture());
 
         //verifico che viene inviato a delivery-push l'evento originale RECAG005C in stato OK
         SendEvent sendEvent = SendEventMapper.createSendEventMessage(entity, paperRequest);
@@ -250,7 +250,7 @@ class Complex890MessageHandlerTest {
         assertThat(sendPNAG012Event.getStatusDateTime()).isEqualTo("2023-03-15T17:07:00.000Z");
 
         ArgumentCaptor<SendEvent> sendEventArgumentCaptor = ArgumentCaptor.forClass(SendEvent.class);
-        verify(sqsSender, times(2)).pushSendEvent(sendEventArgumentCaptor.capture());
+        verify(sqsSender, times(2)).pushSendEventOnEventBridge(anyString(), sendEventArgumentCaptor.capture());
         sendPNAG012Event.setClientRequestTimeStamp(sendEventArgumentCaptor.getAllValues().get(0).getClientRequestTimeStamp());
         assertThat(sendEventArgumentCaptor.getAllValues().get(0)).isEqualTo(sendPNAG012Event);
 

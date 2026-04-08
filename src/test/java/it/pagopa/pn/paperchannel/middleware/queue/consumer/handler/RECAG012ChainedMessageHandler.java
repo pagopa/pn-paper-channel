@@ -120,7 +120,7 @@ class RECAG012ChainedMessageHandler {
         verify(mockEventMetaDAO, times(1)).createOrUpdate(pnEventMeta);
 
         // I expect it to send the message to delivery-push
-        verify(mockSqsSender, times(1)).pushSendEvent(sendEventExpected);
+        verify(mockSqsSender, times(1)).pushSendEventOnEventBridge(anyString(), eq(sendEventExpected));
         verify(mockSqsSender, never()).pushSingleStatusUpdateEvent( any());
         verify(mockPnEventErrorDAO, never()).findEventErrorsByRequestId( anyString());
 
@@ -168,7 +168,7 @@ class RECAG012ChainedMessageHandler {
         verify(mockEventMetaDAO, times(1)).createOrUpdate(pnEventMeta);
 
         // I expect it not to send the message to delivery-push
-        verify(mockSqsSender, never()).pushSendEvent(any());
+        verify(mockSqsSender, never()).pushSendEventOnEventBridge(anyString(), any());
         verify(mockSqsSender, never()).pushSingleStatusUpdateEvent( any());
         verify(mockPnEventErrorDAO, never()).findEventErrorsByRequestId( anyString());
 
@@ -248,7 +248,7 @@ class RECAG012ChainedMessageHandler {
         verify(mockEventMetaDAO, times(1)).createOrUpdate(pnEventMeta);
 
         // I expect it not to send the message to delivery-push
-        verify(mockSqsSender, times(1)).pushSendEvent(sendEventExpected);
+        verify(mockSqsSender, times(1)).pushSendEventOnEventBridge(anyString(), eq(sendEventExpected));
         verify(mockSqsSender, never()).pushSingleStatusUpdateEvent( any());
         verify(mockPnEventErrorDAO, never()).findEventErrorsByRequestId( anyString());
 

@@ -87,7 +87,7 @@ public class SaveMetadataChainedMessageHandlerTest {
         verify(mockEventMetaDAO, times(1)).createOrUpdate(pnEventMeta);
 
         // I expect it to send the message to delivery-push
-        verify(mockSqsSender, times(1)).pushSendEvent(sendEventExpected);
+        verify(mockSqsSender, times(1)).pushSendEventOnEventBridge(anyString(), eq(sendEventExpected));
         verify(mockSqsSender, never()).pushSingleStatusUpdateEvent( any());
         verify(mockPnEventErrorDAO, never()).findEventErrorsByRequestId( anyString());
 
@@ -124,7 +124,7 @@ public class SaveMetadataChainedMessageHandlerTest {
         verify(mockEventMetaDAO, times(1)).createOrUpdate(pnEventMeta);
 
         // I expect it to not send the message to delivery-push
-        verify(mockSqsSender, times(0)).pushSendEvent(any());
+        verify(mockSqsSender, times(0)).pushSendEventOnEventBridge(anyString(), any());
         verify(mockSqsSender, never()).pushSingleStatusUpdateEvent(any());
         verify(mockPnEventErrorDAO, never()).findEventErrorsByRequestId(anyString());
 

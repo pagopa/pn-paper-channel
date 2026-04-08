@@ -147,7 +147,7 @@ class RECAG011BMessageHandlerTest {
 
         //mi aspetto che mandi l'evento prima l'evento RECAG011B e poi il PNAG012 a delivery-push
         ArgumentCaptor<SendEvent> sendEventArgumentCaptor = ArgumentCaptor.forClass(SendEvent.class);
-        verify(mockSqsSender, times(2)).pushSendEvent(sendEventArgumentCaptor.capture());
+        verify(mockSqsSender, times(2)).pushSendEventOnEventBridge(anyString(), sendEventArgumentCaptor.capture());
 
         PnDeliveryRequest deliveryRequest = pnDeliveryRequestCaptor.getValue();
         assertEquals("RECAG011B", deliveryRequest.getFeedbackOriginalStatusCode());
@@ -220,7 +220,7 @@ class RECAG011BMessageHandlerTest {
         SendEvent sendPNAG012Event = SendEventMapper.createSendEventMessage(pnDeliveryRequestPNAG012, paperProgressStatusEventDtoPNAG012);
 
         //mi aspetto che NON mandi il messaggio PNAG012 a delivery-push
-        verify(mockSqsSender, times(0)).pushSendEvent(sendPNAG012Event);
+        verify(mockSqsSender, times(0)).pushSendEventOnEventBridge(anyString(), eq(sendPNAG012Event));
 
         verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
     }
@@ -286,7 +286,7 @@ class RECAG011BMessageHandlerTest {
         SendEvent sendPNAG012Event = SendEventMapper.createSendEventMessage(pnDeliveryRequestPNAG012, paperProgressStatusEventDtoPNAG012);
 
         //mi aspetto che NON mandi il messaggio PNAG012 a delivery-push
-        verify(mockSqsSender, times(0)).pushSendEvent(sendPNAG012Event);
+        verify(mockSqsSender, times(0)).pushSendEventOnEventBridge(anyString(), eq(sendPNAG012Event));
 
         verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
     }
@@ -349,7 +349,7 @@ class RECAG011BMessageHandlerTest {
 
         //mi aspetto che mandi SOLO l'evento RECAG011B e non mandi l'evento PNAG012 perché non supera la putIfAbsent
         ArgumentCaptor<SendEvent> sendEventArgumentCaptor = ArgumentCaptor.forClass(SendEvent.class);
-        verify(mockSqsSender, times(1)).pushSendEvent(sendEventArgumentCaptor.capture());
+        verify(mockSqsSender, times(1)).pushSendEventOnEventBridge(anyString(), sendEventArgumentCaptor.capture());
         assertThat(sendEventArgumentCaptor.getAllValues().get(0).getStatusDetail()).isEqualTo("RECAG011B");
 
         verify(requestDeliveryDAO, never()).updateData(any(PnDeliveryRequest.class));
@@ -361,7 +361,7 @@ class RECAG011BMessageHandlerTest {
         //mi aspetto che salvi l'evento
         verify(eventDematDAO, times(1)).createOrUpdate(pnEventDematExpected);
         //mi aspetto che mandi il messaggio a delivery-push perché il product è Plico
-        verify(mockSqsSender, times(1)).pushSendEvent(eventDematToDeliveryPushExpected);
+        verify(mockSqsSender, times(1)).pushSendEventOnEventBridge(anyString(), eq(eventDematToDeliveryPushExpected));
     }
 
     private PnEventMeta createEventMetaRECAG012Expected(PaperProgressStatusEventDto paperRequest) {

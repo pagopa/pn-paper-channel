@@ -18,6 +18,7 @@ import it.pagopa.pn.paperchannel.middleware.msclient.ExternalChannelClient;
 import it.pagopa.pn.paperchannel.middleware.msclient.PaperTrackerClient;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.PnPaperChannelCostDTO;
+import it.pagopa.pn.paperchannel.model.PrepareRequestInt;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.service.impl.PaperMessagesServiceImpl;
 import it.pagopa.pn.paperchannel.utils.*;
@@ -231,7 +232,7 @@ class PaperMessagesServiceTest {
 
         //ADDED RELATED REQUEST ID FOR SECOND ATTEMPT
         //ADDED DISCOVERED ADDRESS FOR START ASYNC FLOW AND NOT NATIONAL REGISTRY
-        PrepareRequest request = getRequestOK();
+        PrepareRequestInt request = getRequestOK();
         request.setRelatedRequestId("ABS-1234");
         request.setDiscoveredAddress(getAnalogAddress());
 
@@ -257,7 +258,7 @@ class PaperMessagesServiceTest {
 
         //ADDED RELATED REQUEST ID FOR SECOND ATTEMPT
         //ADDED DISCOVERED ADDRESS FOR START ASYNC FLOW AND NOT NATIONAL REGISTRY
-        PrepareRequest request = getRequestOK();
+        PrepareRequestInt request = getRequestOK();
         request.setRelatedRequestId("ABS-1234");
         request.setDiscoveredAddress(getAnalogAddress());
 
@@ -290,7 +291,7 @@ class PaperMessagesServiceTest {
 
         //ADDED RELATED REQUEST ID FOR SECOND ATTEMPT
         //ADDED DISCOVERED ADDRESS FOR START ASYNC FLOW AND NOT NATIONAL REGISTRY
-        PrepareRequest request = getRequestOK();
+        PrepareRequestInt request = getRequestOK();
         request.setRelatedRequestId("ABS-1234");
         request.setDiscoveredAddress(getAnalogAddress());
 
@@ -334,7 +335,7 @@ class PaperMessagesServiceTest {
 
         //ADDED RELATED REQUEST ID FOR SECOND ATTEMPT
         //ADDED DISCOVERED ADDRESS FOR START ASYNC FLOW AND NOT NATIONAL REGISTRY
-        PrepareRequest request = getRequestOK();
+        PrepareRequestInt request = getRequestOK();
         request.setRelatedRequestId("ABS-1234");
         request.setDiscoveredAddress(null);
 
@@ -379,7 +380,7 @@ class PaperMessagesServiceTest {
         request.setReworkNeeded(true);
         request.setApplyRasterization(Boolean.TRUE);
 
-        PrepareRequest prepareRequest = getRequestOK();
+        PrepareRequestInt prepareRequest = getRequestOK();
         prepareRequest.setRelatedRequestId(request.getRelatedRequestId());
 
         //MOCK RELATED DELIVERY REQUEST
@@ -605,7 +606,6 @@ class PaperMessagesServiceTest {
         sendRequest.setRequestPaId("request-pad-id");
         sendRequest.setPrintType("FRONTE-RETRO");
 
-        /* TEST WITHOUT CONTEXT SETTING */
         Mono<SendResponse> mono = paperMessagesService.executionPaper("TST-IOR.2332", sendRequest);
         int value = Assertions.assertThrows(PnGenericException.class, mono::block).getHttpStatus().value();
         Assertions.assertEquals(422, value);
@@ -691,15 +691,21 @@ class PaperMessagesServiceTest {
     }
 
     @Test
-    void executionPaperWithoutContextAndWithStatusTakingChargeTest() {
+    void executionPaperWithClientIdAndWithStatusTakingChargeTest() {
         when(pnPaperChannelConfig.getPaperTrackerProductList()).thenReturn(List.of("890"));
         mocksExecutionPaperOK();
+
+        PnDeliveryRequest request = getPnDeliveryRequest();
+        request.setStatusCode(StatusDeliveryEnum.TAKING_CHARGE.getCode());
+        request.setClientId("001");
+
+        Mockito.when(requestDeliveryDAO.getByRequestIdStrongConsistency("TST-IOR.2332", false))
+                .thenReturn(Mono.just(request));
 
         SendRequest sendRequest = getRequest("TST-IOR.2332");
         sendRequest.setRequestPaId("request-pad-id");
         sendRequest.setPrintType("FRONTE-RETRO");
 
-        /* TEST WITHOUT CONTEXT SETTING */
         SendResponse response = paperMessagesService.executionPaper("TST-IOR.2332", sendRequest)
                 .block();
 
@@ -719,17 +725,22 @@ class PaperMessagesServiceTest {
         /* -----------------------------  */
     }
     @Test
-    void executionPaperWithContextAndWithStatusTakingChargeTest() {
+    void executionPaperWithNullClientIdAndWithStatusTakingChargeTest() {
         when(pnPaperChannelConfig.getPaperTrackerProductList()).thenReturn(List.of("890"));
         mocksExecutionPaperOK();
+
+        PnDeliveryRequest request = getPnDeliveryRequest();
+        request.setStatusCode(StatusDeliveryEnum.TAKING_CHARGE.getCode());
+        request.setClientId(null);
+
+        Mockito.when(requestDeliveryDAO.getByRequestIdStrongConsistency("TST-IOR.2332", false))
+                .thenReturn(Mono.just(request));
 
         SendRequest sendRequest = getRequest("TST-IOR.2332");
         sendRequest.setRequestPaId("request-pad-id");
         sendRequest.setPrintType("FRONTE-RETRO");
 
-        /* TEST WITH CONTEXT SETTING */
         SendResponse response = paperMessagesService.executionPaper("TST-IOR.2332", sendRequest)
-                .contextWrite(ctx -> ctx.put(Const.CONTEXT_KEY_PREFIX_CLIENT_ID, "001"))
                 .block();
 
         ArgumentCaptor<SendRequest> captureSendRequest = ArgumentCaptor.forClass(SendRequest.class);
@@ -737,9 +748,43 @@ class PaperMessagesServiceTest {
         // verifico che è stato invocato externalChannel
         verify(externalChannelClient, timeout(2000).times(1)).sendEngageRequest(captureSendRequest.capture(), any(), any());
 
-        // verifico il nuovo requestID da inviare ad ExtChannel - {CLIENTID}.{REQUESTID}.PCRETRY_{ATTEMPT}
         assertNotNull(captureSendRequest.getValue());
-        assertEquals("001.TST-IOR.2332.PCRETRY_0", captureSendRequest.getValue().getRequestId());
+        assertEquals("TST-IOR.2332.PCRETRY_0", captureSendRequest.getValue().getRequestId());
+
+        assertEquals(100,response.getAmount());
+        assertEquals(3, response.getNumberOfPages());
+        Mockito.verify(paperTrackerClient, times(0)).initPaperTracking(any(), any(), any(), any());
+        Mockito.verify(deliveryDriverDAO, times(0)).getByDeliveryDriverId(anyString());
+
+        /* ----------------------------- */
+    }
+
+    @Test
+    void executionPaperWithEmptyStringClientIdAndWithStatusTakingChargeTest() {
+        when(pnPaperChannelConfig.getPaperTrackerProductList()).thenReturn(List.of("890"));
+        mocksExecutionPaperOK();
+
+        PnDeliveryRequest request = getPnDeliveryRequest();
+        request.setStatusCode(StatusDeliveryEnum.TAKING_CHARGE.getCode());
+        request.setClientId("");
+
+        Mockito.when(requestDeliveryDAO.getByRequestIdStrongConsistency("TST-IOR.2332", false))
+                .thenReturn(Mono.just(request));
+
+        SendRequest sendRequest = getRequest("TST-IOR.2332");
+        sendRequest.setRequestPaId("request-pad-id");
+        sendRequest.setPrintType("FRONTE-RETRO");
+
+        SendResponse response = paperMessagesService.executionPaper("TST-IOR.2332", sendRequest)
+                .block();
+
+        ArgumentCaptor<SendRequest> captureSendRequest = ArgumentCaptor.forClass(SendRequest.class);
+
+        // verifico che è stato invocato externalChannel
+        verify(externalChannelClient, timeout(2000).times(1)).sendEngageRequest(captureSendRequest.capture(), any(), any());
+
+        assertNotNull(captureSendRequest.getValue());
+        assertEquals("TST-IOR.2332.PCRETRY_0", captureSendRequest.getValue().getRequestId());
 
         assertEquals(100,response.getAmount());
         assertEquals(3, response.getNumberOfPages());
@@ -754,6 +799,13 @@ class PaperMessagesServiceTest {
         when(pnPaperChannelConfig.getPaperTrackerProductList()).thenReturn(List.of("AR"));
         mocksExecutionPaperTrackerEnableProductAROK();
 
+        PnDeliveryRequest request = getPnDeliveryRequest();
+        request.setStatusCode(StatusDeliveryEnum.TAKING_CHARGE.getCode());
+        request.setClientId("001");
+
+        Mockito.when(requestDeliveryDAO.getByRequestIdStrongConsistency("TST-IOR.2332", false))
+                .thenReturn(Mono.just(request));
+
         SendRequest sendRequest = getRequest("TST-IOR.2332");
         sendRequest.setRequestPaId("request-pad-id");
         sendRequest.setPrintType("FRONTE-RETRO");
@@ -765,9 +817,7 @@ class PaperMessagesServiceTest {
 
         when(paperTenderService.getSimplifiedCost(any(), any())).thenReturn(Mono.just(pnPaperChannelCostDTO));
 
-        /* TEST WITH CONTEXT SETTING */
         SendResponse response = paperMessagesService.executionPaper("TST-IOR.2332", sendRequest)
-                .contextWrite(ctx -> ctx.put(Const.CONTEXT_KEY_PREFIX_CLIENT_ID, "001"))
                 .block();
 
         ArgumentCaptor<SendRequest> captureSendRequest = ArgumentCaptor.forClass(SendRequest.class);
@@ -775,9 +825,8 @@ class PaperMessagesServiceTest {
         // verifico che è stato invocato externalChannel
         verify(externalChannelClient, timeout(2000).times(1)).sendEngageRequest(captureSendRequest.capture(), any(), any());
 
-        // verifico il nuovo requestID da inviare ad ExtChannel - {CLIENTID}.{REQUESTID}.PCRETRY_{ATTEMPT}
         assertNotNull(captureSendRequest.getValue());
-        assertEquals("001.TST-IOR.2332.PCRETRY_0", captureSendRequest.getValue().getRequestId());
+        assertEquals("TST-IOR.2332.PCRETRY_0", captureSendRequest.getValue().getRequestId());
 
         assertEquals(100,response.getAmount());
         assertEquals(3, response.getNumberOfPages());
@@ -951,7 +1000,7 @@ class PaperMessagesServiceTest {
     void paperAsyncEntityFirstAttemptApplyRasterizationTest() {
         PnAddress address = getPnAddress(deliveryRequestTakingCharge.getRequestId());
         deliveryRequestTakingCharge.setApplyRasterization(Boolean.TRUE);
-        PrepareRequest prepareRequest = getRelatedRequest();
+        PrepareRequestInt prepareRequest = getRelatedRequest();
         prepareRequest.setRelatedRequestId(null);
 
         PnDeliveryRequest newPnDeliveryRequest = getDeliveryRequest(getRequestOK().getRequestId(), StatusDeliveryEnum.TAKING_CHARGE);
@@ -1025,8 +1074,8 @@ class PaperMessagesServiceTest {
         deliveryRequest.setAttachments(attachmentUrls);
         return deliveryRequest;
     }
-    private PrepareRequest getRequestOK(){
-        PrepareRequest sendRequest= new PrepareRequest();
+    private PrepareRequestInt getRequestOK(){
+        PrepareRequestInt sendRequest= new PrepareRequestInt();
         List<String> attachmentUrls = new ArrayList<>();
         String s = "http://localhost:8080";
         attachmentUrls.add(s);
@@ -1042,8 +1091,8 @@ class PaperMessagesServiceTest {
         sendRequest.setReceiverAddress(getAnalogAddress());
         return sendRequest;
     }
-    private PrepareRequest getRelatedRequest(){
-        PrepareRequest sendRequest= new PrepareRequest();
+    private PrepareRequestInt getRelatedRequest(){
+        PrepareRequestInt sendRequest= new PrepareRequestInt();
         List<String> attachmentUrls = new ArrayList<>();
         String s = "http://localhost:8080";
         attachmentUrls.add(s);

@@ -94,7 +94,7 @@ class Paper_RS_AR_IT extends BaseTest {
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
         // verifico che è stato inviato un evento a delivery-push
-        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
+        verify(sqsSender, timeout(2000).times(1)).pushSendEventOnEventBridge(anyString(), caturedSendEvent.capture());
 
         assertEquals(statusToCheck, caturedSendEvent.getValue().getStatusCode());
     }
@@ -153,7 +153,7 @@ class Paper_RS_AR_IT extends BaseTest {
         verify(mockExtChannel, timeout(2000).times(1)).sendEngageRequest(any(SendRequest.class), anyList(), any());
 
         // verifico che è stato inviato un evento a delivery-push
-        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
+        verify(sqsSender, timeout(2000).times(1)).pushSendEventOnEventBridge(anyString(), caturedSendEvent.capture());
 
         assertEquals(StatusCodeEnum.PROGRESS, caturedSendEvent.getValue().getStatusCode());
 
@@ -189,7 +189,7 @@ class Paper_RS_AR_IT extends BaseTest {
         // verifico che il flusso della Giacenza RECRN011 è terminato con successo
         assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
-        verify(sqsSender).pushSendEvent(caturedSendEvent.capture());
+        verify(sqsSender).pushSendEventOnEventBridge(anyString(), caturedSendEvent.capture());
 
         assertNotNull(caturedSendEvent.getValue());
         assertEquals(RECRN011_STATUS_CODE, caturedSendEvent.getValue().getStatusDetail());
@@ -275,7 +275,7 @@ class Paper_RS_AR_IT extends BaseTest {
         // check PROGRESS
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
-        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture()); // 1 send for each attachment of the correct type
+        verify(sqsSender, timeout(2000).times(1)).pushSendEventOnEventBridge(anyString(), caturedSendEvent.capture()); // 1 send for each attachment of the correct type
 
         assertEquals(pnDeliveryRequest.getRequestId(), caturedSendEvent.getValue().getRequestId());
         assertEquals(StatusCodeEnum.PROGRESS, caturedSendEvent.getValue().getStatusCode());
@@ -319,7 +319,7 @@ class Paper_RS_AR_IT extends BaseTest {
 
         caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
-        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(caturedSendEvent.capture());
+        verify(sqsSender, timeout(2000).times(1)).pushSendEventOnEventBridge(anyString(), caturedSendEvent.capture());
 
         assertEquals(pnDeliveryRequest.getRequestId(), caturedSendEvent.getValue().getRequestId());
 
@@ -469,7 +469,7 @@ class Paper_RS_AR_IT extends BaseTest {
         generateEvent(RECRN010_STATUS_CODE, null, null, null, Instant.now().minus(20, ChronoUnit.DAYS));
         generateEvent(RECRN011_STATUS_CODE, null, null, null, Instant.now().minus(20, ChronoUnit.DAYS));
 
-        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(capturedSendEvent.capture());
+        verify(sqsSender, timeout(2000).times(1)).pushSendEventOnEventBridge(anyString(), capturedSendEvent.capture());
         log.info("Event: \n"+capturedSendEvent.getAllValues());
         assertNotNull(capturedSendEvent.getValue());
         assertEquals(StatusCodeEnum.PROGRESS, capturedSendEvent.getValue().getStatusCode());
@@ -480,7 +480,7 @@ class Paper_RS_AR_IT extends BaseTest {
         generateEvent("RECRN003C", null, null, null, Instant.now().minus(5, ChronoUnit.DAYS));
 
         ArgumentCaptor<SendEvent> captureSecond = ArgumentCaptor.forClass(SendEvent.class);
-        verify(sqsSender, times(3)).pushSendEvent(captureSecond.capture());
+        verify(sqsSender, times(3)).pushSendEventOnEventBridge(anyString(), captureSecond.capture());
         assertNotNull(captureSecond.getAllValues());
         assertEquals(3, captureSecond.getAllValues().size());
 
@@ -503,7 +503,7 @@ class Paper_RS_AR_IT extends BaseTest {
         generateEvent(RECRN010_STATUS_CODE, null, null, null, Instant.now().minus(20, ChronoUnit.DAYS));
         generateEvent(RECRN011_STATUS_CODE, null, null, null, Instant.now().minus(20, ChronoUnit.DAYS));
 
-        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(capturedSendEvent.capture());
+        verify(sqsSender, timeout(2000).times(1)).pushSendEventOnEventBridge(anyString(), capturedSendEvent.capture());
         log.info("Event: \n"+capturedSendEvent.getAllValues());
         assertNotNull(capturedSendEvent.getValue());
         assertEquals(StatusCodeEnum.PROGRESS, capturedSendEvent.getValue().getStatusCode());
@@ -514,7 +514,7 @@ class Paper_RS_AR_IT extends BaseTest {
         generateEvent("RECRN004C", null, null, null, Instant.now().minus(5, ChronoUnit.DAYS));
 
         ArgumentCaptor<SendEvent> captureSecond = ArgumentCaptor.forClass(SendEvent.class);
-        verify(sqsSender, times(3)).pushSendEvent(captureSecond.capture());
+        verify(sqsSender, times(3)).pushSendEventOnEventBridge(anyString(), captureSecond.capture());
         assertNotNull(captureSecond.getAllValues());
         assertEquals(3, captureSecond.getAllValues().size());
 
@@ -539,7 +539,7 @@ class Paper_RS_AR_IT extends BaseTest {
         generateEvent(RECRN010_STATUS_CODE, null, null, null, now.minus(30, ChronoUnit.DAYS));
         generateEvent(RECRN011_STATUS_CODE, null, null, null, now.minus(30, ChronoUnit.DAYS));
 
-        verify(sqsSender, timeout(2000).times(1)).pushSendEvent(capturedSendEvent.capture());
+        verify(sqsSender, timeout(2000).times(1)).pushSendEventOnEventBridge(anyString(), capturedSendEvent.capture());
         log.info("Event: \n"+capturedSendEvent.getAllValues());
         assertNotNull(capturedSendEvent.getValue());
         assertEquals(StatusCodeEnum.PROGRESS, capturedSendEvent.getValue().getStatusCode());
@@ -550,7 +550,7 @@ class Paper_RS_AR_IT extends BaseTest {
         generateEvent("RECRN005C", "MA", null, null, now);
 
         ArgumentCaptor<SendEvent> captureSecond = ArgumentCaptor.forClass(SendEvent.class);
-        verify(sqsSender, times(3)).pushSendEvent(captureSecond.capture());
+        verify(sqsSender, times(3)).pushSendEventOnEventBridge(anyString(), captureSecond.capture());
         assertNotNull(captureSecond.getAllValues());
         assertEquals(3, captureSecond.getAllValues().size());
 

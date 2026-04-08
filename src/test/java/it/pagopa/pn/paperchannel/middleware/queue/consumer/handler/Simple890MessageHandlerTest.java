@@ -63,7 +63,7 @@ class Simple890MessageHandlerTest {
         entity.setStatusDetail(StatusCodeEnum.OK.getValue());
 
         when(requestDeliveryDAO.updateConditionalOnFeedbackStatus(any(PnDeliveryRequest.class), anyBoolean())).thenReturn(Mono.just(entity));
-        doNothing().when(mockSqsSender).pushSendEvent(any(SendEvent.class));
+        doNothing().when(mockSqsSender).pushSendEventOnEventBridge(anyString(), any(SendEvent.class));
         when(metaDematCleaner.clean(anyString())).thenReturn(Mono.empty());
 
         assertDoesNotThrow(() -> handler.handleMessage(entity, paperProgressStatusEventDto).block());
@@ -72,7 +72,7 @@ class Simple890MessageHandlerTest {
         SendEvent sendEventExpected = SendEventMapper.createSendEventMessage(entity, paperProgressStatusEventDto);
         sendEventExpected.setStatusCode(StatusCodeEnum.PROGRESS);
 
-        verify(mockSqsSender, times(1)).pushSendEvent(sendEventExpected);
+        verify(mockSqsSender, times(1)).pushSendEventOnEventBridge(anyString(), eq(sendEventExpected));
         verify(requestDeliveryDAO, never()).updateData(entity);
         verify(metaDematCleaner, times(1)).clean(entity.getRequestId());
     }
