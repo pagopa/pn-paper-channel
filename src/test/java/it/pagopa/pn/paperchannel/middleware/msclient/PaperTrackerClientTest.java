@@ -32,8 +32,8 @@ public class PaperTrackerClientTest  {
     @Test
     void testInitTrackingOk(){
         PnDeliveryRequest pnDeliveryRequest = new PnDeliveryRequest();
-        when(paperTrackerTrackingApi.initTracking(any())).thenReturn(Mono.empty());
-        StepVerifier.create(paperTrackerClient.initPaperTracking("requestId", "PCRETRY_0", "AR","driver"))
+        when(paperTrackerTrackingApi.initTracking(any(), any())).thenReturn(Mono.empty());
+        StepVerifier.create(paperTrackerClient.initPaperTracking("requestId", "PCRETRY_0", "AR","driver", "clientId"))
                 .verifyComplete();
     }
 
@@ -43,8 +43,8 @@ public class PaperTrackerClientTest  {
         pnDeliveryRequest.setRequestId("requestId");
         WebClientResponseException exception = WebClientResponseException.create(
                 409, "Conflict", null, null, null);
-        when(paperTrackerTrackingApi.initTracking(any())).thenReturn(Mono.error(exception));
-        StepVerifier.create(paperTrackerClient.initPaperTracking("requestId", "PCRETRY_0","AR","driver"))
+        when(paperTrackerTrackingApi.initTracking(any(), any())).thenReturn(Mono.error(exception));
+        StepVerifier.create(paperTrackerClient.initPaperTracking("requestId", "PCRETRY_0","AR","driver", "clientId"))
                 .verifyError(PnIdConflictException.class);
     }
 
@@ -52,8 +52,8 @@ public class PaperTrackerClientTest  {
     void testInitTrackingError(){
         WebClientResponseException exception = WebClientResponseException.create(
                 500, "Conflict", null, null, null);
-        when(paperTrackerTrackingApi.initTracking(any())).thenReturn(Mono.error(exception));
-        StepVerifier.create(paperTrackerClient.initPaperTracking("requestId", "PCRETRY_0","AR","driver"))
+        when(paperTrackerTrackingApi.initTracking(any(), any())).thenReturn(Mono.error(exception));
+        StepVerifier.create(paperTrackerClient.initPaperTracking("requestId", "PCRETRY_0","AR","driver", "clientId"))
                 .verifyError(WebClientResponseException.class);
     }
 
