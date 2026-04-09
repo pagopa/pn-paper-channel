@@ -28,7 +28,7 @@ public class PaperTrackerClientImpl implements PaperTrackerClient {
         trackerCreationRequestDto.setPcRetry(pcRetry);
         trackerCreationRequestDto.setProductType(productType);
         trackerCreationRequestDto.setUnifiedDeliveryDriver(unifiedDeliveryDriver);
-        return paperTrackerEventApi.initTracking(clientId, trackerCreationRequestDto)
+        return paperTrackerEventApi.initTracking(trackerCreationRequestDto, clientId)
                 .onErrorMap(ex -> {
                     if (ex instanceof WebClientResponseException exception && exception.getStatusCode() == HttpStatus.CONFLICT) {
                         return new PnIdConflictException(PAPER_TRACKER_REQUEST_CONFLICT.getTitle(), Map.of("trackingId", String.join(".", attemptId, pcRetry)));

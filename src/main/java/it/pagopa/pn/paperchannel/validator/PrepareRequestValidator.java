@@ -3,6 +3,7 @@ package it.pagopa.pn.paperchannel.validator;
 import it.pagopa.pn.paperchannel.exception.PnInputValidatorException;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
+import it.pagopa.pn.paperchannel.model.CommunicationType;
 import it.pagopa.pn.paperchannel.model.PrepareRequestInt;
 import it.pagopa.pn.paperchannel.service.impl.F24ServiceImpl;
 import it.pagopa.pn.paperchannel.utils.AttachmentsConfigUtils;
@@ -37,7 +38,9 @@ public class PrepareRequestValidator {
 
         validateIun(prepareRequest, pnDeliveryEntity, errors);
 
-        validateFiscalCode(prepareRequest, pnDeliveryEntity, errors);
+        if (!CommunicationType.INFORMAL.equals(prepareRequest.getCommunicationType())) {
+            validateFiscalCode(prepareRequest, pnDeliveryEntity, errors);
+        }
 
         validateProductType(prepareRequest, pnDeliveryEntity, errors);
 

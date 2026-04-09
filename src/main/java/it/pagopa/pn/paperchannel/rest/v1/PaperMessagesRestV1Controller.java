@@ -25,12 +25,8 @@ public class PaperMessagesRestV1Controller implements PaperMessagesApi {
 
     @Override
     public Mono<ResponseEntity<PaperChannelUpdate>> sendPaperPrepareRequest(String requestId, Mono<PrepareRequest> prepareRequest, String xClientId, ServerWebExchange exchange) {
-        MDC.put( MDCUtils.MDC_PN_CTX_REQUEST_ID, "PREPARE_PHASE_" + requestId);
         Mono<ResponseEntity<PaperChannelUpdate>> responseEntityMono = prepareRequest
-                .doOnNext(request -> {
-                    log.debug("Delivery Request of prepare flow");
-                    log.debug("Receiver address: {}", request.getReceiverAddress());
-                })
+                .doOnNext(request -> MDC.put( MDCUtils.MDC_PN_CTX_REQUEST_ID, "PREPARE_PHASE_" + requestId))
                 .flatMap(request -> paperMessagesService.preparePaperSync(requestId, prepareRequestMapper.prepareRequestToInternal(request, xClientId)))
                 .map(ResponseEntity::ok)
                 .switchIfEmpty(Mono.just(ResponseEntity.noContent().build()));
