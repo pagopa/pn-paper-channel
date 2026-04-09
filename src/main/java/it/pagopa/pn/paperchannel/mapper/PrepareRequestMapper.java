@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.mapper;
 
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.InformalPrepareRequest;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PrepareRequest;
 import it.pagopa.pn.paperchannel.model.CommunicationType;
 import it.pagopa.pn.paperchannel.model.PrepareRequestInt;
@@ -11,4 +12,8 @@ public interface PrepareRequestMapper {
 
     @Mapping(target = "communicationType", expression = "java(CommunicationType.LEGAL)")
     PrepareRequestInt prepareRequestToInternal(PrepareRequest request, String clientId);
+
+    @Mapping(target = "communicationType", expression = "java(CommunicationType.INFORMAL)")
+    PrepareRequestInt informalPrepareRequestToInternal(InformalPrepareRequest request, String clientId);
+
 }

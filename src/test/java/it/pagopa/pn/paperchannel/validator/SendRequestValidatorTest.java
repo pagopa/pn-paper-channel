@@ -1,6 +1,5 @@
 package it.pagopa.pn.paperchannel.validator;
 
-import it.pagopa.pn.commons.exceptions.PnInternalException;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.AttachmentDetailsDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
@@ -10,6 +9,7 @@ import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.model.Address;
+import it.pagopa.pn.paperchannel.model.CommunicationType;
 import it.pagopa.pn.paperchannel.utils.Utility;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -107,6 +107,44 @@ class SendRequestValidatorTest {
     void compareRequestCostEntityOK2() {
         Assertions.assertDoesNotThrow(() -> SendRequestValidator.compareRequestCostEntity(10, null));
 
+    }
+
+    @Test
+    void compareRequestEntity_whenCommunicationTypeIsLegal_andFiscalCodeMatches_thenNoException() {
+        PnDeliveryRequest entity = getEntityOK();
+        entity.setCommunicationType(CommunicationType.LEGAL.name());
+        entity.setHashedFiscalCode(Utility.convertToHash("ABCD123AB501"));
+        entity.setProductType(ProductTypeEnum.RIR.getValue());
+
+        Assertions.assertDoesNotThrow(() ->
+                SendRequestValidator.compareRequestEntity(getRequestOK(), entity));
+    }
+
+    @Test
+    void compareRequestEntity_whenCommunicationTypeIsLegal_andFiscalCodeMismatches_thenThrows() {
+        PnDeliveryRequest entity = getEntityOK();
+        entity.setCommunicationType(CommunicationType.LEGAL.name());
+        entity.setHashedFiscalCode(Utility.convertToHash("FISCALCODE_WRONG"));
+        entity.setProductType(ProductTypeEnum.RIR.getValue());
+
+        try {
+            SendRequestValidator.compareRequestEntity(getRequestOK(), entity);
+            Assertions.fail("Expected PnInputValidatorException");
+        } catch (PnGenericException ex) {
+            assertNotNull(ex);
+            assertEquals(DIFFERENT_DATA_REQUEST, ex.getExceptionType());
+        }
+    }
+
+    @Test
+    void compareRequestEntity_whenCommunicationTypeIsNotLegal_thenFiscalCodeNotValidated() {
+        PnDeliveryRequest entity = getEntityOK();
+        entity.setCommunicationType(CommunicationType.INFORMAL.name());
+        entity.setHashedFiscalCode(Utility.convertToHash("FISCALCODE_WRONG"));
+        entity.setProductType(ProductTypeEnum.RIR.getValue());
+
+        Assertions.assertDoesNotThrow(() ->
+                SendRequestValidator.compareRequestEntity(getRequestOK(), entity));
     }
 
     private PnDeliveryRequest getEntity(){

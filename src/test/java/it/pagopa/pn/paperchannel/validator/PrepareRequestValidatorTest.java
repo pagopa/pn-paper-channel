@@ -9,6 +9,7 @@ import it.pagopa.pn.paperchannel.mapper.AddressMapper;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.model.Address;
+import it.pagopa.pn.paperchannel.model.CommunicationType;
 import it.pagopa.pn.paperchannel.model.PrepareRequestInt;
 import it.pagopa.pn.paperchannel.utils.Utility;
 import org.junit.jupiter.api.Assertions;
@@ -267,6 +268,34 @@ class PrepareRequestValidatorTest {
         deliveryRequest.setRemovedAttachments(List.of(
                 attachmentInfoRemoved
         ));
+    }
+
+    @Test
+    void compareRequestEntity_whenCommunicationTypeIsLegal_andFiscalCodeMatches_thenNoException() {
+        prepareRequest.setCommunicationType(CommunicationType.LEGAL);
+        prepareRequest.setReceiverFiscalCode("MDF1234JJJSSKK");
+
+        assertThatNoException().isThrownBy(() ->
+                PrepareRequestValidator.compareRequestEntity(prepareRequest, deliveryRequest, true, true));
+    }
+
+    @Test
+    void compareRequestEntity_whenCommunicationTypeIsLegal_andFiscalCodeMismatches_thenThrows() {
+        prepareRequest.setCommunicationType(CommunicationType.LEGAL);
+        prepareRequest.setReceiverFiscalCode("FISCALCODE_WRONG");
+
+        PnGenericException ex = Assertions.assertThrows(PnInputValidatorException.class,
+                () -> PrepareRequestValidator.compareRequestEntity(prepareRequest, deliveryRequest, true, true));
+        Assertions.assertEquals(ExceptionTypeEnum.DIFFERENT_DATA_REQUEST.getMessage(), ex.getMessage());
+    }
+
+    @Test
+    void compareRequestEntity_whenCommunicationTypeIsInformal_thenFiscalCodeNotValidated() {
+        prepareRequest.setCommunicationType(CommunicationType.INFORMAL);
+        prepareRequest.setReceiverFiscalCode("FISCALCODE_WRONG");
+
+        assertThatNoException().isThrownBy(() ->
+                PrepareRequestValidator.compareRequestEntity(prepareRequest, deliveryRequest, true, true));
     }
 
     private void setPrepareRequest(){

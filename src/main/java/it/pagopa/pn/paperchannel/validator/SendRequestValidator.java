@@ -1,6 +1,5 @@
 package it.pagopa.pn.paperchannel.validator;
 
-import it.pagopa.pn.commons.exceptions.PnInternalException;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.exception.PnInputValidatorException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.AttachmentDetailsDto;
@@ -8,6 +7,7 @@ import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
+import it.pagopa.pn.paperchannel.model.CommunicationType;
 import it.pagopa.pn.paperchannel.utils.Utility;
 import lombok.CustomLog;
 import org.apache.commons.lang3.StringUtils;
@@ -37,7 +37,7 @@ public class SendRequestValidator {
             log.debug("Comparison between request and entity failed, different data: RequestId");
         }
 
-        if (!Utility.convertToHash(sendRequest.getReceiverFiscalCode()).equals(pnDeliveryEntity.getHashedFiscalCode())) {
+        if (!CommunicationType.INFORMAL.name().equals(pnDeliveryEntity.getCommunicationType()) && !Utility.convertToHash(sendRequest.getReceiverFiscalCode()).equals(pnDeliveryEntity.getHashedFiscalCode())) {
             errors.add("FiscalCode");
             log.debug("Comparison between request and entity failed, different data: FiscalCode");
         }
