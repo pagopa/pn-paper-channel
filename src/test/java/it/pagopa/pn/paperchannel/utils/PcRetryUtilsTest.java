@@ -137,7 +137,7 @@ class PcRetryUtilsTest {
         pcRetryUtils.callInitTrackingAndEcSendEngage(requestId, sendRequest, attachmentInfos, pnDeliveryRequest, pcRetry).block();
 
         verify(paperChannelDeliveryDriverDAO).getByDeliveryDriverId("driver1");
-        verify(paperTrackerClient).initPaperTracking(requestId, "PCRETRY_1", "AR", "poste","clientId");
+        verify(paperTrackerClient).initPaperTracking(requestId, "PCRETRY_1", "AR", "poste", pnDeliveryRequest.getClientId());
         verify(externalChannelClient).sendEngageRequest(sendRequest, attachmentInfos, pnDeliveryRequest.getApplyRasterization());
     }
 
@@ -179,7 +179,7 @@ class PcRetryUtilsTest {
         when(paperTenderService.getSimplifiedCost(any(), any())).thenReturn(Mono.just(pnPaperChannelCostDTO));
         when(paperChannelDeliveryDriverDAO.getByDeliveryDriverId(pnPaperChannelCostDTO.getDeliveryDriverId()))
                 .thenReturn(Mono.just(driver));
-        when(paperTrackerClient.initPaperTracking(any(), any(), any(), any(), anyString()))
+        when(paperTrackerClient.initPaperTracking(any(), any(), any(), any(), any()))
                 .thenReturn(Mono.error(new RuntimeException("Init tracking failed")));
 
         StepVerifier.create(pcRetryUtils.callInitTrackingAndEcSendEngage(requestId, sendRequest, attachmentInfos, pnDeliveryRequest, pcRetry))
@@ -188,7 +188,7 @@ class PcRetryUtilsTest {
                 .verify();
 
         verify(paperChannelDeliveryDriverDAO).getByDeliveryDriverId("driver1");
-        verify(paperTrackerClient).initPaperTracking(requestId, "PCRETRY_1", "AR", "poste","clientId");
+        verify(paperTrackerClient).initPaperTracking(requestId, "PCRETRY_1", "AR", "poste", pnDeliveryRequest.getClientId());
         verifyNoInteractions(externalChannelClient);
     }
 
@@ -218,7 +218,7 @@ class PcRetryUtilsTest {
         pcRetryUtils.callInitTrackingAndEcSendEngage(requestId, sendRequest, attachmentInfos, pnDeliveryRequest, pcRetry).block();
 
         verify(paperChannelDeliveryDriverDAO).getByDeliveryDriverId("driver1");
-        verify(paperTrackerClient).initPaperTracking(requestId, "PCRETRY_1", "AR", "poste","clientId");
+        verify(paperTrackerClient).initPaperTracking(requestId, "PCRETRY_1", "AR", "poste", pnDeliveryRequest.getClientId());
         verify(externalChannelClient).sendEngageRequest(sendRequest, attachmentInfos, pnDeliveryRequest.getApplyRasterization());
     }
 
