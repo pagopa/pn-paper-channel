@@ -37,11 +37,7 @@ public class InformalMessagesRestV1Controller implements InformalMessagesApi {
         }
 
         Mono<ResponseEntity<InformalPrepareResponse>> responseEntityMono = informalPrepareRequest
-                .doOnNext(request -> {
-                    MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, "PREPARE_PHASE_" + request.getRequestId());
-                    log.info("Informal request of prepare flow");
-                    log.debug("Receiver address: {}", request.getReceiverAddress());
-                })
+                .doOnNext(request -> MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, "INFORMAL_PREPARE_PHASE_" + request.getRequestId()))
                 .flatMap(request -> paperMessagesService.preparePaperSync(request.getRequestId(), prepareRequestMapper.informalPrepareRequestToInternal(request, xClientId))
                                 .map(internalResponse -> ResponseEntity.ok(new InformalPrepareResponse(request.getRequestId())))
                                 .switchIfEmpty(Mono.just(buildCreatedResponseEntity(exchange, request)))
