@@ -250,18 +250,6 @@ aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
 
 aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     dynamodb create-table \
-    --table-name AttachmentsConfig  \
-    --attribute-definitions \
-        AttributeName=configKey,AttributeType=S \
-        AttributeName=startValidity,AttributeType=S \
-    --key-schema \
-        AttributeName=configKey,KeyType=HASH \
-        AttributeName=startValidity,KeyType=RANGE \
-    --provisioned-throughput \
-        ReadCapacityUnits=10,WriteCapacityUnits=5
-
-aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
-    dynamodb create-table \
     --table-name PaperEventErrorDynamoTable  \
     --attribute-definitions \
         AttributeName=requestId,AttributeType=S \

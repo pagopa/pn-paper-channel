@@ -301,14 +301,6 @@ Parameters:
     Type: String
     Description: 'ARN of dynamodb table containing events'
 
-  AttachmentsConfigDynamoTableName:
-    Type: String
-    Description: 'Name of dynamodb table containing configurations about attachments'
-
-  AttachmentsConfigDynamoTableArn:
-    Type: String
-    Description: 'ARN of dynamodb table containing configurations about attachments'
-
   PaperEventErrorDynamoTableName:
     Type: String
     Description: 'Name of dynamodb table containing event errors'
@@ -464,7 +456,7 @@ Parameters:
 
   MountEfs:
     Type: String
-    Default: false
+    Default: "false"
     AllowedValues:
       - "true"
       - "false"
@@ -517,11 +509,6 @@ Parameters:
     AllowedValues:
       - true
       - false
-
-  DefaultAttachmentConfigCap:
-    Description: Codice di default per il parent di nuovi cap inseriti
-    Type: String
-    Default: 'ZIP##DEFAULT'
 
   HealthCheckTimeout:
     Description: health check timeout seconds
@@ -839,9 +826,7 @@ Resources:
         ContainerEnvEntry57: !Sub 'PN_PAPERCHANNEL_F24CLIENT_RETRYMAXATTEMPTS=${F24ClientRetryMaxAttempts}'
         ContainerEnvEntry58: !Sub 'PN_PAPERCHANNEL_REQUIREDDEMATS=${RequiredDemats}'
         ContainerEnvEntry59: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUEZIPHANDLE=${AttemptQueueZipHandle}'
-        ContainerEnvEntry60: !Sub 'AWS_DYNAMODBATTACHMENTSCONFIGTABLE=${AttachmentsConfigDynamoTableName}'
         ContainerEnvEntry62: !Sub 'PN_PAPERCHANNEL_ENABLEDOCFILTERRULEENGINE=${EnableDocFilterRuleEngine}'
-        ContainerEnvEntry63: !Sub 'PN_PAPERCHANNEL_DEFAULTATTACHMENTCONFIGCAP=${DefaultAttachmentConfigCap}'
         ContainerEnvEntry64: !Sub 'AWS_DYNAMODBPAPEREVENTERRORTABLE=${PaperEventErrorDynamoTableName}'
         ContainerEnvEntry65: !Sub 'AWS_DYNAMODBPAPERCHANNELTENDERTABLE=${PaperChannelTenderDynamoTableName}'
         ContainerEnvEntry66: !Sub 'AWS_DYNAMODBPAPERCHANNELGEOKEYTABLE=${PaperChannelGeokeyDynamoTableName}'
@@ -966,8 +951,6 @@ Resources:
               - !Sub "${PaperEventsTableArn}/*"
               - !Sub "${ClientDynamoTableArn}"
               - !Sub "${ClientDynamoTableArn}/*"
-              - !Sub "${AttachmentsConfigDynamoTableArn}"
-              - !Sub "${AttachmentsConfigDynamoTableArn}/*"
               - !Sub "${PaperEventErrorDynamoTableArn}"
               - !Sub "${PaperEventErrorDynamoTableArn}/*"
               - !Sub "${PaperChannelTenderDynamoTableArn}"
@@ -1068,7 +1051,6 @@ Resources:
             - !Ref TenderDynamoTableName
             - !Ref DeliveryFileDynamoTableName
             - !Ref RequestDeliveryDynamoTableName
-            - !Ref AttachmentsConfigDynamoTableArn
             - !Ref PaperEventErrorDynamoTableArn
             - !Ref PaperChannelTenderDynamoTableArn
             - !Ref PaperChannelGeokeyDynamoTableArn
