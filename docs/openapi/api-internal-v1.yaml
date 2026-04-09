@@ -305,7 +305,7 @@ paths:
               $ref: '#/components/schemas/InformalPrepareRequest'
       responses:
         "200":
-          description: Richiesta già inviata in precedenza con stesso requestId e body; ritorna l'ultimo evento.
+          description: Richiesta già inviata in precedenza con stesso requestId e body; ritorna l'identificativo univoco della richiesta
           content:
             application/json:
               schema:
@@ -704,7 +704,6 @@ components:
         - printType
         - proposalProductType
         - requestId
-        - receiverFiscalCode
         - receiverType
         - iun
       type: object
@@ -727,8 +726,7 @@ components:
           example: 'ABCD-HILM-YKWX-202202-1'
         requestId:
           type: string
-          description: Identificativo della richiesta. E' lo stesso usato nel path
-            del metodo
+          description: Identificativo della richiesta.
           example: ABCD-HILM-YKWX-202202-1_rec0_try1
         receiverType:
           type: string

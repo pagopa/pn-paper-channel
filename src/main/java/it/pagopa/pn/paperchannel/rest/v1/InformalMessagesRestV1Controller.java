@@ -2,7 +2,6 @@ package it.pagopa.pn.paperchannel.rest.v1;
 
 import it.pagopa.pn.commons.utils.MDCUtils;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
-import it.pagopa.pn.paperchannel.exception.PnInputValidatorException;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.api.InformalMessagesApi;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.InformalPrepareRequest;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.InformalPrepareResponse;
@@ -11,7 +10,6 @@ import it.pagopa.pn.paperchannel.service.PaperMessagesService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RestController;
@@ -53,15 +51,15 @@ public class InformalMessagesRestV1Controller implements InformalMessagesApi {
     }
 
     private ResponseEntity<InformalPrepareResponse> buildCreatedResponseEntity(ServerWebExchange exchange, InformalPrepareRequest request) {
-        return ResponseEntity.created(buildLocationUri(exchange)).body(new InformalPrepareResponse(request.getRequestId()));
-    }
 
-
-    private URI buildLocationUri(ServerWebExchange exchange) {
-        return UriComponentsBuilder
+        URI location = UriComponentsBuilder
                 .fromUri(exchange.getRequest().getURI())
-                .replacePath("/paper-channel-private/v1/paper-deliveries-prepare/informal")
-                .build()
+                .replacePath("/paper-channel-private/v1/b2b/paper-deliveries-prepare/{requestId}")
+                .buildAndExpand(request.getRequestId())
                 .toUri();
+
+        return ResponseEntity
+                .created(location)
+                .body(new InformalPrepareResponse(request.getRequestId()));
     }
 }

@@ -2,7 +2,9 @@ package it.pagopa.pn.paperchannel.rest.v1;
 
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.paperchannel.mapper.PrepareRequestMapper;
+import it.pagopa.pn.paperchannel.model.PrepareRequestInt;
 import it.pagopa.pn.paperchannel.service.PaperMessagesService;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +20,7 @@ import java.util.List;
 class InformalMessagesRestV1ControllerTest {
     private static final String TEST_CLIENT_ID = "test-client-id";
     private static final String BASE_PATH = "/paper-channel-private/v1/paper-deliveries-prepare/informal";
+    private static final String URI_LOCATION_BASE = "/paper-channel-private/v1/b2b/paper-deliveries-prepare/";
 
     @Autowired
     private WebTestClient webTestClient;
@@ -31,7 +34,7 @@ class InformalMessagesRestV1ControllerTest {
         PaperChannelUpdate serviceResponse = new PaperChannelUpdate();
 
         Mockito.when(prepareRequestMapper.informalPrepareRequestToInternal(Mockito.any(), Mockito.anyString()))
-                .thenReturn(null);
+                .thenReturn(new PrepareRequestInt());
 
         Mockito.when(paperMessagesService.preparePaperSync(Mockito.anyString(), Mockito.any()))
                 .thenReturn(Mono.just(serviceResponse));
@@ -44,8 +47,8 @@ class InformalMessagesRestV1ControllerTest {
                 .expectStatus().isOk()
                 .expectBody(InformalPrepareResponse.class)
                 .value(response -> {
-                    assert response != null;
-                    assert "12345ABC".equals(response.getRequestId());
+                    Assertions.assertNotNull(response);
+                    Assertions.assertEquals("12345ABC",response.getRequestId());
                 });
     }
 
@@ -64,13 +67,13 @@ class InformalMessagesRestV1ControllerTest {
                 .exchange()
                 .expectStatus().isCreated()
                 .expectHeader().value("Location", location -> {
-                    assert location != null;
-                    assert location.contains(BASE_PATH);
+                    Assertions.assertNotNull(location);
+                    Assertions.assertTrue(location.contains(URI_LOCATION_BASE));
                 })
                 .expectBody(InformalPrepareResponse.class)
                 .value(response -> {
-                    assert response != null;
-                    assert "12345ABC".equals(response.getRequestId());
+                    Assertions.assertNotNull(response);
+                    Assertions.assertEquals("12345ABC",response.getRequestId());
                 });
     }
 
