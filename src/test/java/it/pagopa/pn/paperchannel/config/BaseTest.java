@@ -35,9 +35,6 @@ public abstract class BaseTest {
     public static class WithOutLocalStackTest {
 
         @MockitoBean
-        private DeliveryPushMomProducer deliveryMomProducer;
-
-        @MockitoBean
         private InternalQueueMomProducer internalQueueMomProducer;
 
         @MockitoBean

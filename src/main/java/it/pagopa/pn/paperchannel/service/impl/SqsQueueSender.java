@@ -33,24 +33,12 @@ public class SqsQueueSender implements SqsSender {
 
     private static final int ONE_MINUTE_IN_SECONDS = 60;
 
-    private final DeliveryPushMomProducer deliveryPushMomProducer;
     private final InternalQueueMomProducer internalQueueMomProducer;
     private final NormalizeAddressQueueMomProducer normalizeAddressQueueMomProducer;
     private final PaperchannelToDelayerMomProducer paperchannelToDelayerMomProducer;
     private final DelayerToPaperchannelInternalProducer delayerToPaperchannelInternalProducer;
     private final EventBridgeProducer eventBridgeProducer;
     private final OcrProducer ocrProducer;
-
-    @Override
-    public void pushPrepareEvent(PrepareEvent event) {
-        push(event);
-    }
-
-    private void push(PrepareEvent prepareEvent){
-        log.info("Push event to queue {}", prepareEvent.getRequestId());
-        this.deliveryPushMomProducer.push(getDeliveryPushEvent(prepareEvent));
-    }
-
 
     @Override
     public void pushToInternalQueue(PrepareAsyncRequest prepareAsyncRequest){

@@ -44,7 +44,6 @@ public class PnPaperChannelConfig {
     private String f24CxId;
     private String xPagopaExtchCxId;
     private String nationalRegistryCxId;
-    private String queueDeliveryPush;
     private String queueNationalRegistries;
     private String queueExternalChannel;
     private String queueNormalizeAddress;

@@ -11,7 +11,6 @@ import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.middleware.queue.model.AttemptPushEvent;
 import it.pagopa.pn.paperchannel.middleware.queue.model.DeliveryPushEvent;
 import it.pagopa.pn.paperchannel.middleware.queue.model.InternalPushEvent;
-import it.pagopa.pn.paperchannel.middleware.queue.producer.DeliveryPushMomProducer;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.EventBridgeProducer;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.InternalQueueMomProducer;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.NormalizeAddressQueueMomProducer;
@@ -34,9 +33,6 @@ class SqsQueueSenderTestIT extends BaseTest {
     private static final String CLIENT_ID = "clientId";
 
     @MockitoSpyBean
-    private DeliveryPushMomProducer deliveryPushMomProducer;
-
-    @MockitoSpyBean
     private InternalQueueMomProducer internalQueueMomProducer;
 
     @MockitoSpyBean
@@ -51,8 +47,6 @@ class SqsQueueSenderTestIT extends BaseTest {
 
     @BeforeEach
     void setUp(){
-        Mockito.doNothing().when(deliveryPushMomProducer)
-                .push((DeliveryPushEvent) Mockito.any());
 
         Mockito.doNothing().when(internalQueueMomProducer)
                 .push((InternalPushEvent) Mockito.any());
@@ -69,13 +63,6 @@ class SqsQueueSenderTestIT extends BaseTest {
         this.sqsSender.pushSendEventOnEventBridge(CLIENT_ID, getSendEvent());
         Mockito.verify(eventBridgeProducer, Mockito.times(1))
                 .sendEvent(Mockito.anyString(), Mockito.anyString());
-    }
-
-    @Test
-    void pushPrepareEventOnDeliveryQueueTest(){
-
-        this.sqsSender.pushPrepareEvent(getPrepareEvent());
-        Mockito.verify(deliveryPushMomProducer, Mockito.times(1)).push((DeliveryPushEvent) Mockito.any());
     }
 
     @Test
