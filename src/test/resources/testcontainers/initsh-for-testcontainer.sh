@@ -1,6 +1,6 @@
 echo "### CREATE AWS OBJECTS FOR IT TESTS ###"
 
-bash <(curl -s https://raw.githubusercontent.com/pagopa/pn-paper-channel/1bd29cd4cb43f513ac86387ce29fec02cbe3ee07/src/test/resources/testcontainers/init.sh)
+bash <(curl -s https://raw.githubusercontent.com/pagopa/pn-paper-channel/70128fe6a8d7b181705e3d07671b745f4fd01fd5/src/test/resources/testcontainers/init.sh)
 
 
 echo "### CREATE TEST IT QUEUES ###"

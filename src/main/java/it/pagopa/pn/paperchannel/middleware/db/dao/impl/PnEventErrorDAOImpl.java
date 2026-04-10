@@ -3,7 +3,6 @@ package it.pagopa.pn.paperchannel.middleware.db.dao.impl;
 import it.pagopa.pn.paperchannel.config.AwsPropertiesConfig;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PnEventErrorDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.common.BaseDAO;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentsConfig;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventError;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;

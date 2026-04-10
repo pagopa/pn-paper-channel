@@ -40,7 +40,6 @@
     "Pnaddr002ContinueFlow": "false",
     "ComplexRefinementCodes": "RECAG007C",
     "EnableDocFilterRuleEngine": "true",
-    "DefaultAttachmentConfigCap": "ZIP##DEFAULT",
     "PnCronAnalyzer": "-",
     "WireTapLogActivation": "false",
     "MountEfs": "false",

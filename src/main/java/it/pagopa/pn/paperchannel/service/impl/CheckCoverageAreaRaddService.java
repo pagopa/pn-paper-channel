@@ -10,7 +10,6 @@ import it.pagopa.pn.paperchannel.service.RaddAltService;
 import it.pagopa.pn.paperchannel.utils.Utility;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Mono;
@@ -18,9 +17,6 @@ import reactor.core.publisher.Mono;
 import java.util.ArrayList;
 import java.util.List;
 
-@ConditionalOnExpression(
-        "'${pn.paper-channel.radd-coverage-search-mode}'.equals('LIGHT') or '${pn.paper-channel.radd-coverage-search-mode}'.equals('COMPLETE')"
-)
 @RequiredArgsConstructor
 @Service
 @Slf4j

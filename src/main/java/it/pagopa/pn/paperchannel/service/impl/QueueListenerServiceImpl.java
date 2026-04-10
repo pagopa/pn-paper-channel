@@ -201,8 +201,7 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
                             log.info("Received message from National Registry queue with correlationId: {} ", correlationId);
                             return requestDeliveryDAO.getByCorrelationId(correlationId)
                                     // probabile errore di read consistency, riprovo un'unica volta la getItem dopo 3 secondi
-                                    .retryWhen(Retry.fixedDelay(1, Duration.ofSeconds(3)))
-                                    .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage())))
+                                    .switchIfEmpty(attemptForReadConsistencyError(correlationId))
                                     .onErrorResume(throwable -> saveToPaperError(correlationId, DELIVERY_REQUEST_NOT_EXIST));
                         })
                         .doOnNext(addressAndEntity -> resolveAuditLogFromResponse(addressAndEntity.getT2(), addressAndEntity.getT1().getError(), pnLogAudit, PN_NATIONAL_REGISTRIES, addressAndEntity.getT2().getCorrelationId()))
@@ -225,6 +224,13 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
                             return startPrepareAsync(addressFromNational, entity);
                         }))
                 .block();
+    }
+
+    private Mono<PnDeliveryRequest> attemptForReadConsistencyError(String correlationId) {
+        return Mono.delay(Duration.ofSeconds(3))
+                .doOnNext(aLong -> log.debug("Retrying to get Delivery Request with correlationId {} after delay for read consistency", correlationId))
+                .flatMap(aLong -> requestDeliveryDAO.getByCorrelationId(correlationId)
+                        .switchIfEmpty(Mono.error(new PnGenericException(DELIVERY_REQUEST_NOT_EXIST, DELIVERY_REQUEST_NOT_EXIST.getMessage()))));
     }
 
     private Mono<PnDeliveryRequest> saveToPaperError(String requestId, ExceptionTypeEnum exceptionTypeEnum) {
