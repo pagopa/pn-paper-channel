@@ -14,7 +14,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import java.time.Instant;
 import java.time.OffsetDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -73,7 +72,7 @@ public class RECAG012AMessageHandlerTest {
         assertEquals(ExternalChannelCodeEnum.RECAG012A.name(), paperRequest.getStatusDescription());
 
         // I expect it to send the message to delivery-push
-        verify(mockSqsSender, times(1)).pushSendEvent(sendEventExpected);
+        verify(mockSqsSender, times(1)).pushSendEventOnEventBridge(anyString(), eq(sendEventExpected));
         verify(mockSqsSender, never()).pushSingleStatusUpdateEvent(Mockito.any());
         verify(mockPnEventErrorDAO, never()).findEventErrorsByRequestId(Mockito.anyString());
     }
@@ -110,7 +109,7 @@ public class RECAG012AMessageHandlerTest {
         assertEquals(ExternalChannelCodeEnum.RECAG012.name(), paperRequest.getStatusDescription());
 
         // I expect it to not send the message to delivery-push
-        verify(mockSqsSender, never()).pushSendEvent(sendEventExpected);
+        verify(mockSqsSender, never()).pushSendEventOnEventBridge(anyString(), eq(sendEventExpected));
         verify(mockSqsSender, never()).pushSingleStatusUpdateEvent(Mockito.any());
         verify(mockPnEventErrorDAO, never()).findEventErrorsByRequestId(Mockito.anyString());
     }

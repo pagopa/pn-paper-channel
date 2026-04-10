@@ -387,6 +387,14 @@ Parameters:
     Type: String
     Description: 'ARN of the queue executing the flow of PREPARE phase 1'
 
+  PaperChannelToServiceDeskQueueARN:
+    Type: String
+    Description: 'ARN of the queue PaperChannelToServiceDeskQueue'
+
+  PaperChannelToServiceDeskQueueURL:
+    Type: String
+    Description: 'URL of the queue PaperChannelToServiceDeskQueue'
+
   DateChargeCalculationModes:
     Type: String
     Description: 'Variable that determines which calculation mode to use,  in startConfigurationTime;calculationMode format.'
@@ -434,6 +442,14 @@ Parameters:
       - 'HALF_UP'
       - 'UP'
     Description: 'Rounding mode for simplified cost calculation'
+
+  ServiceDeskPaperChannelUser:
+    Description: "PaperChannel user dedicated to ServiceDesk"
+    Type: String
+
+  DeliveryPushPaperChannelUser:
+    Description: "PaperChannel user dedicated to DeliveryPush"
+    Type: String
 
   # Logging parameters
   WireTapLogActivation:
@@ -1367,12 +1383,16 @@ Resources:
               - Sid: putEvents
                 Action:
                   - sqs:ChangeMessageVisibility
+                  - sqs:ChangeMessageVisibilityBatch
                   - sqs:GetQueueAttributes
                   - sqs:GetQueueUrl
                   - sqs:SendMessage
+                  - sqs:SendMessageBatch
                 Effect: Allow
                 Resource:
                   - !Ref DelayerToPaperChannelQueueARN
+                  - !Ref ExternalChannelsOutputsQueueARN
+                  - !Ref PaperChannelToServiceDeskQueueARN
 
   PnDeliveryQueuePolicy:
     Type: AWS::SQS::QueuePolicy
@@ -1412,3 +1432,63 @@ Resources:
             Condition:
               StringEquals:
                 aws:PrincipalArn: !Ref OcrAwsRoleARN
+
+  PnCoreEventBusToServiceDeskPaperChannelResponseQueue:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: Route PaperChannel Events to pn-servicedesk
+      RoleArn: !GetAtt "EventBusEnqueueRole.Arn"
+      EventBusName: !Sub '${ProjectName}-CoreEventBus'
+      EventPattern:
+        detail-type: [ "PaperChannelOutcomeEvent" ]
+        detail:
+          clientId: [ !Ref ServiceDeskPaperChannelUser ]
+      Targets:
+        - Arn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:PnCoreEventBusMatchedEventLogger
+          Id: !Sub ${ProjectName}-Logger-PaperChannel2ServiceDesk
+          InputTransformer:
+            InputPathsMap:
+              "timestamp": "$.time"
+            InputTemplate: |
+              {
+                  "timestamp": <timestamp>,
+                  "ruleArn": <aws.events.rule-arn>,
+                  "ruleName": <aws.events.rule-name>,
+                  "ingestionTime": <aws.events.event.ingestion-time>,
+                  "originalEvent": <aws.events.event.json>
+              }
+        - Id: !Sub '${ProjectName}-CoreEventBus-PaperChannel2ServiceDesk'
+          Arn: !Ref PaperChannelToServiceDeskQueueARN
+          InputPath: $.detail
+          DeadLetterConfig:
+            Arn: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:pn-CoreEventBus-DLQ
+
+  PnCoreEventBusToDeliveryPushExternalChannelOutputsQueue:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: Route PaperChannel Events to pn-external-channel-outputs for delivery-push
+      RoleArn: !GetAtt "EventBusEnqueueRole.Arn"
+      EventBusName: !Sub '${ProjectName}-CoreEventBus'
+      EventPattern:
+        detail-type: [ "PaperChannelOutcomeEvent" ]
+        detail:
+          clientId: [ !Ref DeliveryPushPaperChannelUser ]
+      Targets:
+        - Arn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:PnCoreEventBusMatchedEventLogger
+          Id: !Sub ${ProjectName}-Logger-PaperChannel2ExternalChannelOutputs
+          InputTransformer:
+            InputPathsMap:
+              "timestamp": "$.time"
+            InputTemplate: |
+              {
+                  "timestamp": <timestamp>,
+                  "ruleArn": <aws.events.rule-arn>,
+                  "ruleName": <aws.events.rule-name>,
+                  "ingestionTime": <aws.events.event.ingestion-time>,
+                  "originalEvent": <aws.events.event.json>
+              }
+        - Id: !Sub '${ProjectName}-CoreEventBus-PaperChannel2ExternalChannelOutputs'
+          Arn: !Ref ExternalChannelsOutputsQueueARN
+          InputPath: $.detail
+          DeadLetterConfig:
+            Arn: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:pn-CoreEventBus-DLQ

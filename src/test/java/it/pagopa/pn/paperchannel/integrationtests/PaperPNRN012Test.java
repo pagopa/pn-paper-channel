@@ -84,7 +84,7 @@ class PaperPNRN012Test extends BaseTest.WithOutLocalStackTest {
         mockResultAsync(entityFromDB, entityForUpdated, extChannelMessage.getAnalogMail());
 
 
-        Mockito.doNothing().when(sqsSender).pushSendEvent(Mockito.any());
+        Mockito.doNothing().when(sqsSender).pushSendEventOnEventBridge(Mockito.anyString(), Mockito.any());
 
         Mockito.when(eventMetaDAO.createOrUpdate(Mockito.any()))
                 .thenReturn(Mono.just(new PnEventMeta()));
@@ -98,7 +98,7 @@ class PaperPNRN012Test extends BaseTest.WithOutLocalStackTest {
          */
 
         ArgumentCaptor<SendEvent> capturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
-        verify(sqsSender).pushSendEvent(capturedSendEvent.capture());
+        verify(sqsSender).pushSendEventOnEventBridge(anyString(), capturedSendEvent.capture());
         assertNotNull(capturedSendEvent);
         assertNotNull(capturedSendEvent.getValue());
         assertEquals(RECRN011_STATUS_CODE, capturedSendEvent.getValue().getStatusDetail());
@@ -213,7 +213,7 @@ class PaperPNRN012Test extends BaseTest.WithOutLocalStackTest {
         Mockito.when(eventMetaDAO.getDeliveryEventMeta(eventRECRN004A.getMetaRequestId(), eventRECRN004A.getMetaStatusCode()))
                 .thenReturn(Mono.just(eventRECRN004A));
 
-        Mockito.doNothing().when(sqsSender).pushSendEvent(Mockito.any());
+        Mockito.doNothing().when(sqsSender).pushSendEventOnEventBridge(Mockito.anyString(), Mockito.any());
 
         Mockito.when(metaDematCleaner.clean(REQUEST_ID))
                 .thenReturn(Mono.just("").then());
@@ -224,7 +224,7 @@ class PaperPNRN012Test extends BaseTest.WithOutLocalStackTest {
         });
 
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
-        verify(sqsSender , times(2)).pushSendEvent(caturedSendEvent.capture());
+        verify(sqsSender , times(2)).pushSendEventOnEventBridge(anyString(), caturedSendEvent.capture());
         assertNotNull(caturedSendEvent);
         assertNotNull(caturedSendEvent.getAllValues());
         assertEquals(2, caturedSendEvent.getAllValues().size());

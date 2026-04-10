@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 
@@ -140,7 +141,7 @@ public abstract class BasePaperStock890IT extends BaseTest {
         /* Expected events to delivery push */
         verify(sqsSender, timeout(2000)
             .times(assertionLookupTable.size()))
-            .pushSendEvent(capturedSendEvent.capture());
+            .pushSendEventOnEventBridge(anyString(), capturedSendEvent.capture());
 
         /* Verify all events are sent with right status code */
         capturedSendEvent.getAllValues().forEach(sendEvent -> {

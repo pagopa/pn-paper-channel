@@ -28,6 +28,8 @@ tags:
     description: Metodo heartbeat
   - name: NotificationRework
     description: Operazioni per la gestione della correzione timeline
+  - name: InformalMessages
+    description: Operazioni per inviare e monitorare messaggi non a valore legale (informal messages)
 paths:
   '/status':
     get:
@@ -221,6 +223,7 @@ paths:
             maxLength: 100
             minLength: 5
             type: string
+        - $ref: '#/components/parameters/XClientIdHeader'
       requestBody:
         content:
           application/json:
@@ -276,6 +279,61 @@ paths:
                   description: Update correctly received
                 "400":
                   description: Malformed update status
+
+  /paper-channel-private/v1/paper-deliveries-prepare/informal:
+    post:
+      tags:
+        - InformalMessages
+      summary: Invio di messaggi non legali - richiesta di validazione e preparazione all'invio
+      description: |
+        Questa operazione sottomette a paper-channel una richiesta di preparazione per l'invio
+        di comunicazioni non a valore legale (informal messages).
+        Paper channel deve:
+        - validare sintatticamente la richiesta
+        - ritornare 201 se la richiesta è stata presa in carico
+        - ritornare 200 se la richiesta era già stata elaborata in precedenza
+        In caso di duplicati funzionali con requestId già esistente ma dati diversi,
+        verrà restituito 409.
+      operationId: sendInformalPrepareRequest
+      parameters:
+        - $ref: '#/components/parameters/XClientIdHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InformalPrepareRequest'
+      responses:
+        "200":
+          description: Richiesta già inviata in precedenza con stesso requestId e body; ritorna l'identificativo univoco della richiesta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InformalPrepareResponse'
+        "201":
+          description: Richiesta presa in carico correttamente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InformalPrepareResponse'
+          headers:
+            Location:
+              description: "URL per monitorare lo stato della risorsa"
+              schema:
+                type: string
+                format: uri
+        "400":
+          description: Errore di validazione sintattica della richiesta
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+        "409":
+          description: Duplicato con requestId già esistente ma dati diversi
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
 
   /paper-channel-private/v2/tenders/{tenderId}/cost/calculate:
     post:
@@ -451,6 +509,15 @@ components:
         type: string
         minLength: 5
         maxLength: 100
+    XClientIdHeader:
+      name: X-Client-Id
+      in: header
+      description: Identificativo del client che effettua la richiesta
+      required: false
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
 
   responses:
 
@@ -622,6 +689,78 @@ components:
         endValidity:
           type: string
           format: date-time
+
+    InformalPrepareResponse:
+      required:
+        - requestId
+      properties:
+        requestId:
+          type: string
+          description: Identificativo della richiesta
+          example: ABCD-HILM-YKWX-202202-1_rec0_try1
+    InformalPrepareRequest:
+      required:
+        - attachmentUrls
+        - printType
+        - proposalProductType
+        - requestId
+        - receiverType
+        - iun
+      type: object
+      properties:
+        proposalProductType:
+          $ref: '#/components/schemas/InformalProposalProductTypeEnum'
+        notificationSentAt:
+          type: string
+          description: Date of creation of the notification, date and time referred to UTC
+          format: date-time
+          example: 2022-07-27T12:22:33.444Z
+      allOf:
+        - $ref: '#/components/schemas/InformalPaperRequest'
+    InformalPaperRequest:
+      type: object
+      properties:
+        iun:
+          type: string
+          description: IUN della richiesta, necessario a fini di audit
+          example: 'ABCD-HILM-YKWX-202202-1'
+        requestId:
+          type: string
+          description: Identificativo della richiesta.
+          example: ABCD-HILM-YKWX-202202-1_rec0_try1
+        receiverType:
+          type: string
+          description: PF o PG in base al tipo di destinatario
+        receiverAddress:
+          $ref: 'schemas-paper-v1.yaml#/components/schemas/AnalogAddress'
+        printType:
+          type: string
+          description: "Indica il tipo di stampa richiesto al Consolidatore <br />\
+                \ - __BN_FRONTE__: bianco e nero solo fronte <br/> - __BN_FRONTE_RETRO__:\
+                \ bianco e nero fronte e retro <br/> - ... ulteriori modalità previste\
+                \ dal contratto Se non presente prevedere il default"
+          example: BN_FRONTE_RETRO
+        attachmentUrls:
+          type: array
+          items:
+            type: string
+            description: "Path in cui si trova il documento da allegare alla comunicazione\
+                  \ digitale (i.e. url del file dentro Safe Storage che si occuperà di\
+                  \ crypt/decrypt dei documenti). Il Safe Storge si occuperà di calcolare\
+                  \ la presigned url per il recupero dell'allegato che sarà decifrato.\
+                  \ documentUrl può rispondere (alla GET) con un 403 per redirect vs servizio\
+                  \ (i.e. lambda, safe storage, presigned url vs bucket s3 non cifrato).\
+                  \ Utilizzato per recuperare il conteggio delle pagine da stampare"
+        senderPaId:
+          type: string
+          description: Identificativo della PA mittente
+    InformalProposalProductTypeEnum:
+      type: string
+      enum: [ RS ]
+      description: "Tipo prodotto proposta di cui viene chiesto il recapito: <br/> \
+                    \  - __RS__: Raccomandata Semplice (per Avviso di mancato Recapito)."
+      example: RS
+
 
 #  securitySchemes:        # ONLY EXTERNAL
 #    ApiKeyAuth:           # ONLY EXTERNAL

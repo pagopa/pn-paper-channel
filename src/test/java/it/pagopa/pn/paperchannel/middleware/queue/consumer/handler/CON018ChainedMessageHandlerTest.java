@@ -75,7 +75,7 @@ public class CON018ChainedMessageHandlerTest {
 
         // Assert
         // I expect it to send the message to delivery-push
-        verify(mockSqsSender, times(1)).pushSendEvent(sendEventExpected);
+        verify(mockSqsSender, times(1)).pushSendEventOnEventBridge(anyString(), eq(sendEventExpected));
         verify(mockSqsSender, never()).pushSingleStatusUpdateEvent(Mockito.any());
         verify(mockPnEventErrorDAO, never()).findEventErrorsByRequestId(Mockito.anyString());
 
@@ -108,7 +108,7 @@ public class CON018ChainedMessageHandlerTest {
 
         // Assert
         // I expect it to not send the message to delivery-push
-        verify(mockSqsSender, never()).pushSendEvent(any());
+        verify(mockSqsSender, never()).pushSendEventOnEventBridge(anyString(), any());
         verify(mockSqsSender, never()).pushSingleStatusUpdateEvent(Mockito.any());
         verify(mockPnEventErrorDAO, never()).findEventErrorsByRequestId(Mockito.anyString());
 

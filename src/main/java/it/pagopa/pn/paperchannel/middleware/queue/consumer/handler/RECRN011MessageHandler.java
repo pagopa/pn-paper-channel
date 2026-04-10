@@ -6,6 +6,7 @@ import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.mapper.SendEventMapper;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.service.SqsSender;
+import it.pagopa.pn.paperchannel.utils.ClientIdHelper;
 import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
@@ -30,8 +31,9 @@ public class RECRN011MessageHandler extends SaveMetadataMessageHandler {
         log.debug("[{}] Response of ExternalChannel from request id {}", paperRequest.getRequestId(), paperRequest);
         SendEvent sendEvent = SendEventMapper.createSendEventMessage(entity, paperRequest);
         sendEvent.setStatusCode(StatusCodeEnum.PROGRESS);
-        sqsSender.pushSendEvent(sendEvent);
-        log.info("[{}] Sent to delivery-push: {}", paperRequest.getRequestId(), sendEvent);
+        String resolvedClientId = ClientIdHelper.getClientId(entity.getRequestId(), entity.getClientId());
+        sqsSender.pushSendEventOnEventBridge(resolvedClientId, sendEvent);
+        log.info("[{}] Sent to event-bridge: {}", paperRequest.getRequestId(), sendEvent);
         return Mono.empty();
     }
 

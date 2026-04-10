@@ -82,7 +82,7 @@ class SendToDeliveryPushHandlerTest {
 
 
         //mi aspetto che mandi il messaggio a delivery-push
-        verify(mockSqsSender, times(1)).pushSendEvent(sendEventExpected);
+        verify(mockSqsSender, times(1)).pushSendEventOnEventBridge(anyString(), eq(sendEventExpected));
         verify(mockSqsSender, never()).pushSingleStatusUpdateEvent(Mockito.any());
         verify(eventErrorDAO, never()).findEventErrorsByRequestId(Mockito.anyString());
 
@@ -109,7 +109,7 @@ class SendToDeliveryPushHandlerTest {
         SendEvent sendEventExpected = SendEventMapper.createSendEventMessage(entity, paperRequest);
 
         //mi aspetto che mandi il messaggio a delivery-push
-        verify(mockSqsSender, times(1)).pushSendEvent(sendEventExpected);
+        verify(mockSqsSender, times(1)).pushSendEventOnEventBridge(anyString(), eq(sendEventExpected));
         verify(mockSqsSender, never()).pushSingleStatusUpdateEvent(Mockito.any());
         verify(eventErrorDAO, never()).findEventErrorsByRequestId(Mockito.anyString());
 
@@ -141,7 +141,7 @@ class SendToDeliveryPushHandlerTest {
         SendEvent sendEventExpected = SendEventMapper.createSendEventMessage(entity, paperRequest);
 
         //mi aspetto che mandi il messaggio a delivery-push
-        verify(mockSqsSender, times(1)).pushSendEvent(sendEventExpected);
+        verify(mockSqsSender, times(1)).pushSendEventOnEventBridge(anyString(), eq(sendEventExpected));
         verify(mockSqsSender, never()).pushSingleStatusUpdateEvent(Mockito.any());
         verify(eventErrorDAO, never()).deleteItem(Mockito.anyString(), Mockito.any(Instant.class));
 
@@ -182,7 +182,7 @@ class SendToDeliveryPushHandlerTest {
         SendEvent sendEventExpected = SendEventMapper.createSendEventMessage(entity, paperRequest);
 
         //mi aspetto che mandi il messaggio a delivery-push
-        verify(mockSqsSender, times(1)).pushSendEvent(sendEventExpected);
+        verify(mockSqsSender, times(1)).pushSendEventOnEventBridge(anyString(), eq(sendEventExpected));
         verify(mockSqsSender, times(1)).pushSingleStatusUpdateEvent(Mockito.any());
         verify(eventErrorDAO, times(1)).deleteItem(Mockito.anyString(), Mockito.any(Instant.class));
 
@@ -224,7 +224,7 @@ class SendToDeliveryPushHandlerTest {
         SendEvent sendEventExpected = SendEventMapper.createSendEventMessage(entity, paperRequest);
 
         //mi aspetto che mandi il messaggio a delivery-push
-        verify(mockSqsSender, times(1)).pushSendEvent(sendEventExpected);
+        verify(mockSqsSender, times(1)).pushSendEventOnEventBridge(anyString(), eq(sendEventExpected));
         verify(mockSqsSender, times(0)).pushSingleStatusUpdateEvent(Mockito.any());
 
         verify(requestDeliveryDAO, times(1)).updateConditionalOnFeedbackStatus(any(PnDeliveryRequest.class), eq(true));
@@ -259,7 +259,7 @@ class SendToDeliveryPushHandlerTest {
         SendEvent sendEventExpected = SendEventMapper.createSendEventMessage(entity, paperRequest);
 
         //mi aspetto che mandi il messaggio a delivery-push
-        verify(mockSqsSender, times(1)).pushSendEvent(sendEventExpected);
+        verify(mockSqsSender, times(1)).pushSendEventOnEventBridge(anyString(), eq(sendEventExpected));
         verify(mockSqsSender, times(0)).pushSingleStatusUpdateEvent(Mockito.any());
 
         verify(requestDeliveryDAO, times(1)).updateConditionalOnFeedbackStatus(any(PnDeliveryRequest.class), eq(true));
@@ -303,7 +303,7 @@ class SendToDeliveryPushHandlerTest {
 
         // expect exactly one call to delivery push sqs queue
         SendEvent sendEventExpected = SendEventMapper.createSendEventMessage(entity, paperProgressStatusEventDto);
-        verify(mockSqsSender, times(1)).pushSendEvent(sendEventExpected);
+        verify(mockSqsSender, times(1)).pushSendEventOnEventBridge(anyString(), eq(sendEventExpected));
         verify(requestDeliveryDAO, never()).updateData(entity);
     }
 

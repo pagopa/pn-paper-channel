@@ -16,7 +16,6 @@ import java.time.Instant;
 
 public interface SqsSender {
 
-    void pushSendEvent(SendEvent event);
     void pushPrepareEvent(PrepareEvent event);
     void pushToInternalQueue(PrepareAsyncRequest prepareAsyncRequest);
     void pushToNormalizeAddressQueue(PrepareNormalizeAddressEvent prepareNormalizeAddressEvent);

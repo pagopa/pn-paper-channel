@@ -58,6 +58,8 @@
     "OcrAwsRoleARN": "arn:aws:iam::830192246553:role/pn-external-channels-TaskRole",
     "OcrAwsAccountId": "830192246553",
     "EnablePreparePhaseOne": "true",
-    "TenderAPILambdaRuntime": "nodejs24.x"
+    "TenderAPILambdaRuntime": "nodejs24.x",
+    "ServiceDeskPaperChannelUser": "pn-service-desk",
+    "DeliveryPushPaperChannelUser": "pn-delivery-push"
   }
 }

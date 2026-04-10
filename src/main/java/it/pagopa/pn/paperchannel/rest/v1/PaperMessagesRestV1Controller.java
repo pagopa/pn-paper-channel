@@ -5,6 +5,7 @@ import it.pagopa.pn.commons.utils.MDCUtils;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.api.PaperMessagesApi;
 
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.*;
+import it.pagopa.pn.paperchannel.mapper.PrepareRequestMapper;
 import it.pagopa.pn.paperchannel.service.PaperMessagesService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,16 +21,13 @@ import reactor.core.publisher.Mono;
 public class PaperMessagesRestV1Controller implements PaperMessagesApi {
 
     private final PaperMessagesService paperMessagesService;
+    private final PrepareRequestMapper prepareRequestMapper;
 
     @Override
-    public Mono<ResponseEntity<PaperChannelUpdate>> sendPaperPrepareRequest(String requestId, Mono<PrepareRequest> prepareRequest, ServerWebExchange exchange) {
-        MDC.put( MDCUtils.MDC_PN_CTX_REQUEST_ID, "PREPARE_PHASE_" + requestId);
+    public Mono<ResponseEntity<PaperChannelUpdate>> sendPaperPrepareRequest(String requestId, Mono<PrepareRequest> prepareRequest, String xClientId, ServerWebExchange exchange) {
         Mono<ResponseEntity<PaperChannelUpdate>> responseEntityMono = prepareRequest
-                .doOnNext(request -> {
-                    log.debug("Delivery Request of prepare flow");
-                    log.debug(request.getReceiverAddress().toString());
-                })
-                .flatMap(request -> paperMessagesService.preparePaperSync(requestId, request))
+                .doOnNext(request -> MDC.put( MDCUtils.MDC_PN_CTX_REQUEST_ID, "PREPARE_PHASE_" + requestId))
+                .flatMap(request -> paperMessagesService.preparePaperSync(requestId, prepareRequestMapper.prepareRequestToInternal(request, xClientId)))
                 .map(ResponseEntity::ok)
                 .switchIfEmpty(Mono.just(ResponseEntity.noContent().build()));
 

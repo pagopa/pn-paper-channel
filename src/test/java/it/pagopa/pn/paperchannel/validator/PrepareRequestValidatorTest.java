@@ -4,12 +4,13 @@ import it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.exception.PnInputValidatorException;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.AnalogAddress;
-import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PrepareRequest;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ProposalTypeEnum;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.model.Address;
+import it.pagopa.pn.paperchannel.model.CommunicationType;
+import it.pagopa.pn.paperchannel.model.PrepareRequestInt;
 import it.pagopa.pn.paperchannel.utils.Utility;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,7 +25,7 @@ import static org.assertj.core.api.Assertions.assertThatNoException;
 class PrepareRequestValidatorTest {
 
     private PnDeliveryRequest deliveryRequest;
-    private PrepareRequest prepareRequest;
+    private PrepareRequestInt prepareRequest;
 
     @BeforeEach
     void setUp(){
@@ -40,7 +41,7 @@ class PrepareRequestValidatorTest {
 
     @Test
     void prepareRequestValidatorInvalidTest() {
-        PrepareRequest notValid = new PrepareRequest();
+        PrepareRequestInt notValid = new PrepareRequestInt();
         notValid.setRequestId("PPOOIi--22");
         notValid.setIun("dfdf-fdf4-223332");
         notValid.setAttachmentUrls(new ArrayList<>());
@@ -269,8 +270,36 @@ class PrepareRequestValidatorTest {
         ));
     }
 
+    @Test
+    void compareRequestEntity_whenCommunicationTypeIsLegal_andFiscalCodeMatches_thenNoException() {
+        prepareRequest.setCommunicationType(CommunicationType.LEGAL);
+        prepareRequest.setReceiverFiscalCode("MDF1234JJJSSKK");
+
+        assertThatNoException().isThrownBy(() ->
+                PrepareRequestValidator.compareRequestEntity(prepareRequest, deliveryRequest, true, true));
+    }
+
+    @Test
+    void compareRequestEntity_whenCommunicationTypeIsLegal_andFiscalCodeMismatches_thenThrows() {
+        prepareRequest.setCommunicationType(CommunicationType.LEGAL);
+        prepareRequest.setReceiverFiscalCode("FISCALCODE_WRONG");
+
+        PnGenericException ex = Assertions.assertThrows(PnInputValidatorException.class,
+                () -> PrepareRequestValidator.compareRequestEntity(prepareRequest, deliveryRequest, true, true));
+        Assertions.assertEquals(ExceptionTypeEnum.DIFFERENT_DATA_REQUEST.getMessage(), ex.getMessage());
+    }
+
+    @Test
+    void compareRequestEntity_whenCommunicationTypeIsInformal_thenFiscalCodeNotValidated() {
+        prepareRequest.setCommunicationType(CommunicationType.INFORMAL);
+        prepareRequest.setReceiverFiscalCode("FISCALCODE_WRONG");
+
+        assertThatNoException().isThrownBy(() ->
+                PrepareRequestValidator.compareRequestEntity(prepareRequest, deliveryRequest, true, true));
+    }
+
     private void setPrepareRequest(){
-        prepareRequest = new PrepareRequest();
+        prepareRequest = new PrepareRequestInt();
         List<String> attachmentUrls = List.of(
                 "safestorage://aar.pdf",
                 "safestorage://document.pdf"
