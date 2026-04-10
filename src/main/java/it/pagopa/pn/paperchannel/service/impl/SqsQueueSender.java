@@ -33,24 +33,12 @@ public class SqsQueueSender implements SqsSender {
 
     private static final int ONE_MINUTE_IN_SECONDS = 60;
 
-    private final DeliveryPushMomProducer deliveryPushMomProducer;
     private final InternalQueueMomProducer internalQueueMomProducer;
     private final NormalizeAddressQueueMomProducer normalizeAddressQueueMomProducer;
     private final PaperchannelToDelayerMomProducer paperchannelToDelayerMomProducer;
     private final DelayerToPaperchannelInternalProducer delayerToPaperchannelInternalProducer;
     private final EventBridgeProducer eventBridgeProducer;
     private final OcrProducer ocrProducer;
-
-    @Override
-    public void pushPrepareEvent(PrepareEvent event) {
-        push(event);
-    }
-
-    private void push(PrepareEvent prepareEvent){
-        log.info("Push event to queue {}", prepareEvent.getRequestId());
-        this.deliveryPushMomProducer.push(getDeliveryPushEvent(prepareEvent));
-    }
-
 
     @Override
     public void pushToInternalQueue(PrepareAsyncRequest prepareAsyncRequest){
@@ -259,32 +247,6 @@ public class SqsQueueSender implements SqsSender {
         if (tClass == NationalRegistryError.class) typeEnum = NATIONAL_REGISTRIES_ERROR;
         if (tClass == PrepareNormalizeAddressEvent.class && ((PrepareNormalizeAddressEvent) entity).isAddressRetry()) typeEnum = ADDRESS_MANAGER_ERROR;
         return typeEnum;
-    }
-
-    private DeliveryPushEvent getDeliveryPushEvent(PrepareEvent prepareEvent){
-        GenericEventHeader deliveryHeader= GenericEventHeader.builder()
-                .publisher(PUBLISHER_UPDATE)
-                .eventId(UUID.randomUUID().toString())
-                .createdAt(Instant.now())
-                .eventType(EventTypeEnum.PREPARE_ANALOG_RESPONSE.name())
-                .build();
-
-        PaperChannelUpdate paperChannelUpdate = new PaperChannelUpdate();
-        paperChannelUpdate.setPrepareEvent(prepareEvent);
-
-        DeliveryPushEvent deliveryPushEvent = new DeliveryPushEvent(deliveryHeader, paperChannelUpdate);
-        if (prepareEvent != null && prepareEvent.getReceiverAddress() != null){
-            log.debug(
-                    "name surname: {}, address: {}, zip: {},city:{}, pr:{},foreign state: {}",
-                    LogUtils.maskGeneric(prepareEvent.getReceiverAddress().getFullname()),
-                    LogUtils.maskGeneric(prepareEvent.getReceiverAddress().getAddress()),
-                    LogUtils.maskGeneric(prepareEvent.getReceiverAddress().getCap()),
-                    LogUtils.maskGeneric(prepareEvent.getReceiverAddress().getCity()),
-                    LogUtils.maskGeneric(prepareEvent.getReceiverAddress().getPr()),
-                    LogUtils.maskGeneric(prepareEvent.getReceiverAddress().getCountry())
-            );
-        }
-        return deliveryPushEvent;
     }
 
     private int getDelaySeconds(int attempt) {

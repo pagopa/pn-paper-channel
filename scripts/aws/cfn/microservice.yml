@@ -341,14 +341,6 @@ Parameters:
     Type: String
     Description: 'ARN of dynamodb table containing costs'
 
-  ExternalChannelsOutputsQueueName:
-    Type: String
-    Description: 'Push delivery-push messages to this Queue'
-
-  ExternalChannelsOutputsQueueARN:
-    Type: String
-    Description: 'Push delivery-push messages to this Queue'
-
   NationalRegistries2PaperChannelQueueName:
     Type: String
     Description: 'Pull national-registry messages to this Queue'
@@ -386,14 +378,6 @@ Parameters:
   PaperNormalizeAddressQueueARN:
     Type: String
     Description: 'ARN of the queue executing the flow of PREPARE phase 1'
-
-  PaperChannelToServiceDeskQueueARN:
-    Type: String
-    Description: 'ARN of the queue PaperChannelToServiceDeskQueue'
-
-  PaperChannelToServiceDeskQueueURL:
-    Type: String
-    Description: 'URL of the queue PaperChannelToServiceDeskQueue'
 
   DateChargeCalculationModes:
     Type: String
@@ -442,14 +426,6 @@ Parameters:
       - 'HALF_UP'
       - 'UP'
     Description: 'Rounding mode for simplified cost calculation'
-
-  ServiceDeskPaperChannelUser:
-    Description: "PaperChannel user dedicated to ServiceDesk"
-    Type: String
-
-  DeliveryPushPaperChannelUser:
-    Description: "PaperChannel user dedicated to DeliveryPush"
-    Type: String
 
   # Logging parameters
   WireTapLogActivation:
@@ -803,7 +779,6 @@ Resources:
         ContainerEnvEntry18: !Sub 'AWS_DYNAMODBCLIENTTABLE=${ClientDynamoTableName}'
         ContainerEnvEntry19: !Sub 'AWS_KMS_KEYID=${PCKmsEncDecDynamoDataKeyARN}'
         ContainerEnvEntry20: !Sub 'PN_PAPERCHANNEL_EVENTBUS_NAME=arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/${ProjectName}-CoreEventBus'
-        ContainerEnvEntry21: !Sub 'PN_PAPERCHANNEL_QUEUEDELIVERYPUSH=${ExternalChannelsOutputsQueueName}'
         ContainerEnvEntry22: !Sub 'PN_PAPERCHANNEL_QUEUEEXTERNALCHANNEL=${ExternalChannelToPaperChannelDryRunQueueName}'
         ContainerEnvEntry23: !Sub 'PN_PAPERCHANNEL_QUEUENATIONALREGISTRIES=${NationalRegistries2PaperChannelQueueName}'
         ContainerEnvEntry24: !Sub 'PN_PAPERCHANNEL_QUEUEINTERNAL=${ScheduledRequestsQueueName}'
@@ -903,7 +878,6 @@ Resources:
               - sqs:SendMessage
               - sqs:SendMessageBatch
             Resource:
-              - !Ref ExternalChannelsOutputsQueueARN
               - !Ref ExternalChannelToPaperChannelDryRunQueueARN
               - !Ref ScheduledRequestsQueueARN
               - !Ref PaperNormalizeAddressQueueARN
@@ -1086,8 +1060,7 @@ Resources:
             - !GetAtt PaperRequestErrorAlarm.Arn
         QueueArns: !Join
           - ','
-          - - !Ref ExternalChannelsOutputsQueueARN
-            - !Ref ExternalChannelToPaperChannelDryRunQueueARN
+          - - !Ref ExternalChannelToPaperChannelDryRunQueueARN
             - !Ref ScheduledRequestsQueueARN
             - !Ref PaperNormalizeAddressQueueARN
             - !Ref NationalRegistries2PaperChannelQueueARN
@@ -1391,8 +1364,6 @@ Resources:
                 Effect: Allow
                 Resource:
                   - !Ref DelayerToPaperChannelQueueARN
-                  - !Ref ExternalChannelsOutputsQueueARN
-                  - !Ref PaperChannelToServiceDeskQueueARN
 
   PnDeliveryQueuePolicy:
     Type: AWS::SQS::QueuePolicy
@@ -1432,63 +1403,3 @@ Resources:
             Condition:
               StringEquals:
                 aws:PrincipalArn: !Ref OcrAwsRoleARN
-
-  PnCoreEventBusToServiceDeskPaperChannelResponseQueue:
-    Type: AWS::Events::Rule
-    Properties:
-      Description: Route PaperChannel Events to pn-servicedesk
-      RoleArn: !GetAtt "EventBusEnqueueRole.Arn"
-      EventBusName: !Sub '${ProjectName}-CoreEventBus'
-      EventPattern:
-        detail-type: [ "PaperChannelOutcomeEvent" ]
-        detail:
-          clientId: [ !Ref ServiceDeskPaperChannelUser ]
-      Targets:
-        - Arn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:PnCoreEventBusMatchedEventLogger
-          Id: !Sub ${ProjectName}-Logger-PaperChannel2ServiceDesk
-          InputTransformer:
-            InputPathsMap:
-              "timestamp": "$.time"
-            InputTemplate: |
-              {
-                  "timestamp": <timestamp>,
-                  "ruleArn": <aws.events.rule-arn>,
-                  "ruleName": <aws.events.rule-name>,
-                  "ingestionTime": <aws.events.event.ingestion-time>,
-                  "originalEvent": <aws.events.event.json>
-              }
-        - Id: !Sub '${ProjectName}-CoreEventBus-PaperChannel2ServiceDesk'
-          Arn: !Ref PaperChannelToServiceDeskQueueARN
-          InputPath: $.detail
-          DeadLetterConfig:
-            Arn: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:pn-CoreEventBus-DLQ
-
-  PnCoreEventBusToDeliveryPushExternalChannelOutputsQueue:
-    Type: AWS::Events::Rule
-    Properties:
-      Description: Route PaperChannel Events to pn-external-channel-outputs for delivery-push
-      RoleArn: !GetAtt "EventBusEnqueueRole.Arn"
-      EventBusName: !Sub '${ProjectName}-CoreEventBus'
-      EventPattern:
-        detail-type: [ "PaperChannelOutcomeEvent" ]
-        detail:
-          clientId: [ !Ref DeliveryPushPaperChannelUser ]
-      Targets:
-        - Arn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:PnCoreEventBusMatchedEventLogger
-          Id: !Sub ${ProjectName}-Logger-PaperChannel2ExternalChannelOutputs
-          InputTransformer:
-            InputPathsMap:
-              "timestamp": "$.time"
-            InputTemplate: |
-              {
-                  "timestamp": <timestamp>,
-                  "ruleArn": <aws.events.rule-arn>,
-                  "ruleName": <aws.events.rule-name>,
-                  "ingestionTime": <aws.events.event.ingestion-time>,
-                  "originalEvent": <aws.events.event.json>
-              }
-        - Id: !Sub '${ProjectName}-CoreEventBus-PaperChannel2ExternalChannelOutputs'
-          Arn: !Ref ExternalChannelsOutputsQueueARN
-          InputPath: $.detail
-          DeadLetterConfig:
-            Arn: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:pn-CoreEventBus-DLQ

@@ -110,7 +110,6 @@ class PreparePhaseTwoAsyncServiceImplTest {
                 .verifyComplete();
 
         verify(sqsSender, times(1)).pushPrepareEventOnEventBridge(anyString(), any());
-        verify(sqsSender, never()).pushPrepareEvent(any());
     }
 
     @Test
@@ -149,7 +148,6 @@ class PreparePhaseTwoAsyncServiceImplTest {
                 .verifyComplete();
 
         verify(sqsSender, times(1)).pushPrepareEventOnEventBridge(any(), any());
-        verify(sqsSender, never()).pushPrepareEvent(any());
     }
 
 
@@ -206,7 +204,6 @@ class PreparePhaseTwoAsyncServiceImplTest {
                 .verifyComplete();
 
        verify(sqsSender, times(1)).pushPrepareEventOnEventBridge(anyString(), any());
-       verify(sqsSender, never()).pushPrepareEvent(any());
     }
     @Test
     void prepareAsyncPhaseTwoUrlNullThrowsGenericException() {
@@ -439,8 +436,6 @@ class PreparePhaseTwoAsyncServiceImplTest {
         StepVerifier.create(preparePhaseTwoAsyncService.prepareAsyncPhaseTwo(event))
                 .expectNext(deliveryRequest)
                 .verifyComplete();
-
-        verify(sqsSender, never()).pushPrepareEvent(any());
     }
 
     @Test
