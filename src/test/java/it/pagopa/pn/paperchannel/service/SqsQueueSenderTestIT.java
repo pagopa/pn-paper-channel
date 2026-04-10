@@ -9,7 +9,6 @@ import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PrepareEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.middleware.queue.model.AttemptPushEvent;
-import it.pagopa.pn.paperchannel.middleware.queue.model.DeliveryPushEvent;
 import it.pagopa.pn.paperchannel.middleware.queue.model.InternalPushEvent;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.EventBridgeProducer;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.InternalQueueMomProducer;

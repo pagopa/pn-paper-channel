@@ -249,32 +249,6 @@ public class SqsQueueSender implements SqsSender {
         return typeEnum;
     }
 
-    private DeliveryPushEvent getDeliveryPushEvent(PrepareEvent prepareEvent){
-        GenericEventHeader deliveryHeader= GenericEventHeader.builder()
-                .publisher(PUBLISHER_UPDATE)
-                .eventId(UUID.randomUUID().toString())
-                .createdAt(Instant.now())
-                .eventType(EventTypeEnum.PREPARE_ANALOG_RESPONSE.name())
-                .build();
-
-        PaperChannelUpdate paperChannelUpdate = new PaperChannelUpdate();
-        paperChannelUpdate.setPrepareEvent(prepareEvent);
-
-        DeliveryPushEvent deliveryPushEvent = new DeliveryPushEvent(deliveryHeader, paperChannelUpdate);
-        if (prepareEvent != null && prepareEvent.getReceiverAddress() != null){
-            log.debug(
-                    "name surname: {}, address: {}, zip: {},city:{}, pr:{},foreign state: {}",
-                    LogUtils.maskGeneric(prepareEvent.getReceiverAddress().getFullname()),
-                    LogUtils.maskGeneric(prepareEvent.getReceiverAddress().getAddress()),
-                    LogUtils.maskGeneric(prepareEvent.getReceiverAddress().getCap()),
-                    LogUtils.maskGeneric(prepareEvent.getReceiverAddress().getCity()),
-                    LogUtils.maskGeneric(prepareEvent.getReceiverAddress().getPr()),
-                    LogUtils.maskGeneric(prepareEvent.getReceiverAddress().getCountry())
-            );
-        }
-        return deliveryPushEvent;
-    }
-
     private int getDelaySeconds(int attempt) {
         return (attempt + 1) * ONE_MINUTE_IN_SECONDS;
     }
