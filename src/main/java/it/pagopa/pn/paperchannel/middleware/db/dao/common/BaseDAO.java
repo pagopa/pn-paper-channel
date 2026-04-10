@@ -4,6 +4,7 @@ import it.pagopa.pn.commons.utils.MDCUtils;
 import it.pagopa.pn.paperchannel.encryption.DataEncryption;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
+import it.pagopa.pn.paperchannel.model.CommunicationType;
 import lombok.AllArgsConstructor;
 import lombok.CustomLog;
 import lombok.Getter;
@@ -186,7 +187,7 @@ public abstract class BaseDAO<T> {
             pnAddress.setPr(dataEncryption.encode(pnAddress.getPr()));
             pnAddress.setCountry(dataEncryption.encode(pnAddress.getCountry()));
         }
-        if(data instanceof PnDeliveryRequest pnDeliveryRequest) {
+        if(data instanceof PnDeliveryRequest pnDeliveryRequest && !CommunicationType.INFORMAL.name().equalsIgnoreCase(pnDeliveryRequest.getCommunicationType())) {
             pnDeliveryRequest.setFiscalCode(dataEncryption.encode(pnDeliveryRequest.getFiscalCode(), pnDeliveryRequest.getReceiverType()));
         }
         return data;
