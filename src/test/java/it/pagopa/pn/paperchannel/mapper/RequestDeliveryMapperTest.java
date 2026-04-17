@@ -6,6 +6,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.model.CommunicationType;
 import it.pagopa.pn.paperchannel.model.PrepareRequestInt;
+import it.pagopa.pn.paperchannel.model.PrintType;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -25,7 +26,7 @@ class RequestDeliveryMapperTest {
         Assertions.assertEquals(response.getRelatedRequestId(), prepareRequest.getRelatedRequestId());
         Assertions.assertEquals(response.getIun(), prepareRequest.getIun());
         Assertions.assertEquals(response.getReceiverType(), prepareRequest.getReceiverType());
-        Assertions.assertEquals(response.getPrintType(), prepareRequest.getPrintType());
+        Assertions.assertEquals(response.getPrintType(), prepareRequest.getPrintType().name());
         Assertions.assertEquals(response.getFiscalCode(), prepareRequest.getReceiverFiscalCode());
         Assertions.assertEquals(response.getNotificationSentAt(), prepareRequest.getNotificationSentAt());
         Assertions.assertEquals(response.getAttachments().stream().map(PnAttachmentInfo::getFileKey).toList(), prepareRequest.getAttachmentUrls());
@@ -56,7 +57,7 @@ class RequestDeliveryMapperTest {
         prepareRequest.setDiscoveredAddress(analogAddress);
         prepareRequest.setIun("iun");
         prepareRequest.setReceiverAddress(analogAddress);
-        prepareRequest.setPrintType("BN_FRONTE_RETRO");
+        prepareRequest.setPrintType(PrintType.BN_FRONTE);
         prepareRequest.setRelatedRequestId(null);
         prepareRequest.setProposalProductType(ProposalTypeEnum.AR);
         prepareRequest.setReceiverFiscalCode("FRMTTR76M06B715E");

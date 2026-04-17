@@ -11,6 +11,7 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.CommunicationType;
 import it.pagopa.pn.paperchannel.model.PrepareRequestInt;
+import it.pagopa.pn.paperchannel.model.PrintType;
 import it.pagopa.pn.paperchannel.utils.Utility;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,7 +46,7 @@ class PrepareRequestValidatorTest {
         notValid.setRequestId("PPOOIi--22");
         notValid.setIun("dfdf-fdf4-223332");
         notValid.setAttachmentUrls(new ArrayList<>());
-        notValid.setPrintType("BACK");
+        notValid.setPrintType(PrintType.BN_FRONTE);
         notValid.setProposalProductType(ProposalTypeEnum.RS);
         notValid.setReceiverFiscalCode("PSkkll3333");
         notValid.setReceiverType("PG");
@@ -261,7 +262,7 @@ class PrepareRequestValidatorTest {
         deliveryRequest.setAddressHash(getAddress().convertToHash());
         deliveryRequest.setProposalProductType("AR");
         deliveryRequest.setProductType("RN-AR");
-        deliveryRequest.setPrintType("FRONTE-RETRO");
+        deliveryRequest.setPrintType(PrintType.BN_FRONTE.name());
         deliveryRequest.setAttachments(List.of(
                 attachmentInfo
         ));
@@ -309,7 +310,7 @@ class PrepareRequestValidatorTest {
         prepareRequest.setReceiverFiscalCode("MDF1234JJJSSKK");
         prepareRequest.setProposalProductType(ProposalTypeEnum.AR);
         prepareRequest.setReceiverType("PF");
-        prepareRequest.setPrintType("FRONTE-RETRO");
+        prepareRequest.setPrintType(PrintType.BN_FRONTE);
         prepareRequest.setIun("LOKKF-343222");
         prepareRequest.setAttachmentUrls(attachmentUrls);
         prepareRequest.setReceiverAddress(analogAddress);

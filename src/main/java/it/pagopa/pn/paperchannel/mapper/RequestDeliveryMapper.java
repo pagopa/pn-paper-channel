@@ -32,7 +32,7 @@ public class RequestDeliveryMapper {
         changeState(entity, IN_PROCESSING.getCode(), IN_PROCESSING.getDescription(), IN_PROCESSING.getDetail(), null, null);
 
         entity.setFiscalCode(request.getReceiverFiscalCode());
-        entity.setPrintType(request.getPrintType());
+        entity.setPrintType(request.getPrintType() != null ? request.getPrintType().name() : null);
         entity.setReceiverType(request.getReceiverType());
         entity.setAarWithRadd(request.getAarWithRadd());
         entity.setAttachments(request.getAttachmentUrls().stream().map(key -> {
