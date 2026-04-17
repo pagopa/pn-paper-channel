@@ -740,6 +740,9 @@ components:
                 \ bianco e nero fronte e retro <br/> - ... ulteriori modalità previste\
                 \ dal contratto Se non presente prevedere il default"
           example: BN_FRONTE_RETRO
+          enum:
+            - BN_FRONTE_RETRO
+            - BN_FRONTE
         attachmentUrls:
           type: array
           items:

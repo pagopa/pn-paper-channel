@@ -18,7 +18,7 @@ public class PrepareRequestInt {
     private CommunicationType communicationType;
     private String clientId;
     private List<String> attachmentUrls = new ArrayList<>();
-    private String printType;
+    private PrintType printType;
     private ProposalTypeEnum proposalProductType;
     private String requestId;
     private String receiverFiscalCode;

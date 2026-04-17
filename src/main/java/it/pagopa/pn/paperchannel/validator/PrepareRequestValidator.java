@@ -62,7 +62,10 @@ public class PrepareRequestValidator {
     }
 
     private static void validatePrintType(PrepareRequestInt prepareRequest, PnDeliveryRequest pnDeliveryEntity, List<String> errors) {
-        if (!StringUtils.equals(prepareRequest.getPrintType(), (pnDeliveryEntity.getPrintType()))) {
+        String requestPrintType = Optional.ofNullable(prepareRequest.getPrintType())
+                .map(Enum::name)
+                .orElse(null);
+        if (!StringUtils.equals(requestPrintType, (pnDeliveryEntity.getPrintType()))) {
             errors.add("PrintType");
             log.debug("Comparison between request and entity failed, different data: PrintType");
         }

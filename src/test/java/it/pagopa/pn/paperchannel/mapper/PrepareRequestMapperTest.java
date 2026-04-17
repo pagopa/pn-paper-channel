@@ -42,7 +42,7 @@ class PrepareRequestMapperTest {
         assertEquals(request.getIun(), result.getIun());
         assertEquals(request.getReceiverFiscalCode(), result.getReceiverFiscalCode());
         assertEquals(request.getReceiverType(), result.getReceiverType());
-        assertEquals(request.getPrintType(), result.getPrintType());
+        assertEquals(request.getPrintType(), result.getPrintType().name());
         assertEquals(request.getProposalProductType(), result.getProposalProductType());
         assertEquals(request.getAttachmentUrls(), result.getAttachmentUrls());
         assertEquals(request.getRelatedRequestId(), result.getRelatedRequestId());
@@ -59,7 +59,7 @@ class PrepareRequestMapperTest {
         request.setRequestId("REQINF");
         request.setIun("IUNINF");
         request.setReceiverType("PG");
-        request.setPrintType("BN_FRONTE_RETRO");
+        request.setPrintType(InformalPrepareRequest.PrintTypeEnum.BN_FRONTE_RETRO);
         request.setProposalProductType(InformalProposalProductTypeEnum.RS);
         request.setAttachmentUrls(List.of("urlA", "urlB"));
         request.setSenderPaId("PAINF");
@@ -76,7 +76,7 @@ class PrepareRequestMapperTest {
         assertEquals(request.getRequestId(), result.getRequestId());
         assertEquals(request.getIun(), result.getIun());
         assertEquals(request.getReceiverType(), result.getReceiverType());
-        assertEquals(request.getPrintType(), result.getPrintType());
+        assertEquals(request.getPrintType().name(), result.getPrintType().name());
         assertEquals(request.getProposalProductType().name(), result.getProposalProductType().name());
         assertEquals(request.getAttachmentUrls(), result.getAttachmentUrls());
         assertEquals(request.getSenderPaId(), result.getSenderPaId());

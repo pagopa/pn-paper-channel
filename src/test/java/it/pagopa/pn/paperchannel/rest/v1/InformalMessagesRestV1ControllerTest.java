@@ -122,7 +122,7 @@ class InformalMessagesRestV1ControllerTest {
         request.setAttachmentUrls(attachmentUrls);
         request.setReceiverAddress(analogAddress);
         request.setReceiverType("PF");
-        request.setPrintType("BN_FRONTE_RETRO");
+        request.setPrintType(InformalPrepareRequest.PrintTypeEnum.BN_FRONTE);
         request.setIun("IUN123");
         request.setProposalProductType(InformalProposalProductTypeEnum.RS);
 
