@@ -1170,6 +1170,7 @@ Resources:
         WAFName: !Sub '${ProjectName}-paper-channel-bo'
         IntendedUsage: BACKOFFICE
         APIGatewayARNs: !GetAtt PaperChannelGatewayDeliveryDriver.Outputs.APIGatewayARN
+        AlarmSNSTopicArn: !Ref AlarmSNSTopicArn
 
   PaperRequestErrorAlarm:
     Type: AWS::CloudWatch::Alarm
