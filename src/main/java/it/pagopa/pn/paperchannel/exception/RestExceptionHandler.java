@@ -7,20 +7,22 @@ import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PaperEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.Problem;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ProblemError;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.MDC;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.reactive.result.method.annotation.ResponseEntityExceptionHandler;
+import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.server.ServerWebInputException;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
-import java.util.Date;
 import java.util.stream.Collectors;
 
 @Slf4j
 @ControllerAdvice
-public class RestExceptionHandler {
+public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(JsonMappingException.class)
     public void handle(JsonMappingException e) {
@@ -92,5 +94,21 @@ public class RestExceptionHandler {
         } catch (Exception e) {
             log.warn("Cannot get traceid", e);
         }
+    }
+
+    @Override
+    protected @NotNull Mono<ResponseEntity<Object>> handleServerWebInputException(@NotNull ServerWebInputException ex,
+                                                                                  @NotNull HttpHeaders headers, @NotNull HttpStatusCode status, @NotNull ServerWebExchange exchange) {
+        var problem = new Problem();
+        var pd = ex.getBody();
+
+        problem.setType(pd.getType().toString());
+        problem.setTitle(pd.getTitle());
+        problem.setStatus(pd.getStatus());
+        problem.setDetail(pd.getDetail());
+        problem.setTimestamp(Instant.now());
+        settingTraceId(problem);
+
+        return Mono.just(ResponseEntity.status(status.value()).body(problem));
     }
 }
