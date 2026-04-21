@@ -63,7 +63,7 @@ public class PnResponseEntityExceptionHandlerActivation extends PnResponseEntity
             item.setDetail("Trovato valore differente a db");
             item.setElement(error);
             return item;
-        }).collect(Collectors.toList()));
+        }).toList());
         settingTraceId(problem);
         problem.setTimestamp(Instant.now());
 
@@ -84,7 +84,7 @@ public class PnResponseEntityExceptionHandlerActivation extends PnResponseEntity
             item.setDetail(error.getCol().toString());
             item.setElement(error.getMessage());
             return item;
-        }).collect(Collectors.toList()));
+        }).toList());
         settingTraceId(problem);
         problem.setTimestamp(Instant.now());
 
