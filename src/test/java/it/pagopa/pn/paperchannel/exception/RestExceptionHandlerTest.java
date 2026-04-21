@@ -1,20 +1,27 @@
 package it.pagopa.pn.paperchannel.exception;
 
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PaperEvent;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.Problem;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Spy;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ProblemDetail;
+import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.server.ServerWebInputException;
 import reactor.core.publisher.Mono;
 
+import java.net.URI;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
+import static org.mockito.Mockito.mock;
 
 
 class RestExceptionHandlerTest {
@@ -94,6 +101,41 @@ class RestExceptionHandlerTest {
                     Assertions.assertEquals("0", responseEntity.getBody().getErrors().get(0).getCode());
                     Assertions.assertEquals("1", responseEntity.getBody().getErrors().get(0).getDetail());
                     Assertions.assertEquals(INVALID_CAP_FSU.getMessage(), responseEntity.getBody().getErrors().get(0).getElement());
+                    return Mono.empty();
+                })
+                .block();
+    }
+
+    @Test
+    void handleServerWebInputExceptionTest(){
+        URI typeUri = URI.create("https://example.com/problem");
+        String title = "Bad Request";
+        String detail = "Required parameter is missing";
+        int status = HttpStatus.BAD_REQUEST.value();
+
+        ProblemDetail problemDetail = ProblemDetail.forStatus(status);
+        problemDetail.setType(typeUri);
+        problemDetail.setTitle(title);
+        problemDetail.setDetail(detail);
+
+        ServerWebInputException serverWebInputException = new ServerWebInputException(detail);
+
+        HttpHeaders headers = new HttpHeaders();
+        HttpStatusCode httpStatusCode = HttpStatus.BAD_REQUEST;
+
+        ServerWebExchange exchange = mock(ServerWebExchange.class);
+
+        restExceptionHandler.handleServerWebInputException(serverWebInputException, headers, httpStatusCode, exchange)
+                .map(responseEntity -> {
+                    Assertions.assertNotNull(responseEntity.getBody());
+
+                    Problem problem = (Problem) responseEntity.getBody();
+                    Assertions.assertEquals(HttpStatus.BAD_REQUEST.value(), responseEntity.getStatusCode().value());
+                    Assertions.assertEquals(title, problem.getTitle());
+                    Assertions.assertEquals(status, problem.getStatus());
+                    Assertions.assertEquals(detail, problem.getDetail());
+                    Assertions.assertNotNull(problem.getTimestamp());
+
                     return Mono.empty();
                 })
                 .block();
