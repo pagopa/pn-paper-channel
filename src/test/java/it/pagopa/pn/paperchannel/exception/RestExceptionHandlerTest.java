@@ -1,7 +1,9 @@
 package it.pagopa.pn.paperchannel.exception;
 
+import it.pagopa.pn.commons.exceptions.ExceptionHelper;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PaperEvent;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
+import it.pagopa.pn.paperchannel.springbootcfg.PnResponseEntityExceptionHandlerActivation;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,15 +13,15 @@ import reactor.core.publisher.Mono;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 
 
 class RestExceptionHandlerTest {
     @Spy
-    private RestExceptionHandler restExceptionHandler;
+    private PnResponseEntityExceptionHandlerActivation restExceptionHandler;
 
 
     @BeforeEach
@@ -99,7 +101,8 @@ class RestExceptionHandlerTest {
                 .block();
     }
 
+
     private void initialize() {
-        restExceptionHandler = new RestExceptionHandler();
+        restExceptionHandler = new PnResponseEntityExceptionHandlerActivation(new ExceptionHelper(Optional.empty()));
     }
 }
