@@ -729,6 +729,7 @@ components:
           description: Identificativo della richiesta.
           example: ABCD-HILM-YKWX-202202-1_rec0_try1
           minLength: 1
+          maxLength: 100
         receiverType:
           type: string
           description: PF o PG in base al tipo di destinatario
@@ -747,6 +748,7 @@ components:
         attachmentUrls:
           type: array
           minItems: 1
+          maxItems: 100
           items:
             type: string
             description: "Path in cui si trova il documento da allegare alla comunicazione\
