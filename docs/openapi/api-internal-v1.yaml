@@ -728,6 +728,7 @@ components:
           type: string
           description: Identificativo della richiesta.
           example: ABCD-HILM-YKWX-202202-1_rec0_try1
+          minLength: 1
         receiverType:
           type: string
           description: PF o PG in base al tipo di destinatario

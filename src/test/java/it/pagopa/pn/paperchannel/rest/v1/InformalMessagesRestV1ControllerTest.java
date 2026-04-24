@@ -1,5 +1,6 @@
 package it.pagopa.pn.paperchannel.rest.v1;
 
+import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.*;
 import it.pagopa.pn.paperchannel.mapper.PrepareRequestMapper;
 import it.pagopa.pn.paperchannel.model.PrepareRequestInt;
@@ -9,9 +10,13 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
+import org.springframework.http.ResponseEntity;
+import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
+import org.springframework.mock.web.server.MockServerWebExchange;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +33,9 @@ class InformalMessagesRestV1ControllerTest {
     private PaperMessagesService paperMessagesService;
     @MockitoBean
     private PrepareRequestMapper prepareRequestMapper;
+
+    @Autowired
+    private InformalMessagesRestV1Controller controller;
 
     @Test
     void sendInformalPrepareRequest_whenServiceReturnsValue_thenReturns200() {
@@ -103,19 +111,136 @@ class InformalMessagesRestV1ControllerTest {
     }
 
     @Test
-    void sendInformalPrepareRequest_whenEmptyRequestId_thenReturns400() {
+    void sendInformalPrepareRequest_whenNullRequestId_thenMonoErrorWithPnGenericException() {
         InformalPrepareRequest request = getInformalPrepareRequest();
-        request.setRequestId("");
+        request.setRequestId(null);
 
-        webTestClient.post()
-                .uri(BASE_PATH)
-                .bodyValue(request)
-                .header("X-Client-Id", TEST_CLIENT_ID)
-                .exchange()
-                .expectStatus().isBadRequest();
+        MockServerWebExchange exchange = MockServerWebExchange.from(
+                MockServerHttpRequest.post(BASE_PATH).build());
+
+        Mono<ResponseEntity<InformalPrepareResponse>> result =
+                controller.sendInformalPrepareRequest(Mono.just(request), TEST_CLIENT_ID, exchange);
+
+        StepVerifier.create(result)
+                .expectErrorSatisfies(ex -> {
+                    Assertions.assertInstanceOf(PnGenericException.class, ex);
+                    Assertions.assertTrue(ex.getMessage().contains("requestId"));
+                })
+                .verify();
 
         Mockito.verify(paperMessagesService, Mockito.never())
                 .preparePaperSync(Mockito.anyString(), Mockito.any());
+    }
+
+    @Test
+    void sendInformalPrepareRequest_whenEmptyRequestId_thenMonoErrorWithPnGenericException() {
+        InformalPrepareRequest request = getInformalPrepareRequest();
+        request.setRequestId("");
+
+        MockServerWebExchange exchange = MockServerWebExchange.from(
+                MockServerHttpRequest.post(BASE_PATH).build());
+
+        Mono<ResponseEntity<InformalPrepareResponse>> result =
+                controller.sendInformalPrepareRequest(Mono.just(request), TEST_CLIENT_ID, exchange);
+
+        StepVerifier.create(result)
+                .expectErrorSatisfies(ex -> {
+                    Assertions.assertInstanceOf(PnGenericException.class, ex);
+                    Assertions.assertTrue(ex.getMessage().contains("requestId"));
+                })
+                .verify();
+
+        Mockito.verify(paperMessagesService, Mockito.never())
+                .preparePaperSync(Mockito.anyString(), Mockito.any());
+    }
+
+    @Test
+    void sendInformalPrepareRequest_whenBlankRequestId_thenMonoErrorWithPnGenericException() {
+        InformalPrepareRequest request = getInformalPrepareRequest();
+        request.setRequestId("   ");
+
+        MockServerWebExchange exchange = MockServerWebExchange.from(
+                MockServerHttpRequest.post(BASE_PATH).build());
+
+        Mono<ResponseEntity<InformalPrepareResponse>> result =
+                controller.sendInformalPrepareRequest(Mono.just(request), TEST_CLIENT_ID, exchange);
+
+        StepVerifier.create(result)
+                .expectErrorSatisfies(ex -> {
+                    Assertions.assertInstanceOf(PnGenericException.class, ex);
+                    Assertions.assertTrue(ex.getMessage().contains("requestId"));
+                })
+                .verify();
+
+        Mockito.verify(paperMessagesService, Mockito.never())
+                .preparePaperSync(Mockito.anyString(), Mockito.any());
+    }
+
+    @Test
+    void sendInformalPrepareRequest_whenNullAttachmentUrls_thenMonoErrorWithPnGenericException() {
+        InformalPrepareRequest request = getInformalPrepareRequest();
+        request.setAttachmentUrls(null);
+
+        MockServerWebExchange exchange = MockServerWebExchange.from(
+                MockServerHttpRequest.post(BASE_PATH).build());
+
+        Mono<ResponseEntity<InformalPrepareResponse>> result =
+                controller.sendInformalPrepareRequest(Mono.just(request), TEST_CLIENT_ID, exchange);
+
+        StepVerifier.create(result)
+                .expectErrorSatisfies(ex -> {
+                    Assertions.assertInstanceOf(PnGenericException.class, ex);
+                    Assertions.assertTrue(ex.getMessage().contains("attachmentUrls"));
+                })
+                .verify();
+
+        Mockito.verify(paperMessagesService, Mockito.never())
+                .preparePaperSync(Mockito.anyString(), Mockito.any());
+    }
+
+    @Test
+    void sendInformalPrepareRequest_whenEmptyAttachmentUrls_thenMonoErrorWithPnGenericException() {
+        InformalPrepareRequest request = getInformalPrepareRequest();
+        request.setAttachmentUrls(new ArrayList<>());
+
+        MockServerWebExchange exchange = MockServerWebExchange.from(
+                MockServerHttpRequest.post(BASE_PATH).build());
+
+        Mono<ResponseEntity<InformalPrepareResponse>> result =
+                controller.sendInformalPrepareRequest(Mono.just(request), TEST_CLIENT_ID, exchange);
+
+        StepVerifier.create(result)
+                .expectErrorSatisfies(ex -> {
+                    Assertions.assertInstanceOf(PnGenericException.class, ex);
+                    Assertions.assertTrue(ex.getMessage().contains("attachmentUrls"));
+                })
+                .verify();
+
+        Mockito.verify(paperMessagesService, Mockito.never())
+                .preparePaperSync(Mockito.anyString(), Mockito.any());
+    }
+
+    @Test
+    void sendInformalPrepareRequest_whenBothInvalid_thenRequestIdErrorTakesPrecedence() {
+        InformalPrepareRequest request = getInformalPrepareRequest();
+        request.setRequestId(null);
+        request.setAttachmentUrls(null);
+
+        MockServerWebExchange exchange = MockServerWebExchange.from(
+                MockServerHttpRequest.post(BASE_PATH).build());
+
+        Mono<ResponseEntity<InformalPrepareResponse>> result =
+                controller.sendInformalPrepareRequest(Mono.just(request), TEST_CLIENT_ID, exchange);
+
+        StepVerifier.create(result)
+                .expectErrorSatisfies(ex -> {
+                    Assertions.assertInstanceOf(PnGenericException.class, ex);
+                    // requestId is validated first — attachment error must NOT be the one thrown
+                    String exType = ((PnGenericException) ex).getExceptionType().toString().toLowerCase();
+                    Assertions.assertFalse(exType.contains("attachmentUrls"),
+                            "Expected requestId error to take precedence but got: " + exType);
+                })
+                .verify();
     }
 
     private InformalPrepareRequest getInformalPrepareRequest() {

@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ServerWebExchange;
@@ -19,8 +20,7 @@ import reactor.core.publisher.Mono;
 
 import java.net.URI;
 
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.CLIENT_ID_IS_REQUIRED;
-import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.REQUEST_ID_IS_REQUIRED;
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 
 @Slf4j
 @RestController
@@ -39,9 +39,10 @@ public class InformalMessagesRestV1Controller implements InformalMessagesApi {
 
         Mono<ResponseEntity<InformalPrepareResponse>> responseEntityMono = informalPrepareRequest
                 .flatMap(request -> {
-                    if (!StringUtils.hasText(request.getRequestId())) {
-                        log.error("Missing required field: requestId");
-                        return Mono.error(new PnGenericException(REQUEST_ID_IS_REQUIRED, REQUEST_ID_IS_REQUIRED.getMessage()));
+                    try {
+                        validateInformalPrepareRequest(request);
+                    } catch (PnGenericException ex) {
+                        return Mono.error(ex);
                     }
                     MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, "INFORMAL_PREPARE_PHASE_" + request.getRequestId());
                     return paperMessagesService.preparePaperSync(request.getRequestId(), prepareRequestMapper.informalPrepareRequestToInternal(request, xClientId))
@@ -50,6 +51,17 @@ public class InformalMessagesRestV1Controller implements InformalMessagesApi {
                 });
 
         return MDCUtils.addMDCToContextAndExecute(responseEntityMono);
+    }
+
+    private void validateInformalPrepareRequest(InformalPrepareRequest request) {
+        if (!StringUtils.hasText(request.getRequestId())) {
+            log.error("Missing required field: requestId");
+            throw new PnGenericException(REQUEST_ID_IS_REQUIRED, REQUEST_ID_IS_REQUIRED.getMessage());
+        }
+        if (CollectionUtils.isEmpty(request.getAttachmentUrls())) {
+            log.error("Missing or empty required field: attachmentUrls");
+            throw new PnGenericException(ATTACHMENT_URLS_IS_REQUIRED, ATTACHMENT_URLS_IS_REQUIRED.getMessage());
+        }
     }
 
     private ResponseEntity<InformalPrepareResponse> buildCreatedResponseEntity(ServerWebExchange exchange, InformalPrepareRequest request) {
