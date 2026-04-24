@@ -72,7 +72,8 @@ public enum ExceptionTypeEnum{
     ERROR_CODE_PAPERCHANNEL_ZIP_HANDLE("PN_PAPERCHANNEL_ZIP_HANDLE", "Errore nel flusso di gestione dell'allegato ZIP"),
     INCORRECT_ROUNDING_MODE("INCORRECT_ROUNDING_MODE", "Modalità di rounding non è tra quelle possibili"),
     DELIVERY_DRIVER_NOT_FOUND("DELIVERY_DRIVER_NOT_FOUND", "Il recapitista non è stato trovato"),
-    ERROR_NOT_FOUND_EXTERNAL_CHANNEL("ERROR_NOT_FOUND_EXTERNAL_CHANNEL", "RequestId non trovato su external-channels: ");
+    ERROR_NOT_FOUND_EXTERNAL_CHANNEL("ERROR_NOT_FOUND_EXTERNAL_CHANNEL", "RequestId non trovato su external-channels: "),
+    REQUEST_ID_IS_REQUIRED("REQUEST_ID_IS_REQUIRED", "Il campo requestId è obbligatorio");
 
     private final String title;
     private final String message;

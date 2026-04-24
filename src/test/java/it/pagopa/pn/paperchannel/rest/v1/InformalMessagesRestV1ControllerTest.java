@@ -102,6 +102,22 @@ class InformalMessagesRestV1ControllerTest {
                 .preparePaperSync(Mockito.anyString(), Mockito.any());
     }
 
+    @Test
+    void sendInformalPrepareRequest_whenEmptyRequestId_thenReturns400() {
+        InformalPrepareRequest request = getInformalPrepareRequest();
+        request.setRequestId("");
+
+        webTestClient.post()
+                .uri(BASE_PATH)
+                .bodyValue(request)
+                .header("X-Client-Id", TEST_CLIENT_ID)
+                .exchange()
+                .expectStatus().isBadRequest();
+
+        Mockito.verify(paperMessagesService, Mockito.never())
+                .preparePaperSync(Mockito.anyString(), Mockito.any());
+    }
+
     private InformalPrepareRequest getInformalPrepareRequest() {
         InformalPrepareRequest request = new InformalPrepareRequest();
 

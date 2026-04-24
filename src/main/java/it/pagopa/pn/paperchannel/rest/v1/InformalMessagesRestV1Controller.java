@@ -20,6 +20,7 @@ import reactor.core.publisher.Mono;
 import java.net.URI;
 
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.CLIENT_ID_IS_REQUIRED;
+import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.REQUEST_ID_IS_REQUIRED;
 
 @Slf4j
 @RestController
@@ -37,11 +38,16 @@ public class InformalMessagesRestV1Controller implements InformalMessagesApi {
         }
 
         Mono<ResponseEntity<InformalPrepareResponse>> responseEntityMono = informalPrepareRequest
-                .doOnNext(request -> MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, "INFORMAL_PREPARE_PHASE_" + request.getRequestId()))
-                .flatMap(request -> paperMessagesService.preparePaperSync(request.getRequestId(), prepareRequestMapper.informalPrepareRequestToInternal(request, xClientId))
-                                .map(internalResponse -> ResponseEntity.ok(new InformalPrepareResponse(request.getRequestId())))
-                                .switchIfEmpty(Mono.just(buildCreatedResponseEntity(exchange, request)))
-                );
+                .flatMap(request -> {
+                    if (!StringUtils.hasText(request.getRequestId())) {
+                        log.error("Missing required field: requestId");
+                        return Mono.error(new PnGenericException(REQUEST_ID_IS_REQUIRED, REQUEST_ID_IS_REQUIRED.getMessage()));
+                    }
+                    MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, "INFORMAL_PREPARE_PHASE_" + request.getRequestId());
+                    return paperMessagesService.preparePaperSync(request.getRequestId(), prepareRequestMapper.informalPrepareRequestToInternal(request, xClientId))
+                            .map(internalResponse -> ResponseEntity.ok(new InformalPrepareResponse(request.getRequestId())))
+                            .switchIfEmpty(Mono.just(buildCreatedResponseEntity(exchange, request)));
+                });
 
         return MDCUtils.addMDCToContextAndExecute(responseEntityMono);
     }
