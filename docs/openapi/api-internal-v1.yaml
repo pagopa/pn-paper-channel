@@ -724,15 +724,22 @@ components:
           type: string
           description: IUN della richiesta, necessario a fini di audit
           example: 'ABCD-HILM-YKWX-202202-1'
+          minLength: 1
+          maxLength: 100
+          pattern: '.*\S.*'
         requestId:
           type: string
           description: Identificativo della richiesta.
           example: ABCD-HILM-YKWX-202202-1_rec0_try1
           minLength: 1
           maxLength: 100
+          pattern: '.*\S.*'
         receiverType:
           type: string
           description: PF o PG in base al tipo di destinatario
+          minLength: 1
+          maxLength: 100
+          pattern: '.*\S.*'
         receiverAddress:
           $ref: 'schemas-paper-v1.yaml#/components/schemas/AnalogAddress'
         printType:
@@ -751,6 +758,7 @@ components:
           maxItems: 100
           items:
             type: string
+            pattern: '.*\S.*'
             description: "Path in cui si trova il documento da allegare alla comunicazione\
                   \ digitale (i.e. url del file dentro Safe Storage che si occuperà di\
                   \ crypt/decrypt dei documenti). Il Safe Storge si occuperà di calcolare\
