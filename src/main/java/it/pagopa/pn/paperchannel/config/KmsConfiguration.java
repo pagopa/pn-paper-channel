@@ -25,11 +25,13 @@ public class KmsConfiguration {
     public KmsClient kmsClient() {
         var builder = KmsClient.builder();
 
-        if (Optional.ofNullable(awsConfigs.getEndpointUrl()).isPresent()) {
-            builder.endpointOverride(URI.create(awsConfigs.getEndpointUrl()));
-            Optional.ofNullable(awsConfigs.getRegionCode()).ifPresent(r -> builder.region(Region.of(r)));
-        } else {
-            Optional.ofNullable(awsConfigs.getRegionCode()).ifPresent(r -> builder.region(Region.of(r)));
+        if(System.getenv("AWS_REGIONCODE") == null) {
+            if (Optional.ofNullable(awsConfigs.getEndpointUrl()).isPresent()) {
+                builder.endpointOverride(URI.create(awsConfigs.getEndpointUrl()));
+                Optional.ofNullable(awsConfigs.getRegionCode()).ifPresent(r -> builder.region(Region.of(r)));
+            } else {
+                Optional.ofNullable(awsConfigs.getRegionCode()).ifPresent(r -> builder.region(Region.of(r)));
+            }
         }
 
         return builder.build();
