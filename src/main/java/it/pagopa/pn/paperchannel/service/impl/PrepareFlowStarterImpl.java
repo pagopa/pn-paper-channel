@@ -99,6 +99,7 @@ public class PrepareFlowStarterImpl implements PrepareFlowStarter {
                 .prepareRequestDate(deliveryRequest.getStartDate())
                 .recipientId(deliveryRequest.getFiscalCode())
                 .communicationType(StringUtils.hasText(deliveryRequest.getCommunicationType()) ? paperDeliveryCommunicationType.valueOf(deliveryRequest.getCommunicationType()) : null)
+                .senderPriority(deliveryRequest.getSenderPriority())
                 .build();
 
         this.sqsSender.pushToPaperchannelToDelayerQueue(payload);

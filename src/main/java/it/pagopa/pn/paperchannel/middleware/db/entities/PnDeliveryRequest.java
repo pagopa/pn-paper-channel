@@ -105,6 +105,8 @@ public class PnDeliveryRequest implements Serializable {
 
     public static final String COL_CLIENT_ID = "clientId";
 
+    public static final String COL_SENDER_PRIORITY = "senderPriority";
+
 
     @Getter(onMethod = @__({@DynamoDbPartitionKey,@DynamoDbAttribute(COL_REQUEST_ID)}))
     private String requestId;
@@ -220,4 +222,7 @@ public class PnDeliveryRequest implements Serializable {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_CLIENT_ID)}))
     private String clientId;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_SENDER_PRIORITY)}))
+    private Integer senderPriority;
 }
