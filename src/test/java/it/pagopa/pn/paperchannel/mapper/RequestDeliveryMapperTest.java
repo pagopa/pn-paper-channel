@@ -19,7 +19,7 @@ class RequestDeliveryMapperTest {
     @Test
     void requestDeliveryMapperTest () {
         PrepareRequestInt prepareRequest = getPrepareRequest();
-        PnDeliveryRequest response= RequestDeliveryMapper.toEntity(prepareRequest);
+        PnDeliveryRequest response = RequestDeliveryMapper.toEntity(prepareRequest);
         Assertions.assertNotNull(response);
         Assertions.assertEquals(response.getAarWithRadd(), prepareRequest.getAarWithRadd());
         Assertions.assertEquals(response.getRequestId(), prepareRequest.getRequestId());
@@ -33,6 +33,7 @@ class RequestDeliveryMapperTest {
         Assertions.assertEquals(response.getSenderPaId(), prepareRequest.getSenderPaId());
         Assertions.assertEquals(response.getClientId(), prepareRequest.getClientId());
         Assertions.assertEquals(response.getCommunicationType(), prepareRequest.getCommunicationType().name());
+        Assertions.assertEquals(response.getSenderPriority(), prepareRequest.getSenderPriority());
     }
 
     private PrepareRequestInt getPrepareRequest() {
@@ -65,6 +66,7 @@ class RequestDeliveryMapperTest {
         prepareRequest.setAarWithRadd(true);
         prepareRequest.setClientId("clientId");
         prepareRequest.setCommunicationType(CommunicationType.LEGAL);
+        prepareRequest.setSenderPriority(45);
         return prepareRequest;
     }
 }

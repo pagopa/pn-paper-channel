@@ -41,6 +41,7 @@ public class RequestDeliveryMapper {
             pnAttachmentInfo.setDocTag(AttachmentsConfigUtils.getDocTagFromFileKey(key));
             return pnAttachmentInfo;
         }).toList());
+        entity.setSenderPriority(request.getSenderPriority());
 
         return entity;
     }
