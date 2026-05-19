@@ -166,6 +166,7 @@ class PrepareFlowStarterImplTest {
         deliveryRequest.setTenderCode("tenderId");
         deliveryRequest.setFiscalCode("recipientId");
         deliveryRequest.setCommunicationType("INFORMAL");
+        deliveryRequest.setSenderPriority(50);
 
         PnAddress recipientNormalizedAddress = new PnAddress();
         recipientNormalizedAddress.setCap("00100");
@@ -191,6 +192,7 @@ class PrepareFlowStarterImplTest {
         assertEquals("tenderId", capturedPayload.getTenderId());
         assertEquals("recipientId", capturedPayload.getRecipientId());
         assertEquals("INFORMAL", capturedPayload.getCommunicationType().name());
+        assertEquals(50, capturedPayload.getSenderPriority());
     }
 
 }
