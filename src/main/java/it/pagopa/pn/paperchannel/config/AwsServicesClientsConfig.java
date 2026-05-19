@@ -1,4 +1,4 @@
-package it.pagopa.pn.paperchannel.springbootcfg;
+package it.pagopa.pn.paperchannel.config;
 
 import it.pagopa.pn.commons.configs.RuntimeMode;
 import it.pagopa.pn.commons.configs.aws.AwsConfigs;
@@ -6,23 +6,18 @@ import it.pagopa.pn.commons.utils.dynamodb.async.DynamoDbAsyncClientDecorator;
 import it.pagopa.pn.commons.utils.dynamodb.async.DynamoDbEnhancedAsyncClientDecorator;
 import it.pagopa.pn.commons.utils.dynamodb.sync.DynamoDbEnhancedClientDecorator;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
-import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider;
 import software.amazon.awssdk.awscore.client.builder.AwsClientBuilder;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
-import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.eventbridge.EventBridgeAsyncClient;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.ssm.SsmClient;
-
-import java.net.URI;
 
 @Configuration
 @Slf4j
@@ -75,24 +70,25 @@ public class AwsServicesClientsConfig {
     }
 
     private <C> C configureBuilder(AwsClientBuilder<?, C> builder) {
-        if( props != null && System.getenv("AWS_REGIONCODE") == null ) {
-
-            String profileName = props.getProfileName();
-            if( StringUtils.isNotBlank( profileName ) ) {
-                builder.credentialsProvider( ProfileCredentialsProvider.create( profileName ));
-            }
-
-            String regionCode = props.getRegionCode();
-            if( StringUtils.isNotBlank( regionCode )) {
-                builder.region( Region.of( regionCode ));
-            }
-
-            String endpointUrl = props.getEndpointUrl();
-            if( StringUtils.isNotBlank( endpointUrl )) {
-                builder.endpointOverride( URI.create( endpointUrl ));
-            }
-
-        }
+//        if( props != null && System.getenv("AWS_REGIONCODE") == null ) {
+//
+//            log.error("SONO DENTRO");
+//            String profileName = props.getProfileName();
+//            if( StringUtils.isNotBlank( profileName ) ) {
+//                builder.credentialsProvider( ProfileCredentialsProvider.create( profileName ));
+//            }
+//
+//            String regionCode = props.getRegionCode();
+//            if( StringUtils.isNotBlank( regionCode )) {
+//                builder.region( Region.of( regionCode ));
+//            }
+//
+//            String endpointUrl = props.getEndpointUrl();
+//            if( StringUtils.isNotBlank( endpointUrl )) {
+//                builder.endpointOverride( URI.create( endpointUrl ));
+//            }
+//
+//        }
 
         return builder.build();
     }
