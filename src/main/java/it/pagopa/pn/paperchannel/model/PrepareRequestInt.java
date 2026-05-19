@@ -30,4 +30,5 @@ public class PrepareRequestInt {
     private Instant notificationSentAt;
     private String senderPaId;
     private Boolean aarWithRadd;
+    private Integer senderPriority;
 }
