@@ -16,7 +16,6 @@
         <jacoco.min.line.cover.ratio>0.00</jacoco.min.line.cover.ratio>
         <java.version>25</java.version>
     </properties>
-
     <dependencies>
         <dependency>
             <groupId>it.pagopa.pn</groupId>
@@ -159,13 +158,6 @@
         <dependency>
             <groupId>org.mapstruct</groupId>
             <artifactId>mapstruct</artifactId>
-            <version>1.5.5.Final</version>
-        </dependency>
-        <dependency>
-            <groupId>org.mapstruct</groupId>
-            <artifactId>mapstruct-processor</artifactId>
-            <version>1.5.5.Final</version>
-            <scope>provided</scope>
         </dependency>
 
     </dependencies>
