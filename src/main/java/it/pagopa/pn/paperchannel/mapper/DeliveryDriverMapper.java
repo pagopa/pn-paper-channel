@@ -2,12 +2,11 @@ package it.pagopa.pn.paperchannel.mapper;
 
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.DeliveryDriverDTO;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PageableDeliveryDriverResponseDto;
-import it.pagopa.pn.paperchannel.mapper.common.BaseMapper;
-import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryDriver;
 import it.pagopa.pn.paperchannel.model.PageModel;
 
 import lombok.extern.slf4j.Slf4j;
+import org.mapstruct.factory.Mappers;
 import org.springframework.data.domain.Pageable;
 
 import java.util.*;
@@ -19,7 +18,7 @@ public class DeliveryDriverMapper {
         throw new IllegalCallerException();
     }
 
-    private static final BaseMapper<PnDeliveryDriver, DeliveryDriverDTO> mapperDeliveryDriverToDto = new BaseMapperImpl<>(PnDeliveryDriver.class, DeliveryDriverDTO.class);
+    private static final DeliveryDriverMapStructMapper mapperDeliveryDriverToDto = Mappers.getMapper(DeliveryDriverMapStructMapper.class);
 
 
     public static PnDeliveryDriver toEntity(DeliveryDriverDTO dto){
@@ -43,7 +42,7 @@ public class DeliveryDriverMapper {
     }
 
     public static DeliveryDriverDTO deliveryDriverToDto(PnDeliveryDriver pnDeliveryDriver) {
-        return mapperDeliveryDriverToDto.toDTO(pnDeliveryDriver);
+        return mapperDeliveryDriverToDto.toDto(pnDeliveryDriver);
     }
 
     public static PageModel<PnDeliveryDriver> toPagination(Pageable pageable, List<PnDeliveryDriver> list){

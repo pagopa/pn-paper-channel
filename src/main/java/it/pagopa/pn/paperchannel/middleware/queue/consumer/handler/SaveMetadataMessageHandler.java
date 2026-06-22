@@ -1,15 +1,15 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
-import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.DiscoveredAddressDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
-import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
+import it.pagopa.pn.paperchannel.mapper.PnDiscoveredAddressMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDiscoveredAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
 import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
+import org.mapstruct.factory.Mappers;
 import reactor.core.publisher.Mono;
 
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.buildMetaRequestId;
@@ -19,6 +19,8 @@ import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.buildMetaStatusCode
 @Slf4j
 @SuperBuilder
 public class SaveMetadataMessageHandler implements MessageHandler {
+
+    private static final PnDiscoveredAddressMapper discoveredAddressMapper = Mappers.getMapper(PnDiscoveredAddressMapper.class);
 
     protected final EventMetaDAO eventMetaDAO;
     protected final PnPaperChannelConfig pnPaperChannelConfig;
@@ -44,7 +46,7 @@ public class SaveMetadataMessageHandler implements MessageHandler {
 
         if (paperRequest.getDiscoveredAddress() != null)
         {
-            PnDiscoveredAddress discoveredAddress = new BaseMapperImpl<>(DiscoveredAddressDto.class, PnDiscoveredAddress.class).toDTO(paperRequest.getDiscoveredAddress());
+            PnDiscoveredAddress discoveredAddress = discoveredAddressMapper.toPnDiscoveredAddress(paperRequest.getDiscoveredAddress());
             pnEventMeta.setDiscoveredAddress(discoveredAddress);
 
             log.info("[{}] Discovered Address in PaperRequest, statusCode {}", paperRequest.getRequestId(), paperRequest.getStatusCode());

@@ -1,11 +1,10 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
-import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.DiscoveredAddressDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
-import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
+import it.pagopa.pn.paperchannel.mapper.PnDiscoveredAddressMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
@@ -18,6 +17,7 @@ import it.pagopa.pn.paperchannel.utils.DematDocumentTypeEnum;
 import it.pagopa.pn.paperchannel.utils.MetaDematUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 import org.springframework.test.util.ReflectionTestUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -33,6 +33,8 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.*;
 
 class PNAG012MessageHandlerTest {
+
+    private static final PnDiscoveredAddressMapper discoveredAddressMapper = Mappers.getMapper(PnDiscoveredAddressMapper.class);
 
     private PNAG012MessageHandler handler;
 
@@ -590,7 +592,7 @@ class PNAG012MessageHandlerTest {
 
         if (paperRequest.getDiscoveredAddress() != null)
         {
-            PnDiscoveredAddress discoveredAddress = new BaseMapperImpl<>(DiscoveredAddressDto.class, PnDiscoveredAddress.class).toDTO(paperRequest.getDiscoveredAddress());
+            PnDiscoveredAddress discoveredAddress = discoveredAddressMapper.toPnDiscoveredAddress(paperRequest.getDiscoveredAddress());
             pnEventMeta.setDiscoveredAddress(discoveredAddress);
         }
 

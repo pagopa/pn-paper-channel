@@ -3,14 +3,14 @@ package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 import it.pagopa.pn.paperchannel.exception.InvalidEventOrderException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.DiscoveredAddressDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
-import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
+import it.pagopa.pn.paperchannel.mapper.PnDiscoveredAddressMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnDiscoveredAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
 import it.pagopa.pn.paperchannel.middleware.queue.consumer.MetaDematCleaner;
 import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
+import org.mapstruct.factory.Mappers;
 import reactor.core.publisher.Mono;
 
 import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.buildMetaRequestId;
@@ -26,6 +26,8 @@ import static it.pagopa.pn.paperchannel.utils.MetaDematUtils.buildMetaStatusCode
 @Slf4j
 @SuperBuilder
 public class AggregatorMessageHandler extends SendToDeliveryPushHandler {
+
+    private static final PnDiscoveredAddressMapper discoveredAddressMapper = Mappers.getMapper(PnDiscoveredAddressMapper.class);
 
     protected final EventMetaDAO eventMetaDAO;
     protected final MetaDematCleaner metaDematCleaner;
@@ -54,8 +56,7 @@ public class AggregatorMessageHandler extends SendToDeliveryPushHandler {
         if (pnEventMeta.getDiscoveredAddress() != null)
         {
             DiscoveredAddressDto discoveredAddressDto =
-                    new BaseMapperImpl<>(PnDiscoveredAddress.class, DiscoveredAddressDto.class)
-                            .toDTO(pnEventMeta.getDiscoveredAddress());
+                    discoveredAddressMapper.toDiscoveredAddressDto(pnEventMeta.getDiscoveredAddress());
             paperRequest.setDiscoveredAddress(discoveredAddressDto);
 
             log.info("[{}] Discovered Address in EventMeta for {}", paperRequest.getRequestId(), pnEventMeta);
