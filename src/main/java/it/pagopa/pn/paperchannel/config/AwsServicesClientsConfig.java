@@ -77,7 +77,6 @@ public class AwsServicesClientsConfig {
     private <C> C configureBuilder(AwsClientBuilder<?, C> builder) {
         if( props != null && System.getenv("AWS_REGIONCODE") == null ) {
 
-            log.error("SONO DENTRO");
             String profileName = props.getProfileName();
             if( StringUtils.isNotBlank( profileName ) ) {
                 builder.credentialsProvider( ProfileCredentialsProvider.create( profileName ));
