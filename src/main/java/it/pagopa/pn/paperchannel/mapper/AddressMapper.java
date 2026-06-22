@@ -7,8 +7,6 @@ import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnnationalregistries
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnraddalt.v1.dto.CheckCoverageRequestDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.AnalogAddress;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ProductTypeEnum;
-import it.pagopa.pn.paperchannel.mapper.common.BaseMapper;
-import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
@@ -19,11 +17,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.time.LocalDateTime;
 
 public class AddressMapper {
-    private static final BaseMapper<Address, AnalogAddress> mapperAnalog = new BaseMapperImpl<>(Address.class, AnalogAddress.class);
-
-    private static final BaseMapper<PnAddress, Address> mapperToAddressEntity = new BaseMapperImpl<>(PnAddress.class, Address.class);
-
-    private static final BaseMapper<AnalogAddress, DiscoveredAddressDto> mapperToAnalog = new BaseMapperImpl<>(AnalogAddress.class, DiscoveredAddressDto.class);
+    private static final AddressMapStructMapper mapper = AddressMapStructMapper.INSTANCE;
 
     private AddressMapper(){
         throw new IllegalCallerException("the constructor must not called");
@@ -39,7 +33,7 @@ public class AddressMapper {
 
     public static Address fromAnalogToAddress(AnalogAddress analogAddress){
         if (analogAddress == null) return null;
-        return mapperAnalog.toEntity(analogAddress);
+        return mapper.analogAddressToAddress(analogAddress);
     }
 
 
@@ -62,7 +56,7 @@ public class AddressMapper {
     }
 
     public static PnAddress toEntity(Address address, String requestId, AddressTypeEnum addressTypeEnum, PnPaperChannelConfig paperChannelConfig){
-        PnAddress pnAddress = mapperToAddressEntity.toEntity(address);
+        PnAddress pnAddress = mapper.addressToPnAddress(address);
         pnAddress.setRequestId(requestId);
         pnAddress.setTypology(addressTypeEnum.toString());
 
@@ -93,25 +87,25 @@ public class AddressMapper {
     }
 
     public static Address toDTO(PnAddress address){
-        return mapperToAddressEntity.toDTO(address);
+        return mapper.pnAddressToAddress(address);
     }
 
     public static AnalogAddress toPojo(DiscoveredAddressDto discoveredAddressDto){
         if (discoveredAddressDto == null) return null;
 
-        AnalogAddress address = mapperToAnalog.toEntity(discoveredAddressDto);
+        AnalogAddress address = mapper.discoveredAddressToAnalogAddress(discoveredAddressDto);
         address.setFullname(discoveredAddressDto.getName());
         return address;
     }
 
     public static AnalogAddress toPojo(Address address){
         if (address == null) return null;
-        return mapperAnalog.toDTO(address);
+        return mapper.addressToAnalogAddress(address);
     }
 
     public static AnalogAddress fromEntity(PnAddress address){
         if (address == null) return null;
-        return mapperAnalog.toDTO(toDTO(address));
+        return mapper.pnAddressToAnalogAddress(address);
     }
 
     public static AnalogAddressDto toAnalogAddressManager(Address address){

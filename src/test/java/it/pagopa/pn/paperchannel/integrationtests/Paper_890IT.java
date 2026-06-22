@@ -9,7 +9,7 @@ import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendRequest;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
-import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
+import it.pagopa.pn.paperchannel.mapper.PnDiscoveredAddressMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
@@ -266,8 +266,7 @@ class Paper_890IT extends BaseTest {
             address.setAddress(discoveredAddress);
 
             DiscoveredAddressDto discoveredAddressDto =
-                new BaseMapperImpl<>(PnDiscoveredAddress.class, DiscoveredAddressDto.class)
-                    .toDTO(address);
+                PnDiscoveredAddressMapper.INSTANCE.toDiscoveredAddressDto(address);
 
             analogMail.setDiscoveredAddress(discoveredAddressDto);
         }

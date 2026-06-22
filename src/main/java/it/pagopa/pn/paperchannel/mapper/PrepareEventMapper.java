@@ -1,8 +1,6 @@
 package it.pagopa.pn.paperchannel.mapper;
 
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.*;
-import it.pagopa.pn.paperchannel.mapper.common.BaseMapper;
-import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
@@ -22,7 +20,7 @@ public class PrepareEventMapper {
         throw new IllegalCallerException();
     }
 
-    private static final BaseMapper <PnAddress, AnalogAddress> baseMapperAddress = new BaseMapperImpl<>(PnAddress.class, AnalogAddress.class);
+    private static final AddressMapStructMapper addressMapper = AddressMapStructMapper.INSTANCE;
 
     public static PrepareEvent fromResult(PnDeliveryRequest request, PnAddress address){
         PrepareEvent entityEvent = new PrepareEvent();
@@ -30,7 +28,7 @@ public class PrepareEventMapper {
         entityEvent.setStatusCode(StatusCodeEnum.fromValue(request.getStatusDetail()));
 
         if (address != null && address.getTtl() != null){
-           entityEvent.setReceiverAddress(baseMapperAddress.toDTO(address));
+           entityEvent.setReceiverAddress(addressMapper.pnAddressToAnalogAddress(address));
         }
 
         entityEvent.setStatusDetail(request.getStatusCode());

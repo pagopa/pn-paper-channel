@@ -4,10 +4,9 @@ import it.pagopa.pn.paperchannel.exception.InvalidEventOrderException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.DiscoveredAddressDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
-import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
+import it.pagopa.pn.paperchannel.mapper.PnDiscoveredAddressMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
-import it.pagopa.pn.paperchannel.middleware.db.entities.PnDiscoveredAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnEventMeta;
 import it.pagopa.pn.paperchannel.middleware.queue.consumer.MetaDematCleaner;
 import it.pagopa.pn.paperchannel.middleware.queue.consumer.handler.SendToDeliveryPushHandler;
@@ -110,8 +109,8 @@ public abstract class RECRN00XCAbstractMessageHandler extends SendToDeliveryPush
      */
     protected PaperProgressStatusEventDto enrichEvent(PaperProgressStatusEventDto paperRequest, PnEventMeta pnEventMeta) {
         if (pnEventMeta.getDiscoveredAddress() != null) {
-            DiscoveredAddressDto discoveredAddressDto = new BaseMapperImpl<>(PnDiscoveredAddress.class, DiscoveredAddressDto.class)
-                    .toDTO(pnEventMeta.getDiscoveredAddress());
+            DiscoveredAddressDto discoveredAddressDto = PnDiscoveredAddressMapper.INSTANCE
+                    .toDiscoveredAddressDto(pnEventMeta.getDiscoveredAddress());
             paperRequest.setDiscoveredAddress(discoveredAddressDto);
 
             log.info("[{}] Discovered Address in EventMeta for {}", paperRequest.getRequestId(), pnEventMeta);

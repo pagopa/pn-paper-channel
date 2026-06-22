@@ -1,11 +1,8 @@
 package it.pagopa.pn.paperchannel.mapper;
 
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
-import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.AnalogAddress;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
-import it.pagopa.pn.paperchannel.mapper.common.BaseMapper;
-import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.model.DematInternalEvent;
@@ -22,7 +19,7 @@ public class SendEventMapper {
         throw new IllegalCallerException();
     }
 
-    private static final BaseMapper<PnAddress, AnalogAddress> baseMapperAddress = new BaseMapperImpl<>(PnAddress.class, AnalogAddress.class);
+    private static final AddressMapStructMapper addressMapper = AddressMapStructMapper.INSTANCE;
 
     public static SendEvent fromResult(PnDeliveryRequest request, PnAddress address){
         SendEvent entityEvent = new SendEvent();
@@ -38,7 +35,7 @@ public class SendEventMapper {
         entityEvent.setStatusDateTime((DateUtils.parseStringTOInstant(request.getStatusDate())));
         entityEvent.setAttachments(request.getAttachments().stream().map(AttachmentMapper::toAttachmentDetails).toList());
         if (address != null && address.getTtl() != null) {
-            entityEvent.setDiscoveredAddress(baseMapperAddress.toDTO(address));
+            entityEvent.setDiscoveredAddress(addressMapper.pnAddressToAnalogAddress(address));
         }
         return entityEvent;
     }

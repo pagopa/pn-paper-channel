@@ -3,8 +3,6 @@ package it.pagopa.pn.paperchannel.mapper;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.AttachmentDetailsDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileDownloadResponseDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.AttachmentDetails;
-import it.pagopa.pn.paperchannel.mapper.common.BaseMapper;
-import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 
 import it.pagopa.pn.paperchannel.model.AttachmentInfo;
@@ -19,7 +17,7 @@ public class AttachmentMapper {
         throw new IllegalCallerException("the constructor must not called");
     }
 
-    private static final BaseMapper<PnAttachmentInfo,AttachmentInfo> mapper = new BaseMapperImpl<>(PnAttachmentInfo.class,AttachmentInfo.class);
+    private static final AttachmentMapStructMapper mapper = AttachmentMapStructMapper.INSTANCE;
 
     public static AttachmentInfo fromSafeStorage(FileDownloadResponseDto response){
         AttachmentInfo info = new AttachmentInfo();
@@ -33,13 +31,13 @@ public class AttachmentMapper {
     }
 
     public static AttachmentInfo fromEntity(PnAttachmentInfo entity){
-        AttachmentInfo attachmentInfo = mapper.toDTO(entity);
+        AttachmentInfo attachmentInfo = mapper.toAttachmentInfo(entity);
         attachmentInfo.setSha256(entity.getChecksum());
         return attachmentInfo;
     }
 
     public static PnAttachmentInfo toEntity(AttachmentInfo dto){
-        PnAttachmentInfo pnAttachmentInfo = mapper.toEntity(dto);
+        PnAttachmentInfo pnAttachmentInfo = mapper.toPnAttachmentInfo(dto);
         pnAttachmentInfo.setChecksum(dto.getSha256());
         return pnAttachmentInfo;
     }

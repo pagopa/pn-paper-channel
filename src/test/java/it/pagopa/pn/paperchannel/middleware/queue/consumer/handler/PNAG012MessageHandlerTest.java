@@ -1,11 +1,10 @@
 package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
 
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
-import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.DiscoveredAddressDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
-import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
+import it.pagopa.pn.paperchannel.mapper.PnDiscoveredAddressMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventDematDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.EventMetaDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
@@ -590,7 +589,7 @@ class PNAG012MessageHandlerTest {
 
         if (paperRequest.getDiscoveredAddress() != null)
         {
-            PnDiscoveredAddress discoveredAddress = new BaseMapperImpl<>(DiscoveredAddressDto.class, PnDiscoveredAddress.class).toDTO(paperRequest.getDiscoveredAddress());
+            PnDiscoveredAddress discoveredAddress = PnDiscoveredAddressMapper.INSTANCE.toPnDiscoveredAddress(paperRequest.getDiscoveredAddress());
             pnEventMeta.setDiscoveredAddress(discoveredAddress);
         }
 
