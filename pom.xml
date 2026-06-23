@@ -184,13 +184,6 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                <configuration>
-                    <image>
-                        <env>
-                            <JAVA_TOOL_OPTIONS>--add-modules=java.instrument --add-opens=java.base/java.lang=ALL-UNNAMED</JAVA_TOOL_OPTIONS>
-                        </env>
-                    </image>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.openapitools</groupId>
