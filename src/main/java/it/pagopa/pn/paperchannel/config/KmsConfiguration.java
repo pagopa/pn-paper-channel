@@ -25,7 +25,7 @@ public class KmsConfiguration {
     public KmsClient kmsClient() {
         var builder = KmsClient.builder();
 
-        if(System.getenv("AWS_REGIONCODE") == null) {
+        if(isLocal()) {
             if (Optional.ofNullable(awsConfigs.getEndpointUrl()).isPresent()) {
                 builder.endpointOverride(URI.create(awsConfigs.getEndpointUrl()));
                 Optional.ofNullable(awsConfigs.getRegionCode()).ifPresent(r -> builder.region(Region.of(r)));
@@ -41,5 +41,9 @@ public class KmsConfiguration {
     @Qualifier("kmsEncryption")
     public DataEncryption kmsEncryption(KmsClient kmsClient){
         return new KmsEncryptionImpl(kmsClient, this.properties);
+    }
+
+    private boolean isLocal() {
+        return System.getenv("AWS_REGIONCODE") == null;
     }
 }

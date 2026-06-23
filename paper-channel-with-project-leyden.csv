@@ -1,0 +1,74 @@
+timestamp,message
+1782199823718,"Calculated JVM Memory Configuration: -Xmx1104244K -XX:MaxMetaspaceSize=171659K -XX:ReservedCodeCacheSize=240M -Xss1M (Total Memory: 1792M, Thread Count: 50, Loaded Class Count: 27893, Headroom: 0%)"
+1782199823722,Enabling Java Native Memory Tracking
+1782199823739,Adding 146 container CA certificates to JVM truststore
+1782199823757,"Spring AOT Cache Enabled, contributing -XX:AOTCache=application.aot to JAVA_TOOL_OPTIONS"
+1782199823760,Spring Cloud Bindings Enabled
+1782199823765,Picked up JAVA_TOOL_OPTIONS: -XX:MaxDirectMemorySize=256m -javaagent:/xray/aws-opentelemetry-agent.jar -Djava.security.properties=/layers/paketo-buildpacks_bellsoft-liberica/java-security-properties/java-security.properties -XX:+ExitOnOutOfMemoryError -Xmx1104244K -XX:MaxMetaspaceSize=171659K -XX:ReservedCodeCacheSize=240M -Xss1M -XX:+UnlockDiagnosticVMOptions -XX:NativeMemoryTracking=summary -XX:+PrintNMTStatistics -XX:AOTCache=application.aot -Dorg.springframework.cloud.bindings.boot.enable=true
+1782199823839,[0.074s][error][aot] An error has occurred while processing the AOT cache. Run with -Xlog:aot for details.
+1782199823839,[0.074s][error][aot] Mismatched values for property jdk.module.addmods: java.instrument specified during runtime but not during dump time
+1782199823839,[0.074s][error][aot] Disabling optimized module handling
+1782199823839,[0.074s][error][aot] AOT cache has aot-linked classes. It cannot be used when archived full module graph is not used.
+1782199823842,[0.078s][error][aot] Unable to map shared spaces
+1782199825126,[otel.javaagent 2026-06-23 07:30:25:125 +0000] [main] INFO io.opentelemetry.javaagent.tooling.VersionLogger - opentelemetry-javaagent - version: 1.32.0-aws
+1782199826863,OpenTelemetry Javaagent failed to start
+1782199826863,java.lang.ExceptionInInitializerError
+1782199826863,	at io.opentelemetry.javaagent.tooling.muzzle.AgentTooling.<clinit>(AgentTooling.java:23)
+1782199826863,	at io.opentelemetry.javaagent.tooling.AgentInstaller.installBytebuddyAgent(AgentInstaller.java:151)
+1782199826863,	at io.opentelemetry.javaagent.tooling.AgentInstaller.installBytebuddyAgent(AgentInstaller.java:103)
+1782199826863,	at io.opentelemetry.javaagent.tooling.AgentStarterImpl.start(AgentStarterImpl.java:98)
+1782199826863,	at io.opentelemetry.javaagent.bootstrap.AgentInitializer$1.run(AgentInitializer.java:53)
+1782199826863,	at io.opentelemetry.javaagent.bootstrap.AgentInitializer$1.run(AgentInitializer.java:47)
+1782199826863,	at io.opentelemetry.javaagent.bootstrap.AgentInitializer.execute(AgentInitializer.java:64)
+1782199826863,	at io.opentelemetry.javaagent.bootstrap.AgentInitializer.initialize(AgentInitializer.java:46)
+1782199826864,	at io.opentelemetry.javaagent.OpenTelemetryAgent.startAgent(OpenTelemetryAgent.java:57)
+1782199826864,	at io.opentelemetry.javaagent.OpenTelemetryAgent.agentmain(OpenTelemetryAgent.java:49)
+1782199826864,	at software.amazon.opentelemetry.javaagent.bootstrap.AwsAgentBootstrap.agentmain(AwsAgentBootstrap.java:28)
+1782199826864,	at software.amazon.opentelemetry.javaagent.bootstrap.AwsAgentBootstrap.premain(AwsAgentBootstrap.java:24)
+1782199826864,	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)
+1782199826864,	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+1782199826864,	at java.instrument/sun.instrument.InstrumentationImpl.loadClassAndStartAgent(Unknown Source)
+1782199826864,	at java.instrument/sun.instrument.InstrumentationImpl.loadClassAndCallPremain(Unknown Source)
+1782199826864,"Caused by: java.lang.reflect.InaccessibleObjectException: Unable to make protected final java.lang.Class java.lang.ClassLoader.findLoadedClass(java.lang.String) accessible: module java.base does not ""opens java.lang"" to unnamed module @49070868"
+1782199826864,	at java.base/java.lang.reflect.AccessibleObject.throwInaccessibleObjectException(Unknown Source)
+1782199826864,	at java.base/java.lang.reflect.AccessibleObject.checkCanSetAccessible(Unknown Source)
+1782199826864,	at java.base/java.lang.reflect.AccessibleObject.checkCanSetAccessible(Unknown Source)
+1782199826864,	at java.base/java.lang.reflect.Method.checkCanSetAccessible(Unknown Source)
+1782199826864,	at java.base/java.lang.reflect.Method.setAccessible(Unknown Source)
+1782199826864,	at io.opentelemetry.javaagent.tooling.muzzle.AgentCachingPoolStrategy.getFindLoadedClassMethod(AgentCachingPoolStrategy.java:115)
+1782199826864,	at io.opentelemetry.javaagent.tooling.muzzle.AgentCachingPoolStrategy.<clinit>(AgentCachingPoolStrategy.java:58)
+1782199826864,	... 16 more
+1782199828155,"07:30:28,154 |-WARN in ch.qos.logback.core.model.processor.conditional.IfModelHandler - The 'condition' attribute in <if> element is deprecated and slated for removal. Use <condition> element instead."
+1782199828156,"07:30:28,155 |-WARN in ch.qos.logback.core.model.processor.conditional.IfModelHandler - See also https://logback.qos.ch/codes.html#conditionAttributeDeprecation"
+1782199829156,  .   ____          _            __ _ _
+1782199829156, /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+1782199829156,( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+1782199829156, \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+1782199829156,"  '  |____| .__|_| |_|_| |_\__, | / / / /"
+1782199829156, =========|_|==============|___/=/_/_/_/
+1782199829157, :: Spring Boot ::               (v3.5.13)
+1782199829262,"{""@timestamp"":""2026-06-23T07:30:29.249Z"",""@version"":""1"",""message"":""HV000001: Hibernate Validator 8.0.3.Final"",""logger_name"":""org.hibernate.validator.internal.util.Version"",""thread_name"":""background-preinit"",""level"":""INFO"",""level_value"":20000}"
+1782199829453,"{""@timestamp"":""2026-06-23T07:30:29.453Z"",""@version"":""1"",""message"":""Starting PaperChannelApplication v2.24.0-SNAPSHOT using Java 25.0.2 with PID 7 (/workspace/runner.jar started by cnb in /workspace)"",""logger_name"":""it.pagopa.pn.paperchannel.PaperChannelApplication"",""thread_name"":""main"",""level"":""INFO"",""level_value"":20000}"
+1782199829461,"{""@timestamp"":""2026-06-23T07:30:29.46Z"",""@version"":""1"",""message"":""No active profile set, falling back to 1 default profile: \""default\"""",""logger_name"":""it.pagopa.pn.paperchannel.PaperChannelApplication"",""thread_name"":""main"",""level"":""INFO"",""level_value"":20000}"
+1782199835549,WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+1782199835549,WARNING: sun.misc.Unsafe::allocateMemory has been called by io.netty.util.internal.PlatformDependent0$2 (file:/workspace/lib/netty-common-4.1.132.Final.jar)
+1782199835549,WARNING: Please consider reporting this to the maintainers of class io.netty.util.internal.PlatformDependent0$2
+1782199835549,WARNING: sun.misc.Unsafe::allocateMemory will be removed in a future release
+1782199836127,"{""@timestamp"":""2026-06-23T07:30:36.126Z"",""@version"":""1"",""message"":""AWS RuntimeMode is=PROD"",""logger_name"":""it.pagopa.pn.paperchannel.config.AwsServicesClientsConfig"",""thread_name"":""main"",""level"":""INFO"",""level_value"":20000}"
+1782199836830,WARNING: A restricted method in java.lang.System has been called
+1782199836830,WARNING: java.lang.System::loadLibrary has been called by io.netty.util.internal.NativeLibraryUtil in an unnamed module (file:/workspace/lib/netty-common-4.1.132.Final.jar)
+1782199836831,WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
+1782199836831,WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+1782199837629,"{""@timestamp"":""2026-06-23T07:30:37.624Z"",""@version"":""1"",""message"":""CONFIGURATIONS: PnPaperChannelConfig(raddCoverageSearchMode=LIGHT, clientSafeStorageBasepath=http://vpce-0dded6c8c8504a79b-oqtwh7nb.vpce-svc-07d53855bfe7d3c4a.eu-south-1.vpce.amazonaws.com:8080/, clientNationalRegistriesBasepath=http://internal-EcsA-20230409091221502000000003-2047636771.eu-south-1.elb.amazonaws.com:8080, clientExternalChannelBasepath=http://alb.confidential.pn.internal:8080/, clientPaperTrackerBasepath=http://internal-EcsA-20230409091221502000000003-2047636771.eu-south-1.elb.amazonaws.com:8080, clientF24Basepath=http://internal-EcsA-20230409091221502000000003-2047636771.eu-south-1.elb.amazonaws.com:8080, clientDataVaultBasepath=http://alb.confidential.pn.internal:8080, clientAddressManagerBasepath=http://alb.confidential.pn.internal:8080, clientRaddAltBasepath=http://internal-EcsA-20230409091221502000000003-2047636771.eu-south-1.elb.amazonaws.com:8080, addressManagerCxId=pn-paper-channel, addressManagerApiKey=-, safeStorageCxId=pn-cons-000, f24CxId=pn-paper-channel-f24, xPagopaExtchCxId=pn-cons-000, nationalRegistryCxId=pn-paper-channel, queueNationalRegistries=pn-nationalregistries_to_paperchannel, queueExternalChannel=pn-external_channel_to_paper_channel_dry_run, queueNormalizeAddress=pn-paper-normalize-address, queuePaperchannelToDelayer=pn-paperchannel_to_delayer, queueDelayerToPaperchannel=pn-delayer_to_paperchannel, queueInternal=pn-paper_channel_requests, queueUrlOcrInputs=https://sqs.eu-south-1.amazonaws.com/830192246553/pn-mock_ocr_inputs, queueRegionOcrInputs=eu-south-1, attemptSafeStorage=4, attemptQueueSafeStorage=3, attemptQueueExternalChannel=3, attemptQueueNationalRegistries=3, attemptQueueAddressManager=3, attemptQueueF24=3, attemptQueueZipHandle=3, maxPcRetry=3, ttlPrepare=14, ttlExecutionN_890=11, ttlExecutionN_AR=12, ttlExecutionN_RS=11, ttlExecutionI_AR=13, ttlExecutionI_RS=14, ttlExecutionDaysMeta=3650, ttlExecutionDaysDemat=3650, paperWeight=5, letterWeight=5, dateChargeCalculationModes=[1970-01-01T00:00:00Z;AAR, 2024-01-01T00:00:00Z;COMPLETE], refinementDuration=PT1M, requestPaIdOverride=, requiredDemats=[23L], complexRefinementCodes=[RECAG007C], sendCon020=true, enableRetryCon996=true, enabledocfilterruleengine=true, enableSimplifiedTenderFlow=true, allowedRedriveProgressStatusCodes=[RECAG005C, RECAG006C, RECAG007C, RECAG008C], SendProgressMeta=[META, RECAG012A, CON018], costRoundingMode=HALF_UP, prepareTwoPhases=true, compiutaGiacenzaArDuration=PT1M20S, enableTruncatedDateForRefinementCheck=false, enableOcr=true, paperTrackerProductList=[AR, RIR, 890, RS, RIS], pnaddr001continueFlow=true, pnaddr002continueFlow=false)"",""logger_name"":""it.pagopa.pn.paperchannel.config.PnPaperChannelConfig"",""thread_name"":""main"",""level"":""INFO"",""level_value"":20000}"
+1782199842365,"{""@timestamp"":""2026-06-23T07:30:42.365Z"",""@version"":""1"",""message"":""Cloudwatch metric handler activated"",""logger_name"":""it.pagopa.pn.commons.utils.metrics.cloudwatch.CloudWatchMetricHandler"",""thread_name"":""main"",""level"":""INFO"",""level_value"":20000}"
+1782199842521,"{""@timestamp"":""2026-06-23T07:30:42.521Z"",""@version"":""1"",""message"":""Metric Instance for SpringAnalyzer Activation: PN-PAPER-CHANNEL-e19b63c710e64600a5c2a9f2259d52bf"",""logger_name"":""it.pagopa.pn.commons.utils.metrics.SpringAnalyzer"",""thread_name"":""main"",""level"":""INFO"",""level_value"":20000}"
+1782199843829,"{""@timestamp"":""2026-06-23T07:30:43.829Z"",""@version"":""1"",""message"":""allowed domains:http://localhost:8090, https://pg-webapp.fe-prototype.dev.notifichedigitali.it, https://pa-webapp.fe-prototype.dev.notifichedigitali.it, https://pf-webapp.fe-prototype.dev.notifichedigitali.it, https://cittadini.dev.notifichedigitali.it, https://helpdesk.dev.notifichedigitali.it, https://imprese.dev.notifichedigitali.it, https://login.dev.notifichedigitali.it, https://maps.dev.notifichedigitali.it, https://selfcare.dev.notifichedigitali.it, https://showcase.dev.notifichedigitali.it, https://www.dev.notifichedigitali.it, http://localhost:3000"",""logger_name"":""it.pagopa.pn.paperchannel.CorsGlobalConfiguration"",""thread_name"":""main"",""level"":""INFO"",""level_value"":20000}"
+1782199844750,"{""@timestamp"":""2026-06-23T07:30:44.75Z"",""@version"":""1"",""message"":""Exposing 3 endpoints beneath base path '/actuator'"",""logger_name"":""org.springframework.boot.actuate.endpoint.web.EndpointLinksResolver"",""thread_name"":""main"",""level"":""INFO"",""level_value"":20000}"
+1782199846164,"{""@timestamp"":""2026-06-23T07:30:46.164Z"",""@version"":""1"",""message"":""Netty started on port 8080 (http)"",""logger_name"":""org.springframework.boot.web.embedded.netty.NettyWebServer"",""thread_name"":""main"",""level"":""INFO"",""level_value"":20000}"
+1782199847967,"{""@timestamp"":""2026-06-23T07:30:47.966Z"",""@version"":""1"",""message"":""Container io.awspring.cloud.sqs.sqsListenerEndpointContainer#3 started"",""logger_name"":""io.awspring.cloud.sqs.listener.AbstractMessageListenerContainer"",""thread_name"":""lifecycle-thread-1"",""level"":""INFO"",""level_value"":20000}"
+1782199848021,"{""@timestamp"":""2026-06-23T07:30:48.021Z"",""@version"":""1"",""message"":""Container io.awspring.cloud.sqs.sqsListenerEndpointContainer#5 started"",""logger_name"":""io.awspring.cloud.sqs.listener.AbstractMessageListenerContainer"",""thread_name"":""lifecycle-thread-3"",""level"":""INFO"",""level_value"":20000}"
+1782199848023,"{""@timestamp"":""2026-06-23T07:30:48.022Z"",""@version"":""1"",""message"":""Container io.awspring.cloud.sqs.sqsListenerEndpointContainer#0 started"",""logger_name"":""io.awspring.cloud.sqs.listener.AbstractMessageListenerContainer"",""thread_name"":""lifecycle-thread-4"",""level"":""INFO"",""level_value"":20000}"
+1782199848061,"{""@timestamp"":""2026-06-23T07:30:48.06Z"",""@version"":""1"",""message"":""Container io.awspring.cloud.sqs.sqsListenerEndpointContainer#2 started"",""logger_name"":""io.awspring.cloud.sqs.listener.AbstractMessageListenerContainer"",""thread_name"":""lifecycle-thread-6"",""level"":""INFO"",""level_value"":20000}"
+1782199848065,"{""@timestamp"":""2026-06-23T07:30:48.064Z"",""@version"":""1"",""message"":""Container io.awspring.cloud.sqs.sqsListenerEndpointContainer#4 started"",""logger_name"":""io.awspring.cloud.sqs.listener.AbstractMessageListenerContainer"",""thread_name"":""lifecycle-thread-2"",""level"":""INFO"",""level_value"":20000}"
+1782199848121,"{""@timestamp"":""2026-06-23T07:30:48.121Z"",""@version"":""1"",""message"":""Container io.awspring.cloud.sqs.sqsListenerEndpointContainer#1 started"",""logger_name"":""io.awspring.cloud.sqs.listener.AbstractMessageListenerContainer"",""thread_name"":""lifecycle-thread-5"",""level"":""INFO"",""level_value"":20000}"
+1782199848221,"{""@timestamp"":""2026-06-23T07:30:48.221Z"",""@version"":""1"",""message"":""Started PaperChannelApplication in 20.982 seconds (process running for 24.456)"",""logger_name"":""it.pagopa.pn.paperchannel.PaperChannelApplication"",""thread_name"":""main"",""level"":""INFO"",""level_value"":20000}"
