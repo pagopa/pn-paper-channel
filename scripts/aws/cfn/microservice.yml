@@ -753,7 +753,7 @@ Resources:
         AutoscalingDataPointN: !Ref AutoscalingDataPointN
         AutoscalingDataPointM: !Ref AutoscalingDataPointM
         AlarmSNSTopicArn: !Ref AlarmSNSTopicArn
-        JavaToolOptions: '-XX:MaxDirectMemorySize=256m'
+        JavaToolOptions: '-XX:MaxDirectMemorySize=256m --add-modules=java.instrument --add-opens=java.base/java.lang=ALL-UNNAMED'
         ContainerImageURI: !Sub '${ContainerImageUri}'
         ContainerEnvEntry1: !Sub 'AWS_REGIONCODE=${AWS::Region}'
         ContainerEnvEntry2: !Sub 'CORS_ALLOWED_DOMAINS=${CorsAllowedDomains}, http://localhost:3000'
