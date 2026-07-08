@@ -9,7 +9,7 @@ import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.SendRequest;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
-import it.pagopa.pn.paperchannel.mapper.common.BaseMapperImpl;
+import it.pagopa.pn.paperchannel.mapper.PnDiscoveredAddressMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
@@ -25,6 +25,7 @@ import it.pagopa.pn.paperchannel.utils.ExternalChannelCodeEnum;
 import it.pagopa.pn.paperchannel.utils.PcRetryUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -41,6 +42,8 @@ import static org.mockito.Mockito.*;
 
 @Slf4j
 class Paper_890IT extends BaseTest {
+
+    private static final PnDiscoveredAddressMapper discoveredAddressMapper = Mappers.getMapper(PnDiscoveredAddressMapper.class);
 
     @Autowired
     private PaperResultAsyncService paperResultAsyncService;
@@ -266,8 +269,7 @@ class Paper_890IT extends BaseTest {
             address.setAddress(discoveredAddress);
 
             DiscoveredAddressDto discoveredAddressDto =
-                new BaseMapperImpl<>(PnDiscoveredAddress.class, DiscoveredAddressDto.class)
-                    .toDTO(address);
+                discoveredAddressMapper.toDiscoveredAddressDto(address);
 
             analogMail.setDiscoveredAddress(discoveredAddressDto);
         }
