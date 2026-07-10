@@ -30,11 +30,7 @@ public class AttachmentInfo implements Comparable<AttachmentInfo> {
         boolean isThisAAR = StringUtils.equalsIgnoreCase(this.documentType, Const.PN_AAR);
         boolean isThisCoverpage = StringUtils.equalsIgnoreCase(this.documentType, Const.PN_COVERPAGE);
         boolean isEquals = StringUtils.equals(this.getDocumentType(), attachmentInfo.getDocumentType());
-        if (isThisAAR) {
-            if (isEquals) return 0;
-            return -1;
-        }
-        if (isThisCoverpage) {
+        if (isThisAAR || isThisCoverpage) {
             if (isEquals) return 0;
             return -1;
         }
