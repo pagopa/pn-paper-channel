@@ -6,7 +6,6 @@ import lombok.Setter;
 import lombok.ToString;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
 
 
 @Getter
@@ -26,9 +25,16 @@ public class AttachmentInfo implements Comparable<AttachmentInfo> {
     private String filterResultDiagnostic;
     @Override
     public int compareTo(@NotNull AttachmentInfo attachmentInfo) {
+        // AAR e coverpage devono essere sempre in testa alla lista, e appartengono a 2 domini di notifiche distinte,
+        // dunque non dovrebbero mai essere presenti nella stessa lista di attachmentInfo.
         boolean isThisAAR = StringUtils.equalsIgnoreCase(this.documentType, Const.PN_AAR);
+        boolean isThisCoverpage = StringUtils.equalsIgnoreCase(this.documentType, Const.PN_COVERPAGE);
         boolean isEquals = StringUtils.equals(this.getDocumentType(), attachmentInfo.getDocumentType());
         if (isThisAAR) {
+            if (isEquals) return 0;
+            return -1;
+        }
+        if (isThisCoverpage) {
             if (isEquals) return 0;
             return -1;
         }
