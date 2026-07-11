@@ -47,6 +47,34 @@ class AttachmentInfoTest {
         Assertions.assertNotNull(lisUnsorted);
         Assertions.assertEquals(Const.PN_PAPER_CHANNEL, lisUnsorted.get(0).getDocumentType());
         Assertions.assertEquals(Const.PN_PAPER_CHANNEL, lisUnsorted.get(1).getDocumentType());
+
+
+        // Test coverpage
+        // Scenario 1: coverpage e document
+        AttachmentInfo info1 = new AttachmentInfo();
+        info1.setId("1234");
+        info1.setDocumentType("PN_DOCUMENT");
+        AttachmentInfo info2 = new AttachmentInfo();
+        info2.setId("12345");
+        info2.setDocumentType(Const.PN_COVERPAGE);
+        List<AttachmentInfo> list3 = new ArrayList<>(List.of(info1, info2));
+        Collections.sort(list3);
+        Assertions.assertNotNull(list3);
+        Assertions.assertEquals(Const.PN_COVERPAGE, list3.get(0).getDocumentType());
+        Assertions.assertEquals("PN_DOCUMENT", list3.get(1).getDocumentType());
+
+        // Scenario 2: coverpage e coverpage
+        AttachmentInfo info3 = new AttachmentInfo();
+        info3.setId("1234");
+        info3.setDocumentType(Const.PN_COVERPAGE);
+        AttachmentInfo info4 = new AttachmentInfo();
+        info4.setId("12345");
+        info4.setDocumentType(Const.PN_COVERPAGE);
+        List<AttachmentInfo> list4 = new ArrayList<>(List.of(info3, info4));
+        Collections.sort(list4);
+        Assertions.assertNotNull(list4);
+        Assertions.assertEquals(Const.PN_COVERPAGE, list4.get(0).getDocumentType());
+        Assertions.assertEquals(Const.PN_COVERPAGE, list4.get(1).getDocumentType());
     }
 
     private List<AttachmentInfo> getListOfAttachments(){
