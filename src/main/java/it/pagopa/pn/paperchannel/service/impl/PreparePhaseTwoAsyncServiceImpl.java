@@ -77,7 +77,7 @@ public class PreparePhaseTwoAsyncServiceImpl implements PreparePhaseTwoAsyncServ
                         return f24Service.preparePDF(deliveryRequest);
                     }
                     // Handle regular flow
-                    return handleRegularDeliveryRequest(deliveryRequest, eventPayload.getClientId())
+                    return handleRegularDeliveryRequest(deliveryRequest)
                             .onErrorResume(ex -> {
                                 // Error -> Retry
                                 log.error("Retriable error processing attachments for requestId {}", eventPayload.getRequestId(), ex);
@@ -97,10 +97,9 @@ public class PreparePhaseTwoAsyncServiceImpl implements PreparePhaseTwoAsyncServ
      * Handles delivery request processing attachments.
      *
      * @param deliveryRequest the delivery request to process
-     * @param clientId
      * @return a Mono containing the processed PnDeliveryRequest
      */
-    private Mono<PnDeliveryRequest> handleRegularDeliveryRequest(PnDeliveryRequest deliveryRequest, String clientId) {
+    private Mono<PnDeliveryRequest> handleRegularDeliveryRequest(PnDeliveryRequest deliveryRequest) {
         RequestDeliveryMapper.changeState(
                 deliveryRequest,
                 TAKING_CHARGE.getCode(),
@@ -115,7 +114,7 @@ public class PreparePhaseTwoAsyncServiceImpl implements PreparePhaseTwoAsyncServ
         return processAllAttachments(deliveryRequest)
                 .flatMap(pnDeliveryRequestWithAttachmentOk -> addressDAO.findByRequestId(deliveryRequest.getRequestId()))
                 .flatMap(correctAddress -> this.requestDeliveryDAO.updateDataWithoutGet(deliveryRequest, false).thenReturn(correctAddress))
-                .doOnNext(correctAddress -> this.pushPrepareEvent(deliveryRequest, AddressMapper.toDTO(correctAddress), clientId))
+                .doOnNext(correctAddress -> this.pushPrepareEvent(deliveryRequest, AddressMapper.toDTO(correctAddress)))
                 .thenReturn(deliveryRequest);
 
     }
@@ -247,11 +246,10 @@ public class PreparePhaseTwoAsyncServiceImpl implements PreparePhaseTwoAsyncServ
      *
      * @param request  the delivery request containing the details of the event
      * @param address  the address information to include in the event
-     * @param clientId the client identifier
      */
-    private void pushPrepareEvent(PnDeliveryRequest request, Address address, String clientId){
+    private void pushPrepareEvent(PnDeliveryRequest request, Address address){
         PrepareEvent prepareEvent = PrepareEventMapper.toPrepareEvent(request, address, StatusCodeEnum.OK, null);
-        String resolvedClientId = ClientIdHelper.getClientId(request.getRequestId(), clientId);
+        String resolvedClientId = ClientIdHelper.getClientId(request.getRequestId(), request.getClientId());
         log.info("Sending event to EventBridge: {}", prepareEvent);
         this.sqsSender.pushPrepareEventOnEventBridge(resolvedClientId, prepareEvent);
     }
