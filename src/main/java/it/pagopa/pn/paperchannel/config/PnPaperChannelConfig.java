@@ -82,7 +82,6 @@ public class PnPaperChannelConfig {
     private List<String> allowedRedriveProgressStatusCodes;
     private List<String> SendProgressMeta;
     private String costRoundingMode;
-    private boolean prepareTwoPhases;
     private Duration compiutaGiacenzaArDuration;
     private boolean enableTruncatedDateForRefinementCheck;
     private boolean enableOcr;

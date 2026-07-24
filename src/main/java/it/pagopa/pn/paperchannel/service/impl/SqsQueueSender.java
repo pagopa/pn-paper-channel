@@ -1,7 +1,6 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.api.dto.events.*;
-import it.pagopa.pn.commons.utils.LogUtils;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PaperChannelUpdate;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PrepareEvent;
@@ -10,7 +9,6 @@ import it.pagopa.pn.paperchannel.middleware.queue.model.*;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.*;
 import it.pagopa.pn.paperchannel.model.*;
 import it.pagopa.pn.paperchannel.service.SqsSender;
-import it.pagopa.pn.paperchannel.utils.DateUtils;
 import it.pagopa.pn.paperchannel.utils.Utility;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,22 +37,6 @@ public class SqsQueueSender implements SqsSender {
     private final DelayerToPaperchannelInternalProducer delayerToPaperchannelInternalProducer;
     private final EventBridgeProducer eventBridgeProducer;
     private final OcrProducer ocrProducer;
-
-    @Override
-    public void pushToInternalQueue(PrepareAsyncRequest prepareAsyncRequest){
-        InternalEventHeader prepareHeader= InternalEventHeader.builder()
-                .publisher(PUBLISHER_PREPARE)
-                .eventId(UUID.randomUUID().toString())
-                .createdAt(Instant.now())
-                .eventType(EventTypeEnum.PREPARE_ASYNC_FLOW.name())
-                .clientId(prepareAsyncRequest.getClientId())
-                .attempt(0)
-                .expired(Instant.now())
-                .build();
-
-        InternalPushEvent<PrepareAsyncRequest> internalPushEvent = new InternalPushEvent<>(prepareHeader, prepareAsyncRequest);
-        this.internalQueueMomProducer.push(internalPushEvent);
-    }
 
     @Override
     public void pushToNormalizeAddressQueue(PrepareNormalizeAddressEvent prepareNormalizeAddressEvent) {
@@ -141,22 +123,6 @@ public class SqsQueueSender implements SqsSender {
         this.eventBridgeProducer.sendEvent(jsonMessage, event.getRequestId());
     }
 
-    @Override
-    public <T> void pushInternalError(T entity, int attempt, Class<T> tClass) {
-        EventTypeEnum eventTypeEnum = getTypeEnum(entity, tClass);
-        if (eventTypeEnum == null) return;
-        InternalEventHeader prepareHeader= InternalEventHeader.builder()
-                .publisher(PUBLISHER_PREPARE)
-                .eventId(UUID.randomUUID().toString())
-                .createdAt(Instant.now())
-                .attempt(attempt+1)
-                .eventType(eventTypeEnum.name())
-                .expired(DateUtils.addedTime(attempt+1, 1))
-                .build();
-        this.internalQueueMomProducer.push(new InternalPushEvent<>(prepareHeader, entity));
-        log.info("pushed to queue entity={}", entity);
-    }
-
     public void pushErrorDelayerToPaperChannelAfterSafeStorageErrorQueue(PnPrepareDelayerToPaperchannelPayload entity) {
         AttemptEventHeader prepareHeader= AttemptEventHeader.builder()
                 .publisher(PUBLISHER_PREPARE)
@@ -203,21 +169,6 @@ public class SqsQueueSender implements SqsSender {
     }
 
     @Override
-    public <T> void rePushInternalError(T entity, int attempt, Instant expired, Class<T> tClass) {
-        EventTypeEnum eventTypeEnum = getTypeEnum(entity, tClass);
-        if (eventTypeEnum == null) return;
-        InternalEventHeader prepareHeader= InternalEventHeader.builder()
-                .publisher(PUBLISHER_PREPARE)
-                .eventId(UUID.randomUUID().toString())
-                .createdAt(Instant.now())
-                .attempt(attempt)
-                .eventType(eventTypeEnum.name())
-                .expired(expired)
-                .build();
-        this.internalQueueMomProducer.push(new InternalPushEvent<>(prepareHeader, entity));
-    }
-
-    @Override
     public void pushToOcr(OcrInputPayload entity) {
         var header = GenericEventHeader.builder()
                 .eventId(UUID.randomUUID().toString())
@@ -227,19 +178,6 @@ public class SqsQueueSender implements SqsSender {
                 .build();
         var event = new OcrInputEvent(header, entity);
         this.ocrProducer.push(event);
-    }
-
-
-    //TODO rimuovere errori non pertinenti dopo il rilascio dello split della PREPARE
-    private <T> EventTypeEnum getTypeEnum(T entity, Class<T> tClass){
-        EventTypeEnum typeEnum = null;
-        if (tClass == NationalRegistryError.class) typeEnum = NATIONAL_REGISTRIES_ERROR;
-        if (tClass == ExternalChannelError.class) typeEnum = EXTERNAL_CHANNEL_ERROR;
-        if (tClass == PrepareAsyncRequest.class) typeEnum = SAFE_STORAGE_ERROR;
-        if (tClass == F24Error.class) typeEnum = F24_ERROR;
-        if (tClass == PrepareAsyncRequest.class && ((PrepareAsyncRequest) entity).isAddressRetry()) typeEnum = ADDRESS_MANAGER_ERROR;
-
-        return typeEnum;
     }
 
     private <T> EventTypeEnum getTypeEnumForPreparePhaseOne(T entity, Class<T> tClass){

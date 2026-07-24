@@ -51,9 +51,6 @@ class QueueListenerServiceImplTest {
     private PaperResultAsyncService paperResultAsyncService;
 
     @Mock
-    private PaperAsyncService paperAsyncService;
-
-    @Mock
     private AddressDAO addressDAO;
 
     @Mock
@@ -70,38 +67,6 @@ class QueueListenerServiceImplTest {
 
     @Mock
     private PcRetryUtils pcRetryUtils;
-
-    @Test
-    void internalListenerTest(){
-
-        // Given
-        int attempt = 10;
-        PrepareAsyncRequest prepareAsyncRequest = new PrepareAsyncRequest();
-        PnDeliveryRequest pnDeliveryRequest = new PnDeliveryRequest();
-
-        // When
-        Mockito.when(this.paperAsyncService.prepareAsync(Mockito.any(PrepareAsyncRequest.class))).thenReturn(Mono.just(pnDeliveryRequest));
-
-        try {
-            this.queueListenerService.internalListener(prepareAsyncRequest, attempt);
-        } catch (PnGenericException ex) {
-            Assertions.fail("Exception thrown not expected");
-        }
-
-        // Then
-        Mockito.verify(this.paperAsyncService, Mockito.times(1)).prepareAsync(Mockito.any(PrepareAsyncRequest.class));
-    }
-
-    @Test
-    void internalListenerErrorTest(){
-        Mockito.when(this.paperAsyncService.prepareAsync(Mockito.any())).thenReturn(Mono.error(new PnGenericException(ExceptionTypeEnum.PREPARE_ASYNC_LISTENER_EXCEPTION,ExceptionTypeEnum.PREPARE_ASYNC_LISTENER_EXCEPTION.getMessage() )));
-        try{
-            this.queueListenerService.internalListener(new PrepareAsyncRequest(),10);
-        }
-        catch(PnGenericException ex){
-            Assertions.assertEquals(PREPARE_ASYNC_LISTENER_EXCEPTION, ex.getExceptionType());
-        }
-    }
 
     @Test
     void nationalRegistriesResponseListenerUntraceableAddressBecauseCorrelationIdIsNotFoundTest(){

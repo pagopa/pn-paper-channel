@@ -31,7 +31,6 @@ import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
-import reactor.util.retry.Retry;
 
 import jakarta.validation.constraints.NotNull;
 import java.time.Duration;
@@ -52,7 +51,6 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
     private static final String PROCESS_NAME = "National Registries Response Listener";
 
     private final PaperResultAsyncService paperResultAsyncService;
-    private final PaperAsyncService paperAsyncService;
     private final PreparePhaseOneAsyncService preparePhaseOneAsyncService;
     private final PreparePhaseTwoAsyncService preparePhaseTwoAsyncService;
     private final AddressDAO addressDAO;
@@ -65,7 +63,6 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
     public QueueListenerServiceImpl(RequestDeliveryDAO requestDeliveryDAO,
                                     SqsSender sqsSender,
                                     PaperResultAsyncService paperResultAsyncService,
-                                    PaperAsyncService paperAsyncService,
                                     PreparePhaseOneAsyncService preparePhaseOneAsyncService,
                                     PreparePhaseTwoAsyncService preparePhaseTwoAsyncService,
                                     AddressDAO addressDAO,
@@ -78,7 +75,6 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
         super(sqsSender, requestDeliveryDAO);
 
         this.paperResultAsyncService = paperResultAsyncService;
-        this.paperAsyncService = paperAsyncService;
         this.preparePhaseOneAsyncService = preparePhaseOneAsyncService;
         this.preparePhaseTwoAsyncService = preparePhaseTwoAsyncService;
         this.addressDAO = addressDAO;
@@ -87,36 +83,6 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
         this.prepareFlowStarter = prepareFlowStarter;
         this.nationalRegistryService = nationalRegistryService;
         this.pcRetryUtils = pcRetryUtils;
-    }
-
-
-    /**
-     * @deprecated This method has been replaced by  {@link #normalizeAddressListener(PrepareNormalizeAddressEvent, int)}.
-     */
-    @Deprecated(since = "2.15.0", forRemoval = true)
-    @Override
-    public void internalListener(PrepareAsyncRequest body, int attempt) {
-        String processName = "InternalListener";
-        MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, body.getRequestId());
-        log.logStartingProcess(processName);
-        MDCUtils.addMDCToContextAndExecute(Mono.just(body)
-                        .flatMap(prepareRequest -> {
-                            prepareRequest.setAttemptRetry(attempt);
-                            return this.paperAsyncService.prepareAsync(prepareRequest);
-                        })
-                        .doOnSuccess(resultFromAsync ->{
-                                    log.info("End of prepare async internal");
-                                    log.logEndingProcess(processName);
-                                }
-                        )
-                        .doOnError(throwable -> {
-                            log.error(throwable.getMessage());
-                            if (throwable instanceof PnAddressFlowException) return;
-                            if (throwable instanceof PnF24FlowException pnF24FlowException) manageF24Exception(pnF24FlowException.getF24Error(), pnF24FlowException.getF24Error().getAttempt(), pnF24FlowException);
-
-                            throw new PnGenericException(PREPARE_ASYNC_LISTENER_EXCEPTION, PREPARE_ASYNC_LISTENER_EXCEPTION.getMessage());
-                        }))
-                .block();
     }
 
     @Override
