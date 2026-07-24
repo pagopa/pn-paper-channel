@@ -14,24 +14,34 @@ import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnRequestError;
 import it.pagopa.pn.paperchannel.middleware.queue.model.AttemptEventHeader;
 import it.pagopa.pn.paperchannel.middleware.queue.model.EventTypeEnum;
-import it.pagopa.pn.paperchannel.model.F24Error;
+import it.pagopa.pn.paperchannel.middleware.queue.model.InternalEventHeader;
+import it.pagopa.pn.paperchannel.middleware.queue.model.ManualRetryEvent;
+import it.pagopa.pn.paperchannel.model.*;
 import it.pagopa.pn.paperchannel.service.QueueListenerService;
+import it.pagopa.pn.paperchannel.service.SqsSender;
 import it.pagopa.pn.paperchannel.utils.PnLogAudit;
 import it.pagopa.pn.paperchannel.utils.Utility;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
+import org.springframework.data.util.Pair;
 import org.springframework.messaging.handler.annotation.Headers;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.time.format.DateTimeParseException;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
 
 import static it.pagopa.pn.api.dto.events.GenericEventHeader.PN_EVENT_HEADER_EVENT_TYPE;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.*;
 import static it.pagopa.pn.paperchannel.middleware.queue.model.InternalEventHeader.PN_EVENT_HEADER_ATTEMPT;
+import static it.pagopa.pn.paperchannel.middleware.queue.model.InternalEventHeader.PN_EVENT_HEADER_EXPIRED;
 
 @Component
 @Slf4j
@@ -39,8 +49,31 @@ import static it.pagopa.pn.paperchannel.middleware.queue.model.InternalEventHead
 public class QueueListener {
     private final QueueListenerService queueListenerService;
     private final PnPaperChannelConfig paperChannelConfig;
+    private final SqsSender sqsSender;
     private final ObjectMapper objectMapper;
     private final PaperRequestErrorDAO paperRequestErrorDAO;
+
+    @SqsListener(value = "${pn.paper-channel.queue-internal}", acknowledgementMode = SqsListenerAcknowledgementMode.ALWAYS)
+    public void pullFromInternalQueue(@Payload String node, @Headers Map<String, Object> headers) {
+        log.info("Headers : {}", headers);
+        setMDCContext(headers);
+        InternalEventHeader internalEventHeader = toInternalEventHeader(headers);
+
+        if (internalEventHeader == null) return;
+
+        if (internalEventHeader.getEventType().equals(EventTypeEnum.MANUAL_RETRY_EXTERNAL_CHANNEL.name())) {
+            this.handleManualRetryExternalChannelEvent(node);
+        }
+
+        else if (internalEventHeader.getEventType().equals(EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name())) {
+            this.handleExternalChannelErrorEvent(internalEventHeader, node);
+        }
+
+        else if (internalEventHeader.getEventType().equals(EventTypeEnum.REDRIVE_PAPER_PROGRESS_STATUS.name())) {
+            this.handleRedrivePaperProgressStatus(internalEventHeader, node);
+        }
+
+    }
 
     @SqsListener(value = "${pn.paper-channel.queue-national-registries}", acknowledgementMode = SqsListenerAcknowledgementMode.ALWAYS)
     public void pullNationalRegistries(@Payload String node, @Headers Map<String, Object> headers){
@@ -89,6 +122,39 @@ public class QueueListener {
             }
         }
 
+    }
+
+    private void handleManualRetryExternalChannelEvent(String node) {
+        ManualRetryEvent manualRetryEvent = convertToObject(node, ManualRetryEvent.class);
+        this.queueListenerService.manualRetryExternalChannel(manualRetryEvent.getRequestId(), manualRetryEvent.getNewPcRetry());
+    }
+
+    private void handleExternalChannelErrorEvent(InternalEventHeader internalEventHeader, String node) {
+
+        boolean noAttempt = (paperChannelConfig.getAttemptQueueExternalChannel()-1) < internalEventHeader.getAttempt();
+        ExternalChannelError error = convertToObject(node, ExternalChannelError.class);
+        execution(error, noAttempt, internalEventHeader.getAttempt(), internalEventHeader.getExpired(), ExternalChannelError.class,
+                entity -> {
+                    PnLogAudit pnLogAudit = new PnLogAudit();
+                    pnLogAudit.addsBeforeDiscard(entity.getAnalogMail().getIun(), String.format("requestId = %s finish retry to External Channel", entity.getAnalogMail().getRequestId()));
+
+                    PnRequestError pnRequestError = PnRequestError.builder()
+                            .requestId(entity.getAnalogMail().getRequestId())
+                            .error(EXTERNAL_CHANNEL_LISTENER_EXCEPTION.getMessage())
+                            .flowThrow(EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name())
+                            .build();
+
+                    paperRequestErrorDAO.created(pnRequestError).subscribe();
+
+                    pnLogAudit.addsSuccessDiscard(entity.getAnalogMail().getIun(), String.format("requestId = %s finish retry to External Channel", entity.getAnalogMail().getRequestId()));
+                    return null;
+                },
+                entityAndAttempt -> {
+                    SingleStatusUpdateDto dto = new SingleStatusUpdateDto();
+                    dto.setAnalogMail(entityAndAttempt.getFirst().getAnalogMail());
+                    this.queueListenerService.externalChannelListener(dto, entityAndAttempt.getSecond());
+                    return null;
+                });
     }
 
     private void handleSafeStorageErrorEventFromPreparePhaseTwo(AttemptEventHeader attemptEventHeader, String node) {
@@ -153,6 +219,36 @@ public class QueueListener {
 
     }
 
+    private void handleRedrivePaperProgressStatus(InternalEventHeader internalEventHeader, String node) {
+        log.info("Push redrive paper progress status queue - first time");
+        var request = convertToObject(node, SingleStatusUpdateDto.class);
+        this.queueListenerService.externalChannelListener(request, internalEventHeader.getAttempt());
+    }
+
+    private InternalEventHeader toInternalEventHeader(Map<String, Object> headers){
+        if (headers.containsKey(PN_EVENT_HEADER_EVENT_TYPE) &&
+                headers.containsKey(PN_EVENT_HEADER_EXPIRED) &&
+                headers.containsKey(PN_EVENT_HEADER_ATTEMPT)){
+            String headerEventType = headers.get(PN_EVENT_HEADER_EVENT_TYPE) instanceof String ? (String) headers.get(PN_EVENT_HEADER_EVENT_TYPE) : "";
+
+            int headerAttempt = 0;
+            Instant headerExpired = null;
+            try {
+                headerAttempt = Integer.parseInt((String) headers.get(PN_EVENT_HEADER_ATTEMPT));
+                headerExpired = Instant.parse((String)headers.get(PN_EVENT_HEADER_EXPIRED));
+            } catch (NumberFormatException | DateTimeParseException ex ){
+                log.warn("QueueListener#toInternalEventHeader - Ignoring exception: {}", ex.getClass().getCanonicalName());
+            }
+            return InternalEventHeader.builder()
+                    .expired(headerExpired)
+                    .attempt(headerAttempt)
+                    .eventType(headerEventType)
+                    .build();
+
+        }
+        return null;
+    }
+
     private AttemptEventHeader toAttemptEventHeader(Map<String, Object> headers){
         if (headers.containsKey(PN_EVENT_HEADER_EVENT_TYPE) &&
                 headers.containsKey(PN_EVENT_HEADER_ATTEMPT)){
@@ -172,6 +268,25 @@ public class QueueListener {
 
         }
         return null;
+    }
+
+    private <T> void execution(T entity, boolean noAttempt, int attempt, Instant expired, Class<T> tClass,
+                               Function<T, Void> traceErrorDB,
+                               Function<Pair<T, Integer>, Void> pushQueue){
+        if (noAttempt) {
+            traceErrorDB.apply(entity);
+            return;
+        }
+
+        if (expired.isAfter(Instant.now())){
+            Mono.delay(Duration.ofMillis(1)).publishOn(Schedulers.boundedElastic())
+                    .map(i -> {
+                        this.sqsSender.rePushInternalError(entity, attempt, expired, tClass);
+                        return "";
+                    }).subscribe();
+            return;
+        }
+        pushQueue.apply(Pair.of(entity, attempt));
     }
 
     private <T> T convertToObject(String body, Class<T> tClass){

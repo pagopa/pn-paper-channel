@@ -9,6 +9,8 @@ import it.pagopa.pn.paperchannel.middleware.queue.model.OcrInputPayload;
 import it.pagopa.pn.paperchannel.model.F24Error;
 import it.pagopa.pn.paperchannel.model.PrepareNormalizeAddressEvent;
 
+import java.time.Instant;
+
 public interface SqsSender {
 
     void pushToNormalizeAddressQueue(PrepareNormalizeAddressEvent prepareNormalizeAddressEvent);
@@ -17,6 +19,7 @@ public interface SqsSender {
     void pushToDelayerToPaperchennelQueue(PnPrepareDelayerToPaperchannelPayload payload);
     void pushSendEventOnEventBridge(String clientId, SendEvent event);
     void pushPrepareEventOnEventBridge(String clientId, PrepareEvent event);
+    <T> void rePushInternalError(T entity, int attempt, Instant expired, Class<T> tClass);
     <T> void redrivePreparePhaseOneAfterError(T entity, int attempt, Class<T> tClass);
     void pushErrorDelayerToPaperChannelAfterSafeStorageErrorQueue(PnPrepareDelayerToPaperchannelPayload entity);
     void pushF24ErrorDelayerToPaperChannelQueue(F24Error entity);

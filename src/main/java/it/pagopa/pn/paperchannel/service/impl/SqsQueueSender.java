@@ -169,6 +169,21 @@ public class SqsQueueSender implements SqsSender {
     }
 
     @Override
+    public <T> void rePushInternalError(T entity, int attempt, Instant expired, Class<T> tClass) {
+        EventTypeEnum eventTypeEnum = getTypeEnum(entity, tClass);
+        if (eventTypeEnum == null) return;
+        InternalEventHeader prepareHeader= InternalEventHeader.builder()
+                .publisher(PUBLISHER_PREPARE)
+                .eventId(UUID.randomUUID().toString())
+                .createdAt(Instant.now())
+                .attempt(attempt)
+                .eventType(eventTypeEnum.name())
+                .expired(expired)
+                .build();
+        this.internalQueueMomProducer.push(new InternalPushEvent<>(prepareHeader, entity));
+    }
+
+    @Override
     public void pushToOcr(OcrInputPayload entity) {
         var header = GenericEventHeader.builder()
                 .eventId(UUID.randomUUID().toString())
@@ -178,6 +193,19 @@ public class SqsQueueSender implements SqsSender {
                 .build();
         var event = new OcrInputEvent(header, entity);
         this.ocrProducer.push(event);
+    }
+
+
+    //TODO rimuovere errori non pertinenti dopo il rilascio dello split della PREPARE
+    private <T> EventTypeEnum getTypeEnum(T entity, Class<T> tClass){
+        EventTypeEnum typeEnum = null;
+        if (tClass == NationalRegistryError.class) typeEnum = NATIONAL_REGISTRIES_ERROR;
+        if (tClass == ExternalChannelError.class) typeEnum = EXTERNAL_CHANNEL_ERROR;
+        if (tClass == PrepareAsyncRequest.class) typeEnum = SAFE_STORAGE_ERROR;
+        if (tClass == F24Error.class) typeEnum = F24_ERROR;
+        if (tClass == PrepareAsyncRequest.class && ((PrepareAsyncRequest) entity).isAddressRetry()) typeEnum = ADDRESS_MANAGER_ERROR;
+
+        return typeEnum;
     }
 
     private <T> EventTypeEnum getTypeEnumForPreparePhaseOne(T entity, Class<T> tClass){

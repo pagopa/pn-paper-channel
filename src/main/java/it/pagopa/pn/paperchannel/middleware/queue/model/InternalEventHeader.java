@@ -13,6 +13,8 @@ import java.time.Instant;
 @SuperBuilder
 public class InternalEventHeader extends AttemptEventHeader {
 
+    public static final String PN_EVENT_HEADER_EXPIRED = "expired";
+
     private Instant expired;
 
     public InternalEventHeader(Integer attempt, Instant expired) {
