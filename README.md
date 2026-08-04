@@ -14,7 +14,6 @@
 ## Descrizione
 
 Il servizio `pn-paper-channel` gestisce il canale analogico del dominio SEND, esponendo e consumando interfacce applicative necessarie ai flussi di notifica cartacea. 
-Il servizio interagisce con componenti interni della piattaforma e con sistemi esterni correlati al ciclo di vita delle comunicazioni analogiche. 
 Il dettaglio puntuale delle integrazioni sincrone e asincrone deve essere allineato alle specifiche presenti in `docs/openapi/` e alla configurazione infrastrutturale del servizio.
 
 ---
@@ -26,15 +25,16 @@ Il dettaglio puntuale delle integrazioni sincrone e asincrone deve essere alline
 * Java 21
 * Spring Boot 3
 * Spring Cloud AWS SQS
+* SDK AWS EventBrdige, DynamoDB
 * OpenAPI 3.0.1 con generazione client/server tramite `openapi-generator-maven-plugin`
 * Testcontainers e LocalStack per test con servizi AWS locali
 
 ### Infrastruttura
 
 * AWS Lambda
-* AWS API Gateway
 * AWS SQS
 * AWS DynamoDB
+* AWS EventBridge
 * AWS CloudWatch Logs, Dashboard e Alarm
 * SafeStorage
 
@@ -49,54 +49,35 @@ I flussi sincroni e asincroni devono essere verificati e mantenuti coerenti con 
 sequenceDiagram
     participant Orchestratore SEND
     participant pn-paper-channel
-    participant External Channel
     participant National Registry
+    participant Address Manager
+    participant Radd Alt
     participant SafeStorage
-    participant Recapitista
+    participant External Channel
 
     Orchestratore SEND->>pn-paper-channel: POST /paper-deliveries-prepare
-    pn-paper-channel->>National Registry: Lookup indirizzo
-    National Registry-->>pn-paper-channel: Indirizzo validato
-    pn-paper-channel->>SafeStorage: Upload documento cartaceo
-    SafeStorage-->>pn-paper-channel: FileKey
+    pn-paper-channel-->>Orchestratore SEND: PREPARE HTTP OK
+    alt secondo tentativo
+        pn-paper-channel->>National Registry: Lookup indirizzo
+        National Registry-->>pn-paper-channel: Indirizzo restituito
+        pn-paper-channel->>Address Manager: Deduplica indirizzi
+        Address Manager-->>pn-paper-channel: Risultato deduplica
+    end
+    alt indirizzo italiano
+        pn-paper-channel->>Radd Alt: Check copertura RADD
+        Radd Alt-->>pn-paper-channel: Copertura RADD verificata
+        pn-paper-channel-->>pn-paper-channel: Filtro allegati
+    end
+    pn-paper-channel->>SafeStorage: Download documenti
+    pn-paper-channel-->>pn-paper-channel: Calcolo numero pagine
     pn-paper-channel-->>Orchestratore SEND: PrepareEvent (200/204)
     Orchestratore SEND->>pn-paper-channel: POST /paper-deliveries-send
-    pn-paper-channel->>External Channel: Invio recapito cartaceo
-    External Channel->>Recapitista: Assegnazione spedizione
-    Recapitista-->>External Channel: Aggiornamento stato
-    External Channel-->>pn-paper-channel: Evento SQS (delivery status)
-    pn-paper-channel-->>Orchestratore SEND: Callback SQS (PaperChannelUpdate)
-```
-
-Flusso di ciclo di vita di una richiesta di spedizione cartacea: dalla preparazione (validazione indirizzo e upload documenti) all'invio al recapitista, 
-con percorsi di successo, retry su errore di validazione e gestione degli stati coerenti per l'operazione di invio.
-
-```mermaid
-flowchart TD
-    A[Richiesta POST /paper-deliveries-prepare] --> B[Valida payload e requestId]
-    B --> C{requestId presente in DB?}
-    C -- No --> D[Crea record IN_PREPARATION in DynamoDB]
-    D --> E[Lookup indirizzo National Registry]
-    E --> F{Indirizzo valido?}
-    F -- Sì --> G[Upload documenti SafeStorage]
-    G --> H[Salva fileKey in record]
-    H --> I[Agggiorna stato PREPARED]
-    F -- No --> J[Salva errore VALIDATION_ERROR]
-    J --> K[Risposta con errore al client]
-    C -- Sì, stato PREPARED --> L[Richiesta ricevuta: restituisci stato]
-    L --> M[Termina]
-    C -- Sì, stato VALIDATION_ERROR --> N[Retry: reset a IN_PREPARATION]
-    N --> E
-    I --> O[Risposta 200 PrepareEvent]
-    O --> P[Attesa richiesta POST /paper-deliveries-send]
-    P --> Q[Valida stato PREPARED]
-    Q --> R{Stato coerente?}
-    R -- Sì --> S[Invia a External Channel]
-    S --> T[Agggiorna stato SENT]
-    T --> U[Pubblica evento su queue client]
-    U --> V[Risposta 200 SendEvent]
-    R -- No --> W[Salva errore SEND_ERROR]
-    W --> X[Risposta con errore]
+    pn-paper-channel-->>pn-paper-channel: Calcolo costo analogico
+    pn-paper-channel->>External Channel: Ingaggio spedizione
+    External Channel-->>pn-paper-channel: Ingaggio spedizione ok
+    pn-paper-channel-->>Orchestratore SEND: SEND HTTP OK
+    External Channel-->>pn-paper-channel: Invio evento di recapito o consolidatore
+    pn-paper-channel-->>Orchestratore SEND: Invio evento OK/KO/PROGRESS
 ```
 
 ---
@@ -322,8 +303,8 @@ OpenAPI:
 ### Prerequisiti
 
 * Java 21
-* Node.js 20+
-* Docker 27+ oppure Podman attivo per i test di integrazione
+* Node.js 24+
+* Docker oppure Podman attivo per i test di integrazione
 * Build locale dei progetti `pn-parent` e `pn-commons` e `pn-model` da cui `pn-paper-channel` dipende
 
 ### Build
@@ -331,7 +312,7 @@ OpenAPI:
 ```bash
     git clone https://github.com/pagopa/pn-paper-channel.git
     cd pn-paper-channel
-    ./mvnw clean install
+    ./mvnw clean compile
 ```
 
 ### Test
