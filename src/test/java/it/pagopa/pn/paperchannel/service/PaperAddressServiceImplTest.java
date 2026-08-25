@@ -12,7 +12,6 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.AddressManagerClient;
 import it.pagopa.pn.paperchannel.model.Address;
-import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
 import it.pagopa.pn.paperchannel.service.impl.PaperAddressServiceImpl;
 import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
 import org.junit.jupiter.api.BeforeEach;
@@ -472,13 +471,6 @@ class PaperAddressServiceImplTest {
         discoveredAddressFromDb.setRequestId(requestId);
         discoveredAddressFromDb.setAddress("via discovered");
 
-        PrepareAsyncRequest retryPrepareAsyncRequest = new PrepareAsyncRequest();
-        retryPrepareAsyncRequest.setAttemptRetry(0);
-        retryPrepareAsyncRequest.setIun(deliveryRequest.getIun());
-        retryPrepareAsyncRequest.setRequestId(deliveryRequest.getRequestId());
-        retryPrepareAsyncRequest.setCorrelationId(deliveryRequest.getCorrelationId());
-        retryPrepareAsyncRequest.setAddressRetry(true);
-
         Address addressFirstAttempt = AddressMapper.toDTO(addressFromDb);
         Address addressDiscovered = AddressMapper.toDTO(discoveredAddressFromDb);
 
@@ -503,7 +495,7 @@ class PaperAddressServiceImplTest {
                 .verify();
 
         // verifico che scrivo in coda nuovamente l'evento di prepare async
-        verify(prepareFlowStarter, times(1)).redrivePreparePhaseOneAfterAddressManagerError(deliveryRequest, retryPrepareAsyncRequest.getAttemptRetry(), null);
+        verify(prepareFlowStarter, times(1)).redrivePreparePhaseOneAfterAddressManagerError(deliveryRequest, 0, null);
 
     }
 }

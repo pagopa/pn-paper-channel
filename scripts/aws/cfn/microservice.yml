@@ -620,13 +620,6 @@ Parameters:
       - 'RUNNING'
       - 'STOPPED'
 
-  PrepareTwoPhases:
-    Type: String
-    Description: 'Activation of the PREPARE flow in two phases'
-    AllowedValues:
-      - 'true'
-      - 'false'
-
   EnablePreparePhaseOne:
     Type: String
     Description: 'Activation of the consumer for phase one PREPARE flow'
@@ -830,7 +823,7 @@ Resources:
         ContainerEnvEntry70: !Sub 'PN_PAPERCHANNEL_SENDPROGRESSMETA=${SendProgressMeta}'
         ContainerEnvEntry71: !Sub 'PN_PAPERCHANNEL_COSTROUNDINGMODE=${CostRoundingMode}'
         ContainerEnvEntry72: !Sub 'PN_PAPERCHANNEL_SENDCON020=${SendCon020}'
-        ContainerEnvEntry73: !Sub 'PN_PAPERCHANNEL_PREPARETWOPHASES=${PrepareTwoPhases}'
+        ContainerEnvEntry73: !Sub 'PN_PAPERCHANNEL_ENABLEPREPAREPHASEONE=${EnablePreparePhaseOne}'
         ContainerEnvEntry74: !Sub 'PN_PAPERCHANNEL_QUEUENORMALIZEADDRESS=${PaperNormalizeAddressQueueName}'
         ContainerEnvEntry75: !Sub 'PN_PAPERCHANNEL_QUEUEPAPERCHANNELTODELAYER=${PaperChannelToDelayerQueueName}'
         ContainerEnvEntry76: !Sub 'PN_PAPERCHANNEL_QUEUEDELAYERTOPAPERCHANNEL=${DelayerToPaperChannelQueueName}'
@@ -841,7 +834,6 @@ Resources:
         ContainerEnvEntry81: !Sub 'PN_PAPERCHANNEL_QUEUEREGIONOCRINPUTS=${PaperChannelOcrInputsQueueRegion}'
         ContainerEnvEntry82: !Sub 'PN_PAPERCHANNEL_CLIENTRADDALTBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
         ContainerEnvEntry83: 'PN_PAPERCHANNEL_RADDCOVERAGESEARCHMODE={{resolve:ssm:/config/radd-coverage/search-mode}}'
-        ContainerEnvEntry84: !Sub 'PN_PAPERCHANNEL_ENABLEPREPAREPHASEONE=${EnablePreparePhaseOne}'
         ApplicativeEnvFileChecksum: !Ref ApplicativeEnvFileChecksum
         ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-PaperChannel-Secrets

@@ -48,7 +48,6 @@
     "EnableSimplifiedTenderFlow": "true",
     "CostRoundingMode": "HALF_UP",
     "PaperChannelPrepareToDelayerQueuePipeDesiredState": "RUNNING",
-    "PrepareTwoPhases": "true",
     "EnableRetryCon996": "true",
     "EnableTruncatedDateForRefinementCheck": "false",
     "PnDelayerToPaperChannelEventBusRuleStatus": "ENABLED",
