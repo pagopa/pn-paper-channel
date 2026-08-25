@@ -4,7 +4,6 @@ import it.pagopa.pn.api.dto.events.PnAddressItem;
 import it.pagopa.pn.api.dto.events.PnPrepareDelayerToPaperchannelPayload;
 import it.pagopa.pn.api.dto.events.PnPreparePaperchannelToDelayerPayload;
 import it.pagopa.pn.api.dto.events.paperDeliveryCommunicationType;
-import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PrepareEvent;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.mapper.PrepareEventMapper;
@@ -32,7 +31,6 @@ import java.util.Objects;
 public class PrepareFlowStarterImpl implements PrepareFlowStarter {
 
     private final SqsSender sqsSender;
-    private final PnPaperChannelConfig config;
 
     /**
      * Starts the asynchronous PREPARE flow from the synchronous PREPARE
@@ -40,18 +38,9 @@ public class PrepareFlowStarterImpl implements PrepareFlowStarter {
      * @param clientId Possible identifier of the client who called the PREPARE
      */
     public void startPreparePhaseOneFromPrepareSync(PnDeliveryRequest deliveryRequest, String clientId) {
-
-        if(isPrepareTwoPhases()) {
-            log.debug("Internal event from PREPARE sync to pn-paper-normalize-address queue");
-            var prepareNormalizeAddressEvent = this.buildEventFromPrepareSync(deliveryRequest, clientId);
-            this.sqsSender.pushToNormalizeAddressQueue(prepareNormalizeAddressEvent);
-        }
-
-        else {
-            log.debug("Internal event from PREPARE sync to pn-paper_channel_requests queue");
-            var request = new PrepareAsyncRequest(deliveryRequest.getRequestId(), deliveryRequest.getIun(), false, 0);
-            this.sqsSender.pushToInternalQueue(request);
-        }
+        log.debug("Internal event from PREPARE sync to pn-paper-normalize-address queue");
+        var prepareNormalizeAddressEvent = this.buildEventFromPrepareSync(deliveryRequest, clientId);
+        this.sqsSender.pushToNormalizeAddressQueue(prepareNormalizeAddressEvent);
     }
 
     /**
@@ -60,18 +49,9 @@ public class PrepareFlowStarterImpl implements PrepareFlowStarter {
      * @param nationalRegistriesAddress Possible address retrieved from national records
      */
     public void startPreparePhaseOneFromNationalRegistriesFlow(PnDeliveryRequest deliveryRequest, @Nullable Address nationalRegistriesAddress) {
-
-        if(isPrepareTwoPhases()) {
-            log.debug("Internal event from national registries flow to pn-paper-normalize-address queue");
-            var prepareNormalizeAddressEvent = this.buildEventFromNationalRegistriesFlow(deliveryRequest, nationalRegistriesAddress);
-            this.sqsSender.pushToNormalizeAddressQueue(prepareNormalizeAddressEvent);
-        }
-
-        else {
-            log.debug("Internal event from national registries flow to pn-paper_channel_requests queue");
-            var request = new PrepareAsyncRequest(deliveryRequest.getRequestId(), deliveryRequest.getCorrelationId(), nationalRegistriesAddress);
-            this.sqsSender.pushToInternalQueue(request);
-        }
+        log.debug("Internal event from national registries flow to pn-paper-normalize-address queue");
+        var prepareNormalizeAddressEvent = this.buildEventFromNationalRegistriesFlow(deliveryRequest, nationalRegistriesAddress);
+        this.sqsSender.pushToNormalizeAddressQueue(prepareNormalizeAddressEvent);
     }
 
     /**
@@ -107,57 +87,30 @@ public class PrepareFlowStarterImpl implements PrepareFlowStarter {
 
     @Override
     public void redrivePreparePhaseOneAfterNationalRegistryError(NationalRegistryError entity, int attemptRetry) {
-        if(isPrepareTwoPhases()) {
-            this.sqsSender.redrivePreparePhaseOneAfterError(entity, attemptRetry, NationalRegistryError.class);
-        }
-        else {
-            this.sqsSender.pushInternalError(entity, attemptRetry, NationalRegistryError.class);
-        }
+        this.sqsSender.redrivePreparePhaseOneAfterError(entity, attemptRetry, NationalRegistryError.class);
     }
 
     @Override
     public void redrivePreparePhaseOneAfterAddressManagerError(PnDeliveryRequest deliveryRequest, int attemptRetry, Address fromNationalRegistry) {
-        if(isPrepareTwoPhases()) {
-            PrepareNormalizeAddressEvent event = PrepareNormalizeAddressEvent.builder()
-                    .requestId(deliveryRequest.getRequestId())
-                    .correlationId(deliveryRequest.getCorrelationId())
-                    .iun(deliveryRequest.getIun())
-                    .address(fromNationalRegistry)
-                    .isAddressRetry(true)
-                    .attempt(attemptRetry)
-                    .build();
-            this.sqsSender.redrivePreparePhaseOneAfterError(event, event.getAttempt(), PrepareNormalizeAddressEvent.class);
-        }
-        else {
-            PrepareAsyncRequest queueModel = new PrepareAsyncRequest();
-            queueModel.setIun(deliveryRequest.getIun());
-            queueModel.setRequestId(deliveryRequest.getRequestId());
-            queueModel.setCorrelationId(deliveryRequest.getCorrelationId());
-            queueModel.setAddress(fromNationalRegistry);
-            queueModel.setAddressRetry(true);
-            queueModel.setAttemptRetry(attemptRetry);
-            this.sqsSender.pushInternalError(queueModel, queueModel.getAttemptRetry(), PrepareAsyncRequest.class);
-        }
+        PrepareNormalizeAddressEvent event = PrepareNormalizeAddressEvent.builder()
+                .requestId(deliveryRequest.getRequestId())
+                .correlationId(deliveryRequest.getCorrelationId())
+                .iun(deliveryRequest.getIun())
+                .address(fromNationalRegistry)
+                .isAddressRetry(true)
+                .attempt(attemptRetry)
+                .build();
+        this.sqsSender.redrivePreparePhaseOneAfterError(event, event.getAttempt(), PrepareNormalizeAddressEvent.class);
     }
 
     public void redrivePreparePhaseTwoAfterF24Flow(PnDeliveryRequest deliveryRequest) {
-
-        if(isPrepareTwoPhases()) {
-            log.debug("Internal event from f24 flow to pn-delayer_to_paperchannel queue");
-            PnPrepareDelayerToPaperchannelPayload payload = PnPrepareDelayerToPaperchannelPayload.builder()
-                    .requestId(deliveryRequest.getRequestId())
-                    .iun(deliveryRequest.getIun())
-                    .attempt(0)
-                    .build();
-            this.sqsSender.pushToDelayerToPaperchennelQueue(payload);
-        }
-
-        else {
-            log.debug("Internal event from f24 flow to pn-paper_channel_requests queue");
-            PrepareAsyncRequest request = new PrepareAsyncRequest(deliveryRequest.getRequestId(), deliveryRequest.getIun(), false, 0);
-            request.setF24ResponseFlow(true);
-            this.sqsSender.pushToInternalQueue(request);
-        }
+        log.debug("Internal event from f24 flow to pn-delayer_to_paperchannel queue");
+        PnPrepareDelayerToPaperchannelPayload payload = PnPrepareDelayerToPaperchannelPayload.builder()
+                .requestId(deliveryRequest.getRequestId())
+                .iun(deliveryRequest.getIun())
+                .attempt(0)
+                .build();
+        this.sqsSender.pushToDelayerToPaperchennelQueue(payload);
     }
 
     public void pushResultPrepareEvent(PnDeliveryRequest request, Address address, String clientId, StatusCodeEnum statusCode, KOReason koReason){
@@ -168,20 +121,8 @@ public class PrepareFlowStarterImpl implements PrepareFlowStarter {
     }
 
     public void redrivePreparePhaseTwoAfterF24Error(F24Error f24Error) {
-
-        if(isPrepareTwoPhases()) {
-            log.info("Attempting F24 to pushing to pn-delayer_to_paperchannel queue, payload={}", f24Error);
-            this.sqsSender.pushF24ErrorDelayerToPaperChannelQueue(f24Error);
-        }
-
-        else {
-            log.info("Attempting to pushing to internal payload={}", f24Error);
-            sqsSender.pushInternalError(f24Error, f24Error.getAttempt(), F24Error.class);
-        }
-    }
-
-    private boolean isPrepareTwoPhases() {
-        return Boolean.TRUE.equals(config.isPrepareTwoPhases());
+        log.info("Attempting F24 to pushing to pn-delayer_to_paperchannel queue, payload={}", f24Error);
+        this.sqsSender.pushF24ErrorDelayerToPaperChannelQueue(f24Error);
     }
 
     /**

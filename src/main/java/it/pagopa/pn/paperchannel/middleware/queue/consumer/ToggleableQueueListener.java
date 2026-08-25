@@ -1,4 +1,4 @@
-package it.pagopa.pn.paperchannel.middleware.queue.consumer.handler;
+package it.pagopa.pn.paperchannel.middleware.queue.consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.awspring.cloud.sqs.annotation.SqsListener;
