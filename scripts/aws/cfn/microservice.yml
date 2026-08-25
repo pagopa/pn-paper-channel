@@ -193,10 +193,6 @@ Parameters:
     Type: String
     Description: 'Weight letter'
 
-  RetryStatus:
-    Type: String
-    Description: 'Retry status code'
-
   NetworkLoadBalancerLink:
     Type: String
     Description: 'network load balancer link for API-GW'
@@ -700,14 +696,6 @@ Parameters:
     Default: 512
     Description: Memory size TenderAPI Lambda.
 
-  PaperTrackerEnabled:
-    Type: String
-    Default: 'false'
-    Description: 'Enable Paper Tracker feature'
-    AllowedValues:
-      - 'true'
-      - 'false'
-
   PaperTrackerProductList:
     Type: CommaDelimitedList
     Default: 'AR'
@@ -790,7 +778,7 @@ Resources:
         ContainerEnvEntry36: !Sub 'PN_PAPERCHANNEL_TTLEXECUTIONIRS=${TtlExecutionRIRS}'
         ContainerEnvEntry37: !Sub 'PN_PAPERCHANNEL_TTLEXECUTIONDAYSDEMAT=${TtlExecutionDaysDemat}'
         ContainerEnvEntry38: !Sub 'PN_PAPERCHANNEL_TTLEXECUTIONDAYSMETA=${TtlExecutionDaysMeta}'
-        ContainerEnvEntry39: !Sub 'PN_PAPERCHANNEL_RETRYSTATUS=${RetryStatus}'
+        ContainerEnvEntry39: 'PN_PAPERCHANNEL_RADDCOVERAGESEARCHMODE={{resolve:ssm:/config/radd-coverage/search-mode}}'
         ContainerEnvEntry40: !Sub 'PN_PAPERCHANNEL_CLIENTDATAVAULTBASEPATH=${DataVaultBaseUrl}'
         ContainerEnvEntry41: !Sub 'PN_PAPERCHANNEL_PAPERWEIGHT=${PaperWeight}'
         ContainerEnvEntry42: !Sub 'PN_PAPERCHANNEL_LETTERWEIGHT=${LetterWeight}'
@@ -834,7 +822,6 @@ Resources:
         ContainerEnvEntry80: !Sub 'PN_PAPERCHANNEL_QUEUEURLOCRINPUTS=${PaperChannelOcrInputsQueueURL}'
         ContainerEnvEntry81: !Sub 'PN_PAPERCHANNEL_QUEUEREGIONOCRINPUTS=${PaperChannelOcrInputsQueueRegion}'
         ContainerEnvEntry82: !Sub 'PN_PAPERCHANNEL_CLIENTRADDALTBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
-        ContainerEnvEntry83: 'PN_PAPERCHANNEL_RADDCOVERAGESEARCHMODE={{resolve:ssm:/config/radd-coverage/search-mode}}'
         ApplicativeEnvFileChecksum: !Ref ApplicativeEnvFileChecksum
         ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-PaperChannel-Secrets
