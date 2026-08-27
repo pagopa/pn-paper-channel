@@ -13,9 +13,6 @@ import it.pagopa.pn.paperchannel.middleware.queue.model.InternalPushEvent;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.EventBridgeProducer;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.InternalQueueMomProducer;
 import it.pagopa.pn.paperchannel.middleware.queue.producer.NormalizeAddressQueueMomProducer;
-import it.pagopa.pn.paperchannel.model.ExternalChannelError;
-import it.pagopa.pn.paperchannel.model.NationalRegistryError;
-import it.pagopa.pn.paperchannel.model.PrepareAsyncRequest;
 import it.pagopa.pn.paperchannel.model.PrepareNormalizeAddressEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,7 +22,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.time.Instant;
 import java.time.ZoneOffset;
-import java.time.temporal.ChronoUnit;
 
 class SqsQueueSenderTestIT extends BaseTest {
 
@@ -63,56 +59,6 @@ class SqsQueueSenderTestIT extends BaseTest {
         Mockito.verify(eventBridgeProducer, Mockito.times(1))
                 .sendEvent(Mockito.anyString(), Mockito.anyString());
     }
-
-    @Test
-    void pushToInternalQueueTest(){
-        PrepareAsyncRequest request = new PrepareAsyncRequest("1234", "iun", false, 1);
-        this.sqsSender.pushToInternalQueue(request);
-        Mockito.verify(internalQueueMomProducer, Mockito.times(1))
-                .push((InternalPushEvent) Mockito.any());
-    }
-
-    @Test
-    void pushToNationalRegistryErrorQueueTest(){
-        NationalRegistryError error = new NationalRegistryError();
-        error.setMessage("Error");
-        error.setReceiverType("PF");
-        error.setIun("IUN");
-        error.setFiscalCode("MMDDD945439adfsf");
-        error.setCorrelationId("correlation");
-        this.sqsSender.pushInternalError(error, 1, NationalRegistryError.class);
-
-        Mockito.verify(internalQueueMomProducer, Mockito.times(1))
-                .push((InternalPushEvent) Mockito.any());
-    }
-
-    @Test
-    void pushToExternalChannelErrorErrorQueueTest(){
-        ExternalChannelError error = new ExternalChannelError();
-        this.sqsSender.pushInternalError(error, 1, ExternalChannelError.class);
-
-        Mockito.verify(internalQueueMomProducer, Mockito.times(1))
-                .push((InternalPushEvent) Mockito.any());
-    }
-
-    @Test
-    void pushToPrepareAsyncRequestErrorQueueTest(){
-        PrepareAsyncRequest error = new PrepareAsyncRequest();
-        this.sqsSender.pushInternalError(error, 1, PrepareAsyncRequest.class);
-
-        Mockito.verify(internalQueueMomProducer, Mockito.times(1))
-                .push((InternalPushEvent) Mockito.any());
-    }
-
-    @Test
-    void rePushToExternalChannelErrorQueueTest(){
-        ExternalChannelError error = new ExternalChannelError();
-        this.sqsSender.rePushInternalError(error, 1, Instant.now().plus(200, ChronoUnit.MINUTES), ExternalChannelError.class);
-
-        Mockito.verify(internalQueueMomProducer, Mockito.times(1))
-                .push((InternalPushEvent) Mockito.any());
-    }
-
 
     @Test
     void pushSingleStatusUpdateEventTest(){

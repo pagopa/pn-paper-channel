@@ -72,9 +72,6 @@ public class ExternalChannelClientImpl extends BaseClient implements ExternalCha
         PaperEngageRequestDto dto = new PaperEngageRequestDto();
         dto.setRequestId(sendRequest.getRequestId());
         dto.setRequestPaId(sendRequest.getRequestPaId());
-        if(!(pnPaperChannelConfig.getRequestPaIdOverride().isBlank()) && pnPaperChannelConfig.getRequestPaIdOverride()!=null ){
-            dto.setRequestPaId(pnPaperChannelConfig.getRequestPaIdOverride());
-        }
         dto.setClientRequestTimeStamp(OffsetDateTime.now());
         if (sendRequest.getClientRequestTimeStamp() != null){
             dto.setClientRequestTimeStamp(DateUtils.getOffsetDateTimeFromDate(sendRequest.getClientRequestTimeStamp()));

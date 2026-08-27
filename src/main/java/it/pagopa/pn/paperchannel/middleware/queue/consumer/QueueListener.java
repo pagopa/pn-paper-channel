@@ -61,32 +61,12 @@ public class QueueListener {
 
         if (internalEventHeader == null) return;
 
-        if (internalEventHeader.getEventType().equals(EventTypeEnum.NATIONAL_REGISTRIES_ERROR.name())) {
-            this.handleNationalRegistriesErrorEvent(internalEventHeader, node);
-        }
-
-        else if (internalEventHeader.getEventType().equals(EventTypeEnum.MANUAL_RETRY_EXTERNAL_CHANNEL.name())) {
+        if (internalEventHeader.getEventType().equals(EventTypeEnum.MANUAL_RETRY_EXTERNAL_CHANNEL.name())) {
             this.handleManualRetryExternalChannelEvent(node);
         }
 
         else if (internalEventHeader.getEventType().equals(EventTypeEnum.EXTERNAL_CHANNEL_ERROR.name())) {
             this.handleExternalChannelErrorEvent(internalEventHeader, node);
-        }
-
-        else if (internalEventHeader.getEventType().equals(EventTypeEnum.SAFE_STORAGE_ERROR.name())) {
-            this.handleSafeStorageErrorEvent(internalEventHeader, node);
-        }
-
-        else if (internalEventHeader.getEventType().equals(EventTypeEnum.ADDRESS_MANAGER_ERROR.name())) {
-            this.handleAddressManagerErrorEvent(internalEventHeader, node);
-        }
-
-        else if (internalEventHeader.getEventType().equals(EventTypeEnum.F24_ERROR.name())) {
-            this.handleF24ErrorEvent(internalEventHeader, node);
-        }
-
-        else if (internalEventHeader.getEventType().equals(EventTypeEnum.PREPARE_ASYNC_FLOW.name())) {
-            this.handlePrepareAsyncFlowEvent(internalEventHeader, node);
         }
 
         else if (internalEventHeader.getEventType().equals(EventTypeEnum.REDRIVE_PAPER_PROGRESS_STATUS.name())) {
@@ -144,30 +124,6 @@ public class QueueListener {
 
     }
 
-    private void handleNationalRegistriesErrorEvent(AttemptEventHeader attemptEventHeader, String node) {
-
-        boolean noAttempt = (paperChannelConfig.getAttemptQueueNationalRegistries()-1) < attemptEventHeader.getAttempt();
-        NationalRegistryError entity = convertToObject(node, NationalRegistryError.class);
-        if(noAttempt) {
-            PnLogAudit pnLogAudit = new PnLogAudit();
-            pnLogAudit.addsBeforeDiscard(entity.getIun(), String.format("requestId = %s finish retry to National Registry", entity.getRequestId()));
-
-            PnRequestError pnRequestError = PnRequestError.builder()
-                    .requestId(entity.getRequestId())
-                    .error("ERROR WITH RETRIEVE ADDRESS")
-                    .flowThrow(EventTypeEnum.NATIONAL_REGISTRIES_ERROR.name())
-                    .build();
-
-            paperRequestErrorDAO.created(pnRequestError).subscribe();
-
-            pnLogAudit.addsSuccessDiscard(entity.getIun(), String.format("requestId = %s finish retry to National Registry", entity.getRequestId()));
-        }
-        else {
-            this.queueListenerService.nationalRegistriesErrorListener(entity, attemptEventHeader.getAttempt());
-        }
-
-    }
-
     private void handleManualRetryExternalChannelEvent(String node) {
         ManualRetryEvent manualRetryEvent = convertToObject(node, ManualRetryEvent.class);
         this.queueListenerService.manualRetryExternalChannel(manualRetryEvent.getRequestId(), manualRetryEvent.getNewPcRetry());
@@ -201,36 +157,6 @@ public class QueueListener {
                 });
     }
 
-    /**
-     * @deprecated This method has been replaced by  {@link #handleSafeStorageErrorEventFromPreparePhaseTwo(AttemptEventHeader, String)}.
-     */
-    @Deprecated(since = "2.15.0", forRemoval = true)
-    private void handleSafeStorageErrorEvent(InternalEventHeader internalEventHeader, String node) {
-
-        boolean noAttempt = (paperChannelConfig.getAttemptQueueSafeStorage()-1) < internalEventHeader.getAttempt();
-        PrepareAsyncRequest error = convertToObject(node, PrepareAsyncRequest.class);
-        execution(error, noAttempt, internalEventHeader.getAttempt(), internalEventHeader.getExpired(), PrepareAsyncRequest.class,
-                entity -> {
-                    PnLogAudit pnLogAudit = new PnLogAudit();
-                    pnLogAudit.addsBeforeDiscard(entity.getIun(), String.format("requestId = %s finish retry to Safe Storage", entity.getRequestId()));
-
-                    PnRequestError pnRequestError = PnRequestError.builder()
-                            .requestId(entity.getRequestId())
-                            .error(DOCUMENT_NOT_DOWNLOADED.getMessage())
-                            .flowThrow(EventTypeEnum.SAFE_STORAGE_ERROR.name())
-                            .build();
-
-                    paperRequestErrorDAO.created(pnRequestError).subscribe();
-
-                    pnLogAudit.addsSuccessDiscard(entity.getIun(), String.format("requestId = %s finish retry to Safe Storage", entity.getRequestId()));
-                    return null;
-                },
-                entityAndAttempt -> {
-                    this.queueListenerService.internalListener(entityAndAttempt.getFirst(), entityAndAttempt.getSecond());
-                    return null;
-                });
-    }
-
     private void handleSafeStorageErrorEventFromPreparePhaseTwo(AttemptEventHeader attemptEventHeader, String node) {
 
         boolean noAttempt = (paperChannelConfig.getAttemptQueueSafeStorage()-1) < attemptEventHeader.getAttempt();
@@ -254,37 +180,6 @@ public class QueueListener {
         }
     }
 
-
-    /**
-     * @deprecated This method has been replaced by  {#handleAddressManagerErrorEventFromPreparePhaseOne(AttemptEventHeader, String)}.
-     */
-    @Deprecated(since = "2.15.0", forRemoval = true)
-    private void handleAddressManagerErrorEvent(InternalEventHeader internalEventHeader, String node) {
-
-        boolean noAttempt = (paperChannelConfig.getAttemptQueueAddressManager()-1) < internalEventHeader.getAttempt();
-        PrepareAsyncRequest error = convertToObject(node, PrepareAsyncRequest.class);
-        execution(error, noAttempt, internalEventHeader.getAttempt(), internalEventHeader.getExpired(), PrepareAsyncRequest.class,
-                entity -> {
-                    PnLogAudit pnLogAudit = new PnLogAudit();
-                    pnLogAudit.addsBeforeDiscard(entity.getIun(), String.format("requestId = %s finish retry address manager error ?", entity.getRequestId()));
-
-                    PnRequestError pnRequestError = PnRequestError.builder()
-                            .requestId(entity.getRequestId())
-                            .error(ADDRESS_MANAGER_ERROR.getMessage())
-                            .flowThrow(EventTypeEnum.ADDRESS_MANAGER_ERROR.name())
-                            .build();
-
-                    paperRequestErrorDAO.created(pnRequestError).subscribe();
-
-                    pnLogAudit.addsSuccessDiscard(entity.getIun(), String.format("requestId = %s finish retry address manager error", entity.getRequestId()));
-                    return null;
-                },
-                entityAndAttempt -> {
-                    this.queueListenerService.internalListener(entityAndAttempt.getFirst(), entityAndAttempt.getSecond());
-                    return null;
-                });
-    }
-
     private void handleF24ErrorEvent(AttemptEventHeader internalEventHeader, String node) {
 
         boolean noAttempt = (paperChannelConfig.getAttemptQueueF24()-1) < internalEventHeader.getAttempt();
@@ -306,16 +201,6 @@ public class QueueListener {
         else {
             this.queueListenerService.f24ErrorListener(error, internalEventHeader.getAttempt());
         }
-    }
-
-    /**
-     * @deprecated This method has been replaced by  {@link #handleNationalRegistriesErrorEvent(AttemptEventHeader, String)} (AttemptEventHeader, String)}.
-     */
-    @Deprecated(since = "2.15.0", forRemoval = true)
-    private void handlePrepareAsyncFlowEvent(InternalEventHeader internalEventHeader, String node) {
-        log.info("Push internal queue - first time");
-        PrepareAsyncRequest request = convertToObject(node, PrepareAsyncRequest.class);
-        this.queueListenerService.internalListener(request, internalEventHeader.getAttempt());
     }
 
     private void handlePreparePhaseTwoAsyncFlowEvent(AttemptEventHeader attemptEventHeader, String node) {

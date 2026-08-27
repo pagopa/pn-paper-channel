@@ -72,7 +72,6 @@ public class PnPaperChannelConfig {
     private Integer letterWeight;
     private List<String> dateChargeCalculationModes;
     private Duration refinementDuration;
-    private String requestPaIdOverride;
     private Set<String> requiredDemats;
     private Set<String> complexRefinementCodes;
     private boolean sendCon020;
@@ -82,7 +81,6 @@ public class PnPaperChannelConfig {
     private List<String> allowedRedriveProgressStatusCodes;
     private List<String> SendProgressMeta;
     private String costRoundingMode;
-    private boolean prepareTwoPhases;
     private Duration compiutaGiacenzaArDuration;
     private boolean enableTruncatedDateForRefinementCheck;
     private boolean enableOcr;

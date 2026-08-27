@@ -193,10 +193,6 @@ Parameters:
     Type: String
     Description: 'Weight letter'
 
-  RetryStatus:
-    Type: String
-    Description: 'Retry status code'
-
   NetworkLoadBalancerLink:
     Type: String
     Description: 'network load balancer link for API-GW'
@@ -470,12 +466,6 @@ Parameters:
     Type: Number
     Default: 60
 
-  #Request PaId Override
-  RequestPaIdOverride:
-    Description : Partita iva di default override RequestPAId
-    Type: String
-    Default: ''
-
   #Override pn.paper-channel.pnaddr001continue-flow
   Pnaddr001ContinueFlow:
     Description: Per l'errore PNADDR001, true se il flusso deve continuare, false se si deve salvare l'errore a DB
@@ -620,13 +610,6 @@ Parameters:
       - 'RUNNING'
       - 'STOPPED'
 
-  PrepareTwoPhases:
-    Type: String
-    Description: 'Activation of the PREPARE flow in two phases'
-    AllowedValues:
-      - 'true'
-      - 'false'
-
   EnablePreparePhaseOne:
     Type: String
     Description: 'Activation of the consumer for phase one PREPARE flow'
@@ -707,14 +690,6 @@ Parameters:
     Default: 512
     Description: Memory size TenderAPI Lambda.
 
-  PaperTrackerEnabled:
-    Type: String
-    Default: 'false'
-    Description: 'Enable Paper Tracker feature'
-    AllowedValues:
-      - 'true'
-      - 'false'
-
   PaperTrackerProductList:
     Type: CommaDelimitedList
     Default: 'AR'
@@ -753,7 +728,8 @@ Resources:
         AutoscalingDataPointN: !Ref AutoscalingDataPointN
         AutoscalingDataPointM: !Ref AutoscalingDataPointM
         AlarmSNSTopicArn: !Ref AlarmSNSTopicArn
-        JavaToolOptions: '-XX:MaxDirectMemorySize=256m'
+        JavaToolOptions: '-XX:MaxDirectMemorySize=256m --add-modules=java.instrument --add-opens=java.base/java.lang=ALL-UNNAMED'
+        JavaVersion: '25'
         ContainerImageURI: !Sub '${ContainerImageUri}'
         ContainerEnvEntry1: !Sub 'AWS_REGIONCODE=${AWS::Region}'
         ContainerEnvEntry2: !Sub 'CORS_ALLOWED_DOMAINS=${CorsAllowedDomains}, http://localhost:3000'
@@ -796,7 +772,7 @@ Resources:
         ContainerEnvEntry36: !Sub 'PN_PAPERCHANNEL_TTLEXECUTIONIRS=${TtlExecutionRIRS}'
         ContainerEnvEntry37: !Sub 'PN_PAPERCHANNEL_TTLEXECUTIONDAYSDEMAT=${TtlExecutionDaysDemat}'
         ContainerEnvEntry38: !Sub 'PN_PAPERCHANNEL_TTLEXECUTIONDAYSMETA=${TtlExecutionDaysMeta}'
-        ContainerEnvEntry39: !Sub 'PN_PAPERCHANNEL_RETRYSTATUS=${RetryStatus}'
+        ContainerEnvEntry39: 'PN_PAPERCHANNEL_RADDCOVERAGESEARCHMODE={{resolve:ssm:/config/radd-coverage/search-mode}}'
         ContainerEnvEntry40: !Sub 'PN_PAPERCHANNEL_CLIENTDATAVAULTBASEPATH=${DataVaultBaseUrl}'
         ContainerEnvEntry41: !Sub 'PN_PAPERCHANNEL_PAPERWEIGHT=${PaperWeight}'
         ContainerEnvEntry42: !Sub 'PN_PAPERCHANNEL_LETTERWEIGHT=${LetterWeight}'
@@ -808,7 +784,7 @@ Resources:
         ContainerEnvEntry48: !Sub 'PN_PAPERCHANNEL_PNADDR002CONTINUEFLOW=${Pnaddr002ContinueFlow}'
         ContainerEnvEntry49: !Sub 'PN_PAPERCHANNEL_REFINEMENTDURATION=${RefinementDuration}'
         ContainerEnvEntry50: !Sub 'PN_PAPERCHANNEL_CLOUDWATCHMETRICCRON=${CloudwatchMetricCron}'
-        ContainerEnvEntry51: !Sub 'PN_PAPERCHANNEL_REQUESTPAIDOVERRIDE=${RequestPaIdOverride}'
+        ContainerEnvEntry51: !Sub 'PN_PAPERCHANNEL_CLIENTRADDALTBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
         ContainerEnvEntry52: !Sub 'PN_PAPERCHANNEL_CLIENTF24BASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
         ContainerEnvEntry53: !Sub 'PN_PAPERCHANNEL_F24CXID=${F24PaperChannelUser}'
         ContainerEnvEntry54: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUEF24=${AttemptQueueF24}'
@@ -830,7 +806,7 @@ Resources:
         ContainerEnvEntry70: !Sub 'PN_PAPERCHANNEL_SENDPROGRESSMETA=${SendProgressMeta}'
         ContainerEnvEntry71: !Sub 'PN_PAPERCHANNEL_COSTROUNDINGMODE=${CostRoundingMode}'
         ContainerEnvEntry72: !Sub 'PN_PAPERCHANNEL_SENDCON020=${SendCon020}'
-        ContainerEnvEntry73: !Sub 'PN_PAPERCHANNEL_PREPARETWOPHASES=${PrepareTwoPhases}'
+        ContainerEnvEntry73: !Sub 'PN_PAPERCHANNEL_ENABLEPREPAREPHASEONE=${EnablePreparePhaseOne}'
         ContainerEnvEntry74: !Sub 'PN_PAPERCHANNEL_QUEUENORMALIZEADDRESS=${PaperNormalizeAddressQueueName}'
         ContainerEnvEntry75: !Sub 'PN_PAPERCHANNEL_QUEUEPAPERCHANNELTODELAYER=${PaperChannelToDelayerQueueName}'
         ContainerEnvEntry76: !Sub 'PN_PAPERCHANNEL_QUEUEDELAYERTOPAPERCHANNEL=${DelayerToPaperChannelQueueName}'
@@ -839,9 +815,6 @@ Resources:
         ContainerEnvEntry79: !Sub 'PN_PAPERCHANNEL_ENABLETRUNCATEDDATEFORREFINEMENTCHECK=${EnableTruncatedDateForRefinementCheck}'
         ContainerEnvEntry80: !Sub 'PN_PAPERCHANNEL_QUEUEURLOCRINPUTS=${PaperChannelOcrInputsQueueURL}'
         ContainerEnvEntry81: !Sub 'PN_PAPERCHANNEL_QUEUEREGIONOCRINPUTS=${PaperChannelOcrInputsQueueRegion}'
-        ContainerEnvEntry82: !Sub 'PN_PAPERCHANNEL_CLIENTRADDALTBASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
-        ContainerEnvEntry83: 'PN_PAPERCHANNEL_RADDCOVERAGESEARCHMODE={{resolve:ssm:/config/radd-coverage/search-mode}}'
-        ContainerEnvEntry84: !Sub 'PN_PAPERCHANNEL_ENABLEPREPAREPHASEONE=${EnablePreparePhaseOne}'
         ApplicativeEnvFileChecksum: !Ref ApplicativeEnvFileChecksum
         ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-PaperChannel-Secrets
