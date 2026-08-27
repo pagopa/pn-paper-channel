@@ -55,7 +55,6 @@ class ExternalChannelClientImplTest {
         ArgumentCaptor<String> caturedSCxId = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<PaperEngageRequestDto> caturedSPaperEngageRequestDto = ArgumentCaptor.forClass(PaperEngageRequestDto.class);
 
-        Mockito.when(pnPaperChannelConfig.getRequestPaIdOverride()).thenReturn("");
         Mockito.when(pnPaperChannelConfig.getXPagopaExtchCxId()).thenReturn("cxid");
         Mockito.when(paperMessagesApi.sendPaperEngageRequest(caturedSRequestId.capture(), caturedSCxId.capture(), caturedSPaperEngageRequestDto.capture())).thenReturn(Mono.empty());
 
@@ -81,7 +80,6 @@ class ExternalChannelClientImplTest {
         ArgumentCaptor<String> caturedSCxId = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<PaperEngageRequestDto> caturedSPaperEngageRequestDto = ArgumentCaptor.forClass(PaperEngageRequestDto.class);
 
-        Mockito.when(pnPaperChannelConfig.getRequestPaIdOverride()).thenReturn("");
         Mockito.when(pnPaperChannelConfig.getXPagopaExtchCxId()).thenReturn("cxid");
         Mockito.when(paperMessagesApi.sendPaperEngageRequest(caturedSRequestId.capture(), caturedSCxId.capture(), caturedSPaperEngageRequestDto.capture())).thenReturn(Mono.empty());
 

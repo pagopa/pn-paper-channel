@@ -466,12 +466,6 @@ Parameters:
     Type: Number
     Default: 60
 
-  #Request PaId Override
-  RequestPaIdOverride:
-    Description : Partita iva di default override RequestPAId
-    Type: String
-    Default: ''
-
   #Override pn.paper-channel.pnaddr001continue-flow
   Pnaddr001ContinueFlow:
     Description: Per l'errore PNADDR001, true se il flusso deve continuare, false se si deve salvare l'errore a DB
@@ -790,7 +784,6 @@ Resources:
         ContainerEnvEntry48: !Sub 'PN_PAPERCHANNEL_PNADDR002CONTINUEFLOW=${Pnaddr002ContinueFlow}'
         ContainerEnvEntry49: !Sub 'PN_PAPERCHANNEL_REFINEMENTDURATION=${RefinementDuration}'
         ContainerEnvEntry50: !Sub 'PN_PAPERCHANNEL_CLOUDWATCHMETRICCRON=${CloudwatchMetricCron}'
-        ContainerEnvEntry51: !Sub 'PN_PAPERCHANNEL_REQUESTPAIDOVERRIDE=${RequestPaIdOverride}'
         ContainerEnvEntry52: !Sub 'PN_PAPERCHANNEL_CLIENTF24BASEPATH=http://${ApplicationLoadBalancerDomain}:8080'
         ContainerEnvEntry53: !Sub 'PN_PAPERCHANNEL_F24CXID=${F24PaperChannelUser}'
         ContainerEnvEntry54: !Sub 'PN_PAPERCHANNEL_ATTEMPTQUEUEF24=${AttemptQueueF24}'
