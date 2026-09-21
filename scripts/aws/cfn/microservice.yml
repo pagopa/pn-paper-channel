@@ -700,6 +700,16 @@ Parameters:
     Default: ''
     Description: 'Applicative environment variable file checksum'
 
+  CpuArchitecture:
+    Type: String
+    Default: 'ARM'
+    Description: CPU architecture for the Fargate tasks
+
+  JavaToolOptions:
+    Type: String
+    Default: '-XX:MaxDirectMemorySize=256m --add-modules=java.instrument --add-opens=java.base/java.lang=ALL-UNNAMED'
+    Description: Java tool options for the Fargate tasks
+
 Conditions:
   UseExternalChannelMock: !Equals [ !Ref ExternalChannelBaseUrl, "Mock" ]
 
@@ -728,7 +738,7 @@ Resources:
         AutoscalingDataPointN: !Ref AutoscalingDataPointN
         AutoscalingDataPointM: !Ref AutoscalingDataPointM
         AlarmSNSTopicArn: !Ref AlarmSNSTopicArn
-        JavaToolOptions: '-XX:MaxDirectMemorySize=256m --add-modules=java.instrument --add-opens=java.base/java.lang=ALL-UNNAMED'
+        JavaToolOptions: !Ref JavaToolOptions
         JavaVersion: '25'
         ContainerImageURI: !Sub '${ContainerImageUri}'
         ContainerEnvEntry1: !Sub 'AWS_REGIONCODE=${AWS::Region}'
@@ -829,6 +839,7 @@ Resources:
         TaskRoleManagedPolicyArn: !Ref PaperChannelMicroserviceTaskPolicy
         EcsLogGroup: !Ref EcsLogGroup
         LogAlarmStrategyV1: !Ref LogAlarmStrategy
+        CpuArchitecture: !Ref CpuArchitecture
 
   PaperChannelMicroserviceTaskPolicy:
     Type: AWS::IAM::ManagedPolicy
