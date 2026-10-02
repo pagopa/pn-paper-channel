@@ -95,18 +95,6 @@ aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
 
 aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     dynamodb create-table \
-    --table-name CapDynamoTable \
-    --attribute-definitions \
-        AttributeName=author,AttributeType=S \
-        AttributeName=cap,AttributeType=S \
-    --key-schema \
-        AttributeName=author,KeyType=HASH \
-        AttributeName=cap,KeyType=RANGE \
-    --provisioned-throughput \
-        ReadCapacityUnits=5,WriteCapacityUnits=5
-
-aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
-    dynamodb create-table \
     --table-name ZoneDynamoTable \
     --attribute-definitions \
       AttributeName=countryIt,AttributeType=S \
@@ -374,11 +362,6 @@ aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
         AttributeName=productLotZone,KeyType=RANGE \
     --provisioned-throughput \
         ReadCapacityUnits=5,WriteCapacityUnits=5 \
-
-aws  --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
-    dynamodb put-item \
-    --table-name CapDynamoTable  \
-    --item '{"author": {"S": "PN-PAPER-CHANNEL"}, "cap": {"S": "35031"}, "city": {"S": "Abano Terme"}}'
 
 aws  --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     dynamodb put-item \

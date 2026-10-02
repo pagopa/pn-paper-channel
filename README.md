@@ -195,7 +195,6 @@ OpenAPI:
 | `AWS_DYNAMODBDELIVERYDRIVERTABLE`                       | ENV            | Nome tabella               | Tabella delivery driver legacy (`DeliveryDriverDynamoTableName`).                         |
 | `AWS_DYNAMODBCOSTTABLE`                                 | ENV            | Nome tabella               | Tabella costi legacy (`CostDynamoTableName`).                                             |
 | `AWS_DYNAMODBZONETABLE`                                 | ENV            | Nome tabella               | Tabella zone (`ZoneDynamoTableName`).                                                     |
-| `AWS_DYNAMODBCAPTABLE`                                  | ENV            | Nome tabella               | Tabella CAP (`CapDynamoTableName`).                                                       |
 | `AWS_DYNAMODBDELIVERYFILETABLE`                         | ENV            | Nome tabella               | Tabella file delivery (`DeliveryFileDynamoTableName`).                                    |
 | `AWS_DYNAMODBPAPERREQUESTERRORTABLE`                    | ENV            | Nome tabella               | Tabella errori richiesta (`PaperRequestErrorTableName`).                                  |
 | `AWS_DYNAMODBPAPEREVENTSTABLE`                          | ENV            | Nome tabella               | Tabella eventi paper (`PaperEventsTableName`).                                            |
@@ -243,7 +242,6 @@ OpenAPI:
 | `DeliveryDriverDynamoTableName`                         | CloudFormation | Nome tabella               | Nome tabella delivery driver legacy.                                                      |
 | `CostDynamoTableName`                                   | CloudFormation | Nome tabella               | Nome tabella cost legacy.                                                                 |
 | `ZoneDynamoTableName`                                   | CloudFormation | Nome tabella               | Nome tabella zone.                                                                        |
-| `CapDynamoTableName`                                    | CloudFormation | Nome tabella               | Nome tabella CAP.                                                                         |
 | `PaperRequestErrorTableName`                            | CloudFormation | Nome tabella               | Nome tabella errori request.                                                              |
 | `ClientDynamoTableName`                                 | CloudFormation | Nome tabella               | Nome tabella client.                                                                      |
 | `PaperEventsTableName`                                  | CloudFormation | Nome tabella               | Nome tabella eventi paper.                                                                |

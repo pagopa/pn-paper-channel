@@ -321,30 +321,6 @@ Resources:
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: true
 
-  CapDynamoTable:
-    Type: AWS::DynamoDB::Table
-    UpdateReplacePolicy: Retain
-    DeletionPolicy: Retain 
-    Properties:
-      TableName: !Sub '${ProjectName}-PaperCap'
-      AttributeDefinitions:
-        - AttributeName: "author"
-          AttributeType: "S"
-        - AttributeName: "cap"
-          AttributeType: "S"
-      KeySchema:
-        - AttributeName: "author"
-          KeyType: "HASH"
-        - AttributeName: "cap"
-          KeyType: "RANGE"
-      KinesisStreamSpecification:
-        StreamArn: !Ref CdcKinesisSourceStreamArn
-      StreamSpecification:
-        StreamViewType: NEW_IMAGE
-      BillingMode: "PAY_PER_REQUEST"
-      PointInTimeRecoverySpecification:
-        PointInTimeRecoveryEnabled: true
-
   DeliveryFileDynamoTable:
     Type: AWS::DynamoDB::Table
     UpdateReplacePolicy: Retain
@@ -739,14 +715,6 @@ Outputs:
   ZoneDynamoTableArn:
     Description: ARN of dynamodb table containing zone
     Value: !Sub '${ZoneDynamoTable.Arn}'
-
-  CapDynamoTableName:
-    Description: Name of dynamodb table containing cap
-    Value: !Ref CapDynamoTable
-
-  CapDynamoTableArn:
-    Description: ARN of dynamodb table containing cap
-    Value: !Sub '${CapDynamoTable.Arn}'
 
   PaperEventErrorDynamoTableName:
     Description: Name of dynamodb table containing event errors
