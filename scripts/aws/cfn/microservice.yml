@@ -265,14 +265,6 @@ Parameters:
     Type: String
     Description: 'ARN of dynamodb table containing zone'
 
-  CapDynamoTableName:
-    Type: String
-    Description: 'Name of dynamodb table containing cap'
-
-  CapDynamoTableArn:
-    Type: String
-    Description: 'ARN of dynamodb table containing cap'
-
   PaperRequestErrorTableName:
     Type: String
     Description: 'Name of dynamodb table containing request error'
@@ -758,7 +750,7 @@ Resources:
         ContainerEnvEntry11: !Sub 'AWS_DYNAMODBDELIVERYDRIVERTABLE=${DeliveryDriverDynamoTableName}'
         ContainerEnvEntry12: !Sub 'AWS_DYNAMODBCOSTTABLE=${CostDynamoTableName}'
         ContainerEnvEntry13: !Sub 'AWS_DYNAMODBZONETABLE=${ZoneDynamoTableName}'
-        ContainerEnvEntry14: !Sub 'AWS_DYNAMODBCAPTABLE=${CapDynamoTableName}'
+        ContainerEnvEntry14: !Sub 'PN_PAPERCHANNEL_QUEUEREGIONOCRINPUTS=${PaperChannelOcrInputsQueueRegion}'
         ContainerEnvEntry15: !Sub 'AWS_DYNAMODBDELIVERYFILETABLE=${DeliveryFileDynamoTableName}'
         ContainerEnvEntry16: !Sub 'AWS_DYNAMODBPAPERREQUESTERRORTABLE=${PaperRequestErrorTableName}'
         ContainerEnvEntry17: !Sub 'AWS_DYNAMODBPAPEREVENTSTABLE=${PaperEventsTableName}'
@@ -824,7 +816,6 @@ Resources:
         ContainerEnvEntry78: !Sub 'PN_PAPERCHANNEL_ENABLERETRYCON996=${EnableRetryCon996}'
         ContainerEnvEntry79: !Sub 'PN_PAPERCHANNEL_ENABLETRUNCATEDDATEFORREFINEMENTCHECK=${EnableTruncatedDateForRefinementCheck}'
         ContainerEnvEntry80: !Sub 'PN_PAPERCHANNEL_QUEUEURLOCRINPUTS=${PaperChannelOcrInputsQueueURL}'
-        ContainerEnvEntry81: !Sub 'PN_PAPERCHANNEL_QUEUEREGIONOCRINPUTS=${PaperChannelOcrInputsQueueRegion}'
         ApplicativeEnvFileChecksum: !Ref ApplicativeEnvFileChecksum
         ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-PaperChannel-Secrets
@@ -917,8 +908,6 @@ Resources:
               - !Sub "${CostDynamoTableArn}/*"
               - !Sub "${ZoneDynamoTableArn}"
               - !Sub "${ZoneDynamoTableArn}/*"
-              - !Sub "${CapDynamoTableArn}"
-              - !Sub "${CapDynamoTableArn}/*"
               - !Sub "${PaperRequestErrorTableArn}"
               - !Sub "${PaperRequestErrorTableArn}/*"
               - !Sub "${PaperEventsTableArn}"
@@ -1017,9 +1006,7 @@ Resources:
           - ','
           - - !Ref PaperEventsTableName
             - !Ref PaperRequestErrorTableName
-            - !Ref CapDynamoTableName
             - !Ref ZoneDynamoTableName
-            - !Ref CapDynamoTableName
             - !Ref CostDynamoTableName
             - !Ref DeliveryDriverDynamoTableName
             - !Ref TenderDynamoTableName
