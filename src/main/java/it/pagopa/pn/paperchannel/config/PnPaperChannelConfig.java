@@ -77,7 +77,6 @@ public class PnPaperChannelConfig {
     private boolean sendCon020;
     private boolean enableRetryCon996;
     private boolean enabledocfilterruleengine;
-    private boolean enableSimplifiedTenderFlow;
     private List<String> allowedRedriveProgressStatusCodes;
     private List<String> SendProgressMeta;
     private String costRoundingMode;

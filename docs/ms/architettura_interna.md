@@ -24,7 +24,6 @@ flowchart TD
 | Componente                                                            | Responsabilità                                                                                                                   | Fonte                                                                                                                |
 |-----------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|
 | API private orchestratore (`paper-channel-private`)                   | Espone le API di preparazione, invio, retry e verifica indirizzo del flusso paper verso i sistemi orchestranti SEND.             | `docs/openapi/api-internal-v1.yaml`, `scripts/aws/cfn/microservice.yml`                                              |
-| API backoffice (`paper-channel-bo`)                                   | Espone le API di gestione tender, recapitisti e costi (CRUD e consultazione) per il dominio backoffice paper.                    | `docs/openapi/pn-paper-channel-v1.yaml`, `scripts/aws/cfn/microservice.yml`                                          |
 | Client REST `pn-national-registry`                                    | Effettua lookup/validazione indirizzi destinatario nei flussi di preparazione e controllo indirizzo.                             | `docs/openapi/national-registry/pn-national-registry-api-v1.yaml`, `docs/openapi/national-registry/remote-refs.yaml` |
 | Client REST `pn-external-channel`                                     | Invia richieste di recapito cartaceo e integra gli aggiornamenti di stato del ciclo di consegna.                                 | `docs/openapi/external-channel/pn-external-channel.yaml`, `docs/openapi/external-channel/schemas-paper-v1.yaml`      |
 | Client REST `pn-safe-storage`                                         | Gestisce upload/cifratura documenti e metadati necessari al ciclo di vita della comunicazione cartacea.                          | `docs/openapi/pn-safe-storage/pn-safestorage-v1-api.yaml`, `docs/openapi/pn-safe-storage/`                           |
@@ -229,7 +228,6 @@ La tabella `RequestDeliveryDynamoTable` (parametro `RequestDeliveryDynamoTableNa
 | `pn.paper-channel.enabledocfilterruleengine`                  | `PN_PAPERCHANNEL_ENABLEDOCFILTERRULEENGINE`             | Abilita il motore di filtro documenti.                     |
 | `pn.paper-channel.sendCon020`                                 | `PN_PAPERCHANNEL_SENDCON020`                            | Abilita invio messaggi CON020 a delivery push.             |
 | `pn.paper-channel.radd-coverage-search-mode`                  | `PN_PAPERCHANNEL_RADDCOVERAGESEARCHMODE`                | Modalità ricerca copertura RADD.                           |
-| `pn.paper-channel.enable-simplified-tender-flow`              | `PN_PAPERCHANNEL_ENABLESIMPLIFIEDTENDERFLOW`            | Feature flag flusso tender semplificato.                   |
 | `pn.paper-channel.prepare-two-phases`                         | `PN_PAPERCHANNEL_PREPARETWOPHASES`                      | Feature flag prepare a due fasi.                           |
 | `pn.paper-channel.enable-prepare-phase-one`                   | `PN_PAPERCHANNEL_ENABLEPREPAREPHASEONE`                 | Feature flag consumer fase 1 prepare.                      |
 | `pn.paper-channel.paper-tracker-enabled`                      | `PN_PAPERCHANNEL_PAPERTRACKERENABLED`                   | Abilita Paper Tracker.                                     |
@@ -245,7 +243,6 @@ Il microservizio espone metriche e log operativi attraverso le risorse CloudWatc
 | Area                          | File                                                                                            |
 |-------------------------------|-------------------------------------------------------------------------------------------------|
 | API private orchestratore     | `docs/openapi/api-internal-v1.yaml`                                                             |
-| API backoffice                | `docs/openapi/pn-paper-channel-v1.yaml`                                                         |
 | Consumer richieste analogiche | `src/main/java/it/pagopa/pn/paperchannel/middleware/queue/consumer/QueueListener.java`          |
 | Elaborazione preparazione     | `src/main/java/it/pagopa/pn/paperchannel/service/impl/PrepareAsyncServiceImpl.java`             |
 | Elaborazione invio            | `src/main/java/it/pagopa/pn/paperchannel/service/impl/PaperChannelServiceImpl.java`             |

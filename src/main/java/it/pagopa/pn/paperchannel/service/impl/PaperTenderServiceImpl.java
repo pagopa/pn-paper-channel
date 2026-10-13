@@ -1,8 +1,6 @@
 package it.pagopa.pn.paperchannel.service.impl;
 
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
-import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.CostDTO;
-import it.pagopa.pn.paperchannel.mapper.CostMapper;
 import it.pagopa.pn.paperchannel.mapper.PnPaperChannelCostMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.*;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnPaperChannelTender;
@@ -25,24 +23,6 @@ public class PaperTenderServiceImpl implements PaperTenderService {
     private final PnPaperCostDAO pnPaperCostDAO;
     private final PnPaperTenderDAO pnPaperTenderDAO;
     private final PnPaperGeoKeyDAO pnPaperGeoKeyDAO;
-    private final TenderDAO tenderDAO;
-    private final CostDAO costDAO;
-    private final ZoneDAO zoneDAO;
-
-    @Override
-    public Mono<CostDTO> getCostFrom(String cap, String zone, String productType){
-        String processName = "Get Cost From";
-        log.logStartingProcess(processName);
-        return this.tenderDAO.findActiveTender()
-                .switchIfEmpty(Mono.error(new PnGenericException(ACTIVE_TENDER_NOT_FOUND, ACTIVE_TENDER_NOT_FOUND.getMessage())))
-                .flatMap(tender -> costDAO.getByCapOrZoneAndProductType(tender.getTenderCode(), cap, zone, productType)
-                        .switchIfEmpty(Mono.error(new PnGenericException(COST_DRIVER_OR_FSU_NOT_FOUND, COST_DRIVER_OR_FSU_NOT_FOUND.getMessage())))
-                        .map(paperCost -> {
-                            log.logEndingProcess(processName);
-                            return CostMapper.toCostDTO(paperCost);
-                        })
-                );
-    }
 
     /**
      * Retrieve the cost based on a specific tenderId, geokey and productType
@@ -95,16 +75,5 @@ public class PaperTenderServiceImpl implements PaperTenderService {
                             return PnPaperChannelCostMapper.toDTO(tender, paperCost);
                         })
                 );
-    }
-
-    @Override
-    public Mono<String> getZoneFromCountry(String country) {
-        String processName = "Get Zone From Country";
-        log.logStartingProcess(processName);
-        return zoneDAO.getByCountry(country)
-                .map(pnZone -> {
-                    log.logEndingProcess(processName);
-                    return pnZone.getZone();
-                });
     }
 }

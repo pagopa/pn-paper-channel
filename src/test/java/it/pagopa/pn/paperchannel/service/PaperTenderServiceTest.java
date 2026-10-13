@@ -1,7 +1,6 @@
 package it.pagopa.pn.paperchannel.service;
 
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
-import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.CostDTO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.*;
 import it.pagopa.pn.paperchannel.middleware.db.entities.*;
 import it.pagopa.pn.paperchannel.model.PnPaperChannelCostDTO;
@@ -26,65 +25,12 @@ class PaperTenderServiceTest {
     @InjectMocks
     private PaperTenderServiceImpl paperTenderService;
     @Mock
-    private ZoneDAO zoneDAO;
-    @Mock
-    private CostDAO costDAO;
-    @Mock
-    private TenderDAO tenderDAO;
-    @Mock
     private PnPaperTenderDAO pnPaperTenderDAO;
     @Mock
     private PnPaperGeoKeyDAO pnPaperGeoKeyDAO;
     @Mock
     private PnPaperCostDAO pnPaperCostDAO;
-    private PnTender tender;
-    private PnCost cost;
 
-
-    @Test
-    void whenCallGetCostWithoutActiveTenderThenReturnErrorTest(){
-        when(tenderDAO.findActiveTender()).thenReturn(Mono.empty());
-        StepVerifier.create(this.paperTenderService.getCostFrom(null, "ZONE_1", "AR"))
-                .expectErrorMatches(ex -> {
-                    assertInstanceOf(PnGenericException.class, ex);
-                    assertEquals(ACTIVE_TENDER_NOT_FOUND, ((PnGenericException) ex).getExceptionType());
-                    return true;
-                }).verify();
-    }
-
-    @Test
-    void whenCallGetCostFromTenderAndCapNotExistReturnErrorTest(){
-        mockTender();
-        when(costDAO.getByCapOrZoneAndProductType(tender.getTenderCode(), "89321", null, "AR"))
-                        .thenReturn(Mono.empty());
-        StepVerifier.create(this.paperTenderService.getCostFrom("89321", null, "AR"))
-                .expectErrorMatches((ex) -> {
-                    assertInstanceOf(PnGenericException.class, ex);
-                    assertEquals(COST_DRIVER_OR_FSU_NOT_FOUND, ((PnGenericException) ex).getExceptionType());
-                    return true;
-                }).verify();
-    }
-
-    @Test
-    void whenCallGetCostFromTenderAndZoneReturnCostDTOTest(){
-        mockTender();
-        mockCost();
-        CostDTO costDTO = this.paperTenderService.getCostFrom(null, cost.getZone(), cost.getProductType()).block();
-        assertNotNull(costDTO);
-        assertEquals(cost.getUuid(), costDTO.getUid());
-        assertEquals(cost.getCap(), costDTO.getCap());
-        assertEquals(cost.getBasePrice(), costDTO.getPrice());
-        assertEquals(cost.getPagePrice(), costDTO.getPriceAdditional());
-        assertEquals(cost.getProductType(), costDTO.getProductType().getValue());
-    }
-
-    @Test
-    void getZoneFromCountryTest(){
-        mockZone();
-        String zone = this.paperTenderService.getZoneFromCountry("Germany").block();
-        assertNotNull(zone);
-        assertEquals("ZONE_1", zone);
-    }
 
     @Test
     void getSimplifiedCost_shouldReturnPnPaperChannelCostDTO_whenValidInputsAreProvided() {
@@ -141,6 +87,63 @@ class PaperTenderServiceTest {
         verify(pnPaperTenderDAO, times(1)).getActiveTender();
         verify(pnPaperGeoKeyDAO, never()).getGeoKey(anyString(), anyString(), anyString());
         verify(pnPaperCostDAO, never()).getCostByTenderIdProductLotZone(anyString(), anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void getSimplifiedCost_shouldThrowException_whenGeokeyNotFound() {
+        PnPaperChannelTender mockTender = mockPnPaperTender();
+        String geokey = "00100";
+        String productType = "AR";
+
+        when(pnPaperTenderDAO.getActiveTender()).thenReturn(Mono.just(mockTender));
+        when(pnPaperGeoKeyDAO.getGeoKey(mockTender.getTenderId(), productType, geokey)).thenReturn(Mono.empty());
+
+        StepVerifier.create(paperTenderService.getSimplifiedCost(geokey, productType))
+                .expectErrorMatches(ex -> ex instanceof PnGenericException pnEx
+                        && pnEx.getExceptionType() == GEOKEY_NOT_FOUND)
+                .verify();
+
+        verify(pnPaperCostDAO, never()).getCostByTenderIdProductLotZone(anyString(), anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void getSimplifiedCost_shouldThrowException_whenCostNotFound() {
+        PnPaperChannelTender mockTender = mockPnPaperTender();
+        PnPaperChannelGeoKey mockGeoKey = mockPnPaperGeokey();
+
+        when(pnPaperTenderDAO.getActiveTender()).thenReturn(Mono.just(mockTender));
+        when(pnPaperGeoKeyDAO.getGeoKey(mockTender.getTenderId(), mockGeoKey.getProduct(), mockGeoKey.getGeokey()))
+                .thenReturn(Mono.just(mockGeoKey));
+        when(pnPaperCostDAO.getCostByTenderIdProductLotZone(mockTender.getTenderId(), mockGeoKey.getProduct(), mockGeoKey.getLot(), mockGeoKey.getZone()))
+                .thenReturn(Mono.empty());
+
+        StepVerifier.create(paperTenderService.getSimplifiedCost(mockGeoKey.getGeokey(), mockGeoKey.getProduct()))
+                .expectErrorMatches(ex -> ex instanceof PnGenericException pnEx
+                        && pnEx.getExceptionType() == COST_DRIVER_OR_FSU_NOT_FOUND)
+                .verify();
+    }
+
+    @Test
+    void getSimplifiedCost_shouldUseUncoveredLot_whenGeokeyIsNotCovered() {
+        PnPaperChannelTender mockTender = mockPnPaperTender();
+        PnPaperChannelGeoKey mockGeoKey = mockPnPaperGeokey();
+        mockGeoKey.setCoverFlag(false);
+        PnPaperChannelCost mockPaperCost = new PnPaperChannelCost(mockTender.getTenderId(), mockGeoKey.getProduct(), "UNCOVERED", mockGeoKey.getZone());
+        mockPaperCost.setDeliveryDriverId("DELIVERY_ID");
+
+        when(pnPaperTenderDAO.getActiveTender()).thenReturn(Mono.just(mockTender));
+        when(pnPaperGeoKeyDAO.getGeoKey(mockTender.getTenderId(), mockGeoKey.getProduct(), mockGeoKey.getGeokey()))
+                .thenReturn(Mono.just(mockGeoKey));
+        when(pnPaperCostDAO.getCostByTenderIdProductLotZone(mockTender.getTenderId(), mockGeoKey.getProduct(), "UNCOVERED", mockGeoKey.getZone()))
+                .thenReturn(Mono.just(mockPaperCost));
+
+        StepVerifier.create(paperTenderService.getSimplifiedCost(mockGeoKey.getGeokey(), mockGeoKey.getProduct()))
+                .assertNext(dto -> {
+                    assertEquals(mockTender.getTenderId(), dto.getTenderId());
+                    assertEquals("UNCOVERED", dto.getLot());
+                    assertEquals("DELIVERY_ID", dto.getDeliveryDriverId());
+                })
+                .verifyComplete();
     }
 
     @Test
@@ -337,35 +340,5 @@ class PaperTenderServiceTest {
         mockCost.setDematerializationCost(BigDecimal.valueOf(0.90));
         mockCost.setCreatedAt(Instant.now());
         return mockCost;
-    }
-
-    private void mockZone() {
-        PnZone zone = new PnZone();
-        zone.setZone("ZONE_1");
-        zone.setCountryEn("Germany");
-        zone.setCountryIt("Germania");
-        when(zoneDAO.getByCountry("Germany")).thenReturn(Mono.just(zone));
-    }
-
-    private void mockTender() {
-        tender = new PnTender();
-        tender.setStatus("IN_PROGRESS");
-        tender.setTenderCode("CODE_TENDER");
-        when(tenderDAO.findActiveTender()).thenReturn(Mono.just(tender));
-    }
-
-    private void mockCost(){
-        cost = new PnCost();
-        cost.setFsu(false);
-        cost.setCap(null);
-        cost.setProductType("AR");
-        cost.setPagePrice(BigDecimal.valueOf(1.23F));
-        cost.setUuid("COST_UUID");
-        cost.setZone("ZONE_1");
-        cost.setBasePrice(BigDecimal.valueOf(1.43F));
-        cost.setDeliveryDriverCode("DRIVER");
-        cost.setTenderCode(tender.getTenderCode());
-        when(costDAO.getByCapOrZoneAndProductType(tender.getTenderCode(),  null, cost.getZone(), cost.getProductType()))
-                .thenReturn(Mono.just(cost));
     }
 }

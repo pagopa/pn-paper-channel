@@ -1,12 +1,10 @@
 package it.pagopa.pn.paperchannel.utils;
 
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
-import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.CostDTO;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ShipmentCalculateRequest;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ShipmentCalculateResponse;
 import it.pagopa.pn.paperchannel.model.PnPaperChannelCostDTO;
 import it.pagopa.pn.paperchannel.utils.config.CostRoundingModeConfig;
-import it.pagopa.pn.paperchannel.utils.costutils.CostRanges;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ProductTypeEnum;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.model.AttachmentInfo;
@@ -35,21 +33,9 @@ public class PaperCalculatorUtils {
 
     public Mono<CostWithDriver> calculator(List<AttachmentInfo> attachments, Address address, ProductTypeEnum productType, boolean isReversePrinter){
         boolean isNational = Utility.isNational(address.getCountry());
-
-        if(pnPaperChannelConfig.isEnableSimplifiedTenderFlow()) {
-            log.info("SimplifiedTenderFlow");
-            String geokey = (isNational) ? address.getCap() : address.getCountry();
-            return paperTenderService.getSimplifiedCost(geokey, productType.getValue())
-                    .map(contract -> getSimplifiedCostWithDriver(contract, attachments, productType.getValue(), isReversePrinter));
-        }
-        log.info("OldTenderFlow");
-
-        if (StringUtils.isNotBlank(address.getCap()) && isNational) {
-            return getAmount(attachments, address.getCap(), null, getProductType(address, productType), isReversePrinter)
-                    .map(item -> item);
-        }
-        return paperTenderService.getZoneFromCountry(address.getCountry())
-                .flatMap(zone -> getAmount(attachments,null, zone, getProductType(address, productType), isReversePrinter).map(item -> item));
+        String geokey = (isNational) ? address.getCap() : address.getCountry();
+        return paperTenderService.getSimplifiedCost(geokey, productType.getValue())
+                .map(contract -> getSimplifiedCostWithDriver(contract, attachments, productType.getValue(), isReversePrinter));
     }
 
     /**
@@ -91,27 +77,6 @@ public class PaperCalculatorUtils {
     }
 
     /**
-     * Algoritmo del calcolo del costo per modalità COMPLETE:
-     * <b>${prezzo base scaglione di peso} + ( (${numero di pagine}-1) * ${prezzo pagina aggiuntiva} )</b>
-     *
-     * @param attachments lista di allegati della notifica
-     * @param cap di spedizione (null se la spedizione è estera)
-     * @param zone eventuale zona recuperata dalla country (è valorizzato a null se è presente un CAP ed è italiano)
-     * @param productType tipo di prodotto (AR, 890, etc)
-     * @param isReversePrinter true, se il printType della request della SEND è di tipo BN_FRONTE_RETRO
-     *
-     * @return calcolo del costo della notifica con le informazioni del recapitista
-     */
-    private Mono<CostWithDriver> getAmount(List<AttachmentInfo> attachments, String cap, String zone, String productType, boolean isReversePrinter){
-        String processName = "Get Amount";
-        log.logStartingProcess(processName);
-
-        return paperTenderService.getCostFrom(cap, zone, productType)
-                .map(contract -> getCostWithDriver(contract, attachments, isReversePrinter))
-                .doOnNext(totalCost -> log.logEndingProcess(processName));
-    }
-
-    /**
      * Retrieve the notification cost with the driver information
      *
      * @param contract          contract from which costs are calculated
@@ -134,43 +99,6 @@ public class PaperCalculatorUtils {
                 .driverCode(contract.getDeliveryDriverId())
                 .tenderCode(contract.getTenderId())
                 .build();
-    }
-
-    /**
-     * Retrieve the notification cost with the driver information
-     *
-     * @param contract          contract from which costs are calculated
-     * @param attachments       notification attachments for which calculate pages and costs
-     * @param isReversePrinter  true if print with BN_FRONTE_RETRO
-     *
-     * @return                  the amount cost of notification with driver information
-     * */
-    private CostWithDriver getCostWithDriver(CostDTO contract, List<AttachmentInfo> attachments, boolean isReversePrinter) {
-        ChargeCalculationModeEnum calculationModeEnum = chargeCalculationModeUtils.getChargeCalculationMode();
-        log.debug("calculationMode found: {}", calculationModeEnum);
-
-        BigDecimal amount = calculationModeEnum.equals(ChargeCalculationModeEnum.AAR)
-                ? contract.getPrice()
-                : getPriceForCOMPLETEMode(attachments, contract, isReversePrinter);
-
-        return CostWithDriver.builder()
-                .cost(amount)
-                .driverCode(contract.getDriverCode())
-                .tenderCode(contract.getTenderCode())
-                .build();
-    }
-
-    private BigDecimal getPriceForCOMPLETEMode(List<AttachmentInfo> attachments, CostDTO costDTO, boolean isReversePrinter){
-        Integer totPagesIgnoringAAR = getNumberOfPages(attachments, isReversePrinter, false);
-        Integer totPages = getNumberOfPages(attachments, isReversePrinter, true);
-        int totPagesWight = getLetterWeight(totPages, pnPaperChannelConfig.getPaperWeight(), pnPaperChannelConfig.getLetterWeight());
-
-        BigDecimal basePriceForWeight = CostRanges.getBasePriceForWeight(costDTO, totPagesWight);
-        BigDecimal priceTotPages = costDTO.getPriceAdditional().multiply(BigDecimal.valueOf(totPagesIgnoringAAR));
-        BigDecimal completedPrice = basePriceForWeight.add(priceTotPages);
-        log.info("Calculating cost COMPLETE mode, totPages={}, totPagesWight={}, basePriceForWeight={}, priceTotPages={}, completedPrice={}, costDTO: {}",
-                totPages, totPagesWight, basePriceForWeight, priceTotPages, completedPrice, costDTO);
-        return completedPrice;
     }
 
     private BigDecimal getSimplifiedPriceForCOMPLETEMode(List<AttachmentInfo> attachments, PnPaperChannelCostDTO costDTO, String productType,  boolean isReversePrinter) {
@@ -231,28 +159,6 @@ public class PaperCalculatorUtils {
             if (isReversePrinter) numberOfPages = (int) Math.ceil(((double) attachment.getNumberOfPage())/2);
             return (!includeAAR && StringUtils.equals(attachment.getDocumentType(), Const.PN_AAR)) ? numberOfPages-1 : numberOfPages;
         }).reduce(0, Integer::sum);
-    }
-
-    protected String getProductType(Address address, ProductTypeEnum productTypeEnum){
-        String productType = "";
-        boolean isNational = Utility.isNational(address.getCountry());
-
-        if (StringUtils.isNotBlank(address.getCap()) && isNational) {
-            if (productTypeEnum.equals(ProductTypeEnum.AR)) {
-                productType = RACCOMANDATA_AR;
-            } else if (productTypeEnum.equals(ProductTypeEnum.RS)){
-                productType = RACCOMANDATA_SEMPLICE;
-            } else if (productTypeEnum.equals(ProductTypeEnum._890)){
-                productType = RACCOMANDATA_890;
-            }
-        } else {
-            if (productTypeEnum.equals(ProductTypeEnum.RIR) || productTypeEnum.equals(ProductTypeEnum._890)) {
-                productType = RACCOMANDATA_AR;
-            } else if (productTypeEnum.equals(ProductTypeEnum.RIS)){
-                productType = RACCOMANDATA_SEMPLICE;
-            }
-        }
-        return productType;
     }
 
     public String getProposalProductType(Address address, String productType){
