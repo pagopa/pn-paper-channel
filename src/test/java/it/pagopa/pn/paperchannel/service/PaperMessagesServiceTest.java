@@ -597,7 +597,7 @@ class PaperMessagesServiceTest {
         Mockito.when(requestDeliveryDAO.getByRequestIdStrongConsistency("TST-IOR.2332", false))
                 .thenReturn(Mono.just(request));
 
-        Mockito.when(paperTenderService.getCostFrom(Mockito.any(), Mockito.any(), Mockito.any()))
+        Mockito.when(paperTenderService.getSimplifiedCost(Mockito.any(), Mockito.any()))
             .thenReturn(Mono.just(getNationalCost()));
 
         SendRequest sendRequest = getRequest("TST-IOR.2332");
@@ -651,7 +651,7 @@ class PaperMessagesServiceTest {
                 .thenReturn(Mono.just(request));
 
         //MOCK RETRIEVE NATIONAL COST
-        Mockito.when(paperTenderService.getCostFrom(Mockito.any(), Mockito.any(), Mockito.any()))
+        Mockito.when(paperTenderService.getSimplifiedCost(Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(getNationalCost()));
 
         Mockito.when(dateChargeCalculationModesUtils.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.AAR);
@@ -682,7 +682,7 @@ class PaperMessagesServiceTest {
                 .thenReturn(Mono.just(request));
 
         //MOCK RETRIEVE NATIONAL COST
-        Mockito.when(paperTenderService.getCostFrom(Mockito.any(), Mockito.any(), Mockito.any()))
+        Mockito.when(paperTenderService.getSimplifiedCost(Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(getNationalCost()));
 
         Mockito.when(dateChargeCalculationModesUtils.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.AAR);
@@ -810,7 +810,7 @@ class PaperMessagesServiceTest {
         AnalogAddress receiverAddress = new AnalogAddress();
         receiverAddress.setCap("00100");
         sendRequest.setReceiverAddress(receiverAddress);
-        PnPaperChannelCostDTO pnPaperChannelCostDTO = new PnPaperChannelCostDTO();
+        PnPaperChannelCostDTO pnPaperChannelCostDTO = getNationalCost();
         pnPaperChannelCostDTO.setDeliveryDriverId("driver1");
 
         when(paperTenderService.getSimplifiedCost(any(), any())).thenReturn(Mono.just(pnPaperChannelCostDTO));
@@ -860,7 +860,7 @@ class PaperMessagesServiceTest {
                 .thenReturn(Mono.error(new PnGenericException(EXTERNAL_CHANNEL_API_EXCEPTION, EXTERNAL_CHANNEL_API_EXCEPTION.getMessage())));
 
         //MOCK RETRIEVE NATIONAL COST
-        Mockito.when(paperTenderService.getCostFrom(Mockito.any(), Mockito.any(), Mockito.any()))
+        Mockito.when(paperTenderService.getSimplifiedCost(Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(getNationalCost()));
 
         Mockito.when(dateChargeCalculationModesUtils.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.AAR);
@@ -909,19 +909,15 @@ class PaperMessagesServiceTest {
         Mockito.when(requestDeliveryDAO.updateDataWithoutGet(Mockito.any(), Mockito.eq(false)))
                 .thenReturn(Mono.just(request));
 
-        //MOCK RETRIEVE ZONE FROM COUNTRY
-        Mockito.when(paperTenderService.getZoneFromCountry(Mockito.any()))
-                .thenReturn(Mono.just("ZONE_1"));
-
         //MOCK RETRIEVE INTERNATIONAL COST
-        Mockito.when(paperTenderService.getCostFrom(Mockito.any(), Mockito.any(), Mockito.any()))
+        Mockito.when(paperTenderService.getSimplifiedCost(Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(getInternationalCost()));
 
         Mockito.when(dateChargeCalculationModesUtils.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.AAR);
 
         StepVerifier.create(paperMessagesService.executionPaper("TST-IOR.2332", sendRequest))
                 .expectNextMatches((response) -> {
-                    // price 1 and additionalPrice 2 getNationalCost()
+                    // basePriceAR 2.23 from getInternationalCost() (AAR mode)
                     // attachments 1 and number of page 3
                     assertEquals(223,response.getAmount());
                     assertEquals(3, response.getNumberOfPages());
@@ -950,14 +946,14 @@ class PaperMessagesServiceTest {
 
         Mockito.when(addressDAO.create(Mockito.any())).thenReturn(Mono.just(new PnAddress()));
 
-        Mockito.when(paperTenderService.getCostFrom(Mockito.any(), Mockito.any(), Mockito.any()))
+        Mockito.when(paperTenderService.getSimplifiedCost(Mockito.any(), Mockito.any()))
                 .thenReturn(Mono.just(getNationalCost()));
 
         Mockito.when(dateChargeCalculationModesUtils.getChargeCalculationMode()).thenReturn(ChargeCalculationModeEnum.AAR);
 
         StepVerifier.create(paperMessagesService.executionPaper("TST-IOR.2332", getRequest("TST-IOR.2332")))
                 .expectNextMatches((response) -> {
-                    // price 1 and additionalPrice 2 getNationalCost()
+                    // basePriceAR 1.00 from getNationalCost() (AAR mode)
                     // attachments 1 and number of page 3
                     assertEquals(100,response.getAmount());
                     assertEquals(3, response.getNumberOfPages());
@@ -1139,21 +1135,19 @@ class PaperMessagesServiceTest {
         return deliveryRequest;
     }
 
-    private CostDTO getNationalCost() {
-        CostDTO dto = new CostDTO();
-        dto.setPrice(BigDecimal.valueOf(1.00));
-        dto.setPriceAdditional(BigDecimal.valueOf(2.00));
-        dto.setDriverCode("driverCode");
-        dto.setTenderCode("tenderCode");
-        return dto;
+    private PnPaperChannelCostDTO getNationalCost() {
+        return getPaperChannelCost(BigDecimal.valueOf(1.00));
     }
 
-    private CostDTO getInternationalCost() {
-        CostDTO dto = new CostDTO();
-        dto.setPrice(BigDecimal.valueOf(2.23));
-        dto.setPriceAdditional(BigDecimal.valueOf(1.97));
-        dto.setDriverCode("driverCode");
-        dto.setTenderCode("tenderCode");
+    private PnPaperChannelCostDTO getInternationalCost() {
+        return getPaperChannelCost(BigDecimal.valueOf(2.23));
+    }
+
+    private PnPaperChannelCostDTO getPaperChannelCost(BigDecimal basePriceAR) {
+        PnPaperChannelCostDTO dto = new PnPaperChannelCostDTO();
+        dto.setBasePriceAR(basePriceAR);
+        dto.setDeliveryDriverId("driverCode");
+        dto.setTenderId("tenderCode");
         return dto;
     }
 

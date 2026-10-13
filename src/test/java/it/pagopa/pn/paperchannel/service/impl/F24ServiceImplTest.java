@@ -7,7 +7,6 @@ import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnf24.v1.dto.NumberO
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnf24.v1.dto.RequestAcceptedDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileDownloadInfoDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnsafestorage.v1.dto.FileDownloadResponseDto;
-import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.CostDTO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
@@ -15,6 +14,8 @@ import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
 import it.pagopa.pn.paperchannel.middleware.msclient.F24Client;
 import it.pagopa.pn.paperchannel.model.Address;
+import it.pagopa.pn.paperchannel.model.PnPaperChannelCostDTO;
+import it.pagopa.pn.paperchannel.model.PnPaperChannelRangeDTO;
 import it.pagopa.pn.paperchannel.model.StatusDeliveryEnum;
 import it.pagopa.pn.paperchannel.service.*;
 import it.pagopa.pn.paperchannel.utils.*;
@@ -173,7 +174,7 @@ class F24ServiceImplTest {
 
         Mockito.when(f24Client.preparePDF(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.nullable(Integer.class))).thenReturn(Mono.just(new RequestAcceptedDto()));
 
-        Mockito.when(paperTenderService.getCostFrom(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(Mono.just(getNationalCost()));
+        Mockito.when(paperTenderService.getSimplifiedCost(Mockito.any(), Mockito.any())).thenReturn(Mono.just(getNationalCost()));
 
         PnDeliveryRequest res = f24Service.preparePDF(pnDeliveryRequest).block();
 
@@ -357,17 +358,33 @@ class F24ServiceImplTest {
         return pnAddress;
     }
 
-    private CostDTO getNationalCost() {
-        CostDTO dto = new CostDTO();
-        dto.setPrice(BigDecimal.valueOf(1.00));
-        dto.setPrice50(BigDecimal.valueOf(2.00));
-        dto.setPrice100(BigDecimal.valueOf(3.00));
-        dto.setPrice250(BigDecimal.valueOf(4.00));
-        dto.setPrice350(BigDecimal.valueOf(5.00));
-        dto.setPrice1000(BigDecimal.valueOf(6.00));
-        dto.setPrice2000(BigDecimal.valueOf(7.00));
-        dto.setPriceAdditional(BigDecimal.valueOf(2.00));
+    /*
+     * AAR mode: cost = basePriceAR (1.00).
+     * COMPLETE mode (no VAT/fee/dematerialization): cost = rangePrice(weight) + basePriceAR + pagePrice * (pages - 1)
+     */
+    private PnPaperChannelCostDTO getNationalCost() {
+        PnPaperChannelCostDTO dto = new PnPaperChannelCostDTO();
+        dto.setTenderId("tenderCode");
+        dto.setDeliveryDriverId("driverCode");
+        dto.setBasePriceAR(BigDecimal.valueOf(1.00));
+        dto.setPagePrice(BigDecimal.valueOf(2.00));
+        dto.setDematerializationCost(BigDecimal.ZERO);
+        dto.setFee(BigDecimal.ZERO);
+        dto.setVat(0);
+        dto.setNonDeductibleVat(0);
+        dto.setRangedCosts(List.of(
+                getRange(0, 50, 1.00),
+                getRange(51, 250, 3.00),
+                getRange(251, 2000, 5.00)));
         return dto;
+    }
+
+    private PnPaperChannelRangeDTO getRange(int minWeight, int maxWeight, double cost) {
+        PnPaperChannelRangeDTO range = new PnPaperChannelRangeDTO();
+        range.setMinWeight(minWeight);
+        range.setMaxWeight(maxWeight);
+        range.setCost(BigDecimal.valueOf(cost));
+        return range;
     }
 
     private FileDownloadResponseDto getFileDownloadDTOResponse(String documentType) {

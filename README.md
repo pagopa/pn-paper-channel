@@ -95,20 +95,6 @@ sequenceDiagram
 | API   | IN  | pn-orchestratore     | REST        | GET     | `/paper-channel-private/v1/b2b/pc-retry/{requestId}`                       | Verifica disponibilità retry su delivery fallito                                |
 | API   | IN  | pn-orchestratore     | REST        | GET     | `/paper-channel-private/v1/{requestId}/check-address`                      | Verifica validità indirizzo con data di scadenza                                |
 | API   | IN  | pn-orchestratore     | REST        | PUT     | `/paper-channel-private/v1/rework/{requestId}/init`                        | Invalidazione timeline e ripresa elaborazione con rework                        |
-| API   | IN  | Backoffice PA        | REST        | GET     | `/paper-channel-bo/v1/tenders`                                             | Elenco gare d'appalto con paginazione                                           |
-| API   | IN  | Backoffice PA        | REST        | GET     | `/paper-channel-bo/v1/tenders/{tenderCode}`                                | Dettagli gara specifica                                                         |
-| API   | IN  | Backoffice PA        | REST        | POST    | `/paper-channel-bo/v1/tender`                                              | Creazione o modifica gara                                                       |
-| API   | IN  | Backoffice PA        | REST        | PUT     | `/paper-channel-bo/v1/tender/{tenderCode}`                                 | Aggiornamento stato gara                                                        |
-| API   | IN  | Backoffice PA        | REST        | DELETE  | `/paper-channel-bo/v1/tender/{tenderCode}`                                 | Eliminazione gara                                                               |
-| API   | IN  | Backoffice PA        | REST        | GET     | `/paper-channel-bo/v1/deliveries-drivers/{tenderCode}`                     | Elenco recapitisti per gara con paginazione                                     |
-| API   | IN  | Backoffice PA        | REST        | GET     | `/paper-channel-bo/v1/deliveries-drivers/{tenderCode}/detail/{driverId}`   | Dettagli recapitista specifico                                                  |
-| API   | IN  | Backoffice PA        | REST        | GET     | `/paper-channel-bo/v1/deliveries-drivers/{tenderCode}/fsu`                 | Dettagli FSU (Fornitore di Servizi Universali)                                  |
-| API   | IN  | Backoffice PA        | REST        | POST    | `/paper-channel-bo/v1/delivery-driver/{tenderCode}`                        | Creazione o modifica recapitista                                                |
-| API   | IN  | Backoffice PA        | REST        | DELETE  | `/paper-channel-bo/v1/{tenderCode}/delivery-driver/{deliveryDriverId}`     | Eliminazione recapitista                                                        |
-| API   | IN  | Backoffice PA        | REST        | POST    | `/paper-channel-bo/v1/{tenderCode}/delivery-driver/{driverId}/cost`        | Creazione o modifica fascia tariffaria                                          |
-| API   | IN  | Backoffice PA        | REST        | GET     | `/paper-channel-bo/v1/{tenderCode}/delivery-driver/{driverId}/get-cost`    | Elenco tariffe per recapitista/gara con paginazione                             |
-| API   | IN  | Backoffice PA        | REST        | DELETE  | `/paper-channel-bo/v1/{tenderCode}/delivery-driver/{driverId}/cost/{uuid}` | Eliminazione tariffe                                                            |
-| API   | IN  | Backoffice PA        | REST        | GET     | `/paper-channel-bo/v1/delivery-tender/file-download`                       | Download dati gare/recapitisti in formato file                                  |
 | API   | IN  | pn-orchestratore     | REST        | GET     | `/status`                                                                  | Health check del servizio                                                       |
 | EVENT | OUT | pn-orchestratore     | SQS         | PRODUCE | Queue configurata da client (X-Pagopa-Extch-CxId)                          | Aggiornamenti stato spedizione (PrepareEvent, SendEvent, PaperChannelUpdate)    |
 | API   | OUT | pn-national-registry | REST        | GET     | `/api/v1/addresses/*`                                                      | Lookup indirizzo destinatario                                                   |
@@ -118,7 +104,6 @@ sequenceDiagram
 
 OpenAPI:
 
-* [pn-paper-channel-v1.yaml](docs/openapi/pn-paper-channel-v1.yaml) — API backoffice gare
 * [api-internal-v1.yaml](docs/openapi/api-internal-v1.yaml) — API private orchestratore
 * [external-channel/pn-external-channel.yaml](docs/openapi/external-channel/pn-external-channel.yaml) — Integrazioni canale esterno
 * [national-registry/pn-national-registry-api-v1.yaml](docs/openapi/national-registry/pn-national-registry-api-v1.yaml) — Registro indirizzi
@@ -175,7 +160,6 @@ OpenAPI:
 | `PN_PAPERCHANNEL_DATECHARGECALCULATIONMODES`            | ENV            | Lista `timestamp;mode`     | Configurazione modalità calcolo costo (`DateChargeCalculationModes`).                     |
 | `PN_PAPERCHANNEL_REQUIREDDEMATS`                        | ENV            | CSV codici demat           | Eventi demat obbligatori (`RequiredDemats`).                                              |
 | `PN_PAPERCHANNEL_COMPLEXREFINEMENTCODES`                | ENV            | CSV codici                 | Codici con flusso refinement legacy (`ComplexRefinementCodes`).                           |
-| `PN_PAPERCHANNEL_ENABLESIMPLIFIEDTENDERFLOW`            | ENV            | `true/false`               | Feature flag tender semplificato (`EnableSimplifiedTenderFlow`).                          |
 | `PN_PAPERCHANNEL_SENDPROGRESSMETA`                      | ENV            | Enum                       | Feature flag metadati progress (`SendProgressMeta`).                                      |
 | `PN_PAPERCHANNEL_COSTROUNDINGMODE`                      | ENV            | `HALF_UP` / `UP`           | Regola arrotondamento costi (`CostRoundingMode`).                                         |
 | `PN_PAPERCHANNEL_SENDCON020`                            | ENV            | `true/false`               | Abilita invio messaggi CON020 (`SendCon020`).                                             |
@@ -191,12 +175,6 @@ OpenAPI:
 | `PN_PAPERCHANNEL_RADDCOVERAGESEARCHMODE`                | ENV            | Valore da SSM              | Modalità ricerca copertura RADD (`/config/radd-coverage/search-mode`).                    |
 | `AWS_DYNAMODBREQUESTDELIVERYTABLE`                      | ENV            | Nome tabella               | Tabella richieste delivery (`RequestDeliveryDynamoTableName`).                            |
 | `AWS_DYNAMODBADDRESSTABLE`                              | ENV            | Nome tabella               | Tabella indirizzi (`AddressDynamoTableName`).                                             |
-| `AWS_DYNAMODBTENDERTABLE`                               | ENV            | Nome tabella               | Tabella tender legacy (`TenderDynamoTableName`).                                          |
-| `AWS_DYNAMODBDELIVERYDRIVERTABLE`                       | ENV            | Nome tabella               | Tabella delivery driver legacy (`DeliveryDriverDynamoTableName`).                         |
-| `AWS_DYNAMODBCOSTTABLE`                                 | ENV            | Nome tabella               | Tabella costi legacy (`CostDynamoTableName`).                                             |
-| `AWS_DYNAMODBZONETABLE`                                 | ENV            | Nome tabella               | Tabella zone (`ZoneDynamoTableName`).                                                     |
-| `AWS_DYNAMODBCAPTABLE`                                  | ENV            | Nome tabella               | Tabella CAP (`CapDynamoTableName`).                                                       |
-| `AWS_DYNAMODBDELIVERYFILETABLE`                         | ENV            | Nome tabella               | Tabella file delivery (`DeliveryFileDynamoTableName`).                                    |
 | `AWS_DYNAMODBPAPERREQUESTERRORTABLE`                    | ENV            | Nome tabella               | Tabella errori richiesta (`PaperRequestErrorTableName`).                                  |
 | `AWS_DYNAMODBPAPEREVENTSTABLE`                          | ENV            | Nome tabella               | Tabella eventi paper (`PaperEventsTableName`).                                            |
 | `AWS_DYNAMODBCLIENTTABLE`                               | ENV            | Nome tabella               | Tabella client (`ClientDynamoTableName`).                                                 |
@@ -237,13 +215,7 @@ OpenAPI:
 | `LetterWeight`                                          | CloudFormation | Stringa                    | Peso lettera.                                                                             |
 | `RetryStatus`                                           | CloudFormation | Stringa                    | Stato retry.                                                                              |
 | `RequestDeliveryDynamoTableName`                        | CloudFormation | Nome tabella               | Nome tabella request delivery.                                                            |
-| `DeliveryFileDynamoTableName`                           | CloudFormation | Nome tabella               | Nome tabella delivery file.                                                               |
 | `AddressDynamoTableName`                                | CloudFormation | Nome tabella               | Nome tabella address.                                                                     |
-| `TenderDynamoTableName`                                 | CloudFormation | Nome tabella               | Nome tabella tender legacy.                                                               |
-| `DeliveryDriverDynamoTableName`                         | CloudFormation | Nome tabella               | Nome tabella delivery driver legacy.                                                      |
-| `CostDynamoTableName`                                   | CloudFormation | Nome tabella               | Nome tabella cost legacy.                                                                 |
-| `ZoneDynamoTableName`                                   | CloudFormation | Nome tabella               | Nome tabella zone.                                                                        |
-| `CapDynamoTableName`                                    | CloudFormation | Nome tabella               | Nome tabella CAP.                                                                         |
 | `PaperRequestErrorTableName`                            | CloudFormation | Nome tabella               | Nome tabella errori request.                                                              |
 | `ClientDynamoTableName`                                 | CloudFormation | Nome tabella               | Nome tabella client.                                                                      |
 | `PaperEventsTableName`                                  | CloudFormation | Nome tabella               | Nome tabella eventi paper.                                                                |
@@ -260,7 +232,6 @@ OpenAPI:
 | `DateChargeCalculationModes`                            | CloudFormation | Stringa                    | Modalità calcolo charge.                                                                  |
 | `RequiredDemats`                                        | CloudFormation | CSV codici                 | Demat obbligatori.                                                                        |
 | `ComplexRefinementCodes`                                | CloudFormation | CSV codici                 | Codici refinement complessi.                                                              |
-| `EnableSimplifiedTenderFlow`                            | CloudFormation | `true/false`               | Abilita tender flow semplificato.                                                         |
 | `SendProgressMeta`                                      | CloudFormation | Enum                       | Feature flag SendProgressMeta.                                                            |
 | `CostRoundingMode`                                      | CloudFormation | `HALF_UP` / `UP`           | Modalità arrotondamento costi.                                                            |
 | `RequestPaIdOverride`                                   | CloudFormation | Stringa                    | Override della partita IVA/RequestPAId.                                                   |
@@ -290,10 +261,8 @@ OpenAPI:
 | Tipo      | Nome                                                          | Descrizione                                                                                                             |
 |-----------|---------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------|
 | ALARM     | `FatalLogsMetricAlarmArn`                                     | Allarme log fatali del microservizio ECS `PaperChannelMicroservice`.                                                    |
-| ALARM     | `RestApiErrorAlarmArn`                                        | Allarme errori API Gateway esposta da `PaperChannelGatewayDeliveryDriver`.                                              |
-| ALARM     | `RestApiLatencyAlarmArn`                                      | Allarme latenza API Gateway esposta da `PaperChannelGatewayDeliveryDriver`.                                             |
 | ALARM     | `PaperRequestErrorAlarm.Arn`                                  | Allarme CloudWatch su metrica `PNPaperErrorRequest` (resource `PaperRequestErrorAlarm`).                                |
-| DASHBOARD | `PaperChannelMicroserviceCloudWatchDashboard`                 | Dashboard CloudWatch del microservizio; aggrega metriche e allarmi di ECS, API Gateway, DynamoDB, code SQS e log group. |
+| DASHBOARD | `PaperChannelMicroserviceCloudWatchDashboard`                 | Dashboard CloudWatch del microservizio; aggrega metriche e allarmi di ECS, DynamoDB, code SQS e log group.              |
 | LOG       | `EcsLogGroup`                                                 | Log group ECS del microservizio `pn-paper-channel`, usato per log applicativi e tracciamento MDC.                       |
 
 ---

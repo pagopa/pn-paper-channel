@@ -217,14 +217,6 @@ Parameters:
     Type: String
     Description: 'ARN of dynamodb table containing request'
 
-  DeliveryFileDynamoTableName:
-    Type: String
-    Description: 'Name of dynamodb table containing file request'
-
-  DeliveryFileDynamoTableArn:
-    Type: String
-    Description: 'ARN of dynamodb table containing file request'
-
   AddressDynamoTableName:
     Type: String
     Description: 'Name of dynamodb table containing address of request delivery'
@@ -232,46 +224,6 @@ Parameters:
   AddressDynamoTableArn:
     Type: String
     Description: 'ARN of dynamodb table containing address of request delivery'
-
-  TenderDynamoTableName:
-    Type: String
-    Description: 'Name of dynamodb table containing tenders'
-
-  TenderDynamoTableArn:
-    Type: String
-    Description: 'ARN of dynamodb table containing tenders'
-
-  DeliveryDriverDynamoTableName:
-    Type: String
-    Description: 'Name of dynamodb table containing delivery drivers'
-
-  DeliveryDriverDynamoTableArn:
-    Type: String
-    Description: 'ARN of dynamodb table containing delivery drivers'
-
-  CostDynamoTableName:
-    Type: String
-    Description: 'Name of dynamodb table containing cost'
-
-  CostDynamoTableArn:
-    Type: String
-    Description: 'ARN of dynamodb table containing cost'
-
-  ZoneDynamoTableName:
-    Type: String
-    Description: 'Name of dynamodb table containing zone'
-
-  ZoneDynamoTableArn:
-    Type: String
-    Description: 'ARN of dynamodb table containing zone'
-
-  CapDynamoTableName:
-    Type: String
-    Description: 'Name of dynamodb table containing cap'
-
-  CapDynamoTableArn:
-    Type: String
-    Description: 'ARN of dynamodb table containing cap'
 
   PaperRequestErrorTableName:
     Type: String
@@ -398,11 +350,6 @@ Parameters:
     Type: String
     Default: 'RECAG005C,RECAG006C,RECAG007C'
     Description: 'Variable that defines all the 890 codes that must be managed using old complex flow'
-
-  EnableSimplifiedTenderFlow:
-    Type: String
-    Description: 'Variable that defines whether to enable the new tender workflow'
-    Default: 'false'
 
   SendProgressMeta:
       Type: String
@@ -754,12 +701,12 @@ Resources:
         ContainerEnvEntry7: !Sub 'PN_PAPERCHANNEL_XPAGOPAEXTCHCXID=${XPagopaExtchCxId}'
         ContainerEnvEntry8: !Sub 'AWS_DYNAMODBREQUESTDELIVERYTABLE=${RequestDeliveryDynamoTableName}'
         ContainerEnvEntry9: !Sub 'AWS_DYNAMODBADDRESSTABLE=${AddressDynamoTableName}'
-        ContainerEnvEntry10: !Sub 'AWS_DYNAMODBTENDERTABLE=${TenderDynamoTableName}'
-        ContainerEnvEntry11: !Sub 'AWS_DYNAMODBDELIVERYDRIVERTABLE=${DeliveryDriverDynamoTableName}'
-        ContainerEnvEntry12: !Sub 'AWS_DYNAMODBCOSTTABLE=${CostDynamoTableName}'
-        ContainerEnvEntry13: !Sub 'AWS_DYNAMODBZONETABLE=${ZoneDynamoTableName}'
-        ContainerEnvEntry14: !Sub 'AWS_DYNAMODBCAPTABLE=${CapDynamoTableName}'
-        ContainerEnvEntry15: !Sub 'AWS_DYNAMODBDELIVERYFILETABLE=${DeliveryFileDynamoTableName}'
+        ContainerEnvEntry10: !Sub 'PN_PAPERCHANNEL_QUEUEPAPERCHANNELTODELAYER=${PaperChannelToDelayerQueueName}'
+        ContainerEnvEntry11: !Sub 'PN_PAPERCHANNEL_QUEUEDELAYERTOPAPERCHANNEL=${DelayerToPaperChannelQueueName}'
+        ContainerEnvEntry12: !Sub 'PN_PAPERCHANNEL_COMPIUTAGIACENZAARDURATION=${CompiutaGiacenzaArDuration}'
+        ContainerEnvEntry13: !Sub 'PN_PAPERCHANNEL_ENABLERETRYCON996=${EnableRetryCon996}'
+        ContainerEnvEntry14: !Sub 'PN_PAPERCHANNEL_QUEUEREGIONOCRINPUTS=${PaperChannelOcrInputsQueueRegion}'
+        ContainerEnvEntry15: !Sub 'PN_PAPERCHANNEL_ENABLETRUNCATEDDATEFORREFINEMENTCHECK=${EnableTruncatedDateForRefinementCheck}'
         ContainerEnvEntry16: !Sub 'AWS_DYNAMODBPAPERREQUESTERRORTABLE=${PaperRequestErrorTableName}'
         ContainerEnvEntry17: !Sub 'AWS_DYNAMODBPAPEREVENTSTABLE=${PaperEventsTableName}'
         ContainerEnvEntry18: !Sub 'AWS_DYNAMODBCLIENTTABLE=${ClientDynamoTableName}'
@@ -810,7 +757,7 @@ Resources:
         ContainerEnvEntry64: !Sub 'AWS_DYNAMODBPAPERCHANNELDELIVERYDRIVERTABLE=${PaperChannelDeliveryDriverDynamoTableName}'
         ContainerEnvEntry65: !Sub 'AWS_DYNAMODBPAPERCHANNELCOSTTABLE=${PaperChannelCostDynamoTableName}'
         ContainerEnvEntry66: !Sub 'PN_PAPERCHANNEL_COMPLEXREFINEMENTCODES=${ComplexRefinementCodes}'
-        ContainerEnvEntry67: !Sub 'PN_PAPERCHANNEL_ENABLESIMPLIFIEDTENDERFLOW=${EnableSimplifiedTenderFlow}'
+        ContainerEnvEntry67: !Sub 'PN_PAPERCHANNEL_QUEUEURLOCRINPUTS=${PaperChannelOcrInputsQueueURL}'
         ContainerEnvEntry68: !Sub 'PN_CRON_ANALYZER=${PnCronAnalyzer}'
         ContainerEnvEntry69: !Sub 'WIRE_TAP_LOG=${WireTapLogActivation}'
         ContainerEnvEntry70: !Sub 'PN_PAPERCHANNEL_SENDPROGRESSMETA=${SendProgressMeta}'
@@ -818,17 +765,10 @@ Resources:
         ContainerEnvEntry72: !Sub 'PN_PAPERCHANNEL_SENDCON020=${SendCon020}'
         ContainerEnvEntry73: !Sub 'PN_PAPERCHANNEL_ENABLEPREPAREPHASEONE=${EnablePreparePhaseOne}'
         ContainerEnvEntry74: !Sub 'PN_PAPERCHANNEL_QUEUENORMALIZEADDRESS=${PaperNormalizeAddressQueueName}'
-        ContainerEnvEntry75: !Sub 'PN_PAPERCHANNEL_QUEUEPAPERCHANNELTODELAYER=${PaperChannelToDelayerQueueName}'
-        ContainerEnvEntry76: !Sub 'PN_PAPERCHANNEL_QUEUEDELAYERTOPAPERCHANNEL=${DelayerToPaperChannelQueueName}'
-        ContainerEnvEntry77: !Sub 'PN_PAPERCHANNEL_COMPIUTAGIACENZAARDURATION=${CompiutaGiacenzaArDuration}'
-        ContainerEnvEntry78: !Sub 'PN_PAPERCHANNEL_ENABLERETRYCON996=${EnableRetryCon996}'
-        ContainerEnvEntry79: !Sub 'PN_PAPERCHANNEL_ENABLETRUNCATEDDATEFORREFINEMENTCHECK=${EnableTruncatedDateForRefinementCheck}'
-        ContainerEnvEntry80: !Sub 'PN_PAPERCHANNEL_QUEUEURLOCRINPUTS=${PaperChannelOcrInputsQueueURL}'
-        ContainerEnvEntry81: !Sub 'PN_PAPERCHANNEL_QUEUEREGIONOCRINPUTS=${PaperChannelOcrInputsQueueRegion}'
         ApplicativeEnvFileChecksum: !Ref ApplicativeEnvFileChecksum
         ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-PaperChannel-Secrets
-        MappedPaths: '/paper-channel-bo/*,/paper-channel-private/*'
+        MappedPaths: '/paper-channel-private/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref VpcEgressSubnetsIds
         VpcId: !Ref VpcId
@@ -905,20 +845,8 @@ Resources:
             Resource:
               - !Sub "${RequestDeliveryDynamoTableArn}"
               - !Sub "${RequestDeliveryDynamoTableArn}/*"
-              - !Sub "${DeliveryFileDynamoTableArn}"
-              - !Sub "${DeliveryFileDynamoTableArn}/*"
               - !Sub "${AddressDynamoTableArn}"
               - !Sub "${AddressDynamoTableArn}/*"
-              - !Sub "${TenderDynamoTableArn}"
-              - !Sub "${TenderDynamoTableArn}/*"
-              - !Sub "${DeliveryDriverDynamoTableArn}"
-              - !Sub "${DeliveryDriverDynamoTableArn}/*"
-              - !Sub "${CostDynamoTableArn}"
-              - !Sub "${CostDynamoTableArn}/*"
-              - !Sub "${ZoneDynamoTableArn}"
-              - !Sub "${ZoneDynamoTableArn}/*"
-              - !Sub "${CapDynamoTableArn}"
-              - !Sub "${CapDynamoTableArn}/*"
               - !Sub "${PaperRequestErrorTableArn}"
               - !Sub "${PaperRequestErrorTableArn}/*"
               - !Sub "${PaperEventsTableArn}"
@@ -1017,30 +945,15 @@ Resources:
           - ','
           - - !Ref PaperEventsTableName
             - !Ref PaperRequestErrorTableName
-            - !Ref CapDynamoTableName
-            - !Ref ZoneDynamoTableName
-            - !Ref CapDynamoTableName
-            - !Ref CostDynamoTableName
-            - !Ref DeliveryDriverDynamoTableName
-            - !Ref TenderDynamoTableName
-            - !Ref DeliveryFileDynamoTableName
             - !Ref RequestDeliveryDynamoTableName
             - !Ref PaperEventErrorDynamoTableArn
             - !Ref PaperChannelTenderDynamoTableArn
             - !Ref PaperChannelGeokeyDynamoTableArn
             - !Ref PaperChannelDeliveryDriverDynamoTableArn
             - !Ref PaperChannelCostDynamoTableArn
-        RestApiStageArns: !Join
-          - ','
-          - - !GetAtt PaperChannelGatewayDeliveryDriver.Outputs.RestApiStageArn
-        RestApiNames: !Join
-          - ','
-          - - !GetAtt PaperChannelGatewayDeliveryDriver.Outputs.RestApiName
         AlarmArns: !Join
           - ','
           - - !GetAtt PaperChannelMicroservice.Outputs.FatalLogsMetricAlarmArn
-            - !GetAtt PaperChannelGatewayDeliveryDriver.Outputs.RestApiErrorAlarmArn
-            - !GetAtt PaperChannelGatewayDeliveryDriver.Outputs.RestApiLatencyAlarmArn
             - !GetAtt PaperRequestErrorAlarm.Arn
         QueueArns: !Join
           - ','
@@ -1128,33 +1041,6 @@ Resources:
                   - !Sub "${PaperChannelGeokeyDynamoTableArn}"
                   - !Sub "${PaperChannelDeliveryDriverDynamoTableArn}"
                   - !Sub "${PaperChannelCostDynamoTableArn}"
-
-  PaperChannelGatewayDeliveryDriver:
-    Type: AWS::CloudFormation::Stack
-    Properties:
-      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/api-gw-expose-service.yaml"
-      Parameters:
-        MicroServiceUniqueName: !Sub '${ProjectName}-paper-channel-bo'
-        IntendedUsage: BACKOFFICE
-        DnsName: !Ref WebApiDnsName
-        ProjectName: !Ref ProjectName
-        ServiceApiPath: 'paper-channel-bo'
-        NetworkLoadBalancerLink: !Ref NetworkLoadBalancerLink
-        ApplicationLoadBalancerDomain: !Ref ApplicationLoadBalancerDomain
-        AlarmSNSTopicArn: !Ref AlarmSNSTopicArn
-        CloudwatchLogKinesisStreamArn: !Ref LogsKinesisSourceStreamArn
-        OpenApiBucketName: !Ref MicroserviceBucketName
-        OpenApiBucketKey: !Sub ${MicroserviceBucketBaseKey}/docs/openapi/pn-paper-channel-v1.yaml
-
-  PaperChannelGatewayDeliveryDriverWaf:
-    Type: AWS::CloudFormation::Stack
-    Properties:
-      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/api-gw-waf-acl.yaml"
-      Parameters:
-        WAFName: !Sub '${ProjectName}-paper-channel-bo'
-        IntendedUsage: BACKOFFICE
-        APIGatewayARNs: !GetAtt PaperChannelGatewayDeliveryDriver.Outputs.APIGatewayARN
-        AlarmSNSTopicArn: !Ref AlarmSNSTopicArn
 
   PaperRequestErrorAlarm:
     Type: AWS::CloudWatch::Alarm

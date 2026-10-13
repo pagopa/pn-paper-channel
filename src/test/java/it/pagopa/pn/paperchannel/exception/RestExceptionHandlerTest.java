@@ -81,27 +81,6 @@ class RestExceptionHandlerTest {
                 .block();
     }
 
-    @Test
-    void handlePnInputValidatorExcelExceptionTest(){
-        List<PnExcelValidatorException.ErrorCell> errors = new ArrayList<>();
-        errors.add(new PnExcelValidatorException.ErrorCell(0, 1, "CAP", INVALID_CAP_FSU.getMessage()));
-        PnExcelValidatorException pnExcelValidatorException = new PnExcelValidatorException(INVALID_CAP_FSU, errors);
-
-        restExceptionHandler.handlePnInputValidatorException(pnExcelValidatorException)
-                .map(responseEntity -> {
-                    Assertions.assertEquals(INVALID_CAP_FSU.getTitle(), responseEntity.getBody().getTitle());
-                    Assertions.assertEquals(INVALID_CAP_FSU.getMessage(), responseEntity.getBody().getDetail());
-                    Assertions.assertEquals(HttpStatus.BAD_REQUEST.value(), responseEntity.getStatusCode().value());
-
-                    Assertions.assertEquals("0", responseEntity.getBody().getErrors().get(0).getCode());
-                    Assertions.assertEquals("1", responseEntity.getBody().getErrors().get(0).getDetail());
-                    Assertions.assertEquals(INVALID_CAP_FSU.getMessage(), responseEntity.getBody().getErrors().get(0).getElement());
-                    return Mono.empty();
-                })
-                .block();
-    }
-
-
     private void initialize() {
         restExceptionHandler = new PnResponseEntityExceptionHandlerActivation(new ExceptionHelper(Optional.empty()));
     }

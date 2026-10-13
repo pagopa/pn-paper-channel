@@ -231,41 +231,6 @@
                         </configuration>
                     </execution>
                     <execution>
-                        <id>generate-paper-channel-api</id>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                        <phase>generate-resources</phase>
-                        <configuration>
-                            <inputSpec>${project.basedir}/docs/openapi/pn-paper-channel-v1.yaml</inputSpec>
-                            <generatorName>spring</generatorName>
-                            <library>spring-boot</library>
-                            <generateApiDocumentation>false</generateApiDocumentation>
-                            <generateApiTests>false</generateApiTests>
-                            <generateModelTests>false</generateModelTests>
-                            <schemaMappings>
-                                Pageable=org.springframework.data.domain.Pageable
-                            </schemaMappings>
-<!--                            <templateDirectory>${project.build.directory}/dependency-resources/scripts/openapi/templates/5.4.0/server</templateDirectory>-->
-                            <configOptions>
-                                <useSpringBoot3>true</useSpringBoot3>
-                                <dateLibrary>java11</dateLibrary>
-                                <delegatePattern>true</delegatePattern>
-                                <interfaceOnly>true</interfaceOnly>
-                                <annotationLibrary>none</annotationLibrary>
-                                <documentationProvider>source</documentationProvider>
-                                <openApiNullable>false</openApiNullable>
-                                <reactive>true</reactive>
-                                <skipDefaultInterface>false</skipDefaultInterface>
-                                <useTags>true</useTags>
-                                <basePackage>${project.groupId}.paperchannel.generated.openapi.server.v1</basePackage>
-                                <modelPackage>${project.groupId}.paperchannel.generated.openapi.server.v1.dto</modelPackage>
-                                <apiPackage>${project.groupId}.paperchannel.generated.openapi.server.v1.api</apiPackage>
-                                <configPackage>${project.groupId}.paperchannel.generated.openapi.server.v1.config</configPackage>
-                            </configOptions>
-                        </configuration>
-                    </execution>
-                    <execution>
                         <id>generate-client-pn-safe-storage</id>
                         <goals>
                             <goal>generate</goal>
