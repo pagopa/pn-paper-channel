@@ -45,7 +45,7 @@ class ExternalChannelClientImplTest {
         inizialize();
     }
     @Test
-    void sendEngageRequest() {
+    void sendEngageRequestUsesSenderPaIdWhenFeatureFlagRequestPaIdAsSelfcareTokenIsEnabled() {
         AttachmentInfo attachmentInfo = new AttachmentInfo();
         attachmentInfo.setDocumentType(PN_AAR);
         attachmentInfo.setFileKey("safestorage://PN_AAR-0002-GR7Z-3UBM-81QT-1QWV?docTag=AAR");
@@ -56,6 +56,7 @@ class ExternalChannelClientImplTest {
         ArgumentCaptor<PaperEngageRequestDto> caturedSPaperEngageRequestDto = ArgumentCaptor.forClass(PaperEngageRequestDto.class);
 
         Mockito.when(pnPaperChannelConfig.getXPagopaExtchCxId()).thenReturn("cxid");
+        Mockito.when(pnPaperChannelConfig.isRequestPaIdAsSelfcareToken()).thenReturn(Boolean.TRUE);
         Mockito.when(paperMessagesApi.sendPaperEngageRequest(caturedSRequestId.capture(), caturedSCxId.capture(), caturedSPaperEngageRequestDto.capture())).thenReturn(Mono.empty());
 
         externalChannelClient.sendEngageRequest(sendRequest, List.of(attachmentInfo), null).block();
@@ -67,9 +68,32 @@ class ExternalChannelClientImplTest {
         Assertions.assertEquals("safestorage://PN_AAR-0002-GR7Z-3UBM-81QT-1QWV", dto.getAttachments().get(0).getUri());
         Assertions.assertEquals("cxid", cxid);
         Assertions.assertEquals(sendRequest.getRequestId(), reqId);
+        Assertions.assertEquals(sendRequest.getSenderPaId(), dto.getRequestPaId());
         Assertions.assertNull(dto.getApplyRasterization());
     }
 
+    @Test
+    void sendEngageRequestUsesRequestPaIdWhenFeatureFlagRequestPaIdAsSelfcareTokenIsDisabled() {
+        AttachmentInfo attachmentInfo = new AttachmentInfo();
+        attachmentInfo.setDocumentType(PN_AAR);
+        attachmentInfo.setFileKey("safestorage://PN_AAR-0002-GR7Z-3UBM-81QT-1QWV?docTag=AAR");
+        attachmentInfo.setSha256("234567890");
+
+        ArgumentCaptor<String> caturedSRequestId = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> caturedSCxId = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<PaperEngageRequestDto> caturedSPaperEngageRequestDto = ArgumentCaptor.forClass(PaperEngageRequestDto.class);
+
+        Mockito.when(pnPaperChannelConfig.getXPagopaExtchCxId()).thenReturn("cxid");
+        Mockito.when(pnPaperChannelConfig.isRequestPaIdAsSelfcareToken()).thenReturn(Boolean.FALSE);
+        Mockito.when(paperMessagesApi.sendPaperEngageRequest(caturedSRequestId.capture(), caturedSCxId.capture(), caturedSPaperEngageRequestDto.capture())).thenReturn(Mono.empty());
+
+        externalChannelClient.sendEngageRequest(sendRequest, List.of(attachmentInfo), null).block();
+
+        PaperEngageRequestDto dto = caturedSPaperEngageRequestDto.getValue();
+        Assertions.assertEquals(sendRequest.getRequestPaId(), dto.getRequestPaId());
+    }
+
+    @Test
     void sendEngageRequestApplyRasterizatonTrue() {
         AttachmentInfo attachmentInfo = new AttachmentInfo();
         attachmentInfo.setDocumentType(PN_AAR);
@@ -81,6 +105,7 @@ class ExternalChannelClientImplTest {
         ArgumentCaptor<PaperEngageRequestDto> caturedSPaperEngageRequestDto = ArgumentCaptor.forClass(PaperEngageRequestDto.class);
 
         Mockito.when(pnPaperChannelConfig.getXPagopaExtchCxId()).thenReturn("cxid");
+        Mockito.when(pnPaperChannelConfig.isRequestPaIdAsSelfcareToken()).thenReturn(Boolean.TRUE);
         Mockito.when(paperMessagesApi.sendPaperEngageRequest(caturedSRequestId.capture(), caturedSCxId.capture(), caturedSPaperEngageRequestDto.capture())).thenReturn(Mono.empty());
 
         externalChannelClient.sendEngageRequest(sendRequest, List.of(attachmentInfo), Boolean.TRUE).block();
@@ -92,6 +117,7 @@ class ExternalChannelClientImplTest {
         Assertions.assertEquals("safestorage://PN_AAR-0002-GR7Z-3UBM-81QT-1QWV", dto.getAttachments().get(0).getUri());
         Assertions.assertEquals("cxid", cxid);
         Assertions.assertEquals(sendRequest.getRequestId(), reqId);
+        Assertions.assertEquals(sendRequest.getSenderPaId(), dto.getRequestPaId());
         Assertions.assertNotNull(dto.getApplyRasterization());
         Assertions.assertTrue(dto.getApplyRasterization());
 
@@ -119,6 +145,7 @@ class ExternalChannelClientImplTest {
         sendRequest.setPrintType("PT");
         sendRequest.setIun("iun");
         sendRequest.setRequestPaId("FFPAPERTEST.IUN_FATY-FATY-2023041520230302-101111.RECINDEX_0");
+        sendRequest.setSenderPaId("senderPaId");
         sendRequest.setAttachmentUrls(attachmentUrls);
         sendRequest.setReceiverAddress(analogAddress);
         sendRequest.setSenderAddress(analogAddress);
