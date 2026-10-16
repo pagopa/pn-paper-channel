@@ -84,6 +84,7 @@ public class PnPaperChannelConfig {
     private boolean enableTruncatedDateForRefinementCheck;
     private boolean enableOcr;
     private List<String> paperTrackerProductList = new ArrayList<>();
+    private boolean requestPaIdAsSelfcareToken;
 
     /**
      * Per l'errore PNADDR001 flusso NR: True se il failureDetailCode D01 deve essere mandato a delivery push (specificando anche l'indirizzo),

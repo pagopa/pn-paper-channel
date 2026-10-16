@@ -68,6 +68,7 @@ class ExternalChannelClientTest  extends BaseTest.WithMockServer {
         sendRequest.setPrintType("PT");
         sendRequest.setIun("iun");
         sendRequest.setRequestPaId("FFPAPERTEST.IUN_FATY-FATY-2023041520230302-101111.RECINDEX_0");
+        sendRequest.setSenderPaId("senderPaId");
         sendRequest.setAttachmentUrls(attachmentUrls);
         sendRequest.setReceiverAddress(analogAddress);
         sendRequest.setSenderAddress(analogAddress);
