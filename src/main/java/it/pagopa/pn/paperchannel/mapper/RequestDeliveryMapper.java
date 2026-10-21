@@ -42,6 +42,7 @@ public class RequestDeliveryMapper {
             return pnAttachmentInfo;
         }).toList());
         entity.setSenderPriority(request.getSenderPriority());
+        entity.setReceiverAddressSourceType(request.getReceiverAddressSourceType());
 
         return entity;
     }

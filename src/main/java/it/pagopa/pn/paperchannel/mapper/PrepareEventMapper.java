@@ -35,6 +35,8 @@ public class PrepareEventMapper {
         entityEvent.setStatusDetail(request.getStatusCode());
         entityEvent.setProductType(request.getProductType());
         entityEvent.setStatusDateTime((DateUtils.parseStringTOInstant(request.getStatusDate())));
+        entityEvent.setReceiverAddressSourceType(request.getReceiverAddressSourceType() != null ?
+                ReceiverAddressSourceTypeEnum.valueOf(request.getReceiverAddressSourceType()) : null);
         return entityEvent;
     }
 
@@ -53,6 +55,9 @@ public class PrepareEventMapper {
             enrichWithReplacedF24AttachmentUrls(deliveryRequest, entityEvent);
 
             enrichWithCategorizedAttachmentResults(deliveryRequest, entityEvent);
+
+            entityEvent.setReceiverAddressSourceType(deliveryRequest.getReceiverAddressSourceType() != null ?
+                    ReceiverAddressSourceTypeEnum.valueOf(deliveryRequest.getReceiverAddressSourceType()) : null);
         }
         return entityEvent;
     }
