@@ -176,62 +176,63 @@ La tabella `RequestDeliveryDynamoTable` (parametro `RequestDeliveryDynamoTableNa
 
 ## Configurazioni funzionali coinvolte
 
-| Proprietà applicativa                                         | Variabile ambiente                                      | Descrizione                                                |
-|---------------------------------------------------------------|---------------------------------------------------------|------------------------------------------------------------|
-| `pn.paper-channel.client-safe-storage-basepath`               | `PN_PAPERCHANNEL_CLIENTSAFESTORAGEBASEPATH`             | Base URL SafeStorage per upload/download documenti.        |
-| `pn.paper-channel.client-national-registries-basepath`        | `PN_PAPERCHANNEL_CLIENTNATIONALREGISTRIESBASEPATH`      | Base URL National Registry per lookup indirizzi.           |
-| `pn.paper-channel.client-external-channel-basepath`           | `PN_PAPERCHANNEL_CLIENTEXTERNALCHANNELBASEPATH`         | Base URL External Channel per invio cartaceo.              |
-| `pn.paper-channel.client-datavault-basepath`                  | `PN_PAPERCHANNEL_CLIENTDATAVAULTBASEPATH`               | Base URL DataVault.                                        |
-| `pn.paper-channel.client-address-manager-basepath`            | `PN_PAPERCHANNEL_CLIENTADDRESSMANAGERBASEPATH`          | Base URL Address Manager per normalizzazione indirizzi.    |
-| `pn.paper-channel.client-f24-basepath`                        | `PN_PAPERCHANNEL_CLIENTF24BASEPATH`                     | Base URL F24.                                              |
-| `pn.paper-channel-client-raddalt-basepath`                    | `PN_PAPERCHANNEL_CLIENTRADDALTBASEPATH`                 | Base URL RADD ALT.                                         |
-| `pn.paper-channel.safe-storage-cx-id`                         | `PN_PAPERCHANNEL_SAFESTORAGECXID`                       | CxId client SafeStorage.                                   |
-| `pn.paper-channel.x-pagopa-extch-cx-id`                       | `PN_PAPERCHANNEL_XPAGOPAEXTCHCXID`                      | CxId per External Channel.                                 |
-| `pn.paper-channel.national-registry-cx-id`                    | `PN_PAPERCHANNEL_NATIONALREGISTRYCXID`                  | CxId per National Registry.                                |
-| `pn.paper-channel.address-manager-cx-id`                      | `PN_PAPERCHANNEL_ADDRESSMANAGERCXID`                    | CxId per Address Manager.                                  |
-| `pn.paper-channel.f24-cx-id`                                  | `PN_PAPERCHANNEL_F24CXID`                               | CxId per F24.                                              |
-| `pn.paper-channel.eventbus.name`                              | `PN_PAPERCHANNEL_EVENTBUS_NAME`                         | ARN EventBridge per publish eventi verso orchestratore.    |
-| `pn.paper-channel.queue-internal`                             | `PN_PAPERCHANNEL_QUEUEINTERNAL`                         | Nome coda SQS interna per richieste schedulate.            |
-| `pn.paper-channel.queue-external-channel`                     | `PN_PAPERCHANNEL_QUEUEEXTERNALCHANNEL`                  | Nome coda SQS input da External Channel (dry-run).         |
-| `pn.paper-channel.queue-national-registries`                  | `PN_PAPERCHANNEL_QUEUENATIONALREGISTRIES`               | Nome coda SQS input da National Registry.                  |
-| `pn.paper-channel.queue-f24`                                  | `PN_PAPERCHANNEL_QUEUEF24`                              | Nome coda SQS input da F24.                                |
-| `pn.paper-channel.queue-normalize-address`                    | `PN_PAPERCHANNEL_QUEUENORMALIZEADDRESS`                 | Nome coda normalizzazione indirizzo (fase 1 PREPARE).      |
-| `pn.paper-channel.queue-paperchannel-to-delayer`              | `PN_PAPERCHANNEL_QUEUEPAPERCHANNELTODELAYER`            | Nome coda output verso delayer per ritardi programmati.    |
-| `pn.paper-channel.queue-delayer-to-paperchannel`              | `PN_PAPERCHANNEL_QUEUEDELAYERTOPAPERCHANNEL`            | Nome coda input da delayer per rientro nel workflow.       |
-| `pn.paper-channel.queue-url-ocr-inputs`                       | `PN_PAPERCHANNEL_QUEUEURLOCRINPUTS`                     | URL coda OCR input.                                        |
-| `pn.paper-channel.queue-region-ocr-inputs`                    | `PN_PAPERCHANNEL_QUEUEREGIONOCRINPUTS`                  | Regione AWS coda OCR input.                                |
-| `pn.paper-channel.attempt-safe-storage`                       | `PN_PAPERCHANNEL_ATTEMPTSAFESTORAGE`                    | Numero tentativi fetch SafeStorage.                        |
-| `pn.paper-channel.attempt-queue-safe-storage`                 | `PN_PAPERCHANNEL_ATTEMPTQUEUESAFESTORAGE`               | Numero retry coda SafeStorage.                             |
-| `pn.paper-channel.attempt-queue-external-channel`             | `PN_PAPERCHANNEL_ATTEMPTQUEUEEXTERNALCHANNEL`           | Numero retry coda External Channel.                        |
-| `pn.paper-channel.attempt-queue-national-registries`          | `PN_PAPERCHANNEL_ATTEMPTQUEUENATIONALREGISTRIES`        | Numero retry coda National Registry.                       |
-| `pn.paper-channel.attempt-queue-address-manager`              | `PN_PAPERCHANNEL_ATTEMPTQUEUEADDRESSMANAGER`            | Numero retry coda Address Manager.                         |
-| `pn.paper-channel.attempt-queue-f24`                          | `PN_PAPERCHANNEL_ATTEMPTQUEUEF24`                       | Numero retry coda F24.                                     |
-| `pn.paper-channel.attempt-queue-zip-handle`                   | `PN_PAPERCHANNEL_ATTEMPTQUEUEZIPHANDLE`                 | Numero retry elaborazioni ZIP.                             |
-| `pn.paper-channel.ttl-prepare`                                | `PN_PAPERCHANNEL_TTLPREPARE`                            | TTL fase prepare (giorni).                                 |
-| `pn.paper-channel.ttl-execution-N_AR`                         | `PN_PAPERCHANNEL_TTLEXECUTIONNAR`                       | TTL execution N_AR.                                        |
-| `pn.paper-channel.ttl-execution-N_890`                        | `PN_PAPERCHANNEL_TTLEXECUTIONN890`                      | TTL execution N_890.                                       |
-| `pn.paper-channel.ttl-execution-N_RS`                         | `PN_PAPERCHANNEL_TTLEXECUTIONNRS`                       | TTL execution N_RS.                                        |
-| `pn.paper-channel.ttl-execution-I_AR`                         | `PN_PAPERCHANNEL_TTLEXECUTIONIAR`                       | TTL execution I_AR.                                        |
-| `pn.paper-channel.ttl-execution-I_RS`                         | `PN_PAPERCHANNEL_TTLEXECUTIONIRS`                       | TTL execution I_RS.                                        |
-| `pn.paper-channel.ttl-execution-days-demat`                   | `PN_PAPERCHANNEL_TTLEXECUTIONDAYSDEMAT`                 | TTL retention giorni dati demat.                           |
-| `pn.paper-channel.ttl-execution-days-meta`                    | `PN_PAPERCHANNEL_TTLEXECUTIONDAYSMETA`                  | TTL retention giorni metadati.                             |
-| `pn.paper-channel.refinement-duration`                        | `PN_PAPERCHANNEL_REFINEMENTDURATION`                    | Durata del perfezionamento (es. `10d`).                    |
-| `pn.paper-channel.compiuta-giacenza-ar-duration`              | `PN_PAPERCHANNEL_COMPIUTAGIACENZAARDURATION`            | Durata compiuta giacenza AR (es. `30d`).                   |
-| `pn.paper-channel.enable-truncated-date-for-refinement-check` | `PN_PAPERCHANNEL_ENABLETRUNCATEDDATEFORREFINEMENTCHECK` | Tronca datetime a data locale per il controllo refinement. |
-| `pn.paper-channel.retry-status`                               | `PN_PAPERCHANNEL_RETRYSTATUS`                           | Codice stato usato nei flussi di retry.                    |
-| `pn.paper-channel.date-charge-calculation-modes`              | `PN_PAPERCHANNEL_DATECHARGECALCULATIONMODES`            | Modalità calcolo costo in formato `timestamp;mode`.        |
-| `pn.paper-channel.required-demats`                            | `PN_PAPERCHANNEL_REQUIREDDEMATS`                        | Codici demat obbligatori (es. per eventi PNAG012).         |
-| `pn.paper-channel.complex-refinement-codes`                   | `PN_PAPERCHANNEL_COMPLEXREFINEMENTCODES`                | Codici 890 gestiti con flusso refinement legacy.           |
-| `pn.paper-channel.paper-weight`                               | `PN_PAPERCHANNEL_PAPERWEIGHT`                           | Peso unitario foglio.                                      |
-| `pn.paper-channel.letter-weight`                              | `PN_PAPERCHANNEL_LETTERWEIGHT`                          | Peso unitario lettera.                                     |
-| `pn.paper-channel.RequestPaIdOverride`                        | `PN_PAPERCHANNEL_REQUESTPAIDOVERRIDE`                   | Override tecnico del `RequestPAId` (partita IVA).          |
-| `pn.paper-channel.enabledocfilterruleengine`                  | `PN_PAPERCHANNEL_ENABLEDOCFILTERRULEENGINE`             | Abilita il motore di filtro documenti.                     |
-| `pn.paper-channel.sendCon020`                                 | `PN_PAPERCHANNEL_SENDCON020`                            | Abilita invio messaggi CON020 a delivery push.             |
-| `pn.paper-channel.radd-coverage-search-mode`                  | `PN_PAPERCHANNEL_RADDCOVERAGESEARCHMODE`                | Modalità ricerca copertura RADD.                           |
-| `pn.paper-channel.prepare-two-phases`                         | `PN_PAPERCHANNEL_PREPARETWOPHASES`                      | Feature flag prepare a due fasi.                           |
-| `pn.paper-channel.enable-prepare-phase-one`                   | `PN_PAPERCHANNEL_ENABLEPREPAREPHASEONE`                 | Feature flag consumer fase 1 prepare.                      |
-| `pn.paper-channel.paper-tracker-enabled`                      | `PN_PAPERCHANNEL_PAPERTRACKERENABLED`                   | Abilita Paper Tracker.                                     |
-| `pn.paper-channel.paper-tracker-product-list`                 | `PN_PAPERCHANNEL_PAPERTRACKERPRODUCTLIST`               | Prodotti tracciati da Paper Tracker.                       |
+| Proprietà applicativa                                         | Variabile ambiente                                      | Descrizione                                                                                    |
+|---------------------------------------------------------------|---------------------------------------------------------|------------------------------------------------------------------------------------------------|
+| `pn.paper-channel.client-safe-storage-basepath`               | `PN_PAPERCHANNEL_CLIENTSAFESTORAGEBASEPATH`             | Base URL SafeStorage per upload/download documenti.                                            |
+| `pn.paper-channel.client-national-registries-basepath`        | `PN_PAPERCHANNEL_CLIENTNATIONALREGISTRIESBASEPATH`      | Base URL National Registry per lookup indirizzi.                                               |
+| `pn.paper-channel.client-external-channel-basepath`           | `PN_PAPERCHANNEL_CLIENTEXTERNALCHANNELBASEPATH`         | Base URL External Channel per invio cartaceo.                                                  |
+| `pn.paper-channel.client-datavault-basepath`                  | `PN_PAPERCHANNEL_CLIENTDATAVAULTBASEPATH`               | Base URL DataVault.                                                                            |
+| `pn.paper-channel.client-address-manager-basepath`            | `PN_PAPERCHANNEL_CLIENTADDRESSMANAGERBASEPATH`          | Base URL Address Manager per normalizzazione indirizzi.                                        |
+| `pn.paper-channel.client-f24-basepath`                        | `PN_PAPERCHANNEL_CLIENTF24BASEPATH`                     | Base URL F24.                                                                                  |
+| `pn.paper-channel-client-raddalt-basepath`                    | `PN_PAPERCHANNEL_CLIENTRADDALTBASEPATH`                 | Base URL RADD ALT.                                                                             |
+| `pn.paper-channel.radd-coverage-reference-date`               | `PN_PAPERCHANNEL_RADDCOVERAGEREFERENCEDATE`             | Data usata per la verifica di copertura RADD: `NOTIFICATION_SENT_AT` o `PREPARE_REQUEST_DATE`. |
+| `pn.paper-channel.safe-storage-cx-id`                         | `PN_PAPERCHANNEL_SAFESTORAGECXID`                       | CxId client SafeStorage.                                                                       |
+| `pn.paper-channel.x-pagopa-extch-cx-id`                       | `PN_PAPERCHANNEL_XPAGOPAEXTCHCXID`                      | CxId per External Channel.                                                                     |
+| `pn.paper-channel.national-registry-cx-id`                    | `PN_PAPERCHANNEL_NATIONALREGISTRYCXID`                  | CxId per National Registry.                                                                    |
+| `pn.paper-channel.address-manager-cx-id`                      | `PN_PAPERCHANNEL_ADDRESSMANAGERCXID`                    | CxId per Address Manager.                                                                      |
+| `pn.paper-channel.f24-cx-id`                                  | `PN_PAPERCHANNEL_F24CXID`                               | CxId per F24.                                                                                  |
+| `pn.paper-channel.eventbus.name`                              | `PN_PAPERCHANNEL_EVENTBUS_NAME`                         | ARN EventBridge per publish eventi verso orchestratore.                                        |
+| `pn.paper-channel.queue-internal`                             | `PN_PAPERCHANNEL_QUEUEINTERNAL`                         | Nome coda SQS interna per richieste schedulate.                                                |
+| `pn.paper-channel.queue-external-channel`                     | `PN_PAPERCHANNEL_QUEUEEXTERNALCHANNEL`                  | Nome coda SQS input da External Channel (dry-run).                                             |
+| `pn.paper-channel.queue-national-registries`                  | `PN_PAPERCHANNEL_QUEUENATIONALREGISTRIES`               | Nome coda SQS input da National Registry.                                                      |
+| `pn.paper-channel.queue-f24`                                  | `PN_PAPERCHANNEL_QUEUEF24`                              | Nome coda SQS input da F24.                                                                    |
+| `pn.paper-channel.queue-normalize-address`                    | `PN_PAPERCHANNEL_QUEUENORMALIZEADDRESS`                 | Nome coda normalizzazione indirizzo (fase 1 PREPARE).                                          |
+| `pn.paper-channel.queue-paperchannel-to-delayer`              | `PN_PAPERCHANNEL_QUEUEPAPERCHANNELTODELAYER`            | Nome coda output verso delayer per ritardi programmati.                                        |
+| `pn.paper-channel.queue-delayer-to-paperchannel`              | `PN_PAPERCHANNEL_QUEUEDELAYERTOPAPERCHANNEL`            | Nome coda input da delayer per rientro nel workflow.                                           |
+| `pn.paper-channel.queue-url-ocr-inputs`                       | `PN_PAPERCHANNEL_QUEUEURLOCRINPUTS`                     | URL coda OCR input.                                                                            |
+| `pn.paper-channel.queue-region-ocr-inputs`                    | `PN_PAPERCHANNEL_QUEUEREGIONOCRINPUTS`                  | Regione AWS coda OCR input.                                                                    |
+| `pn.paper-channel.attempt-safe-storage`                       | `PN_PAPERCHANNEL_ATTEMPTSAFESTORAGE`                    | Numero tentativi fetch SafeStorage.                                                            |
+| `pn.paper-channel.attempt-queue-safe-storage`                 | `PN_PAPERCHANNEL_ATTEMPTQUEUESAFESTORAGE`               | Numero retry coda SafeStorage.                                                                 |
+| `pn.paper-channel.attempt-queue-external-channel`             | `PN_PAPERCHANNEL_ATTEMPTQUEUEEXTERNALCHANNEL`           | Numero retry coda External Channel.                                                            |
+| `pn.paper-channel.attempt-queue-national-registries`          | `PN_PAPERCHANNEL_ATTEMPTQUEUENATIONALREGISTRIES`        | Numero retry coda National Registry.                                                           |
+| `pn.paper-channel.attempt-queue-address-manager`              | `PN_PAPERCHANNEL_ATTEMPTQUEUEADDRESSMANAGER`            | Numero retry coda Address Manager.                                                             |
+| `pn.paper-channel.attempt-queue-f24`                          | `PN_PAPERCHANNEL_ATTEMPTQUEUEF24`                       | Numero retry coda F24.                                                                         |
+| `pn.paper-channel.attempt-queue-zip-handle`                   | `PN_PAPERCHANNEL_ATTEMPTQUEUEZIPHANDLE`                 | Numero retry elaborazioni ZIP.                                                                 |
+| `pn.paper-channel.ttl-prepare`                                | `PN_PAPERCHANNEL_TTLPREPARE`                            | TTL fase prepare (giorni).                                                                     |
+| `pn.paper-channel.ttl-execution-N_AR`                         | `PN_PAPERCHANNEL_TTLEXECUTIONNAR`                       | TTL execution N_AR.                                                                            |
+| `pn.paper-channel.ttl-execution-N_890`                        | `PN_PAPERCHANNEL_TTLEXECUTIONN890`                      | TTL execution N_890.                                                                           |
+| `pn.paper-channel.ttl-execution-N_RS`                         | `PN_PAPERCHANNEL_TTLEXECUTIONNRS`                       | TTL execution N_RS.                                                                            |
+| `pn.paper-channel.ttl-execution-I_AR`                         | `PN_PAPERCHANNEL_TTLEXECUTIONIAR`                       | TTL execution I_AR.                                                                            |
+| `pn.paper-channel.ttl-execution-I_RS`                         | `PN_PAPERCHANNEL_TTLEXECUTIONIRS`                       | TTL execution I_RS.                                                                            |
+| `pn.paper-channel.ttl-execution-days-demat`                   | `PN_PAPERCHANNEL_TTLEXECUTIONDAYSDEMAT`                 | TTL retention giorni dati demat.                                                               |
+| `pn.paper-channel.ttl-execution-days-meta`                    | `PN_PAPERCHANNEL_TTLEXECUTIONDAYSMETA`                  | TTL retention giorni metadati.                                                                 |
+| `pn.paper-channel.refinement-duration`                        | `PN_PAPERCHANNEL_REFINEMENTDURATION`                    | Durata del perfezionamento (es. `10d`).                                                        |
+| `pn.paper-channel.compiuta-giacenza-ar-duration`              | `PN_PAPERCHANNEL_COMPIUTAGIACENZAARDURATION`            | Durata compiuta giacenza AR (es. `30d`).                                                       |
+| `pn.paper-channel.enable-truncated-date-for-refinement-check` | `PN_PAPERCHANNEL_ENABLETRUNCATEDDATEFORREFINEMENTCHECK` | Tronca datetime a data locale per il controllo refinement.                                     |
+| `pn.paper-channel.retry-status`                               | `PN_PAPERCHANNEL_RETRYSTATUS`                           | Codice stato usato nei flussi di retry.                                                        |
+| `pn.paper-channel.date-charge-calculation-modes`              | `PN_PAPERCHANNEL_DATECHARGECALCULATIONMODES`            | Modalità calcolo costo in formato `timestamp;mode`.                                            |
+| `pn.paper-channel.required-demats`                            | `PN_PAPERCHANNEL_REQUIREDDEMATS`                        | Codici demat obbligatori (es. per eventi PNAG012).                                             |
+| `pn.paper-channel.complex-refinement-codes`                   | `PN_PAPERCHANNEL_COMPLEXREFINEMENTCODES`                | Codici 890 gestiti con flusso refinement legacy.                                               |
+| `pn.paper-channel.paper-weight`                               | `PN_PAPERCHANNEL_PAPERWEIGHT`                           | Peso unitario foglio.                                                                          |
+| `pn.paper-channel.letter-weight`                              | `PN_PAPERCHANNEL_LETTERWEIGHT`                          | Peso unitario lettera.                                                                         |
+| `pn.paper-channel.RequestPaIdOverride`                        | `PN_PAPERCHANNEL_REQUESTPAIDOVERRIDE`                   | Override tecnico del `RequestPAId` (partita IVA).                                              |
+| `pn.paper-channel.enabledocfilterruleengine`                  | `PN_PAPERCHANNEL_ENABLEDOCFILTERRULEENGINE`             | Abilita il motore di filtro documenti.                                                         |
+| `pn.paper-channel.sendCon020`                                 | `PN_PAPERCHANNEL_SENDCON020`                            | Abilita invio messaggi CON020 a delivery push.                                                 |
+| `pn.paper-channel.radd-coverage-search-mode`                  | `PN_PAPERCHANNEL_RADDCOVERAGESEARCHMODE`                | Modalità ricerca copertura RADD.                                                               |
+| `pn.paper-channel.prepare-two-phases`                         | `PN_PAPERCHANNEL_PREPARETWOPHASES`                      | Feature flag prepare a due fasi.                                                               |
+| `pn.paper-channel.enable-prepare-phase-one`                   | `PN_PAPERCHANNEL_ENABLEPREPAREPHASEONE`                 | Feature flag consumer fase 1 prepare.                                                          |
+| `pn.paper-channel.paper-tracker-enabled`                      | `PN_PAPERCHANNEL_PAPERTRACKERENABLED`                   | Abilita Paper Tracker.                                                                         |
+| `pn.paper-channel.paper-tracker-product-list`                 | `PN_PAPERCHANNEL_PAPERTRACKERPRODUCTLIST`               | Prodotti tracciati da Paper Tracker.                                                           |
 
 
 ## Osservabilità

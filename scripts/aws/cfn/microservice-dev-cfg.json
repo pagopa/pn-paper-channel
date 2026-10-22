@@ -56,6 +56,7 @@
     "OcrAwsAccountId": "830192246553",
     "EnablePreparePhaseOne": "true",
     "TenderAPILambdaRuntime": "nodejs24.x",
-    "RequestPaIdAsSelfcareToken": "true"
+    "RequestPaIdAsSelfcareToken": "true",
+    "RaddCoverageReferenceDate": "NOTIFICATION_SENT_AT"
   }
 }

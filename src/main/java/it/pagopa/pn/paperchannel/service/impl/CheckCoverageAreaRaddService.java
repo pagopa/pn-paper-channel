@@ -5,8 +5,10 @@ import it.pagopa.pn.paperchannel.exception.PnInvalidChainRuleException;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
+import it.pagopa.pn.paperchannel.model.RaddCoverageReferenceDate;
 import it.pagopa.pn.paperchannel.service.CheckCoverageAreaService;
 import it.pagopa.pn.paperchannel.service.RaddAltService;
+import it.pagopa.pn.paperchannel.utils.DateUtils;
 import it.pagopa.pn.paperchannel.utils.Utility;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,7 +36,7 @@ public class CheckCoverageAreaRaddService implements CheckCoverageAreaService {
     public Mono<PnDeliveryRequest> filterAttachmentsToSend(PnDeliveryRequest pnDeliveryRequest, List<PnAttachmentInfo> attachmentInfoList, PnAddress pnAddress) {
         if (checkZipCoverage(pnDeliveryRequest, pnAddress)) {
             log.debug("Perform checkZipCoverage");
-            return raddAltService.isAreaCovered(cfg.getRaddCoverageSearchMode(), pnAddress, pnDeliveryRequest.getNotificationSentAt())
+            return raddAltService.isAreaCovered(cfg.getRaddCoverageSearchMode(), pnAddress, getCoverageReferenceDate(pnDeliveryRequest))
                     .map(isCovered -> Boolean.TRUE.equals(isCovered)
                         ? applyFilter(pnDeliveryRequest, attachmentInfoList)
                         : sendAllAttachments(pnDeliveryRequest, attachmentInfoList)
@@ -42,6 +45,31 @@ public class CheckCoverageAreaRaddService implements CheckCoverageAreaService {
             log.debug("Skip checkZipCoverage, sending all attachments");
             return Mono.just(sendAllAttachments(pnDeliveryRequest, attachmentInfoList));
         }
+    }
+
+    private Instant getCoverageReferenceDate(PnDeliveryRequest request) {
+        RaddCoverageReferenceDate referenceDate = cfg.getRaddCoverageReferenceDate();
+
+        if (referenceDate == null || referenceDate == RaddCoverageReferenceDate.NOTIFICATION_SENT_AT) {
+            return request.getNotificationSentAt();
+        }
+
+        if (referenceDate != RaddCoverageReferenceDate.PREPARE_REQUEST_DATE) {
+            log.warn("Unsupported RADD coverage reference date: {}", referenceDate);
+            return null;
+        }
+
+        String startDate = request.getStartDate();
+        Instant prepareRequestDate = (startDate == null || startDate.isBlank())
+                ? null
+                : DateUtils.parseStringTOInstant(startDate);
+
+        if (prepareRequestDate == null) {
+            log.warn("RADD coverage reference date is PREPARE_REQUEST_DATE but startDate is missing or invalid for requestId {}",
+                    request.getRequestId());
+        }
+
+        return prepareRequestDate;
     }
 
     private boolean checkZipCoverage(PnDeliveryRequest pnDeliveryRequest, PnAddress pnAddress) {

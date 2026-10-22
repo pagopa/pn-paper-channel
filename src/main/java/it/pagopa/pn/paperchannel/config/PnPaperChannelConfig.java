@@ -5,6 +5,7 @@ import it.pagopa.pn.commons.conf.SharedAutoConfiguration;
 import java.util.ArrayList;
 import java.util.List;
 
+import it.pagopa.pn.paperchannel.model.RaddCoverageReferenceDate;
 import it.pagopa.pn.paperchannel.model.RaddSearchMode;
 import lombok.Getter;
 import lombok.Setter;
@@ -30,6 +31,7 @@ import java.util.Set;
 @Slf4j
 public class PnPaperChannelConfig {
     private RaddSearchMode raddCoverageSearchMode;
+    private RaddCoverageReferenceDate raddCoverageReferenceDate;
     private String clientSafeStorageBasepath;
     private String clientNationalRegistriesBasepath;
     private String clientExternalChannelBasepath;
