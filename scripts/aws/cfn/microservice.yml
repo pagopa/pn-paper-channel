@@ -185,6 +185,13 @@ Parameters:
     Type: String
     Description: 'Time before send metric'
 
+  RaddCoverageReferenceDate:
+    Type: String
+    Description: 'Date used to check RADD coverage: NOTIFICATION_SENT_AT or PREPARE_REQUEST_DATE'
+    AllowedValues:
+      - 'NOTIFICATION_SENT_AT'
+      - 'PREPARE_REQUEST_DATE'
+
   PaperWeight:
     Type: String
     Description: 'Weight single paper'
@@ -774,6 +781,7 @@ Resources:
         ContainerEnvEntry73: !Sub 'PN_PAPERCHANNEL_ENABLEPREPAREPHASEONE=${EnablePreparePhaseOne}'
         ContainerEnvEntry74: !Sub 'PN_PAPERCHANNEL_QUEUENORMALIZEADDRESS=${PaperNormalizeAddressQueueName}'
         ContainerEnvEntry75: !Sub 'PN_PAPERCHANNEL_REQUESTPAIDASSELFCARETOKEN=${RequestPaIdAsSelfcareToken}'
+        ContainerEnvEntry76: !Sub 'PN_PAPERCHANNEL_RADDCOVERAGEREFERENCEDATE=${RaddCoverageReferenceDate}'
         ApplicativeEnvFileChecksum: !Ref ApplicativeEnvFileChecksum
         ContainerSecret1: !Sub 'PN_PAPERCHANNEL_ADDRESSMANAGERAPIKEY=arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:pn-PaperChannel-Secrets:AddressManagerApiKey:AWSCURRENT:'
         MicroServiceSecretPrefix: pn-PaperChannel-Secrets

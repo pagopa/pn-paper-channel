@@ -5,6 +5,7 @@ import it.pagopa.pn.paperchannel.exception.PnInvalidChainRuleException;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
+import it.pagopa.pn.paperchannel.model.RaddCoverageReferenceDate;
 import it.pagopa.pn.paperchannel.model.RaddSearchMode;
 import it.pagopa.pn.paperchannel.service.RaddAltService;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
+import java.time.format.DateTimeParseException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -57,6 +59,28 @@ class CheckCoverageAreaRaddServiceTest {
         assertEquals("AAR", result.getAttachments().getFirst().getDocTag());
         assertEquals(1, result.getRemovedAttachments().size());
         assertEquals("ALTRO", result.getRemovedAttachments().getFirst().getDocTag());
+    }
+
+    @Test
+    void testFilterAttachmentsToSend_WhenStartDateIsInvalid() {
+        when(cfg.getRaddCoverageSearchMode()).thenReturn(RaddSearchMode.LIGHT);
+        when(cfg.getRaddCoverageReferenceDate()).thenReturn(RaddCoverageReferenceDate.PREPARE_REQUEST_DATE);
+        when(raddAltService.isAreaCovered(any(), any(), isNull())).thenReturn(Mono.just(true));
+
+        PnDeliveryRequest req = new PnDeliveryRequest();
+        req.setAarWithRadd(true);
+        req.setNotificationSentAt(Instant.parse("2024-01-20T10:00:00Z"));
+        req.setStartDate("invalid-date");
+
+        PnAddress address = new PnAddress();
+        address.setCountry("ITALIA");
+
+        PnAttachmentInfo info = new PnAttachmentInfo();
+        info.setDocTag("AAR");
+
+        assertThrows(DateTimeParseException.class,
+                () -> service.filterAttachmentsToSend(req, List.of(info), address).block());
+        verify(raddAltService, never()).isAreaCovered(any(), any(), any());
     }
 
     @Test
