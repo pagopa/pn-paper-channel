@@ -4,6 +4,7 @@ import it.pagopa.pn.paperchannel.exception.PnAddressFlowException;
 import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.exception.PnUntracebleException;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.FailureDetailCodeEnum;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ReceiverAddressSourceTypeEnum;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.RequestDeliveryDAO;
@@ -31,6 +32,9 @@ public class PaperAddressServiceImpl extends GenericService implements PaperAddr
     private final SecondAttemptFlowHandlerFactory secondAttemptFlowHandlerFactory;
     private final NationalRegistryService nationalRegistryService;
     private final PrepareFlowStarter prepareFlowStarter;
+
+    private static final String RECEIVER_TYPE_PF = "PF";
+    private static final String RECEIVER_TYPE_PG = "PG";
 
 
     public PaperAddressServiceImpl(RequestDeliveryDAO requestDeliveryDAO, SqsSender sqsQueueSender,
@@ -100,7 +104,8 @@ public class PaperAddressServiceImpl extends GenericService implements PaperAddr
         logAuditSuccessLogic("prepare requestId = %s, relatedRequestId = %s National Registry Address is present", deliveryRequest, pnLogAudit);
 
         return secondAttemptFlowHandlerFactory.getSecondAttemptFlowService(SecondAttemptFlowHandlerFactory.FlowType.NATIONAL_REGISTY_FLOW)
-                .handleSecondAttempt(deliveryRequest, fromNationalRegistry, addressFromFirstAttempt);
+                .handleSecondAttempt(deliveryRequest, fromNationalRegistry, addressFromFirstAttempt)
+                .doOnNext(unused -> setReceiverAddressSourceType(deliveryRequest, fromNationalRegistryReceiverType(deliveryRequest.getReceiverType())));
     }
 
     private Mono<Address> getAddressFromDiscoveredAddress(PnDeliveryRequest deliveryRequest, Address addressFromFirstAttempt) {
@@ -118,8 +123,8 @@ public class PaperAddressServiceImpl extends GenericService implements PaperAddr
                 .doOnNext(pnAddress -> logAuditSuccessLogic("prepare requestId = %s, relatedRequestId = %s discovered address is present on DB", deliveryRequest, pnLogAudit))
                 .map(AddressMapper::toDTO)
                 .flatMap(discoveredAddress -> secondAttemptFlowHandlerFactory.getSecondAttemptFlowService(SecondAttemptFlowHandlerFactory.FlowType.POSTMAN_FLOW)
-                        .handleSecondAttempt(deliveryRequest, discoveredAddress, addressFromFirstAttempt));
-
+                        .handleSecondAttempt(deliveryRequest, discoveredAddress, addressFromFirstAttempt))
+                .doOnNext(unused -> setReceiverAddressSourceType(deliveryRequest, fromNationalRegistryReceiverType(deliveryRequest.getReceiverType())));
     }
 
     private <T> Mono<T> handlePnAddressFlowException(PnAddressFlowException ex, PnDeliveryRequest deliveryRequest, Address fromNationalRegistry, int attemptRetry) {
@@ -137,6 +142,22 @@ public class PaperAddressServiceImpl extends GenericService implements PaperAddr
             prepareFlowStarter.redrivePreparePhaseOneAfterAddressManagerError(deliveryRequest, attemptRetry, fromNationalRegistry);
         }
         return Mono.error(ex);
+    }
+
+    private void setReceiverAddressSourceType(PnDeliveryRequest deliveryRequest, ReceiverAddressSourceTypeEnum receiverAddressSourceType) {
+        log.info("RequestId - {}, receiver address source type - {}", deliveryRequest.getRequestId(), receiverAddressSourceType);
+        deliveryRequest.setReceiverAddressSourceType(receiverAddressSourceType != null ? receiverAddressSourceType.getValue() : null);
+    }
+
+    private ReceiverAddressSourceTypeEnum fromNationalRegistryReceiverType(String receiverType) {
+        if (RECEIVER_TYPE_PF.equalsIgnoreCase(receiverType)) {
+            return ReceiverAddressSourceTypeEnum.ANPR;
+        }
+        if (RECEIVER_TYPE_PG.equalsIgnoreCase(receiverType)) {
+            return ReceiverAddressSourceTypeEnum.REGISTRO_IMPRESE;
+        }
+        log.warn("Unknown receiverType {}, unable to resolve receiver address source type", receiverType);
+        return null;
     }
 
 }

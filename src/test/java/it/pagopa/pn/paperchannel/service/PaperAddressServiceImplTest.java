@@ -14,6 +14,7 @@ import it.pagopa.pn.paperchannel.middleware.msclient.AddressManagerClient;
 import it.pagopa.pn.paperchannel.model.Address;
 import it.pagopa.pn.paperchannel.service.impl.PaperAddressServiceImpl;
 import it.pagopa.pn.paperchannel.utils.AddressTypeEnum;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,6 +26,7 @@ import reactor.test.StepVerifier;
 import static it.pagopa.pn.paperchannel.exception.ExceptionTypeEnum.RESPONSE_ERROR_NOT_HANDLED_FROM_DEDUPLICATION;
 import static it.pagopa.pn.paperchannel.utils.DeduplicateErrorConst.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -107,6 +109,8 @@ class PaperAddressServiceImplTest {
 
         StepVerifier.create(paperAddressService.getCorrectAddress(deliveryRequest, fromNationalRegistry, 0))
                 .expectNext(expectedResponse).verifyComplete();
+
+        Assertions.assertNull(deliveryRequest.getReceiverAddressSourceType());
 
     }
 
@@ -497,5 +501,94 @@ class PaperAddressServiceImplTest {
         // verifico che scrivo in coda nuovamente l'evento di prepare async
         verify(prepareFlowStarter, times(1)).redrivePreparePhaseOneAfterAddressManagerError(deliveryRequest, 0, null);
 
+    }
+
+    @Test
+    void getCorrectAddressFromNationalRegistrySetsReceiverAddressSourceTypeForPfAndPg() {
+        String requestId = "req-001";
+        String relatedRequestId = "req-000";
+        PnDeliveryRequest deliveryRequest = new PnDeliveryRequest();
+        deliveryRequest.setIun("a-iun");
+        deliveryRequest.setRequestId(requestId);
+        deliveryRequest.setRelatedRequestId(relatedRequestId);
+        deliveryRequest.setReceiverType("PF");
+        deliveryRequest.setCorrelationId("a-correlation-id");
+
+        PnAddress addressFromDb = new PnAddress();
+        addressFromDb.setRequestId(relatedRequestId);
+        addressFromDb.setAddress("via Roma");
+
+        Address fromNationalRegistry = new Address();
+        fromNationalRegistry.setAddress("via Da NR");
+
+        DeduplicatesResponseDto response = new DeduplicatesResponseDto();
+        response.setEqualityResult(false);
+        response.setNormalizedAddress(new AnalogAddressDto().addressRow("via address-normalizzato"));
+
+        when(addressDAO.findByRequestId(relatedRequestId, AddressTypeEnum.RECEIVER_ADDRESS))
+                .thenReturn(Mono.just(addressFromDb));
+        when(addressManagerClient.deduplicates(anyString(), any(Address.class), eq(fromNationalRegistry)))
+                .thenReturn(Mono.just(response));
+
+        StepVerifier.create(paperAddressService.getCorrectAddress(deliveryRequest, fromNationalRegistry, 0))
+                .expectNextMatches(address -> "ANPR".equals(deliveryRequest.getReceiverAddressSourceType()))
+                .verifyComplete();
+
+        deliveryRequest.setReceiverType("PG");
+        when(addressDAO.findByRequestId(relatedRequestId, AddressTypeEnum.RECEIVER_ADDRESS))
+                .thenReturn(Mono.just(addressFromDb));
+        when(addressManagerClient.deduplicates(anyString(), any(Address.class), eq(fromNationalRegistry)))
+                .thenReturn(Mono.just(response));
+
+        StepVerifier.create(paperAddressService.getCorrectAddress(deliveryRequest, fromNationalRegistry, 0))
+                .expectNextMatches(address -> "REGISTRO_IMPRESE".equals(deliveryRequest.getReceiverAddressSourceType()))
+                .verifyComplete();
+    }
+
+    @Test
+    void getCorrectAddressFromDiscoveredAddressSetsReceiverAddressSourceTypeForPfAndPg() {
+        String requestId = "req-001";
+        String relatedRequestId = "req-000";
+        PnDeliveryRequest deliveryRequest = new PnDeliveryRequest();
+        deliveryRequest.setIun("a-iun");
+        deliveryRequest.setRequestId(requestId);
+        deliveryRequest.setRelatedRequestId(relatedRequestId);
+        deliveryRequest.setCorrelationId(null);
+        deliveryRequest.setReceiverType("PF");
+
+        PnAddress firstAttemptAddress = new PnAddress();
+        firstAttemptAddress.setRequestId(relatedRequestId);
+        firstAttemptAddress.setAddress("via Roma");
+
+        PnAddress discoveredAddress = new PnAddress();
+        discoveredAddress.setRequestId(requestId);
+        discoveredAddress.setAddress("via discovered");
+
+        DeduplicatesResponseDto response = new DeduplicatesResponseDto();
+        response.setEqualityResult(false);
+        response.setNormalizedAddress(new AnalogAddressDto().addressRow("via address-normalizzato"));
+
+        when(addressDAO.findByRequestId(relatedRequestId, AddressTypeEnum.RECEIVER_ADDRESS))
+                .thenReturn(Mono.just(firstAttemptAddress));
+        when(addressDAO.findByRequestId(requestId, AddressTypeEnum.DISCOVERED_ADDRESS))
+                .thenReturn(Mono.just(discoveredAddress));
+        when(addressManagerClient.deduplicates(any(), eq(AddressMapper.toDTO(firstAttemptAddress)), eq(AddressMapper.toDTO(discoveredAddress))))
+                .thenReturn(Mono.just(response));
+
+        StepVerifier.create(paperAddressService.getCorrectAddress(deliveryRequest, null, 0))
+                .expectNextMatches(address -> "ANPR".equals(deliveryRequest.getReceiverAddressSourceType()))
+                .verifyComplete();
+
+        deliveryRequest.setReceiverType("PG");
+        when(addressDAO.findByRequestId(relatedRequestId, AddressTypeEnum.RECEIVER_ADDRESS))
+                .thenReturn(Mono.just(firstAttemptAddress));
+        when(addressDAO.findByRequestId(requestId, AddressTypeEnum.DISCOVERED_ADDRESS))
+                .thenReturn(Mono.just(discoveredAddress));
+        when(addressManagerClient.deduplicates(any(), eq(AddressMapper.toDTO(firstAttemptAddress)), eq(AddressMapper.toDTO(discoveredAddress))))
+                .thenReturn(Mono.just(response));
+
+        StepVerifier.create(paperAddressService.getCorrectAddress(deliveryRequest, null, 0))
+                .expectNextMatches(address -> "REGISTRO_IMPRESE".equals(deliveryRequest.getReceiverAddressSourceType()))
+                .verifyComplete();
     }
 }
