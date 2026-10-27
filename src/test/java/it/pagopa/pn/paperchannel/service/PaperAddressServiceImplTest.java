@@ -95,6 +95,7 @@ class PaperAddressServiceImplTest {
         deliveryRequest.setRelatedRequestId(relatedRequestId);
         String correlationId = "a-correlation-id";
         deliveryRequest.setCorrelationId(correlationId); //questo campo non-null determina il fatto di scegliere il flusso NR
+        deliveryRequest.setReceiverType("PF");
         PnAddress addressFromDb = new PnAddress();
         addressFromDb.setRequestId(requestId);
         addressFromDb.setAddress("via Roma");
@@ -110,7 +111,7 @@ class PaperAddressServiceImplTest {
         StepVerifier.create(paperAddressService.getCorrectAddress(deliveryRequest, fromNationalRegistry, 0))
                 .expectNext(expectedResponse).verifyComplete();
 
-        Assertions.assertNull(deliveryRequest.getReceiverAddressSourceType());
+        Assertions.assertEquals("ANPR", deliveryRequest.getReceiverAddressSourceType());
 
     }
 
@@ -576,7 +577,7 @@ class PaperAddressServiceImplTest {
                 .thenReturn(Mono.just(response));
 
         StepVerifier.create(paperAddressService.getCorrectAddress(deliveryRequest, null, 0))
-                .expectNextMatches(address -> "ANPR".equals(deliveryRequest.getReceiverAddressSourceType()))
+                .expectNextMatches(address -> "INDAGINE".equals(deliveryRequest.getReceiverAddressSourceType()))
                 .verifyComplete();
 
         deliveryRequest.setReceiverType("PG");
@@ -588,7 +589,7 @@ class PaperAddressServiceImplTest {
                 .thenReturn(Mono.just(response));
 
         StepVerifier.create(paperAddressService.getCorrectAddress(deliveryRequest, null, 0))
-                .expectNextMatches(address -> "REGISTRO_IMPRESE".equals(deliveryRequest.getReceiverAddressSourceType()))
+                .expectNextMatches(address -> "INDAGINE".equals(deliveryRequest.getReceiverAddressSourceType()))
                 .verifyComplete();
     }
 }

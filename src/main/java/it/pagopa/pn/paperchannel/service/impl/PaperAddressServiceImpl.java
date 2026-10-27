@@ -124,7 +124,7 @@ public class PaperAddressServiceImpl extends GenericService implements PaperAddr
                 .map(AddressMapper::toDTO)
                 .flatMap(discoveredAddress -> secondAttemptFlowHandlerFactory.getSecondAttemptFlowService(SecondAttemptFlowHandlerFactory.FlowType.POSTMAN_FLOW)
                         .handleSecondAttempt(deliveryRequest, discoveredAddress, addressFromFirstAttempt))
-                .doOnNext(unused -> setReceiverAddressSourceType(deliveryRequest, fromNationalRegistryReceiverType(deliveryRequest.getReceiverType())));
+                .doOnNext(unused -> setReceiverAddressSourceType(deliveryRequest, ReceiverAddressSourceTypeEnum.INDAGINE));
     }
 
     private <T> Mono<T> handlePnAddressFlowException(PnAddressFlowException ex, PnDeliveryRequest deliveryRequest, Address fromNationalRegistry, int attemptRetry) {
@@ -156,8 +156,8 @@ public class PaperAddressServiceImpl extends GenericService implements PaperAddr
         if (RECEIVER_TYPE_PG.equalsIgnoreCase(receiverType)) {
             return ReceiverAddressSourceTypeEnum.REGISTRO_IMPRESE;
         }
-        log.warn("Unknown receiverType {}, unable to resolve receiver address source type", receiverType);
-        return null;
+        log.error("Unknown receiverType {}, unable to resolve receiver address source type", receiverType);
+        throw new PnGenericException(UNKNOWN_RECEIVER_TYPE, UNKNOWN_RECEIVER_TYPE.getMessage());
     }
 
 }
