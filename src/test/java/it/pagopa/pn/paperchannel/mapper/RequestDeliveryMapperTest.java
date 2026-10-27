@@ -34,6 +34,7 @@ class RequestDeliveryMapperTest {
         Assertions.assertEquals(response.getClientId(), prepareRequest.getClientId());
         Assertions.assertEquals(response.getCommunicationType(), prepareRequest.getCommunicationType().name());
         Assertions.assertEquals(response.getSenderPriority(), prepareRequest.getSenderPriority());
+        Assertions.assertEquals(response.getReceiverAddressSourceType(), prepareRequest.getReceiverAddressSourceType());
     }
 
     private PrepareRequestInt getPrepareRequest() {
@@ -67,6 +68,7 @@ class RequestDeliveryMapperTest {
         prepareRequest.setClientId("clientId");
         prepareRequest.setCommunicationType(CommunicationType.LEGAL);
         prepareRequest.setSenderPriority(45);
+        prepareRequest.setReceiverAddressSourceType("ANPR");
         return prepareRequest;
     }
 }

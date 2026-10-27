@@ -93,7 +93,7 @@ components:
 
     ReceiverAddressSourceTypeEnum:
       type: string
-      enum: [ SENDER, ANPR, REGISTRO_IMPRESE, INDAGINE ]
+      enum: [ MITTENTE, ANPR, REGISTRO_IMPRESE, INDAGINE ]
       example: ANPR
 
     PrepareEvent:
