@@ -5,6 +5,7 @@ import it.pagopa.pn.paperchannel.exception.PnInvalidChainRuleException;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAttachmentInfo;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnDeliveryRequest;
+import it.pagopa.pn.paperchannel.model.RaddCoverageReferenceDate;
 import it.pagopa.pn.paperchannel.service.CheckCoverageAreaService;
 import it.pagopa.pn.paperchannel.service.RaddAltService;
 import it.pagopa.pn.paperchannel.utils.Utility;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,7 +35,7 @@ public class CheckCoverageAreaRaddService implements CheckCoverageAreaService {
     public Mono<PnDeliveryRequest> filterAttachmentsToSend(PnDeliveryRequest pnDeliveryRequest, List<PnAttachmentInfo> attachmentInfoList, PnAddress pnAddress) {
         if (checkZipCoverage(pnDeliveryRequest, pnAddress)) {
             log.debug("Perform checkZipCoverage");
-            return raddAltService.isAreaCovered(cfg.getRaddCoverageSearchMode(), pnAddress, pnDeliveryRequest.getNotificationSentAt())
+            return raddAltService.isAreaCovered(cfg.getRaddCoverageSearchMode(), pnAddress, getCoverageReferenceDate(pnDeliveryRequest))
                     .map(isCovered -> Boolean.TRUE.equals(isCovered)
                         ? applyFilter(pnDeliveryRequest, attachmentInfoList)
                         : sendAllAttachments(pnDeliveryRequest, attachmentInfoList)
@@ -42,6 +44,11 @@ public class CheckCoverageAreaRaddService implements CheckCoverageAreaService {
             log.debug("Skip checkZipCoverage, sending all attachments");
             return Mono.just(sendAllAttachments(pnDeliveryRequest, attachmentInfoList));
         }
+    }
+
+    private Instant getCoverageReferenceDate(PnDeliveryRequest request) {
+        RaddCoverageReferenceDate referenceDate = cfg.getRaddCoverageReferenceDate();
+        return RaddCoverageReferenceDate.PREPARE_REQUEST_DATE.equals(referenceDate) ? Instant.parse(request.getStartDate()) : request.getNotificationSentAt();
     }
 
     private boolean checkZipCoverage(PnDeliveryRequest pnDeliveryRequest, PnAddress pnAddress) {

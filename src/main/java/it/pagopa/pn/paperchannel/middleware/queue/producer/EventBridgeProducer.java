@@ -32,7 +32,6 @@ public class EventBridgeProducer {
                         log.error("Send event with requestId {} failed", requestId, throwable);
                     } else {
                         log.info("Event with requestId {} sent successfully", requestId);
-                        log.debug("Sent event result: {}", putEventsResponse.entries());
                     }
                 });
     }
