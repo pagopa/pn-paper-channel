@@ -109,6 +109,8 @@ public class PnDeliveryRequest implements Serializable {
 
     public static final String COL_RECEIVER_ADDRESS_SOURCE_TYPE = "receiverAddressSourceType";
 
+    public static final String COL_RADD_COVERAGE_REFERENCE_DATE = "raddCoverageReferenceDate";
+
 
     @Getter(onMethod = @__({@DynamoDbPartitionKey,@DynamoDbAttribute(COL_REQUEST_ID)}))
     private String requestId;
@@ -230,4 +232,7 @@ public class PnDeliveryRequest implements Serializable {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_RECEIVER_ADDRESS_SOURCE_TYPE)}))
     private String receiverAddressSourceType;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_RADD_COVERAGE_REFERENCE_DATE)}))
+    private String raddCoverageReferenceDate;
 }
