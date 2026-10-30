@@ -10,6 +10,8 @@ import it.pagopa.pn.paperchannel.model.RaddSearchMode;
 import it.pagopa.pn.paperchannel.service.RaddAltService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
@@ -33,14 +35,18 @@ class CheckCoverageAreaRaddServiceTest {
         service = new CheckCoverageAreaRaddService(cfg, raddAltService);
     }
 
-    @Test
-    void testFilterAttachmentsToSend_AreaCovered_FiltersCorrectly() {
+    @ParameterizedTest
+    @EnumSource(RaddCoverageReferenceDate.class)
+    void testFilterAttachmentsToSend_AreaCovered_FiltersCorrectly(RaddCoverageReferenceDate referenceDate) {
         when(cfg.getRaddCoverageSearchMode()).thenReturn(RaddSearchMode.LIGHT);
-        when(raddAltService.isAreaCovered(any(), any(), any())).thenReturn(Mono.just(true));
+        when(cfg.getRaddCoverageReferenceDate()).thenReturn(referenceDate);
+        when(raddAltService.isAreaCovered(any(), any(), any()))
+                .thenReturn(Mono.just(true));
 
         PnDeliveryRequest req = new PnDeliveryRequest();
         req.setAarWithRadd(true);
-        req.setNotificationSentAt(Instant.now());
+        req.setNotificationSentAt(Instant.parse("2024-01-20T10:00:00Z"));
+        req.setStartDate("2024-01-22T12:00:00Z");
 
         PnAddress address = new PnAddress();
         address.setCountry("ITALIA");
@@ -55,10 +61,20 @@ class CheckCoverageAreaRaddServiceTest {
         PnDeliveryRequest result = service.filterAttachmentsToSend(req, attachments, address).block();
 
         assertNotNull(result);
+        assertSame(req, result);
         assertEquals(1, result.getAttachments().size());
         assertEquals("AAR", result.getAttachments().getFirst().getDocTag());
         assertEquals(1, result.getRemovedAttachments().size());
         assertEquals("ALTRO", result.getRemovedAttachments().getFirst().getDocTag());
+        assertEquals(referenceDate.name(), result.getRaddCoverageReferenceDate());
+
+        Instant expectedDate =
+                referenceDate == RaddCoverageReferenceDate.PREPARE_REQUEST_DATE
+                        ? Instant.parse(req.getStartDate())
+                        : req.getNotificationSentAt();
+
+        verify(raddAltService)
+                .isAreaCovered(RaddSearchMode.LIGHT, address, expectedDate);
     }
 
     @Test
@@ -80,17 +96,22 @@ class CheckCoverageAreaRaddServiceTest {
 
         assertThrows(DateTimeParseException.class,
                 () -> service.filterAttachmentsToSend(req, List.of(info), address).block());
-        verify(raddAltService, never()).isAreaCovered(any(), any(), any());
+
+        assertNull(req.getRaddCoverageReferenceDate());
+        verifyNoInteractions(raddAltService);
     }
 
-    @Test
-    void testFilterAttachmentsToSend_AreaNotCovered_SendsAll() {
-        when(cfg.getRaddCoverageSearchMode()).thenReturn(RaddSearchMode.valueOf("COMPLETE"));
+    @ParameterizedTest
+    @EnumSource(RaddCoverageReferenceDate.class)
+    void testFilterAttachmentsToSend_AreaNotCovered_SendsAll(RaddCoverageReferenceDate referenceDate) {
+        when(cfg.getRaddCoverageSearchMode()).thenReturn(RaddSearchMode.COMPLETE);
+        when(cfg.getRaddCoverageReferenceDate()).thenReturn(referenceDate);
         when(raddAltService.isAreaCovered(any(), any(), any())).thenReturn(Mono.just(false));
 
         PnDeliveryRequest req = new PnDeliveryRequest();
         req.setAarWithRadd(true);
-        req.setNotificationSentAt(Instant.now());
+        req.setNotificationSentAt(Instant.parse("2024-01-20T10:00:00Z"));
+        req.setStartDate("2024-01-22T12:00:00Z");
 
         PnAddress address = new PnAddress();
         address.setCountry("ITALIA");
@@ -105,8 +126,18 @@ class CheckCoverageAreaRaddServiceTest {
         PnDeliveryRequest result = service.filterAttachmentsToSend(req, attachments, address).block();
 
         assertNotNull(result);
-        assertEquals(2, result.getAttachments().size());
-        assertEquals(0, result.getRemovedAttachments().size());
+        assertSame(req, result);
+        assertEquals(attachments, result.getAttachments());
+        assertTrue(result.getRemovedAttachments().isEmpty());
+        assertEquals(referenceDate.name(), result.getRaddCoverageReferenceDate());
+
+        Instant expectedDate =
+                referenceDate == RaddCoverageReferenceDate.PREPARE_REQUEST_DATE
+                        ? Instant.parse(req.getStartDate())
+                        : req.getNotificationSentAt();
+
+        verify(raddAltService)
+                .isAreaCovered(RaddSearchMode.COMPLETE, address, expectedDate);
     }
 
     @Test

@@ -48,7 +48,15 @@ public class CheckCoverageAreaRaddService implements CheckCoverageAreaService {
 
     private Instant getCoverageReferenceDate(PnDeliveryRequest request) {
         RaddCoverageReferenceDate referenceDate = cfg.getRaddCoverageReferenceDate();
-        return RaddCoverageReferenceDate.PREPARE_REQUEST_DATE.equals(referenceDate) ? Instant.parse(request.getStartDate()) : request.getNotificationSentAt();
+
+        if (RaddCoverageReferenceDate.PREPARE_REQUEST_DATE.equals(referenceDate)) {
+            Instant startDate = Instant.parse(request.getStartDate());
+            request.setRaddCoverageReferenceDate(RaddCoverageReferenceDate.PREPARE_REQUEST_DATE.name());
+            return startDate;
+        }
+
+        request.setRaddCoverageReferenceDate(RaddCoverageReferenceDate.NOTIFICATION_SENT_AT.name());
+        return request.getNotificationSentAt();
     }
 
     private boolean checkZipCoverage(PnDeliveryRequest pnDeliveryRequest, PnAddress pnAddress) {
