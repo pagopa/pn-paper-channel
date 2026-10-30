@@ -10,6 +10,7 @@ import java.time.Instant;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class PrepareRequestMapperTest {
     private final PrepareRequestMapper mapper = Mappers.getMapper(PrepareRequestMapper.class);
@@ -32,6 +33,7 @@ class PrepareRequestMapperTest {
         address.setAddress("Via Roma");
         request.setReceiverAddress(address);
         request.setDiscoveredAddress(address);
+        request.setReceiverAddressSourceType(ReceiverAddressSourceTypeEnum.INDAGINE);
 
         String clientId = "CLIENT1";
         PrepareRequestInt result = mapper.prepareRequestToInternal(request, clientId);
@@ -51,6 +53,7 @@ class PrepareRequestMapperTest {
         assertEquals(request.getReceiverAddress(), result.getReceiverAddress());
         assertEquals(request.getDiscoveredAddress(), result.getDiscoveredAddress());
         assertEquals(request.getAarWithRadd(), result.getAarWithRadd());
+        assertEquals(request.getReceiverAddressSourceType().getValue(), result.getReceiverAddressSourceType());
     }
 
     @Test
@@ -67,6 +70,7 @@ class PrepareRequestMapperTest {
         AnalogAddress address = new AnalogAddress();
         address.setAddress("Via Milano");
         request.setReceiverAddress(address);
+        request.setReceiverAddressSourceType(ReceiverAddressSourceTypeEnum.ANPR);
 
         String clientId = "CLIENTINF";
         PrepareRequestInt result = mapper.informalPrepareRequestToInternal(request, clientId);
@@ -82,6 +86,7 @@ class PrepareRequestMapperTest {
         assertEquals(request.getSenderPaId(), result.getSenderPaId());
         assertEquals(request.getNotificationSentAt(), result.getNotificationSentAt());
         assertEquals(request.getReceiverAddress(), result.getReceiverAddress());
+        assertEquals(request.getReceiverAddressSourceType().getValue(), result.getReceiverAddressSourceType());
     }
 
     @Test
