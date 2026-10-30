@@ -71,11 +71,14 @@ public class ExternalChannelClientImpl extends BaseClient implements ExternalCha
     private PaperEngageRequestDto buildPaperEngageRequest(SendRequest sendRequest, List<AttachmentInfo> attachments, Boolean applyRasterization) {
         PaperEngageRequestDto dto = new PaperEngageRequestDto();
         dto.setRequestId(sendRequest.getRequestId());
-        dto.setRequestPaId(
-                pnPaperChannelConfig.isRequestPaIdAsSelfcareToken()
-                        ? sendRequest.getSenderPaId()
-                        : sendRequest.getRequestPaId()
-        );
+        if(pnPaperChannelConfig.isRequestPaIdAsSelfcareToken()){
+            log.info("Request PA ID is set as selfcare token, using sender PA ID: {}", sendRequest.getSenderPaId());
+            dto.setRequestPaId(sendRequest.getSenderPaId());
+        }else{
+            log.info("Request PA ID is set as request PA ID, using request PA ID: {}", sendRequest.getRequestPaId());
+            dto.setRequestPaId(sendRequest.getRequestPaId());
+        }
+
         dto.setClientRequestTimeStamp(OffsetDateTime.now());
         if (sendRequest.getClientRequestTimeStamp() != null){
             dto.setClientRequestTimeStamp(DateUtils.getOffsetDateTimeFromDate(sendRequest.getClientRequestTimeStamp()));
