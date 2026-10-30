@@ -123,9 +123,9 @@ public class PcRetryUtils {
                             .doOnError(ex -> log.error("Error on initPaperTracking: {}", ex.getMessage(), ex))
                     )
                     .thenReturn(sendRequest)
-                    .flatMap(sendReq -> externalChannelClient.sendEngageRequest(sendReq, attachmentInfos, pnDeliveryRequest.getApplyRasterization()));
+                    .flatMap(sendReq -> externalChannelClient.sendEngageRequest(sendReq, attachmentInfos, pnDeliveryRequest.getApplyRasterization(), pnDeliveryRequest.getSenderPaId()));
         }
-        return externalChannelClient.sendEngageRequest(sendRequest, attachmentInfos, pnDeliveryRequest.getApplyRasterization());
+        return externalChannelClient.sendEngageRequest(sendRequest, attachmentInfos, pnDeliveryRequest.getApplyRasterization(), pnDeliveryRequest.getSenderPaId());
     }
 
     private Mono<PaperChannelDeliveryDriver> retrieveUnifiedDeliveryDriver(SendRequest sendRequest, String requestId, String productType) {

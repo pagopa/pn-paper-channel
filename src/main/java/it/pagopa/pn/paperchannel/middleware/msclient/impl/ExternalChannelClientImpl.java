@@ -50,11 +50,11 @@ public class ExternalChannelClientImpl extends BaseClient implements ExternalCha
     }
 
 
-    public Mono<Void> sendEngageRequest(SendRequest sendRequest, List<AttachmentInfo> attachments, Boolean applyRasterization) {
+    public Mono<Void> sendEngageRequest(SendRequest sendRequest, List<AttachmentInfo> attachments, Boolean applyRasterization, String senderPaId) {
         return Mono.defer(() -> {
             log.logInvokingAsyncExternalService(PnLogger.EXTERNAL_SERVICES.PN_EXTERNAL_CHANNELS, PN_EXTERNAL_CHANNEL_DESCRIPTION, sendRequest.getRequestId());
             String requestIdx = sendRequest.getRequestId();
-            var dto = buildPaperEngageRequest(sendRequest, attachments, applyRasterization);
+            var dto = buildPaperEngageRequest(sendRequest, attachments, applyRasterization, senderPaId);
 
             return this.paperMessagesApi.sendPaperEngageRequest(requestIdx, this.pnPaperChannelConfig.getXPagopaExtchCxId(), dto);
         });
@@ -68,14 +68,17 @@ public class ExternalChannelClientImpl extends BaseClient implements ExternalCha
         return this.paperRequestMetadataPatchApi.patchRequestMetadata(requestIdx, this.pnPaperChannelConfig.getXPagopaExtchCxId(), dto);
     }
 
-    private PaperEngageRequestDto buildPaperEngageRequest(SendRequest sendRequest, List<AttachmentInfo> attachments, Boolean applyRasterization) {
+    private PaperEngageRequestDto buildPaperEngageRequest(SendRequest sendRequest, List<AttachmentInfo> attachments, Boolean applyRasterization, String senderPaId) {
         PaperEngageRequestDto dto = new PaperEngageRequestDto();
         dto.setRequestId(sendRequest.getRequestId());
-        dto.setRequestPaId(
-                pnPaperChannelConfig.isRequestPaIdAsSelfcareToken()
-                        ? sendRequest.getSenderPaId()
-                        : sendRequest.getRequestPaId()
-        );
+        if(pnPaperChannelConfig.isRequestPaIdAsSelfcareToken()){
+            log.info("using request PA id as selfcare token: {}", senderPaId);
+            dto.setRequestPaId(senderPaId);
+        }else{
+            log.info("using request PA id as taxId");
+            dto.setRequestPaId(sendRequest.getRequestPaId());
+        }
+
         dto.setClientRequestTimeStamp(OffsetDateTime.now());
         if (sendRequest.getClientRequestTimeStamp() != null){
             dto.setClientRequestTimeStamp(DateUtils.getOffsetDateTimeFromDate(sendRequest.getClientRequestTimeStamp()));
