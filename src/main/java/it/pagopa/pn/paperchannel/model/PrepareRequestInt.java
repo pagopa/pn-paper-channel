@@ -31,4 +31,5 @@ public class PrepareRequestInt {
     private String senderPaId;
     private Boolean aarWithRadd;
     private Integer senderPriority;
+    private String receiverAddressSourceType;
 }

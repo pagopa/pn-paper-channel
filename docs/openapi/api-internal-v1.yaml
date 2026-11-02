@@ -724,6 +724,8 @@ components:
           maximum: 100
           default: 0
           example: 0
+        receiverAddressSourceType:
+          $ref: 'schemas-paper-v1.yaml#/components/schemas/ReceiverAddressSourceTypeEnum'
       allOf:
         - $ref: '#/components/schemas/InformalPaperRequest'
     InformalPaperRequest:

@@ -1,6 +1,7 @@
 package it.pagopa.pn.paperchannel.mapper;
 
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.PrepareEvent;
+import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ReceiverAddressSourceTypeEnum;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ResultFilterEnum;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.StatusCodeEnum;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
@@ -33,6 +34,7 @@ class PrepareEventMapperTest {
         Assertions.assertNotNull(response);
         Assertions.assertEquals(response.getStatusCode().getValue(),StatusDeliveryEnum.IN_PROCESSING.getDetail());
         Assertions.assertEquals(response.getStatusDetail(), StatusDeliveryEnum.IN_PROCESSING.getCode());
+        Assertions.assertEquals(ReceiverAddressSourceTypeEnum.ANPR, response.getReceiverAddressSourceType());
     }
 
     @Test
@@ -41,6 +43,7 @@ class PrepareEventMapperTest {
         Assertions.assertNotNull(response);
         Assertions.assertEquals(response.getStatusCode().getValue(),StatusDeliveryEnum.UNTRACEABLE.getDetail());
         Assertions.assertEquals(response.getStatusDetail(), StatusDeliveryEnum.UNTRACEABLE.getCode());
+        Assertions.assertEquals(ReceiverAddressSourceTypeEnum.ANPR, response.getReceiverAddressSourceType());
     }
 
     @Test
@@ -67,6 +70,7 @@ class PrepareEventMapperTest {
         PrepareEvent response= PrepareEventMapper.toPrepareEvent(req,getAddress(), StatusCodeEnum.OK, null);
         Assertions.assertNotNull(response);
         Assertions.assertEquals(2, response.getReplacedF24AttachmentUrls().size());
+        Assertions.assertEquals(ReceiverAddressSourceTypeEnum.ANPR, response.getReceiverAddressSourceType());
     }
 
 
@@ -95,6 +99,7 @@ class PrepareEventMapperTest {
         Assertions.assertNotNull(response.getCategorizedAttachments());
         Assertions.assertEquals(3, response.getCategorizedAttachments().getAcceptedAttachments().size());
         Assertions.assertEquals(0, response.getCategorizedAttachments().getDiscardedAttachments().size());
+        Assertions.assertEquals(ReceiverAddressSourceTypeEnum.ANPR, response.getReceiverAddressSourceType());
     }
 
 
@@ -126,6 +131,7 @@ class PrepareEventMapperTest {
         Assertions.assertNotNull(response.getCategorizedAttachments());
         Assertions.assertEquals(2, response.getCategorizedAttachments().getAcceptedAttachments().size());
         Assertions.assertEquals(1, response.getCategorizedAttachments().getDiscardedAttachments().size());
+        Assertions.assertEquals(ReceiverAddressSourceTypeEnum.ANPR, response.getReceiverAddressSourceType());
 
         Assertions.assertEquals(ResultFilterEnum.SUCCESS, response.getCategorizedAttachments().getAcceptedAttachments().get(1).getResult());
         Assertions.assertEquals("OK", response.getCategorizedAttachments().getAcceptedAttachments().get(1).getReasonCode());
@@ -178,6 +184,7 @@ class PrepareEventMapperTest {
         deliveryRequest.setStartDate("");
         deliveryRequest.setProductType("RN_AR");
         deliveryRequest.setAttachments(attachmentUrls);
+        deliveryRequest.setReceiverAddressSourceType("ANPR");
         return deliveryRequest;
     }
     public Address getAddress(){
