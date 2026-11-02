@@ -59,7 +59,7 @@ class ExternalChannelClientImplTest {
         Mockito.when(pnPaperChannelConfig.isRequestPaIdAsSelfcareToken()).thenReturn(Boolean.TRUE);
         Mockito.when(paperMessagesApi.sendPaperEngageRequest(caturedSRequestId.capture(), caturedSCxId.capture(), caturedSPaperEngageRequestDto.capture())).thenReturn(Mono.empty());
 
-        externalChannelClient.sendEngageRequest(sendRequest, List.of(attachmentInfo), null).block();
+        externalChannelClient.sendEngageRequest(sendRequest, List.of(attachmentInfo), null, "senderPaId").block();
 
         PaperEngageRequestDto dto = caturedSPaperEngageRequestDto.getValue();
         String cxid = caturedSCxId.getValue();
@@ -87,7 +87,7 @@ class ExternalChannelClientImplTest {
         Mockito.when(pnPaperChannelConfig.isRequestPaIdAsSelfcareToken()).thenReturn(Boolean.FALSE);
         Mockito.when(paperMessagesApi.sendPaperEngageRequest(caturedSRequestId.capture(), caturedSCxId.capture(), caturedSPaperEngageRequestDto.capture())).thenReturn(Mono.empty());
 
-        externalChannelClient.sendEngageRequest(sendRequest, List.of(attachmentInfo), null).block();
+        externalChannelClient.sendEngageRequest(sendRequest, List.of(attachmentInfo), null, "senderPaId").block();
 
         PaperEngageRequestDto dto = caturedSPaperEngageRequestDto.getValue();
         Assertions.assertEquals(sendRequest.getRequestPaId(), dto.getRequestPaId());
@@ -108,7 +108,7 @@ class ExternalChannelClientImplTest {
         Mockito.when(pnPaperChannelConfig.isRequestPaIdAsSelfcareToken()).thenReturn(Boolean.TRUE);
         Mockito.when(paperMessagesApi.sendPaperEngageRequest(caturedSRequestId.capture(), caturedSCxId.capture(), caturedSPaperEngageRequestDto.capture())).thenReturn(Mono.empty());
 
-        externalChannelClient.sendEngageRequest(sendRequest, List.of(attachmentInfo), Boolean.TRUE).block();
+        externalChannelClient.sendEngageRequest(sendRequest, List.of(attachmentInfo), Boolean.TRUE, "senderPaId").block();
 
         PaperEngageRequestDto dto = caturedSPaperEngageRequestDto.getValue();
         String cxid = caturedSCxId.getValue();

@@ -124,7 +124,7 @@ class RetryableErrorMessageHandlerTest {
         assertDoesNotThrow(() -> handler.handleMessage(pnDeliveryRequest, paperRequest).block());
 
         //verifico che viene NON invocato ext-channels
-        verify(mockExtChannel, timeout(2000).times(0)).sendEngageRequest(any(SendRequest.class), anyList(), eq(null));
+        verify(mockExtChannel, timeout(2000).times(0)).sendEngageRequest(any(SendRequest.class), anyList(), eq(null), anyString());
 
         //verifico che viene salvata la richiesta andata in errore
         verify(mockRequestError, timeout(2000).times(1))

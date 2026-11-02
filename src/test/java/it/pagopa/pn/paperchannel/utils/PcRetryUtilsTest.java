@@ -80,9 +80,10 @@ class PcRetryUtilsTest {
     void testCheckHasOtherAttemptAndMapPcRetryResponse_WithRetry() {
         PnDeliveryRequest pnDeliveryRequest = getPnDeliveryRequest();
         pnDeliveryRequest.setStatusCode("RECRN006");
+        pnDeliveryRequest.setSenderPaId("senderPaId");
         when(config.getMaxPcRetry()).thenReturn(10);
         when(addressDAO.findAllByRequestId(pnDeliveryRequest.getRequestId())).thenReturn(Mono.just(new ArrayList<>()));
-        when(externalChannelClient.sendEngageRequest(any(), any(), any())).thenReturn(Mono.empty());
+        when(externalChannelClient.sendEngageRequest(any(), any(), any(), anyString())).thenReturn(Mono.empty());
 
         PcRetryResponse response = pcRetryUtils.checkHasOtherAttemptAndMapPcRetryResponse("IUN.ATTEMPT_0.PCRETRY_0", pnDeliveryRequest).block();
 
@@ -91,7 +92,7 @@ class PcRetryUtilsTest {
         Assertions.assertEquals("PCRETRY_1", response.getPcRetry());
         Assertions.assertEquals("IUN.ATTEMPT_0.PCRETRY_1", response.getRequestId());
         verify(addressDAO).findAllByRequestId(pnDeliveryRequest.getRequestId());
-        verify(externalChannelClient).sendEngageRequest(any(), any(), any());
+        verify(externalChannelClient).sendEngageRequest(any(), any(), any(), anyString());
     }
 
     @Test
@@ -101,7 +102,7 @@ class PcRetryUtilsTest {
         PnAddress pnAddress = new PnAddress();
         pnAddress.setTypology(AddressTypeEnum.RECEIVER_ADDRESS.toString());
         when(addressDAO.findAllByRequestId(anyString())).thenReturn(Mono.just(List.of(pnAddress)));
-        when(externalChannelClient.sendEngageRequest(any(), any(), any())).thenReturn(Mono.empty());
+        when(externalChannelClient.sendEngageRequest(any(), any(), any(), anyString())).thenReturn(Mono.empty());
         PcRetryResponse response = pcRetryUtils.checkHasOtherAttemptAndMapPcRetryResponse("IUN.ATTEMPT_0.PCRETRY_2", pnDeliveryRequest).block();
 
         Assertions.assertEquals("IUN.ATTEMPT_0.PCRETRY_2", response.getParentRequestId());
@@ -117,6 +118,7 @@ class PcRetryUtilsTest {
         String requestId = "REQ123";
         String pcRetry = "1";
         PnDeliveryRequest pnDeliveryRequest = getPnDeliveryRequest();
+        pnDeliveryRequest.setSenderPaId("senderPaId");
         SendRequest sendRequest = new SendRequest();
         AnalogAddress receiverAddress = new AnalogAddress();
         receiverAddress.setCap("00100");
@@ -132,13 +134,13 @@ class PcRetryUtilsTest {
         when(paperChannelDeliveryDriverDAO.getByDeliveryDriverId(pnPaperChannelCostDTO.getDeliveryDriverId()))
                 .thenReturn(Mono.just(driver));
         when(paperTrackerClient.initPaperTracking(any(), any(), any(), any(), any())).thenReturn(Mono.empty());
-        when(externalChannelClient.sendEngageRequest(any(), any(), any())).thenReturn(Mono.empty());
+        when(externalChannelClient.sendEngageRequest(any(), any(), any(), anyString())).thenReturn(Mono.empty());
 
         pcRetryUtils.callInitTrackingAndEcSendEngage(requestId, sendRequest, attachmentInfos, pnDeliveryRequest, pcRetry).block();
 
         verify(paperChannelDeliveryDriverDAO).getByDeliveryDriverId("driver1");
         verify(paperTrackerClient).initPaperTracking(requestId, "PCRETRY_1", "AR", "poste", pnDeliveryRequest.getClientId());
-        verify(externalChannelClient).sendEngageRequest(sendRequest, attachmentInfos, pnDeliveryRequest.getApplyRasterization());
+        verify(externalChannelClient).sendEngageRequest(sendRequest, attachmentInfos, pnDeliveryRequest.getApplyRasterization(), "senderPaId");
     }
 
     @Test
@@ -147,17 +149,18 @@ class PcRetryUtilsTest {
         String pcRetry = "1";
         PnDeliveryRequest pnDeliveryRequest = getPnDeliveryRequest();
         pnDeliveryRequest.setProductType("RIR");
+        pnDeliveryRequest.setSenderPaId("senderPaId");
         SendRequest sendRequest = new SendRequest();
         List<AttachmentInfo> attachmentInfos = new ArrayList<>();
 
         when(config.getPaperTrackerProductList()).thenReturn(List.of("AR"));
-        when(externalChannelClient.sendEngageRequest(any(), any(), any())).thenReturn(Mono.empty());
+        when(externalChannelClient.sendEngageRequest(any(), any(), any(), anyString())).thenReturn(Mono.empty());
 
         pcRetryUtils.callInitTrackingAndEcSendEngage(requestId, sendRequest, attachmentInfos, pnDeliveryRequest, pcRetry).block();
 
         verifyNoInteractions(paperChannelDeliveryDriverDAO);
         verifyNoInteractions(paperTrackerClient);
-        verify(externalChannelClient).sendEngageRequest(sendRequest, attachmentInfos, pnDeliveryRequest.getApplyRasterization());
+        verify(externalChannelClient).sendEngageRequest(sendRequest, attachmentInfos, pnDeliveryRequest.getApplyRasterization(), "senderPaId");
     }
 
     @Test
@@ -198,6 +201,7 @@ class PcRetryUtilsTest {
         String pcRetry = "1";
         PnDeliveryRequest pnDeliveryRequest = getPnDeliveryRequest();
         pnDeliveryRequest.setDriverCode(null);
+        pnDeliveryRequest.setSenderPaId("senderPaId");
         SendRequest sendRequest = new SendRequest();
         AnalogAddress receiverAddress = new AnalogAddress();
         receiverAddress.setCap("00100");
@@ -213,13 +217,13 @@ class PcRetryUtilsTest {
         when(paperChannelDeliveryDriverDAO.getByDeliveryDriverId("driver1"))
                 .thenReturn(Mono.just(driver));
         when(paperTrackerClient.initPaperTracking(any(), any(), any(), any(), any())).thenReturn(Mono.empty());
-        when(externalChannelClient.sendEngageRequest(any(), any(), any())).thenReturn(Mono.empty());
+        when(externalChannelClient.sendEngageRequest(any(), any(), any(), anyString())).thenReturn(Mono.empty());
 
         pcRetryUtils.callInitTrackingAndEcSendEngage(requestId, sendRequest, attachmentInfos, pnDeliveryRequest, pcRetry).block();
 
         verify(paperChannelDeliveryDriverDAO).getByDeliveryDriverId("driver1");
         verify(paperTrackerClient).initPaperTracking(requestId, "PCRETRY_1", "AR", "poste", pnDeliveryRequest.getClientId());
-        verify(externalChannelClient).sendEngageRequest(sendRequest, attachmentInfos, pnDeliveryRequest.getApplyRasterization());
+        verify(externalChannelClient).sendEngageRequest(sendRequest, attachmentInfos, pnDeliveryRequest.getApplyRasterization(), "senderPaId");
     }
 
     @Test

@@ -107,6 +107,7 @@ class Paper_RS_AR_IT extends BaseTest {
 
         // event (final only)
         PnDeliveryRequest pnDeliveryRequest = CommonUtils.createPnDeliveryRequest();
+        pnDeliveryRequest.setSenderPaId("senderPaId");
 
         PaperProgressStatusEventDto analogMail = CommonUtils.createSimpleAnalogMail();
         analogMail.setStatusCode(event);
@@ -119,6 +120,7 @@ class Paper_RS_AR_IT extends BaseTest {
         extChannelMessage.setAnalogMail(analogMail);
 
         PnDeliveryRequest afterSetForUpdate = CommonUtils.createPnDeliveryRequest();
+        afterSetForUpdate.setSenderPaId("senderPaId");
 
         afterSetForUpdate.setProductType("RS"); // product type
 
@@ -145,7 +147,7 @@ class Paper_RS_AR_IT extends BaseTest {
         pnAddress.setCity("Milan");
         pnAddress.setCap("");
         when(mockAddressDAO.findAllByRequestId(anyString())).thenReturn(Mono.just(List.of(pnAddress)));
-        when(mockExtChannel.sendEngageRequest(any(SendRequest.class), anyList(), any())).thenReturn(Mono.empty());
+        when(mockExtChannel.sendEngageRequest(any(SendRequest.class), anyList(), any(), anyString())).thenReturn(Mono.empty());
 
         // verifico che il flusso è stato completato con successo
         assertDoesNotThrow(() -> paperResultAsyncService.resultAsyncBackground(extChannelMessage, 0).block());
@@ -153,7 +155,7 @@ class Paper_RS_AR_IT extends BaseTest {
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
         // verifico che viene invocato ext-channels
-        verify(mockExtChannel, timeout(2000).times(1)).sendEngageRequest(any(SendRequest.class), anyList(), any());
+        verify(mockExtChannel, timeout(2000).times(1)).sendEngageRequest(any(SendRequest.class), anyList(), any(), anyString());
 
         // verifico che è stato inviato un evento a delivery-push
         verify(sqsSender, timeout(2000).times(1)).pushSendEventOnEventBridge(anyString(), caturedSendEvent.capture());
