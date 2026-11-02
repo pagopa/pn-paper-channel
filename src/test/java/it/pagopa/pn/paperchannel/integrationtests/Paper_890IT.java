@@ -200,11 +200,11 @@ class Paper_890IT extends BaseTest {
         pnAddress.setCap("");
 
         when(mockAddressDAO.findAllByRequestId(anyString())).thenReturn(Mono.just(List.of(pnAddress)));
-        when(mockExtChannel.sendEngageRequest(any(SendRequest.class), anyList(), any())).thenReturn(Mono.empty());
+        when(mockExtChannel.sendEngageRequest(any(SendRequest.class), anyList(), any(), anyString())).thenReturn(Mono.empty());
 
         generateEvent("RECAG004","F04","",null,"retry", null, iun);
 
-        verify(mockExtChannel, timeout(2000).times(1)).sendEngageRequest(any(SendRequest.class), anyList(), any());
+        verify(mockExtChannel, timeout(2000).times(1)).sendEngageRequest(any(SendRequest.class), anyList(), any(), anyString());
         ArgumentCaptor<SendEvent> caturedSendEvent = ArgumentCaptor.forClass(SendEvent.class);
 
         verify(sqsSender, timeout(2000).times(1)).pushSendEventOnEventBridge(anyString(), caturedSendEvent.capture());
@@ -224,7 +224,7 @@ class Paper_890IT extends BaseTest {
         pnAddress.setCap("");
 
         when(mockAddressDAO.findAllByRequestId(anyString())).thenReturn(Mono.just(List.of(pnAddress)));
-        when(mockExtChannel.sendEngageRequest(any(SendRequest.class), anyList(), any())).thenReturn(Mono.empty());
+        when(mockExtChannel.sendEngageRequest(any(SendRequest.class), anyList(), any(), anyString())).thenReturn(Mono.empty());
 
         generateEvent("RECAG013","","",null,"retry", null, iun);
 
@@ -238,6 +238,7 @@ class Paper_890IT extends BaseTest {
     private void generateEvent(String statusCode, String deliveryFailureCause, String discoveredAddress, List<String> attach, String testType, Instant statusDateTimeToSet, String iun){
         // event (final only)
         PnDeliveryRequest pnDeliveryRequest = CommonUtils.createPnDeliveryRequest(iun);
+        pnDeliveryRequest.setSenderPaId("senderPaId");
 
         PaperProgressStatusEventDto analogMail = CommonUtils.createSimpleAnalogMail(iun);
 
@@ -280,6 +281,7 @@ class Paper_890IT extends BaseTest {
         extChannelMessage.setAnalogMail(analogMail);
 
         PnDeliveryRequest afterSetForUpdate = CommonUtils.createPnDeliveryRequest();
+        afterSetForUpdate.setSenderPaId("senderPaId");
 
         if(testType != null && testType.equalsIgnoreCase("retry")){
             afterSetForUpdate.setProductType("_890");
