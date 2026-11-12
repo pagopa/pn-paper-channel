@@ -2,7 +2,7 @@ package it.pagopa.pn.paperchannel.mapper;
 
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.DiscoveredAddressDto;
-import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnnationalregistries.v1.dto.AddressSQSMessagePhysicalAddressDto;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnnationalregistries.v1.dto.PhysicalAddressDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.AnalogAddress;
 import it.pagopa.pn.paperchannel.middleware.db.entities.PnAddress;
 import it.pagopa.pn.paperchannel.model.Address;
@@ -26,8 +26,9 @@ class AddressMapperTest {
 
     @Test
     void addressMapperFromNationalRegistryTest() {
-        Address address=AddressMapper.fromNationalRegistry(getpysicalAddress());
+        Address address=AddressMapper.fromNationalRegistry(getpysicalAddress(), "ANPR");
         Assertions.assertNotNull(address);
+        Assertions.assertEquals("ANPR", address.getRegistry());
     }
     @Test
     void addressMapperToEntityTest() {
@@ -91,8 +92,8 @@ class AddressMapperTest {
         address.setNameRow2("Ettore");
         return address;
     }
-    public AddressSQSMessagePhysicalAddressDto getpysicalAddress(){
-        AddressSQSMessagePhysicalAddressDto pysicalAddress = new AddressSQSMessagePhysicalAddressDto();
+    public PhysicalAddressDto getpysicalAddress(){
+        PhysicalAddressDto pysicalAddress = new PhysicalAddressDto();
         pysicalAddress.setAt("at");
         pysicalAddress.setAddress("address");
         pysicalAddress.setAddressDetails("addressDetails");

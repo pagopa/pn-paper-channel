@@ -31,6 +31,7 @@ public class Address {
     private String productType;
 
     private boolean fromNationalRegistry = false;
+    private String registry;
 
     public String convertToHash() {
         if (

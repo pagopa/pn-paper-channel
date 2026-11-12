@@ -3,7 +3,7 @@ package it.pagopa.pn.paperchannel.mapper;
 import it.pagopa.pn.paperchannel.config.PnPaperChannelConfig;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnaddressmanager.v1.dto.AnalogAddressDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.DiscoveredAddressDto;
-import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnnationalregistries.v1.dto.AddressSQSMessagePhysicalAddressDto;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnnationalregistries.v1.dto.PhysicalAddressDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnraddalt.v1.dto.CheckCoverageRequestDto;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.AnalogAddress;
 import it.pagopa.pn.paperchannel.generated.openapi.server.v1.dto.ProductTypeEnum;
@@ -38,7 +38,7 @@ public class AddressMapper {
     }
 
 
-    public static Address fromNationalRegistry(AddressSQSMessagePhysicalAddressDto pysicalAddress){
+    public static Address fromNationalRegistry(PhysicalAddressDto pysicalAddress, String registry){
         Address address = new Address();
         address.setNameRow2(pysicalAddress.getAt());
         address.setAddress(pysicalAddress.getAddress());
@@ -49,6 +49,7 @@ public class AddressMapper {
         address.setPr(pysicalAddress.getProvince());
         address.setCountry(pysicalAddress.getForeignState());
         address.setFromNationalRegistry(true);
+        address.setRegistry(registry);
         return address;
     }
 

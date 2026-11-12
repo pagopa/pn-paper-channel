@@ -214,7 +214,7 @@ public class QueueListenerServiceImpl extends GenericService implements QueueLis
         Mono<Optional<Address>> addressMono;
 
         if (validatePhysicalAddressPayload(addressFromNational, deliveryRequest.getRequestId())) {
-            Address address = AddressMapper.fromNationalRegistry(addressFromNational.getPhysicalAddress());
+            Address address = AddressMapper.fromNationalRegistry(addressFromNational.getPhysicalAddress(), addressFromNational.getRegistry());
             addressMono = this.retrieveRelatedAddress(deliveryRequest.getRelatedRequestId(), address);
         }
         else {

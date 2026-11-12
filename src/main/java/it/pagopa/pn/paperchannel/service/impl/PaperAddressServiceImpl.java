@@ -33,9 +33,6 @@ public class PaperAddressServiceImpl extends GenericService implements PaperAddr
     private final NationalRegistryService nationalRegistryService;
     private final PrepareFlowStarter prepareFlowStarter;
 
-    private static final String RECEIVER_TYPE_PF = "PF";
-    private static final String RECEIVER_TYPE_PG = "PG";
-
 
     public PaperAddressServiceImpl(RequestDeliveryDAO requestDeliveryDAO, SqsSender sqsQueueSender,
                                    AddressDAO addressDAO, SecondAttemptFlowHandlerFactory secondAttemptFlowHandlerFactory,
@@ -105,7 +102,7 @@ public class PaperAddressServiceImpl extends GenericService implements PaperAddr
 
         return secondAttemptFlowHandlerFactory.getSecondAttemptFlowService(SecondAttemptFlowHandlerFactory.FlowType.NATIONAL_REGISTY_FLOW)
                 .handleSecondAttempt(deliveryRequest, fromNationalRegistry, addressFromFirstAttempt)
-                .doOnNext(unused -> setReceiverAddressSourceType(deliveryRequest, fromNationalRegistryReceiverType(deliveryRequest.getReceiverType())));
+                .doOnNext(unused -> setReceiverAddressSourceType(deliveryRequest, toReceiverAddressSourceType(fromNationalRegistry.getRegistry())));
     }
 
     private Mono<Address> getAddressFromDiscoveredAddress(PnDeliveryRequest deliveryRequest, Address addressFromFirstAttempt) {
@@ -149,15 +146,13 @@ public class PaperAddressServiceImpl extends GenericService implements PaperAddr
         deliveryRequest.setReceiverAddressSourceType(receiverAddressSourceType != null ? receiverAddressSourceType.getValue() : null);
     }
 
-    private ReceiverAddressSourceTypeEnum fromNationalRegistryReceiverType(String receiverType) {
-        if (RECEIVER_TYPE_PF.equalsIgnoreCase(receiverType)) {
-            return ReceiverAddressSourceTypeEnum.ANPR;
+    private ReceiverAddressSourceTypeEnum toReceiverAddressSourceType(String registry) {
+        try {
+            return ReceiverAddressSourceTypeEnum.fromValue(registry);
+        } catch (IllegalArgumentException ex) {
+            log.error("Unknown registry {}, unable to resolve receiver address source type", registry);
+            throw new PnGenericException(UNKNOWN_REGISTRY, UNKNOWN_REGISTRY.getMessage());
         }
-        if (RECEIVER_TYPE_PG.equalsIgnoreCase(receiverType)) {
-            return ReceiverAddressSourceTypeEnum.REGISTRO_IMPRESE;
-        }
-        log.error("Unknown receiverType {}, unable to resolve receiver address source type", receiverType);
-        throw new PnGenericException(UNKNOWN_RECEIVER_TYPE, UNKNOWN_RECEIVER_TYPE.getMessage());
     }
 
 }
