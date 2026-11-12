@@ -33,6 +33,9 @@ public class PaperAddressServiceImpl extends GenericService implements PaperAddr
     private final NationalRegistryService nationalRegistryService;
     private final PrepareFlowStarter prepareFlowStarter;
 
+    private static final String RECEIVER_TYPE_PF = "PF";
+    private static final String RECEIVER_TYPE_PG = "PG";
+
 
     public PaperAddressServiceImpl(RequestDeliveryDAO requestDeliveryDAO, SqsSender sqsQueueSender,
                                    AddressDAO addressDAO, SecondAttemptFlowHandlerFactory secondAttemptFlowHandlerFactory,
@@ -102,7 +105,7 @@ public class PaperAddressServiceImpl extends GenericService implements PaperAddr
 
         return secondAttemptFlowHandlerFactory.getSecondAttemptFlowService(SecondAttemptFlowHandlerFactory.FlowType.NATIONAL_REGISTY_FLOW)
                 .handleSecondAttempt(deliveryRequest, fromNationalRegistry, addressFromFirstAttempt)
-                .doOnNext(unused -> setReceiverAddressSourceType(deliveryRequest, toReceiverAddressSourceType(fromNationalRegistry.getRegistry())));
+                .doOnNext(unused -> setReceiverAddressSourceType(deliveryRequest, toReceiverAddressSourceType(fromNationalRegistry.getRegistry(), deliveryRequest)));
     }
 
     private Mono<Address> getAddressFromDiscoveredAddress(PnDeliveryRequest deliveryRequest, Address addressFromFirstAttempt) {
@@ -146,13 +149,32 @@ public class PaperAddressServiceImpl extends GenericService implements PaperAddr
         deliveryRequest.setReceiverAddressSourceType(receiverAddressSourceType != null ? receiverAddressSourceType.getValue() : null);
     }
 
-    private ReceiverAddressSourceTypeEnum toReceiverAddressSourceType(String registry) {
+    private ReceiverAddressSourceTypeEnum toReceiverAddressSourceType(String registry, PnDeliveryRequest deliveryRequest) {
+        if (StringUtils.isBlank(registry)) {
+            registry = registryFromReceiverType(deliveryRequest);
+        }
         try {
             return ReceiverAddressSourceTypeEnum.fromValue(registry);
         } catch (IllegalArgumentException ex) {
             log.error("Unknown registry {}, unable to resolve receiver address source type", registry);
             throw new PnGenericException(UNKNOWN_REGISTRY, UNKNOWN_REGISTRY.getMessage());
         }
+    }
+
+    /**
+     * TODO rimuovere al rilascio successivo: serve solo per gli eventi su pn-paper-normalize-address
+     * serializzati da versioni precedenti di paper-channel, in cui Address non conteneva il campo registry.
+     */
+    private String registryFromReceiverType(PnDeliveryRequest deliveryRequest) {
+        String receiverType = deliveryRequest.getReceiverType();
+        log.warn("[{}] Registry missing in national registry address, fallback on receiverType {}", deliveryRequest.getRequestId(), receiverType);
+        if (RECEIVER_TYPE_PF.equalsIgnoreCase(receiverType)) {
+            return ReceiverAddressSourceTypeEnum.ANPR.getValue();
+        }
+        if (RECEIVER_TYPE_PG.equalsIgnoreCase(receiverType)) {
+            return ReceiverAddressSourceTypeEnum.REGISTRO_IMPRESE.getValue();
+        }
+        return null;
     }
 
 }
