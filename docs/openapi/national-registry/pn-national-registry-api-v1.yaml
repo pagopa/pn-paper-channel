@@ -691,6 +691,12 @@ components:
         type: string
         enum: [ PG , PF ]
   schemas:
+    CorrelationId:
+      type: string
+      description: Identificativo univoco della richiesta
+      minLength: 1
+      maxLength: 255
+      pattern: '^[A-Za-z0-9._:@#+=~-]+$'
     AddressRequestBody:
       type: object
       properties:
@@ -711,7 +717,7 @@ components:
               type: string
               format: date-time
             correlationId:
-              type: string
+              $ref: '#/components/schemas/CorrelationId'
             domicileType:
               type: string
               enum: [ PHYSICAL , DIGITAL ]
@@ -719,7 +725,7 @@ components:
       type: object
       properties:
         correlationId:
-          type: string
+          $ref: '#/components/schemas/CorrelationId'
     CheckTaxIdRequestBody:
       type: object
       properties:
@@ -786,7 +792,7 @@ components:
             - requestReason
           properties:
             correlationId:
-              type: string
+              $ref: '#/components/schemas/CorrelationId'
             taxId:
               x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
               type: string
@@ -794,6 +800,7 @@ components:
               example: AAAZZZ00H00T000Z
             referenceRequestDate:
               type: string
+              format: date-time
             requestReason:
               type: string
     GetAddressANPROK:
@@ -881,7 +888,7 @@ components:
             - practicalReference
           properties:
             correlationId:
-              type: string
+              $ref: '#/components/schemas/CorrelationId'
             taxId:
               x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
               type: string
@@ -966,12 +973,12 @@ components:
               format: password # NO EXTERNAL
               example: AAAZZZ00H00T000Z
             correlationId:
-              type: string
+              $ref: '#/components/schemas/CorrelationId'
     GetDigitalAddressIniPECOK:
       type: object
       properties:
         correlationId:
-          type: string
+          $ref: '#/components/schemas/CorrelationId'
     GetDigitalAddressIniPECError:
       type: object
       properties:
@@ -1111,7 +1118,7 @@ components:
         - taxId
       properties:
         correlationId:
-          type: string
+          $ref: '#/components/schemas/CorrelationId'
         taxId:
           x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
@@ -1188,7 +1195,7 @@ components:
             - vatNumber
           properties:
             correlationId:
-              type: string
+              $ref: '#/components/schemas/CorrelationId'
             taxId:
               x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
               type: string
@@ -1258,7 +1265,7 @@ components:
             - vatNumber
           properties:
             correlationId:
-              type: string
+              $ref: '#/components/schemas/CorrelationId'
             taxId:
               x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
               type: string
@@ -1362,7 +1369,7 @@ components:
       type: object
       properties:
         correlationId:
-          type: string
+          $ref: '#/components/schemas/CorrelationId'
         taxId:
           x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
@@ -1452,7 +1459,7 @@ components:
       type: object
       properties:
         correlationId:
-          type: string
+          $ref: '#/components/schemas/CorrelationId'
         taxId:
           x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
@@ -1492,7 +1499,7 @@ components:
         - referenceRequestDate
       properties:
         correlationId:
-          type: string
+          $ref: '#/components/schemas/CorrelationId'
         referenceRequestDate:
           type: string
           format: date-time
@@ -1526,7 +1533,7 @@ components:
         - addresses
       properties:
         correlationId:
-          type: string
+          $ref: '#/components/schemas/CorrelationId'
         addresses:
           type: array
           items:
