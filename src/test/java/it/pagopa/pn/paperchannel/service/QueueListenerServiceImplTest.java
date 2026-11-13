@@ -12,7 +12,7 @@ import it.pagopa.pn.paperchannel.exception.PnGenericException;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.PaperProgressStatusEventDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnextchannel.v1.dto.SingleStatusUpdateDto;
 import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnnationalregistries.v1.dto.AddressSQSMessageDto;
-import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnnationalregistries.v1.dto.AddressSQSMessagePhysicalAddressDto;
+import it.pagopa.pn.paperchannel.generated.openapi.msclient.pnnationalregistries.v1.dto.PhysicalAddressDto;
 import it.pagopa.pn.paperchannel.mapper.AddressMapper;
 import it.pagopa.pn.paperchannel.middleware.db.dao.AddressDAO;
 import it.pagopa.pn.paperchannel.middleware.db.dao.PaperRequestErrorDAO;
@@ -122,7 +122,7 @@ class QueueListenerServiceImplTest {
 
         addressSQSMessageDto.setCorrelationId("1234");
         addressSQSMessageDto.setError("ok");
-        AddressSQSMessagePhysicalAddressDto addressDto = new AddressSQSMessagePhysicalAddressDto();
+        PhysicalAddressDto addressDto = new PhysicalAddressDto();
         addressDto.setAddress("address");
         addressSQSMessageDto.setPhysicalAddress(addressDto);
 
@@ -157,11 +157,12 @@ class QueueListenerServiceImplTest {
         deliveryRequest.setStatusDetail(StatusDeliveryEnum.NATIONAL_REGISTRY_WAITING.getDetail());
 
         addressSQSMessageDto.setCorrelationId("1234");
-        AddressSQSMessagePhysicalAddressDto addressDto = new AddressSQSMessagePhysicalAddressDto();
+        PhysicalAddressDto addressDto = new PhysicalAddressDto();
         addressDto.setAddress("address");
         addressSQSMessageDto.setPhysicalAddress(addressDto);
+        addressSQSMessageDto.setRegistry("ANPR");
 
-        Address expectedAddress = AddressMapper.fromNationalRegistry(addressDto);
+        Address expectedAddress = AddressMapper.fromNationalRegistry(addressDto, "ANPR");
 
         // When
         Mockito.when(this.requestDeliveryDAO.getByCorrelationId(Mockito.anyString())).thenReturn(Mono.just(deliveryRequest));
@@ -238,7 +239,7 @@ class QueueListenerServiceImplTest {
         // Given
         PnDeliveryRequest deliveryRequest = new PnDeliveryRequest();
         AddressSQSMessageDto addressSQSMessageDto = new AddressSQSMessageDto();
-        addressSQSMessageDto.setPhysicalAddress(new AddressSQSMessagePhysicalAddressDto()); //physicalAddress.getAddress null
+        addressSQSMessageDto.setPhysicalAddress(new PhysicalAddressDto()); //physicalAddress.getAddress null
 
         deliveryRequest.setIun("1223");
         deliveryRequest.setRequestId("1234dc");

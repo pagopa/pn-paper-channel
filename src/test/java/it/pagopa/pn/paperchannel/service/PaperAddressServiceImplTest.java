@@ -87,6 +87,7 @@ class PaperAddressServiceImplTest {
         mockDeduplicationResponse.setNormalizedAddress(new AnalogAddressDto().addressRow("via address-normalizzato"));
         Address fromNationalRegistry = new Address();
         fromNationalRegistry.setAddress("via Da NR");
+        fromNationalRegistry.setRegistry("ANPR");
         String requestId = "";
         String relatedRequestId = "related-request";
         PnDeliveryRequest deliveryRequest = new PnDeliveryRequest();
@@ -505,15 +506,57 @@ class PaperAddressServiceImplTest {
     }
 
     @Test
-    void getCorrectAddressFromNationalRegistrySetsReceiverAddressSourceTypeForPfAndPg() {
+    void getCorrectAddressFromNationalRegistrySetsReceiverAddressSourceTypeFromRegistry() {
         String requestId = "req-001";
         String relatedRequestId = "req-000";
         PnDeliveryRequest deliveryRequest = new PnDeliveryRequest();
         deliveryRequest.setIun("a-iun");
         deliveryRequest.setRequestId(requestId);
         deliveryRequest.setRelatedRequestId(relatedRequestId);
-        deliveryRequest.setReceiverType("PF");
         deliveryRequest.setCorrelationId("a-correlation-id");
+
+        PnAddress addressFromDb = new PnAddress();
+        addressFromDb.setRequestId(relatedRequestId);
+        addressFromDb.setAddress("via Roma");
+
+        Address fromNationalRegistry = new Address();
+        fromNationalRegistry.setAddress("via Da NR");
+        fromNationalRegistry.setRegistry("ANPR");
+
+        DeduplicatesResponseDto response = new DeduplicatesResponseDto();
+        response.setEqualityResult(false);
+        response.setNormalizedAddress(new AnalogAddressDto().addressRow("via address-normalizzato"));
+
+        when(addressDAO.findByRequestId(relatedRequestId, AddressTypeEnum.RECEIVER_ADDRESS))
+                .thenReturn(Mono.just(addressFromDb));
+        when(addressManagerClient.deduplicates(anyString(), any(Address.class), eq(fromNationalRegistry)))
+                .thenReturn(Mono.just(response));
+
+        StepVerifier.create(paperAddressService.getCorrectAddress(deliveryRequest, fromNationalRegistry, 0))
+                .expectNextMatches(address -> "ANPR".equals(deliveryRequest.getReceiverAddressSourceType()))
+                .verifyComplete();
+
+        fromNationalRegistry.setRegistry("REGISTRO_IMPRESE");
+        when(addressDAO.findByRequestId(relatedRequestId, AddressTypeEnum.RECEIVER_ADDRESS))
+                .thenReturn(Mono.just(addressFromDb));
+        when(addressManagerClient.deduplicates(anyString(), any(Address.class), eq(fromNationalRegistry)))
+                .thenReturn(Mono.just(response));
+
+        StepVerifier.create(paperAddressService.getCorrectAddress(deliveryRequest, fromNationalRegistry, 0))
+                .expectNextMatches(address -> "REGISTRO_IMPRESE".equals(deliveryRequest.getReceiverAddressSourceType()))
+                .verifyComplete();
+    }
+
+    @Test
+    void getCorrectAddressFromNationalRegistryWithoutRegistryFallbackOnReceiverType() {
+        String requestId = "req-001";
+        String relatedRequestId = "req-000";
+        PnDeliveryRequest deliveryRequest = new PnDeliveryRequest();
+        deliveryRequest.setIun("a-iun");
+        deliveryRequest.setRequestId(requestId);
+        deliveryRequest.setRelatedRequestId(relatedRequestId);
+        deliveryRequest.setCorrelationId("a-correlation-id");
+        deliveryRequest.setReceiverType("PF");
 
         PnAddress addressFromDb = new PnAddress();
         addressFromDb.setRequestId(relatedRequestId);
@@ -536,14 +579,41 @@ class PaperAddressServiceImplTest {
                 .verifyComplete();
 
         deliveryRequest.setReceiverType("PG");
+        StepVerifier.create(paperAddressService.getCorrectAddress(deliveryRequest, fromNationalRegistry, 0))
+                .expectNextMatches(address -> "REGISTRO_IMPRESE".equals(deliveryRequest.getReceiverAddressSourceType()))
+                .verifyComplete();
+    }
+
+    @Test
+    void getCorrectAddressFromNationalRegistryUnknownRegistryKo() {
+        String requestId = "req-001";
+        String relatedRequestId = "req-000";
+        PnDeliveryRequest deliveryRequest = new PnDeliveryRequest();
+        deliveryRequest.setIun("a-iun");
+        deliveryRequest.setRequestId(requestId);
+        deliveryRequest.setRelatedRequestId(relatedRequestId);
+        deliveryRequest.setCorrelationId("a-correlation-id");
+
+        PnAddress addressFromDb = new PnAddress();
+        addressFromDb.setRequestId(relatedRequestId);
+        addressFromDb.setAddress("via Roma");
+
+        Address fromNationalRegistry = new Address();
+        fromNationalRegistry.setAddress("via Da NR");
+
+        DeduplicatesResponseDto response = new DeduplicatesResponseDto();
+        response.setEqualityResult(false);
+        response.setNormalizedAddress(new AnalogAddressDto().addressRow("via address-normalizzato"));
+
         when(addressDAO.findByRequestId(relatedRequestId, AddressTypeEnum.RECEIVER_ADDRESS))
                 .thenReturn(Mono.just(addressFromDb));
         when(addressManagerClient.deduplicates(anyString(), any(Address.class), eq(fromNationalRegistry)))
                 .thenReturn(Mono.just(response));
 
         StepVerifier.create(paperAddressService.getCorrectAddress(deliveryRequest, fromNationalRegistry, 0))
-                .expectNextMatches(address -> "REGISTRO_IMPRESE".equals(deliveryRequest.getReceiverAddressSourceType()))
-                .verifyComplete();
+                .expectErrorMatches(ex -> ex instanceof PnGenericException pnEx
+                        && pnEx.getExceptionType() == ExceptionTypeEnum.UNKNOWN_REGISTRY)
+                .verify();
     }
 
     @Test

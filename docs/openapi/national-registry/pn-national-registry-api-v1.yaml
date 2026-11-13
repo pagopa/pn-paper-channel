@@ -32,24 +32,36 @@ paths:
       responses:
         "200":
           description: OK
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/IPAPec'
         "401":
           description: Unauthorized
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/IPAPecError'
         "500":
           description: Internal server error
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/IPAPecError'
         "503":
           description: Service Unavailable
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
@@ -70,24 +82,36 @@ paths:
       responses:
         "200":
           description: OK
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ADELegalOK'
         "401":
           description: Unauthorized
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ADELegalError'
         "500":
           description: Internal server error
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ADELegalError'
         "503":
           description: Service Unavailable
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
@@ -108,40 +132,126 @@ paths:
       responses:
         "200":
           description: OK
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/InfoCamereLegalOK'
         "400":
           description: Bad request
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/InfoCamereLegalError'
         "401":
           description: Unauthorized
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/InfoCamereLegalError'
         "404":
           description: Not Found
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/InfoCamereLegalError'
         "500":
           description: Internal server error
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/InfoCamereLegalError'
         "503":
           description: Service Unavailable
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/InfoCamereLegalError'
+  /national-registries-private/infocamere/legal-institutions:
+    post:
+      tags:
+        - infoCamere
+      summary: 'Il servizio restituisce la lista delle imprese che hanno come legale rappresentante la persona fisica indicata.'
+      description: 'Il servizio restituisce la lista delle imprese che hanno come legale rappresentante la persona fisica indicata.'
+      operationId: infoCamereLegalInstitutions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InfoCamereLegalInstitutionsRequestBody'
+        required: true
+      responses:
+        "200":
+          description: OK
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InfoCamereLegalInstitutionsOK'
+        "400":
+          description: Bad request
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InfoCamereLegalInstitutionsError'
+        "401":
+          description: Unauthorized
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InfoCamereLegalInstitutionsError'
+        "404":
+          description: Not Found
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InfoCamereLegalInstitutionsError'
+        "500":
+          description: Internal server error
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InfoCamereLegalInstitutionsError'
+        "503":
+          description: Service Unavailable
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InfoCamereLegalInstitutionsError'
   /national-registries-private/{recipient-type}/addresses:
     post:
       tags:
@@ -164,24 +274,86 @@ paths:
       responses:
         "200":
           description: OK
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/AddressOK'
         "400":
           description: Bad request
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/AddressError'
         "404":
           description: Not Found
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/AddressError'
         "500":
           description: Internal server error
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddressError'
+  /national-registries-private/physical-addresses:
+    post:
+      tags:
+        - address
+      summary: 'Questo servizio si occupa di smistare le richieste in ingresso al fine di fornire uno o più indirizzi fisici per la PF o la PG indicata'
+      description: 'Questo servizio si occupa di smistare le richieste in ingresso al fine di fornire uno o più indirizzi fisici per la PF o la PG indicata'
+      operationId: getPhysicalAddresses
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PhysicalAddressesRequestBody'
+        required: true
+      responses:
+        "200":
+          description: OK
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhysicalAddressesResponse'
+        "400":
+          description: Bad request
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddressError'
+        "404":
+          description: Not Found
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddressError'
+        "500":
+          description: Internal server error
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
@@ -203,18 +375,27 @@ paths:
       responses:
         "200":
           description: OK
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CheckTaxIdOK'
         "400":
           description: Bad request
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CheckTaxIdError'
         "500":
           description: Internal server error
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
@@ -236,35 +417,49 @@ paths:
       responses:
         "200":
           description: OK
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GetAddressANPROK'
         "400":
           description: Caso d'uso invalido
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GetAddressANPRError'
         "404":
           description: Caso d'uso non trovato
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GetAddressANPRError'
         "500":
           description: Internal server error
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GetAddressANPRError'
-  /national-registries-private/inad/digital-address:
+  /national-registries-private/{recipient-type}/inad/digital-address:
     post:
       tags:
         - digitalAddressINAD
       summary: 'Consente di ottenere il domicilio digitale corrispondente al codice fiscale al momento della consultazione e, in caso di domicilio digitale eletto in qualità di Professionista, anche l''attività professionale esercitata.'
       description: 'Consente di ottenere il domicilio digitale corrispondente al codice fiscale al momento della consultazione e, in caso di domicilio digitale eletto in qualità di Professionista, anche l''attività professionale esercitata.'
       operationId: digitalAddressINAD
+      parameters:
+        - $ref: '#/components/parameters/pathRecipientType'
       requestBody:
         description: Consente di ottenere il domicilio digitale corrispondente al codice fiscale al momento della consultazione e, in caso di domicilio digitale eletto in qualità di Professionista, anche l'attività professionale esercitata.
         content:
@@ -275,42 +470,63 @@ paths:
       responses:
         "200":
           description: OK
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GetDigitalAddressINADOK'
         "400":
           description: Bad Request
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GetDigitalAddressINADError'
         "401":
           description: Unauthorized
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GetDigitalAddressINADError'
         "403":
           description: Forbidden
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GetDigitalAddressINADError'
         "404":
           description: Not found
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GetDigitalAddressINADError'
         "500":
           description: Internal server error
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GetDigitalAddressINADError'
         "503":
           description: Service Unavailable
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
@@ -337,36 +553,54 @@ paths:
       responses:
         "200":
           description: OK
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GetDigitalAddressIniPECOK'
         "400":
           description: Bad Request
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GetDigitalAddressIniPECError'
         "401":
           description: Unauthorized
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GetDigitalAddressIniPECError'
         "404":
           description: Not found
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GetDigitalAddressIniPECError'
         "500":
           description: Internal server error
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GetDigitalAddressIniPECError'
         "503":
           description: Service Unavailable
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
@@ -388,41 +622,64 @@ paths:
       responses:
         "200":
           description: OK
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GetAddressRegistroImpreseOK'
         "400":
           description: Caso d'uso invalido
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GetAddressRegistroImpreseError'
         "401":
           description: Unauthorized
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GetAddressRegistroImpreseError'
         "404":
           description: Caso d'uso non trovato
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GetAddressRegistroImpreseError'
         "500":
           description: Internal server error
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GetAddressRegistroImpreseError'
         "503":
           description: Service Unavailable
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GetAddressRegistroImpreseError'
 components:
+  headers:
+    RequestId:
+      description: Identificativo univoco della richiesta
+      schema:
+        type: string
   parameters:
     pathRecipientType:
       description: >-
@@ -434,6 +691,12 @@ components:
         type: string
         enum: [ PG , PF ]
   schemas:
+    CorrelationId:
+      type: string
+      description: Identificativo univoco della richiesta
+      minLength: 1
+      maxLength: 255
+      pattern: '^[A-Za-z0-9._:@#+=~-]+$'
     AddressRequestBody:
       type: object
       properties:
@@ -446,15 +709,15 @@ components:
             - domicileType
           properties:
             taxId:
-              x-field-extra-annotation: "@lombok.ToString.Exclude"
+              x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
               type: string
-              format: password
+              format: password # NO EXTERNAL
               example: AAAZZZ00H00T000Z
             referenceRequestDate:
               type: string
               format: date-time
             correlationId:
-              type: string
+              $ref: '#/components/schemas/CorrelationId'
             domicileType:
               type: string
               enum: [ PHYSICAL , DIGITAL ]
@@ -462,26 +725,23 @@ components:
       type: object
       properties:
         correlationId:
-          type: string
+          $ref: '#/components/schemas/CorrelationId'
     CheckTaxIdRequestBody:
       type: object
       properties:
         filter:
-          type: object
-          required:
-            - taxId
-          properties:
-            taxId:
-              type: string
-              example: AAAZZZ00H00T000Z
+          $ref: '#/components/schemas/TaxIdFilter'
     CheckTaxIdOK:
       type: object
       properties:
         taxId:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
+          format: password # NO EXTERNAL
           example: AAAZZZ00H00T000Z
         isValid:
           type: boolean
+          description: true se il codice fiscale/partita IVA risulta valido; false negli altri casi.
         errorCode:
           type: string
           enum: [B001_CHECK_TAX_ID_ERR01, B001_CHECK_TAX_ID_ERR02, B001_CHECK_TAX_ID_ERR03]
@@ -531,11 +791,16 @@ components:
             - referenceRequestDate
             - requestReason
           properties:
+            correlationId:
+              $ref: '#/components/schemas/CorrelationId'
             taxId:
+              x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
               type: string
+              format: password # NO EXTERNAL
               example: AAAZZZ00H00T000Z
             referenceRequestDate:
               type: string
+              format: date-time
             requestReason:
               type: string
     GetAddressANPROK:
@@ -551,23 +816,41 @@ components:
       type: object
       properties:
         description:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
+          format: password # NO EXTERNAL
         at:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
+          format: password # NO EXTERNAL
         address:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
+          format: password # NO EXTERNAL
         addressDetail:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
+          format: password # NO EXTERNAL
         zip:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
+          format: password # NO EXTERNAL
         municipality:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
+          format: password # NO EXTERNAL
         municipalityDetails:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
+          format: password # NO EXTERNAL
         province:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
+          format: password # NO EXTERNAL
         foreignState:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
+          format: password # NO EXTERNAL
     GetAddressANPRError:
       type: object
       properties:
@@ -604,8 +887,12 @@ components:
             - taxId
             - practicalReference
           properties:
+            correlationId:
+              $ref: '#/components/schemas/CorrelationId'
             taxId:
+              x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
               type: string
+              format: password # NO EXTERNAL
               example: AAAZZZ00H00T000Z
             practicalReference:
               type: string
@@ -614,22 +901,26 @@ components:
       type: object
       properties:
         taxId:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
+          format: password # NO EXTERNAL
           example: AAAZZZ00H00T000Z
         since:
           type: string
           format: date-time
+          description: Data/ora di decorrenza del domicilio digitale restituita da INAD.
         digitalAddress:
-          type: array
-          items:
-            $ref: '#/components/schemas/DigitalAddress'
+          $ref: '#/components/schemas/DigitalAddress'
     DigitalAddress:
       type: object
       properties:
         digitalAddress:
+          x-field-extra-annotation: "@lombok.ToString.Exclude"
           type: string
+          format: password
         practicedProfession:
           type: string
+          description: Professione esercitata associata al domicilio digitale.
         usageInfo:
           $ref: '#/components/schemas/UsageInfo'
     UsageInfo:
@@ -641,6 +932,7 @@ components:
         dateEndValidity:
           type: string
           format: date-time
+          description: Data di fine validità del domicilio digitale.
     GetDigitalAddressINADError:
       type: object
       properties:
@@ -676,15 +968,17 @@ components:
             - correlationId
           properties:
             taxId:
+              x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
               type: string
+              format: password # NO EXTERNAL
               example: AAAZZZ00H00T000Z
             correlationId:
-              type: string
+              $ref: '#/components/schemas/CorrelationId'
     GetDigitalAddressIniPECOK:
       type: object
       properties:
         correlationId:
-          type: string
+          $ref: '#/components/schemas/CorrelationId'
     GetDigitalAddressIniPECError:
       type: object
       properties:
@@ -714,18 +1008,14 @@ components:
       type: object
       properties:
         filter:
-          type: object
-          required:
-            - taxId
-          properties:
-            taxId:
-              type: string
-              example: AAAZZZ00H00T0
+          $ref: '#/components/schemas/TaxIdFilter'
     IPAPec:
       type: object
       properties:
         domicilioDigitale:
+          x-field-extra-annotation: "@lombok.ToString.Exclude"
           type: string
+          format: password
         tipo:
           type: string
         codEnte:
@@ -739,21 +1029,37 @@ components:
           type: string
           format: date-time
         taxId:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
+          format: password # NO EXTERNAL
           example: AAAZZZ00H00T000Z
         professionalAddress:
           type: object
           properties:
             description:
+              x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
               type: string
+              format: password # NO EXTERNAL
             municipality:
+              x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
               type: string
+              format: password # NO EXTERNAL
             province:
+              x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
               type: string
+              format: password # NO EXTERNAL
             address:
+              x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
               type: string
+              format: password # NO EXTERNAL
             zip:
+              x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
               type: string
+              format: password # NO EXTERNAL
+            stato:
+              x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+              type: string
+              format: password # NO EXTERNAL
     GetAddressRegistroImpreseError:
       type: object
       properties:
@@ -806,6 +1112,79 @@ components:
                 type: string
               detail:
                 type: string
+    TaxIdFilter:
+      type: object
+      required:
+        - taxId
+      properties:
+        correlationId:
+          $ref: '#/components/schemas/CorrelationId'
+        taxId:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          type: string
+          format: password # NO EXTERNAL
+          example: AAAZZZ00H00T000Z
+    InfoCamereLegalInstitutionsRequestBody:
+      type: object
+      properties:
+        filter:
+          $ref: '#/components/schemas/TaxIdFilter'
+    InfoCamereLegalInstitutionsOK:
+      type: object
+      properties:
+        dateTimeExtraction:
+          type: string
+        legalTaxId:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          type: string
+          format: password # NO EXTERNAL
+          example: AAAZZZ00H00T000Z
+        businessList:
+          type: array
+          items:
+            $ref: '#/components/schemas/Business'
+        code:
+          type: string
+        appName:
+          type: string
+        description:
+          type: string
+        timestamp:
+          type: string
+    Business:
+      type: object
+      properties:
+        businessTaxId:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          type: string
+          format: password # NO EXTERNAL
+        businessName:
+          type: string
+    InfoCamereLegalInstitutionsError:
+      type: object
+      properties:
+        status:
+          type: integer
+          description: Contiene il codice HTTP dell'errore
+        title:
+          type: string
+        detail:
+          type: string
+        traceId:
+          type: string
+        timestamp:
+          type: string
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              code:
+                type: string
+              element:
+                type: string
+              detail:
+                type: string
     InfoCamereLegalRequestBody:
       type: object
       properties:
@@ -815,11 +1194,17 @@ components:
             - taxId
             - vatNumber
           properties:
+            correlationId:
+              $ref: '#/components/schemas/CorrelationId'
             taxId:
+              x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
               type: string
+              format: password # NO EXTERNAL
               example: AAAZZZ00H00T000Z
             vatNumber:
+              x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
               type: string
+              format: password # NO EXTERNAL
               example: 12345678901
     InfoCamereLegalOK:
       type: object
@@ -828,13 +1213,18 @@ components:
           type: string
           format: date-time
         taxId:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
+          format: password # NO EXTERNAL
           example: AAAZZZ00H00T000Z
         vatNumber:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
+          format: password # NO EXTERNAL
           example: BBBCCC00H00T000Z
         verificationResult:
           type: boolean
+          description: true solo quando InfoCamere restituisce esitoVerifica = OK; in caso contrario valorizzato con false.
     InfoCamereLegalError:
       type: object
       properties:
@@ -864,13 +1254,7 @@ components:
       type: object
       properties:
         filter:
-          type: object
-          required:
-            - taxId
-          properties:
-            taxId:
-              type: string
-              example: AAAZZZ00H00T000Z
+          $ref: '#/components/schemas/TaxIdFilter'
     ADELegalRequestBody:
       type: object
       properties:
@@ -880,58 +1264,57 @@ components:
             - taxId
             - vatNumber
           properties:
+            correlationId:
+              $ref: '#/components/schemas/CorrelationId'
             taxId:
+              x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
               type: string
+              format: password # NO EXTERNAL
               example: AAAZZZ00H00T000Z
             vatNumber:
+              x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
               type: string
+              format: password # NO EXTERNAL
               example: BBBCCC00H00T000Z
     ADELegalOK:
       type: object
       properties:
         verificationResult:
           type: boolean
+          description: Risultato della verifica, presente solo per richiesta correttamente eseguita (resultCode 00) e per richiesta effettuata per P.IVA dell'ente (resultCode 03).
         resultDetail:
           type: string
-          enum: [XX00, XX01, XX02, XX0A, XX03, XX04, XXXX]
           description: >
-            Values:
-            
-            
-            _'XX00'_: richiesta corretta
-            
-            
-            _'XX01'_: codice fiscale Ente e/o Rappresentante errato
-            
-            
-            _'XX02'_: codice fiscale Ente non di soggetto diverso da persona fisica
-            
-            
-            _'XX0A'_: errore nell’elaborazione
-            
-            
-            _'XX03'_: timeout interno all'elaborazione
-            
-            
-            _'XX04'_: errore di autenticazione
-            
-            
-            _'XXXX'_: errore non codificato
+            Valori supportati:
+            - XX00: richiesta corretta;
+
+            - XX01: codice fiscale Ente e/o Rappresentante errato;
+
+            - XX02: codice fiscale Ente non di soggetto diverso da persona fisica;
+
+            - XX0A: errore nell’elaborazione;
+
+            - XX03: timeout interno all'elaborazione;
+
+            - XX04: errore di autenticazione;
+
+            - XXXX: errore non codificato.
+        resultDetailMessage:
+          type: string
+          description: Messaggio testuale derivato dal resultDetail.
         resultCode:
           type: string
-          example: '00'
-          enum: ['00', '01', '02']
           description: >
-            Values:
-            
-            
-            _'00'_: Richiesta correttamente eseguita
-            
-            
-            _'01'_: Richiesta andata in errore
-            
-            
-            _'02'_: Formato dati in input non corretto
+            Valori supportati:
+            - 00: richiesta correttamente eseguita;
+
+            - 01: richiesta andata in errore;
+
+            - 02: formato dati in input non corretto;
+
+            - 03: il codice fiscale Ente indicato risulta essere una Partita IVA;
+
+            - UNKNOWN: valore fallback usato per codici non riconosciuti.
     ADELegalError:
       type: object
       properties:
@@ -986,9 +1369,11 @@ components:
       type: object
       properties:
         correlationId:
-          type: string
+          $ref: '#/components/schemas/CorrelationId'
         taxId:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
+          format: password # NO EXTERNAL
         error:
           type: string
           description: Se presente indica che si è verificato un errore durante l'esecuzione dell'operazione richiesta.
@@ -1002,10 +1387,12 @@ components:
               type:
                 type: string
               address:
+                x-field-extra-annotation: "@lombok.ToString.Exclude"
                 type: string
+                format: password
               recipient:
                 type: string
-                enum: [IMPRESA, PROFESSIONISTA, PERSONA_FISICA]
+                enum: [IMPRESA, PROFESSIONISTA, PERSONA_FISICA, PERSONALE]
                 description: >
                   Values:
                   
@@ -1016,35 +1403,67 @@ components:
                   _'PROFESSIONISTA'_: Indica che l'indirizzo digitale corrente è riferito ad un professionista
                   
                   
-                  _'PERSONA FISICA'_: Indica che l'indirizzo digitale corrente è riferito ad una Persona Fisica
+                  _'PERSONA FISICA'_: Indica che l'indirizzo digitale corrente è riferito ad una Persona Fisica ("deprecato a favore di PERSONALE")
+                  
+                  
+                  _'PERSONALE'_: Indica che l'indirizzo digitale corrente è riferito alla pec persionale di una Persona Fisica
         physicalAddress:
+          $ref: '#/components/schemas/PhysicalAddress'
+        registry:
+          $ref: '#/components/schemas/Registry'
+        addressType:
+          type: string
           description: >
-            Rappresenta il domicilio fisico
-          type: object
-          properties:
-            at:
-              type: string
-            address:
-              type: string
-            addressDetails:
-              type: string
-            zip:
-              type: string
-            municipality:
-              type: string
-            municipalityDetails:
-              type: string
-            province:
-              type: string
-            foreignState:
-              type: string
+            Rappresenta il tipo di indirizzo richiesto.
+            Può assumere i seguenti valori:
+            - PHYSICAL
+            - DIGITAL
+    PhysicalAddress:
+      description: >
+        Rappresenta il domicilio fisico
+      type: object
+      properties:
+        at:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          type: string
+          format: password # NO EXTERNAL
+        address:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          type: string
+          format: password # NO EXTERNAL
+        addressDetails:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          type: string
+          format: password # NO EXTERNAL
+        zip:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          type: string
+          format: password # NO EXTERNAL
+        municipality:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          type: string
+          format: password # NO EXTERNAL
+        municipalityDetails:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          type: string
+          format: password # NO EXTERNAL
+        province:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          type: string
+          format: password # NO EXTERNAL
+        foreignState:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          type: string
+          format: password # NO EXTERNAL
     GetDigitalAddressIniPECSQSMessage:
       type: object
       properties:
         correlationId:
-          type: string
+          $ref: '#/components/schemas/CorrelationId'
         taxId:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
           type: string
+          format: password # NO EXTERNAL
         error:
           type: string
           description: Se presente indica che si è verificato un errore durante l'esecuzione dell'operazione richiesta.
@@ -1058,7 +1477,9 @@ components:
               type:
                 type: string
               address:
+                x-field-extra-annotation: "@lombok.ToString.Exclude"
                 type: string
+                format: password
               recipient:
                 type: string
                 enum: [IMPRESA, PROFESSIONISTA]
@@ -1070,3 +1491,90 @@ components:
                   
                   
                   _'PROFESSIONISTA'_: Indica che l'indirizzo digitale corrente è riferito ad un professionista
+    PhysicalAddressesRequestBody:
+      type: object
+      required:
+        - correlationId
+        - addresses
+        - referenceRequestDate
+      properties:
+        correlationId:
+          $ref: '#/components/schemas/CorrelationId'
+        referenceRequestDate:
+          type: string
+          format: date-time
+        addresses:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecipientAddressRequestBody'
+    RecipientAddressRequestBody:
+      type: object
+      required:
+        - taxId
+        - recIndex
+        - recipientType
+      properties:
+        taxId:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          type: string
+          format: password # NO EXTERNAL
+          example: AAAZZZ00H00T000Z
+        recIndex:
+          type: integer
+          description: Index destinatario notifica digitale
+          format: int32
+        recipientType:
+          type: string
+          enum: [ PG , PF ]
+    PhysicalAddressesResponse:
+      type: object
+      required:
+        - correlationId
+        - addresses
+      properties:
+        correlationId:
+          $ref: '#/components/schemas/CorrelationId'
+        addresses:
+          type: array
+          items:
+            $ref: '#/components/schemas/PhysicalAddressResponse'
+    PhysicalAddressResponse:
+      type: object
+      required:
+        - recIndex
+        - taxId
+      properties:
+        recIndex:
+          type: integer
+          description: Index destinatario notifica digitale
+          format: int32
+        taxId:
+          x-field-extra-annotation: "@lombok.ToString.Exclude" # NO EXTERNAL
+          type: string
+          format: password # NO EXTERNAL
+          example: AAAZZZ00H00T000Z
+        error:
+          type: string
+          description: >
+            Se presente indica che si è verificato un errore durante l'esecuzione dell'operazione richiesta.
+            Possibili errori:
+            - 'DOWNSTREAM_REQUEST_ERROR' Non è stato possibile comunicare con i servizi di downstream (400)
+            - 'DOWNSTREAM_TOO_MANY_REQUESTS' Sovraccarico dei servizi di donwstream (429)
+        errorStatus:
+          type: integer
+          description: HttpStatus dell'errore
+          format: int32
+        physicalAddress:
+          $ref: '#/components/schemas/PhysicalAddress'
+        registry:
+          $ref: '#/components/schemas/Registry'
+    Registry:
+      type: string
+      description: >
+        Rappresenta il registro consultato per ottenere l'indirizzo.
+        Può assumere i seguenti valori:
+        - ANPR
+        - REGISTRO_IMPRESE
+        - INIPEC
+        - INAD
+        - IPA

@@ -53,7 +53,7 @@ public enum ExceptionTypeEnum{
     INCORRECT_ROUNDING_MODE("INCORRECT_ROUNDING_MODE", "Modalità di rounding non è tra quelle possibili"),
     DELIVERY_DRIVER_NOT_FOUND("DELIVERY_DRIVER_NOT_FOUND", "Il recapitista non è stato trovato"),
     ERROR_NOT_FOUND_EXTERNAL_CHANNEL("ERROR_NOT_FOUND_EXTERNAL_CHANNEL", "RequestId non trovato su external-channels: "),
-    UNKNOWN_RECEIVER_TYPE("UNKNOWN_RECEIVER_TYPE", "ReceiverType non riconosciuto");
+    UNKNOWN_REGISTRY("UNKNOWN_REGISTRY", "Registro national-registries non riconosciuto");
 
     private final String title;
     private final String message;

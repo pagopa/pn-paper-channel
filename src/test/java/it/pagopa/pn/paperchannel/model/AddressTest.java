@@ -81,7 +81,7 @@ class AddressTest {
     }
 
     private Address initAddress() {
-        return new Address(fullName, nameRow2, address, addressRow2, cap, city, city2, pr, country, flowType, productType, fromNationalRegistry);
+        return new Address(fullName, nameRow2, address, addressRow2, cap, city, city2, pr, country, flowType, productType, fromNationalRegistry, null);
     }
 
     private void initialize() {

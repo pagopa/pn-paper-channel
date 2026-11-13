@@ -15,6 +15,7 @@ public interface AddressMapStructMapper {
 	@Mapping(target = "flowType", ignore = true)
 	@Mapping(target = "productType", ignore = true)
 	@Mapping(target = "fromNationalRegistry", ignore = true)
+	@Mapping(target = "registry", ignore = true)
 	Address analogAddressToAddress(AnalogAddress analogAddress);
 
 	@Mapping(target = "fullname", source = "fullName")
@@ -28,6 +29,7 @@ public interface AddressMapStructMapper {
 	@Mapping(target = "flowType", ignore = true)
 	@Mapping(target = "productType", ignore = true)
 	@Mapping(target = "fromNationalRegistry", ignore = true)
+	@Mapping(target = "registry", ignore = true)
 	Address pnAddressToAddress(PnAddress address);
 
 	@Mapping(target = "fullname", source = "fullName")
