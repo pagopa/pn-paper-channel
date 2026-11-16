@@ -49,7 +49,7 @@ export const toPageMapper = <T>(
 export const zodErrorToValidationField = (
   error: ZodError
 ): ValidationField[] => {
-  return error.errors.map((err) => ({
+  return error.issues.map((err) => ({
     fieldId: err.path.join('.'),
     message: err.message,
   }));

@@ -14,7 +14,7 @@ describe('Validator tests', () => {
         {
           fieldId: 'operation',
           message:
-            "Invalid enum value. Expected 'GET_TENDERS' | 'GET_TENDER_ACTIVE' | 'GET_COSTS' | 'GET_COST' | 'GET_DELIVERY_DRIVERS' | 'GET_GEOKEY' | 'GET_UNIFIED_DELIVERY_DRIVERS', received 'XXX'",
+            'Invalid option: expected one of "GET_TENDERS"|"GET_TENDER_ACTIVE"|"GET_COSTS"|"GET_COST"|"GET_DELIVERY_DRIVERS"|"GET_GEOKEY"|"GET_UNIFIED_DELIVERY_DRIVERS"',
         },
       ];
 
@@ -39,9 +39,9 @@ describe('Validator tests', () => {
       };
 
       const validationField: ValidationField[] = [
-        { fieldId: 'page', message: 'Required' },
-        { fieldId: 'size', message: 'Required' },
-        { fieldId: 'from', message: 'Invalid datetime' },
+        { fieldId: 'page', message: 'Invalid input: expected number, received undefined' },
+        { fieldId: 'size', message: 'Invalid input: expected number, received undefined' },
+        { fieldId: 'from', message: 'Invalid ISO datetime' },
       ];
 
       const validatorError = new ValidatorError(

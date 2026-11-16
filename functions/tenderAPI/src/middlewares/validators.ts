@@ -9,7 +9,6 @@ import {
   UnifiedDeliveryDriversSchema,
 } from '../types/schema-request-types';
 import { ValidationField } from '../types/model-types';
-import { ZodIssueCode } from 'zod';
 import { zodErrorToValidationField } from '../utils/mappers';
 import { ValidatorError } from '../types/error-types';
 
@@ -50,8 +49,8 @@ export const validatorEvent = (event: unknown): Event => {
     if (result.success) {
       return result.data;
     } else {
-      const onlyErrorWithOperationKey = result.error.errors.filter(
-        (err) => err.code === ZodIssueCode.invalid_literal
+      const onlyErrorWithOperationKey = result.error.issues.filter(
+        (err) => err.code === 'invalid_value'
       );
       if (onlyErrorWithOperationKey.length === 0) {
         validationErrors.push(...zodErrorToValidationField(result.error));
